@@ -14,7 +14,10 @@
   "ignorePatterns": ["dist/**", "node_modules/**", "playwright-report/**", "test-results/**"],
   "rules": {
     "react/react-in-jsx-scope": "off",
-    "jsx-a11y/prefer-tag-over-role": "off"
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "require-yield": "off",
+    "unicorn/no-thenable": "off",
+    "typescript/no-redundant-type-constituents": "off"
   },
   "overrides": [
     {
