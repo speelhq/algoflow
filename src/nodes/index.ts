@@ -5,15 +5,25 @@ import { assign } from "./assign";
 import { binop } from "./binop";
 import { bool } from "./bool";
 import { breakStmt } from "./break";
+import { call } from "./call";
+import { abs } from "./call-abs";
+import { floatCall } from "./call-float";
+import { intCall } from "./call-int";
+import { max } from "./call-max";
+import { min } from "./call-min";
+import { randomInt } from "./call-random_int";
+import { strCall } from "./call-str";
 import type { Category } from "./categories";
 import { comment } from "./comment";
 import { continueStmt } from "./continue";
 import { empty } from "./empty";
+import { exprStmt } from "./expr";
 import { forStmt } from "./for";
 import { ifStmt } from "./if";
 import { none } from "./none";
 import { num } from "./num";
 import { print } from "./print";
+import { returnStmt } from "./return";
 import { str } from "./str";
 import type { NodeDef } from "./types";
 import { unop } from "./unop";
@@ -29,7 +39,9 @@ const ALL: NodeDef[] = [
   breakStmt,
   continueStmt,
   print,
+  exprStmt,
   comment,
+  returnStmt,
   // expressions
   empty,
   num,
@@ -39,6 +51,15 @@ const ALL: NodeDef[] = [
   variable,
   binop,
   unop,
+  call,
+  // builtins
+  abs,
+  min,
+  max,
+  strCall,
+  intCall,
+  floatCall,
+  randomInt,
 ];
 
 export const NODES: ReadonlyMap<string, NodeDef> = new Map(ALL.map((def) => [def.key, def]));
