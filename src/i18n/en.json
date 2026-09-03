@@ -1,0 +1,64 @@
+{
+  "app": {
+    "name": "AlgoFlow",
+    "desktopOnly": "AlgoFlow needs a window at least 1280 px wide. Please open it in a desktop browser.",
+    "titlePlaceholder": "Untitled program",
+    "challenge": "Challenge",
+    "freeMode": "Free mode",
+    "undo": "Undo",
+    "redo": "Redo",
+    "saved": "Saved",
+    "export": "Export",
+    "import": "Import",
+    "help": "Help",
+    "language": {
+      "label": "Language",
+      "en": "EN",
+      "ja": "JA"
+    },
+    "resize": {
+      "left": "Resize left panel",
+      "right": "Resize right panel",
+      "bottom": "Resize bottom panel"
+    }
+  },
+  "palette": {
+    "blocks": "Blocks",
+    "task": "Task",
+    "search": "Search blocks",
+    "category": {
+      "basic": "Basic",
+      "list": "List",
+      "control": "Control",
+      "function": "Function",
+      "dict": "Dict",
+      "class": "Class",
+      "math": "Math"
+    }
+  },
+  "canvas": {
+    "main": "main",
+    "add": "Add",
+    "start": "Start",
+    "end": "End"
+  },
+  "props": {
+    "title": "Properties",
+    "empty": "Select a card to edit its slots."
+  },
+  "run": {
+    "run": "Run",
+    "step": "Step",
+    "back": "Back",
+    "stop": "Stop",
+    "speed": "Speed",
+    "stepCount": "Step {n}"
+  },
+  "view": {
+    "data": "Data",
+    "trace": "Trace",
+    "output": "Output",
+    "tests": "Tests",
+    "python": "Python"
+  }
+}
