@@ -1,0 +1,51 @@
+{
+  "id": "tutorial",
+  "track": "day1",
+  "order": 1,
+  "title": { "en": "Hello" },
+  "description": {
+    "en": "Say hello to `name`.\n\nDrag a **print** block onto the canvas and give it the text `\"Hello, \"` joined to `name` with `+`."
+  },
+  "inputs": [{ "name": "name", "value": "Claude" }],
+  "tests": [
+    {
+      "name": { "en": "Claude" },
+      "inputs": { "name": "Claude" },
+      "expect": { "stdout": ["Hello, Claude"] }
+    },
+    {
+      "name": { "en": "edge: empty" },
+      "inputs": { "name": "" },
+      "expect": { "stdout": ["Hello, "] }
+    },
+    { "name": { "en": "Ada" }, "inputs": { "name": "Ada" }, "expect": { "stdout": ["Hello, Ada"] } }
+  ],
+  "hints": [
+    { "en": "The Blocks tab has a **print** block under Basic." },
+    { "en": "Click the print slot and choose a text value, then use `+` to join `name` to it." },
+    { "en": "The text is `\"Hello, \"` with a space after the comma." }
+  ],
+  "solution": {
+    "version": 1,
+    "title": "Hello",
+    "challengeId": "tutorial",
+    "inputs": [{ "name": "name", "value": "Claude" }],
+    "classes": [],
+    "functions": [],
+    "main": [
+      {
+        "id": "tut-prnt-001",
+        "kind": "print",
+        "args": [
+          {
+            "id": "tut-plus-001",
+            "kind": "binop",
+            "op": "+",
+            "left": { "id": "tut-text-001", "kind": "str", "value": "Hello, " },
+            "right": { "id": "tut-name-001", "kind": "var", "name": "name" }
+          }
+        ]
+      }
+    ]
+  }
+}

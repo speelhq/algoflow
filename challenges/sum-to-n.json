@@ -1,0 +1,67 @@
+{
+  "id": "sum-to-n",
+  "track": "day1",
+  "order": 2,
+  "title": { "en": "Sum to n" },
+  "description": {
+    "en": "Add up every whole number from 1 to `n` and store the result in `total`.\n\nFor `n = 10` the answer is `55`."
+  },
+  "inputs": [{ "name": "n", "value": 10 }],
+  "tests": [
+    { "name": { "en": "10" }, "inputs": { "n": 10 }, "expect": { "variables": { "total": 55 } } },
+    {
+      "name": { "en": "edge: 0" },
+      "inputs": { "n": 0 },
+      "expect": { "variables": { "total": 0 } }
+    },
+    { "name": { "en": "1" }, "inputs": { "n": 1 }, "expect": { "variables": { "total": 1 } } }
+  ],
+  "hints": [
+    { "en": "Start with `total` set to 0 before the loop." },
+    { "en": "Use a **for** block from 1 up to `n + 1`; the stop value is not included." },
+    { "en": "Inside the loop, set `total` to `total + i`." }
+  ],
+  "solution": {
+    "version": 1,
+    "title": "Sum to n",
+    "challengeId": "sum-to-n",
+    "inputs": [{ "name": "n", "value": 10 }],
+    "classes": [],
+    "functions": [],
+    "main": [
+      {
+        "id": "sum-init-001",
+        "kind": "assign",
+        "target": { "kind": "var", "name": "total" },
+        "value": { "id": "sum-zero-001", "kind": "num", "value": 0, "float": false, "raw": "0" }
+      },
+      {
+        "id": "sum-loop-001",
+        "kind": "for",
+        "var": "i",
+        "start": { "id": "sum-one0-001", "kind": "num", "value": 1, "float": false, "raw": "1" },
+        "stop": {
+          "id": "sum-stop-001",
+          "kind": "binop",
+          "op": "+",
+          "left": { "id": "sum-nvar-001", "kind": "var", "name": "n" },
+          "right": { "id": "sum-one0-002", "kind": "num", "value": 1, "float": false, "raw": "1" }
+        },
+        "body": [
+          {
+            "id": "sum-addi-001",
+            "kind": "assign",
+            "target": { "kind": "var", "name": "total" },
+            "value": {
+              "id": "sum-plus-001",
+              "kind": "binop",
+              "op": "+",
+              "left": { "id": "sum-totl-001", "kind": "var", "name": "total" },
+              "right": { "id": "sum-ivar-001", "kind": "var", "name": "i" }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

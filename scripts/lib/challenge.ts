@@ -1,0 +1,128 @@
+// C-01, C-03: the challenge schema and its structural checks (used by scripts/check.ts).
+import { migrate } from "@/lang/migrate";
+import { isValidName, validate } from "@/lang/validate";
+import type { Data, Id, Input, Program } from "@/lang/types";
+
+export type Localized = { en: string; ja?: string };
+export type Test = {
+  name: Localized;
+  inputs: Record<Id, Data>;
+  seed?: number;
+  expect: { variables?: Record<Id, Data>; stdout?: string[] };
+};
+export type Challenge = {
+  id: string;
+  track: "day1" | "day2" | "day3" | "classic" | "micrograd";
+  order: number;
+  title: Localized;
+  description: Localized;
+  inputs: Input[];
+  tests: Test[];
+  hints: Localized[];
+  starter?: Program;
+  solution: Program;
+};
+
+export const TRACKS = ["day1", "day2", "day3", "classic", "micrograd"] as const;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isLocalized(value: unknown, requireJa: boolean): value is Localized {
+  if (!isRecord(value) || typeof value.en !== "string") return false;
+  if (requireJa && typeof value.ja !== "string") return false;
+  return value.ja === undefined || typeof value.ja === "string";
+}
+
+function sameData(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+export type SchemaResult = { challenge: Challenge | null; problems: string[] };
+
+/** Validates one challenge file's JSON. `fileId` is the file name without `.json`. */
+export function checkChallengeSchema(
+  json: unknown,
+  fileId: string,
+  opts: { requireJa?: boolean } = {},
+): SchemaResult {
+  const problems: string[] = [];
+  const requireJa = opts.requireJa ?? false;
+  if (!isRecord(json)) return { challenge: null, problems: ["not an object"] };
+
+  if (json.id !== fileId)
+    problems.push(`id "${String(json.id)}" does not match the file name "${fileId}"`);
+  if (!TRACKS.includes(json.track as (typeof TRACKS)[number]))
+    problems.push(`track "${String(json.track)}" is not one of ${TRACKS.join(", ")}`);
+  if (typeof json.order !== "number") problems.push("order must be a number");
+  if (!isLocalized(json.title, requireJa)) problems.push("title must be { en, ja? }");
+  if (!isLocalized(json.description, requireJa)) problems.push("description must be { en, ja? }");
+
+  const inputs = Array.isArray(json.inputs) ? json.inputs : [];
+  if (!Array.isArray(json.inputs)) problems.push("inputs must be an array");
+  const inputNames: string[] = [];
+  inputs.forEach((input, i) => {
+    if (!isRecord(input) || typeof input.name !== "string" || !("value" in input)) {
+      problems.push(`inputs[${i}] must be { name, value }`);
+      return;
+    }
+    if (!isValidName(input.name))
+      problems.push(`inputs[${i}] name "${input.name}" is not a valid name (L-01, L-03)`);
+    if (inputNames.includes(input.name))
+      problems.push(`inputs[${i}] name "${input.name}" is duplicated`);
+    inputNames.push(input.name);
+  });
+
+  const tests = Array.isArray(json.tests) ? json.tests : [];
+  if (!Array.isArray(json.tests) || tests.length < 3)
+    problems.push("tests must be an array of at least 3 (C-01)");
+  let edge = false;
+  tests.forEach((test, i) => {
+    if (!isRecord(test)) return problems.push(`tests[${i}] must be an object`);
+    if (!isLocalized(test.name, requireJa)) problems.push(`tests[${i}].name must be { en, ja? }`);
+    else if (test.name.en.startsWith("edge:")) edge = true;
+    if (!isRecord(test.inputs)) problems.push(`tests[${i}].inputs must be an object`);
+    else {
+      for (const name of inputNames)
+        if (!(name in test.inputs)) problems.push(`tests[${i}].inputs is missing "${name}"`);
+      for (const name of Object.keys(test.inputs))
+        if (!inputNames.includes(name))
+          problems.push(`tests[${i}].inputs has unknown input "${name}"`);
+    }
+    if (test.seed !== undefined && typeof test.seed !== "number")
+      problems.push(`tests[${i}].seed must be a number`);
+    if (
+      !isRecord(test.expect) ||
+      (!isRecord(test.expect.variables) && !Array.isArray(test.expect.stdout))
+    ) {
+      problems.push(`tests[${i}].expect needs variables and/or stdout`);
+    }
+  });
+  if (tests.length > 0 && !edge) problems.push('no test name starts with "edge:" (C-03)');
+
+  const hints = Array.isArray(json.hints) ? json.hints : [];
+  if (!Array.isArray(json.hints) || hints.length !== 3)
+    problems.push("hints must be exactly 3 (C-01)");
+  hints.forEach((hint, i) => {
+    if (!isLocalized(hint, requireJa)) problems.push(`hints[${i}] must be { en, ja? }`);
+  });
+
+  const programs: Array<["solution" | "starter", unknown]> = [["solution", json.solution]];
+  if (json.starter !== undefined) programs.push(["starter", json.starter]);
+  for (const [which, value] of programs) {
+    try {
+      const program = migrate(value);
+      if (which === "solution" && !sameData(program.inputs, inputs))
+        problems.push("solution.inputs must equal inputs (C-01)");
+      if (program.challengeId !== undefined && program.challengeId !== fileId)
+        problems.push(`${which}.challengeId must be "${fileId}"`);
+      for (const d of validate(program))
+        problems.push(`${which}: ${d.code} at ${d.nodeId} ${JSON.stringify(d.params)}`);
+    } catch (error) {
+      problems.push(`${which}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  return { challenge: problems.length === 0 ? (json as unknown as Challenge) : null, problems };
+}

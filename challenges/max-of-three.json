@@ -1,0 +1,101 @@
+{
+  "id": "max-of-three",
+  "track": "day1",
+  "order": 4,
+  "title": { "en": "Max of three" },
+  "description": {
+    "en": "Store the largest of `a`, `b`, and `c` in `biggest` using **if** blocks, not the `max` builtin."
+  },
+  "inputs": [
+    { "name": "a", "value": 3 },
+    { "name": "b", "value": 9 },
+    { "name": "c", "value": 5 }
+  ],
+  "tests": [
+    {
+      "name": { "en": "3, 9, 5" },
+      "inputs": { "a": 3, "b": 9, "c": 5 },
+      "expect": { "variables": { "biggest": 9 } }
+    },
+    {
+      "name": { "en": "edge: equal" },
+      "inputs": { "a": 3, "b": 3, "c": 3 },
+      "expect": { "variables": { "biggest": 3 } }
+    },
+    {
+      "name": { "en": "negatives" },
+      "inputs": { "a": -5, "b": -2, "c": -9 },
+      "expect": { "variables": { "biggest": -2 } }
+    },
+    {
+      "name": { "en": "last is largest" },
+      "inputs": { "a": 1, "b": 2, "c": 7 },
+      "expect": { "variables": { "biggest": 7 } }
+    }
+  ],
+  "hints": [
+    { "en": "Start by setting `biggest` to `a`." },
+    { "en": "If `b` is greater than `biggest`, replace `biggest` with `b`." },
+    { "en": "Do the same for `c`. Two **if** blocks are enough." }
+  ],
+  "solution": {
+    "version": 1,
+    "title": "Max of three",
+    "challengeId": "max-of-three",
+    "inputs": [
+      { "name": "a", "value": 3 },
+      { "name": "b", "value": 9 },
+      { "name": "c", "value": 5 }
+    ],
+    "classes": [],
+    "functions": [],
+    "main": [
+      {
+        "id": "max-init-001",
+        "kind": "assign",
+        "target": { "kind": "var", "name": "biggest" },
+        "value": { "id": "max-avar-001", "kind": "var", "name": "a" }
+      },
+      {
+        "id": "max-ifb0-001",
+        "kind": "if",
+        "cond": {
+          "id": "max-gtb0-001",
+          "kind": "binop",
+          "op": ">",
+          "left": { "id": "max-bvar-001", "kind": "var", "name": "b" },
+          "right": { "id": "max-big0-001", "kind": "var", "name": "biggest" }
+        },
+        "then": [
+          {
+            "id": "max-setb-001",
+            "kind": "assign",
+            "target": { "kind": "var", "name": "biggest" },
+            "value": { "id": "max-bvar-002", "kind": "var", "name": "b" }
+          }
+        ],
+        "else": []
+      },
+      {
+        "id": "max-ifc0-001",
+        "kind": "if",
+        "cond": {
+          "id": "max-gtc0-001",
+          "kind": "binop",
+          "op": ">",
+          "left": { "id": "max-cvar-001", "kind": "var", "name": "c" },
+          "right": { "id": "max-big0-002", "kind": "var", "name": "biggest" }
+        },
+        "then": [
+          {
+            "id": "max-setc-001",
+            "kind": "assign",
+            "target": { "kind": "var", "name": "biggest" },
+            "value": { "id": "max-cvar-002", "kind": "var", "name": "c" }
+          }
+        ],
+        "else": []
+      }
+    ]
+  }
+}

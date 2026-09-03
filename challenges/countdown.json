@@ -1,0 +1,76 @@
+{
+  "id": "countdown",
+  "track": "day1",
+  "order": 5,
+  "title": { "en": "Countdown" },
+  "description": {
+    "en": "Print `n`, then `n - 1`, and so on down to `0`, one number per line. Use a **while** block."
+  },
+  "inputs": [{ "name": "n", "value": 5 }],
+  "tests": [
+    {
+      "name": { "en": "5" },
+      "inputs": { "n": 5 },
+      "expect": { "stdout": ["5", "4", "3", "2", "1", "0"] }
+    },
+    { "name": { "en": "edge: 0" }, "inputs": { "n": 0 }, "expect": { "stdout": ["0"] } },
+    { "name": { "en": "2" }, "inputs": { "n": 2 }, "expect": { "stdout": ["2", "1", "0"] } }
+  ],
+  "hints": [
+    { "en": "Copy `n` into a variable you can change, such as `k`." },
+    { "en": "Loop **while** `k >= 0`; inside, print `k`." },
+    { "en": "After printing, set `k` to `k - 1`, or the loop never ends." }
+  ],
+  "solution": {
+    "version": 1,
+    "title": "Countdown",
+    "challengeId": "countdown",
+    "inputs": [{ "name": "n", "value": 5 }],
+    "classes": [],
+    "functions": [],
+    "main": [
+      {
+        "id": "cnt-init-001",
+        "kind": "assign",
+        "target": { "kind": "var", "name": "k" },
+        "value": { "id": "cnt-nvar-001", "kind": "var", "name": "n" }
+      },
+      {
+        "id": "cnt-loop-001",
+        "kind": "while",
+        "cond": {
+          "id": "cnt-ge00-001",
+          "kind": "binop",
+          "op": ">=",
+          "left": { "id": "cnt-kvar-001", "kind": "var", "name": "k" },
+          "right": { "id": "cnt-zero-001", "kind": "num", "value": 0, "float": false, "raw": "0" }
+        },
+        "body": [
+          {
+            "id": "cnt-prnt-001",
+            "kind": "print",
+            "args": [{ "id": "cnt-kvar-002", "kind": "var", "name": "k" }]
+          },
+          {
+            "id": "cnt-decr-001",
+            "kind": "assign",
+            "target": { "kind": "var", "name": "k" },
+            "value": {
+              "id": "cnt-mins-001",
+              "kind": "binop",
+              "op": "-",
+              "left": { "id": "cnt-kvar-003", "kind": "var", "name": "k" },
+              "right": {
+                "id": "cnt-one0-001",
+                "kind": "num",
+                "value": 1,
+                "float": false,
+                "raw": "1"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

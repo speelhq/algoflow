@@ -10,7 +10,7 @@
     "test:e2e": "playwright test",
     "lint": "oxlint --type-aware --type-check",
     "format": "oxfmt",
-    "check": "tsx scripts/i18n.ts"
+    "check": "tsx scripts/check.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

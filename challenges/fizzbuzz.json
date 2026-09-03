@@ -1,0 +1,188 @@
+{
+  "id": "fizzbuzz",
+  "track": "day1",
+  "order": 3,
+  "title": { "en": "FizzBuzz" },
+  "description": {
+    "en": "Print the numbers from 1 to `n`, one per line. For multiples of 3 print `Fizz` instead, for multiples of 5 print `Buzz`, and for multiples of both print `FizzBuzz`."
+  },
+  "inputs": [{ "name": "n", "value": 15 }],
+  "tests": [
+    {
+      "name": { "en": "15" },
+      "inputs": { "n": 15 },
+      "expect": {
+        "stdout": [
+          "1",
+          "2",
+          "Fizz",
+          "4",
+          "Buzz",
+          "Fizz",
+          "7",
+          "8",
+          "Fizz",
+          "Buzz",
+          "11",
+          "Fizz",
+          "13",
+          "14",
+          "FizzBuzz"
+        ]
+      }
+    },
+    { "name": { "en": "edge: 1" }, "inputs": { "n": 1 }, "expect": { "stdout": ["1"] } },
+    { "name": { "en": "3" }, "inputs": { "n": 3 }, "expect": { "stdout": ["1", "2", "Fizz"] } }
+  ],
+  "hints": [
+    { "en": "`i % 3 == 0` is true exactly when `i` is a multiple of 3." },
+    { "en": "Check the multiple-of-15 case first, otherwise `Fizz` or `Buzz` would win." },
+    {
+      "en": "Put an **if** inside the **else** region of another **if** to test the remaining cases in order."
+    }
+  ],
+  "solution": {
+    "version": 1,
+    "title": "FizzBuzz",
+    "challengeId": "fizzbuzz",
+    "inputs": [{ "name": "n", "value": 15 }],
+    "classes": [],
+    "functions": [],
+    "main": [
+      {
+        "id": "fzb-loop-001",
+        "kind": "for",
+        "var": "i",
+        "start": { "id": "fzb-one0-001", "kind": "num", "value": 1, "float": false, "raw": "1" },
+        "stop": {
+          "id": "fzb-stop-001",
+          "kind": "binop",
+          "op": "+",
+          "left": { "id": "fzb-nvar-001", "kind": "var", "name": "n" },
+          "right": { "id": "fzb-one0-002", "kind": "num", "value": 1, "float": false, "raw": "1" }
+        },
+        "body": [
+          {
+            "id": "fzb-if15-001",
+            "kind": "if",
+            "cond": {
+              "id": "fzb-eq15-001",
+              "kind": "binop",
+              "op": "==",
+              "left": {
+                "id": "fzb-md15-001",
+                "kind": "binop",
+                "op": "%",
+                "left": { "id": "fzb-ivar-001", "kind": "var", "name": "i" },
+                "right": {
+                  "id": "fzb-n15x-001",
+                  "kind": "num",
+                  "value": 15,
+                  "float": false,
+                  "raw": "15"
+                }
+              },
+              "right": {
+                "id": "fzb-zero-001",
+                "kind": "num",
+                "value": 0,
+                "float": false,
+                "raw": "0"
+              }
+            },
+            "then": [
+              {
+                "id": "fzb-prfb-001",
+                "kind": "print",
+                "args": [{ "id": "fzb-txfb-001", "kind": "str", "value": "FizzBuzz" }]
+              }
+            ],
+            "else": [
+              {
+                "id": "fzb-if03-001",
+                "kind": "if",
+                "cond": {
+                  "id": "fzb-eq03-001",
+                  "kind": "binop",
+                  "op": "==",
+                  "left": {
+                    "id": "fzb-md03-001",
+                    "kind": "binop",
+                    "op": "%",
+                    "left": { "id": "fzb-ivar-002", "kind": "var", "name": "i" },
+                    "right": {
+                      "id": "fzb-n03x-001",
+                      "kind": "num",
+                      "value": 3,
+                      "float": false,
+                      "raw": "3"
+                    }
+                  },
+                  "right": {
+                    "id": "fzb-zero-002",
+                    "kind": "num",
+                    "value": 0,
+                    "float": false,
+                    "raw": "0"
+                  }
+                },
+                "then": [
+                  {
+                    "id": "fzb-prfz-001",
+                    "kind": "print",
+                    "args": [{ "id": "fzb-txfz-001", "kind": "str", "value": "Fizz" }]
+                  }
+                ],
+                "else": [
+                  {
+                    "id": "fzb-if05-001",
+                    "kind": "if",
+                    "cond": {
+                      "id": "fzb-eq05-001",
+                      "kind": "binop",
+                      "op": "==",
+                      "left": {
+                        "id": "fzb-md05-001",
+                        "kind": "binop",
+                        "op": "%",
+                        "left": { "id": "fzb-ivar-003", "kind": "var", "name": "i" },
+                        "right": {
+                          "id": "fzb-n05x-001",
+                          "kind": "num",
+                          "value": 5,
+                          "float": false,
+                          "raw": "5"
+                        }
+                      },
+                      "right": {
+                        "id": "fzb-zero-003",
+                        "kind": "num",
+                        "value": 0,
+                        "float": false,
+                        "raw": "0"
+                      }
+                    },
+                    "then": [
+                      {
+                        "id": "fzb-prbz-001",
+                        "kind": "print",
+                        "args": [{ "id": "fzb-txbz-001", "kind": "str", "value": "Buzz" }]
+                      }
+                    ],
+                    "else": [
+                      {
+                        "id": "fzb-prnt-001",
+                        "kind": "print",
+                        "args": [{ "id": "fzb-ivar-004", "kind": "var", "name": "i" }]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
