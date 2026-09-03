@@ -60,5 +60,158 @@
     "output": "Output",
     "tests": "Tests",
     "python": "Python"
+  },
+  "node": {
+    "assign": {
+      "label": "Set variable",
+      "template": "set {target} to {value}",
+      "templateCreate": "create {target} and set it to {value}",
+      "help": "Stores a value in a variable, a list item, a dict entry, or an object field."
+    },
+    "if": {
+      "label": "If",
+      "template": "if {cond}",
+      "help": "Runs the then region when the condition is true, otherwise the else region."
+    },
+    "for": {
+      "label": "For loop",
+      "template": "for {var} from {start} up to {stop}",
+      "help": "Counts the variable from start up to, but not including, stop."
+    },
+    "while": {
+      "label": "While loop",
+      "template": "while {cond}",
+      "help": "Repeats the body as long as the condition stays true."
+    },
+    "break": {
+      "label": "Break",
+      "template": "stop the loop",
+      "help": "Leaves the innermost loop at once."
+    },
+    "continue": {
+      "label": "Continue",
+      "template": "skip to next iteration",
+      "help": "Skips the rest of the body and starts the next iteration."
+    },
+    "print": {
+      "label": "Print",
+      "template": "print {args}",
+      "help": "Writes the values to the Output tab, separated by spaces."
+    },
+    "return": {
+      "label": "Return",
+      "template": "return {value}",
+      "help": "Leaves the function and hands back the value."
+    },
+    "expr": {
+      "label": "Expression",
+      "template": "{expr}",
+      "help": "Evaluates an expression for its effect, such as a method call."
+    },
+    "comment": {
+      "label": "Comment",
+      "template": "# {text}",
+      "help": "A note for readers; it does nothing when run."
+    },
+    "num": {
+      "label": "Number",
+      "template": "{value}",
+      "help": "A whole number or a decimal."
+    },
+    "str": {
+      "label": "Text",
+      "template": "\"{value}\"",
+      "help": "A piece of text."
+    },
+    "bool": {
+      "label": "True / false",
+      "template": "true",
+      "templateFalse": "false",
+      "help": "A truth value."
+    },
+    "none": {
+      "label": "None",
+      "template": "none",
+      "help": "The value that stands for nothing."
+    },
+    "var": {
+      "label": "Variable",
+      "template": "{name}",
+      "help": "The current value of a variable."
+    },
+    "binop": {
+      "label": "Operator",
+      "template": "{left} {op} {right}",
+      "help": "Combines two values with arithmetic, a comparison, and/or, or in."
+    },
+    "unop": {
+      "label": "Negate",
+      "template": "−{operand}",
+      "templateNot": "not {operand}",
+      "help": "Flips the sign of a number or the truth of a value."
+    },
+    "call": {
+      "label": "Call function",
+      "template": "{fn}({args})",
+      "help": "Calls one of your functions with the given arguments."
+    },
+    "call:abs": {
+      "label": "Absolute value",
+      "template": "absolute value of {x}",
+      "help": "Drops the sign of a number."
+    },
+    "call:min": {
+      "label": "Smaller of two",
+      "template": "smaller of {a} and {b}",
+      "help": "Picks the smaller of two numbers or texts."
+    },
+    "call:max": {
+      "label": "Larger of two",
+      "template": "larger of {a} and {b}",
+      "help": "Picks the larger of two numbers or texts."
+    },
+    "call:str": {
+      "label": "As text",
+      "template": "{x} as text",
+      "help": "Turns any value into its text form."
+    },
+    "call:int": {
+      "label": "As integer",
+      "template": "{x} as integer",
+      "help": "Turns a decimal or numeric text into a whole number."
+    },
+    "call:float": {
+      "label": "As decimal",
+      "template": "{x} as decimal",
+      "help": "Turns a whole number or numeric text into a decimal."
+    },
+    "call:random_int": {
+      "label": "Random integer",
+      "template": "random integer from {a} to {b}",
+      "help": "A random whole number between the two bounds, both included."
+    }
+  },
+  "error": {
+    "E_UNDEFINED": "Variable {name} has not been created yet",
+    "E_DECLARE_FIRST": "Create {name} before the if or loop",
+    "E_BAD_NAME": "Names start with a lowercase letter or _ and use only lowercase letters, digits, and _; Python keywords are not allowed",
+    "E_DUPLICATE_NAME": "{name} is already in use",
+    "E_BREAK_OUTSIDE": "This block only works inside a loop",
+    "E_RETURN_OUTSIDE": "Return only works inside a function",
+    "E_ARITY": "{name} needs {expected} values (got {got})",
+    "E_UNKNOWN_CALL": "{name} was not found",
+    "E_EMPTY_SLOT": "{slot} is empty",
+    "E_DEFAULT": "The default of {field} must be a number, text, true/false, an empty list, or an empty dict",
+    "E_DUPLICATE_ID": "Two blocks share the same id",
+    "E_PARSE_SYNTAX": "Syntax error at character {position}",
+    "E_PARSE_CHAIN": "Write a < b < c as a < b and b < c",
+    "E_INDEX": "Item {index} does not exist (length {length})",
+    "E_KEY": "Key {key} does not exist",
+    "E_FIELD": "{cls} has no field {field}",
+    "E_TYPE": "{left} and {right} cannot be used in this operation",
+    "E_DIV_ZERO": "Cannot divide by zero",
+    "E_POP_EMPTY": "The list is empty, nothing to pop",
+    "E_RECURSION": "Function calls are nested too deeply; check the stopping condition",
+    "E_STEP_LIMIT": "The loop does not seem to end; check its condition"
   }
 }
