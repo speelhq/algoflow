@@ -1,0 +1,217 @@
+// T-01: every validation code has a failing and a passing case; L-40, L-41, L-42.
+import { describe, expect, it } from "vitest";
+import { ast, program } from "@/nodes/testing";
+import type { Diagnostic, Program, Stmt } from "./types";
+import { validate } from "./validate";
+
+const {
+  assign,
+  print,
+  num,
+  bin,
+  v,
+  if_,
+  for_,
+  while_,
+  brk,
+  cont,
+  ret,
+  call,
+  exprStmt,
+  empty,
+  bool,
+} = ast;
+
+const codes = (p: Program) => validate(p).map((d) => d.code);
+const withInput = (main: Stmt[], name = "c", value = 1) =>
+  program(main, { inputs: [{ name, value }] });
+
+describe("validate (02 Validation)", () => {
+  it("returns no diagnostics for a well-formed program", () => {
+    expect(validate(program([assign("x", num(1)), print(bin("+", v("x"), num(1)))]))).toEqual([]);
+  });
+
+  it("E_UNDEFINED: a name that is not visible (L-40)", () => {
+    const stmt = print(v("x"));
+    expect(validate(program([stmt]))).toEqual([
+      { nodeId: stmt.id, code: "E_UNDEFINED", params: { name: "x" } },
+    ]);
+    expect(codes(program([assign("x", num(1)), print(v("x"))]))).toEqual([]);
+    expect(codes(program([assign("x", bin("+", v("x"), num(1)))]))).toEqual(["E_UNDEFINED"]);
+  });
+
+  it("E_DECLARE_FIRST: first assigned inside a frame and read after it (L-41), with the hoist fix", () => {
+    const frame = if_(v("c"), [assign("x", num(1))]);
+    const use = print(v("x"));
+    expect(validate(withInput([frame, use]))).toEqual([
+      {
+        nodeId: use.id,
+        code: "E_DECLARE_FIRST",
+        params: { name: "x", frame: frame.id },
+        fix: "hoistAssign",
+      },
+    ]);
+    expect(codes(withInput([assign("x", num(0)), frame, use]))).toEqual([]);
+    const loop = for_("i", num(0), num(3), [assign("y", v("i"))]);
+    expect(codes(program([loop, print(v("y"))]))).toEqual(["E_DECLARE_FIRST"]);
+  });
+
+  it("L-40: a for variable stays visible after its loop; a while body cannot define its condition", () => {
+    expect(codes(program([for_("i", num(0), num(3), []), print(v("i"))]))).toEqual([]);
+    expect(codes(program([while_(v("k"), [assign("k", num(0))])]))).toEqual(["E_UNDEFINED"]);
+  });
+
+  it("L-42: functions see only their parameters and body", () => {
+    const fn = {
+      id: "f0000000000f",
+      name: "twice",
+      params: ["x"],
+      body: [ret(bin("*", v("x"), num(2)))],
+    };
+    expect(codes(program([assign("g", num(1))], { functions: [fn] }))).toEqual([]);
+    const leaky = { ...fn, id: "f0000000000g", name: "leak", body: [ret(v("g"))] };
+    expect(codes(program([assign("g", num(1))], { functions: [leaky] }))).toEqual(["E_UNDEFINED"]);
+  });
+
+  it("E_BAD_NAME: L-01 pattern, L-02 class pattern, L-03 reserved words", () => {
+    for (const bad of ["Foo", "2x", "for", "len", "my-var", ""]) {
+      const p = program([assign(bad, num(1))]);
+      expect(codes(p), bad).toContain(bad === "" ? "E_EMPTY_SLOT" : "E_BAD_NAME");
+    }
+    expect(codes(program([assign("total_2", num(1))]))).toEqual([]);
+    const cls = { id: "c0000000000c", name: "value", fields: [] };
+    const p = program([]);
+    p.classes = [cls];
+    expect(validate(p)).toEqual([
+      { nodeId: cls.id, code: "E_BAD_NAME", params: { name: "value" } },
+    ]);
+    cls.name = "Value";
+    expect(validate(p)).toEqual([]);
+  });
+
+  it("E_DUPLICATE_NAME: functions, classes, and inputs share one namespace (L-05)", () => {
+    const a = { id: "f0000000000a", name: "f", params: [], body: [] };
+    const b = { id: "f0000000000b", name: "f", params: [], body: [] };
+    expect(validate(program([], { functions: [a, b] }))).toEqual([
+      { nodeId: b.id, code: "E_DUPLICATE_NAME", params: { name: "f" } },
+    ]);
+    expect(
+      codes(program([], { functions: [{ ...a, name: "n" }], inputs: [{ name: "n", value: 1 }] })),
+    ).toEqual(["E_DUPLICATE_NAME"]);
+    expect(codes(program([], { functions: [a, { ...b, name: "g" }] }))).toEqual([]);
+  });
+
+  it("E_BREAK_OUTSIDE: break or continue outside a loop", () => {
+    const stray = brk();
+    expect(validate(program([stray]))).toEqual([
+      { nodeId: stray.id, code: "E_BREAK_OUTSIDE", params: {} },
+    ]);
+    expect(codes(withInput([if_(v("c"), [cont()])]))).toEqual(["E_BREAK_OUTSIDE"]);
+    expect(codes(withInput([for_("i", num(0), num(3), [if_(v("c"), [brk()]), cont()])]))).toEqual(
+      [],
+    );
+  });
+
+  it("E_RETURN_OUTSIDE: return in main", () => {
+    const stray = ret(num(1));
+    expect(validate(program([stray]))).toEqual([
+      { nodeId: stray.id, code: "E_RETURN_OUTSIDE", params: {} },
+    ]);
+    expect(
+      codes(
+        program([], { functions: [{ id: "f0000000000f", name: "f", params: [], body: [ret()] }] }),
+      ),
+    ).toEqual([]);
+  });
+
+  it("E_ARITY: builtins, user functions, and constructors", () => {
+    const stmt = assign("m", call("min", num(1)));
+    expect(validate(program([stmt]))).toEqual([
+      { nodeId: stmt.id, code: "E_ARITY", params: { name: "min", expected: 2, got: 1 } },
+    ]);
+    const fn = { id: "f0000000000f", name: "f", params: ["a", "b"], body: [] };
+    expect(codes(program([exprStmt(call("f", num(1)))], { functions: [fn] }))).toEqual(["E_ARITY"]);
+    expect(codes(program([exprStmt(call("f", num(1), num(2)))], { functions: [fn] }))).toEqual([]);
+    // constructors (`new`) and methods are covered with their blocks in M-04/M-05
+  });
+
+  it("E_UNKNOWN_CALL: unknown function", () => {
+    const stmt = exprStmt(call("nope", num(1)));
+    expect(validate(program([stmt]))).toEqual([
+      { nodeId: stmt.id, code: "E_UNKNOWN_CALL", params: { name: "nope" } },
+    ]);
+    expect(codes(program([exprStmt(call("abs", num(1)))]))).toEqual([]);
+    const fn = { id: "f0000000000f", name: "f", params: [], body: [] };
+    expect(codes(program([exprStmt(call("f"))], { functions: [fn] }))).toEqual([]);
+  });
+
+  it("E_EMPTY_SLOT: a required slot left empty, naming the slot (L-09)", () => {
+    const value = assign("x", empty());
+    expect(validate(program([value]))).toEqual([
+      { nodeId: value.id, code: "E_EMPTY_SLOT", params: { slot: "value" } },
+    ]);
+    expect(validate(program([if_(empty(), [])]))[0]).toMatchObject({
+      code: "E_EMPTY_SLOT",
+      params: { slot: "cond" },
+    });
+    expect(validate(program([for_("", num(0), num(1), [])]))[0]).toMatchObject({
+      code: "E_EMPTY_SLOT",
+      params: { slot: "var" },
+    });
+    expect(validate(program([assign("", num(1))]))[0]).toMatchObject({
+      code: "E_EMPTY_SLOT",
+      params: { slot: "target" },
+    });
+    expect(validate(program([assign("x", bin("+", num(1), empty()))]))).toEqual([
+      expect.objectContaining({ code: "E_EMPTY_SLOT", params: { slot: "right" } }),
+    ]);
+    expect(validate(program([print(num(1), empty())]))).toEqual([
+      expect.objectContaining({ code: "E_EMPTY_SLOT", params: { slot: "args" } }),
+    ]);
+    expect(validate(program([exprStmt(call("abs", empty()))]))).toEqual([
+      expect.objectContaining({ code: "E_EMPTY_SLOT", params: { slot: "args" } }),
+    ]);
+    expect(codes(program([assign("x", bin("+", num(1), num(2))), print()]))).toEqual([]);
+  });
+
+  it("E_DEFAULT: a field default must be a scalar, [], or {} (L-30)", () => {
+    const p = program([]);
+    p.classes = [
+      {
+        id: "c0000000000c",
+        name: "P",
+        fields: [
+          { name: "xs", default: [1] },
+          { name: "d", default: { a: 1 } },
+        ],
+      },
+    ];
+    expect(validate(p)).toEqual([
+      { nodeId: "c0000000000c", code: "E_DEFAULT", params: { field: "xs" } },
+      { nodeId: "c0000000000c", code: "E_DEFAULT", params: { field: "d" } },
+    ]);
+    p.classes[0]!.fields = [
+      { name: "xs", default: [] },
+      { name: "d", default: {} },
+      { name: "n", default: 0 },
+      { name: "s", default: "" },
+      { name: "b", default: false },
+      { name: "z", default: null },
+    ];
+    expect(validate(p)).toEqual([]);
+  });
+
+  it("E_DUPLICATE_ID: the second occurrence of an id is reported (L-04)", () => {
+    const a = assign("x", num(1));
+    const b = { ...assign("y", num(2)), id: a.id };
+    expect(validate(program([a, b]))).toEqual([
+      { nodeId: a.id, code: "E_DUPLICATE_ID", params: {} },
+    ]);
+  });
+
+  it("reports several problems in traversal order", () => {
+    const p = program([print(v("x")), brk(), assign("2bad", bool(true))]);
+    const result: Diagnostic[] = validate(p);
+    expect(result.map((d) => d.code)).toEqual(["E_UNDEFINED", "E_BREAK_OUTSIDE", "E_BAD_NAME"]);
+  });
+});
