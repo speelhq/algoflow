@@ -4,18 +4,32 @@ import type { Node } from "@/lang/types";
 import { assign } from "./assign";
 import { binop } from "./binop";
 import { bool } from "./bool";
+import { breakStmt } from "./break";
 import type { Category } from "./categories";
+import { comment } from "./comment";
+import { continueStmt } from "./continue";
 import { empty } from "./empty";
+import { forStmt } from "./for";
+import { ifStmt } from "./if";
 import { none } from "./none";
 import { num } from "./num";
+import { print } from "./print";
 import { str } from "./str";
 import type { NodeDef } from "./types";
 import { unop } from "./unop";
 import { variable } from "./var";
+import { whileStmt } from "./while";
 
 const ALL: NodeDef[] = [
   // statements
   assign,
+  ifStmt,
+  forStmt,
+  whileStmt,
+  breakStmt,
+  continueStmt,
+  print,
+  comment,
   // expressions
   empty,
   num,
