@@ -56,6 +56,32 @@ describe("validate (02 Validation)", () => {
     expect(codes(program([loop, print(v("y"))]))).toEqual(["E_DECLARE_FIRST"]);
   });
 
+  it("E_DECLARE_FIRST: a name assigned two frames deep points at the outermost frame", () => {
+    const outer = if_(v("c"), [if_(v("c"), [assign("x", num(1))])]);
+    const use = print(v("x"));
+    expect(validate(withInput([outer, use]))).toEqual([
+      {
+        nodeId: use.id,
+        code: "E_DECLARE_FIRST",
+        params: { name: "x", frame: outer.id },
+        fix: "hoistAssign",
+      },
+    ]);
+    const nested = for_("i", num(0), num(2), [if_(v("c"), [assign("z", num(1))]), print(v("z"))]);
+    expect(codes(withInput([nested]))).toEqual(["E_DECLARE_FIRST"]);
+  });
+
+  it("E_DUPLICATE_NAME: a variable may not shadow a function or a builtin; params are unique", () => {
+    const fn = { id: "f0000000000f", name: "count", params: ["a", "a"], body: [] };
+    expect(validate(program([assign("count", num(0))], { functions: [fn] }))).toEqual([
+      { nodeId: fn.id, code: "E_DUPLICATE_NAME", params: { name: "a" } },
+      { nodeId: expect.any(String), code: "E_DUPLICATE_NAME", params: { name: "count" } },
+    ]);
+    const shadow = { id: "f0000000000g", name: "random_int", params: [], body: [] };
+    expect(codes(program([], { functions: [shadow] }))).toEqual(["E_DUPLICATE_NAME"]);
+    expect(codes(program([for_("random_int", num(0), num(1), [])]))).toEqual(["E_DUPLICATE_NAME"]);
+  });
+
   it("L-40: a for variable stays visible after its loop; a while body cannot define its condition", () => {
     expect(codes(program([for_("i", num(0), num(3), []), print(v("i"))]))).toEqual([]);
     expect(codes(program([while_(v("k"), [assign("k", num(0))])]))).toEqual(["E_UNDEFINED"]);

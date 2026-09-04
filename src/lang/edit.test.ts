@@ -119,6 +119,17 @@ describe("edit (L-50)", () => {
     expect(unparse((reused.main[0] as Extract<Stmt, { kind: "assign" }>).value)).toBe("x + i");
   });
 
+  it("setExpr addresses a target's expression as target.<field>", () => {
+    const stmt = ast.assignTo({ kind: "index", list: v("xs"), index: num(0) }, num(9));
+    const p = program([stmt]);
+    expect(lines(setExpr(p, stmt.id, "target.index", num(2)))).toEqual(["xs[2] = 9"]);
+    expect(() => setExpr(p, stmt.id, "target.nope", num(2))).toThrow(/no expression field/);
+    const plain = assign("x", num(1));
+    expect(() => setExpr(program([plain]), plain.id, "target.list", num(2))).toThrow(
+      /no expression field/,
+    );
+  });
+
   it("renameName rewrites variables, loop variables, function names and calls, and class names", () => {
     const { p } = sample();
     const renamed = renameName(p, "x", "total");

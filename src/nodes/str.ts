@@ -8,6 +8,7 @@ export const str = defineExpr<"str">({
   category: "basic",
   slots: [{ name: "value", role: "text" }],
   create: () => ({ id: newId(), kind: "str", value: "" }),
+  zeroLike: () => ({ id: newId(), kind: "str", value: "" }),
   *run(node) {
     return { t: "str", v: node.value };
   },

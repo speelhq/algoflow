@@ -53,4 +53,24 @@ describe("migrate (L-53)", () => {
     delete noId.main[0]!.args[0]!.id;
     expect(() => migrate(noId)).toThrow(/^main\[0\]\.args\[0\]\.id/);
   });
+
+  it("checks id shape, field and parameter elements, and target shape", () => {
+    const shortId = json(program([assign("x", num(1))])) as {
+      main: Array<Record<string, unknown>>;
+    };
+    shortId.main[0]!.id = "x";
+    expect(() => migrate(shortId)).toThrow(/^main\[0\]\.id: expected a 12-character node id/);
+    const p = program([]);
+    expect(() =>
+      migrate({ ...p, classes: [{ id: "c0000000000c", name: "C", fields: [null] }] }),
+    ).toThrow(/^classes\[0\]\.fields\[0\]/);
+    expect(() =>
+      migrate({ ...p, functions: [{ id: "f0000000000f", name: "f", params: [null], body: [] }] }),
+    ).toThrow(/^functions\[0\]\.params\[0\]/);
+    const badTarget = json(program([assign("x", num(1))])) as {
+      main: Array<Record<string, unknown>>;
+    };
+    badTarget.main[0]!.target = "x";
+    expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target: expected a target/);
+  });
 });

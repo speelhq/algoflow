@@ -1,12 +1,9 @@
 // L-53: import validates and migrates by `version`. Only version 1 exists; the
 // check is structural (shape, known kinds, ids); semantics are validate()'s job.
 import { getNode, hasNode, keyOf } from "@/nodes";
-import type { Expr, Program, Stmt } from "./types";
-import { targetExprs } from "./walk";
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
+import { isNodeId } from "./id";
+import type { Expr, Program, Stmt, Target } from "./types";
+import { regionsOf, targetExprs } from "./walk";
 
 export class MigrateError extends Error {
   constructor(
@@ -20,6 +17,10 @@ export class MigrateError extends Error {
 
 export const CURRENT_VERSION = 1;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 function expectArray(value: unknown, path: string): unknown[] {
   if (!Array.isArray(value)) throw new MigrateError(path, "expected an array");
   return value;
@@ -30,7 +31,11 @@ function expectString(value: unknown, path: string): string {
   return value;
 }
 
-/** Raw slot contents of a node whose kind is known, without trusting their shape. */
+function expectNodeId(value: unknown, path: string): void {
+  if (!isNodeId(value)) throw new MigrateError(path, "expected a 12-character node id");
+}
+
+/** The raw slot values of a node, by the registry's slot roles (no `isExpr` filtering). */
 function rawChildren(
   node: Record<string, unknown>,
   path: string,
@@ -45,38 +50,39 @@ function rawChildren(
         out.push({ value: item, path: `${path}.${slot.name}[${i}]` }),
       );
     } else if (slot.role === "target") {
-      if (!isRecord(value) || typeof value.kind !== "string")
+      if (!isRecord(value) || typeof value.kind !== "string") {
         throw new MigrateError(`${path}.${slot.name}`, "expected a target");
-      targetExprs(value as unknown as Parameters<typeof targetExprs>[0]).forEach((expr, i) =>
-        out.push({ value: expr, path: `${path}.${slot.name}[${i}]` }),
+      }
+      targetExprs(value as unknown as Target).forEach((item, i) =>
+        out.push({ value: item, path: `${path}.${slot.name}[${i}]` }),
       );
     }
   }
   return out;
 }
 
-function checkNode(value: unknown, path: string): Record<string, unknown> {
-  if (!isRecord(value)) throw new MigrateError(path, "expected a node");
-  expectString(value.id, `${path}.id`);
+function checkExpr(value: unknown, path: string): void {
+  if (!isRecord(value)) throw new MigrateError(path, "expected an expression");
+  expectNodeId(value.id, `${path}.id`);
   const kind = expectString(value.kind, `${path}.kind`);
   if (!hasNode(keyOf(value as unknown as Expr))) {
     throw new MigrateError(`${path}.kind`, `unknown kind "${kind}"`);
   }
-  return value;
-}
-
-function checkExpr(value: unknown, path: string): void {
-  const node = checkNode(value, path);
-  for (const child of rawChildren(node, path)) checkExpr(child.value, child.path);
+  for (const child of rawChildren(value, path)) checkExpr(child.value, child.path);
 }
 
 function checkStmts(value: unknown, path: string): void {
   expectArray(value, path).forEach((stmt, i) => {
     const at = `${path}[${i}]`;
-    const node = checkNode(stmt, at);
-    for (const child of rawChildren(node, at)) checkExpr(child.value, child.path);
-    for (const slot of getNode(keyOf(node as unknown as Stmt)).slots) {
-      if (slot.role === "body") checkStmts(node[slot.name], `${at}.${slot.name}`);
+    if (!isRecord(stmt)) throw new MigrateError(at, "expected a statement");
+    expectNodeId(stmt.id, `${at}.id`);
+    const kind = expectString(stmt.kind, `${at}.kind`);
+    if (!hasNode(kind) || getNode(kind).shape !== "stmt") {
+      throw new MigrateError(`${at}.kind`, `unknown kind "${kind}"`);
+    }
+    for (const child of rawChildren(stmt, at)) checkExpr(child.value, child.path);
+    for (const region of regionsOf(stmt as unknown as Stmt)) {
+      checkStmts(region.stmts, `${at}.${region.slot}`);
     }
   });
 }
@@ -89,24 +95,22 @@ function checkV1(json: Record<string, unknown>): Program {
     }
   });
   expectArray(json.classes, "classes").forEach((cls, i) => {
-    if (
-      !isRecord(cls) ||
-      typeof cls.id !== "string" ||
-      typeof cls.name !== "string" ||
-      !Array.isArray(cls.fields)
-    ) {
+    if (!isRecord(cls) || typeof cls.name !== "string" || !Array.isArray(cls.fields)) {
       throw new MigrateError(`classes[${i}]`, "expected { id, name, fields }");
     }
+    expectNodeId(cls.id, `classes[${i}].id`);
+    cls.fields.forEach((field, j) => {
+      if (!isRecord(field) || typeof field.name !== "string" || !("default" in field)) {
+        throw new MigrateError(`classes[${i}].fields[${j}]`, "expected { name, default }");
+      }
+    });
   });
   expectArray(json.functions, "functions").forEach((fn, i) => {
-    if (
-      !isRecord(fn) ||
-      typeof fn.id !== "string" ||
-      typeof fn.name !== "string" ||
-      !Array.isArray(fn.params)
-    ) {
+    if (!isRecord(fn) || typeof fn.name !== "string" || !Array.isArray(fn.params)) {
       throw new MigrateError(`functions[${i}]`, "expected { id, name, params, body }");
     }
+    expectNodeId(fn.id, `functions[${i}].id`);
+    fn.params.forEach((param, j) => expectString(param, `functions[${i}].params[${j}]`));
     checkStmts(fn.body, `functions[${i}].body`);
   });
   checkStmts(json.main, "main");

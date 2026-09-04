@@ -1,5 +1,6 @@
 // 02-language "Validation": every code, run after every edit and before every run.
-// Scope rules L-40..L-42; names L-01..L-05; slots L-09; defaults L-30.
+// Scope rules L-40..L-44; names L-01..L-05; slots L-09; defaults L-30.
+// Dispatch is registry-driven (N-01): slots, `requires`, `loop`, `params`, `callee`.
 import { getNode, hasNode, keyOf } from "@/nodes";
 import type { NodeDef, Slot } from "@/nodes/types";
 import {
@@ -9,13 +10,12 @@ import {
   type Data,
   type Diagnostic,
   type Expr,
-  type FunctionDef,
   type Id,
   type NodeId,
   type Program,
   type Stmt,
 } from "./types";
-import { allExprs, childSlots, regionsOf } from "./walk";
+import { childSlots, programIds, regionsOf, stmtExprs } from "./walk";
 
 type Bag = Record<string, unknown>;
 
@@ -27,6 +27,11 @@ export function isValidClassName(name: string): boolean {
   return CLASS_NAME_PATTERN.test(name) && !RESERVED.has(name);
 }
 
+/** A builtin call key (`abs`, `random_int`, …) may not be redefined. */
+export function isBuiltinName(name: string): boolean {
+  return hasNode(`call:${name}`);
+}
+
 /** L-30 */
 export function isValidDefault(data: Data): boolean {
   if (data === null || typeof data !== "object") return true;
@@ -34,8 +39,12 @@ export function isValidDefault(data: Data): boolean {
   return Object.keys(data).length === 0;
 }
 
+type Scope = { loop: number; inFunction: boolean };
+
 class Collector {
   readonly diagnostics: Diagnostic[] = [];
+  /** Functions and classes: names a variable may not shadow (they would call a different thing in CPython). */
+  private readonly callables = new Set<Id>();
 
   constructor(private readonly program: Program) {}
 
@@ -44,28 +53,43 @@ class Collector {
     code: Diagnostic["code"],
     params: Diagnostic["params"] = {},
     fix?: Diagnostic["fix"],
-  ) {
+  ): void {
     this.diagnostics.push(fix ? { nodeId, code, params, fix } : { nodeId, code, params });
   }
 
-  // ------------------------------------------------------------ declarations
+  // ------------------------------------------------------------ ids (L-04)
+
+  ids(): void {
+    const seen = new Set<NodeId>();
+    for (const id of programIds(this.program)) {
+      if (seen.has(id)) this.report(id, "E_DUPLICATE_ID");
+      seen.add(id);
+    }
+  }
+
+  // ------------------------------------------------------------ declarations (L-01..L-05, L-30)
 
   declarations(): void {
-    const seen = new Map<Id, NodeId>();
-    for (const input of this.program.inputs) seen.set(input.name, "");
+    const taken = new Set<Id>(this.program.inputs.map((input) => input.name));
+    const claim = (name: Id, nodeId: NodeId) => {
+      if (taken.has(name) || isBuiltinName(name)) this.report(nodeId, "E_DUPLICATE_NAME", { name });
+      taken.add(name);
+      this.callables.add(name);
+    };
     for (const fn of this.program.functions) {
       if (!isValidName(fn.name)) this.report(fn.id, "E_BAD_NAME", { name: fn.name });
+      const params = new Set<Id>();
       for (const param of fn.params) {
         if (!isValidName(param)) this.report(fn.id, "E_BAD_NAME", { name: param });
+        if (params.has(param)) this.report(fn.id, "E_DUPLICATE_NAME", { name: param });
+        params.add(param);
       }
-      if (seen.has(fn.name)) this.report(fn.id, "E_DUPLICATE_NAME", { name: fn.name });
-      seen.set(fn.name, fn.id);
+      claim(fn.name, fn.id);
     }
     for (const cls of this.program.classes) {
       if (!isValidClassName(cls.name)) this.report(cls.id, "E_BAD_NAME", { name: cls.name });
-      if (seen.has(cls.name)) this.report(cls.id, "E_DUPLICATE_NAME", { name: cls.name });
-      seen.set(cls.name, cls.id);
-      const fields = new Set<string>();
+      claim(cls.name, cls.id);
+      const fields = new Set<Id>();
       for (const field of cls.fields) {
         if (!isValidName(field.name)) this.report(cls.id, "E_BAD_NAME", { name: field.name });
         if (fields.has(field.name)) this.report(cls.id, "E_DUPLICATE_NAME", { name: field.name });
@@ -75,72 +99,52 @@ class Collector {
     }
   }
 
-  // ------------------------------------------------------------ ids (L-04)
-
-  ids(): void {
-    const seen = new Set<NodeId>();
-    const check = (id: NodeId) => {
-      if (seen.has(id)) this.report(id, "E_DUPLICATE_ID");
-      seen.add(id);
-    };
-    for (const cls of this.program.classes) check(cls.id);
-    for (const fn of this.program.functions) {
-      check(fn.id);
-      this.idsIn(fn.body, check);
-    }
-    this.idsIn(this.program.main, check);
-  }
-
-  private idsIn(stmts: Stmt[], check: (id: NodeId) => void): void {
-    for (const stmt of stmts) {
-      check(stmt.id);
-      for (const { expr } of childSlots(stmt)) for (const e of allExprs(expr)) check(e.id);
-      for (const region of regionsOf(stmt)) this.idsIn(region.stmts, check);
-    }
-  }
-
-  // ------------------------------------------------------------ regions
+  // ------------------------------------------------------------ regions (L-40..L-43)
 
   scopes(): void {
     for (const fn of this.program.functions) {
-      this.region(fn.body, new Set(fn.params), new Map(), { loop: 0, fn });
+      this.region(fn.body, new Set(fn.params), new Map(), { loop: 0, inFunction: true });
     }
     const visible = new Set(this.program.inputs.map((input) => input.name));
-    this.region(this.program.main, visible, new Map(), { loop: 0, fn: null });
+    this.region(this.program.main, visible, new Map(), { loop: 0, inFunction: false });
   }
 
   /**
-   * Walks one region. `visible` is mutated with names assigned here; `inner`
-   * maps names first assigned inside an earlier nested region of this region
-   * to that frame's id (L-41). Returns the names this region declared.
+   * Walks one region. `visible` gains the names assigned directly in it; `inner`
+   * maps names first assigned inside an earlier nested frame of this region to
+   * that frame's id (L-41). Returns every name first assigned anywhere inside
+   * the region, so an enclosing region can attribute it to this frame.
    */
-  private region(
-    stmts: Stmt[],
-    visible: Set<Id>,
-    inner: Map<Id, NodeId>,
-    ctx: { loop: number; fn: FunctionDef | null },
-  ): Set<Id> {
+  private region(stmts: Stmt[], visible: Set<Id>, inner: Map<Id, NodeId>, scope: Scope): Set<Id> {
     const declared = new Set<Id>();
     for (const stmt of stmts) {
       const def = getNode(keyOf(stmt));
       this.slots(stmt, def);
       this.calls(stmt);
       this.reads(stmt, visible, inner);
-      this.control(stmt, def, ctx);
+      this.control(stmt, def, scope);
 
       for (const name of this.declaredBy(stmt, def)) {
         if (!isValidName(name)) this.report(stmt.id, "E_BAD_NAME", { name });
+        else if (this.callables.has(name) || isBuiltinName(name)) {
+          this.report(stmt.id, "E_DUPLICATE_NAME", { name });
+        }
         if (!visible.has(name)) declared.add(name);
         visible.add(name);
       }
 
-      const regions = regionsOf(stmt);
-      const bodyCtx = def.loop ? { ...ctx, loop: ctx.loop + 1 } : ctx;
-      for (const region of regions) {
-        const nested = new Set(visible);
-        const nestedDeclared = this.region(region.stmts, nested, new Map(inner), bodyCtx);
+      const bodyScope = def.loop ? { ...scope, loop: scope.loop + 1 } : scope;
+      for (const region of regionsOf(stmt)) {
+        const nestedDeclared = this.region(
+          region.stmts,
+          new Set(visible),
+          new Map(inner),
+          bodyScope,
+        );
         for (const name of nestedDeclared) {
-          if (!visible.has(name) && !inner.has(name)) inner.set(name, stmt.id);
+          if (visible.has(name)) continue;
+          declared.add(name);
+          if (!inner.has(name)) inner.set(name, stmt.id);
         }
       }
     }
@@ -163,22 +167,17 @@ class Collector {
   }
 
   private reads(stmt: Stmt, visible: Set<Id>, inner: Map<Id, NodeId>): void {
-    for (const { expr: root } of childSlots(stmt)) {
-      for (const expr of allExprs(root)) {
-        if (expr.kind !== "var" || expr.name === "" || visible.has(expr.name)) continue;
-        const frame = inner.get(expr.name);
-        if (frame !== undefined) {
-          this.report(stmt.id, "E_DECLARE_FIRST", { name: expr.name, frame }, "hoistAssign");
-        } else {
-          this.report(stmt.id, "E_UNDEFINED", { name: expr.name });
-        }
-      }
+    for (const expr of stmtExprs(stmt)) {
+      if (expr.kind !== "var" || expr.name === "" || visible.has(expr.name)) continue;
+      const frame = inner.get(expr.name);
+      if (frame === undefined) this.report(stmt.id, "E_UNDEFINED", { name: expr.name });
+      else this.report(stmt.id, "E_DECLARE_FIRST", { name: expr.name, frame }, "hoistAssign");
     }
   }
 
-  private control(stmt: Stmt, def: NodeDef, ctx: { loop: number; fn: FunctionDef | null }): void {
-    if (def.requires === "loop" && ctx.loop === 0) this.report(stmt.id, "E_BREAK_OUTSIDE");
-    if (def.requires === "function" && ctx.fn === null) this.report(stmt.id, "E_RETURN_OUTSIDE");
+  private control(stmt: Stmt, def: NodeDef, scope: Scope): void {
+    if (def.requires === "loop" && scope.loop === 0) this.report(stmt.id, "E_BREAK_OUTSIDE");
+    if (def.requires === "function" && !scope.inFunction) this.report(stmt.id, "E_RETURN_OUTSIDE");
   }
 
   // ------------------------------------------------------------ slots (L-09)
@@ -201,45 +200,50 @@ class Collector {
   private requiredSlots(node: Stmt | Expr, def: NodeDef, stmtId: NodeId): void {
     const bag = node as unknown as Bag;
     for (const slot of def.slots) {
-      if (!slot.required) continue;
-      if (isEmptySlot(slot, bag[slot.name]))
+      if (slot.required && isEmptySlot(slot, bag[slot.name])) {
         this.report(stmtId, "E_EMPTY_SLOT", { slot: slot.name });
+      }
     }
   }
 
   // ------------------------------------------------------------ calls (E_ARITY, E_UNKNOWN_CALL)
 
   private calls(stmt: Stmt): void {
-    for (const { expr: root } of childSlots(stmt)) {
-      for (const expr of allExprs(root)) {
-        if (expr.kind === "call") this.checkCall(stmt.id, expr.fn, expr.args.length);
-        else if (expr.kind === "new") this.checkNew(stmt.id, expr.cls, expr.args.length);
-        else if (expr.kind === "method") this.checkMethod(stmt.id, expr.name, expr.args.length);
+    for (const expr of stmtExprs(stmt)) {
+      const def = getNode(keyOf(expr));
+      const callee = def.callee?.(expr);
+      if (!callee) continue;
+      switch (callee.family) {
+        case "builtin":
+        case "method":
+          this.arity(stmt.id, callee.name, def.params ?? [], callee.argc);
+          break;
+        case "function": {
+          const fn = this.program.functions.find((f) => f.name === callee.name);
+          if (!fn) this.report(stmt.id, "E_UNKNOWN_CALL", { name: callee.name });
+          else if (fn.params.length !== callee.argc) {
+            this.report(stmt.id, "E_ARITY", {
+              name: callee.name,
+              expected: fn.params.length,
+              got: callee.argc,
+            });
+          }
+          break;
+        }
+        case "class": {
+          const cls = this.program.classes.find((c) => c.name === callee.name);
+          if (!cls) this.report(stmt.id, "E_UNKNOWN_CALL", { name: callee.name });
+          else if (callee.argc > cls.fields.length) {
+            this.report(stmt.id, "E_ARITY", {
+              name: callee.name,
+              expected: cls.fields.length,
+              got: callee.argc,
+            });
+          }
+          break;
+        }
       }
     }
-  }
-
-  private checkCall(stmtId: NodeId, name: Id, got: number): void {
-    const builtin = hasNode(`call:${name}`) ? getNode(`call:${name}`) : undefined;
-    if (builtin) return this.arity(stmtId, name, builtin.params ?? [], got);
-    const fn = this.program.functions.find((f) => f.name === name);
-    if (!fn) return this.report(stmtId, "E_UNKNOWN_CALL", { name });
-    if (fn.params.length !== got) {
-      this.report(stmtId, "E_ARITY", { name, expected: fn.params.length, got });
-    }
-  }
-
-  private checkNew(stmtId: NodeId, name: Id, got: number): void {
-    const cls = this.program.classes.find((c) => c.name === name);
-    if (!cls) return this.report(stmtId, "E_UNKNOWN_CALL", { name });
-    if (got > cls.fields.length) {
-      this.report(stmtId, "E_ARITY", { name, expected: cls.fields.length, got });
-    }
-  }
-
-  private checkMethod(stmtId: NodeId, name: Id, got: number): void {
-    if (!hasNode(`method:${name}`)) return this.report(stmtId, "E_UNKNOWN_CALL", { name });
-    this.arity(stmtId, name, getNode(`method:${name}`).params ?? [], got);
   }
 
   /** Optional parameters end with `?`. */
@@ -259,12 +263,10 @@ function isEmptySlot(slot: Slot, value: unknown): boolean {
       return typeof value !== "string" || value === "";
     case "text":
       return value === undefined || value === "";
-    case "target":
-      return (
-        !value ||
-        ((value as { kind?: string; name?: string }).kind === "var" &&
-          !(value as { name?: string }).name)
-      );
+    case "target": {
+      const target = value as { kind?: string; name?: string } | undefined;
+      return !target || (target.kind === "var" && !target.name);
+    }
     case "exprs":
       return !Array.isArray(value) || value.length === 0;
     default:

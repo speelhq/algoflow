@@ -1,6 +1,6 @@
 // Traversal driven by each block's slots (N-01), so no module lists block kinds.
 import { getNode, keyOf } from "@/nodes";
-import type { Expr, FunctionDef, Node, Program, Stmt, Target } from "./types";
+import type { Expr, FunctionDef, Node, NodeId, Program, Stmt, Target } from "./types";
 
 type Bag = Record<string, unknown>;
 
@@ -44,19 +44,7 @@ export function childSlots(node: Node): SlotExpr[] {
 
 /** Direct expression children of a statement or expression, in slot order. */
 export function childExprs(node: Node): Expr[] {
-  const def = getNode(keyOf(node));
-  const bag = node as unknown as Bag;
-  const out: Expr[] = [];
-  for (const slot of def.slots) {
-    const value = bag[slot.name];
-    if (slot.role === "expr" && isExpr(value)) out.push(value);
-    else if (slot.role === "exprs" && Array.isArray(value)) {
-      for (const item of value) if (isExpr(item)) out.push(item);
-    } else if (slot.role === "target" && value && typeof value === "object") {
-      out.push(...targetExprs(value as Target));
-    }
-  }
-  return out;
+  return childSlots(node).map((entry) => entry.expr);
 }
 
 /** Body regions of a statement, in slot order (empty for simple statements). */
@@ -66,8 +54,9 @@ export function regionsOf(stmt: Stmt): Array<{ slot: string; stmts: Stmt[] }> {
   const out: Array<{ slot: string; stmts: Stmt[] }> = [];
   for (const slot of def.slots) {
     const value = bag[slot.name];
-    if (slot.role === "body" && Array.isArray(value))
+    if (slot.role === "body" && Array.isArray(value)) {
       out.push({ slot: slot.name, stmts: value as Stmt[] });
+    }
   }
   return out;
 }
@@ -91,6 +80,14 @@ export function* stmtExprs(stmt: Stmt): Generator<Expr, void, void> {
   for (const child of childExprs(stmt)) yield* allExprs(child);
 }
 
+/** Every NodeId under `stmts`: statements and their expressions, pre-order. */
+export function* idsUnder(stmts: Stmt[]): Generator<NodeId, void, void> {
+  for (const stmt of allStmts(stmts)) {
+    yield stmt.id;
+    for (const expr of stmtExprs(stmt)) yield expr.id;
+  }
+}
+
 export type StmtSite = { stmt: Stmt; fn: FunctionDef | null };
 
 /** Every statement in the program with the function it belongs to (null for main). */
@@ -101,4 +98,14 @@ export function* programStmts(program: Program): Generator<StmtSite, void, void>
 
 export function* programExprs(program: Program): Generator<Expr, void, void> {
   for (const { stmt } of programStmts(program)) yield* stmtExprs(stmt);
+}
+
+/** Every NodeId in the program: classes, functions, statements, expressions. */
+export function* programIds(program: Program): Generator<NodeId, void, void> {
+  for (const cls of program.classes) yield cls.id;
+  for (const fn of program.functions) {
+    yield fn.id;
+    yield* idsUnder(fn.body);
+  }
+  yield* idsUnder(program.main);
 }

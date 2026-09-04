@@ -7,6 +7,7 @@ export const bool = defineExpr<"bool">({
   category: "basic",
   slots: [],
   create: () => ({ id: newId(), kind: "bool", value: true }),
+  zeroLike: () => ({ id: newId(), kind: "bool", value: false }),
   *run(node) {
     return { t: "bool", v: node.value };
   },

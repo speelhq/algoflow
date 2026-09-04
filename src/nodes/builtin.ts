@@ -23,6 +23,11 @@ export function defineBuiltin(def: BuiltinDef): NodeDef {
     category: def.category,
     slots: [{ name: "args", role: "exprs", required: true }],
     params: def.params,
+    callee: (node) => ({
+      name: def.name,
+      argc: node.kind === "call" ? node.args.length : 0,
+      family: "builtin",
+    }),
     ...(def.aliases ? { aliases: def.aliases } : {}),
     ...(def.imports ? { imports: def.imports } : {}),
     create: () => ({

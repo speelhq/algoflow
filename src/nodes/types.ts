@@ -15,6 +15,13 @@ import type { Event, RuntimeCode } from "@/runtime/types";
 import type { Category } from "./categories";
 
 export type SlotRole = "expr" | "exprs" | "id" | "body" | "target" | "text";
+
+/** What a call-like expression invokes; `builtin` and `method` arity comes from `params`. */
+export type Callee = {
+  name: Id;
+  argc: number;
+  family: "builtin" | "function" | "class" | "method";
+};
 export type Slot = { name: string; role: SlotRole; required?: boolean };
 
 // ---------------------------------------------------------------- runner (R-13)
@@ -70,6 +77,10 @@ export type NodeDef = {
   precedence?: (node: Expr) => number;
   /** Not offered in the palette (the `empty` placeholder). */
   hidden?: boolean;
+  /** For literal blocks: the zero-like literal of the same type (L-44). */
+  zeroLike?(node: Expr): Expr;
+  /** For call-like expressions without `params`: what is called and with how many arguments. */
+  callee?(node: Expr): Callee;
   /** Its body regions are loop bodies (`break` / `continue` allowed inside). */
   loop?: boolean;
   /** Where the statement may appear: inside a loop, or inside a function (validation). */
