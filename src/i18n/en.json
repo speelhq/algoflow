@@ -40,7 +40,26 @@
     "main": "main",
     "add": "Add",
     "start": "Start",
-    "end": "End"
+    "end": "End",
+    "input": "Input {name} = {value}",
+    "function": "def {name}({params})",
+    "region": {
+      "then": "then",
+      "else": "else"
+    },
+    "connector": "Insert a block here",
+    "dragHandle": "Drag handle",
+    "verdictTrue": "Condition was true",
+    "verdictFalse": "Condition was false"
+  },
+  "challenge": {
+    "track": {
+      "day1": "Day 1",
+      "day2": "Day 2",
+      "day3": "Day 3",
+      "classic": "Classic",
+      "micrograd": "micrograd"
+    }
   },
   "props": {
     "title": "Properties",
@@ -52,16 +71,39 @@
     "back": "Back",
     "stop": "Stop",
     "speed": "Speed",
-    "stepCount": "Step {n}"
+    "stepCount": "Step {n}",
+    "pause": "Pause",
+    "test": "Test",
+    "loops": "Loops {n}"
   },
   "view": {
     "data": "Data",
     "trace": "Trace",
     "output": "Output",
     "tests": "Tests",
-    "python": "Python"
+    "python": "Python",
+    "noVariables": "No variables yet. Press Step or Run.",
+    "noOutput": "Nothing printed yet.",
+    "noTests": "Free mode has no tests. Pick a challenge to get some.",
+    "step": "Step",
+    "condition": "Condition",
+    "pass": "Pass",
+    "fail": "Fail",
+    "expected": "expected {value}",
+    "actual": "actual {value}",
+    "runWithInput": "Run with this input",
+    "runAll": "Run all",
+    "cleared": "Cleared!",
+    "copy": "Copy",
+    "copied": "Copied",
+    "download": "Download .py"
   },
   "node": {
+    "empty": {
+      "label": "Empty slot",
+      "template": "choose a value",
+      "help": "A slot that still needs a value."
+    },
     "assign": {
       "label": "Set variable",
       "template": "set {target} to {value}",
