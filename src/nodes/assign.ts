@@ -60,4 +60,6 @@ export const assign = defineStmt<"assign">({
     }
   },
   python: (node, ctx) => [`${ctx.target(node.target)} = ${ctx.expr(node.value)}`],
+  // N-02: `create {target} and set it to {value}` when this statement creates the variable.
+  form: (_node, ctx) => (ctx.creates ? "Create" : ""),
 });

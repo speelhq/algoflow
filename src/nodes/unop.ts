@@ -31,4 +31,5 @@ export const unop = defineExpr<"unop">({
     const operand = ctx.operand(node.operand, precedenceOf(node), "right");
     return node.op === "neg" ? `-${operand}` : `not ${operand}`;
   },
+  form: (node) => (node.op === "not" ? "Not" : ""), // N-02 `templateNot`
 });

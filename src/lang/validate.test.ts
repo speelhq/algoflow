@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/nodes/testing";
 import type { Diagnostic, Program, Stmt } from "./types";
-import { validate } from "./validate";
+import { firstAssignments, validate } from "./validate";
 
 const {
   assign,
@@ -239,5 +239,34 @@ describe("validate (02 Validation)", () => {
     const p = program([print(v("x")), brk(), assign("2bad", bool(true))]);
     const result: Diagnostic[] = validate(p);
     expect(result.map((d) => d.code)).toEqual(["E_UNDEFINED", "E_BREAK_OUTSIDE", "E_BAD_NAME"]);
+  });
+});
+
+describe("firstAssignments (N-02 templateCreate, L-40/L-43)", () => {
+  it("marks the first assign of a name, not later ones, inputs, params, or loop variables", () => {
+    const create = assign("x", num(1));
+    const set = assign("x", num(2));
+    const input = assign("c", num(3));
+    const loopBody = assign("i", num(9));
+    const loop = for_("i", num(0), num(3), [loopBody]);
+    const body = assign("a", num(0));
+    const fn = { id: "f0000000000f", name: "f", params: ["a"], body: [body, assign("b", num(1))] };
+    const p = program([create, set, input, loop], {
+      inputs: [{ name: "c", value: 0 }],
+      functions: [fn],
+    });
+    const ids = firstAssignments(p);
+    expect(ids.has(create.id)).toBe(true);
+    expect(ids.has(set.id)).toBe(false);
+    expect(ids.has(input.id)).toBe(false);
+    expect(ids.has(loopBody.id)).toBe(false);
+    expect(ids.has(body.id)).toBe(false);
+    expect(ids.has(fn.body[1]!.id)).toBe(true);
+  });
+
+  it("marks a first assignment inside a frame", () => {
+    const inner = assign("y", num(1));
+    const p = program([if_(bool(true), [inner]), assign("y", num(2))]);
+    expect(firstAssignments(p).has(inner.id)).toBe(true);
   });
 });

@@ -43,6 +43,8 @@ type Scope = { loop: number; inFunction: boolean };
 
 class Collector {
   readonly diagnostics: Diagnostic[] = [];
+  /** Statements whose var target is the first assignment of that name in its region (N-02 `templateCreate`). */
+  readonly firstAssigns = new Set<NodeId>();
   /** Functions and classes: names a variable may not shadow (they would call a different thing in CPython). */
   private readonly callables = new Set<Id>();
 
@@ -124,12 +126,15 @@ class Collector {
       this.reads(stmt, visible, inner);
       this.control(stmt, def, scope);
 
-      for (const name of this.declaredBy(stmt, def)) {
+      for (const { name, role } of this.declaredBy(stmt, def)) {
         if (!isValidName(name)) this.report(stmt.id, "E_BAD_NAME", { name });
         else if (this.callables.has(name) || isBuiltinName(name)) {
           this.report(stmt.id, "E_DUPLICATE_NAME", { name });
         }
-        if (!visible.has(name)) declared.add(name);
+        if (!visible.has(name)) {
+          declared.add(name);
+          if (role === "target") this.firstAssigns.add(stmt.id);
+        }
         visible.add(name);
       }
 
@@ -152,15 +157,17 @@ class Collector {
   }
 
   /** Names a statement assigns in its own region: var targets and loop variables (id slots). */
-  private declaredBy(stmt: Stmt, def: NodeDef): Id[] {
+  private declaredBy(stmt: Stmt, def: NodeDef): Array<{ name: Id; role: "id" | "target" }> {
     const bag = stmt as unknown as Bag;
-    const names: Id[] = [];
+    const names: Array<{ name: Id; role: "id" | "target" }> = [];
     for (const slot of def.slots) {
       const value = bag[slot.name];
-      if (slot.role === "id" && typeof value === "string" && value !== "") names.push(value);
+      if (slot.role === "id" && typeof value === "string" && value !== "") {
+        names.push({ name: value, role: "id" });
+      }
       if (slot.role === "target" && value && typeof value === "object") {
         const target = value as { kind: string; name?: string };
-        if (target.kind === "var" && target.name) names.push(target.name);
+        if (target.kind === "var" && target.name) names.push({ name: target.name, role: "target" });
       }
     }
     return names;
@@ -280,4 +287,15 @@ export function validate(program: Program): Diagnostic[] {
   collector.declarations();
   collector.scopes();
   return collector.diagnostics;
+}
+
+/**
+ * Ids of the `assign` statements that create their variable (first assignment in the
+ * region, L-40): the canvas renders them with `templateCreate` (N-02). Inputs, parameters,
+ * and loop variables are created elsewhere and never count.
+ */
+export function firstAssignments(program: Program): Set<NodeId> {
+  const collector = new Collector(program);
+  collector.scopes();
+  return collector.firstAssigns;
 }

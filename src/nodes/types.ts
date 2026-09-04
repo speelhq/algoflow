@@ -60,6 +60,11 @@ export type EmitContext = {
   block(stmts: Stmt[]): PyLine;
 };
 
+// ---------------------------------------------------------------- canvas text (N-08)
+
+/** `creates`: the statement is the first assignment of its variable (N-02 `templateCreate`). */
+export type FormContext = { creates: boolean };
+
 // ---------------------------------------------------------------- NodeDef (N-01)
 
 export type NodeDef = {
@@ -88,21 +93,31 @@ export type NodeDef = {
   create(): Stmt | Expr;
   run: StmtRunner | ExprRunner;
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string;
+  /** N-08: template variant suffix (`node.<key>.template<Form>`); `""` or absent = the base template. */
+  form?(node: Stmt | Expr, ctx: FormContext): string;
+  /** N-08: canvas text of a `text` slot; default `String(node[slot])`. */
+  text?(node: Stmt | Expr, slot: string): string;
 };
 
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
 type ExprOf<K extends ExprKind> = Extract<Expr, { kind: K }>;
 
-type StmtDef<K extends StmtKind> = Omit<NodeDef, "shape" | "create" | "run" | "python"> & {
+type Generic = "shape" | "create" | "run" | "python" | "form" | "text";
+
+type StmtDef<K extends StmtKind> = Omit<NodeDef, Generic> & {
   create(): StmtOf<K>;
   run(node: StmtOf<K>, ctx: RunContext): Generator<Event, Signal, void>;
   python(node: StmtOf<K>, ctx: EmitContext): PyLine[];
+  form?(node: StmtOf<K>, ctx: FormContext): string;
+  text?(node: StmtOf<K>, slot: string): string;
 };
 
-type ExprDef<K extends ExprKind> = Omit<NodeDef, "shape" | "create" | "run" | "python"> & {
+type ExprDef<K extends ExprKind> = Omit<NodeDef, Generic> & {
   create(): ExprOf<K>;
   run(node: ExprOf<K>, ctx: RunContext): Generator<Event, Value, void>;
   python(node: ExprOf<K>, ctx: EmitContext): string;
+  form?(node: ExprOf<K>, ctx: FormContext): string;
+  text?(node: ExprOf<K>, slot: string): string;
 };
 
 export function defineStmt<K extends StmtKind>(def: StmtDef<K>): NodeDef {

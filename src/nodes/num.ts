@@ -18,4 +18,5 @@ export const num = defineExpr<"num">({
     return node.float ? { t: "float", v: node.value } : { t: "int", v: node.value };
   },
   python: (node) => node.raw,
+  text: (node) => node.raw, // the canvas shows the literal as typed (L-08)
 });

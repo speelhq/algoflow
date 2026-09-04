@@ -148,7 +148,11 @@ export const binop = defineExpr<"binop">({
     const precedence = binopPrecedence(node.op);
     return `${ctx.operand(node.left, precedence, "left")} ${node.op} ${ctx.operand(node.right, precedence, "right")}`;
   },
+  // 03-nodes: the canvas shows `×` and `÷` for `*` and `/`.
+  text: (node, slot) => (slot === "op" ? (CANVAS_OPS[node.op] ?? node.op) : ""),
 });
+
+const CANVAS_OPS: Partial<Record<Binop["op"], string>> = { "*": "×", "/": "÷" };
 
 function emptyExpr(): Expr {
   return { id: newId(), kind: "empty" };
