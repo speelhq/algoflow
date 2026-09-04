@@ -57,21 +57,20 @@ describe("parse (G-01)", () => {
     expect(ok("(a + b) * c")).toMatchObject({ op: "*", left: { op: "+" } });
   });
 
-  it("parses postfix forms into index, field, list, and dict nodes", () => {
-    expect(ok("xs[i + 1]")).toMatchObject({
-      kind: "index",
-      list: { name: "xs" },
-      index: { op: "+" },
-    });
-    expect(ok("p.x")).toMatchObject({ kind: "field", obj: { name: "p" }, field: "x" });
-    expect(ok("[1, 2]")).toMatchObject({ kind: "list", items: [{ value: 1 }, { value: 2 }] });
-    expect(ok("[]")).toMatchObject({ kind: "list", items: [] });
-    expect(ok("{}")).toMatchObject({ kind: "dict", entries: [] });
-    expect(ok('{"a": 1, 2: b}')).toMatchObject({
-      kind: "dict",
-      entries: [{ key: { value: "a" } }, { key: { value: 2 }, value: { name: "b" } }],
-    });
-    expect(ok("xs[0][1]")).toMatchObject({ kind: "index", list: { kind: "index" } });
+  it("reports grammar forms whose block is not registered yet as E_PARSE_SYNTAX at their token", () => {
+    // index, field, list, and dict blocks arrive in M-04/M-05; until then the registry says no.
+    expect(err("xs[i + 1]")).toEqual({ code: "E_PARSE_SYNTAX", position: 2 });
+    expect(err("p.x")).toEqual({ code: "E_PARSE_SYNTAX", position: 2 });
+    expect(err("[1, 2]")).toEqual({ code: "E_PARSE_SYNTAX", position: 0 });
+    expect(err("1 + {}")).toEqual({ code: "E_PARSE_SYNTAX", position: 4 });
+  });
+
+  it("rejects number text CPython rejects and decodes \\x escapes", () => {
+    expect(err("0777")).toEqual({ code: "E_PARSE_SYNTAX", position: 0 });
+    expect(err("1 + 007")).toEqual({ code: "E_PARSE_SYNTAX", position: 4 });
+    expect(ok("00")).toMatchObject({ kind: "num", value: 0, raw: "00" });
+    expect(ok("0.5")).toMatchObject({ kind: "num", value: 0.5 });
+    expect(ok('"a\\x41\\x01"')).toMatchObject({ kind: "str", value: "aA" });
   });
 
   it("marks only the root with source: text and gives every node an id", () => {
@@ -85,11 +84,8 @@ describe("parse (G-01)", () => {
 describe("G-02 / G-03 call resolution", () => {
   it("resolves a class, then a builtin, then a user function, else E_UNKNOWN_CALL", () => {
     const scope = { classes: ["Value"], functions: ["fib"] };
-    expect(ok("Value(1, 2)", scope)).toMatchObject({
-      kind: "new",
-      cls: "Value",
-      args: [{ value: 1 }, { value: 2 }],
-    });
+    // `new` has no block until M-05, so a constructor call is refused at its name.
+    expect(err("Value(1, 2)", scope)).toEqual({ code: "E_PARSE_SYNTAX", position: 0 });
     expect(ok("abs(x)", scope)).toMatchObject({ kind: "call", fn: "abs" });
     expect(ok("fib(n)", scope)).toMatchObject({ kind: "call", fn: "fib" });
     expect(err("nope(1)", scope)).toEqual({

@@ -1,7 +1,8 @@
 // G-01..G-05: typed expression text → Expr. No third-party imports (P-01).
 import { newId } from "@/lang/id";
 import type { BinOp, Expr, Id } from "@/lang/types";
-import { NODES, hasNode } from "@/nodes";
+import { NODES, hasNode, keyOf } from "@/nodes";
+import { BINOPS, PRECEDENCE, binopsAt, isBinOp, isComparison } from "./precedence";
 
 export type ParseScope = { classes: Id[]; functions: Id[] };
 export type ParseError = {
@@ -24,11 +25,13 @@ type Token = {
 };
 
 const NUMBER = /^(?:\d+\.\d*(?:[eE][+-]?\d+)?|\d+[eE][+-]?\d+|\.\d+(?:[eE][+-]?\d+)?|\d+)/;
+const LEADING_ZERO = /^0+\d*[1-9]/; // Python rejects `0777`; `0` and `00` are fine
 const NAME = /^[A-Za-z_][A-Za-z0-9_]*/;
-const OPS2 = ["**", "//", "==", "!=", "<=", ">="];
-const OPS1 = "+-*/%<>()[]{},:.";
-const KEYWORDS = new Set(["and", "or", "not", "in", "True", "False", "None"]);
-const COMPARISONS = new Set(["==", "!=", "<", "<=", ">", ">=", "in"]);
+const SYMBOL_OPS = BINOPS.filter((op) => !/^[a-z]/.test(op));
+const OPS2 = SYMBOL_OPS.filter((op) => op.length === 2);
+const OPS1 = `${SYMBOL_OPS.filter((op) => op.length === 1).join("")}()[]{},:.`;
+const WORD_OPS = new Set(BINOPS.filter((op) => /^[a-z]/.test(op)));
+const KEYWORDS = new Set([...WORD_OPS, "not", "True", "False", "None"]);
 const ESCAPES: Record<string, string> = {
   n: "\n",
   t: "\t",
@@ -58,8 +61,10 @@ function tokenize(text: string): Token[] {
     const rest = text.slice(pos);
     const num = NUMBER.exec(rest);
     if (num) {
-      tokens.push({ type: "num", text: num[0], value: num[0], pos });
-      pos += num[0].length;
+      const [raw] = num;
+      if (!/[.eE]/.test(raw) && LEADING_ZERO.test(raw)) fail("E_PARSE_SYNTAX", pos);
+      tokens.push({ type: "num", text: raw, value: raw, pos });
+      pos += raw.length;
       continue;
     }
     if (ch === '"' || ch === "'") {
@@ -68,6 +73,11 @@ function tokenize(text: string): Token[] {
       while (i < text.length && text[i] !== ch) {
         if (text[i] === "\\") {
           const next = text[i + 1] ?? "";
+          if (next === "x" && /^[0-9a-fA-F]{2}$/.test(text.slice(i + 2, i + 4))) {
+            value += String.fromCharCode(Number.parseInt(text.slice(i + 2, i + 4), 16));
+            i += 4;
+            continue;
+          }
           value += ESCAPES[next] ?? `\\${next}`;
           i += 2;
         } else {
@@ -145,9 +155,23 @@ class Parser {
     return token.type === "name" && token.text === text;
   }
 
+  /** The next token as a binary operator of the given level, if it is one. */
+  private binopAt(level: number): BinOp | undefined {
+    const token = this.peek();
+    if (token.type !== "op" && token.type !== "name") return undefined;
+    if (!isBinOp(token.text)) return undefined;
+    return binopsAt(level).includes(token.text) ? token.text : undefined;
+  }
+
   private expectOp(text: string): void {
     if (!this.isOp(text)) fail("E_PARSE_SYNTAX", this.peek().pos);
     this.i += 1;
+  }
+
+  /** Every node must have a registered block; the registry is the arbiter of the language. */
+  private node(pos: number, expr: Expr): Expr {
+    if (!hasNode(keyOf(expr))) fail("E_PARSE_SYNTAX", pos);
+    return expr;
   }
 
   parseAll(): Expr {
@@ -156,67 +180,64 @@ class Parser {
     return { ...expr, source: "text" };
   }
 
-  private binary(next: () => Expr, ops: string[]): Expr {
+  private binary(next: () => Expr, level: number): Expr {
     let left = next();
-    while (ops.some((op) => this.isOp(op) || (KEYWORDS.has(op) && this.isWord(op)))) {
-      const op = this.take().text as BinOp;
+    for (let op = this.binopAt(level); op !== undefined; op = this.binopAt(level)) {
+      const pos = this.take().pos;
       const right = next();
-      left = { id: newId(), kind: "binop", op, left, right };
+      left = this.node(pos, { id: newId(), kind: "binop", op, left, right });
     }
     return left;
   }
 
   private or(): Expr {
-    return this.binary(() => this.and(), ["or"]);
+    return this.binary(() => this.and(), PRECEDENCE.or);
   }
 
   private and(): Expr {
-    return this.binary(() => this.not(), ["and"]);
+    return this.binary(() => this.not(), PRECEDENCE.and);
   }
 
   private not(): Expr {
     if (this.isWord("not")) {
-      this.take();
-      return { id: newId(), kind: "unop", op: "not", operand: this.not() };
+      const pos = this.take().pos;
+      return this.node(pos, { id: newId(), kind: "unop", op: "not", operand: this.not() });
     }
     return this.cmp();
   }
 
-  private isComparison(): boolean {
-    const token = this.peek();
-    return (token.type === "op" || token.type === "name") && COMPARISONS.has(token.text);
-  }
-
   private cmp(): Expr {
     const left = this.arith();
-    if (!this.isComparison()) return left;
-    const op = this.take().text as BinOp;
+    const op = this.binopAt(PRECEDENCE.compare);
+    if (op === undefined) return left;
+    const pos = this.take().pos;
     const right = this.arith();
-    if (this.isComparison()) fail("E_PARSE_CHAIN", this.peek().pos); // G-04
-    return { id: newId(), kind: "binop", op, left, right };
+    if (this.binopAt(PRECEDENCE.compare) !== undefined) fail("E_PARSE_CHAIN", this.peek().pos); // G-04
+    return this.node(pos, { id: newId(), kind: "binop", op, left, right });
   }
 
   private arith(): Expr {
-    return this.binary(() => this.term(), ["+", "-"]);
+    return this.binary(() => this.term(), PRECEDENCE.additive);
   }
 
   private term(): Expr {
-    return this.binary(() => this.factor(), ["*", "/", "//", "%"]);
+    return this.binary(() => this.factor(), PRECEDENCE.multiplicative);
   }
 
   private factor(): Expr {
     if (this.isOp("-")) {
-      this.take();
-      return { id: newId(), kind: "unop", op: "neg", operand: this.factor() };
+      const pos = this.take().pos;
+      return this.node(pos, { id: newId(), kind: "unop", op: "neg", operand: this.factor() });
     }
     return this.power();
   }
 
   private power(): Expr {
     const base = this.postfix();
-    if (this.isOp("**")) {
-      this.take();
-      return { id: newId(), kind: "binop", op: "**", left: base, right: this.factor() };
+    const op = this.binopAt(PRECEDENCE.power);
+    if (op !== undefined) {
+      const pos = this.take().pos;
+      return this.node(pos, { id: newId(), kind: "binop", op, left: base, right: this.factor() });
     }
     return base;
   }
@@ -242,10 +263,10 @@ class Parser {
     let expr = this.atom();
     for (;;) {
       if (this.isOp("[")) {
-        this.take();
+        const pos = this.take().pos;
         const index = this.or();
         this.expectOp("]");
-        expr = { id: newId(), kind: "index", list: expr, index };
+        expr = this.node(pos, { id: newId(), kind: "index", list: expr, index });
       } else if (this.isOp(".")) {
         this.take();
         const name = this.take();
@@ -255,7 +276,7 @@ class Parser {
           const args = this.args(")");
           expr = this.resolveMethod(expr, name, args);
         } else {
-          expr = { id: newId(), kind: "field", obj: expr, field: name.text };
+          expr = this.node(name.pos, { id: newId(), kind: "field", obj: expr, field: name.text });
         }
       } else if (this.isOp("(")) {
         const open = this.take();
@@ -270,9 +291,13 @@ class Parser {
 
   /** G-02 */
   private resolveCall(name: string, position: number, args: Expr[]): Expr {
-    if (this.scope.classes.includes(name)) return { id: newId(), kind: "new", cls: name, args };
+    if (this.scope.classes.includes(name)) {
+      return this.node(position, { id: newId(), kind: "new", cls: name, args });
+    }
     if (hasNode(`call:${name}`)) return { id: newId(), kind: "call", fn: name, args };
-    if (this.scope.functions.includes(name)) return { id: newId(), kind: "call", fn: name, args };
+    if (this.scope.functions.includes(name)) {
+      return this.node(position, { id: newId(), kind: "call", fn: name, args });
+    }
     return fail("E_UNKNOWN_CALL", position, { name });
   }
 
@@ -282,8 +307,9 @@ class Parser {
       const fn = this.aliases.get(`${obj.name}.${name.text}`);
       if (fn) return { id: newId(), kind: "call", fn, args };
     }
-    if (hasNode(`method:${name.text}`))
+    if (hasNode(`method:${name.text}`)) {
       return { id: newId(), kind: "method", obj, name: name.text, args };
+    }
     return fail("E_UNKNOWN_CALL", name.pos, { name: name.text });
   }
 
@@ -313,19 +339,21 @@ class Parser {
           this.expectOp(")");
           return inner;
         }
-        if (token.text === "[") return { id: newId(), kind: "list", items: this.args("]") };
-        if (token.text === "{") return this.dict();
+        if (token.text === "[") {
+          return this.node(token.pos, { id: newId(), kind: "list", items: this.args("]") });
+        }
+        if (token.text === "{") return this.dict(token.pos);
         return fail("E_PARSE_SYNTAX", token.pos);
       case "end":
         return fail("E_PARSE_SYNTAX", token.pos);
     }
   }
 
-  private dict(): Expr {
+  private dict(pos: number): Expr {
     const entries: Array<{ key: Expr; value: Expr }> = [];
     if (this.isOp("}")) {
       this.take();
-      return { id: newId(), kind: "dict", entries };
+      return this.node(pos, { id: newId(), kind: "dict", entries });
     }
     for (;;) {
       const key = this.or();
@@ -337,7 +365,7 @@ class Parser {
         continue;
       }
       this.expectOp("}");
-      return { id: newId(), kind: "dict", entries };
+      return this.node(pos, { id: newId(), kind: "dict", entries });
     }
   }
 }
@@ -353,3 +381,5 @@ export function parse(
     throw error;
   }
 }
+
+export { isComparison };

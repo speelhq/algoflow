@@ -7,6 +7,10 @@ import { isParseError, parse } from "./parse";
 
 const { assign, print, if_, for_, while_, num, str, bin, v, call } = ast;
 
+const CR = String.fromCharCode(13);
+const SOH = String.fromCharCode(1);
+const DEL = String.fromCharCode(127);
+
 describe("emit (04-runtime)", () => {
   it("E-01: 1-based inclusive lines; a frame maps to its header; else: is unmapped", () => {
     const inner = assign("x", num(1));
@@ -92,6 +96,11 @@ describe("emit (04-runtime)", () => {
     expect(dataToPython(1e-7)).toBe("1e-07");
   });
 
+  it("E-03: integral inputs beyond 1e21 stay integer literals", () => {
+    expect(dataToPython(1e21)).toBe("1000000000000000000000");
+    expect(dataToPython(12)).toBe("12");
+  });
+
   it("E-04: 4-space indentation, no trailing whitespace, one trailing newline", () => {
     const { code } = emit(program([for_("i", num(0), num(3), [while_(v("ok"), [print(v("i"))])])]));
     expect(code).toBe("for i in range(3):\n    while ok:\n        print(i)\n");
@@ -99,9 +108,12 @@ describe("emit (04-runtime)", () => {
     expect(code.split("\n").some((line) => /\s$/.test(line))).toBe(false);
   });
 
-  it("E-06: string escapes", () => {
+  it("E-06: string escapes, including control characters CPython would reject raw", () => {
     expect(pyString('a"b\\c\nd\te')).toBe('"a\\"b\\\\c\\nd\\te"');
+    expect(pyString(`a${CR}b${SOH}c${DEL}`)).toBe('"a\\rb\\x01c\\x7f"');
     expect(unparse(str("plain"))).toBe('"plain"');
+    const roundTrip = parse(unparse(str(`a${CR}b${SOH}`)));
+    expect(!isParseError(roundTrip) && unparse(roundTrip)).toBe('"a\\rb\\x01"');
   });
 
   it("emits an empty program as an empty file and an empty main region under inputs", () => {

@@ -1,4 +1,4 @@
-// E-05: precedence low → high and the parenthesis rule. No third-party imports (P-01).
+// E-05: the one operator table the parser and the emitter share. No third-party imports (P-01).
 import type { BinOp } from "@/lang/types";
 
 export const PRECEDENCE = {
@@ -15,35 +15,52 @@ export const PRECEDENCE = {
 
 export type Associativity = "left" | "right" | "none";
 
-const BINOP: Record<BinOp, { precedence: number; associativity: Associativity }> = {
-  or: { precedence: PRECEDENCE.or, associativity: "left" },
-  and: { precedence: PRECEDENCE.and, associativity: "left" },
-  "==": { precedence: PRECEDENCE.compare, associativity: "none" },
-  "!=": { precedence: PRECEDENCE.compare, associativity: "none" },
-  "<": { precedence: PRECEDENCE.compare, associativity: "none" },
-  "<=": { precedence: PRECEDENCE.compare, associativity: "none" },
-  ">": { precedence: PRECEDENCE.compare, associativity: "none" },
-  ">=": { precedence: PRECEDENCE.compare, associativity: "none" },
-  in: { precedence: PRECEDENCE.compare, associativity: "none" },
-  "+": { precedence: PRECEDENCE.additive, associativity: "left" },
-  "-": { precedence: PRECEDENCE.additive, associativity: "left" },
-  "*": { precedence: PRECEDENCE.multiplicative, associativity: "left" },
-  "/": { precedence: PRECEDENCE.multiplicative, associativity: "left" },
-  "//": { precedence: PRECEDENCE.multiplicative, associativity: "left" },
-  "%": { precedence: PRECEDENCE.multiplicative, associativity: "left" },
-  "**": { precedence: PRECEDENCE.power, associativity: "right" },
+/** Every binary operator with its level, in the order the grammar lists them. */
+const BINOP: Record<BinOp, number> = {
+  or: PRECEDENCE.or,
+  and: PRECEDENCE.and,
+  "==": PRECEDENCE.compare,
+  "!=": PRECEDENCE.compare,
+  "<": PRECEDENCE.compare,
+  "<=": PRECEDENCE.compare,
+  ">": PRECEDENCE.compare,
+  ">=": PRECEDENCE.compare,
+  in: PRECEDENCE.compare,
+  "+": PRECEDENCE.additive,
+  "-": PRECEDENCE.additive,
+  "*": PRECEDENCE.multiplicative,
+  "/": PRECEDENCE.multiplicative,
+  "//": PRECEDENCE.multiplicative,
+  "%": PRECEDENCE.multiplicative,
+  "**": PRECEDENCE.power,
 };
 
+/** Associativity is a property of the level: `**` is right-associative, comparisons chain nowhere. */
+const ASSOCIATIVITY: Partial<Record<number, Associativity>> = {
+  [PRECEDENCE.power]: "right",
+  [PRECEDENCE.compare]: "none",
+};
+
+export const BINOPS = Object.keys(BINOP) as BinOp[];
+
 export function binopPrecedence(op: BinOp): number {
-  return BINOP[op].precedence;
+  return BINOP[op];
 }
 
-export function binopAssociativity(op: BinOp): Associativity {
-  return BINOP[op].associativity;
+export function binopsAt(level: number): BinOp[] {
+  return BINOPS.filter((op) => BINOP[op] === level);
+}
+
+export function isBinOp(text: string): text is BinOp {
+  return Object.hasOwn(BINOP, text);
 }
 
 export function isComparison(op: BinOp): boolean {
-  return BINOP[op].precedence === PRECEDENCE.compare;
+  return BINOP[op] === PRECEDENCE.compare;
+}
+
+export function levelAssociativity(level: number): Associativity {
+  return ASSOCIATIVITY[level] ?? "left";
 }
 
 /**
@@ -51,14 +68,10 @@ export function isComparison(op: BinOp): boolean {
  * the right of a left-associative operator (or the left of a right-associative
  * one). Comparisons are non-associative: equal precedence needs them on either side.
  */
-export function needsParens(
-  child: number,
-  parent: number,
-  side: "left" | "right",
-  associativity: Associativity,
-): boolean {
+export function needsParens(child: number, parent: number, side: "left" | "right"): boolean {
   if (child < parent) return true;
   if (child > parent) return false;
+  const associativity = levelAssociativity(parent);
   if (associativity === "none") return true;
   return associativity === "left" ? side === "right" : side === "left";
 }

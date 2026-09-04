@@ -1,66 +1,70 @@
-// E-01..E-06: Program → Python text plus the NodeId → line map. No third-party imports (P-01).
-import type { Data, Expr, FunctionDef, NodeId, Program, Stmt, Target } from "@/lang/types";
+// E-01..E-08: Program → Python text plus the NodeId → line map. No third-party imports (P-01).
+import type {
+  ClassDef,
+  Data,
+  Expr,
+  FunctionDef,
+  NodeId,
+  Program,
+  Stmt,
+  Target,
+} from "@/lang/types";
 import { programExprs } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
-import type { EmitContext, PyLine, Side } from "@/nodes/types";
+import type { EmitContext, PyLine } from "@/nodes/types";
 import { floatRepr } from "@/runtime/values";
-import { PRECEDENCE, binopAssociativity, needsParens } from "./precedence";
+import { PRECEDENCE, needsParens } from "./precedence";
 
 export type LineMap = Record<NodeId, { start: number; end: number }>;
 export type Emitted = { code: string; map: LineMap };
 
 const INDENT = "    "; // E-04
 
-/** E-06: double quotes with `\\ \" \n \t` escaped. */
+/** E-06: double quotes; `\\ \" \n \t \r` escaped, other control characters as `\xNN`. */
 export function pyString(text: string): string {
   let out = '"';
   for (const ch of text) {
+    const code = ch.codePointAt(0) ?? 0;
     if (ch === "\\") out += "\\\\";
     else if (ch === '"') out += '\\"';
     else if (ch === "\n") out += "\\n";
     else if (ch === "\t") out += "\\t";
+    else if (ch === "\r") out += "\\r";
+    else if (code < 0x20 || code === 0x7f) out += `\\x${code.toString(16).padStart(2, "0")}`;
     else out += ch;
   }
-  return out + '"';
+  return `${out}"`;
 }
 
-/** E-03: a `Data` literal in Python. Objects do not occur in inputs. */
+/** E-03: a Data value as a Python literal. */
 export function dataToPython(data: Data): string {
-  if (typeof data === "number") return Number.isInteger(data) ? String(data) : floatRepr(data);
+  if (typeof data === "number") {
+    if (!Number.isInteger(data)) return floatRepr(data);
+    return Math.abs(data) < 1e21 ? String(data) : BigInt(data).toString();
+  }
   if (typeof data === "string") return pyString(data);
   if (typeof data === "boolean") return data ? "True" : "False";
   if (data === null) return "None";
   if (Array.isArray(data)) return `[${data.map(dataToPython).join(", ")}]`;
   if ("$float" in data && typeof data.$float === "number") return floatRepr(data.$float);
-  if ("$cls" in data) throw new Error("objects cannot be emitted as input data");
-  const parts = Object.entries(data).map(([key, value]) => {
-    const k = key.startsWith("$int:") ? key.slice(5) : pyString(key);
-    return `${k}: ${dataToPython(value)}`;
-  });
-  return `{${parts.join(", ")}}`;
+  if ("$cls" in data) throw new Error("objects cannot be emitted as input literals");
+  const entries = Object.entries(data).map(
+    ([key, value]) =>
+      `${key.startsWith("$int:") ? key.slice(5) : pyString(key)}: ${dataToPython(value)}`,
+  );
+  return `{${entries.join(", ")}}`;
 }
 
-function precedenceOf(expr: Expr): number {
-  return getNode(keyOf(expr)).precedence?.(expr) ?? PRECEDENCE.atom;
-}
+// ---------------------------------------------------------------- expression context (E-08)
 
 const ctx: EmitContext = {
-  expr(expr) {
+  expr(expr: Expr) {
     return getNode(keyOf(expr)).python(expr, ctx) as string;
   },
-  operand(expr, precedence, side: Side) {
+  operand(expr: Expr, parent: number, side) {
+    const child = getNode(keyOf(expr)).precedence?.(expr) ?? PRECEDENCE.atom;
     const text = ctx.expr(expr);
-    const parent = precedence;
-    const child = precedenceOf(expr);
-    // The associativity that matters is the parent's; callers pass their own precedence,
-    // and binop is the only node with associativity, so derive it from the level.
-    const associativity =
-      parent === PRECEDENCE.power
-        ? binopAssociativity("**")
-        : parent === PRECEDENCE.compare
-          ? "none"
-          : "left";
-    return needsParens(child, parent, side, associativity) ? `(${text})` : text;
+    return needsParens(child, parent, side) ? `(${text})` : text;
   },
   target(target: Target) {
     switch (target.kind) {
@@ -74,7 +78,7 @@ const ctx: EmitContext = {
         return `${ctx.operand(target.obj, PRECEDENCE.atom, "left")}.${target.field}`;
     }
   },
-  block(stmts) {
+  block(stmts: Stmt[]): PyLine {
     return { block: stmts };
   },
 };
@@ -84,98 +88,133 @@ export function unparse(expr: Expr): string {
   return ctx.expr(expr);
 }
 
-type Sink = { lines: string[]; map: LineMap };
+// ---------------------------------------------------------------- statements and sections
 
-function emitStmt(stmt: Stmt, indent: number, sink: Sink): void {
-  const def = getNode(keyOf(stmt));
-  const lines = def.python(stmt, ctx) as PyLine[];
-  const start = sink.lines.length + 1;
-  sink.map[stmt.id] = { start, end: start }; // E-01: a frame maps to its header line
-  for (const line of lines) {
-    if (typeof line === "string") sink.lines.push(INDENT.repeat(indent) + line);
-    else emitBlock(line.block, indent + 1, sink);
+class Writer {
+  readonly lines: string[] = [];
+  readonly map: LineMap = {};
+
+  blank(count: number): void {
+    for (let i = 0; i < count; i += 1) this.lines.push("");
+  }
+
+  line(text: string, indent: number): void {
+    this.lines.push(text === "" ? "" : INDENT.repeat(indent) + text);
+  }
+
+  mark(id: NodeId): void {
+    const line = this.lines.length + 1;
+    this.map[id] = { start: line, end: line };
+  }
+
+  stmt(stmt: Stmt, indent: number): void {
+    const pyLines = getNode(keyOf(stmt)).python(stmt, ctx) as PyLine[];
+    let first = true;
+    for (const pyLine of pyLines) {
+      if (typeof pyLine === "string") {
+        if (first) {
+          this.mark(stmt.id); // E-01: a frame maps to its header; `else:` is unmapped
+          first = false;
+        }
+        this.line(pyLine, indent);
+      } else {
+        this.block(pyLine.block, indent + 1);
+      }
+    }
+  }
+
+  block(stmts: Stmt[], indent: number): void {
+    if (stmts.length === 0) {
+      this.line("pass", indent);
+      return;
+    }
+    for (const stmt of stmts) this.stmt(stmt, indent);
+  }
+
+  /** N-07 */
+  classDef(cls: ClassDef): void {
+    this.mark(cls.id);
+    this.line(`class ${cls.name}:`, 0);
+    const params = cls.fields.map((field) => {
+      const container = isEmptyContainer(field.default);
+      return `${field.name}=${container ? "None" : dataToPython(field.default)}`;
+    });
+    this.line(`def __init__(self${params.map((p) => `, ${p}`).join("")}):`, 1);
+    if (cls.fields.length === 0) this.line("pass", 2);
+    for (const field of cls.fields) {
+      const value = isEmptyContainer(field.default)
+        ? `${dataToPython(field.default)} if ${field.name} is None else ${field.name}`
+        : field.name;
+      this.line(`self.${field.name} = ${value}`, 2);
+    }
+    this.blank(1);
+    this.line("def __repr__(self):", 1);
+    const fields = cls.fields.map((field) => `${field.name}={self.${field.name}!r}`).join(", ");
+    this.line(`return f"${cls.name}(${fields})"`, 2);
+  }
+
+  functionDef(fn: FunctionDef): void {
+    this.mark(fn.id);
+    this.line(`def ${fn.name}(${fn.params.join(", ")}):`, 0);
+    this.block(fn.body, 1);
   }
 }
 
-function emitBlock(stmts: Stmt[], indent: number, sink: Sink): void {
-  if (stmts.length === 0) {
-    sink.lines.push(`${INDENT.repeat(indent)}pass`);
-    return;
-  }
-  for (const stmt of stmts) emitStmt(stmt, indent, sink);
+function isEmptyContainer(data: Data): boolean {
+  if (Array.isArray(data)) return data.length === 0;
+  return typeof data === "object" && data !== null && Object.keys(data).length === 0;
 }
 
-function emitFunction(fn: FunctionDef, sink: Sink): void {
-  const start = sink.lines.length + 1;
-  sink.map[fn.id] = { start, end: start };
-  sink.lines.push(`def ${fn.name}(${fn.params.join(", ")}):`);
-  emitBlock(fn.body, 1, sink);
-}
-
-/** N-07 */
-function emitClass(cls: Program["classes"][number], sink: Sink): void {
-  const start = sink.lines.length + 1;
-  sink.map[cls.id] = { start, end: start };
-  const isContainer = (d: Data) =>
-    (Array.isArray(d) && d.length === 0) ||
-    (d !== null && typeof d === "object" && !Array.isArray(d) && Object.keys(d).length === 0);
-  const params = cls.fields.map(
-    (f) => `${f.name}=${isContainer(f.default) ? "None" : dataToPython(f.default)}`,
-  );
-  sink.lines.push(`class ${cls.name}:`);
-  sink.lines.push(`${INDENT}def __init__(self${params.length ? ", " : ""}${params.join(", ")}):`);
-  if (cls.fields.length === 0) sink.lines.push(`${INDENT}${INDENT}pass`);
-  for (const f of cls.fields) {
-    const value = isContainer(f.default)
-      ? `${dataToPython(f.default)} if ${f.name} is None else ${f.name}`
-      : f.name;
-    sink.lines.push(`${INDENT}${INDENT}self.${f.name} = ${value}`);
-  }
-  sink.lines.push("");
-  sink.lines.push(`${INDENT}def __repr__(self):`);
-  const fields = cls.fields.map((f) => `${f.name}={self.${f.name}!r}`).join(", ");
-  sink.lines.push(`${INDENT}${INDENT}return f"${cls.name}(${fields})"`);
-}
-
-export function emit(program: Program): Emitted {
-  const imports = new Set<string>();
+/** N-05: modules required by the blocks a program uses. */
+function importsOf(program: Program): string[] {
+  const modules = new Set<string>();
   for (const expr of programExprs(program)) {
-    const needed = getNode(keyOf(expr)).imports;
-    if (needed) imports.add(needed);
+    const module = getNode(keyOf(expr)).imports;
+    if (module) modules.add(module);
   }
+  return [...modules].toSorted();
+}
 
-  type Section = { kind: "plain" | "def"; render(sink: Sink): void };
+type Section = { kind: "imports" | "class" | "function" | "main"; write: (w: Writer) => void };
+
+/** E-02: one blank line between sections, two around classes and functions. */
+export function emit(program: Program): Emitted {
+  const writer = new Writer();
   const sections: Section[] = [];
-  if (imports.size > 0) {
-    const names = [...imports].sort();
+
+  const imports = importsOf(program);
+  if (imports.length > 0) {
     sections.push({
-      kind: "plain",
-      render: (s) => names.forEach((n) => s.lines.push(`import ${n}`)),
+      kind: "imports",
+      write: (w) => {
+        for (const module of imports) w.line(`import ${module}`, 0);
+      },
     });
   }
   for (const cls of program.classes)
-    sections.push({ kind: "def", render: (s) => emitClass(cls, s) });
-  for (const fn of program.functions)
-    sections.push({ kind: "def", render: (s) => emitFunction(fn, s) });
+    sections.push({ kind: "class", write: (w) => w.classDef(cls) });
+  for (const fn of program.functions) {
+    sections.push({ kind: "function", write: (w) => w.functionDef(fn) });
+  }
   if (program.inputs.length > 0 || program.main.length > 0) {
     sections.push({
-      kind: "plain",
-      render: (s) => {
+      kind: "main",
+      write: (w) => {
         for (const input of program.inputs)
-          s.lines.push(`${input.name} = ${dataToPython(input.value)}`);
-        for (const stmt of program.main) emitStmt(stmt, 0, s);
+          w.line(`${input.name} = ${dataToPython(input.value)}`, 0);
+        for (const stmt of program.main) w.stmt(stmt, 0);
       },
     });
   }
 
-  const sink: Sink = { lines: [], map: {} };
   sections.forEach((section, i) => {
-    if (i > 0) {
-      const previous = sections[i - 1];
-      const gap = section.kind === "def" || previous?.kind === "def" ? 2 : 1; // E-02
-      for (let k = 0; k < gap; k += 1) sink.lines.push("");
+    const previous = sections[i - 1];
+    if (previous) {
+      const around = (kind: Section["kind"]) => kind === "class" || kind === "function";
+      writer.blank(around(previous.kind) || around(section.kind) ? 2 : 1);
     }
-    section.render(sink);
+    section.write(writer);
   });
-  return { code: sink.lines.map((l) => l.trimEnd()).join("\n") + "\n", map: sink.map }; // E-04
+
+  return { code: `${writer.lines.join("\n")}\n`, map: writer.map };
 }
