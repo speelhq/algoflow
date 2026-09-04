@@ -1,4 +1,4 @@
-// L-07, L-16, L-18, L-29: value helpers shared by node runners. No third-party imports (P-01).
+// L-07, L-15, L-16, L-18, L-29: value helpers shared by node runners. No third-party imports (P-01).
 import type { Heap, HeapEntry, Value } from "@/lang/types";
 
 export type NumberValue = { t: "int"; v: number } | { t: "float"; v: number };
@@ -7,12 +7,37 @@ export function isNumber(value: Value): value is NumberValue {
   return value.t === "int" || value.t === "float";
 }
 
-/** L-07: an int result outside ±2^53 becomes a float. */
 const INT_LIMIT = 2 ** 53;
 
+/** L-07: an int result outside ±2^53 becomes a float; ints have no negative zero. */
 export function makeNumber(n: number, float: boolean): NumberValue {
   if (float || !Number.isInteger(n) || Math.abs(n) > INT_LIMIT) return { t: "float", v: n };
-  return { t: "int", v: n };
+  return { t: "int", v: n === 0 ? 0 : n };
+}
+
+const copySign = (magnitude: number, sign: number) =>
+  sign < 0 || Object.is(sign, -0) ? -Math.abs(magnitude) : Math.abs(magnitude);
+
+/** Python `float.__mod__`: the result takes the divisor's sign, including for zero. */
+export function floatMod(a: number, b: number): number {
+  let mod = a % b;
+  if (mod !== 0) {
+    if (b < 0 !== mod < 0) mod += b;
+  } else {
+    mod = copySign(0, b);
+  }
+  return mod;
+}
+
+/** Python `float.__floordiv__`, consistent with `floatMod` (a == b * floordiv + mod). */
+export function floatFloorDiv(a: number, b: number): number {
+  const mod = a % b;
+  let div = (a - mod) / b;
+  if (mod !== 0 && b < 0 !== mod < 0) div -= 1;
+  if (div === 0) return copySign(0, a / b);
+  let floor = Math.floor(div);
+  if (div - floor > 0.5) floor += 1;
+  return floor;
 }
 
 export function entryOf(heap: Heap, ref: number): HeapEntry {
@@ -22,12 +47,7 @@ export function entryOf(heap: Heap, ref: number): HeapEntry {
 }
 
 export function typeName(value: Value, heap: Heap): string {
-  if (value.t === "obj")
-    return entryOf(heap, value.ref).kind === "obj" ? classOf(value, heap) : "obj";
-  return value.t;
-}
-
-function classOf(value: { ref: number }, heap: Heap): string {
+  if (value.t !== "obj") return value.t;
   const entry = entryOf(heap, value.ref);
   return entry.kind === "obj" ? entry.cls : "obj";
 }
@@ -55,6 +75,24 @@ export function truthy(value: Value, heap: Heap): boolean {
     case "obj":
       return true;
   }
+}
+
+/** L-15: numbers order with numbers, strings with strings; anything else is not orderable. */
+export function compare(a: Value, b: Value): -1 | 0 | 1 | undefined {
+  let x: number | string;
+  let y: number | string;
+  if (isNumber(a) && isNumber(b)) {
+    x = a.v;
+    y = b.v;
+  } else if (a.t === "str" && b.t === "str") {
+    x = a.v;
+    y = b.v;
+  } else {
+    return undefined;
+  }
+  if (x < y) return -1;
+  if (x > y) return 1;
+  return 0;
 }
 
 /** L-16 */

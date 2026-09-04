@@ -5,6 +5,14 @@ import type { HeapId, NodeId, Value } from "@/lang/types";
 import type { RunContext } from "@/nodes/types";
 import { entryOf, typeName } from "./values";
 
+/** R-15: `E_TYPE` with the operand type names. */
+export function typeError(nodeId: NodeId, left: Value, right: Value, ctx: RunContext): never {
+  return ctx.fail(nodeId, "E_TYPE", {
+    left: typeName(left, ctx.heap),
+    right: typeName(right, ctx.heap),
+  });
+}
+
 export function asList(
   list: Value,
   nodeId: NodeId,

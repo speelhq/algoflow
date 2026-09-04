@@ -1,25 +1,29 @@
 // 03-nodes `binop`: L-10..L-19 semantics, R-04 membership reads, R-06 compare events, E-05 text.
 import { dictKey } from "@/lang/data";
 import { newId } from "@/lang/id";
-import type { BinOp, Expr, Value } from "@/lang/types";
+import type { Expr, Value } from "@/lang/types";
 import { binopPrecedence, isComparison } from "@/python/precedence";
+import { typeError } from "@/runtime/access";
 import type { Event, Ref } from "@/runtime/types";
-import { entryOf, equals, isNumber, makeNumber, str, truthy, typeName } from "@/runtime/values";
+import {
+  compare,
+  entryOf,
+  equals,
+  floatFloorDiv,
+  floatMod,
+  isNumber,
+  makeNumber,
+  str,
+  truthy,
+} from "@/runtime/values";
 import { defineExpr, type RunContext } from "./types";
 
 type Binop = Extract<Expr, { kind: "binop" }>;
 
-function typeError(node: Binop, l: Value, r: Value, ctx: RunContext): never {
-  return ctx.fail(node.id, "E_TYPE", {
-    left: typeName(l, ctx.heap),
-    right: typeName(r, ctx.heap),
-  });
-}
-
 /** L-10..L-14 */
 function arithmetic(node: Binop, l: Value, r: Value, ctx: RunContext): Value {
   if (node.op === "+" && l.t === "str" && r.t === "str") return { t: "str", v: l.v + r.v };
-  if (!isNumber(l) || !isNumber(r)) return typeError(node, l, r, ctx);
+  if (!isNumber(l) || !isNumber(r)) return typeError(node.id, l, r, ctx);
   const float = l.t === "float" || r.t === "float";
   const a = l.v;
   const b = r.v;
@@ -35,46 +39,38 @@ function arithmetic(node: Binop, l: Value, r: Value, ctx: RunContext): Value {
       return { t: "float", v: a / b };
     case "//":
       if (b === 0) return ctx.fail(node.id, "E_DIV_ZERO");
-      return makeNumber(Math.floor(a / b), float);
+      return float ? { t: "float", v: floatFloorDiv(a, b) } : makeNumber(Math.floor(a / b), false);
     case "%":
       if (b === 0) return ctx.fail(node.id, "E_DIV_ZERO");
-      return makeNumber(a - b * Math.floor(a / b), float);
+      return float
+        ? { t: "float", v: floatMod(a, b) }
+        : makeNumber(a - b * Math.floor(a / b), false);
     case "**":
       if (a === 0 && b < 0) return ctx.fail(node.id, "E_DIV_ZERO");
       if (float || b < 0) return { t: "float", v: a ** b };
       return makeNumber(a ** b, false);
     default:
-      return typeError(node, l, r, ctx);
+      return typeError(node.id, l, r, ctx);
   }
 }
 
 /** L-15, L-16 */
 function ordered(node: Binop, l: Value, r: Value, ctx: RunContext): boolean {
-  const op = node.op;
-  if (op === "==") return equals(l, r, ctx.heap);
-  if (op === "!=") return !equals(l, r, ctx.heap);
-  let a: number | string;
-  let b: number | string;
-  if (isNumber(l) && isNumber(r)) {
-    a = l.v;
-    b = r.v;
-  } else if (l.t === "str" && r.t === "str") {
-    a = l.v;
-    b = r.v;
-  } else {
-    return typeError(node, l, r, ctx);
-  }
-  switch (op) {
+  if (node.op === "==") return equals(l, r, ctx.heap);
+  if (node.op === "!=") return !equals(l, r, ctx.heap);
+  const c = compare(l, r);
+  if (c === undefined) return typeError(node.id, l, r, ctx);
+  switch (node.op) {
     case "<":
-      return a < b;
+      return c < 0;
     case "<=":
-      return a <= b;
+      return c <= 0;
     case ">":
-      return a > b;
+      return c > 0;
     case ">=":
-      return a >= b;
+      return c >= 0;
     default:
-      return typeError(node, l, r, ctx);
+      return typeError(node.id, l, r, ctx);
   }
 }
 
@@ -102,15 +98,15 @@ function* membership(
   }
   if (r.t === "dict") {
     const key = dictKey(l);
-    if (key === undefined) return typeError(node, l, r, ctx);
+    if (key === undefined) return typeError(node.id, l, r, ctx);
     const entry = entryOf(ctx.heap, r.ref);
     return entry.kind === "dict" && entry.entries.has(key);
   }
   if (r.t === "str") {
-    if (l.t !== "str") return typeError(node, l, r, ctx);
+    if (l.t !== "str") return typeError(node.id, l, r, ctx);
     return r.v.includes(l.v);
   }
-  return typeError(node, l, r, ctx);
+  return typeError(node.id, l, r, ctx);
 }
 
 export const binop = defineExpr<"binop">({
@@ -158,21 +154,4 @@ function emptyExpr(): Expr {
   return { id: newId(), kind: "empty" };
 }
 
-export const BINOPS: readonly BinOp[] = [
-  "+",
-  "-",
-  "*",
-  "/",
-  "//",
-  "%",
-  "**",
-  "==",
-  "!=",
-  "<",
-  "<=",
-  ">",
-  ">=",
-  "and",
-  "or",
-  "in",
-];
+export { BINOPS } from "@/python/precedence";

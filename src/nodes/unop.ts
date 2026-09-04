@@ -24,7 +24,8 @@ export const unop = defineExpr<"unop">({
     if (!isNumber(value)) {
       return ctx.fail(node.id, "E_TYPE", { left: "-", right: typeName(value, ctx.heap) });
     }
-    return makeNumber(0 - value.v, value.t === "float");
+    // `-x` keeps the sign rules of Python: `-(0.0)` is `-0.0`; ints have no negative zero.
+    return makeNumber(-value.v, value.t === "float");
   },
   python: (node, ctx) => {
     const operand = ctx.operand(node.operand, precedenceOf(node), "right");

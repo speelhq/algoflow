@@ -25,16 +25,19 @@ export const assign = defineStmt<"assign">({
         yield { type: "write", nodeId: node.id, ref: { var: target.name }, value };
         return undefined;
       case "index": {
+        // Python evaluates the container before the index.
+        const listValue = yield* ctx.eval(target.list);
         const index = yield* ctx.eval(target.index);
-        const list = asList(yield* ctx.eval(target.list), node.id, ctx, index);
+        const list = asList(listValue, node.id, ctx, index);
         const i = listIndex(list.items, index, node.id, ctx);
         list.items[i] = value;
         yield { type: "write", nodeId: node.id, ref: { heap: list.ref, index: i }, value };
         return undefined;
       }
       case "key": {
+        const dictValue = yield* ctx.eval(target.dict);
         const key = yield* ctx.eval(target.key);
-        const dict = asDict(yield* ctx.eval(target.dict), node.id, ctx, key);
+        const dict = asDict(dictValue, node.id, ctx, key);
         const encoded = dictKeyOf(key, node.id, ctx);
         dict.entries.set(encoded, value);
         yield { type: "write", nodeId: node.id, ref: { heap: dict.ref, key: encoded }, value };

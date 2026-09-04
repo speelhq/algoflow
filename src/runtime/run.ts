@@ -41,8 +41,9 @@ export function run(program: Program, inputs: Record<Id, Data>, seed: number): R
       return undefined;
     },
     get(name, nodeId) {
+      // A loop variable is visible after its loop (L-43) yet unbound when the loop ran no iteration.
       const value = top().vars.get(name);
-      if (value === undefined) throw new Error(`unbound variable ${name} at ${nodeId}`);
+      if (value === undefined) return ctx.fail(nodeId, "E_UNDEFINED", { name });
       return value;
     },
     set(name, value) {

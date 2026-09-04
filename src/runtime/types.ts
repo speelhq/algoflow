@@ -16,6 +16,7 @@ export type State = { frames: Frame[]; heap: Heap };
 export type Frame = { fn: Id | "main"; callNodeId?: NodeId; vars: Map<Id, Value> };
 
 export type RuntimeCode =
+  | "E_UNDEFINED"
   | "E_INDEX"
   | "E_KEY"
   | "E_FIELD"

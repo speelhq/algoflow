@@ -37,6 +37,46 @@ describe("02 semantics table", () => {
     expect(evalExpr(bin("**", num(2), num(60))).value.t).toBe("float");
   });
 
+  it("L-12 float // and % follow CPython, including the sign of zero", () => {
+    expect(evalExpr(bin("%", num(1), float(0.1))).data).toBe(1 % 0.1); // 0.09999999999999995 in both engines
+    expect(evalExpr(bin("//", num(1), float(0.1))).data).toEqual({ $float: 9 });
+    expect(evalExpr(bin("%", float(-7.5), num(2))).data).toBe(0.5);
+    expect(evalExpr(bin("//", float(-7.5), num(2))).data).toEqual({ $float: -4 });
+    const negativeZero = evalExpr(bin("%", float(4), neg(num(2)))).value;
+    expect(negativeZero.t === "float" && Object.is(negativeZero.v, -0)).toBe(true);
+    expect(evalExpr(bin("%", float(0.1), float(0.01))).data).toBe(0.1 % 0.01);
+  });
+
+  it("negative zero: -(0.0) is -0.0, ints never carry a sign on zero", () => {
+    const negFloat = evalExpr(neg(float(0))).value;
+    expect(negFloat.t === "float" && Object.is(negFloat.v, -0)).toBe(true);
+    const intZero = evalExpr(bin("*", num(0), neg(num(1)))).value;
+    expect(intZero.t === "int" && Object.is(intZero.v, 0)).toBe(true);
+    expect(
+      runAll(program([print(neg(float(0))), print(call("float", bin("*", num(0), neg(num(1)))))]))
+        .stdout,
+    ).toEqual(["-0.0", "0.0"]);
+  });
+
+  it("R-09 E_UNDEFINED at run time: a loop variable read after a loop that never ran", () => {
+    const read = v("i");
+    const result = runAll(
+      program([for_("i", num(0), v("n"), []), print(read)], { inputs: [{ name: "n", value: 0 }] }),
+      { n: 0 },
+    );
+    expect(result.done).toMatchObject({
+      type: "error",
+      error: { nodeId: read.id, code: "E_UNDEFINED", params: { name: "i" } },
+    });
+  });
+
+  it("L-32 random_int with a > b fails like CPython's empty range", () => {
+    expect(evalExpr(call("random_int", num(5), num(1))).done).toMatchObject({
+      type: "error",
+      error: { code: "E_TYPE" },
+    });
+  });
+
   it("L-11 any float operand → float", () => {
     expect(evalExpr(bin("+", num(1), float(2))).value).toEqual({ t: "float", v: 3 });
   });
