@@ -4,7 +4,7 @@ import type { NodeId } from "@/lang/types";
 
 export type EditorState = {
   hoveredId: NodeId | null;
-  setHovered(id: NodeId | null): void;
+  setHovered: (id: NodeId | null) => void;
 };
 
 export const useEditor = create<EditorState>()((set) => ({

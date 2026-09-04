@@ -1,36 +1,73 @@
-// U-30: tabs `main`, one per function/class (M-05), and `+`; U-31: Start … End.
+// U-30: tabs `main`, one per function (classes in M-05), and `+` (M-05).
+// U-31: Start, one read-only Input card per input, the main region, End.
 import { CircleIcon, PlusIcon } from "lucide-react";
+import { useMemo } from "react";
 import { t } from "@/i18n/t";
+import { firstAssignments } from "@/lang/validate";
+import { dataToPython } from "@/python/emit";
+import { useProgram } from "@/store/program";
 import { PanelTab, PanelTabContent, PanelTabList, PanelTabs } from "@/ui/app/PanelTabs";
 import { Button } from "@/ui/primitives/button";
+import { Region } from "./Region";
 
-const TERMINALS = ["start", "end"] as const;
+function Terminal({ label }: { label: string }) {
+  return (
+    <li className="flex w-fit items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-sm">
+      <CircleIcon aria-hidden className="size-2 fill-current" />
+      {label}
+    </li>
+  );
+}
 
 export function Canvas() {
+  const program = useProgram((s) => s.program);
+  const creates = useMemo(() => firstAssignments(program), [program]);
+
   return (
     <PanelTabs defaultValue="main">
       <PanelTabList>
         <PanelTab value="main" className="font-mono">
           {t("canvas.main")}
         </PanelTab>
+        {program.functions.map((fn) => (
+          <PanelTab key={fn.id} value={fn.id} className="font-mono">
+            {fn.name}
+          </PanelTab>
+        ))}
         <Button variant="ghost" size="icon-sm" aria-label={t("canvas.add")} disabled>
           <PlusIcon />
         </Button>
       </PanelTabList>
 
       <PanelTabContent value="main" className="p-6">
-        <ol className="mx-auto flex max-w-2xl flex-col items-start gap-3">
-          {TERMINALS.map((terminal) => (
+        <ol className="mx-auto flex max-w-3xl flex-col gap-1">
+          <Terminal label={t("canvas.start")} />
+          {program.inputs.map((input) => (
             <li
-              key={terminal}
-              className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-sm"
+              key={input.name}
+              data-testid="input-card"
+              className="flex w-fit items-center rounded-lg border border-border bg-muted/40 px-3 py-1.5 font-mono text-sm text-muted-foreground"
             >
-              <CircleIcon aria-hidden className="size-2 fill-current" />
-              {t(`canvas.${terminal}`)}
+              {t("canvas.input", { name: input.name, value: dataToPython(input.value) })}
             </li>
           ))}
+          <li>
+            <Region stmts={program.main} creates={creates} />
+          </li>
+          <Terminal label={t("canvas.end")} />
         </ol>
       </PanelTabContent>
+
+      {program.functions.map((fn) => (
+        <PanelTabContent key={fn.id} value={fn.id} className="p-6">
+          <div className="mx-auto flex max-w-3xl flex-col gap-1">
+            <div className="w-fit rounded-lg border border-border bg-muted px-3 py-1.5 font-mono text-sm">
+              {t("canvas.function", { name: fn.name, params: fn.params.join(", ") })}
+            </div>
+            <Region stmts={fn.body} creates={creates} />
+          </div>
+        </PanelTabContent>
+      ))}
     </PanelTabs>
   );
 }

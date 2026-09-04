@@ -21,6 +21,8 @@ export type RunState = {
   status: Status;
   step: number;
   lastEvent: Event | null;
+  /** U-36/U-38: the statement card to highlight (owner of `lastEvent`, or of the error). */
+  activeId: NodeId | null;
   state: State | null;
   events: TraceRow[];
   /** Trace columns in first-assignment order (inputs first). */
@@ -31,15 +33,15 @@ export type RunState = {
   done: Done | null;
   speed: number;
   testIndex: number;
-  stepOnce(): void;
-  play(): void;
-  pause(): void;
-  runToEnd(): Promise<void>;
-  back(): void;
-  seek(step: number): void;
-  stop(): void;
-  setSpeed(speed: number): void;
-  selectTest(index: number): void;
+  stepOnce: () => void;
+  play: () => void;
+  pause: () => void;
+  runToEnd: () => Promise<void>;
+  back: () => void;
+  seek: (step: number) => void;
+  stop: () => void;
+  setSpeed: (speed: number) => void;
+  selectTest: (index: number) => void;
 };
 
 /** R-01: a run starts only when validation is clean. */
@@ -126,18 +128,21 @@ function reset(from: Origin): void {
 }
 
 export const useRun = create<RunState>()((set, get) => {
-  const publish = (status: Status, done: Done | null = null) =>
+  const publish = (status: Status, done: Done | null = null) => {
+    const focus = done?.type === "error" ? done.error.nodeId : projection.lastEvent?.nodeId;
     set({
       status,
       done,
       step: projection.step,
       lastEvent: projection.lastEvent,
+      activeId: focus === undefined ? null : (owners.get(focus) ?? focus),
       state: snapshot(),
       events: projection.events.slice(-TRACE_LIMIT),
       columns: [...projection.columns],
       stdout: [...projection.stdout],
       verdicts: { ...projection.verdicts },
     });
+  };
 
   const finish = (done: Done) => {
     clearTimer();
@@ -164,6 +169,7 @@ export const useRun = create<RunState>()((set, get) => {
     status: "idle",
     step: 0,
     lastEvent: null,
+    activeId: null,
     state: null,
     events: [],
     columns: [],
@@ -249,6 +255,7 @@ export const useRun = create<RunState>()((set, get) => {
         status: "idle",
         step: 0,
         lastEvent: null,
+        activeId: null,
         state: null,
         events: [],
         columns: [],

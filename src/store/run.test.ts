@@ -41,6 +41,7 @@ describe("run store (R-11, R-12)", () => {
     store.stepOnce();
     expect(useRun.getState().step).toBe(2);
     expect(useRun.getState().lastEvent).toMatchObject({ type: "loop", var: "i" });
+    expect(useRun.getState().activeId).toBe(useProgram.getState().program.main[0]?.id);
     expect(useRun.getState().state?.frames[0]?.vars.get("i")).toEqual({ t: "int", v: 0 });
   });
 
@@ -148,11 +149,13 @@ describe("run store (R-11, R-12)", () => {
 
   it("R-12 error: the run ends with the error and its params", () => {
     const div = bin("/", num(1), num(0));
-    useProgram.setState({ program: program([assign("x", div)]) });
+    const stmt = assign("x", div);
+    useProgram.setState({ program: program([stmt]) });
     useRun.getState().play();
     vi.advanceTimersByTime(500);
     const s = useRun.getState();
     expect(s.status).toBe("error");
+    expect(s.activeId).toBe(stmt.id); // U-36: the card of the failing statement
     expect(s.done).toEqual({
       type: "error",
       error: { nodeId: div.id, code: "E_DIV_ZERO", params: {} },
