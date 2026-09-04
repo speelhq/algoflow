@@ -1,23 +1,31 @@
-// U-02: app name, editable title, challenge selector, undo, redo, save status,
-// Export, Import, Help, JA/EN. Program-dependent controls are placeholders until M-02/M-03;
-// the language switch becomes functional in M-06 (S-03).
+// U-02: app name, title, challenge selector grouped by track plus Free mode, undo, redo,
+// save status, Export, Import, Help, JA/EN. Undo/redo, title editing, Export, Import and
+// Help arrive in M-03; the language switch in M-06 (S-03).
 import { Redo2Icon, Undo2Icon } from "lucide-react";
+import { challengesByTrack } from "@/challenges";
 import { getLocale, LOCALES, t } from "@/i18n/t";
+import { FREE, useProgram } from "@/store/program";
 import { Button } from "@/ui/primitives/button";
 import { Input } from "@/ui/primitives/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/ui/primitives/select";
 
-const FREE_MODE = "free";
-
 export function TopBar() {
   const locale = getLocale();
-  const challenges = [{ value: FREE_MODE, label: t("app.freeMode") }];
+  const program = useProgram((s) => s.program);
+  const load = useProgram((s) => s.load);
+  const groups = challengesByTrack();
+  const items = [
+    { value: FREE, label: t("app.freeMode") },
+    ...groups.flatMap((g) => g.challenges.map((c) => ({ value: c.id, label: c.title.en }))),
+  ];
 
   return (
     <header
@@ -29,18 +37,32 @@ export function TopBar() {
       <Input
         aria-label={t("app.titlePlaceholder")}
         placeholder={t("app.titlePlaceholder")}
+        value={program.title}
+        readOnly
         className="w-56"
       />
 
-      <Select items={challenges} defaultValue={FREE_MODE}>
+      <Select
+        items={items}
+        value={program.challengeId ?? FREE}
+        onValueChange={(value) => {
+          if (typeof value === "string") load(value);
+        }}
+      >
         <SelectTrigger aria-label={t("app.challenge")} className="w-44">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {challenges.map((c) => (
-            <SelectItem key={c.value} value={c.value}>
-              {c.label}
-            </SelectItem>
+          <SelectItem value={FREE}>{t("app.freeMode")}</SelectItem>
+          {groups.map((group) => (
+            <SelectGroup key={group.track}>
+              <SelectLabel>{t(`challenge.track.${group.track}`)}</SelectLabel>
+              {group.challenges.map((challenge) => (
+                <SelectItem key={challenge.id} value={challenge.id}>
+                  {challenge.title.en}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           ))}
         </SelectContent>
       </Select>

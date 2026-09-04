@@ -16,9 +16,9 @@ export type TestsState = {
   running: boolean;
   /** C-12: every test judged and passing. */
   cleared: boolean;
-  runTest(index: number): Promise<void>;
-  runAll(): Promise<void>;
-  reset(): void;
+  runTest: (index: number) => Promise<void>;
+  runAll: () => Promise<void>;
+  reset: () => void;
 };
 
 let generation = 0;

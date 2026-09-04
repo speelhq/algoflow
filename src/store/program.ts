@@ -45,7 +45,7 @@ export function restore(id: string): Program {
 export type ProgramState = {
   program: Program;
   /** Selects a challenge by id, or `"free"` (U-02 selector). */
-  load(id: string): void;
+  load: (id: string) => void;
 };
 
 export const useProgram = create<ProgramState>()((set) => ({
