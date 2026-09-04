@@ -1,16 +1,14 @@
 // U-32: slot chips. Every expression renders through its block's template (N-02, N-08);
-// this file reads slot roles and `params` only, never a kind.
+// this file reads slot roles, `params`, and flags only, never a kind.
 import { Fragment, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import type { Expr, Node, Target } from "@/lang/types";
+import { isExpr } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
 import type { NodeDef } from "@/nodes/types";
 import { renderTemplate, templateOf } from "./Template";
 
 type Bag = Record<string, unknown>;
-
-const isExpr = (value: unknown): value is Expr =>
-  typeof value === "object" && value !== null && "kind" in value && "id" in value;
 
 function joinChips(items: unknown[]): ReactNode {
   return items.map((item, i) => (
@@ -83,7 +81,8 @@ export function Chip({ expr }: { expr: Expr }) {
       data-kind={def.key}
       className={cn(
         "inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-1.5 py-0.5 font-mono text-xs whitespace-nowrap",
-        def.key === "empty" && "border-dashed text-muted-foreground italic",
+        // The hidden placeholder block (L-09) reads as a slot still waiting for a value.
+        def.hidden && "border-dashed text-muted-foreground italic",
       )}
     >
       {renderTemplate(template, (name) => (

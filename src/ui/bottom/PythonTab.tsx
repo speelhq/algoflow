@@ -1,7 +1,7 @@
 // U-61 Python: emitted code with line numbers; the active card's line highlighted (E-01);
 // hovering a line outlines its card; Copy; `.py` download.
 import { CopyIcon, DownloadIcon } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import type { NodeId } from "@/lang/types";
@@ -17,14 +17,19 @@ function download(name: string, code: string): void {
   anchor.href = url;
   anchor.download = name;
   anchor.click();
-  URL.revokeObjectURL(url);
+  // Revoking synchronously can cancel the download in some browsers.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function copy(code: string): void {
+  // `navigator.clipboard` is absent in insecure contexts; a refused write is not an error worth surfacing.
+  void navigator.clipboard?.writeText(code).catch(() => undefined);
 }
 
 export function PythonTab() {
   const program = useProgram((s) => s.program);
   const activeId = useRun((s) => s.activeId);
   const setHovered = useEditor((s) => s.setHovered);
-  const [copied, setCopied] = useState(false);
 
   const { code, map } = useMemo(() => emit(program), [program]);
   const lines = useMemo(() => code.replace(/\n$/, "").split("\n"), [code]);
@@ -36,12 +41,6 @@ export function PythonTab() {
     return byLine;
   }, [map]);
   const activeLine = activeId === null ? undefined : map[activeId]?.start;
-
-  useEffect(() => {
-    if (!copied) return;
-    const handle = setTimeout(() => setCopied(false), 1500);
-    return () => clearTimeout(handle);
-  }, [copied]);
 
   // Hovering a line outlines its card (U-61). Delegated on the list so the lines stay plain markup.
   const list = useRef<HTMLOListElement>(null);
@@ -59,19 +58,16 @@ export function PythonTab() {
     return () => {
       element.removeEventListener("mouseover", over);
       element.removeEventListener("mouseleave", out);
+      setHovered(null); // the tab may unmount while a line is hovered
     };
   }, [owners, setHovered]);
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="xs"
-          onClick={() => void navigator.clipboard.writeText(code).then(() => setCopied(true))}
-        >
+        <Button variant="outline" size="xs" onClick={() => copy(code)}>
           <CopyIcon data-icon="inline-start" />
-          {copied ? t("view.copied") : t("view.copy")}
+          {t("view.copy")}
         </Button>
         <Button
           variant="outline"

@@ -13,8 +13,8 @@ export const print = defineStmt<"print">({
     const values: Value[] = [];
     for (const arg of node.args) values.push(yield* ctx.eval(arg));
     const text = values.map((value) => str(value, ctx.heap)).join(" ");
+    ctx.print(text); // before the yield, so `stdout()` is current once the event is seen
     yield { type: "print", nodeId: node.id, text };
-    ctx.print(text);
     return undefined;
   },
   python: (node, ctx) => [`print(${node.args.map((arg) => ctx.expr(arg)).join(", ")})`],

@@ -9,8 +9,8 @@ const { assign, num, print, v, for_ } = ast;
 describe("advance and outcomeOf", () => {
   it("advance stops after `limit` events and reports undefined", () => {
     const runner = run(program([for_("i", num(0), num(5), [print(v("i"))])]), {}, 1);
-    // enter for, loop, enter print, print (the line lands when the generator resumes, R-03), loop
-    expect(advance(runner, 5)).toBeUndefined();
+    // enter for, loop, enter print, print (the line is recorded before the event is yielded)
+    expect(advance(runner, 4)).toBeUndefined();
     expect(runner.stdout()).toEqual(["0"]);
   });
 

@@ -3,7 +3,7 @@
 import { PauseIcon, PlayIcon, SkipBackIcon, SkipForwardIcon, SquareIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { getChallenge } from "@/challenges";
-import { t } from "@/i18n/t";
+import { errorText, localized, t } from "@/i18n/t";
 import { useProgram } from "@/store/program";
 import { canRun, SPEED, useRun } from "@/store/run";
 import { useTests } from "@/store/tests";
@@ -38,9 +38,7 @@ function StatusText() {
   const status = useRun((s) => s.status);
   const step = useRun((s) => s.step);
   const done = useRun((s) => s.done);
-  if (status === "error" && done?.type === "error") {
-    return <>{t(`error.${done.error.code}`, done.error.params)}</>;
-  }
+  if (status === "error" && done?.type === "error") return <>{errorText(done.error)}</>;
   const steps = t("run.stepCount", { n: step });
   if (status === "done" && done?.type === "done") {
     return <>{`${steps} · ${t("run.loops", { n: done.loops })}`}</>;
@@ -54,7 +52,10 @@ function TestSelector() {
   const testIndex = useRun((s) => s.testIndex);
   const selectTest = useRun((s) => s.selectTest);
   if (!challenge) return null;
-  const items = challenge.tests.map((test, i) => ({ value: String(i), label: test.name.en }));
+  const items = challenge.tests.map((test, i) => ({
+    value: String(i),
+    label: localized(test.name),
+  }));
   return (
     <label className="ml-3 flex items-center gap-2 text-xs text-muted-foreground">
       {t("run.test")}
@@ -97,18 +98,16 @@ export function BottomPanel() {
 
   const finished = status === "done" || status === "error";
   const playing = status === "playing";
-  const onRun = () => {
-    if (playing) pause();
-    else {
-      if (finished) stop();
-      play();
-    }
-  };
 
   return (
     <div className="flex h-full flex-col border-t border-border">
       <div className="flex h-10 shrink-0 items-center gap-1 border-b border-border px-2">
-        <Button variant="default" size="sm" onClick={onRun} disabled={!runnable}>
+        <Button
+          variant="default"
+          size="sm"
+          onClick={playing ? pause : play}
+          disabled={!runnable || finished}
+        >
           {playing ? <PauseIcon data-icon="inline-start" /> : <PlayIcon data-icon="inline-start" />}
           {playing ? t("run.pause") : t("run.run")}
         </Button>

@@ -1,6 +1,6 @@
 // C-14: every challenge file is bundled; S-05 orders tracks, `order` orders within a track.
 import { describe, expect, it } from "vitest";
-import { CHALLENGES, challengesByTrack, getChallenge } from "./index";
+import { CHALLENGE_GROUPS, CHALLENGES, getChallenge } from "./index";
 import { TRACKS } from "./types";
 
 describe("challenge bundle (C-14)", () => {
@@ -23,8 +23,7 @@ describe("challenge bundle (C-14)", () => {
     expect(getChallenge("fizzbuzz")?.title.en).toBe("FizzBuzz");
     expect(getChallenge("nope")).toBeUndefined();
     expect(getChallenge(undefined)).toBeUndefined();
-    const groups = challengesByTrack();
-    expect(groups[0]?.track).toBe("day1");
-    expect(groups.every((g) => g.challenges.length > 0)).toBe(true);
+    expect(CHALLENGE_GROUPS[0]?.track).toBe("day1");
+    expect(CHALLENGE_GROUPS.every((g) => g.challenges.length > 0)).toBe(true);
   });
 });

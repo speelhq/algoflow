@@ -111,8 +111,8 @@ describe("validate (02 Validation)", () => {
     expect(validate(p)).toEqual([
       { nodeId: cls.id, code: "E_BAD_NAME", params: { name: "value" } },
     ]);
-    cls.name = "Value";
-    expect(validate(p)).toEqual([]);
+    // Validation is memoized per Program object (edits are pure, L-50): validate a new object.
+    expect(validate({ ...p, classes: [{ ...cls, name: "Value" }] })).toEqual([]);
   });
 
   it("E_DUPLICATE_NAME: functions, classes, and inputs share one namespace (L-05)", () => {
@@ -216,7 +216,7 @@ describe("validate (02 Validation)", () => {
       { nodeId: "c0000000000c", code: "E_DEFAULT", params: { field: "xs" } },
       { nodeId: "c0000000000c", code: "E_DEFAULT", params: { field: "d" } },
     ]);
-    p.classes[0]!.fields = [
+    const fields = [
       { name: "xs", default: [] },
       { name: "d", default: {} },
       { name: "n", default: 0 },
@@ -224,7 +224,7 @@ describe("validate (02 Validation)", () => {
       { name: "b", default: false },
       { name: "z", default: null },
     ];
-    expect(validate(p)).toEqual([]);
+    expect(validate({ ...p, classes: [{ id: "c0000000000c", name: "P", fields }] })).toEqual([]);
   });
 
   it("E_DUPLICATE_ID: the second occurrence of an id is reported (L-04)", () => {

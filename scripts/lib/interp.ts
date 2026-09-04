@@ -3,8 +3,6 @@ import type { Data, Id, Program } from "@/lang/types";
 import { advance, outcomeOf, type Outcome } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 
-export type { Outcome } from "@/runtime/outcome";
-
 export function execute(program: Program, inputs: Record<Id, Data>, seed: number): Outcome {
   const runner = run(program, inputs, seed);
   const done = advance(runner, Number.POSITIVE_INFINITY);

@@ -2,8 +2,9 @@
 // save status, Export, Import, Help, JA/EN. Undo/redo, title editing, Export, Import and
 // Help arrive in M-03; the language switch in M-06 (S-03).
 import { Redo2Icon, Undo2Icon } from "lucide-react";
-import { challengesByTrack } from "@/challenges";
-import { getLocale, LOCALES, t } from "@/i18n/t";
+import { useMemo } from "react";
+import { CHALLENGE_GROUPS } from "@/challenges";
+import { getLocale, localized, LOCALES, t } from "@/i18n/t";
 import { FREE, useProgram } from "@/store/program";
 import { Button } from "@/ui/primitives/button";
 import { Input } from "@/ui/primitives/input";
@@ -21,11 +22,16 @@ export function TopBar() {
   const locale = getLocale();
   const program = useProgram((s) => s.program);
   const load = useProgram((s) => s.load);
-  const groups = challengesByTrack();
-  const items = [
-    { value: FREE, label: t("app.freeMode") },
-    ...groups.flatMap((g) => g.challenges.map((c) => ({ value: c.id, label: c.title.en }))),
-  ];
+  const items = useMemo(
+    () => [
+      { value: FREE, label: t("app.freeMode") },
+      ...CHALLENGE_GROUPS.flatMap((g) =>
+        g.challenges.map((c) => ({ value: c.id, label: localized(c.title) })),
+      ),
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- labels depend on the locale only
+    [locale],
+  );
 
   return (
     <header
@@ -54,12 +60,12 @@ export function TopBar() {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={FREE}>{t("app.freeMode")}</SelectItem>
-          {groups.map((group) => (
+          {CHALLENGE_GROUPS.map((group) => (
             <SelectGroup key={group.track}>
               <SelectLabel>{t(`challenge.track.${group.track}`)}</SelectLabel>
               {group.challenges.map((challenge) => (
                 <SelectItem key={challenge.id} value={challenge.id}>
-                  {challenge.title.en}
+                  {localized(challenge.title)}
                 </SelectItem>
               ))}
             </SelectGroup>

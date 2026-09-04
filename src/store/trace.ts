@@ -55,8 +55,8 @@ export function traceRow(event: Event, state: State, step: number): TraceRow | u
   }
 }
 
-/** Columns in first-assignment order: existing columns, then the row's new names. */
-export function withColumns(columns: readonly Id[], row: TraceRow): Id[] {
+/** Columns in first-assignment order: the same array when nothing is new, else a copy with the row's new names. */
+export function withColumns(columns: Id[], row: TraceRow): Id[] {
   const added = Object.keys(row.cells).filter((name) => !columns.includes(name));
-  return added.length === 0 ? [...columns] : [...columns, ...added];
+  return added.length === 0 ? columns : [...columns, ...added];
 }

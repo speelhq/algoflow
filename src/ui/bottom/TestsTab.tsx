@@ -1,10 +1,9 @@
 // U-61 Tests: per test name, Pass/Fail with expected/actual, Run with this input; Run all;
-// Cleared! when every test passes (C-10..C-12, C-16).
+// Cleared! when every test passes (C-10..C-12, C-15).
 import { useMemo } from "react";
 import { getChallenge } from "@/challenges";
 import type { Mismatch, TestResult } from "@/challenges/judge";
-import { t } from "@/i18n/t";
-import { cn } from "@/lib/utils";
+import { errorText, localized, t } from "@/i18n/t";
 import { dataToPython } from "@/python/emit";
 import { useProgram } from "@/store/program";
 import { canRun } from "@/store/run";
@@ -34,7 +33,7 @@ function Verdict({ result }: { result: TestResult | null }) {
   if (result.status === "error") {
     return (
       <span className="text-destructive">
-        {t("view.fail")} · {t(`error.${result.error.code}`, result.error.params)}
+        {t("view.fail")} · {errorText(result.error)}
       </span>
     );
   }
@@ -88,11 +87,11 @@ export function TestsTab() {
       <ul className="flex flex-col gap-2">
         {challenge.tests.map((test, i) => (
           <li
-            key={test.name.en}
+            key={i}
             data-testid="test-row"
-            className={cn("grid grid-cols-[10rem_1fr_auto] items-start gap-3")}
+            className="grid grid-cols-[10rem_1fr_auto] items-start gap-3"
           >
-            <span className="font-medium">{test.name.en}</span>
+            <span className="font-medium">{localized(test.name)}</span>
             <Verdict result={results[i] ?? null} />
             <Button
               variant="outline"

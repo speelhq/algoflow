@@ -42,11 +42,6 @@
     "start": "Start",
     "end": "End",
     "input": "Input {name} = {value}",
-    "function": "def {name}({params})",
-    "region": {
-      "then": "then",
-      "else": "else"
-    },
     "connector": "Insert a block here",
     "dragHandle": "Drag handle",
     "verdictTrue": "Condition was true",
@@ -95,7 +90,6 @@
     "runAll": "Run all",
     "cleared": "Cleared!",
     "copy": "Copy",
-    "copied": "Copied",
     "download": "Download .py"
   },
   "node": {
@@ -113,7 +107,11 @@
     "if": {
       "label": "If",
       "template": "if {cond}",
-      "help": "Runs the then region when the condition is true, otherwise the else region."
+      "help": "Runs the then region when the condition is true, otherwise the else region.",
+      "region": {
+        "then": "then",
+        "else": "else"
+      }
     },
     "for": {
       "label": "For loop",

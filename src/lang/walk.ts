@@ -17,7 +17,7 @@ export function targetExprs(target: Target): Expr[] {
   }
 }
 
-function isExpr(value: unknown): value is Expr {
+export function isExpr(value: unknown): value is Expr {
   return typeof value === "object" && value !== null && "kind" in value && "id" in value;
 }
 

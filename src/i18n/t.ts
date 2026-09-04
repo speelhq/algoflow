@@ -46,3 +46,13 @@ export function t(key: MessageKey, params?: Params): string {
   }
   return interpolate(text, params);
 }
+
+/** U-70: the message of a diagnostic or runtime error. */
+export function errorText(error: { code: string; params: Params }): string {
+  return t(`error.${error.code}` as MessageKey, error.params);
+}
+
+/** A challenge-file text (C-01 `Localized`) in the current locale, falling back to `en`. */
+export function localized(text: { en: string; ja?: string }): string {
+  return text[current] ?? text.en;
+}

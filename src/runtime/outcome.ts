@@ -20,6 +20,15 @@ export function advance(runner: Runner, limit: number): Done | undefined {
   return undefined;
 }
 
+/** R-11: batches of `batch` events with `setTimeout(0)` between them, until the run finishes. */
+export async function advanceAsync(runner: Runner, batch: number): Promise<Done> {
+  for (;;) {
+    const done = advance(runner, batch);
+    if (done) return done;
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+}
+
 export function outcomeOf(runner: Runner, done: Done): Outcome {
   const state = runner.state();
   const vars: Record<Id, Data> = {};

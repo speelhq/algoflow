@@ -8,8 +8,8 @@ export const ifStmt = defineStmt<"if">({
   category: "control",
   slots: [
     { name: "cond", role: "expr", required: true },
-    { name: "then", role: "body" },
-    { name: "else", role: "body" },
+    { name: "then", role: "body", labelled: true },
+    { name: "else", role: "body", labelled: true },
   ],
   create: () => ({
     id: newId(),

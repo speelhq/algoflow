@@ -93,6 +93,17 @@ describe("run store (R-11, R-12)", () => {
     expect(s.events).toHaveLength(TRACE_LIMIT);
   });
 
+  it("setSpeed during a run to end does not start a play timer", async () => {
+    useProgram.setState({ program: program([for_("i", num(0), num(1500), [print(v("i"))])]) });
+    const promise = useRun.getState().runToEnd();
+    useRun.getState().setSpeed(50);
+    vi.advanceTimersByTime(19); // a 50 Hz tick would have fired at 20 ms; the batch loop is untouched
+    expect(useRun.getState().step).toBe(BATCH);
+    const outcome = await Promise.all([promise, vi.runAllTimersAsync()]).then(([o]) => o);
+    expect(outcome?.stdout).toHaveLength(1500);
+    expect(useRun.getState().status).toBe("done");
+  });
+
   it("Pause cancels a run to end", async () => {
     useProgram.setState({ program: program([for_("i", num(0), num(1500), [print(v("i"))])]) });
     const promise = useRun.getState().runToEnd();

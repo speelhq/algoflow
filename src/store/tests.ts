@@ -1,11 +1,11 @@
-// U-61 Tests tab, C-10..C-12, C-16: every test is judged on its own runner in R-11
-// batches; `Run with this input` also plays that test in the driver.
+// U-61 Tests tab, C-10..C-12, C-15: `Run all` judges every test on its own runner in R-11
+// batches; `Run with this input` plays the test in the driver and judges that run.
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";
 import type { Test } from "@/challenges/types";
 import type { Program } from "@/lang/types";
-import { advance, outcomeOf } from "@/runtime/outcome";
+import { advanceAsync, outcomeOf } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import { useProgram } from "./program";
 import { BATCH, canRun, useRun } from "./run";
@@ -25,11 +25,7 @@ let generation = 0;
 
 async function evaluate(program: Program, test: Test): Promise<TestResult> {
   const runner = run(program, test.inputs, test.seed ?? 1);
-  let done = advance(runner, BATCH);
-  while (!done) {
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    done = advance(runner, BATCH);
-  }
+  const done = await advanceAsync(runner, BATCH);
   return judge(test, outcomeOf(runner, done));
 }
 
@@ -50,38 +46,44 @@ export const useTests = create<TestsState>()((set, get) => {
     });
   };
 
+  const guarded = async (mine: number, work: () => Promise<void>) => {
+    set({ running: true });
+    try {
+      await work();
+    } finally {
+      if (mine === generation) set({ running: false });
+    }
+  };
+
   return {
     results: [],
     running: false,
     cleared: false,
 
-    async runTest(index) {
+    runTest(index) {
       const target = current();
       const test = target?.tests[index];
-      if (!target || !test) return;
+      if (!target || !test) return Promise.resolve();
       const mine = ++generation;
       useRun.getState().selectTest(index);
-      set({ running: true });
-      const [result] = await Promise.all([
-        evaluate(target.program, test),
-        useRun.getState().runToEnd(),
-      ]);
-      if (mine !== generation) return;
-      record(index, result, target.tests.length);
-      set({ running: false });
+      return guarded(mine, async () => {
+        const outcome = await useRun.getState().runToEnd();
+        if (mine !== generation || !outcome) return;
+        record(index, judge(test, outcome), target.tests.length);
+      });
     },
 
-    async runAll() {
+    runAll() {
       const target = current();
-      if (!target) return;
+      if (!target) return Promise.resolve();
       const mine = ++generation;
-      set({ running: true });
-      for (const [index, test] of target.tests.entries()) {
-        const result = await evaluate(target.program, test);
-        if (mine !== generation) return;
-        record(index, result, target.tests.length);
-      }
-      set({ running: false });
+      return guarded(mine, async () => {
+        for (const [index, test] of target.tests.entries()) {
+          const result = await evaluate(target.program, test);
+          if (mine !== generation) return;
+          record(index, result, target.tests.length);
+        }
+      });
     },
 
     reset() {

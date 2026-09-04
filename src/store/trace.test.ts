@@ -87,6 +87,7 @@ describe("withColumns", () => {
       cells: { b: "1", a: "2" },
     };
     expect(withColumns(["n", "a"], row)).toEqual(["n", "a", "b"]);
-    expect(withColumns(["n", "a", "b"], row)).toEqual(["n", "a", "b"]);
+    const same = ["n", "a", "b"];
+    expect(withColumns(same, row)).toBe(same);
   });
 });

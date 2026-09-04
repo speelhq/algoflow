@@ -36,9 +36,7 @@ export function restore(id: string): Program {
     const { challengeId: _ignored, ...free } = stored ?? emptyProgram();
     return { ...free, inputs: [] };
   }
-  const base =
-    stored ??
-    (challenge.starter ? structuredClone(challenge.starter) : emptyProgram(challenge.title.en));
+  const base = stored ?? (challenge.starter ? structuredClone(challenge.starter) : emptyProgram());
   return { ...base, challengeId: challenge.id, inputs: structuredClone(challenge.inputs) };
 }
 

@@ -48,9 +48,9 @@ describe("program store (C-13, L-53, L-55)", () => {
     expect(p.main).not.toBe(withStarter.starter?.main); // a copy, never the bundled object
   });
 
-  it("creates an empty main titled after the challenge when there is no starter", () => {
+  it("creates an empty main when there is no starter", () => {
     expect(restore("bare")).toEqual({
-      ...emptyProgram("Bare"),
+      ...emptyProgram(),
       challengeId: "bare",
       inputs: [{ name: "m", value: 7 }],
     });

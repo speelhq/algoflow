@@ -1,7 +1,7 @@
 // U-30: tabs `main`, one per function (classes in M-05), and `+` (M-05).
 // U-31: Start, one read-only Input card per input, the main region, End.
 import { CircleIcon, PlusIcon } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { t } from "@/i18n/t";
 import { firstAssignments } from "@/lang/validate";
 import { dataToPython } from "@/python/emit";
@@ -9,6 +9,8 @@ import { useProgram } from "@/store/program";
 import { PanelTab, PanelTabContent, PanelTabList, PanelTabs } from "@/ui/app/PanelTabs";
 import { Button } from "@/ui/primitives/button";
 import { Region } from "./Region";
+
+const MAIN = "main";
 
 function Terminal({ label }: { label: string }) {
   return (
@@ -22,11 +24,19 @@ function Terminal({ label }: { label: string }) {
 export function Canvas() {
   const program = useProgram((s) => s.program);
   const creates = useMemo(() => firstAssignments(program), [program]);
+  const [tab, setTab] = useState(MAIN);
+  // A selected function tab may vanish with the program (challenge switch): fall back to main.
+  const value = program.functions.some((fn) => fn.id === tab) ? tab : MAIN;
 
   return (
-    <PanelTabs defaultValue="main">
+    <PanelTabs
+      value={value}
+      onValueChange={(next) => {
+        if (typeof next === "string") setTab(next);
+      }}
+    >
       <PanelTabList>
-        <PanelTab value="main" className="font-mono">
+        <PanelTab value={MAIN} className="font-mono">
           {t("canvas.main")}
         </PanelTab>
         {program.functions.map((fn) => (
@@ -39,7 +49,7 @@ export function Canvas() {
         </Button>
       </PanelTabList>
 
-      <PanelTabContent value="main" className="p-6">
+      <PanelTabContent value={MAIN} className="p-6">
         <ol className="mx-auto flex max-w-3xl flex-col gap-1">
           <Terminal label={t("canvas.start")} />
           {program.inputs.map((input) => (
@@ -60,10 +70,7 @@ export function Canvas() {
 
       {program.functions.map((fn) => (
         <PanelTabContent key={fn.id} value={fn.id} className="p-6">
-          <div className="mx-auto flex max-w-3xl flex-col gap-1">
-            <div className="w-fit rounded-lg border border-border bg-muted px-3 py-1.5 font-mono text-sm">
-              {t("canvas.function", { name: fn.name, params: fn.params.join(", ") })}
-            </div>
+          <div className="mx-auto max-w-3xl">
             <Region stmts={fn.body} creates={creates} />
           </div>
         </PanelTabContent>

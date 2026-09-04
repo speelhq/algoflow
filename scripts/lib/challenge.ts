@@ -4,8 +4,6 @@ import { TRACKS, type Challenge, type Localized } from "@/challenges/types";
 import { migrate } from "@/lang/migrate";
 import { isValidName, validate } from "@/lang/validate";
 
-export type { Challenge, Localized, Test } from "@/challenges/types";
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }

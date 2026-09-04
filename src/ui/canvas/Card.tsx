@@ -3,7 +3,7 @@
 // a frame header shows ✓/✗ after its compare, and the failing card shows the error.
 import { CheckIcon, GripVerticalIcon, XIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { t, type MessageKey } from "@/i18n/t";
+import { errorText, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import type { NodeId, Stmt } from "@/lang/types";
 import { regionsOf } from "@/lang/walk";
@@ -13,21 +13,17 @@ import { useRun } from "@/store/run";
 import { SlotContent } from "./Chip";
 import { CATEGORY_ICONS } from "./icons";
 import { Region } from "./Region";
-import { renderTemplate, templateOf } from "./Template";
-
-const REGION_LABELS: Partial<Record<string, MessageKey>> = {
-  then: "canvas.region.then",
-  else: "canvas.region.else",
-};
+import { nodeText, renderTemplate, templateOf } from "./Template";
 
 export function Card({ stmt, creates }: { stmt: Stmt; creates: Set<NodeId> }) {
   const def = getNode(keyOf(stmt));
   const Icon = CATEGORY_ICONS[def.category];
   const template = templateOf(def, stmt, { creates: creates.has(stmt.id) });
   const regions = regionsOf(stmt);
+  const isFrame = regions.length > 0;
 
   const active = useRun((s) => s.activeId === stmt.id);
-  const verdict = useRun((s) => s.verdicts[stmt.id]);
+  const verdict = useRun((s) => (isFrame ? s.verdicts[stmt.id] : undefined));
   const error = useRun((s) =>
     s.status === "error" && s.activeId === stmt.id && s.done?.type === "error"
       ? s.done.error
@@ -72,16 +68,20 @@ export function Card({ stmt, creates }: { stmt: Stmt; creates: Set<NodeId> }) {
       </div>
       {error && (
         <p data-testid="card-error" className="mt-1 text-xs text-destructive">
-          {t(`error.${error.code}`, error.params)}
+          {errorText(error)}
         </p>
       )}
       {regions.map((region, i) => {
         // U-32: an empty secondary region (`else`) is hidden until shown from the header's menu (M-03).
         if (i > 0 && region.stmts.length === 0) return null;
-        const label = REGION_LABELS[region.slot];
+        const slot = def.slots.find((s) => s.name === region.slot);
         return (
           <div key={region.slot} className="ml-3 border-l-2 border-border pl-3">
-            {label && <div className="text-xs text-muted-foreground">{t(label)}</div>}
+            {slot?.labelled && (
+              <div className="text-xs text-muted-foreground">
+                {nodeText(def.key, `region.${region.slot}`)}
+              </div>
+            )}
             <Region stmts={region.stmts} creates={creates} />
           </div>
         );

@@ -281,12 +281,27 @@ function isEmptySlot(slot: Slot, value: unknown): boolean {
   }
 }
 
+type Analysis = { diagnostics: Diagnostic[]; firstAssigns: Set<NodeId> };
+
+// One Collector pass per Program object: the driver, the canvas, and the panels all ask.
+// Edits are pure (L-50), so a mutated Program is never re-validated; build a new object.
+const analyses = new WeakMap<Program, Analysis>();
+
+function analyze(program: Program): Analysis {
+  let analysis = analyses.get(program);
+  if (!analysis) {
+    const collector = new Collector(program);
+    collector.ids();
+    collector.declarations();
+    collector.scopes();
+    analysis = { diagnostics: collector.diagnostics, firstAssigns: collector.firstAssigns };
+    analyses.set(program, analysis);
+  }
+  return analysis;
+}
+
 export function validate(program: Program): Diagnostic[] {
-  const collector = new Collector(program);
-  collector.ids();
-  collector.declarations();
-  collector.scopes();
-  return collector.diagnostics;
+  return analyze(program).diagnostics;
 }
 
 /**
@@ -295,7 +310,5 @@ export function validate(program: Program): Diagnostic[] {
  * and loop variables are created elsewhere and never count.
  */
 export function firstAssignments(program: Program): Set<NodeId> {
-  const collector = new Collector(program);
-  collector.scopes();
-  return collector.firstAssigns;
+  return analyze(program).firstAssigns;
 }

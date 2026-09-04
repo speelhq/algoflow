@@ -17,11 +17,10 @@ export function getChallenge(id: string | undefined): Challenge | undefined {
 }
 
 /** Tracks in S-05 order, each with its challenges by `order`; empty tracks are omitted. */
-export function challengesByTrack(): Array<{ track: Track; challenges: Challenge[] }> {
-  return TRACKS.map((track) => ({
+export const CHALLENGE_GROUPS: ReadonlyArray<{ track: Track; challenges: Challenge[] }> =
+  TRACKS.map((track) => ({
     track,
     challenges: CHALLENGES.filter((challenge) => challenge.track === track),
   })).filter((group) => group.challenges.length > 0);
-}
 
 export type { Challenge, Localized, Test, Track } from "./types";
