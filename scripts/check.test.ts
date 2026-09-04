@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/nodes/testing";
 import { checkChallengeSchema } from "./lib/challenge";
-import { buildScript } from "./lib/cpython";
+import { buildScript, randomShims } from "./lib/cpython";
 import { execute } from "./lib/interp";
 
 const { assign, num, bin, v, print } = ast;
@@ -105,10 +105,16 @@ describe("buildScript (R-20)", () => {
   it("wraps the code with the random shim, stdout capture, and the JSON epilogue", () => {
     const script = buildScript("x = random.randint(1, 6)\nprint(x)\n", [4], ["x"]);
     expect(script).toContain("_draws = iter([4])");
-    expect(script).toContain("_random.randint = _draw");
-    expect(script).toContain("sys.stdout = _out");
-    expect(script).toContain("x = random.randint(1, 6)\nprint(x)\n");
-    expect(script).toContain('for name in ["x"]');
+    expect(script).toContain('for _name in ["randint"]:');
+    expect(script).toContain("builtins.print = _print");
+    expect(script).toContain(
+      'exec(compile("x = random.randint(1, 6)\\nprint(x)\\n", "solution.py", "exec"), _ns)',
+    );
+    expect(script).toContain('for name in ["x"] if name in _ns');
     expect(script).toContain('json.dumps({"stdout": _lines, "vars": _vars})');
+  });
+
+  it("derives the random shims from the registry (N-05)", () => {
+    expect(randomShims()).toEqual(["randint"]);
   });
 });
