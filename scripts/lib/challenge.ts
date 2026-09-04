@@ -1,29 +1,10 @@
-// C-01, C-03: the challenge schema and its structural checks (used by scripts/check.ts).
+// C-01, C-03: structural checks of a challenge file (used by scripts/check.ts).
+// The schema types live in src/challenges/types.ts (C-14).
+import { TRACKS, type Challenge, type Localized } from "@/challenges/types";
 import { migrate } from "@/lang/migrate";
 import { isValidName, validate } from "@/lang/validate";
-import type { Data, Id, Input, Program } from "@/lang/types";
 
-export type Localized = { en: string; ja?: string };
-export type Test = {
-  name: Localized;
-  inputs: Record<Id, Data>;
-  seed?: number;
-  expect: { variables?: Record<Id, Data>; stdout?: string[] };
-};
-export type Challenge = {
-  id: string;
-  track: "day1" | "day2" | "day3" | "classic" | "micrograd";
-  order: number;
-  title: Localized;
-  description: Localized;
-  inputs: Input[];
-  tests: Test[];
-  hints: Localized[];
-  starter?: Program;
-  solution: Program;
-};
-
-export const TRACKS = ["day1", "day2", "day3", "classic", "micrograd"] as const;
+export type { Challenge, Localized, Test } from "@/challenges/types";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);

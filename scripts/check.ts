@@ -3,6 +3,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { judge, sameLines } from "@/challenges/judge";
 import { dataEquals } from "@/lang/data";
 import type { Data } from "@/lang/types";
 import { emit } from "@/python/emit";
@@ -31,18 +32,19 @@ function checkTest(challenge: Challenge, test: Test, index: number): string[] {
   const problems: string[] = [];
   const seed = test.seed ?? 1;
   const outcome = execute(challenge.solution, test.inputs, seed);
-  if (outcome.done.type === "error") {
-    return [
-      `${label}: interpreter ${outcome.done.error.code} at ${outcome.done.error.nodeId} ${JSON.stringify(outcome.done.error.params)}`,
-    ];
+  const verdict = judge(test, outcome);
+  if (verdict.status === "error") {
+    const { code, nodeId, params } = verdict.error;
+    return [`${label}: interpreter ${code} at ${nodeId} ${JSON.stringify(params)}`];
   }
-  for (const [name, expected] of Object.entries(test.expect.variables ?? {})) {
-    if (!(name in outcome.vars)) problems.push(`${label}: variable ${name} was never assigned`);
-    else if (!dataEquals(expected, outcome.vars[name] ?? null))
-      problems.push(`${label}: ${describeMismatch(name, expected, outcome.vars[name])}`);
-  }
-  if (test.expect.stdout && !sameLines(test.expect.stdout, outcome.stdout)) {
-    problems.push(`${label}: ${describeMismatch("stdout", test.expect.stdout, outcome.stdout)}`);
+  if (verdict.status === "fail") {
+    for (const m of verdict.mismatches) {
+      if (m.kind === "stdout")
+        problems.push(`${label}: ${describeMismatch("stdout", m.expected, m.actual)}`);
+      else if (m.actual === undefined)
+        problems.push(`${label}: variable ${m.name} was never assigned`);
+      else problems.push(`${label}: ${describeMismatch(m.name, m.expected, m.actual)}`);
+    }
   }
 
   const program = {
@@ -65,10 +67,6 @@ function checkTest(challenge: Challenge, test: Test, index: number): string[] {
       problems.push(`${label}: CPython ${describeMismatch(name, value, theirs)}`);
   }
   return problems;
-}
-
-function sameLines(a: string[], b: string[]): boolean {
-  return a.length === b.length && a.every((line, i) => line === b[i]);
 }
 
 let failed = 0;
