@@ -1,8 +1,8 @@
 {
   "id": "max-of-three",
-  "track": "day1",
-  "order": 4,
   "title": { "en": "Max of three" },
+  "difficulty": "easy",
+  "topics": ["conditions"],
   "description": {
     "en": "Store the largest of `a`, `b`, and `c` in `biggest` using **if** blocks, not the `max` builtin."
   },
@@ -38,6 +38,7 @@
     { "en": "If `b` is greater than `biggest`, replace `biggest` with `b`." },
     { "en": "Do the same for `c`. Two **if** blocks are enough." }
   ],
+  "takeaway": { "en": "Two **if** blocks replaced `biggest` whenever a larger value appeared." },
   "solution": {
     "version": 1,
     "title": "Max of three",

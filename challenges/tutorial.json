@@ -1,10 +1,10 @@
 {
   "id": "tutorial",
-  "track": "day1",
-  "order": 1,
   "title": { "en": "Hello" },
+  "difficulty": "easy",
+  "topics": ["output"],
   "description": {
-    "en": "Say hello to `name`.\n\nDrag a **print** block onto the canvas and give it the text `\"Hello, \"` joined to `name` with `+`."
+    "en": "Say hello to `name`.\n\nAdd a **print** block with the `+` under `Start` and give it the text `\"Hello, \"` joined to `name` with `+`."
   },
   "inputs": [{ "name": "name", "value": "Claude" }],
   "tests": [
@@ -21,10 +21,11 @@
     { "name": { "en": "Ada" }, "inputs": { "name": "Ada" }, "expect": { "stdout": ["Hello, Ada"] } }
   ],
   "hints": [
-    { "en": "The Blocks tab has a **print** block under Basic." },
+    { "en": "Click the `+` under `Start` and choose **Print** under Basic." },
     { "en": "Click the print slot and choose a text value, then use `+` to join `name` to it." },
     { "en": "The text is `\"Hello, \"` with a space after the comma." }
   ],
+  "takeaway": { "en": "You printed text joined to an input with `+`." },
   "solution": {
     "version": 1,
     "title": "Hello",

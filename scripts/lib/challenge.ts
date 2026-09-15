@@ -1,14 +1,14 @@
 // C-01, C-03: structural checks of a challenge file (used by scripts/check.ts).
 // The schema types live in src/challenges/types.ts (C-14).
-import { TRACKS, type Challenge, type Localized } from "@/challenges/types";
+import { DIFFICULTIES, TOPICS, type Challenge, type Localized } from "@/challenges/types";
 import { migrate } from "@/lang/migrate";
 import { isValidName, validate } from "@/lang/validate";
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+export function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function isLocalized(value: unknown, requireJa: boolean): value is Localized {
+export function isLocalized(value: unknown, requireJa: boolean): value is Localized {
   if (!isRecord(value) || typeof value.en !== "string") return false;
   if (requireJa && typeof value.ja !== "string") return false;
   return value.ja === undefined || typeof value.ja === "string";
@@ -32,11 +32,18 @@ export function checkChallengeSchema(
 
   if (json.id !== fileId)
     problems.push(`id "${String(json.id)}" does not match the file name "${fileId}"`);
-  if (!TRACKS.includes(json.track as (typeof TRACKS)[number]))
-    problems.push(`track "${String(json.track)}" is not one of ${TRACKS.join(", ")}`);
-  if (typeof json.order !== "number") problems.push("order must be a number");
   if (!isLocalized(json.title, requireJa)) problems.push("title must be { en, ja? }");
+  if (!DIFFICULTIES.some((d) => d === json.difficulty))
+    problems.push(`difficulty "${String(json.difficulty)}" is not one of ${DIFFICULTIES.join(", ")}`);
+  if (!Array.isArray(json.topics) || json.topics.length === 0)
+    problems.push("topics must be a non-empty array (C-01)");
+  else
+    for (const topic of json.topics)
+      if (!TOPICS.some((t) => t === topic))
+        problems.push(`topic "${String(topic)}" is not one of ${TOPICS.join(", ")} (U-14)`);
   if (!isLocalized(json.description, requireJa)) problems.push("description must be { en, ja? }");
+  if (json.takeaway !== undefined && !isLocalized(json.takeaway, requireJa))
+    problems.push("takeaway must be { en, ja? }");
 
   const inputs = Array.isArray(json.inputs) ? json.inputs : [];
   if (!Array.isArray(json.inputs)) problems.push("inputs must be an array");

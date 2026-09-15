@@ -1,0 +1,10 @@
+[
+  {
+    "id": "course",
+    "title": { "en": "3-Day Course" },
+    "description": {
+      "en": "From your first print to sorting a list, in the order the course teaches them."
+    },
+    "problems": ["tutorial", "sum-to-n", "fizzbuzz", "max-of-three", "countdown"]
+  }
+]

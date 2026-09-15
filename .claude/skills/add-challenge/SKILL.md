@@ -8,7 +8,7 @@ allowed-tools: Bash(pnpm check *)
 Create the challenge described in $ARGUMENTS.
 
 1. Read `docs/spec/06-challenges.md` (schema and the challenge's row) and
-   `challenges/bubble-sort.json` as the reference file.
+   `challenges/fizzbuzz.json` as the reference file.
 2. Write `challenges/<id>.json` with: English title and description (add Japanese
    texts only if `src/i18n/ja.json` exists), difficulty, topics, inputs, at least
    three tests of which one has an English name starting with `edge:`, three hints,

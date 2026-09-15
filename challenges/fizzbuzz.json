@@ -1,8 +1,8 @@
 {
   "id": "fizzbuzz",
-  "track": "day1",
-  "order": 3,
   "title": { "en": "FizzBuzz" },
+  "difficulty": "easy",
+  "topics": ["loops", "conditions"],
   "description": {
     "en": "Print the numbers from 1 to `n`, one per line. For multiples of 3 print `Fizz` instead, for multiples of 5 print `Buzz`, and for multiples of both print `FizzBuzz`."
   },
@@ -41,6 +41,7 @@
       "en": "Put an **if** inside the **else** region of another **if** to test the remaining cases in order."
     }
   ],
+  "takeaway": { "en": "Nested **if** blocks tested the divisible-by-15 case before 3 and 5." },
   "solution": {
     "version": 1,
     "title": "FizzBuzz",

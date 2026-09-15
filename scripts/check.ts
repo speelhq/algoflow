@@ -12,16 +12,20 @@ import { checkChallengeSchema } from "./lib/challenge";
 import { runPython } from "./lib/cpython";
 import { checkI18n, formatReport } from "./lib/i18n-check";
 import { execute } from "./lib/interp";
+import { checkPlans } from "./lib/plans";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+const PLANS_FILE = "plans.json";
 const args = process.argv.slice(2);
+/** Every challenge file on disk; `plans.json` sits beside them and is checked separately (C-16). */
+const allFiles = readdirSync(join(root, "challenges"))
+  .filter((f) => f.endsWith(".json") && f !== PLANS_FILE)
+  .sort()
+  .map((f) => join(root, "challenges", f));
 const files =
   args.length > 0
-    ? args.map((a) => resolve(a))
-    : readdirSync(join(root, "challenges"))
-        .filter((f) => f.endsWith(".json"))
-        .sort()
-        .map((f) => join(root, "challenges", f));
+    ? args.map((a) => resolve(a)).filter((f) => basename(f) !== PLANS_FILE)
+    : allFiles;
 
 function describeMismatch(kind: string, expected: unknown, actual: unknown): string {
   return `${kind}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`;
@@ -71,7 +75,6 @@ function checkTest(challenge: Challenge, test: Test, index: number): string[] {
 }
 
 let failed = 0;
-const orders = new Map<string, Map<number, string>>();
 for (const file of files) {
   const id = basename(file, ".json");
   let json: unknown;
@@ -83,15 +86,7 @@ for (const file of files) {
     continue;
   }
   const { challenge, problems } = checkChallengeSchema(json, id);
-  if (challenge) {
-    const seen = orders.get(challenge.track) ?? new Map<number, string>();
-    const other = seen.get(challenge.order);
-    if (other)
-      problems.push(`order ${challenge.order} in ${challenge.track} is also used by ${other}`);
-    seen.set(challenge.order, id);
-    orders.set(challenge.track, seen);
-    challenge.tests.forEach((test, i) => problems.push(...checkTest(challenge, test, i)));
-  }
+  if (challenge) challenge.tests.forEach((test, i) => problems.push(...checkTest(challenge, test, i)));
   if (problems.length === 0) {
     console.log(
       `ok   ${id} (${challenge?.tests.length ?? 0} tests, interpreter and CPython agree)`,
@@ -103,6 +98,32 @@ for (const file of files) {
   }
 }
 console.log(`challenges: ${files.length - failed}/${files.length} ok`);
+
+// C-16, C-18: the plans against every challenge file on disk, whatever files were given.
+{
+  const knownIds = new Set(allFiles.map((f) => basename(f, ".json")));
+  let plansProblems: string[];
+  let count = { plans: 0, problems: 0 };
+  try {
+    const json: unknown = JSON.parse(readFileSync(join(root, "challenges", PLANS_FILE), "utf8"));
+    const result = checkPlans(json, knownIds);
+    plansProblems = result.problems;
+    if (result.plans)
+      count = {
+        plans: result.plans.length,
+        problems: result.plans.reduce((n, plan) => n + plan.problems.length, 0),
+      };
+  } catch (error) {
+    plansProblems = [error instanceof Error ? error.message : String(error)];
+  }
+  if (plansProblems.length === 0) {
+    console.log(`ok   plans (${count.plans} plan(s), ${count.problems} problems)`);
+  } else {
+    failed += 1;
+    console.log("FAIL plans");
+    for (const problem of plansProblems) console.log(`     ${problem}`);
+  }
+}
 
 const i18n = checkI18n({ root, srcDir: join(root, "src"), i18nDir: join(root, "src", "i18n") });
 for (const line of formatReport(i18n)) console.log(line);

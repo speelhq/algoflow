@@ -1,9 +1,11 @@
-// C-01, C-03: the schema checker; R-20: the CPython script shape (no python run here).
+// C-01, C-03: the schema checker; C-16, C-18: the plans checker; R-20: the CPython
+// script shape (no python run here).
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/nodes/testing";
 import { checkChallengeSchema } from "./lib/challenge";
 import { buildScript, randomShims } from "./lib/cpython";
 import { execute } from "./lib/interp";
+import { checkPlans } from "./lib/plans";
 
 const { assign, num, bin, v, print } = ast;
 
@@ -13,10 +15,11 @@ function valid() {
   });
   return {
     id: "demo",
-    track: "day1",
-    order: 9,
     title: { en: "Demo" },
+    difficulty: "easy",
+    topics: ["variables"],
     description: { en: "Add one." },
+    takeaway: { en: "You added one." },
     inputs: [{ name: "n", value: 1 }],
     tests: [
       { name: { en: "one" }, inputs: { n: 1 }, expect: { variables: { total: 2 } } },
@@ -52,6 +55,24 @@ describe("checkChallengeSchema (C-01, C-03)", () => {
     );
   });
 
+  it("C-01: checks difficulty, topics (U-14), and takeaway", () => {
+    const c = valid() as unknown as Record<string, unknown>;
+    c.difficulty = "trivial";
+    c.topics = [];
+    c.takeaway = "plain text";
+    expect(checkChallengeSchema(c, "demo").problems).toEqual([
+      expect.stringContaining('difficulty "trivial"'),
+      expect.stringContaining("topics must be a non-empty array"),
+      expect.stringContaining("takeaway must be { en, ja? }"),
+    ]);
+    c.difficulty = "hard";
+    c.topics = ["loops", "knitting"];
+    delete c.takeaway;
+    expect(checkChallengeSchema(c, "demo").problems).toEqual([
+      expect.stringContaining('topic "knitting"'),
+    ]);
+  });
+
   it("requires at least three tests and a non-empty expect", () => {
     const c = valid() as unknown as { tests: unknown[] };
     const [first, second] = valid().tests;
@@ -80,6 +101,42 @@ describe("checkChallengeSchema (C-01, C-03)", () => {
     expect(checkChallengeSchema(valid(), "demo", { requireJa: true }).problems).toEqual(
       expect.arrayContaining([expect.stringContaining("title must be { en, ja? }")]),
     );
+  });
+});
+
+describe("checkPlans (C-16, C-18)", () => {
+  const known = new Set(["a", "b", "c"]);
+  const plan = (id: string, problems: unknown[]) => ({
+    id,
+    title: { en: id },
+    description: { en: "one line" },
+    problems,
+  });
+
+  it("accepts plans whose members exist once, in one plan each", () => {
+    const result = checkPlans([plan("p", ["a", "b"]), plan("q", ["c"])], known);
+    expect(result.problems).toEqual([]);
+    expect(result.plans?.map((p) => p.id)).toEqual(["p", "q"]);
+  });
+
+  it("reports an unknown id, a repeated id, an id in two plans, a duplicate plan, an empty plan", () => {
+    const { plans, problems } = checkPlans(
+      [plan("p", ["a", "zzz", "a"]), plan("q", ["a"]), plan("q", []), { id: 3, problems: "a" }],
+      known,
+    );
+    expect(plans).toBeNull();
+    expect(problems).toEqual([
+      expect.stringContaining('unknown challenge "zzz"'),
+      expect.stringContaining('"a" is listed twice'),
+      expect.stringContaining('"a" is in plan "p" and plan "q"'),
+      expect.stringContaining('plan "q" is listed twice'),
+      expect.stringContaining('plan "q" has no problems (C-18)'),
+      expect.stringContaining("plans[3] needs a string id"),
+      expect.stringContaining("plans[3]: title must be"),
+      expect.stringContaining("plans[3]: description must be"),
+      expect.stringContaining("plans[3]: problems must be an array"),
+    ]);
+    expect(checkPlans({}, known).problems).toEqual(["plans.json must be an array"]);
   });
 });
 

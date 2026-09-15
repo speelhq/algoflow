@@ -9,9 +9,9 @@ const { assign, num, print, v } = ast;
 
 const withStarter: Challenge = {
   id: "with-starter",
-  track: "day1",
-  order: 1,
   title: { en: "With starter" },
+  difficulty: "easy",
+  topics: ["output"],
   description: { en: "" },
   inputs: [{ name: "n", value: 3 }],
   tests: [],

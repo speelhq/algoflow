@@ -1,9 +1,25 @@
-// C-01: the challenge schema. A leaf module: scripts run with tsx import it, so it
-// must not import `index.ts` (which uses `import.meta.glob`, C-14).
+// C-01, C-16: the challenge and plan schemas. A leaf module: scripts run with tsx
+// import it, so it must not import `index.ts` (which uses `import.meta.glob`, C-14).
 import type { Data, Id, Input, Program } from "@/lang/types";
 
-export const TRACKS = ["day1", "day2", "day3", "classic", "micrograd"] as const;
-export type Track = (typeof TRACKS)[number];
+export const DIFFICULTIES = ["easy", "medium", "hard"] as const;
+export type Difficulty = (typeof DIFFICULTIES)[number];
+
+/** U-14: the fixed topic list. */
+export const TOPICS = [
+  "output",
+  "variables",
+  "loops",
+  "conditions",
+  "lists",
+  "searching",
+  "sorting",
+  "recursion",
+  "dictionaries",
+  "classes",
+  "gradients",
+] as const;
+export type Topic = (typeof TOPICS)[number];
 
 export type Localized = { en: string; ja?: string };
 export type Test = {
@@ -14,13 +30,23 @@ export type Test = {
 };
 export type Challenge = {
   id: string;
-  track: Track;
-  order: number;
   title: Localized;
+  difficulty: Difficulty;
+  topics: Topic[];
   description: Localized;
   inputs: Input[];
   tests: Test[];
   hints: Localized[];
+  /** U-83: one sentence shown as `What you used`. */
+  takeaway?: Localized;
   starter?: Program;
   solution: Program;
+};
+
+/** C-16: one study plan of `challenges/plans.json`. */
+export type Plan = {
+  id: string;
+  title: Localized;
+  description: Localized;
+  problems: string[];
 };

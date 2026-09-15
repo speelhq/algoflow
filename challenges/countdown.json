@@ -1,8 +1,8 @@
 {
   "id": "countdown",
-  "track": "day1",
-  "order": 5,
   "title": { "en": "Countdown" },
+  "difficulty": "easy",
+  "topics": ["loops"],
   "description": {
     "en": "Print `n`, then `n - 1`, and so on down to `0`, one number per line. Use a **while** block."
   },
@@ -21,6 +21,7 @@
     { "en": "Loop **while** `k >= 0`; inside, print `k`." },
     { "en": "After printing, set `k` to `k - 1`, or the loop never ends." }
   ],
+  "takeaway": { "en": "A **while** loop kept going until its condition became false." },
   "solution": {
     "version": 1,
     "title": "Countdown",

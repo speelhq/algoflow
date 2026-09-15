@@ -1,8 +1,8 @@
 {
   "id": "sum-to-n",
-  "track": "day1",
-  "order": 2,
   "title": { "en": "Sum to n" },
+  "difficulty": "easy",
+  "topics": ["loops", "variables"],
   "description": {
     "en": "Add up every whole number from 1 to `n` and store the result in `total`.\n\nFor `n = 10` the answer is `55`."
   },
@@ -21,6 +21,7 @@
     { "en": "Use a **for** block from 1 up to `n + 1`; the stop value is not included." },
     { "en": "Inside the loop, set `total` to `total + i`." }
   ],
+  "takeaway": { "en": "A **for** loop added each number to a running total." },
   "solution": {
     "version": 1,
     "title": "Sum to n",
