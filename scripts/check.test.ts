@@ -138,6 +138,15 @@ describe("checkPlans (C-16, C-18)", () => {
     ]);
     expect(checkPlans({}, known).problems).toEqual(["plans.json must be an array"]);
   });
+
+  it("C-16: two plans sharing an id still report a member they both list", () => {
+    const { problems } = checkPlans([plan("p", ["a"]), plan("p", ["a", 7])], known);
+    expect(problems).toEqual([
+      expect.stringContaining('plan "p" is listed twice'),
+      expect.stringContaining('"a" is in plan "p" and plan "p" (C-16)'),
+      expect.stringContaining('plan "p": problems[1] must be a challenge id'),
+    ]);
+  });
 });
 
 describe("execute (C-10 view of a run)", () => {

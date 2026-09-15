@@ -34,7 +34,9 @@ export function checkChallengeSchema(
     problems.push(`id "${String(json.id)}" does not match the file name "${fileId}"`);
   if (!isLocalized(json.title, requireJa)) problems.push("title must be { en, ja? }");
   if (!DIFFICULTIES.some((d) => d === json.difficulty))
-    problems.push(`difficulty "${String(json.difficulty)}" is not one of ${DIFFICULTIES.join(", ")}`);
+    problems.push(
+      `difficulty "${String(json.difficulty)}" is not one of ${DIFFICULTIES.join(", ")}`,
+    );
   if (!Array.isArray(json.topics) || json.topics.length === 0)
     problems.push("topics must be a non-empty array (C-01)");
   else

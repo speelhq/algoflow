@@ -14,10 +14,14 @@ export function checkPlans(
   if (!Array.isArray(json)) return { plans: null, problems: ["plans.json must be an array"] };
   const problems: string[] = [];
   const planIds = new Set<string>();
-  const owners = new Map<string, string>();
+  /** Challenge id → index and label of the plan that first listed it. */
+  const owners = new Map<string, { index: number; label: string }>();
 
   json.forEach((plan, p) => {
-    if (!isRecord(plan)) return problems.push(`plans[${p}] must be an object`);
+    if (!isRecord(plan)) {
+      problems.push(`plans[${p}] must be an object`);
+      return;
+    }
     const label = typeof plan.id === "string" ? `plan "${plan.id}"` : `plans[${p}]`;
     if (typeof plan.id !== "string") problems.push(`${label} needs a string id`);
     else if (planIds.has(plan.id)) problems.push(`${label} is listed twice`);
@@ -26,22 +30,25 @@ export function checkPlans(
     if (!isLocalized(plan.description, requireJa))
       problems.push(`${label}: description must be { en, ja? }`);
 
-    if (!Array.isArray(plan.problems)) return problems.push(`${label}: problems must be an array`);
+    if (!Array.isArray(plan.problems)) {
+      problems.push(`${label}: problems must be an array`);
+      return;
+    }
     if (plan.problems.length === 0) problems.push(`${label} has no problems (C-18)`);
     const seen = new Set<string>();
-    for (const id of plan.problems) {
+    plan.problems.forEach((id, i) => {
       if (typeof id !== "string") {
-        problems.push(`${label}: problems must be challenge ids`);
-        continue;
+        problems.push(`${label}: problems[${i}] must be a challenge id`);
+        return;
       }
       if (!knownIds.has(id)) problems.push(`${label}: unknown challenge "${id}"`);
       if (seen.has(id)) problems.push(`${label}: "${id}" is listed twice`);
       seen.add(id);
       const other = owners.get(id);
-      if (other !== undefined && other !== label)
-        problems.push(`"${id}" is in ${other} and ${label} (C-16)`);
-      owners.set(id, label);
-    }
+      if (other !== undefined && other.index !== p)
+        problems.push(`"${id}" is in ${other.label} and ${label} (C-16)`);
+      owners.set(id, { index: p, label });
+    });
   });
 
   return { plans: problems.length === 0 ? (json as Plan[]) : null, problems };

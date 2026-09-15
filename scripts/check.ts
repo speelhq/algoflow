@@ -86,7 +86,8 @@ for (const file of files) {
     continue;
   }
   const { challenge, problems } = checkChallengeSchema(json, id);
-  if (challenge) challenge.tests.forEach((test, i) => problems.push(...checkTest(challenge, test, i)));
+  if (challenge)
+    challenge.tests.forEach((test, i) => problems.push(...checkTest(challenge, test, i)));
   if (problems.length === 0) {
     console.log(
       `ok   ${id} (${challenge?.tests.length ?? 0} tests, interpreter and CPython agree)`,
@@ -97,7 +98,7 @@ for (const file of files) {
     for (const problem of problems) console.log(`     ${problem}`);
   }
 }
-console.log(`challenges: ${files.length - failed}/${files.length} ok`);
+if (files.length > 0) console.log(`challenges: ${files.length - failed}/${files.length} ok`);
 
 // C-16, C-18: the plans against every challenge file on disk, whatever files were given.
 {
