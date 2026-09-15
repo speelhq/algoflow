@@ -42,7 +42,7 @@ export function restore(id: string): Program {
 
 export type ProgramState = {
   program: Program;
-  /** Selects a challenge by id, or `"free"` (U-02 selector). */
+  /** Selects a challenge by id, or `"free"` for Playground (U-01 routes, S-07). */
   load: (id: string) => void;
 };
 

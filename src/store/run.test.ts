@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getChallenge } from "@/challenges";
 import { ast, program, runAll } from "@/nodes/testing";
 import { useProgram } from "./program";
-import { BATCH, canRun, SPEED, TRACE_LIMIT, useRun } from "./run";
+import { BATCH, canRun, SPEED, useRun } from "./run";
 
 const { assign, num, bin, v, print, for_, if_, str } = ast;
 
@@ -23,7 +23,6 @@ describe("run store (R-11, R-12)", () => {
       step: 0,
       lastEvent: null,
       state: null,
-      events: [],
       stdout: [],
       done: null,
       speed: SPEED.default,
@@ -90,7 +89,6 @@ describe("run store (R-11, R-12)", () => {
     expect(s.status).toBe("done");
     expect(s.step).toBe(4501);
     expect(s.stdout).toHaveLength(1500);
-    expect(s.events).toHaveLength(TRACE_LIMIT);
   });
 
   it("setSpeed during a run to end does not start a play timer", async () => {
@@ -123,7 +121,6 @@ describe("run store (R-11, R-12)", () => {
     expect(s.status).toBe("paused");
     expect(s.lastEvent).toEqual(reference[3]);
     expect(s.stdout).toEqual(["0"]);
-    expect(s.events.map((row) => row.step)).toEqual([2]); // enter, loop, enter, print
     store.seek(0);
     expect(useRun.getState()).toMatchObject({ step: 0, lastEvent: null, stdout: [] });
     useRun.getState().back();
@@ -149,7 +146,6 @@ describe("run store (R-11, R-12)", () => {
       step: 0,
       lastEvent: null,
       state: null,
-      events: [],
       stdout: [],
       verdicts: {},
       done: null,
@@ -183,21 +179,7 @@ describe("run store (R-11, R-12)", () => {
     expect(useRun.getState().status).toBe("idle");
   });
 
-  it("Trace: last 500 rows, columns in first-assignment order starting with inputs", () => {
-    useProgram.setState({
-      program: program([for_("i", num(0), num(600), [assign("x", bin("*", v("i"), v("n")))])], {
-        inputs: [{ name: "n", value: 2 }],
-      }),
-    });
-    void useRun.getState().runToEnd();
-    const s = useRun.getState();
-    expect(s.events).toHaveLength(TRACE_LIMIT);
-    expect(s.columns).toEqual(["n", "i", "x"]);
-    expect(s.events.at(-1)).toMatchObject({ cells: { x: "1198" } });
-    expect(s.events[0]?.step).toBeGreaterThan(1);
-  });
-
-  it("U-38 verdicts: a compare sets its frame header's mark; entering the frame clears it", () => {
+  it("U-61 verdicts: a compare sets its statement's mark; entering it again clears it", () => {
     const frame = if_(bin("==", v("i"), num(1)), [print(v("i"))]);
     useProgram.setState({ program: program([for_("i", num(0), num(2), [frame])]) });
     const store = useRun.getState();

@@ -10,11 +10,11 @@ describe("t (U-71, U-73)", () => {
 
   it("returns the en text for a nested key", () => {
     expect(t("app.name")).toBe("AlgoFlow");
-    expect(t("view.python")).toBe("Python");
+    expect(t("node.for.label")).toBe("For loop");
   });
 
   it("interpolates {name} params and leaves unknown placeholders alone", () => {
-    expect(t("run.stepCount", { n: 12 })).toBe("Step 12");
+    expect(t("error.E_KEY", { key: 7 })).toBe("Key 7 does not exist");
     expect(interpolate("{a} and {b}", { a: "x" })).toBe("x and {b}");
   });
 
@@ -31,7 +31,7 @@ describe("t (U-71, U-73)", () => {
   it("falls back to en while ja has no catalog yet (M-06)", () => {
     setLocale("ja");
     expect(getLocale()).toBe("ja");
-    expect(t("app.saved")).toBe("Saved");
+    expect(t("app.name")).toBe("AlgoFlow");
   });
 
   it("flatten produces dotted keys and rejects non-string leaves", () => {

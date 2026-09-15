@@ -1,6 +1,6 @@
 // R-11, R-12: the driver. The Runner, the play timer, and the run-to-end token live in
-// module scope; the store holds what the UI renders. Back and Trace clicks replay a
-// fresh runner (R-10), so a step number fully identifies a position.
+// module scope; the store holds what the UI renders. Back replays a fresh runner (R-10),
+// so a step number fully identifies a position.
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
 import type { Data, Id, NodeId, Program } from "@/lang/types";
@@ -10,26 +10,21 @@ import { outcomeOf, type Outcome } from "@/runtime/outcome";
 import { run as startRunner } from "@/runtime/run";
 import type { Done, Event, Runner, State } from "@/runtime/types";
 import { useProgram } from "./program";
-import { traceRow, withColumns, type TraceRow } from "./trace";
 
 export type Status = "idle" | "paused" | "playing" | "done" | "error";
 
 export const SPEED = { min: 1, max: 50, default: 10 } as const;
-export const TRACE_LIMIT = 500; // U-61
 export const BATCH = 2000; // R-11
 
 export type RunState = {
   status: Status;
   step: number;
   lastEvent: Event | null;
-  /** U-36/U-38: the statement card to highlight (owner of `lastEvent`, or of the error). */
+  /** U-39: the statement to highlight (owner of `lastEvent`, or of the error). */
   activeId: NodeId | null;
   state: State | null;
-  events: TraceRow[];
-  /** Trace columns in first-assignment order (inputs first). */
-  columns: Id[];
   stdout: string[];
-  /** U-38: the last compare result under each statement, by owner id (cards show it on frame headers). */
+  /** U-61: the last compare result under each statement, by owner id (the diamond's ✓ / ✗). */
   verdicts: Record<NodeId, boolean>;
   done: Done | null;
   speed: number;
@@ -57,28 +52,24 @@ type Origin = { program: Program; inputs: Record<Id, Data>; seed: number };
 type Projection = {
   step: number;
   lastEvent: Event | null;
-  events: TraceRow[];
-  columns: Id[];
   verdicts: Record<NodeId, boolean>;
   /** Fields whose published copy is stale. */
-  dirty: { events: boolean; columns: boolean; stdout: boolean; verdicts: boolean };
+  dirty: { stdout: boolean; verdicts: boolean };
 };
 
 let runner: Runner | null = null;
 let origin: Origin | null = null;
 let owners = new Map<NodeId, NodeId>();
-let projection: Projection = freshProjection([]);
+let projection: Projection = freshProjection();
 let timer: ReturnType<typeof setInterval> | null = null;
 let generation = 0;
 
-function freshProjection(columns: Id[]): Projection {
+function freshProjection(): Projection {
   return {
     step: 0,
     lastEvent: null,
-    events: [],
-    columns,
     verdicts: {},
-    dirty: { events: true, columns: true, stdout: true, verdicts: true },
+    dirty: { stdout: true, verdicts: true },
   };
 }
 
@@ -110,17 +101,6 @@ function apply(event: Event): void {
       p.dirty.verdicts = true;
     }
   } else if (event.type === "print") p.dirty.stdout = true;
-  if (!runner) return;
-  const row = traceRow(event, runner.state(), p.step);
-  if (!row) return;
-  p.events.push(row);
-  p.dirty.events = true;
-  const columns = withColumns(p.columns, row);
-  if (columns !== p.columns) {
-    p.columns = columns;
-    p.dirty.columns = true;
-  }
-  if (p.events.length > TRACE_LIMIT * 2) p.events.splice(0, p.events.length - TRACE_LIMIT);
 }
 
 /** Up to `limit` calls of `next()`; returns the Done when the run finished. */
@@ -148,7 +128,7 @@ function originFor(testIndex: number): Origin | null {
 function reset(from: Origin): void {
   runner = startRunner(from.program, from.inputs, from.seed);
   owners = ownerStmts(from.program);
-  projection = freshProjection(from.program.inputs.map((input) => input.name));
+  projection = freshProjection();
 }
 
 export const useRun = create<RunState>()((set, get) => {
@@ -163,12 +143,10 @@ export const useRun = create<RunState>()((set, get) => {
       lastEvent: p.lastEvent,
       activeId: focus === undefined ? null : (owners.get(focus) ?? focus),
       state: snapshot(),
-      events: p.dirty.events ? p.events.slice(-TRACE_LIMIT) : previous.events,
-      columns: p.dirty.columns ? [...p.columns] : previous.columns,
       stdout: p.dirty.stdout ? (runner?.stdout() ?? []) : previous.stdout,
       verdicts: p.dirty.verdicts ? { ...p.verdicts } : previous.verdicts,
     });
-    p.dirty = { events: false, columns: false, stdout: false, verdicts: false };
+    p.dirty = { stdout: false, verdicts: false };
   };
 
   const finish = (done: Done) => {
@@ -200,8 +178,6 @@ export const useRun = create<RunState>()((set, get) => {
     lastEvent: null,
     activeId: null,
     state: null,
-    events: [],
-    columns: [],
     stdout: [],
     verdicts: {},
     done: null,
@@ -269,7 +245,7 @@ export const useRun = create<RunState>()((set, get) => {
       clearTimer();
       runner = null;
       origin = null;
-      projection = freshProjection([]);
+      projection = freshProjection();
       publish("idle");
     },
 

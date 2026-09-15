@@ -42,8 +42,8 @@ Data flows one way, and nothing below `src/store` depends on React:
   only registry; interpreter, emitter, block menu, chart and node editor all dispatch through it.
 - `src/runtime` — `run(program, inputs, seed)` returns a `Runner`; each `next()`
   yields one `Event` (`enter`, `read`, `write`, `swap`, `compare`, `loop`, `call`,
-  `return`, `print`). Events are the contract the UI consumes for highlights, the
-  Trace tab and step counts. Randomness is mulberry32 seeded per run, so the same
+  `return`, `print`). Events are the contract the UI consumes for highlights and
+  step counts. Randomness is mulberry32 seeded per run, so the same
   program, inputs and seed replay identically; Back is a fresh runner advanced `step-1` times.
 - `src/python` — `emit()` produces the Python file plus a NodeId → line map;
   `parse()` turns typed expression text back into `Expr`; `unparse(parse(s))` is a

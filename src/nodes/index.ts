@@ -81,7 +81,7 @@ export function keyOf(node: Node): string {
   return node.kind;
 }
 
-/** U-10: palette entries of one category, in registration order. */
+/** U-40: block menu entries of one category, in registration order. */
 export function paletteNodes(category: Category): NodeDef[] {
   return ALL.filter((def) => def.category === category && !def.hidden);
 }

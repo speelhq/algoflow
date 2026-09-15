@@ -1,4 +1,4 @@
-// Editor-side UI state. M-02: the card outlined from the Python tab (U-61). Selection joins in M-03.
+// Editor-side UI state: the node outlined from a hovered Python line (U-66). Selection joins in M-04.
 import { create } from "zustand";
 import type { NodeId } from "@/lang/types";
 

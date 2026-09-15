@@ -1,4 +1,4 @@
-// 03-nodes.md: `NodeDef.category`; U-10: palette sections appear in this order.
+// 03-nodes.md: `NodeDef.category`; U-40: block menu groups appear in this order.
 export const CATEGORIES = [
   "basic",
   "list",

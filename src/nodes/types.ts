@@ -26,8 +26,6 @@ export type Slot = {
   name: string;
   role: SlotRole;
   required?: boolean;
-  /** N-08: a `body` slot whose region shows `node.<key>.region.<name>` as its label (U-32). */
-  labelled?: boolean;
 };
 
 // ---------------------------------------------------------------- runner (R-13)
