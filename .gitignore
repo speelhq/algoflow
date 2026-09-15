@@ -5,3 +5,4 @@ playwright-report/
 blob-report/
 *.local
 .DS_Store
+docs/

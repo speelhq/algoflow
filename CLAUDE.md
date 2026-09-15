@@ -39,7 +39,7 @@ Data flows one way, and nothing below `src/store` depends on React:
   `Program` (`edit.ts`), and `Data` ⇄ `Value`/heap conversion (`data.ts`).
 - `src/nodes` — one `NodeDef` per block owning its slots, `create()`, `run`
   (interpreter behaviour) and `python()` (exact emitted text). `index.ts` is the
-  only registry; interpreter, emitter, palette and properties all dispatch through it.
+  only registry; interpreter, emitter, block menu, chart and node editor all dispatch through it.
 - `src/runtime` — `run(program, inputs, seed)` returns a `Runner`; each `next()`
   yields one `Event` (`enter`, `read`, `write`, `swap`, `compare`, `loop`, `call`,
   `return`, `print`). Events are the contract the UI consumes for highlights, the
@@ -50,17 +50,19 @@ Data flows one way, and nothing below `src/store` depends on React:
   fixed point (G-05). Emitted Python is the behavioural reference, not the interpreter.
 - `src/store` — Zustand stores: `program` (with 100-entry undo history and 500 ms
   localStorage persistence), `editor` (selection), `run` (the timer-driven driver),
-  `layout` (panel sizes and palette expansion under `algoflow:layout`).
+  `tests` (submission verdicts), `progress` (per-problem status under `algoflow:progress`),
+  `layout` (problem panel width and collapse under `algoflow:layout`).
 - `src/ui/primitives` — shadcn components generated on Base UI (`pnpm dlx shadcn add …`);
   `src/lib/utils.ts` holds `cn()`. Everything else under `src/ui/` is hand-written.
-- `src/ui` — React. Data-tab views are chosen by value type only (V-01), never by
+- `src/ui` — React. The chart is an SVG flowchart with computed layout (U-30, N-09);
+  variable views are chosen by value type only (V-01), never by
   block or challenge.
 - `challenges/<id>.json` — inputs, ≥3 tests (one named `edge:…`), 3 hints, solution.
   `scripts/check.ts` runs every solution in the interpreter and in CPython (with a
   shim replaying `draws()`) and compares both (R-20). "Recorded" expectations are
   captured once from the solution and pasted into the file (C-20).
 
-Work proceeds by milestone M-00 → M-06 (`docs/spec/07-plan.md`), one per session;
+Work proceeds by milestone M-00 → M-07 (`docs/spec/07-plan.md`), one per session;
 a milestone closes only when its listed tests pass.
 
 ## Verification
