@@ -10,6 +10,7 @@ export const forStmt = defineStmt<"for">({
   key: "for",
   category: "control",
   loop: true,
+  chart: { counted: "body" },
   slots: [
     { name: "var", role: "id", required: true },
     { name: "start", role: "expr", required: true },

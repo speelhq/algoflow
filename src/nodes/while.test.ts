@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
+import { whileStmt } from "./while";
 import { ast, eventTypes, program, runAll, varData } from "./testing";
 
 const { while_, assign, num, bin, v, brk, bool } = ast;
@@ -43,5 +44,9 @@ describe("while (03-nodes)", () => {
       ]),
     );
     expect(varData(result, "n")).toBe(1);
+  });
+
+  it("N-09: a checked loop over `body`", () => {
+    expect(whileStmt.chart).toEqual({ check: "body" });
   });
 });
