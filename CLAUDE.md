@@ -5,8 +5,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # AlgoFlow
 
 Block-based algorithm learning tool (browser only; English UI, Japanese added last)
-whose blocks are a fixed Python subset. Specs in `docs/spec/` are normative;
-every statement has an id like `L-20`. Read `docs/spec/00-conventions.md`
+whose blocks are a fixed Python subset; functions and classes can be moved into
+modules and reused across programs (`docs/spec/08-modules.md`). Specs in
+`docs/spec/` are normative; every statement has an id like `L-20`. Read
+`docs/spec/00-conventions.md`
 first, then the file for the area you change. Cite ids in tests and commit
 messages. If a task conflicts with a spec, stop and report the conflict.
 
@@ -62,7 +64,7 @@ Data flows one way, and nothing below `src/store` depends on React:
   shim replaying `draws()`) and compares both (R-20). "Recorded" expectations are
   captured once from the solution and pasted into the file (C-20).
 
-Work proceeds by milestone M-00 → M-07 (`docs/spec/07-plan.md`), one per session;
+Work proceeds by milestone M-00 → M-10 (`docs/spec/07-plan.md`), one per session;
 a milestone closes only when its listed tests pass.
 
 ## Verification
@@ -106,6 +108,7 @@ command output, not a claim) / Notes (deviations and follow-ups).
 | `docs/spec/05-ui.md`          | U, V             |
 | `docs/spec/06-challenges.md`  | C                |
 | `docs/spec/07-plan.md`        | P, T, M          |
+| `docs/spec/08-modules.md`     | D                |
 
 Rationale for recorded choices: `docs/decisions.md`, grouped by topic. When
 you make a choice the spec does not cover, add the fact as a new id in the
