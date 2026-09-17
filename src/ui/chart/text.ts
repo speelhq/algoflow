@@ -11,7 +11,7 @@ import { getNode, hasNode, keyOf } from "@/nodes";
 import type { NodeDef, Side } from "@/nodes/types";
 import { needsParens } from "@/python/precedence";
 import { str } from "@/runtime/values";
-import { matchTemplate } from "@/ui/expression/templates";
+import { matchTemplate, type TemplateMatch } from "@/ui/expression/templates";
 
 type Bag = Record<string, unknown>;
 
@@ -92,23 +92,26 @@ export function slotText(node: Node, def: NodeDef, name: string): string {
   return isExpr(arg) ? exprText(arg) : "";
 }
 
-/** The blanks of a matched template, parenthesised as operands of the matched expression. */
-function blanks(expr: Expr, a: Expr, b: Expr): { a: string; b: string } {
-  const precedence = getNode(keyOf(expr)).precedence?.(expr);
-  return { a: operand(a, precedence, "left"), b: operand(b, precedence, "right") };
+/** The blanks of a matched template, each parenthesised as an operand of the expression holding it. */
+function blanks(matched: TemplateMatch): { a: string; b: string } {
+  const under = (within: Expr) => getNode(keyOf(within)).precedence?.(within);
+  return {
+    a: operand(matched.a, under(matched.within.a), "left"),
+    b: operand(matched.b, under(matched.within.b), "right"),
+  };
 }
 
 /** U-50: what a slot shows: the template's sentence when the expression matches one, else its chips. */
 export function slotSentence(expr: Expr): string {
   const matched = matchTemplate(expr);
-  return matched ? t(matched.template.key, blanks(expr, matched.a, matched.b)) : exprText(expr);
+  return matched ? t(matched.template.key, blanks(matched)) : exprText(expr);
 }
 
 /** U-33: what a diamond asks: the template's question, else `Is <chips>?`. */
 export function questionText(expr: Expr): string {
   const matched = matchTemplate(expr);
   return matched
-    ? t(matched.template.question, blanks(expr, matched.a, matched.b))
+    ? t(matched.template.question, blanks(matched))
     : t("chart.condition", { cond: exprText(expr) });
 }
 

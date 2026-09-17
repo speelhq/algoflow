@@ -1,6 +1,7 @@
 // U-50: the condition templates as data. Each is a sentence key and the expression it stands
 // for, written as Python with the blanks `a` and `b`; matching is structural over each
-// block's slots (N-01), so this file names no block kind but the blank itself.
+// block's slots (N-01). What a variable is comes from the parser: the block a bare name
+// parses to, with the name in its `id` slot.
 import type { MessageKey } from "@/i18n/t";
 import type { Expr } from "@/lang/types";
 import { isExpr } from "@/lang/walk";
@@ -15,7 +16,13 @@ export type ConditionTemplate = {
   question: MessageKey;
   python: string;
 };
-export type TemplateMatch = { template: ConditionTemplate; a: Expr; b: Expr };
+/** `within`: the expression each blank is an operand of (the matched one, or one inside it). */
+export type TemplateMatch = {
+  template: ConditionTemplate;
+  a: Expr;
+  b: Expr;
+  within: Record<Blank, Expr>;
+};
 
 /** In the order of the U-50 table: the first match names the expression (U-50, U-63). */
 export const CONDITION_TEMPLATES: readonly ConditionTemplate[] = [
@@ -76,10 +83,27 @@ function patternOf(template: ConditionTemplate): Expr {
   return pattern;
 }
 
+let variableKey: string | undefined;
+
+/** The name of a variable expression, else undefined: a variable is what a bare name parses to. */
+export function variableName(expr: Expr): string | undefined {
+  if (variableKey === undefined) {
+    const parsed = parse("a");
+    variableKey = isParseError(parsed) ? "" : keyOf(parsed);
+  }
+  if (keyOf(expr) !== variableKey) return undefined;
+  const slot = getNode(variableKey).slots.find((s) => s.role === "id");
+  const name = slot ? (expr as unknown as Bag)[slot.name] : undefined;
+  return typeof name === "string" ? name : undefined;
+}
+
+type Bound = Partial<Record<Blank, { expr: Expr; within: Expr }>>;
+
 /** Structural match: same block and same `text` / `id` slots; a blank binds any expression. */
-function match(pattern: Expr, expr: Expr, blanks: Partial<Record<Blank, Expr>>): boolean {
-  if (pattern.kind === "var" && isBlank(pattern.name)) {
-    blanks[pattern.name] = expr;
+function match(pattern: Expr, expr: Expr, within: Expr, blanks: Bound): boolean {
+  const name = variableName(pattern);
+  if (name !== undefined && isBlank(name)) {
+    blanks[name] = { expr, within };
     return true;
   }
   if (keyOf(pattern) !== keyOf(expr)) return false;
@@ -88,13 +112,13 @@ function match(pattern: Expr, expr: Expr, blanks: Partial<Record<Blank, Expr>>):
   return getNode(keyOf(pattern)).slots.every((slot) => {
     const w = want[slot.name];
     const h = have[slot.name];
-    if (slot.role === "expr") return isExpr(w) && isExpr(h) && match(w, h, blanks);
+    if (slot.role === "expr") return isExpr(w) && isExpr(h) && match(w, h, expr, blanks);
     if (slot.role === "exprs") {
       return (
         Array.isArray(w) &&
         Array.isArray(h) &&
         w.length === h.length &&
-        w.every((item, i) => isExpr(item) && isExpr(h[i]) && match(item, h[i], blanks))
+        w.every((item, i) => isExpr(item) && isExpr(h[i]) && match(item, h[i], expr, blanks))
       );
     }
     return w === h;
@@ -105,9 +129,14 @@ function match(pattern: Expr, expr: Expr, blanks: Partial<Record<Blank, Expr>>):
 export function matchTemplates(expr: Expr): TemplateMatch[] {
   const matches: TemplateMatch[] = [];
   for (const template of CONDITION_TEMPLATES) {
-    const blanks: Partial<Record<Blank, Expr>> = {};
-    if (match(patternOf(template), expr, blanks) && blanks.a && blanks.b) {
-      matches.push({ template, a: blanks.a, b: blanks.b });
+    const blanks: Bound = {};
+    if (match(patternOf(template), expr, expr, blanks) && blanks.a && blanks.b) {
+      matches.push({
+        template,
+        a: blanks.a.expr,
+        b: blanks.b.expr,
+        within: { a: blanks.a.within, b: blanks.b.within },
+      });
     }
   }
   return matches;

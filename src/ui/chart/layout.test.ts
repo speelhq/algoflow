@@ -108,6 +108,19 @@ const bodyOf = (c: Case): Stmt[] =>
 const lay = (c: Case, measure?: Measure): ChartLayout =>
   layout(c.program, { ...(c.chart ? { chart: c.chart } : {}), ...(measure ? { measure } : {}) });
 
+const leaves = (stmt: Stmt): boolean => getNode(keyOf(stmt)).requires === "function";
+
+/** Something flows out of the bottom of the statement: not a Return, nor a branch whose regions all return. */
+function flows(stmt: Stmt): boolean {
+  const shape = getNode(keyOf(stmt)).chart;
+  if (!shape) return !leaves(stmt);
+  if (!("branch" in shape)) return true; // a loop's No edge
+  return regionsOf(stmt).some((region) => {
+    const final = region.stmts.at(-1);
+    return final === undefined || flows(final);
+  });
+}
+
 const byId = (chart: ChartLayout) => new Map(chart.nodes.map((node) => [node.id, node]));
 const centre = (node: ChartNode) => node.x + node.w / 2;
 
@@ -310,15 +323,14 @@ describe.each([
         count.set(key, (count.get(key) ?? 0) + 1);
       }
       const expectRegion = (parent: string, slot: string, stmts: Stmt[]) => {
-        const leaves = (stmt: Stmt | undefined) =>
-          stmt !== undefined && getNode(keyOf(stmt)).requires === "function";
         for (let index = 0; index <= stmts.length; index += 1) {
-          const open = index === 0 || !leaves(stmts[index - 1]);
-          // After a statement that never falls through (a Return, or a branch whose regions all
-          // return) there is no edge to carry a place; only function charts have those.
-          if (open && (c.chart === undefined || index === 0)) {
-            expect(count.get(`${parent}/${slot}/${index}`), `${parent}/${slot}/${index}`).toBe(1);
-          }
+          // A Return's edge to End carries the place after it; after a branch whose regions all
+          // return nothing flows on, so no edge is there to carry one.
+          const before = stmts[index - 1];
+          const offered = before === undefined || flows(before) || leaves(before);
+          expect(count.get(`${parent}/${slot}/${index}`), `${parent}/${slot}/${index}`).toBe(
+            offered ? 1 : undefined,
+          );
         }
       };
       expectRegion(c.chart ?? "main", c.chart ? "body" : "main", bodyOf(c));

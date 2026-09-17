@@ -76,6 +76,9 @@ describe("condition templates (U-50)", () => {
     expect(slotSentence(expr("i % 15 == 1"))).toBe("i % 15 equals 1");
     expect(slotSentence(expr("n + 1 >= f(2)"))).toBe("n + 1 is at least f(2)");
     expect(slotSentence(expr("(a and b) == c"))).toBe("(a and b) equals c");
+    // A blank is parenthesised as an operand of the expression that holds it (`%` here, not `==`).
+    expect(slotSentence(expr("(i + 1) % 15 == 0"))).toBe("(i + 1) is divisible by 15");
+    expect(questionText(expr("i % (n + 1) == 0"))).toBe("Is i divisible by (n + 1)?");
     const p = program([assign("ok", expr("n > 3")), print(expr("n == 3"), expr("n + 1"))]);
     expect(p.main.map((stmt) => sentence(stmt, p))).toEqual([
       "create ok and set it to n is greater than 3",

@@ -14,7 +14,7 @@ import {
   slotSentence,
   valueText,
 } from "@/ui/chart/text";
-import { matchTemplates } from "@/ui/expression/templates";
+import { matchTemplates, variableName } from "@/ui/expression/templates";
 
 export type Narration = { key: MessageKey; params: Params };
 
@@ -58,10 +58,11 @@ function valueAt(ref: Ref, frame: Frame | undefined, heap: Heap): Value | undefi
 
 /** A template blank that is a variable or a literal (U-63): its value now, or as written. */
 function blankText(blank: Expr, frame: Frame | undefined, heap: Heap): string | undefined {
-  if (childExprs(blank).length > 0 || getNode(keyOf(blank)).hidden) return undefined;
-  if (blank.kind !== "var") return exprText(blank);
-  const value = frame?.vars.get(blank.name);
-  return value ? valueText(value, heap) : blank.name;
+  if (childExprs(blank).length > 0) return undefined;
+  const name = variableName(blank);
+  if (name === undefined) return exprText(blank);
+  const value = frame?.vars.get(name);
+  return value ? valueText(value, heap) : name;
 }
 
 /**
@@ -126,7 +127,7 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
     }
     case "read": {
       const [first] = event.refs;
-      if (event.refs.length !== 1 || !first || "var" in first) {
+      if (event.refs.length !== 1 || !first) {
         const heapRef = first && "heap" in first ? first.heap : -1;
         return {
           key: "run.narrate.readMany",
