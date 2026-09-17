@@ -1,44 +1,65 @@
-// R-11, R-12: the driver. The Runner, the play timer, and the run-to-end token live in
-// module scope; the store holds what the UI renders. Back replays a fresh runner (R-10),
-// so a step number fully identifies a position.
+// R-11, R-12, R-19: the driver. Run first executes the whole program on a throwaway runner
+// (the pre-run), so the length of the run, how it ends, and the step of every print are known
+// before playback. The shown Runner, the play timer, and the cancel token live in module
+// scope; the store holds what the UI renders. Seek replays a fresh runner (R-10), so a step
+// number fully identifies a position.
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
+import { judge, type TestResult } from "@/challenges/judge";
+import type { Test } from "@/challenges/types";
 import type { Data, Id, NodeId, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
-import { ownerStmts } from "@/lang/walk";
-import { outcomeOf, type Outcome } from "@/runtime/outcome";
+import { bodyStmts, ownerStmts } from "@/lang/walk";
+import { outcomeOf } from "@/runtime/outcome";
 import { run as startRunner } from "@/runtime/run";
 import type { Done, Event, Runner, State } from "@/runtime/types";
+import { clamp, useLayout } from "./layout";
 import { useProgram } from "./program";
 
 export type Status = "idle" | "paused" | "playing" | "done" | "error";
 
-export const SPEED = { min: 1, max: 50, default: 10 } as const;
 export const BATCH = 2000; // R-11
 
 export type RunState = {
   status: Status;
+  /** A pre-run, a Seek, or a Skip is working through its batches. */
+  busy: boolean;
   step: number;
+  /** R-11: the visible steps of the whole run; after an error the failing step is step `total`. */
+  total: number;
+  /** R-11: how the pre-run ended. */
+  outcome: Done | null;
+  /** R-11: the visible step of each `print`; `prints[i]` produced line `i` of the output. */
+  prints: number[];
   lastEvent: Event | null;
+  /** U-63: which pass a `loop` event starts, counted since its loop was entered; else null. */
+  pass: number | null;
   /** U-39: the statement to highlight (owner of `lastEvent`, or of the error). */
   activeId: NodeId | null;
   state: State | null;
+  /** U-68: the index of the frame shown; it follows the running frame. */
+  frame: number;
   stdout: string[];
-  /** U-61: the last compare result under each statement, by owner id (the diamond's ✓ / ✗). */
+  /** U-61: the last check result per diamond, by statement id (✓ / ✗). */
   verdicts: Record<NodeId, boolean>;
-  done: Done | null;
-  speed: number;
-  testIndex: number;
+  /** U-61: the statements entered in the current pass (the taken path). */
+  taken: Record<NodeId, true>;
+  /** R-19 */
+  breakpoint: NodeId | null;
+  /** U-32: the chosen case, an index into the challenge's tests. */
+  caseIndex: number;
+  /** C-15: the chosen case's verdict, once the shown run is at its end. */
+  verdict: TestResult | null;
+  run: () => Promise<void>;
   stepOnce: () => void;
   play: () => void;
   pause: () => void;
-  /** Resolves with the run's outcome, or undefined when it was refused or interrupted. */
-  runToEnd: () => Promise<Outcome | undefined>;
-  back: () => void;
-  seek: (step: number) => void;
+  seek: (step: number) => Promise<void>;
+  back: () => Promise<void>;
+  skip: () => Promise<void>;
   stop: () => void;
-  setSpeed: (speed: number) => void;
-  selectTest: (index: number) => void;
+  setBreakpoint: (id: NodeId | null) => void;
+  selectCase: (index: number) => void;
 };
 
 /** R-01: a run starts only when validation is clean. */
@@ -48,34 +69,60 @@ export function canRun(program: Program): boolean {
 
 // ---------------------------------------------------------------- module state
 
-type Origin = { program: Program; inputs: Record<Id, Data>; seed: number };
+type Origin = { program: Program; inputs: Record<Id, Data>; seed: number; test: Test | undefined };
+/** What the pre-run found (R-11), with the chosen case's verdict (C-15). */
+type Plan = { total: number; outcome: Done; prints: number[]; verdict: TestResult | null };
 type Projection = {
   step: number;
   lastEvent: Event | null;
   verdicts: Record<NodeId, boolean>;
+  taken: Record<NodeId, true>;
+  /** `loop` events per loop since its last `enter`. */
+  passes: Map<NodeId, number>;
   /** Fields whose published copy is stale. */
-  dirty: { stdout: boolean; verdicts: boolean };
+  dirty: { stdout: boolean; verdicts: boolean; taken: boolean };
 };
 
 let runner: Runner | null = null;
 let origin: Origin | null = null;
+let plan: Plan | null = null;
 let owners = new Map<NodeId, NodeId>();
+let bodies = new Map<NodeId, NodeId[]>();
 let projection: Projection = freshProjection();
+let breakpoint: NodeId | null = null;
 let timer: ReturnType<typeof setInterval> | null = null;
+/** Bumped by every action; an async action that finds it changed after an `await` gives up. */
 let generation = 0;
+/** The step a Seek in flight is heading for, so that Back stacks while it is held. */
+let target: number | null = null;
+let tick: () => void = () => {};
+const NO_PRINTS: number[] = [];
 
 function freshProjection(): Projection {
   return {
     step: 0,
     lastEvent: null,
     verdicts: {},
-    dirty: { stdout: true, verdicts: true },
+    taken: {},
+    passes: new Map(),
+    dirty: { stdout: true, verdicts: true, taken: true },
   };
 }
 
 function clearTimer(): void {
   if (timer !== null) clearInterval(timer);
   timer = null;
+}
+
+function armTimer(): void {
+  clearTimer();
+  timer = setInterval(() => tick(), 1000 / useLayout.getState().speed);
+}
+
+function cancel(): void {
+  generation += 1;
+  target = null;
+  clearTimer();
 }
 
 function snapshot(): State | null {
@@ -94,179 +141,276 @@ function apply(event: Event): void {
       delete p.verdicts[event.nodeId];
       p.dirty.verdicts = true;
     }
+    p.taken[event.nodeId] = true;
+    p.dirty.taken = true;
+    p.passes.delete(event.nodeId);
   } else if (event.type === "compare") {
     const owner = owners.get(event.nodeId);
     if (owner !== undefined) {
       p.verdicts[owner] = event.result;
       p.dirty.verdicts = true;
     }
+  } else if (event.type === "loop") {
+    // U-61: a new pass clears every mark in the loop's body; the loop's own check passed.
+    for (const id of bodies.get(event.nodeId) ?? []) {
+      delete p.verdicts[id];
+      delete p.taken[id];
+    }
+    p.verdicts[event.nodeId] = true;
+    p.dirty.verdicts = true;
+    p.dirty.taken = true;
+    p.passes.set(event.nodeId, (p.passes.get(event.nodeId) ?? 0) + 1);
   } else if (event.type === "print") p.dirty.stdout = true;
 }
 
-/** Up to `limit` calls of `next()`; returns the Done when the run finished. */
-function advanceMany(limit: number): Done | undefined {
-  for (let i = 0; i < limit; i += 1) {
-    if (!runner) return undefined;
-    const next = runner.next();
-    if (next.type === "done" || next.type === "error") return next;
-    apply(next);
+function atEnd(): boolean {
+  return plan !== null && projection.step >= plan.total;
+}
+
+/**
+ * One visible step (R-11); call only before the end. Every event is visible until module
+ * frames exist (R-16): this is where the driver will pass over the steps inside one.
+ */
+function advance(): void {
+  if (!runner || !plan) return;
+  const next = runner.next();
+  if (next.type === "done" || next.type === "error") {
+    // The failing `next()` is itself step `total`; it has no event.
+    projection.step = plan.total;
+    projection.lastEvent = null;
+    return;
   }
-  return undefined;
+  apply(next);
+  // The last event of a finished run: one more `next()` lets the frames unwind.
+  if (projection.step === plan.total) runner.next();
+}
+
+/** R-19: the step just taken arrived at the breakpoint (its `enter`, or a pass of that loop). */
+function atBreakpoint(): boolean {
+  const event = projection.lastEvent;
+  return (
+    breakpoint !== null &&
+    event !== null &&
+    (event.type === "enter" || event.type === "loop") &&
+    event.nodeId === breakpoint
+  );
 }
 
 function sleep(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-function originFor(testIndex: number): Origin | null {
+function originFor(caseIndex: number): Origin | null {
   const program = useProgram.getState().program;
   if (!canRun(program)) return null;
-  const test = getChallenge(program.challengeId)?.tests[testIndex];
-  return { program, inputs: test?.inputs ?? {}, seed: test?.seed ?? 1 };
+  const test = getChallenge(program.challengeId)?.tests[caseIndex];
+  return { program, inputs: test?.inputs ?? {}, seed: test?.seed ?? 1, test };
 }
 
 function reset(from: Origin): void {
   runner = startRunner(from.program, from.inputs, from.seed);
-  owners = ownerStmts(from.program);
   projection = freshProjection();
 }
 
+/** R-11: the whole run on a throwaway runner, in batches; undefined when another action took over. */
+async function prerun(from: Origin, mine: number): Promise<Plan | undefined> {
+  const probe = startRunner(from.program, from.inputs, from.seed);
+  const prints: number[] = [];
+  let events = 0;
+  for (;;) {
+    for (let i = 0; i < BATCH; i += 1) {
+      const next = probe.next();
+      if (next.type === "done" || next.type === "error") {
+        return {
+          total: next.type === "error" ? events + 1 : events,
+          outcome: next,
+          prints,
+          verdict: from.test ? judge(from.test, outcomeOf(probe, next)) : null,
+        };
+      }
+      events += 1;
+      if (next.type === "print") prints.push(events);
+    }
+    await sleep();
+    if (mine !== generation) return undefined;
+  }
+}
+
 export const useRun = create<RunState>()((set, get) => {
-  const publish = (status: Status, done: Done | null = null) => {
+  /** Publishes the projection; a position at the end of the run decides the status itself. */
+  const publish = (status: Status, busy = false) => {
     const p = projection;
     const previous = get();
-    const focus = done?.type === "error" ? done.error.nodeId : p.lastEvent?.nodeId;
+    const ended = runner !== null && atEnd();
+    if (ended) clearTimer();
+    const outcome = plan?.outcome ?? null;
+    const focus = ended && outcome?.type === "error" ? outcome.error.nodeId : p.lastEvent?.nodeId;
+    const state = snapshot();
     set({
-      status,
-      done,
+      status: ended && outcome ? outcome.type : status,
+      busy,
       step: p.step,
+      total: plan?.total ?? 0,
+      outcome,
+      prints: plan?.prints ?? NO_PRINTS,
       lastEvent: p.lastEvent,
+      pass: p.lastEvent?.type === "loop" ? (p.passes.get(p.lastEvent.nodeId) ?? null) : null,
       activeId: focus === undefined ? null : (owners.get(focus) ?? focus),
-      state: snapshot(),
+      state,
+      frame: state ? state.frames.length - 1 : 0,
       stdout: p.dirty.stdout ? (runner?.stdout() ?? []) : previous.stdout,
       verdicts: p.dirty.verdicts ? { ...p.verdicts } : previous.verdicts,
+      taken: p.dirty.taken ? { ...p.taken } : previous.taken,
+      breakpoint,
+      verdict: ended ? (plan?.verdict ?? null) : null,
     });
-    p.dirty = { stdout: false, verdicts: false };
+    p.dirty = { stdout: false, verdicts: false, taken: false };
   };
 
-  const finish = (done: Done) => {
-    clearTimer();
-    publish(done.type, done);
+  const running = () => runner !== null && !atEnd();
+
+  /**
+   * Steps up to `until` in R-11 batches, publishing `status` once per batch; with `breaks`
+   * it also stops on arriving at the breakpoint. False when another action took over.
+   */
+  const batched = async (until: number, breaks: boolean, status: Status): Promise<boolean> => {
+    const mine = generation;
+    for (;;) {
+      for (let i = 0; i < BATCH; i += 1) {
+        if (projection.step >= until) return true;
+        advance();
+        if (breaks && !atEnd() && atBreakpoint()) return true;
+      }
+      publish(status, true);
+      await sleep();
+      if (mine !== generation) return false;
+    }
   };
 
-  /** Creates the runner when there is none; false when validation refuses (R-01). */
-  const ensureRunner = (): boolean => {
-    if (runner) return true;
-    const from = originFor(get().testIndex);
-    if (!from) return false;
-    origin = from;
-    reset(from);
-    return true;
-  };
-
-  const finished = () => get().status === "done" || get().status === "error";
-
-  const tick = () => {
-    const done = advanceMany(1);
-    if (done) finish(done);
-    else publish("playing");
+  tick = () => {
+    if (!running()) {
+      clearTimer();
+      return;
+    }
+    advance();
+    if (!atEnd() && atBreakpoint()) {
+      clearTimer();
+      publish("paused");
+    } else publish("playing");
   };
 
   return {
     status: "idle",
+    busy: false,
     step: 0,
+    total: 0,
+    outcome: null,
+    prints: [],
     lastEvent: null,
+    pass: null,
     activeId: null,
     state: null,
+    frame: 0,
     stdout: [],
     verdicts: {},
-    done: null,
-    speed: SPEED.default,
-    testIndex: 0,
+    taken: {},
+    breakpoint: null,
+    caseIndex: 0,
+    verdict: null,
+
+    async run() {
+      const from = originFor(get().caseIndex);
+      if (!from) return;
+      get().stop();
+      const mine = generation;
+      set({ busy: true });
+      const made = await prerun(from, mine);
+      if (!made) return;
+      origin = from;
+      plan = made;
+      owners = ownerStmts(from.program);
+      bodies = bodyStmts(from.program);
+      reset(from);
+      if (!atEnd()) armTimer();
+      publish("playing");
+    },
 
     stepOnce() {
-      if (get().status === "playing") get().pause();
-      if (finished() || !ensureRunner()) return;
-      const done = advanceMany(1);
-      if (done) finish(done);
-      else publish("paused");
+      if (!running()) return;
+      cancel();
+      advance();
+      publish("paused");
     },
 
     play() {
-      if (get().status === "playing" || finished() || !ensureRunner()) return;
-      generation += 1;
-      clearTimer();
-      timer = setInterval(tick, 1000 / get().speed);
+      if (!running() || timer !== null) return;
+      cancel();
+      armTimer();
       publish("playing");
     },
 
     pause() {
-      generation += 1;
-      clearTimer();
-      if (get().status === "playing") publish("paused");
+      if (!running()) return;
+      cancel();
+      publish("paused");
     },
 
-    async runToEnd() {
-      if (finished() || !ensureRunner()) return undefined;
-      generation += 1;
-      const mine = generation;
-      clearTimer();
-      publish("playing");
-      for (;;) {
-        const done = advanceMany(BATCH);
-        if (done) {
-          finish(done);
-          return runner ? outcomeOf(runner, done) : undefined;
-        }
-        publish("playing");
-        await sleep();
-        if (mine !== generation || !runner) return undefined;
-      }
+    async seek(step) {
+      if (!runner || !plan || !origin) return;
+      const to = clamp(Math.round(step), 0, plan.total);
+      cancel();
+      target = to;
+      // Forward: the current runner goes on; backward: a fresh runner from step 0 (R-11).
+      if (to < projection.step) reset(origin);
+      if (!(await batched(to, false, "paused"))) return;
+      target = null;
+      publish("paused");
     },
 
     back() {
-      const { step } = get();
-      if (step > 0) get().seek(step - 1);
+      return get().seek((target ?? projection.step) - 1);
     },
 
-    seek(step) {
-      if (!ensureRunner() || !origin) return;
-      generation += 1;
-      clearTimer();
-      // Forward: advance the current runner; backward: a fresh runner advanced `step` times (R-11).
-      if (step < projection.step || finished()) reset(origin);
-      const done = advanceMany(step - projection.step);
-      if (done) finish(done);
-      else publish("paused");
+    async skip() {
+      if (!running() || !plan) return;
+      cancel();
+      publish("playing", true);
+      if (await batched(plan.total, true, "playing")) publish("paused");
     },
 
     stop() {
-      generation += 1;
-      clearTimer();
+      cancel();
       runner = null;
       origin = null;
+      plan = null;
+      breakpoint = null;
       projection = freshProjection();
       publish("idle");
     },
 
-    setSpeed(speed) {
-      const clamped = Math.min(Math.max(Math.round(speed), SPEED.min), SPEED.max);
-      set({ speed: clamped });
-      if (timer !== null) {
-        // Only a play timer is re-armed; a run to end (also `playing`) keeps its batches.
-        clearTimer();
-        timer = setInterval(tick, 1000 / clamped);
-      }
+    setBreakpoint(id) {
+      if (!running()) return;
+      breakpoint = id === null ? null : (owners.get(id) ?? id);
+      set({ breakpoint });
     },
 
-    selectTest(index) {
+    selectCase(index) {
       get().stop();
-      set({ testIndex: index });
+      set({ caseIndex: index });
     },
   };
 });
 
-// C-13: a new program (challenge switch, later edits) discards the runner and the test choice.
+// U-60: a new speed takes effect on the running play timer.
+useLayout.subscribe((current, previous) => {
+  if (current.speed !== previous.speed && timer !== null) armTimer();
+});
+
+// C-13: a new program discards the runner; another problem also resets the chosen case.
 useProgram.subscribe((current, previous) => {
-  if (current.program !== previous.program) useRun.getState().selectTest(0);
+  if (current.program === previous.program) return;
+  useRun.getState().stop();
+  if (current.program.challengeId !== previous.program.challengeId) {
+    useRun.setState({ caseIndex: 0 });
+  }
 });

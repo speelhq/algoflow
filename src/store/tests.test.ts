@@ -1,4 +1,4 @@
-// C-10, C-11, C-12, C-16: the Tests tab judges every test and reports Cleared!.
+// U-80, C-10, C-11, C-12: Submit judges every test on its own runner.
 import { beforeEach, describe, expect, it } from "vitest";
 import { getChallenge } from "@/challenges";
 import { ast, program } from "@/nodes/testing";
@@ -14,15 +14,15 @@ const fizzbuzz = () => {
   return challenge;
 };
 
-describe("tests store (C-10..C-12, C-16)", () => {
+describe("tests store (U-80, C-10..C-12)", () => {
   beforeEach(() => {
     useRun.getState().stop();
     useTests.getState().reset();
   });
 
-  it("Run all judges every test of the challenge and sets cleared when all pass", async () => {
+  it("Submit judges every test of the challenge and sets cleared when all pass", async () => {
     useProgram.setState({ program: fizzbuzz().solution });
-    await useTests.getState().runAll();
+    await useTests.getState().submit();
     const s = useTests.getState();
     expect(s.results).toEqual([{ status: "pass" }, { status: "pass" }, { status: "pass" }]);
     expect(s.cleared).toBe(true);
@@ -36,9 +36,10 @@ describe("tests store (C-10..C-12, C-16)", () => {
         main: [print(str("nope"))],
       },
     });
-    await useTests.getState().runAll();
+    await useTests.getState().submit();
     const s = useTests.getState();
     expect(s.cleared).toBe(false);
+    expect(s.outcomes[1]).toMatchObject({ stdout: ["nope"], vars: { n: 1 } });
     expect(s.results[1]).toEqual({
       status: "fail",
       mismatches: [{ kind: "stdout", expected: ["1"], actual: ["nope"] }],
@@ -48,29 +49,21 @@ describe("tests store (C-10..C-12, C-16)", () => {
   it("C-11: a runtime error is reported in the row", async () => {
     const div = bin("/", num(1), num(0));
     useProgram.setState({ program: { ...fizzbuzz().solution, main: [assign("x", div)] } });
-    await useTests.getState().runAll();
+    await useTests.getState().submit();
     expect(useTests.getState().results[0]).toEqual({
       status: "error",
       error: { nodeId: div.id, code: "E_DIV_ZERO", params: {} },
     });
   });
 
-  it("Run with this input judges one test and plays it in the driver", async () => {
-    useProgram.setState({ program: fizzbuzz().solution });
-    await useTests.getState().runTest(1);
-    expect(useTests.getState().results).toEqual([null, { status: "pass" }, null]);
-    expect(useTests.getState().cleared).toBe(false);
-    expect(useRun.getState()).toMatchObject({ status: "done", testIndex: 1, stdout: ["1"] });
-  });
-
   it("free mode and invalid programs are ignored; a new program resets the results", async () => {
     useProgram.setState({ program: program([print(str("x"))]) });
-    await useTests.getState().runAll();
+    await useTests.getState().submit();
     expect(useTests.getState().results).toEqual([]);
     useProgram.setState({ program: fizzbuzz().solution });
-    await useTests.getState().runAll();
+    await useTests.getState().submit();
     expect(useTests.getState().cleared).toBe(true);
     useProgram.setState({ program: program([]) });
-    expect(useTests.getState()).toMatchObject({ results: [], cleared: false });
+    expect(useTests.getState()).toMatchObject({ results: [], outcomes: [], cleared: false });
   });
 });
