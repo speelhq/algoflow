@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
+import { ifStmt } from "./if";
 import { ast, eventTypes, program, runAll, varData } from "./testing";
 
 const { if_, assign, num, bin, v, for_, brk } = ast;
@@ -36,5 +37,9 @@ describe("if (03-nodes)", () => {
     const result = runAll(program([assign("last", num(-1)), loop]));
     expect(varData(result, "last")).toBe(1);
     expect(result.done).toMatchObject({ type: "done", loops: 3 });
+  });
+
+  it("N-09: a branch with `then` as Yes and `else` as No", () => {
+    expect(ifStmt.chart).toEqual({ branch: { yes: "then", no: "else" } });
   });
 });

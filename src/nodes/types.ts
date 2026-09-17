@@ -69,6 +69,14 @@ export type EmitContext = {
 /** `creates`: the statement is the first assignment of its variable (N-02 `templateCreate`). */
 export type FormContext = { creates: boolean };
 
+// ---------------------------------------------------------------- chart shape (N-09)
+
+/** The body regions a block draws, by slot name: a branch, a checked loop, or a counted loop (U-33). */
+export type ChartShape =
+  | { branch: { yes: string; no: string } }
+  | { check: string }
+  | { counted: string };
+
 // ---------------------------------------------------------------- NodeDef (N-01)
 
 export type NodeDef = {
@@ -101,6 +109,8 @@ export type NodeDef = {
   form?(node: Stmt | Expr, ctx: FormContext): string;
   /** N-08: canvas text of a `text` slot; default `String(node[slot])`. */
   text?(node: Stmt | Expr, slot: string): string;
+  /** N-09: how the chart draws the block's regions; absent = a box with the sentence. */
+  chart?: ChartShape;
 };
 
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;

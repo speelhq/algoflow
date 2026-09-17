@@ -6,6 +6,7 @@ import { defineStmt } from "./types";
 export const ifStmt = defineStmt<"if">({
   key: "if",
   category: "control",
+  chart: { branch: { yes: "then", no: "else" } },
   slots: [
     { name: "cond", role: "expr", required: true },
     { name: "then", role: "body" },

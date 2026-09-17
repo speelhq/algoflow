@@ -23,6 +23,9 @@
     "for": {
       "label": "For loop",
       "template": "for {var} from {start} up to {stop}",
+      "init": "Set {var} to {start}",
+      "check": "Is {var} < {stop}?",
+      "step": "Set {var} to {var} + 1",
       "help": "Counts the variable from start up to, but not including, stop."
     },
     "while": {

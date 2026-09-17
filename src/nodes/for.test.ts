@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
+import { forStmt } from "./for";
 import { ast, eventTypes, program, runAll, varData } from "./testing";
 
 const { for_, assign, num, float, bin, v, brk, cont, if_ } = ast;
@@ -72,5 +73,9 @@ describe("for (03-nodes)", () => {
       type: "error",
       error: { nodeId: stmt.id, code: "E_TYPE", params: { left: "int", right: "float" } },
     });
+  });
+
+  it("N-09: a counted loop over `body`", () => {
+    expect(forStmt.chart).toEqual({ counted: "body" });
   });
 });
