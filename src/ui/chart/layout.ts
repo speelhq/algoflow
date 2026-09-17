@@ -87,6 +87,19 @@ type Frag = {
 };
 type Slot = Place["slot"];
 
+function emptyFrag(): Frag {
+  return {
+    left: 0,
+    right: 0,
+    height: 0,
+    nodes: [],
+    edges: [],
+    entry: null,
+    out: null,
+    escapes: [],
+  };
+}
+
 const last = (points: Point[]): Point => points[points.length - 1] ?? { x: 0, y: 0 };
 
 function shiftPoints(points: Point[], dx: number, dy: number): void {
@@ -110,15 +123,18 @@ function shift(frag: Frag, dx: number, dy: number): Frag {
   return frag;
 }
 
-/** The middle of the first or last vertical run; of the first segment when there is none. */
-function anchorOf(points: Point[], which: "first" | "last"): Point {
+/**
+ * The middle of the first or last vertical run; of the first segment when there is none, and
+ * for `start` (a flow leaving sideways, whose vertical run is far from its node).
+ */
+function anchorOf(points: Point[], which: "first" | "last" | "start"): Point {
   const runs: Array<[Point, Point]> = [];
   for (let i = 1; i < points.length; i += 1) {
     const a = points[i - 1];
     const b = points[i];
     if (a && b && a.x === b.x && a.y !== b.y) runs.push([a, b]);
   }
-  const run = which === "first" ? runs[0] : runs[runs.length - 1];
+  const run = which === "start" ? undefined : which === "first" ? runs[0] : runs[runs.length - 1];
   const [a, b] = run ?? [points[0] ?? { x: 0, y: 0 }, points[1] ?? last(points)];
   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
 }
@@ -127,7 +143,7 @@ function edge(
   stub: Stub,
   to: string,
   rest: Point[],
-  opts: { anchor?: "first" | "last"; back?: boolean; jump?: boolean } = {},
+  opts: { anchor?: "first" | "last" | "start"; back?: boolean; jump?: boolean } = {},
 ): ChartEdge {
   const points: Point[] = [];
   for (const point of [...stub.points, ...rest]) {
@@ -187,16 +203,7 @@ class Builder {
   }
 
   region(stmts: Stmt[], parent: NodeId | "main", slot: Slot): Frag {
-    const frag: Frag = {
-      left: 0,
-      right: 0,
-      height: 0,
-      nodes: [],
-      edges: [],
-      entry: null,
-      out: null,
-      escapes: [],
-    };
+    const frag = emptyFrag();
     let y = 0;
     let flow: Stub | null = null;
     for (const [index, stmt] of stmts.entries()) {
@@ -209,6 +216,11 @@ class Builder {
       frag.entry ??= child.entry;
       frag.nodes.push(...child.nodes);
       frag.edges.push(...child.edges);
+      // U-34: nothing falls out of a Return, so its edge to End carries the place after it.
+      if (child.out === null && child.escapes.length === 1 && child.nodes.length === 1) {
+        const [escape] = child.escapes;
+        if (escape) escape.place = { parent, slot, index: index + 1 };
+      }
       frag.escapes.push(...child.escapes);
       frag.left = Math.max(frag.left, child.left);
       frag.right = Math.max(frag.right, child.right);
@@ -328,16 +340,7 @@ class Builder {
    * its generated init before the junction and its step after the body.
    */
   private loop(stmt: Stmt, slot: string, counted: boolean): Frag {
-    const frag: Frag = {
-      left: 0,
-      right: 0,
-      height: 0,
-      nodes: [],
-      edges: [],
-      entry: null,
-      out: null,
-      escapes: [],
-    };
+    const frag = emptyFrag();
     let y = 0;
     let widest = 0;
     if (counted) {
@@ -432,16 +435,7 @@ class Builder {
 export function layout(program: Program, opts: LayoutOptions = {}): ChartLayout {
   const builder = new Builder(program, opts.measure ?? defaultMeasure);
   const fn = program.functions.find((candidate) => candidate.id === opts.chart);
-  const frag: Frag = {
-    left: 0,
-    right: 0,
-    height: 0,
-    nodes: [],
-    edges: [],
-    entry: null,
-    out: null,
-    escapes: [],
-  };
+  const frag = emptyFrag();
 
   const startText = fn
     ? t("chart.startFn", { name: fn.name, params: fn.params.join(", ") })
@@ -495,7 +489,7 @@ export function layout(program: Program, opts: LayoutOptions = {}): ChartLayout 
         { x: trunk, y: yEnd },
         { x: end.w / 2, y: yEnd },
       ];
-      frag.edges.push(edge(escape, end.id, into, { jump: true }));
+      frag.edges.push(edge(escape, end.id, into, { anchor: "start", jump: true }));
     }
     right = trunk + 4;
   }
