@@ -7,6 +7,7 @@ import type { Test } from "@/challenges/types";
 import type { Program } from "@/lang/types";
 import { advanceAsync, outcomeOf, type Outcome } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
+import { useProgress } from "./progress";
 import { useProgram } from "./program";
 import { BATCH, canRun } from "./run";
 
@@ -30,10 +31,12 @@ async function evaluate(program: Program, test: Test): Promise<Outcome> {
   return outcomeOf(runner, done);
 }
 
-function current(): { program: Program; tests: Test[] } | null {
+function current(): { id: string; program: Program; tests: Test[] } | null {
   const program = useProgram.getState().program;
-  const tests = getChallenge(program.challengeId)?.tests;
-  return tests && canRun(program) ? { program, tests } : null;
+  const challenge = getChallenge(program.challengeId);
+  return challenge && canRun(program)
+    ? { id: challenge.id, program, tests: challenge.tests }
+    : null;
 }
 
 export const useTests = create<TestsState>()((set, get) => {
@@ -76,6 +79,7 @@ export const useTests = create<TestsState>()((set, get) => {
           if (mine !== generation) return;
           record(index, test, outcome, target.tests.length);
         }
+        useProgress.getState().submitted(target.id, get().cleared); // U-80, C-17
       });
     },
 
