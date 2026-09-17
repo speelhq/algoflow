@@ -131,6 +131,22 @@ export function bodyStmts(program: Program): Map<NodeId, NodeId[]> {
   return bodies;
 }
 
+const indexes = new WeakMap<Program, Map<NodeId, Node>>();
+
+/** Every statement and expression of the program by id; one pass per Program object. */
+export function nodesById(program: Program): Map<NodeId, Node> {
+  let index = indexes.get(program);
+  if (!index) {
+    index = new Map();
+    for (const { stmt } of programStmts(program)) {
+      index.set(stmt.id, stmt);
+      for (const expr of stmtExprs(stmt)) index.set(expr.id, expr);
+    }
+    indexes.set(program, index);
+  }
+  return index;
+}
+
 /** Every NodeId in the program: classes, functions, statements, expressions. */
 export function* programIds(program: Program): Generator<NodeId, void, void> {
   for (const cls of program.classes) yield cls.id;
