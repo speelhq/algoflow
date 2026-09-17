@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { LAYOUT_STORAGE_KEY, mergePersisted, PANEL, useLayout } from "./layout";
+import { LAYOUT_STORAGE_KEY, mergePersisted, PANEL, SPEED, useLayout } from "./layout";
 
-describe("layout store (U-03, U-24)", () => {
+describe("layout store (U-03, U-24, U-60)", () => {
   beforeEach(() => {
     localStorage.clear();
-    useLayout.setState({ panel: PANEL.default, collapsed: false });
+    useLayout.setState({ panel: PANEL.default, collapsed: false, speed: SPEED.default });
   });
 
   it("starts at 320 px, expanded", () => {
@@ -19,6 +19,21 @@ describe("layout store (U-03, U-24)", () => {
     expect(useLayout.getState().panel).toBe(480);
     useLayout.getState().setPanel(300.4);
     expect(useLayout.getState().panel).toBe(300);
+  });
+
+  it("U-60: the speed starts at 3, clamps to 1–50, rounds, and persists", () => {
+    expect(useLayout.getState().speed).toBe(3);
+    useLayout.getState().setSpeed(0);
+    expect(useLayout.getState().speed).toBe(1);
+    useLayout.getState().setSpeed(999);
+    expect(useLayout.getState().speed).toBe(50);
+    useLayout.getState().setSpeed(12.4);
+    expect(useLayout.getState().speed).toBe(12);
+    const saved: unknown = JSON.parse(localStorage.getItem(LAYOUT_STORAGE_KEY) ?? "{}");
+    expect(saved).toMatchObject({ state: { speed: 12 } });
+    const current = useLayout.getState();
+    expect(mergePersisted({ speed: 400 }, current).speed).toBe(50);
+    expect(mergePersisted({ speed: "fast" }, current).speed).toBe(3);
   });
 
   it("persists the width and the collapsed state under algoflow:layout", () => {
