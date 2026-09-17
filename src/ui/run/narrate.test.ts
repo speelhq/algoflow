@@ -5,7 +5,8 @@ import type { Data, Input, Program } from "@/lang/types";
 import { ast, program, tid } from "@/nodes/testing";
 import { run } from "@/runtime/run";
 import type { Event } from "@/runtime/types";
-import { narrate, narrateDifference, narrateEnd, valueText, type Narration } from "./narrate";
+import { valueText } from "@/ui/chart/text";
+import { narrate, narrateDifference, narrateEnd, type Narration } from "./narrate";
 
 const { assign, num, float, str, bool, none, bin, not, v, print, for_, while_, if_ } = ast;
 const { exprStmt, call, ret } = ast;

@@ -6,8 +6,14 @@ import type { Expr, Heap, Program, Value } from "@/lang/types";
 import { childExprs, nodesById } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
-import { str } from "@/runtime/values";
-import { capitalise, conditionOf, exprText, sentence } from "@/ui/chart/text";
+import {
+  capitalise,
+  conditionOf,
+  exprText,
+  sentence,
+  slotSentence,
+  valueText,
+} from "@/ui/chart/text";
 import { matchTemplates } from "@/ui/expression/templates";
 
 export type Narration = { key: MessageKey; params: Params };
@@ -21,38 +27,6 @@ export type NarrateContext = {
   /** R-12 `pass`, for a `loop` event. */
   pass: number | null;
 };
-
-/** A value as the blocks write it: `true` / `false` / `none`, a text in quotes, the rest as `str()`. */
-export function valueText(value: Value, heap: Heap): string {
-  switch (value.t) {
-    case "bool":
-      return t(value.v ? "node.bool.template" : "node.bool.templateFalse");
-    case "none":
-      return t("node.none.template");
-    case "str":
-      return t("node.str.template", { value: value.v });
-    case "int":
-    case "float":
-      return str(value, heap);
-    default: {
-      const entry = heap.get(value.ref);
-      if (entry?.kind === "list") {
-        return `[${entry.items.map((item) => valueText(item, heap)).join(", ")}]`;
-      }
-      if (entry?.kind === "dict") {
-        const pairs = [...entry.entries].map(
-          ([key, item]) => `${valueText(keyValue(key), heap)}: ${valueText(item, heap)}`,
-        );
-        return `{${pairs.join(", ")}}`;
-      }
-      if (entry?.kind === "obj") {
-        const fields = [...entry.fields].map(([name, item]) => `${name}=${valueText(item, heap)}`);
-        return `${entry.cls}(${fields.join(", ")})`;
-      }
-      return str(value, heap);
-    }
-  }
-}
 
 /** The name a heap entry goes by: the first variable of the frame that holds it. */
 function nameOf(ref: number, frame: Frame | undefined, heap: Heap): string {
@@ -144,7 +118,7 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
       const chart = getNode(keyOf(node)).chart;
       const condition = chart && !("counted" in chart) ? conditionOf(node) : undefined;
       return condition
-        ? { key: "run.narrate.check", params: { condition: exprText(condition) } }
+        ? { key: "run.narrate.check", params: { condition: slotSentence(condition) } }
         : {
             key: "run.narrate.enter",
             params: { sentence: capitalise(sentence(node, ctx.program)) },

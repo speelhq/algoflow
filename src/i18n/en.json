@@ -141,6 +141,23 @@
       "help": "A random whole number between the two bounds, both included."
     }
   },
+  "chart": {
+    "start": "Start",
+    "startFn": "Start {name}({params})",
+    "end": "End",
+    "input": "Input {name} = {value}",
+    "condition": "Is {cond}?",
+    "question": {
+      "divisible": "Is {a} divisible by {b}?",
+      "equals": "Does {a} equal {b}?",
+      "notEquals": "Does {a} not equal {b}?",
+      "greater": "Is {a} greater than {b}?",
+      "less": "Is {a} less than {b}?",
+      "atLeast": "Is {a} at least {b}?",
+      "atMost": "Is {a} at most {b}?",
+      "in": "Is {a} in {b}?"
+    }
+  },
   "editor": {
     "template": {
       "divisible": "{a} is divisible by {b}",

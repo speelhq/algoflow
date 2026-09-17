@@ -1,13 +1,16 @@
 // N-08: a node's sentence as plain text, from `node.<key>.template<form>` and the block's
-// slots; U-50: an expression that matches a condition template reads as that sentence.
+// slots; U-50: a statement's slot holding an expression that matches a condition template
+// reads as that template's sentence, while the chips nested inside an expression keep symbols.
 // Reads slot roles, `params`, `form`, `text`, and `precedence` only, never a kind (N-01).
 import { t, type MessageKey } from "@/i18n/t";
-import type { Expr, Node, Program, Target } from "@/lang/types";
+import { keyValue, toValue } from "@/lang/data";
+import type { Data, Expr, Heap, Node, Program, Target, Value } from "@/lang/types";
 import { firstAssignments } from "@/lang/validate";
 import { isExpr } from "@/lang/walk";
 import { getNode, hasNode, keyOf } from "@/nodes";
 import type { NodeDef, Side } from "@/nodes/types";
 import { needsParens } from "@/python/precedence";
+import { str } from "@/runtime/values";
 import { matchTemplate } from "@/ui/expression/templates";
 
 type Bag = Record<string, unknown>;
@@ -59,9 +62,17 @@ export function slotText(node: Node, def: NodeDef, name: string): string {
     const first = def.slots.find((s) => s.role === "expr") === slot;
     switch (slot.role) {
       case "expr":
-        return isExpr(value) ? operand(value, precedence, first ? "left" : "right") : "";
+        if (!isExpr(value)) return "";
+        return def.shape === "stmt"
+          ? slotSentence(value)
+          : operand(value, precedence, first ? "left" : "right");
       case "exprs":
-        return Array.isArray(value) ? value.filter(isExpr).map(exprText).join(", ") : "";
+        return Array.isArray(value)
+          ? value
+              .filter(isExpr)
+              .map(def.shape === "stmt" ? slotSentence : exprText)
+              .join(", ")
+          : "";
       case "id":
         return typeof value === "string" ? value : "";
       case "text":
@@ -81,16 +92,28 @@ export function slotText(node: Node, def: NodeDef, name: string): string {
   return isExpr(arg) ? exprText(arg) : "";
 }
 
-/** N-08 text of an expression; a condition template's sentence when it matches one (U-50). */
-export function exprText(expr: Expr): string {
+/** The blanks of a matched template, parenthesised as operands of the matched expression. */
+function blanks(expr: Expr, a: Expr, b: Expr): { a: string; b: string } {
+  const precedence = getNode(keyOf(expr)).precedence?.(expr);
+  return { a: operand(a, precedence, "left"), b: operand(b, precedence, "right") };
+}
+
+/** U-50: what a slot shows: the template's sentence when the expression matches one, else its chips. */
+export function slotSentence(expr: Expr): string {
   const matched = matchTemplate(expr);
-  if (matched) {
-    const precedence = getNode(keyOf(expr)).precedence?.(expr);
-    return t(matched.template.key, {
-      a: operand(matched.a, precedence, "left"),
-      b: operand(matched.b, precedence, "right"),
-    });
-  }
+  return matched ? t(matched.template.key, blanks(expr, matched.a, matched.b)) : exprText(expr);
+}
+
+/** U-33: what a diamond asks: the template's question, else `Is <chips>?`. */
+export function questionText(expr: Expr): string {
+  const matched = matchTemplate(expr);
+  return matched
+    ? t(matched.template.question, blanks(expr, matched.a, matched.b))
+    : t("chart.condition", { cond: exprText(expr) });
+}
+
+/** N-08 text of an expression as chips: each block's template, with symbols for operators. */
+export function exprText(expr: Expr): string {
   const def = getNode(keyOf(expr));
   const form = def.form?.(expr, { creates: false }) ?? "";
   return render(nodeText(def.key, `template${form}`), (name) => slotText(expr, def, name));
@@ -116,4 +139,42 @@ export function conditionOf(node: Node): Expr | undefined {
   const slot = def.slots.find((s) => s.role === "expr");
   const value = slot ? (node as unknown as Bag)[slot.name] : undefined;
   return isExpr(value) ? value : undefined;
+}
+
+/** A value as the blocks write it: `true` / `false` / `none`, a text in quotes, the rest as `str()`. */
+export function valueText(value: Value, heap: Heap): string {
+  switch (value.t) {
+    case "bool":
+      return t(value.v ? "node.bool.template" : "node.bool.templateFalse");
+    case "none":
+      return t("node.none.template");
+    case "str":
+      return t("node.str.template", { value: value.v });
+    case "int":
+    case "float":
+      return str(value, heap);
+    default: {
+      const entry = heap.get(value.ref);
+      if (entry?.kind === "list") {
+        return `[${entry.items.map((item) => valueText(item, heap)).join(", ")}]`;
+      }
+      if (entry?.kind === "dict") {
+        const pairs = [...entry.entries].map(
+          ([key, item]) => `${valueText(keyValue(key), heap)}: ${valueText(item, heap)}`,
+        );
+        return `{${pairs.join(", ")}}`;
+      }
+      if (entry?.kind === "obj") {
+        const fields = [...entry.fields].map(([name, item]) => `${name}=${valueText(item, heap)}`);
+        return `${entry.cls}(${fields.join(", ")})`;
+      }
+      return str(value, heap);
+    }
+  }
+}
+
+/** A case's input value (U-32, U-31 `Input n = 15`), written like any other value. */
+export function dataText(data: Data): string {
+  const heap: Heap = new Map();
+  return valueText(toValue(data, heap), heap);
 }

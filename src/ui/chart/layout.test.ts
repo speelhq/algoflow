@@ -1,0 +1,379 @@
+// T-11: layout() places every node of every challenge solution without overlap; loops and
+// branches match U-33. Synthetic programs cover the nestings no challenge has yet.
+import { describe, expect, it } from "vitest";
+import { CHALLENGES } from "@/challenges";
+import type { Program, Stmt } from "@/lang/types";
+import { allStmts, regionsOf } from "@/lang/walk";
+import { getNode, keyOf } from "@/nodes";
+import { ast, program, tid } from "@/nodes/testing";
+import { layout, type ChartEdge, type ChartLayout, type ChartNode, type Measure } from "./layout";
+
+const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont, comment } = ast;
+
+const wide: Measure = (text) => text.length * 14.4;
+
+const lt = (name: string, n: number) => bin("<", v(name), num(n));
+const chain = (depth: number): Stmt =>
+  if_(lt("x", depth), [print(num(depth))], depth > 1 ? [chain(depth - 1)] : [print(str("else"))]);
+
+const fn = (name: string, body: Stmt[]) => ({ id: tid(), name, params: ["x"], body });
+
+const SYNTHETIC: Array<[string, Program]> = [
+  ["an empty main", program([])],
+  ["one statement", program([print(str("hi"))])],
+  [
+    "a for in a for with an if/else and a statement after the inner loop",
+    program([
+      for_("i", num(0), num(3), [
+        for_("j", num(0), v("i"), [if_(lt("j", 1), [print(v("j"))], [print(v("i"))])]),
+        print(str("row")),
+      ]),
+    ]),
+  ],
+  [
+    "a while in a Yes region with a for in the No region",
+    program([
+      assign("x", num(0)),
+      if_(
+        lt("x", 3),
+        [while_(lt("x", 3), [assign("x", bin("+", v("x"), num(1)))]), print(v("x"))],
+        [for_("k", num(0), num(2), [print(v("k"))])],
+      ),
+      print(str("after")),
+    ]),
+  ],
+  [
+    "every region empty",
+    program([
+      assign("x", num(0)),
+      if_(lt("x", 1), []),
+      while_(lt("x", 0), []),
+      for_("i", num(0), num(2), []),
+    ]),
+  ],
+  ["an else-if chain five deep", program([assign("x", num(2)), chain(5)])],
+  [
+    "an if inside a Yes region, and a loop ending a Yes region",
+    program([
+      assign("x", num(0)),
+      if_(lt("x", 5), [if_(lt("x", 2), [print(str("small"))]), while_(lt("x", 1), [])]),
+    ]),
+  ],
+  [
+    "a long sentence three levels deep",
+    program([
+      for_("i", num(0), num(2), [
+        if_(lt("i", 1), [while_(lt("i", 0), [print(str("x".repeat(80)))])]),
+      ]),
+    ]),
+  ],
+  [
+    "break, continue, and a comment as ordinary boxes",
+    program([
+      for_("i", num(0), num(9), [
+        if_(lt("i", 2), [cont()]),
+        if_(lt("i", 5), [], [brk()]),
+        comment("go on"),
+      ]),
+    ]),
+  ],
+];
+
+const returning = fn("find", [
+  if_(lt("x", 0), [for_("i", num(0), v("x"), [if_(lt("i", 2), [ret(v("i"))])])], [ret(num(0))]),
+  while_(lt("x", 9), [ret(v("x"))]),
+  ret(num(-1)),
+]);
+const bothReturn = fn("sign", [if_(lt("x", 0), [ret(num(-1))], [ret(num(1))])]);
+
+type Case = { name: string; program: Program; chart?: string };
+const CASES: Case[] = [
+  ...CHALLENGES.map((challenge) => ({ name: challenge.id, program: challenge.solution })),
+  ...SYNTHETIC.map(([name, p]) => ({ name, program: p })),
+  {
+    name: "returns in a loop in an if",
+    program: program([], { functions: [returning] }),
+    chart: returning.id,
+  },
+  {
+    name: "both regions return",
+    program: program([], { functions: [bothReturn] }),
+    chart: bothReturn.id,
+  },
+];
+
+const bodyOf = (c: Case): Stmt[] =>
+  c.chart ? (c.program.functions.find((f) => f.id === c.chart)?.body ?? []) : c.program.main;
+
+const lay = (c: Case, measure?: Measure): ChartLayout =>
+  layout(c.program, { ...(c.chart ? { chart: c.chart } : {}), ...(measure ? { measure } : {}) });
+
+const byId = (chart: ChartLayout) => new Map(chart.nodes.map((node) => [node.id, node]));
+const centre = (node: ChartNode) => node.x + node.w / 2;
+
+function rectsOverlap(a: ChartNode, b: ChartNode, inflate: number): boolean {
+  return (
+    a.x - inflate < b.x + b.w + inflate &&
+    b.x - inflate < a.x + a.w + inflate &&
+    a.y - inflate < b.y + b.h + inflate &&
+    b.y - inflate < a.y + a.h + inflate
+  );
+}
+
+/** An axis-parallel segment meets the interior of `node` shrunk by 1 px. */
+function crosses(a: { x: number; y: number }, b: { x: number; y: number }, node: ChartNode) {
+  if (node.w === 0) return false;
+  const [x0, x1] = [Math.min(a.x, b.x), Math.max(a.x, b.x)];
+  const [y0, y1] = [Math.min(a.y, b.y), Math.max(a.y, b.y)];
+  return x1 > node.x + 1 && x0 < node.x + node.w - 1 && y1 > node.y + 1 && y0 < node.y + node.h - 1;
+}
+
+function segments(edge: ChartEdge) {
+  return edge.points.slice(1).map((point, i) => [edge.points[i] ?? point, point] as const);
+}
+
+describe.each([
+  ["the default measure", undefined],
+  ["a measure twice as wide", wide],
+] as const)("layout (T-11) with %s", (_, measure) => {
+  it.each(CASES.map((c) => [c.name, c] as const))(
+    "%s: every node placed once, inside the chart",
+    (_n, c) => {
+      const chart = lay(c, measure);
+      const nodes = byId(chart);
+      expect(nodes.size).toBe(chart.nodes.length);
+      expect(chart.nodes[0]?.role).toBe("start");
+      expect(chart.nodes.at(-1)?.role).toBe("end");
+      for (const stmt of allStmts(bodyOf(c))) {
+        const shape = getNode(keyOf(stmt)).chart;
+        const ids =
+          shape && "counted" in shape
+            ? ["init", "check", "step"].map((r) => `${stmt.id}:${r}`)
+            : [stmt.id];
+        for (const id of ids) expect(nodes.get(id)?.owner, id).toBe(stmt.id);
+      }
+      for (const node of chart.nodes) {
+        expect(node.x).toBeGreaterThanOrEqual(0);
+        expect(node.x + node.w).toBeLessThanOrEqual(chart.width);
+        expect(node.y + node.h).toBeLessThanOrEqual(chart.height);
+      }
+      for (const edge of chart.edges) {
+        for (const point of [...edge.points, edge.anchor]) {
+          expect(point.x).toBeGreaterThanOrEqual(0);
+          expect(point.x).toBeLessThanOrEqual(chart.width);
+          expect(point.y).toBeLessThanOrEqual(chart.height);
+        }
+      }
+    },
+  );
+
+  it.each(CASES.map((c) => [c.name, c] as const))("%s: no two nodes overlap", (_n, c) => {
+    const drawn = lay(c, measure).nodes.filter((node) => node.w > 0);
+    for (const [i, a] of drawn.entries()) {
+      for (const b of drawn.slice(i + 1))
+        expect(rectsOverlap(a, b, 4), `${a.id} / ${b.id}`).toBe(false);
+    }
+  });
+
+  it.each(CASES.map((c) => [c.name, c] as const))(
+    "%s: edges are orthogonal, join their nodes, and cross no other node",
+    (_n, c) => {
+      const chart = lay(c, measure);
+      const nodes = byId(chart);
+      expect(new Set(chart.edges.map((edge) => edge.id)).size).toBe(chart.edges.length);
+      for (const edge of chart.edges) {
+        const from = nodes.get(edge.from);
+        const to = nodes.get(edge.to);
+        expect(from && to, edge.id).toBeTruthy();
+        expect(edge.points.length).toBeGreaterThanOrEqual(2);
+        for (const [a, b] of segments(edge)) {
+          expect(a.x === b.x || a.y === b.y, edge.id).toBe(true);
+          for (const node of chart.nodes) {
+            if (node.id !== edge.from && node.id !== edge.to) {
+              expect(crosses(a, b, node), `${edge.id} through ${node.id}`).toBe(false);
+            }
+          }
+        }
+        for (const node of chart.nodes) {
+          expect(crosses(edge.anchor, edge.anchor, node), `anchor of ${edge.id}`).toBe(false);
+        }
+        const [first, final] = [edge.points[0], edge.points.at(-1)];
+        if (from && first) expect(onBorder(first, from), `${edge.id} leaves ${from.id}`).toBe(true);
+        if (to && final) expect(onBorder(final, to), `${edge.id} reaches ${to.id}`).toBe(true);
+      }
+    },
+  );
+
+  it.each(CASES.map((c) => [c.name, c] as const))(
+    "%s: every node is reached from Start",
+    (_n, c) => {
+      const chart = lay(c, measure);
+      const reached = new Set(["start"]);
+      for (let grew = true; grew;) {
+        grew = false;
+        for (const edge of chart.edges) {
+          if (reached.has(edge.from) && !reached.has(edge.to)) {
+            reached.add(edge.to);
+            grew = true;
+          }
+        }
+      }
+      const dead = new Set(["returns in a loop in an if"]); // the statements after a loop that always returns
+      if (!dead.has(c.name))
+        expect(chart.nodes.filter((node) => !reached.has(node.id))).toEqual([]);
+    },
+  );
+
+  it.each(CASES.map((c) => [c.name, c] as const))("%s: branches and loops match U-33", (_n, c) => {
+    const chart = lay(c, measure);
+    const nodes = byId(chart);
+    const out = (id: string, label: "yes" | "no") =>
+      chart.edges.filter((edge) => edge.from === id && edge.label === label);
+    for (const stmt of allStmts(bodyOf(c))) {
+      const shape = getNode(keyOf(stmt)).chart;
+      if (!shape) {
+        expect(nodes.get(stmt.id)?.shape).toBe("box");
+        continue;
+      }
+      const inside = regionsOf(stmt).flatMap((region) => [...allStmts(region.stmts)]);
+      const under = chart.nodes.filter(
+        (node) => node.owner !== null && inside.some((s) => s.id === node.owner),
+      );
+      if ("branch" in shape) {
+        const d = nodes.get(stmt.id);
+        const [yes] = out(stmt.id, "yes");
+        const [no] = out(stmt.id, "no");
+        if (!d || !yes || !no) throw new Error(`branch ${stmt.id}`);
+        expect(d.shape).toBe("diamond");
+        expect(yes.points[0]).toEqual({ x: d.x + d.w, y: d.y + d.h / 2 }); // Yes leaves by the right vertex
+        expect(no.points[0]).toEqual({ x: centre(d), y: d.y + d.h }); // No by the bottom vertex
+        const yesTo = nodes.get(yes.to);
+        const noTo = nodes.get(no.to);
+        if (yesTo?.role !== "merge") expect(centre(yesTo ?? d)).toBeGreaterThan(d.x + d.w);
+        if (noTo?.role !== "merge") expect(centre(noTo ?? d)).toBe(centre(d));
+        const merge = nodes.get(`${stmt.id}:merge`);
+        if (merge) {
+          expect(centre(merge)).toBe(centre(d));
+          for (const node of under) expect(node.y + node.h).toBeLessThan(merge.y);
+          const bare =
+            regionsOf(stmt).find((region) => region.slot === shape.branch.no)?.stmts.length === 0;
+          if (bare)
+            expect(no).toMatchObject({
+              to: merge.id,
+              points: [no.points[0], { x: centre(d), y: merge.y }],
+            });
+        }
+        continue;
+      }
+      const counted = "counted" in shape;
+      const d = nodes.get(counted ? `${stmt.id}:check` : stmt.id);
+      const junction = nodes.get(`${stmt.id}:junction`);
+      if (!d || !junction) throw new Error(`loop ${stmt.id}`);
+      expect(d.shape).toBe("diamond");
+      expect(centre(junction)).toBe(centre(d));
+      expect(junction.y).toBeLessThan(d.y);
+      const [yes] = out(d.id, "yes");
+      const [no] = out(d.id, "no");
+      if (!yes || !no) throw new Error(`loop ${stmt.id} edges`);
+      expect(yes.points[0]).toEqual({ x: centre(d), y: d.y + d.h }); // Yes leads down into the body
+      expect(no.points[0]).toEqual({ x: d.x + d.w, y: d.y + d.h / 2 }); // No leaves to the right
+      const bottom = Math.max(d.y + d.h, ...under.map((node) => node.y + node.h));
+      expect(Math.max(...no.points.map((point) => point.y))).toBeGreaterThan(bottom);
+      const backs = chart.edges.filter((edge) => edge.to === junction.id && edge.back);
+      expect(backs.length).toBeLessThanOrEqual(1);
+      for (const back of backs) {
+        const lane = Math.min(...back.points.map((point) => point.x));
+        for (const node of [d, ...under]) expect(lane).toBeLessThan(node.x);
+        expect(back.points.at(-1)).toEqual({ x: centre(junction), y: junction.y });
+      }
+      if (counted) {
+        const init = nodes.get(`${stmt.id}:init`);
+        const step = nodes.get(`${stmt.id}:step`);
+        if (!init || !step) throw new Error(`counted ${stmt.id}`);
+        expect([init.generated, d.generated, step.generated]).toEqual([true, true, true]);
+        expect([centre(init), centre(step)]).toEqual([centre(d), centre(d)]);
+        expect(init.y + init.h).toBeLessThan(junction.y);
+        for (const node of under) expect(node.y + node.h).toBeLessThan(step.y);
+        expect(backs.map((edge) => edge.from)).toEqual([step.id]);
+      }
+    }
+  });
+
+  it.each(CASES.map((c) => [c.name, c] as const))(
+    "%s: each region offers the places 0..n once (U-34)",
+    (_n, c) => {
+      const chart = lay(c, measure);
+      const count = new Map<string, number>();
+      for (const edge of chart.edges) {
+        if (!edge.place) continue;
+        const key = `${edge.place.parent}/${edge.place.slot}/${edge.place.index}`;
+        count.set(key, (count.get(key) ?? 0) + 1);
+      }
+      const expectRegion = (parent: string, slot: string, stmts: Stmt[]) => {
+        const leaves = (stmt: Stmt | undefined) =>
+          stmt !== undefined && getNode(keyOf(stmt)).requires === "function";
+        for (let index = 0; index <= stmts.length; index += 1) {
+          const open = index === 0 || !leaves(stmts[index - 1]);
+          // After a statement that never falls through (a Return, or a branch whose regions all
+          // return) there is no edge to carry a place; only function charts have those.
+          if (open && (c.chart === undefined || index === 0)) {
+            expect(count.get(`${parent}/${slot}/${index}`), `${parent}/${slot}/${index}`).toBe(1);
+          }
+        }
+      };
+      expectRegion(c.chart ?? "main", c.chart ? "body" : "main", bodyOf(c));
+      for (const stmt of allStmts(bodyOf(c))) {
+        for (const region of regionsOf(stmt)) expectRegion(stmt.id, region.slot, region.stmts);
+      }
+    },
+  );
+
+  it.each(CASES.map((c) => [c.name, c] as const))("%s: deterministic", (_n, c) => {
+    expect(lay(c, measure)).toEqual(lay({ ...c, program: structuredClone(c.program) }, measure));
+  });
+});
+
+function onBorder(point: { x: number; y: number }, node: ChartNode): boolean {
+  if (node.w === 0) return point.x === node.x && point.y === node.y;
+  const onX = point.x === node.x || point.x === node.x + node.w;
+  const onY = point.y === node.y || point.y === node.y + node.h;
+  const inX = point.x >= node.x && point.x <= node.x + node.w;
+  const inY = point.y >= node.y && point.y <= node.y + node.h;
+  return (onX && inY) || (onY && inX);
+}
+
+describe("layout (U-31, U-33 texts)", () => {
+  it("main: Start, one Input node per input with the chosen values, the statements, End", () => {
+    const sum = CHALLENGES.find((challenge) => challenge.id === "sum-to-n");
+    if (!sum) throw new Error("sum-to-n missing");
+    const chart = layout(sum.solution, { inputs: { n: 0 } });
+    expect(chart.nodes.slice(0, 2).map((node) => node.text)).toEqual(["Start", "Input n = 0"]);
+    expect(layout(sum.solution).nodes[1]?.text).toBe("Input n = 10");
+    expect(chart.nodes.at(-1)?.text).toBe("End");
+    const texts = chart.nodes.filter((node) => node.generated).map((node) => node.text);
+    expect(texts).toEqual(["Set i to 1", "Is i < n + 1?", "Set i to i + 1"]);
+  });
+
+  it("a diamond asks its condition; a function chart starts with its signature and has no inputs", () => {
+    const check = if_(bin("==", bin("%", v("x"), num(15)), num(0)), [ret(v("x"))]);
+    const f = fn("f", [check, ret(num(0))]);
+    const chart = layout(program([], { functions: [f], inputs: [{ name: "n", value: 1 }] }), {
+      chart: f.id,
+    });
+    expect(chart.nodes[0]?.text).toBe("Start f(x)");
+    expect(chart.nodes.some((node) => node.role === "input")).toBe(false);
+    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe("Is x divisible by 15?");
+    const jumps = chart.edges.filter((edge) => edge.jump);
+    expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // U-31: a Return leads to End
+  });
+
+  it("an empty main offers its one connector between Start and End (U-34)", () => {
+    const chart = layout(program([]));
+    expect(chart.edges).toHaveLength(1);
+    expect(chart.edges[0]).toMatchObject({
+      from: "start",
+      to: "end",
+      place: { parent: "main", slot: "main", index: 0 },
+    });
+  });
+});

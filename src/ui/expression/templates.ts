@@ -8,19 +8,55 @@ import { getNode, keyOf } from "@/nodes";
 import { isParseError, parse } from "@/python/parse";
 
 export type Blank = "a" | "b";
-export type ConditionTemplate = { name: string; key: MessageKey; python: string };
+/** `key` is the sentence (U-50); `question` is how a diamond asks it (U-33). */
+export type ConditionTemplate = {
+  name: string;
+  key: MessageKey;
+  question: MessageKey;
+  python: string;
+};
 export type TemplateMatch = { template: ConditionTemplate; a: Expr; b: Expr };
 
 /** In the order of the U-50 table: the first match names the expression (U-50, U-63). */
 export const CONDITION_TEMPLATES: readonly ConditionTemplate[] = [
-  { name: "divisible", key: "editor.template.divisible", python: "a % b == 0" },
-  { name: "equals", key: "editor.template.equals", python: "a == b" },
-  { name: "notEquals", key: "editor.template.notEquals", python: "a != b" },
-  { name: "greater", key: "editor.template.greater", python: "a > b" },
-  { name: "less", key: "editor.template.less", python: "a < b" },
-  { name: "atLeast", key: "editor.template.atLeast", python: "a >= b" },
-  { name: "atMost", key: "editor.template.atMost", python: "a <= b" },
-  { name: "in", key: "editor.template.in", python: "a in b" },
+  {
+    name: "divisible",
+    key: "editor.template.divisible",
+    question: "chart.question.divisible",
+    python: "a % b == 0",
+  },
+  {
+    name: "equals",
+    key: "editor.template.equals",
+    question: "chart.question.equals",
+    python: "a == b",
+  },
+  {
+    name: "notEquals",
+    key: "editor.template.notEquals",
+    question: "chart.question.notEquals",
+    python: "a != b",
+  },
+  {
+    name: "greater",
+    key: "editor.template.greater",
+    question: "chart.question.greater",
+    python: "a > b",
+  },
+  { name: "less", key: "editor.template.less", question: "chart.question.less", python: "a < b" },
+  {
+    name: "atLeast",
+    key: "editor.template.atLeast",
+    question: "chart.question.atLeast",
+    python: "a >= b",
+  },
+  {
+    name: "atMost",
+    key: "editor.template.atMost",
+    question: "chart.question.atMost",
+    python: "a <= b",
+  },
+  { name: "in", key: "editor.template.in", question: "chart.question.in", python: "a in b" },
 ];
 
 type Bag = Record<string, unknown>;
