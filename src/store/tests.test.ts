@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { getChallenge } from "@/challenges";
 import { ast, program } from "@/nodes/testing";
+import { useProgress } from "./progress";
 import { useProgram } from "./program";
 import { useRun } from "./run";
 import { useTests } from "./tests";
@@ -44,6 +45,19 @@ describe("tests store (U-80, C-10..C-12)", () => {
       status: "fail",
       mismatches: [{ kind: "stdout", expected: ["1"], actual: ["nope"] }],
     });
+  });
+
+  it("U-80, C-17: a submission is recorded; an accepted one solves the problem for good", async () => {
+    useProgress.setState({ entries: {} });
+    useProgram.setState({ program: { ...fizzbuzz().solution, main: [print(str("nope"))] } });
+    await useTests.getState().submit();
+    expect(useProgress.getState().entries.fizzbuzz?.status).toBe("attempted");
+    useProgram.setState({ program: fizzbuzz().solution });
+    await useTests.getState().submit();
+    expect(useProgress.getState().entries.fizzbuzz?.status).toBe("solved");
+    useProgram.setState({ program: { ...fizzbuzz().solution, main: [print(str("nope"))] } });
+    await useTests.getState().submit();
+    expect(useProgress.getState().entries.fizzbuzz?.status).toBe("solved");
   });
 
   it("C-11: a runtime error is reported in the row", async () => {
