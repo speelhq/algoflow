@@ -2,7 +2,7 @@
 // Shared by the Tests tab, the driver's run-to-end batches (R-11), and scripts/check.ts.
 import { toData } from "@/lang/data";
 import type { Data, Id } from "@/lang/types";
-import type { Done, Runner } from "./types";
+import type { Done, Runner, State } from "./types";
 
 export type Outcome = {
   done: Done;
@@ -29,9 +29,13 @@ export async function advanceAsync(runner: Runner, batch: number): Promise<Done>
   }
 }
 
-export function outcomeOf(runner: Runner, done: Done): Outcome {
-  const state = runner.state();
+/** The main-level variables as Data: what C-10 compares and the `Result` rows show (U-23). */
+export function mainVars(state: State): Record<Id, Data> {
   const vars: Record<Id, Data> = {};
   for (const [name, value] of state.frames[0]?.vars ?? []) vars[name] = toData(value, state.heap);
-  return { done, stdout: runner.stdout(), vars, draws: runner.draws() };
+  return vars;
+}
+
+export function outcomeOf(runner: Runner, done: Done): Outcome {
+  return { done, stdout: runner.stdout(), vars: mainVars(runner.state()), draws: runner.draws() };
 }

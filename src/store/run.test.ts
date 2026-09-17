@@ -88,6 +88,7 @@ describe("run store (T-05: R-11, R-12, R-19)", () => {
       breakpoint: null,
       caseIndex: 0,
       verdict: null,
+      difference: null,
     });
   });
 
@@ -473,5 +474,40 @@ describe("run store (T-05: R-11, R-12, R-19)", () => {
     await paused();
     await run().skip();
     expect(run()).toMatchObject({ status: "done", verdict: null });
+  });
+
+  // ------------------------------------------------------------ U-81 Watch this case
+
+  it("U-81: Watch this case opens paused at the print of the first differing line", async () => {
+    const wrong = for_("i", num(0), bin("+", v("n"), num(1)), [print(v("i"))]); // from 0, not 1
+    useProgram.setState({ program: { ...fizzbuzz().solution, main: [wrong] } });
+    run().selectCase(1);
+    await settle(run().run({ watch: true }));
+    // enter for, loop, enter print, print "0" against the expected "1"
+    expect(run()).toMatchObject({
+      status: "paused",
+      busy: false,
+      step: 4,
+      stdout: ["0"],
+      difference: { step: 4, line: 1 },
+    });
+    expect(vi.getTimerCount()).toBe(0);
+    await run().seek(0);
+    expect(run().difference).toEqual({ step: 4, line: 1 });
+    run().stop();
+    expect(run().difference).toBeNull();
+  });
+
+  it("U-81: when no print produced the difference, it opens at the last step of the run", async () => {
+    const quiet = for_("i", num(1), v("n"), [print(v("i"))]); // one pass short: a line is missing
+    useProgram.setState({ program: { ...fizzbuzz().solution, main: [quiet] } });
+    run().selectCase(2);
+    await settle(run().run({ watch: true }));
+    expect(run()).toMatchObject({ status: "done", step: 7, total: 7, stdout: ["1", "2"] });
+    expect(run().difference).toEqual({ step: 7 });
+    expect(run().verdict?.status).toBe("fail");
+
+    await settle(run().run());
+    expect(run()).toMatchObject({ status: "playing", difference: null });
   });
 });
