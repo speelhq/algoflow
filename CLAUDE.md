@@ -59,7 +59,7 @@ Data flows one way, and nothing below `src/store` depends on React:
 - `src/ui` — React. The chart is an SVG flowchart with computed layout (U-30, N-09);
   variable views are chosen by value type only (V-01), never by
   block or challenge.
-- `challenges/<id>.json` — inputs, ≥3 tests (one named `edge:…`), 3 hints, solution.
+- `challenges/<id>.json` — inputs, ≥3 tests (one with `edge: true`), 3 hints, solution.
   `scripts/check.ts` runs every solution in the interpreter and in CPython (with a
   shim replaying `draws()`) and compares both (R-20). "Recorded" expectations are
   captured once from the solution and pasted into the file (C-20).

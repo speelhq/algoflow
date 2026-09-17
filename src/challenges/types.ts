@@ -23,8 +23,10 @@ export type Topic = (typeof TOPICS)[number];
 
 export type Localized = { en: string; ja?: string };
 export type Test = {
-  name: Localized;
+  /** A test is shown by these values; it has no name. */
   inputs: Record<Id, Data>;
+  /** C-03: a boundary case; every challenge has at least one. */
+  edge?: boolean;
   seed?: number;
   expect: { variables?: Record<Id, Data>; stdout?: string[] };
 };

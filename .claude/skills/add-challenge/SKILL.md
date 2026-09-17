@@ -11,7 +11,8 @@ Create the challenge described in $ARGUMENTS.
    `challenges/fizzbuzz.json` as the reference file.
 2. Write `challenges/<id>.json` with: English title and description (add Japanese
    texts only if `src/i18n/ja.json` exists), difficulty, topics, inputs, at least
-   three tests of which one has an English name starting with `edge:`, three hints,
+   three tests of which one is a boundary case marked `"edge": true` (C-03; tests
+   have no name and are shown by their inputs), three hints,
    a `takeaway`, and a complete `solution` (plus `starter` in the micrograd plan).
    If the problem belongs to a study plan, add its id to `challenges/plans.json`.
 3. For expectations the spec marks as "recorded", run the solution once with the

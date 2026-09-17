@@ -16,7 +16,7 @@ function outcome(p: Program, inputs = {}): Outcome {
   return outcomeOf(runner, done);
 }
 
-const test = (expect: Test["expect"], inputs = {}): Test => ({ name: { en: "t" }, inputs, expect });
+const test = (expect: Test["expect"], inputs = {}): Test => ({ inputs, expect });
 
 describe("judge (C-10)", () => {
   it("passes when every expected variable and stdout line matches", () => {

@@ -13,22 +13,19 @@
   ],
   "tests": [
     {
-      "name": { "en": "3, 9, 5" },
       "inputs": { "a": 3, "b": 9, "c": 5 },
       "expect": { "variables": { "biggest": 9 } }
     },
     {
-      "name": { "en": "edge: equal" },
       "inputs": { "a": 3, "b": 3, "c": 3 },
+      "edge": true,
       "expect": { "variables": { "biggest": 3 } }
     },
     {
-      "name": { "en": "negatives" },
       "inputs": { "a": -5, "b": -2, "c": -9 },
       "expect": { "variables": { "biggest": -2 } }
     },
     {
-      "name": { "en": "last is largest" },
       "inputs": { "a": 1, "b": 2, "c": 7 },
       "expect": { "variables": { "biggest": 7 } }
     }

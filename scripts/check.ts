@@ -35,7 +35,7 @@ function describeMismatch(kind: string, expected: unknown, actual: unknown): str
 
 /** C-10 for one test: interpreter result against `expect`, then CPython against the interpreter (E-07). */
 function checkTest(challenge: Challenge, test: Test, index: number): string[] {
-  const label = `test[${index}] "${test.name.en}"`;
+  const label = `test[${index}] ${JSON.stringify(test.inputs)}`;
   const problems: string[] = [];
   const seed = test.seed ?? 1;
   const outcome = execute(challenge.solution, test.inputs, seed);

@@ -9,16 +9,15 @@
   "inputs": [{ "name": "name", "value": "Claude" }],
   "tests": [
     {
-      "name": { "en": "Claude" },
       "inputs": { "name": "Claude" },
       "expect": { "stdout": ["Hello, Claude"] }
     },
     {
-      "name": { "en": "edge: empty" },
       "inputs": { "name": "" },
+      "edge": true,
       "expect": { "stdout": ["Hello, "] }
     },
-    { "name": { "en": "Ada" }, "inputs": { "name": "Ada" }, "expect": { "stdout": ["Hello, Ada"] } }
+    { "inputs": { "name": "Ada" }, "expect": { "stdout": ["Hello, Ada"] } }
   ],
   "hints": [
     { "en": "Click the `+` under `Start` and choose **Print** under Basic." },

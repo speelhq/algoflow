@@ -8,13 +8,13 @@
   },
   "inputs": [{ "name": "n", "value": 10 }],
   "tests": [
-    { "name": { "en": "10" }, "inputs": { "n": 10 }, "expect": { "variables": { "total": 55 } } },
+    { "inputs": { "n": 10 }, "expect": { "variables": { "total": 55 } } },
     {
-      "name": { "en": "edge: 0" },
       "inputs": { "n": 0 },
+      "edge": true,
       "expect": { "variables": { "total": 0 } }
     },
-    { "name": { "en": "1" }, "inputs": { "n": 1 }, "expect": { "variables": { "total": 1 } } }
+    { "inputs": { "n": 1 }, "expect": { "variables": { "total": 1 } } }
   ],
   "hints": [
     { "en": "Start with `total` set to 0 before the loop." },

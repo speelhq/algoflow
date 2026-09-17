@@ -9,12 +9,11 @@
   "inputs": [{ "name": "n", "value": 5 }],
   "tests": [
     {
-      "name": { "en": "5" },
       "inputs": { "n": 5 },
       "expect": { "stdout": ["5", "4", "3", "2", "1", "0"] }
     },
-    { "name": { "en": "edge: 0" }, "inputs": { "n": 0 }, "expect": { "stdout": ["0"] } },
-    { "name": { "en": "2" }, "inputs": { "n": 2 }, "expect": { "stdout": ["2", "1", "0"] } }
+    { "inputs": { "n": 0 }, "edge": true, "expect": { "stdout": ["0"] } },
+    { "inputs": { "n": 2 }, "expect": { "stdout": ["2", "1", "0"] } }
   ],
   "hints": [
     { "en": "Copy `n` into a variable you can change, such as `k`." },

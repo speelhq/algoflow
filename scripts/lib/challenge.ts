@@ -68,8 +68,9 @@ export function checkChallengeSchema(
   let edge = false;
   tests.forEach((test, i) => {
     if (!isRecord(test)) return problems.push(`tests[${i}] must be an object`);
-    if (!isLocalized(test.name, requireJa)) problems.push(`tests[${i}].name must be { en, ja? }`);
-    else if (test.name.en.startsWith("edge:")) edge = true;
+    if (test.edge !== undefined && typeof test.edge !== "boolean")
+      problems.push(`tests[${i}].edge must be a boolean`);
+    else if (test.edge === true) edge = true;
     if (!isRecord(test.inputs)) problems.push(`tests[${i}].inputs must be an object`);
     else {
       for (const name of inputNames)
@@ -87,7 +88,7 @@ export function checkChallengeSchema(
       problems.push(`tests[${i}].expect needs variables and/or stdout`);
     }
   });
-  if (tests.length > 0 && !edge) problems.push('no test name starts with "edge:" (C-03)');
+  if (tests.length > 0 && !edge) problems.push("no test has edge: true (C-03)");
 
   const hints = Array.isArray(json.hints) ? json.hints : [];
   if (!Array.isArray(json.hints) || hints.length !== 3)

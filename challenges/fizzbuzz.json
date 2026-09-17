@@ -9,7 +9,6 @@
   "inputs": [{ "name": "n", "value": 15 }],
   "tests": [
     {
-      "name": { "en": "15" },
       "inputs": { "n": 15 },
       "expect": {
         "stdout": [
@@ -31,8 +30,8 @@
         ]
       }
     },
-    { "name": { "en": "edge: 1" }, "inputs": { "n": 1 }, "expect": { "stdout": ["1"] } },
-    { "name": { "en": "3" }, "inputs": { "n": 3 }, "expect": { "stdout": ["1", "2", "Fizz"] } }
+    { "inputs": { "n": 1 }, "edge": true, "expect": { "stdout": ["1"] } },
+    { "inputs": { "n": 3 }, "expect": { "stdout": ["1", "2", "Fizz"] } }
   ],
   "hints": [
     { "en": "`i % 3 == 0` is true exactly when `i` is a multiple of 3." },
