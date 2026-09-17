@@ -141,6 +141,50 @@
       "help": "A random whole number between the two bounds, both included."
     }
   },
+  "editor": {
+    "template": {
+      "divisible": "{a} is divisible by {b}",
+      "equals": "{a} equals {b}",
+      "notEquals": "{a} does not equal {b}",
+      "greater": "{a} is greater than {b}",
+      "less": "{a} is less than {b}",
+      "atLeast": "{a} is at least {b}",
+      "atMost": "{a} is at most {b}",
+      "in": "{a} is in {b}"
+    }
+  },
+  "run": {
+    "narrate": {
+      "enter": "{sentence}",
+      "check": "Checking {condition}",
+      "read": "Read {what}: {value}",
+      "readMany": "Read {count} items of {name}",
+      "compareYes": "\"{condition}\" is true, so Yes",
+      "compareNo": "\"{condition}\" is false, so No",
+      "compareTrue": "\"{condition}\" is true",
+      "compareFalse": "\"{condition}\" is false",
+      "write": "{what} is now {value}",
+      "swap": "Swapped items {i} and {j} of {name}",
+      "loop": "Pass {pass}: {var} is {value}",
+      "loopPlain": "Pass {pass}",
+      "print": "Printed \"{text}\"",
+      "call": "Calling {fn}({args})",
+      "return": "{fn} returned {value}",
+      "done": "Finished in {steps} steps",
+      "difference": {
+        "line": "This printed line {line}",
+        "end": "The run ended here"
+      },
+      "ref": {
+        "index": "item {index} of {name}",
+        "key": "{name} at {key}",
+        "field": "{name}.{field}",
+        "list": "a list",
+        "dict": "a dict",
+        "object": "an object"
+      }
+    }
+  },
   "error": {
     "E_UNDEFINED": "Variable {name} has not been created yet",
     "E_DECLARE_FIRST": "Create {name} before the if or loop",
