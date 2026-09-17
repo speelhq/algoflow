@@ -115,6 +115,22 @@ export function ownerStmts(program: Program): Map<NodeId, NodeId> {
   return owners;
 }
 
+/**
+ * U-61: for each statement with body regions, the ids of every statement inside them,
+ * at any depth. A loop's `loop` event clears the marks of these statements.
+ */
+export function bodyStmts(program: Program): Map<NodeId, NodeId[]> {
+  const bodies = new Map<NodeId, NodeId[]>();
+  for (const { stmt } of programStmts(program)) {
+    const regions = regionsOf(stmt);
+    if (regions.length === 0) continue;
+    const ids: NodeId[] = [];
+    for (const region of regions) for (const inner of allStmts(region.stmts)) ids.push(inner.id);
+    bodies.set(stmt.id, ids);
+  }
+  return bodies;
+}
+
 /** Every NodeId in the program: classes, functions, statements, expressions. */
 export function* programIds(program: Program): Generator<NodeId, void, void> {
   for (const cls of program.classes) yield cls.id;
