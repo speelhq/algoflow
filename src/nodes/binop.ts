@@ -13,7 +13,6 @@ import {
   floatMod,
   isNumber,
   makeNumber,
-  str,
   truthy,
 } from "@/runtime/values";
 import { defineExpr, type RunContext } from "./types";
@@ -134,12 +133,7 @@ export const binop = defineExpr<"binop">({
         node.op === "in"
           ? yield* membership(node, left, right, ctx)
           : ordered(node, left, right, ctx);
-      yield {
-        type: "compare",
-        nodeId: node.id,
-        text: `${str(left, ctx.heap)} ${node.op} ${str(right, ctx.heap)}`,
-        result,
-      };
+      yield { type: "compare", nodeId: node.id, left, right, result };
       return { t: "bool", v: result };
     }
     return arithmetic(node, left, right, ctx);
