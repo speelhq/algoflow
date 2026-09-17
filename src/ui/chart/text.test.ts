@@ -4,7 +4,15 @@ import type { Expr } from "@/lang/types";
 import { ast, program } from "@/nodes/testing";
 import { isParseError, parse } from "@/python/parse";
 import { CONDITION_TEMPLATES, matchTemplate, matchTemplates } from "@/ui/expression/templates";
-import { capitalise, conditionOf, exprText, generatedText, sentence } from "./text";
+import {
+  capitalise,
+  conditionOf,
+  exprText,
+  generatedText,
+  questionText,
+  sentence,
+  slotSentence,
+} from "./text";
 
 const { assign, num, str, bool, bin, neg, not, v, print, for_, if_, call, comment, ret } = ast;
 
@@ -64,13 +72,29 @@ describe("condition templates (U-50)", () => {
   });
 
   it("a slot holding a matching expression shows the template's sentence", () => {
-    expect(exprText(expr("i % 15 == 0"))).toBe("i is divisible by 15");
-    expect(exprText(expr("i % 15 == 1"))).toBe("i % 15 equals 1");
-    expect(exprText(expr("n + 1 >= f(2)"))).toBe("n + 1 is at least f(2)");
-    expect(exprText(expr("x in nums and not x != 3"))).toBe(
-      "x is in nums and not x does not equal 3",
-    );
-    expect(exprText(expr("(a and b) == c"))).toBe("(a and b) equals c");
+    expect(slotSentence(expr("i % 15 == 0"))).toBe("i is divisible by 15");
+    expect(slotSentence(expr("i % 15 == 1"))).toBe("i % 15 equals 1");
+    expect(slotSentence(expr("n + 1 >= f(2)"))).toBe("n + 1 is at least f(2)");
+    expect(slotSentence(expr("(a and b) == c"))).toBe("(a and b) equals c");
+    const p = program([assign("ok", expr("n > 3")), print(expr("n == 3"), expr("n + 1"))]);
+    expect(p.main.map((stmt) => sentence(stmt, p))).toEqual([
+      "create ok and set it to n is greater than 3",
+      "print n equals 3, n + 1",
+    ]);
+  });
+
+  it("any other expression is shown as chips, with symbols inside", () => {
+    expect(slotSentence(expr("x in nums and not x != 3"))).toBe("x in nums and not x != 3");
+    expect(exprText(expr("i % 15 == 0"))).toBe("i % 15 == 0");
+  });
+
+  it("U-33: a diamond asks its condition as a question", () => {
+    expect(questionText(expr("i % 15 == 0"))).toBe("Is i divisible by 15?");
+    expect(questionText(expr("a + 1 == b"))).toBe("Does a + 1 equal b?");
+    expect(questionText(expr("x != 0"))).toBe("Does x not equal 0?");
+    expect(questionText(expr("x in nums"))).toBe("Is x in nums?");
+    expect(questionText(expr("a < b and b < c"))).toBe("Is a < b and b < c?");
+    expect(questionText(expr("not ok"))).toBe("Is not ok?");
   });
 
   it("`is divisible by` also matches as `equals`, second; anything else matches nothing", () => {
