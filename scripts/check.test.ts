@@ -22,10 +22,10 @@ function valid() {
     takeaway: { en: "You added one." },
     inputs: [{ name: "n", value: 1 }],
     tests: [
-      { inputs: { n: 1 }, expect: { variables: { total: 2 } } },
+      { inputs: { n: 1 }, edge: false, expect: { variables: { total: 2 } } },
       { inputs: { n: 0 }, edge: true, expect: { variables: { total: 1 } } },
-      { inputs: { n: 10 }, expect: { variables: { total: 11 } } },
-    ] as Array<{ inputs: { n: number }; edge?: boolean; expect: { variables: { total: number } } }>,
+      { inputs: { n: 10 }, edge: false, expect: { variables: { total: 11 } } },
+    ],
     hints: [{ en: "a" }, { en: "b" }, { en: "c" }],
     solution: { ...solution, challengeId: "demo" },
   };
@@ -40,7 +40,7 @@ describe("checkChallengeSchema (C-01, C-03)", () => {
     const c = valid();
     c.id = "other";
     c.hints = c.hints.slice(0, 2);
-    delete c.tests[1]!.edge;
+    c.tests[1]!.edge = false;
     delete (c.tests[2]!.inputs as Record<string, unknown>).n;
     c.solution.inputs = [{ name: "n", value: 2 }];
     const { problems } = checkChallengeSchema(c, "demo");
