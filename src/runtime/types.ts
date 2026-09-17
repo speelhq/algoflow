@@ -38,7 +38,7 @@ export type Event =
   | { type: "read"; nodeId: NodeId; refs: Ref[] }
   | { type: "write"; nodeId: NodeId; ref: Ref; value: Value }
   | { type: "swap"; nodeId: NodeId; a: Ref; b: Ref }
-  | { type: "compare"; nodeId: NodeId; text: string; result: boolean }
+  | { type: "compare"; nodeId: NodeId; left: Value; right: Value; result: boolean }
   | { type: "loop"; nodeId: NodeId; var?: Id; value?: Value }
   | { type: "call"; nodeId: NodeId; fn: Id; args: Value[] }
   | { type: "return"; nodeId: NodeId; fn: Id; value: Value }

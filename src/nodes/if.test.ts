@@ -20,7 +20,12 @@ describe("if (03-nodes)", () => {
     const stmt = if_(bin("<", num(1), num(2)), [assign("x", num(1))], [assign("x", num(2))]);
     const result = runAll(program([stmt]));
     expect(eventTypes(result.events)).toEqual(["enter", "compare", "enter", "write"]);
-    expect(result.events[1]).toMatchObject({ type: "compare", text: "1 < 2", result: true });
+    expect(result.events[1]).toMatchObject({
+      type: "compare",
+      left: { t: "int", v: 1 },
+      right: { t: "int", v: 2 },
+      result: true,
+    });
     expect(varData(result, "x")).toBe(1);
   });
 
