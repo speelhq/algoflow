@@ -29,6 +29,8 @@ describe("layout store (U-03, U-24, U-60)", () => {
     expect(useLayout.getState().speed).toBe(50);
     useLayout.getState().setSpeed(12.4);
     expect(useLayout.getState().speed).toBe(12);
+    useLayout.getState().setSpeed(Number.NaN); // a cleared slider field: the speed stays
+    expect(useLayout.getState().speed).toBe(12);
     const saved: unknown = JSON.parse(localStorage.getItem(LAYOUT_STORAGE_KEY) ?? "{}");
     expect(saved).toMatchObject({ state: { speed: 12 } });
     const current = useLayout.getState();

@@ -26,6 +26,7 @@ export type LayoutState = {
   setSpeed: (speed: number) => void;
 };
 
+/** A finite number rounded and clamped, else `fallback`: what a setter and a stored value both pass. */
 function size(value: unknown, fallback: number, min: number, max: number): number {
   return typeof value === "number" && Number.isFinite(value)
     ? clamp(Math.round(value), min, max)
@@ -49,9 +50,9 @@ export const useLayout = create<LayoutState>()(
       panel: PANEL.default,
       collapsed: false,
       speed: SPEED.default,
-      setPanel: (px) => set({ panel: clamp(Math.round(px), PANEL.min, PANEL.max) }),
+      setPanel: (px) => set((s) => ({ panel: size(px, s.panel, PANEL.min, PANEL.max) })),
       setCollapsed: (collapsed) => set({ collapsed }),
-      setSpeed: (speed) => set({ speed: clamp(Math.round(speed), SPEED.min, SPEED.max) }),
+      setSpeed: (speed) => set((s) => ({ speed: size(speed, s.speed, SPEED.min, SPEED.max) })),
     }),
     {
       name: LAYOUT_STORAGE_KEY,
