@@ -6,7 +6,7 @@
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";
-import { firstDifference, resultRows, watchStep } from "@/challenges/rows";
+import { firstDifference, resultRows, watchStep, type WatchStep } from "@/challenges/rows";
 import type { Test } from "@/challenges/types";
 import type { Data, Id, NodeId, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
@@ -66,8 +66,7 @@ export type RunState = {
   selectCase: (index: number) => void;
 };
 
-/** `line` (1-based) when a `print` produced the differing line; absent at the end of the run. */
-export type Difference = { step: number; line?: number };
+export type Difference = WatchStep;
 
 /** R-01: a run starts only when validation is clean. */
 export function canRun(program: Program): boolean {
@@ -110,6 +109,10 @@ let generation = 0;
 let target: number | null = null;
 /** The run was started by `Watch this case` (U-81). */
 let watching = false;
+/** A pre-run, Seek, or Skip is working through its batches; Step and Play wait for it. */
+let working = false;
+/** Pause arrived during the pre-run: the run opens paused. */
+let openPaused = false;
 let tick: () => void = () => {};
 const NO_PRINTS: number[] = [];
 
@@ -137,6 +140,7 @@ function armTimer(): void {
 function cancel(): void {
   generation += 1;
   target = null;
+  working = false;
   clearTimer();
 }
 
@@ -220,10 +224,7 @@ function differenceOf(
 ): Difference {
   const first =
     outcome.done.type === "done" ? firstDifference(resultRows(test?.expect, outcome)) : null;
-  const step = watchStep(first, prints, total);
-  return first?.kind === "output" && step === prints[first.line - 1]
-    ? { step, line: first.line }
-    : { step };
+  return watchStep(first, prints, total);
 }
 
 function sleep(): Promise<void> {
@@ -309,11 +310,16 @@ export const useRun = create<RunState>()((set, get) => {
    */
   const batched = async (until: number, breaks: boolean, status: Status): Promise<boolean> => {
     const mine = generation;
+    const finished = () => {
+      working = false;
+      return true;
+    };
+    working = true;
     for (;;) {
       for (let i = 0; i < BATCH; i += 1) {
-        if (projection.step >= until) return true;
+        if (projection.step >= until) return finished();
         advance();
-        if (breaks && !atEnd() && atBreakpoint()) return true;
+        if (breaks && !atEnd() && atBreakpoint()) return finished();
       }
       publish(status, true);
       await sleep();
@@ -358,9 +364,12 @@ export const useRun = create<RunState>()((set, get) => {
       if (!from) return;
       get().stop();
       const mine = generation;
+      working = true;
+      openPaused = false;
       set({ busy: true });
       const made = await prerun(from, mine);
       if (!made) return;
+      working = false;
       origin = from;
       plan = made;
       owners = ownerStmts(from.program);
@@ -371,25 +380,31 @@ export const useRun = create<RunState>()((set, get) => {
         if (await batched(made.difference.step, false, "paused")) publish("paused");
         return;
       }
+      if (openPaused) {
+        publish("paused");
+        return;
+      }
       if (!atEnd()) armTimer();
       publish("playing");
     },
 
     stepOnce() {
-      if (!running()) return;
+      if (!running() || working) return;
       cancel();
       advance();
       publish("paused");
     },
 
     play() {
-      if (!running() || timer !== null) return;
+      if (!running() || working || timer !== null) return;
       cancel();
       armTimer();
       publish("playing");
     },
 
     pause() {
+      // During the pre-run there is nothing to pause yet: the run then opens paused.
+      if (runner === null && working) openPaused = true;
       if (!running()) return;
       cancel();
       publish("paused");

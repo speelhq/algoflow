@@ -311,6 +311,24 @@ describe("run store (T-05: R-11, R-12, R-19)", () => {
     expect(run().step).toBe(1);
   });
 
+  it("Pause during the pre-run opens the run paused; Step and Play wait for a Seek in flight", async () => {
+    useProgram.setState({ program: long() });
+    const starting = run().run();
+    run().pause();
+    run().stepOnce();
+    await settle(starting);
+    expect(run()).toMatchObject({ status: "paused", busy: false, step: 0, total: 4501 });
+    expect(vi.getTimerCount()).toBe(0);
+
+    const seeking = run().seek(4400);
+    run().play();
+    run().stepOnce();
+    await settle(seeking);
+    expect(run()).toMatchObject({ status: "paused", busy: false, step: 4400 });
+    run().stepOnce();
+    expect(run().step).toBe(4401);
+  });
+
   it("C-13: a new program stops the run; the case resets only with another problem", async () => {
     useProgram.setState({ program: fizzbuzz().solution });
     run().selectCase(1);

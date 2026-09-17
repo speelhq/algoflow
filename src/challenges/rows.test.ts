@@ -65,10 +65,11 @@ describe("firstDifference and watchStep (U-23, U-81)", () => {
 
   it("opens at the print of the differing line, else at the last step of the run", () => {
     const prints = [4, 7, 10];
-    expect(watchStep({ kind: "output", line: 2 }, prints, 12)).toBe(7);
-    expect(watchStep({ kind: "output", line: 4 }, prints, 12)).toBe(12); // a line never printed
-    expect(watchStep({ kind: "variable", name: "total" }, prints, 12)).toBe(12);
-    expect(watchStep(null, prints, 12)).toBe(12);
+    expect(watchStep({ kind: "output", line: 2 }, prints, 12)).toEqual({ step: 7, line: 2 });
+    expect(watchStep({ kind: "output", line: 3 }, prints, 10)).toEqual({ step: 10, line: 3 });
+    expect(watchStep({ kind: "output", line: 4 }, prints, 12)).toEqual({ step: 12 }); // never printed
+    expect(watchStep({ kind: "variable", name: "total" }, prints, 12)).toEqual({ step: 12 });
+    expect(watchStep(null, prints, 12)).toEqual({ step: 12 });
   });
 
   it("is null exactly when the judge passes, over every challenge test", () => {

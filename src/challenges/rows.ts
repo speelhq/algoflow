@@ -10,6 +10,8 @@ export type OutputRow = { line: number; actual?: string; expected?: string; diff
 export type VariableRow = { name: Id; actual?: Data; expected: Data; differs: boolean };
 export type Rows = { output: OutputRow[]; variables: VariableRow[] };
 export type FirstDifference = { kind: "output"; line: number } | { kind: "variable"; name: Id };
+/** U-81: `line` (1-based) when a `print` produced the differing line; absent at the end of the run. */
+export type WatchStep = { step: number; line?: number };
 
 /**
  * `expect` is absent for a `Custom…` case and a Playground program: the output rows then
@@ -57,6 +59,9 @@ export function watchStep(
   difference: FirstDifference | null,
   prints: number[],
   total: number,
-): number {
-  return (difference?.kind === "output" ? prints[difference.line - 1] : undefined) ?? total;
+): WatchStep {
+  const step = difference?.kind === "output" ? prints[difference.line - 1] : undefined;
+  return step === undefined || difference?.kind !== "output"
+    ? { step: total }
+    : { step, line: difference.line };
 }

@@ -74,12 +74,15 @@ export const useTests = create<TestsState>()((set, get) => {
       if (!target) return Promise.resolve();
       const mine = ++generation;
       return guarded(mine, async () => {
+        let passed = 0;
         for (const [index, test] of target.tests.entries()) {
           const outcome = await evaluate(target.program, test);
           if (mine !== generation) return;
           record(index, test, outcome, target.tests.length);
+          if (get().results[index]?.status === "pass") passed += 1;
         }
-        useProgress.getState().submitted(target.id, get().cleared); // U-80, C-17
+        // U-80, C-12, C-17: accepted only when every test of this submission passed.
+        useProgress.getState().submitted(target.id, passed > 0 && passed === target.tests.length);
       });
     },
 
