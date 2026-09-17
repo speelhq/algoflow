@@ -6,11 +6,12 @@
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";
+import { firstDifference, resultRows, watchStep } from "@/challenges/rows";
 import type { Test } from "@/challenges/types";
 import type { Data, Id, NodeId, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
 import { bodyStmts, ownerStmts } from "@/lang/walk";
-import { outcomeOf } from "@/runtime/outcome";
+import { outcomeOf, type Outcome } from "@/runtime/outcome";
 import { run as startRunner } from "@/runtime/run";
 import type { Done, Event, Runner, State } from "@/runtime/types";
 import { clamp, useLayout } from "./layout";
@@ -50,7 +51,10 @@ export type RunState = {
   caseIndex: number;
   /** C-15: the chosen case's verdict, once the shown run is at its end. */
   verdict: TestResult | null;
-  run: () => Promise<void>;
+  /** U-81: where a run started by `Watch this case` opened, for the narration at that step. */
+  difference: Difference | null;
+  /** U-60: pre-runs, then plays; with `watch`, opens paused at the first difference (U-81). */
+  run: (opts?: { watch?: boolean }) => Promise<void>;
   stepOnce: () => void;
   play: () => void;
   pause: () => void;
@@ -62,6 +66,9 @@ export type RunState = {
   selectCase: (index: number) => void;
 };
 
+/** `line` (1-based) when a `print` produced the differing line; absent at the end of the run. */
+export type Difference = { step: number; line?: number };
+
 /** R-01: a run starts only when validation is clean. */
 export function canRun(program: Program): boolean {
   return validate(program).length === 0;
@@ -71,7 +78,13 @@ export function canRun(program: Program): boolean {
 
 type Origin = { program: Program; inputs: Record<Id, Data>; seed: number; test: Test | undefined };
 /** What the pre-run found (R-11), with the chosen case's verdict (C-15). */
-type Plan = { total: number; outcome: Done; prints: number[]; verdict: TestResult | null };
+type Plan = {
+  total: number;
+  outcome: Done;
+  prints: number[];
+  verdict: TestResult | null;
+  difference: Difference;
+};
 type Projection = {
   step: number;
   lastEvent: Event | null;
@@ -95,6 +108,8 @@ let timer: ReturnType<typeof setInterval> | null = null;
 let generation = 0;
 /** The step a Seek in flight is heading for, so that Back stacks while it is held. */
 let target: number | null = null;
+/** The run was started by `Watch this case` (U-81). */
+let watching = false;
 let tick: () => void = () => {};
 const NO_PRINTS: number[] = [];
 
@@ -196,6 +211,21 @@ function atBreakpoint(): boolean {
   );
 }
 
+/** U-81: the print of the first differing line, or the last step of the run. */
+function differenceOf(
+  test: Test | undefined,
+  outcome: Outcome,
+  prints: number[],
+  total: number,
+): Difference {
+  const first =
+    outcome.done.type === "done" ? firstDifference(resultRows(test?.expect, outcome)) : null;
+  const step = watchStep(first, prints, total);
+  return first?.kind === "output" && step === prints[first.line - 1]
+    ? { step, line: first.line }
+    : { step };
+}
+
 function sleep(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
@@ -221,11 +251,14 @@ async function prerun(from: Origin, mine: number): Promise<Plan | undefined> {
     for (let i = 0; i < BATCH; i += 1) {
       const next = probe.next();
       if (next.type === "done" || next.type === "error") {
+        const total = next.type === "error" ? events + 1 : events;
+        const outcome = outcomeOf(probe, next);
         return {
-          total: next.type === "error" ? events + 1 : events,
+          total,
           outcome: next,
           prints,
-          verdict: from.test ? judge(from.test, outcomeOf(probe, next)) : null,
+          verdict: from.test ? judge(from.test, outcome) : null,
+          difference: differenceOf(from.test, outcome, prints, total),
         };
       }
       events += 1;
@@ -263,6 +296,7 @@ export const useRun = create<RunState>()((set, get) => {
       taken: p.dirty.taken ? { ...p.taken } : previous.taken,
       breakpoint,
       verdict: ended ? (plan?.verdict ?? null) : null,
+      difference: watching ? (plan?.difference ?? null) : null,
     });
     p.dirty = { stdout: false, verdicts: false, taken: false };
   };
@@ -317,8 +351,9 @@ export const useRun = create<RunState>()((set, get) => {
     breakpoint: null,
     caseIndex: 0,
     verdict: null,
+    difference: null,
 
-    async run() {
+    async run(opts) {
       const from = originFor(get().caseIndex);
       if (!from) return;
       get().stop();
@@ -331,6 +366,11 @@ export const useRun = create<RunState>()((set, get) => {
       owners = ownerStmts(from.program);
       bodies = bodyStmts(from.program);
       reset(from);
+      watching = opts?.watch === true;
+      if (watching) {
+        if (await batched(made.difference.step, false, "paused")) publish("paused");
+        return;
+      }
       if (!atEnd()) armTimer();
       publish("playing");
     },
@@ -383,6 +423,7 @@ export const useRun = create<RunState>()((set, get) => {
       runner = null;
       origin = null;
       plan = null;
+      watching = false;
       breakpoint = null;
       projection = freshProjection();
       publish("idle");
