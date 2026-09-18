@@ -49,7 +49,7 @@ itself.
 
 C-22 The three hints name, in order, the block or module function to use,
 the shape of the loop or condition, and the remaining step, so a learner
-without an instructor can finish the problem after the third hint.
+without an instructor can complete the problem after the third hint.
 
 ## Study plans and progress
 
@@ -102,7 +102,7 @@ reads the files from disk. The schema types live in
 C-15 Run (U-60) drives one runner with the Input nodes' values and, when
 those are the inputs of one of the tests, judges that test at the end of
 the run (U-23); Submit (U-80) judges every test on its own runner in R-11
-batches without touching the driver; both use the modules the program uses
+batches without affecting the driver; both use the modules the program uses
 (D-04), and every verdict comes from `src/challenges/judge.ts`, the rule
 `scripts/check.ts` applies (C-10, C-11).
 
@@ -110,7 +110,7 @@ batches without touching the driver; both use the modules the program uses
 
 Inputs are `name: default`. Expectations are `expect.variables` unless
 `stdout` is stated. In the `edge tests` columns an entry written `edge: …`
-is a test with `edge: true`, and the words after it only describe it.
+is a test with `edge: true`, and the text following it is descriptive only.
 
 | id             | difficulty, topics          | inputs                                 | expectation                                  | edge tests                                            |
 | -------------- | --------------------------- | -------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
@@ -178,7 +178,7 @@ then `hard`.
 | slope          | `f(x)` = `3 * x ** 2 - 4 * x + 5`                                                                                                                                    | `x: 3.0, h: 0.001`                                                  | `slope = (f(x + h) - f(x)) / h` = `14.003`; edge `h: 0.0001`                                                                                       |
 | value          | class `Value(data=0.0, grad=0.0, prev=[], op="")`; `add(a, b)`, `mul(a, b)` returning a new `Value` with `prev = [a, b]`, `op` `"+"` / `"*"`                         | `a: 2.0, b: -3.0`                                                   | `s = add(a, b)`: `s.data = -1.0`, `s.op = "+"`, `len(s.prev) = 2`; `p = mul(a, b)`: `-6.0`; edge `mul(a, a)` has `prev = [a, a]`                   |
 | expression     | —                                                                                                                                                                    | `a: 2.0, b: -3.0, c: 10.0, f: -2.0`                                 | `e = mul(a, b)`, `d = add(e, c)`, `L = mul(d, f)`: `L.data = -8.0`, `d.data = 4.0`; 7 objects                                                      |
-| manual-grad    | —                                                                                                                                                                    | same                                                                | grads set by hand: `L 1.0, d -2.0, f 4.0, e -2.0, c -2.0, a 6.0, b -4.0`                                                                           |
+| manual-grad    | —                                                                                                                                                                    | same                                                                | gradients set manually: `L 1.0, d -2.0, f 4.0, e -2.0, c -2.0, a 6.0, b -4.0`                                                                           |
 | local-backward | `backward_step(v)`: `"+"` adds `v.grad` to both children; `"*"` adds `v.grad * other.data`                                                                           | same                                                                | `backward_step` on `L`, `d`, `e` after `L.grad = 1.0` yields manual-grad values                                                                    |
 | topo-backward  | `build_topo(v, visited, topo)` recursive with list `visited` and `in`; `backward(root)`: `root.grad = 1.0`, build, iterate reversed with `backward_step`             | same                                                                | `backward(L)` yields manual-grad values; edge `mul(a, a)` → `a.grad = 2 * a.data`                                                                  |
 | tanh           | `tanh_v(v)` = `Value(math.tanh(v.data), prev=[v], op="tanh")`; the `"tanh"` case of `backward_step`, `child.grad += (1 - v.data ** 2) * v.grad`, added to the learner's module (D-11 when it is the built-in one) | `x1: 2.0, x2: 0.0, w1: -3.0, w2: 1.0, b: 6.8813735870195432`        | `o = tanh_v(add(add(mul(x1, w1), mul(x2, w2)), b))`, `o.data ≈ 0.7071`; after `backward(o)`: `x1.grad -1.5, w1.grad 1.0, x2.grad 0.5, w2.grad 0.0` |
@@ -187,5 +187,5 @@ then `hard`.
 | train          | `zero_grad(params)`; loop in main                                                                                                                                    | `xs: 4×3, ys: [1.0, -1.0, -1.0, 1.0], epochs: 20, lr: 0.05`, seed 1 | stdout 20 lines of `round(loss.data, 4)` recorded; `losses` length 20                                                                              |
 
 C-20 "Recorded" expectations are obtained by running `solution` once with
-the stated seed and pasted into the file; `scripts/check.ts` enforces them
+the stated seed and inserted into the file; `scripts/check.ts` enforces them
 in both engines.

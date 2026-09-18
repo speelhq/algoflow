@@ -120,22 +120,24 @@ visible steps (R-11).
 
 R-18 `run` accepts an entry `{ fn: Id; args: Data[] }` in place of `main`:
 the named function of the program or module is the first frame, and `done`
-then carries `value: Data`, what the function returned, and `args: Data[]`,
-the arguments as they are afterwards (D-06, D-19).
+then carries `value: Data`, the function's return value, and `args: Data[]`,
+the arguments as they are after the run (D-06, D-19).
 
 ## Driver (`src/store/run.ts`)
 
 R-11 A visible step is an event emitted while no module frame is on the
 stack; a module call is one visible step, its `return`. Run first advances
-a throwaway runner to its end in batches of 2,000 with `setTimeout(0)`
-between batches and records `total`, the number of visible steps it
-produced however it ended (after an error the failing step is step
-`total`), `outcome`, how it ended, and `prints`, the visible step of each
-`print`; then it creates the shown runner at step 0. Step: `next()` until
-the next visible step. Play: one Step every `1000 / speed` ms, speed in
-`[1, 50]`. Seek(k): a new runner advanced to visible step `k`, in the same
-batches, rebuilding `state`, `stdout`, and `verdicts` from every event it
-passes. Back: Seek(`step - 1`). Stop: discard the runner.
+a separate runner, discarded afterwards, to its end in batches of 2,000
+with `setTimeout(0)` between batches and records `total`, the number of
+visible steps it
+produced irrespective of how it ended (after an error the failing step is
+step `total`), `outcome`, the manner in which it ended, and `prints`, the
+visible step of each `print`; then it creates the shown runner at step 0.
+Step: `next()` until the next visible step. Play: one Step every
+`1000 / speed` ms, speed in `[1, 50]`. Seek(k): a new runner advanced to
+visible step `k`, in the same batches, rebuilding `state`, `stdout`, and
+`verdicts` from every event it passes. Back: Seek(`step - 1`). Stop:
+discard the runner.
 
 R-12 Driver state: `status` (`idle | paused | playing | done | error`),
 `step`, `total`, `outcome`, `prints`, `lastEvent`, `state` (refreshed after
@@ -145,15 +147,15 @@ done, error), `frame` (the index of the frame shown, U-68), `stdout`,
 `NodeId` or none, R-19). `Done.steps` counts every event, visible or not.
 
 R-17 Step over: `next()` repeatedly, in R-11 batches, until the frame
-count is at most what it was before the first `next()` and the run is at a
+count is at most its value before the first `next()` and the run is at a
 visible step (R-11), or the run ends.
 
 R-19 The driver holds at most one breakpoint, a statement's `NodeId`, from
 its setting until Stop. Play, Step over, and Skip pause at a visible
 `enter` of that node and, when it is a loop, at each of its `loop` events
 (the run is then at the loop's check); Step and Seek ignore it. Skip:
-`next()` repeatedly, in R-11 batches and without publishing the steps
-between, until such a pause or the end of the run.
+`next()` repeatedly, in R-11 batches and without publishing the
+intervening steps, until such a pause or the end of the run.
 
 ## Python emitter (`src/python/emit.ts`)
 
@@ -244,7 +246,7 @@ args     := (expr ("," expr)*)?
 The root of the result has `source: "text"`. Number text CPython rejects
 (`0777`) is `E_PARSE_SYNTAX`; `\xNN` escapes are decoded. A construct whose
 block is not in the registry is `E_PARSE_SYNTAX` at its token, so the
-registry alone decides what the language accepts.
+registry alone determines what the language accepts.
 
 G-02 `NAME(...)` resolves in the order of L-46: a class or function of the
 program, a learner module, a built-in module, a builtin in `03-nodes.md`
@@ -267,6 +269,6 @@ Python; write a script of (1) a shim replacing `random.randint` and
 when exhausted, (2) the emitted code with the test's inputs, (3) an
 epilogue printing one JSON line `{"stdout": [...], "vars": {...}}` using
 the `toData` rules; write each module the solution uses (E-09) as
-`<name>.py` next to the script; run `python3`; compare with the
+`<name>.py` alongside the script; run `python3`; compare with the
 interpreter under C-10. Every built-in module (D-15) is also emitted
 alone and compiled by `python3 -m py_compile`.

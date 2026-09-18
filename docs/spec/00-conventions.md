@@ -41,9 +41,9 @@ Statements use the present indicative ("The emitter writes 4-space
 indentation") and are mandatory. "May" marks an option.
 
 An identifier is assigned once and is never renumbered or reused. The text
-of a statement may change; the change lands in its own commit before the
+of a statement may change; the change is committed separately, before the
 code that implements it (P-10), so a commit message or a test that cites an
-identifier refers to the statement as the tree holds it at that commit. A
+identifier refers to the statement as it stands at that commit. A
 withdrawn statement keeps its identifier, its text replaced by "withdrawn"
 and the identifier that supersedes it, if any.
 
@@ -72,15 +72,15 @@ and the identifier that supersedes it, if any.
 | built-in module | a module shipped as `modules/<name>.json`                                       |
 | learner module  | a module the learner created or copied, stored under D-14                       |
 | milestone       | one `M-NN` of `07-plan.md`: a vertical slice with an exit criterion; the GitHub milestone of the same name holds its issues (P-12) |
-| session         | one run of Claude Code over one milestone (M-03: two), from its kickoff prompt to its pull requests |
+| session         | one run of Claude Code over one milestone (M-03: two), from its milestone prompt to its pull requests |
 | pull request    | the unit of change merged into `main`: one or a few vertical slices, reviewed with CI (P-11) |
-| issue           | one GitHub issue: a decision the spec lacks, a defect, a debt, a cost, or a task, under the milestone that needs it (P-12) |
+| issue           | one GitHub issue: a decision the specification lacks, a defect, a debt, a cost, or a task, under the milestone that needs it (P-12) |
 | label           | the one word on an issue that names its kind: `decision`, `defect`, `debt`, `perf`; a task has none |
 | task            | an issue that names work to do rather than a problem to decide or fix       |
 | finding         | one item a review reports; fixed in the pull request under review or filed as an issue |
 | canvas          | a design document on which screens are drawn; linked from `private/PROMPTS.md`   |
 | board           | one screen drawing exported from a canvas into `docs/design/` (P-13)             |
-| kickoff prompt  | the text pasted to start a session, kept in `private/PROMPTS.md`                |
+| milestone prompt | the text pasted to start a session, kept in `private/PROMPTS.md`               |
 
 ## Rationale (informative)
 
@@ -88,5 +88,5 @@ Three commitments: one small block language that is a Python subset; views
 chosen by value type only; generated Python as the reference for behaviour.
 
 The reasons behind individual statements, and the alternatives rejected,
-live in `docs/decisions.md`, grouped by topic. The specification records
-facts, not history.
+are recorded in `docs/decisions.md`, grouped by topic. The specification
+records facts, not history.
