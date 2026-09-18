@@ -70,9 +70,10 @@ challenges/      <id>.json plans.json
 modules/         <name>.json (D-15)
 scripts/         check.ts i18n.ts lib/ (functions the scripts and their tests share)
 e2e/             *.spec.ts screenshots/
-docs/spec/       docs/decisions.md
-private/         NEXT.md PROMPTS.md (ignored: the session handoff and the kickoff prompts)
-components.json  .github/workflows/ci.yml
+docs/            spec/ decisions.md design/ (README.md, one PNG per board, P-13)
+private/         PROMPTS.md (ignored: the kickoff prompts and the canvas links, P-10)
+.github/         workflows/ci.yml pull_request_template.md ISSUE_TEMPLATE/ (P-11, P-12)
+components.json
 ```
 
 `src/store/layout.ts` holds the panel width and collapsed state (U-03,
@@ -101,10 +102,11 @@ and on every push to `main`, which also deploys `dist/` to GitHub Pages
 
 ## Process
 
-P-10 `docs/spec/` and `docs/decisions.md` are tracked. `private/` is
-ignored and holds the session handoff (`NEXT.md`) and the kickoff prompts
-(`PROMPTS.md`); nothing the code or the spec needs lives there. A change to
-the spec lands in its own commit before the code that implements it.
+P-10 `docs/` is tracked: the spec, `decisions.md`, and `design/`. `private/`
+is ignored and holds only `PROMPTS.md`, the kickoff prompts with the links
+to the design canvases; nothing the code, the spec, or a review needs lives
+there. A change to the spec lands in its own commit before the code that
+implements it.
 
 P-11 `main` takes only rebase merges of pull requests whose CI passed. A
 pull request is one or a few vertical slices under about 600 changed lines;
@@ -112,13 +114,27 @@ a milestone is several. Its body follows `.github/pull_request_template.md`:
 What, Why (spec ids and milestone), Verification (command output), Notes
 (deviations, and the issue of every review finding it does not fix).
 
-P-12 Open questions and known faults live in GitHub Issues, not in the
-spec. Milestones `M-03`..`M-10` mirror this file. Every issue has one label:
-`decision` (the spec lacks an id; closed by the pull request that writes the
-id and its reason), `defect` (behaviour against an id), `debt` (one fact
-kept in two places), or `perf` (a cost to measure before changing). A
-session starts with the issues of its milestone and ends by filing what it
-found and did not fix.
+P-12 Open questions, known faults, and tasks live in GitHub Issues, not in
+the spec or in a file. Milestones `M-03`..`M-10` mirror this file. An issue
+that names a problem has one label: `decision` (the spec lacks an id; closed
+by the pull request that writes the id and its reason), `defect` (behaviour
+against an id), `debt` (one fact kept in two places), or `perf` (a cost to
+measure before changing); a task (a board to export, a file to migrate) has
+a milestone and no label. A session starts with the issues of its milestone
+and ends by filing what it found and did not fix; a pull request closes the
+issues it resolves by number.
+
+P-13 `docs/design/` holds one PNG per board of the design canvases, under
+the names `docs/design/README.md` lists with what each board shows and where
+the spec deviates from it; the spec takes precedence over a board. A screen the spec
+describes and no board shows is an issue labelled `decision` under the
+milestone that builds it.
+
+P-14 The state of the work is not kept in a file: the open milestone, its
+issues, and the open pull requests say what is next; the spec says what must
+be and the code what is. No handoff file is kept between sessions. Working
+knowledge that neither the spec nor the code holds (tool behaviour, test
+conventions) lives in `CLAUDE.md`.
 
 ## Tests
 

@@ -905,3 +905,56 @@ a tab, because a hint refers to the statement it would hide.
 **A plan's end is said, not skipped** (U-83). With sections per plan,
 "the next row" after the last course problem would drop a trainee into the
 first data-structure problem; `Plan complete` hands the choice back.
+
+## Process
+
+**The spec is tracked; only the prompts are private** (P-10). Until M-03 the
+whole of `docs/` was ignored: a working spec edited freely, with no history.
+Once every commit and test cited an id, a reviewer needed the spec the code
+was written against at that commit, and a session that reverted a branch
+lost a file that had never been committed. What stays out of the repository
+is what has no reader but the person running the sessions: the kickoff
+prompts and the links to the design canvases. Everything a reviewer, a
+contributor, or a later session needs is in git or on GitHub.
+
+**No handoff file** (P-14). `NEXT.md` held four kinds of text: where the
+repository stood (git and the pull requests say it), what a session built
+and how to use it (the code and its doc comments say it), open questions and
+follow-ups (issues say it, with a milestone and a history), and tool behaviour
+(`CLAUDE.md` says it, and it is loaded at every start). A file rewritten at
+the end of every session and read at the start of the next was a fifth copy
+of the same facts, drifted between sessions, and being untracked was the one
+file a reset could lose. Kickoff prompts remain, in `private/PROMPTS.md`,
+because they are written for a person to paste.
+
+**Boards are exported into the repository** (P-13). The screens were drawn
+on a design canvas the spec was written from, reachable only by link. A
+link cannot be read by a session, reviewed in a pull request, or diffed
+when a board changes. One PNG per board in `docs/design/`, with a README
+naming what each shows and where the spec deviates, gives every reader the
+same source; the canvas stays the tool for drawing, and the spec stays the
+authority.
+
+**Issues carry the questions; the spec carries the answers** (P-12). The
+spec states facts and never history, so an open question has no place in
+it. `NEXT.md`'s "Open issues" and "Follow-ups" lists lost their reasons and
+their age at every rewrite. An issue keeps both, is assigned to the
+milestone that needs the answer, and is closed by the pull request that
+writes the id, which is where the answer belongs. Four labels are enough
+because they answer the one question a session asks of an issue: does it
+need a decision, a fix, a merge of two copies, or a measurement first.
+
+**One pull request per few slices** (P-11). The commits were already
+vertical slices; the pull request is the unit a review can hold and CI can
+attest to. Rebase merges keep the slices as commits on `main`, where their
+messages cite the ids; a squash would lose that.
+
+**Identifiers are stable; texts are not** (00-conventions, P-10). Commit
+messages and tests cite identifiers, and a statement's text is revised as
+the design settles (R-06 changed what a `compare` event carries; R-12 gained
+six fields). Renumbering would break every citation; keeping the number and
+revising the text breaks none, because the spec is tracked and the revision
+lands before the code, so each citation resolves against the tree at its own
+commit. A withdrawn statement keeps its number for the same reason: the
+citations that predate the withdrawal still name a real thing.
+
