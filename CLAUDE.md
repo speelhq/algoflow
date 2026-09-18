@@ -115,4 +115,7 @@ you make a choice the spec does not cover, add the fact as a new id in the
 spec file for that area and the reason to `docs/decisions.md`; the spec
 states facts, never history.
 
-Skills: `/add-node`, `/add-challenge`. Kickoff prompts: `docs/PROMPTS.md`.
+Skills: `/add-node`, `/add-challenge`. The session handoff `private/NEXT.md`
+and the kickoff prompts `private/PROMPTS.md` are ignored by git (P-10): read
+them, update them, never commit them. `docs/` is tracked: a spec change lands
+in its own commit before the code that implements it.
