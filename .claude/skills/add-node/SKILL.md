@@ -8,7 +8,7 @@ allowed-tools: Bash(pnpm test *) Bash(pnpm lint)
 Add the block described in $ARGUMENTS.
 
 1. Read `docs/spec/03-nodes.md` and find the block's row. If there is no row,
-   add one first and say so in the recap.
+   add one first and state so in the recap.
 2. Read `src/nodes/index.ts` and one existing block of the same shape.
 3. Create `src/nodes/<key>.ts` with `key`, `shape`, `category`, `slots`, `create`,
    `run`, `python`. The emitted Python must equal the row's Python column exactly.

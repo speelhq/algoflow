@@ -65,7 +65,7 @@ L-06 `toValue(data, heap)` allocates heap entries for lists, dicts, and
 objects; `toData(value, heap)` is its inverse and numbers objects `$id` in
 first-reach order. `toValue` allocates one object per distinct `$id`, so
 references shared within one value, or across the values converted with
-one heap, stay shared.
+one heap, remain shared.
 
 ## Run-time values
 
@@ -160,7 +160,8 @@ writes; `float` is true when `raw` contains `.`, `e`, or `E`.
 
 L-09 An unfilled required expression slot holds `{ kind: "empty" }`:
 `create()` fills required slots with it, `validate` reports `E_EMPTY_SLOT`
-with the slot name, and the emitter writes `...` for it. It never runs.
+with the slot name, and the emitter writes `...` for it. It is never
+executed.
 
 ## Semantics
 
@@ -205,7 +206,7 @@ L-42 Functions see only their parameters and body. Field defaults see
 nothing.
 
 L-43 A `for` or `foreach` variable is assigned by the loop statement in the
-region that contains the loop, so it stays visible after the loop; bounds
+region that contains the loop, so it remains visible after the loop; bounds
 and the iterated list are read before the variable exists.
 
 L-44 `hoistAssign` takes the default from the first assignment to the name
@@ -237,7 +238,7 @@ run after every edit and before every run.
 | `E_RETURN_OUTSIDE` | `return` in `main`                                          |                           |
 | `E_ARITY`          | wrong argument count                                        | `name`, `expected`, `got` |
 | `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`                    |
-| `E_EMPTY_SLOT`     | required slot empty (blocks running)                        | `slot`                    |
+| `E_EMPTY_SLOT`     | required slot empty (prevents execution)                    | `slot`                    |
 | `E_DEFAULT`        | L-30                                                        | `field`                   |
 | `E_DUPLICATE_ID`   | L-04                                                        |                           |
 

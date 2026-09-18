@@ -19,7 +19,7 @@ S-04 The application is deployed as static files to GitHub Pages from
 ## The learner
 
 S-09 The learner may have never programmed; every problem, hint, and
-solution is written so that a learner without an instructor can finish it
+solution is written so that a learner without an instructor can complete it
 (C-22).
 
 S-10 In one problem the learner reads the statement, builds the chart,
@@ -45,7 +45,7 @@ are reached from the list by topic.
 | (no plan)                               | gcd, is-prime, fibonacci-memo, fisher-yates, hanoi                                                                                 |
 
 S-06 Every challenge is solvable with the blocks in `03-nodes.md` and the
-built-in modules (D-15) and nothing else.
+built-in modules (D-15), and with no other means.
 
 S-07 A Playground program has no `challengeId`, no inputs, no tests, and
 no Submit; there may be any number of them, each stored under its own id

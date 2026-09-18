@@ -2,8 +2,8 @@
 
 One PNG per board of the design canvases, exported at 1280 × 800 (P-13).
 The spec (`docs/spec/05-ui.md`) was written from these boards and takes
-precedence over them: a board shows how a screen looks, the spec says what
-it does. A screen
+precedence over them: a board shows the appearance of a screen, the spec
+states its behaviour. A screen
 the spec describes and no board shows is an issue labelled `decision`.
 
 ## Canvas "AlgoFlow Screens"
@@ -54,6 +54,6 @@ before M-05); a built-in module's page with `Clone` (M-08); the path bar's
 
 Export each board from the canvas as PNG at 1280 × 800 into this folder
 under the file name above. The links to the canvases are in
-`private/PROMPTS.md`; the canvases themselves stay the working copies, and
+`private/PROMPTS.md`; the canvases themselves remain the working copies, and
 a changed board is re-exported in the pull request that changes the spec
 it affects.
