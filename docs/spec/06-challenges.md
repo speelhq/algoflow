@@ -73,7 +73,7 @@ exists, with the S-05 members whose files exist, in S-05 order;
 
 C-17 Progress persists under `localStorage` `algoflow:progress` as
 `Record<id, { status: "attempted" | "solved"; hints: number; solution: boolean }>`:
-an entry appears on the first submission or hint, `solved` is set by an
+an entry appears on the first submission, hint, or shown solution, `solved` is set by an
 accepted submission and never cleared, `hints` is the number of hints
 revealed (U-21), and `solution` whether the solution was shown (U-22).
 

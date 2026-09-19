@@ -33,7 +33,7 @@ export type Event =
   | { type: "read"; nodeId: NodeId; refs: Ref[] }
   | { type: "write"; nodeId: NodeId; ref: Ref; value: Value }
   | { type: "swap"; nodeId: NodeId; a: Ref; b: Ref }
-  | { type: "compare"; nodeId: NodeId; text: string; result: boolean }
+  | { type: "compare"; nodeId: NodeId; left: Value; right: Value; result: boolean }
   | { type: "loop"; nodeId: NodeId; var?: Id; value?: Value }
   | { type: "call"; nodeId: NodeId; fn: Id; args: Value[] }
   | { type: "return"; nodeId: NodeId; fn: Id; value: Value }
@@ -56,8 +56,8 @@ R-05 `write` is emitted for `assign`, `append` (new index), `insert`,
 `pop` (removed index and value), `delete`, and each field set by `new`.
 
 R-06 `compare` is emitted for every comparison `binop` (`== != < <= > >=`
-and `in`), with `text` rendered from operand values in `str()` form,
-e.g. `5 > 3`.
+and `in`), with `left` and `right` holding the two operand values; the
+operator is the node's.
 
 R-07 `loop` is emitted at the start of each iteration of `for`, `foreach`,
 and `while` (after the `while` compare).
@@ -129,22 +129,32 @@ R-11 A visible step is an event emitted while no module frame is on the
 stack; a module call is one visible step, its `return`. Run first advances
 a separate runner, discarded afterwards, to its end in batches of 2,000
 with `setTimeout(0)` between batches and records `total`, the number of
-visible steps it
-produced irrespective of how it ended (after an error the failing step is
-step `total`), `outcome`, the manner in which it ended, and `prints`, the
+visible steps it produced irrespective of how it ended (after an error the
+failing step is step `total`), `outcome`, the manner in which it ended, and `prints`, the
 visible step of each `print`; then it creates the shown runner at step 0.
 Step: `next()` until the next visible step. Play: one Step every
 `1000 / speed` ms, speed in `[1, 50]`. Seek(k): a new runner advanced to
 visible step `k`, in the same batches, rebuilding `state`, `stdout`, and
-`verdicts` from every event it passes. Back: Seek(`step - 1`). Stop:
-discard the runner.
+`verdicts` from every event it passes. Back: Seek(`step - 1`), and
+Seek(`k - 1`) while a Seek to `k` is in progress. Stop: discard the runner.
+While the pre-run, a Seek, or a Skip works through its batches `busy` is
+true and Step and Play do nothing; Pause during the pre-run makes the run
+open paused. A run of no step is `done` immediately; a run is `done` or in
+`error` on reaching step `total`.
 
 R-12 Driver state: `status` (`idle | paused | playing | done | error`),
 `step`, `total`, `outcome`, `prints`, `lastEvent`, `state` (refreshed after
 each step in step and play mode, at the end of each batch, and on pause,
 done, error), `frame` (the index of the frame shown, U-68), `stdout`,
-`verdicts` (the last check result per diamond, U-61), and `breakpoint` (a
-`NodeId` or none, R-19). `Done.steps` counts every event, visible or not.
+`verdicts` (the last check result per diamond, U-61), `taken` (the
+statements entered in the current pass, U-61), `pass` (for a `loop`
+`lastEvent`, the number of that loop's passes since it was entered, U-63),
+`breakpoint` (a `NodeId` or none, R-19), `busy` (R-11), `caseIndex` (the
+chosen case, U-32), `verdict` (the chosen case's result, C-15, only while
+the run is at step `total`), and `difference` (`{ step, line? }`, the step
+at which a run started by `Watch this case` opened, U-81, until Stop).
+After an error `lastEvent` is none at step `total`. `Done.steps` counts
+every event, visible or not.
 
 R-17 Step over: `next()` repeatedly, in R-11 batches, until the frame
 count is at most its value before the first `next()` and the run is at a
