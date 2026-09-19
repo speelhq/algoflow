@@ -79,7 +79,11 @@ components.json
 `src/store/layout.ts` holds the panel width and collapsed state (U-03,
 U-24) and the playback speed (U-60) and persists them under
 `algoflow:layout`; values are clamped
-when set and validated again when read back. `src/store/progress.ts`
+when set and validated again when read back. The panel width is bounded
+below by 280 px in the store; its upper bound, half the viewport width
+(U-03), is applied by `panelWidth(panel, viewport)` where the width is set
+and where it is drawn, because the store does not hold the viewport.
+`src/store/progress.ts`
 persists C-17. `src/store/modules.ts` persists D-14. `src/store/views.ts`
 persists V-06. `src/nodes/categories.ts` defines the category order (N-01,
 U-40) and has no other imports.
