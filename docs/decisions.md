@@ -1067,3 +1067,13 @@ M-03 session 2 onward change screens and T-10 requires the images. A
 checklist was not added: the template asks for pasted command output, and a
 ticked box is an assertion.
 
+**The panel's upper bound is applied with the viewport, not stored** (U-03).
+The store held a constant maximum of 480 px from the retired shell. Half the
+viewport width is not a constant, and a store that read `window.innerWidth`
+would not run under the node test environment and would keep an outdated
+bound after the window is resized. The store therefore keeps the requested
+width with its lower bound only, and one pure function applies the upper
+bound from the viewport width given to it, both when the handle sets the
+width and when the page draws it, so a stored width above the bound is drawn
+at the bound without being rewritten.
+
