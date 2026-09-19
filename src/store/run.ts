@@ -8,7 +8,7 @@ import { getChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";
 import { firstDifference, resultRows, watchStep, type WatchStep } from "@/challenges/rows";
 import type { Test } from "@/challenges/types";
-import type { Data, Id, NodeId, Program } from "@/lang/types";
+import type { Data, HeapEntry, Id, NodeId, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
 import { bodyStmts, ownerStmts } from "@/lang/walk";
 import { outcomeOf, type Outcome } from "@/runtime/outcome";
@@ -144,10 +144,25 @@ function cancel(): void {
   clearTimer();
 }
 
+/** R-12: a published state is a copy; values are immutable records, so one level suffices. */
+function copyEntry(entry: HeapEntry): HeapEntry {
+  switch (entry.kind) {
+    case "list":
+      return { kind: "list", items: [...entry.items] };
+    case "dict":
+      return { kind: "dict", entries: new Map(entry.entries) };
+    case "obj":
+      return { kind: "obj", cls: entry.cls, fields: new Map(entry.fields) };
+  }
+}
+
 function snapshot(): State | null {
   if (!runner) return null;
   const { frames, heap } = runner.state();
-  return { frames: [...frames], heap };
+  return {
+    frames: frames.map((frame) => ({ ...frame, vars: new Map(frame.vars) })),
+    heap: new Map([...heap].map(([id, entry]) => [id, copyEntry(entry)])),
+  };
 }
 
 /** Feeds one event into the projection (no store update). */
