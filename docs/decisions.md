@@ -304,10 +304,16 @@ does not suit one key per challenge, and `migrate()` must validate whatever
 is returned; the raw form is also what Export writes (L-53). A rejected value
 resolves to an empty main rather than failing the load.
 
-**`state` is refreshed while playing** (R-12). The `Result` tab must
-update per step at speed 50; the refresh is a shallow copy of the frame
-list, so the cost is a re-render, not a heap copy. Run-to-end batches
-publish once per batch.
+**`state` is refreshed while playing, as a copy** (R-12). The `Result` tab
+must update per step at speed 50. The refresh was a shallow copy of the
+frame list, which shared the runner's variable maps and heap: a published
+`state` changed at the next step, so a screen could neither compare two
+states nor memoize on one, and a `compare` event narrated later showed a
+list's current contents. A published `state` is now a copy of the
+variables and of the heap entries; values are immutable records, so one
+level is sufficient. The cost per publish is proportional to the size of
+the heap and is among the costs to measure (#18). Batches publish once per
+batch.
 
 **The chart highlights the owning statement** (U-39). `compare`, `read`, and
 `call` events carry expression ids while the chart has nodes only for
