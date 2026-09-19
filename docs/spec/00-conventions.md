@@ -79,7 +79,7 @@ and the identifier that supersedes it, if any.
 | task            | an issue that names work to do rather than a problem to decide or fix       |
 | finding         | one item a review reports; fixed in the pull request under review or filed as an issue |
 | canvas          | a design document on which screens are drawn; linked from `private/PROMPTS.md`   |
-| board           | one screen drawing exported from a canvas into `docs/design/` (P-13)             |
+| board           | one screen drawing on a canvas; a board the spec was written from has a PNG in `docs/design/`, a superseded board does not (P-13) |
 | milestone prompt | the text pasted to start a session, kept in `private/PROMPTS.md`               |
 
 ## Rationale (informative)
