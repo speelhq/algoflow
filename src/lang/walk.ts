@@ -101,7 +101,7 @@ export function* programExprs(program: Program): Generator<Expr, void, void> {
 }
 
 /**
- * U-38: the statement that contains each node. Expressions map to their statement,
+ * U-39: the statement that contains each node. Expressions map to their statement,
  * statements, functions, and classes to themselves.
  */
 export function ownerStmts(program: Program): Map<NodeId, NodeId> {

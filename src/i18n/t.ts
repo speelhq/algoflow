@@ -1,5 +1,5 @@
-// U-71, U-73: every user-visible string comes from en.json (and ja.json from M-06).
-// S-03: the locale switch and browser-language default arrive in M-06; the
+// U-71, U-73: every user-visible string comes from en.json (and ja.json from M-10).
+// S-03: the locale switch and browser-language default arrive in M-10; the
 // `ja` slot exists so that milestone only adds the catalog and the switch.
 import en from "./en.json";
 import { flatten } from "./flatten";

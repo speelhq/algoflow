@@ -96,8 +96,9 @@ commands, decisions not yet in `docs/spec/`.
   milestone, its issues, and the open pull requests determine what is next. There
   is no handoff file. `docs/decisions.md` holds the reasons, grouped by
   topic; the spec states facts, never history.
-- `docs/design/` holds one PNG per board (P-13); read the board
-  before building its screen. `docs/design/README.md` names them and lists
+- `docs/design/` holds one PNG for each board the spec was written from
+  (P-13); read the board before building its screen. `docs/design/README.md`
+  names them, names the superseded boards, which are not exported, and lists
   where the spec deviates; the spec takes precedence.
 - `private/PROMPTS.md` (ignored by git) holds the milestone prompts the user
   pastes; nothing else is private.

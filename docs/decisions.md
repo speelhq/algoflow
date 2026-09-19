@@ -1022,12 +1022,16 @@ remain, in `private/PROMPTS.md`, because they are written for a person to
 paste.
 
 **Boards are exported into the repository** (P-13). The screens were drawn
-on a design canvas the spec was written from, reachable only by link. A
+on design canvases the spec was written from, reachable only by link. A
 link cannot be read by a session, reviewed in a pull request, or diffed
-when a board changes. One PNG per board in `docs/design/`, with a README
-naming what each shows and where the spec deviates, provides every reader
-with the same source; the canvas remains the tool for drawing, and the spec
-remains the authority.
+when a board changes. One PNG in `docs/design/` for each board the spec was
+written from, with a README naming what each shows and where the spec
+deviates, provides every reader with the same source; the canvas remains
+the tool for drawing, and the spec remains the authority. A board that a
+later board or the spec supersedes is named in the README and is not
+exported: the ten remaining boards of "AlgoFlow Redesign" show tabs,
+controls, and wording the spec does not retain, and a PNG of one in the
+repository would be read as a source for a screen.
 
 **Issues carry the questions; the spec carries the answers** (P-12). The
 spec states facts and never history, so an open question has no place in

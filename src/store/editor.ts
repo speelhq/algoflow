@@ -1,4 +1,4 @@
-// Editor-side UI state: the node outlined from a hovered Python line (U-66). Selection joins in M-04.
+// Editor-side UI state: the node outlined from a hovered Python line (U-25). Selection joins in M-04.
 import { create } from "zustand";
 import type { NodeId } from "@/lang/types";
 

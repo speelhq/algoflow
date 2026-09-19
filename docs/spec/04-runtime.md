@@ -135,8 +135,11 @@ visible step of each `print`; then it creates the shown runner at step 0.
 Step: `next()` until the next visible step. Play: one Step every
 `1000 / speed` ms, speed in `[1, 50]`. Seek(k): a new runner advanced to
 visible step `k`, in the same batches, rebuilding `state`, `stdout`, and
-`verdicts` from every event it passes. Back: Seek(`step - 1`), and
-Seek(`k - 1`) while a Seek to `k` is in progress. Stop: discard the runner.
+`verdicts` from every event it passes. When `k` is at or after the current
+step and the run has not ended, the driver continues the current runner in
+place of a new one; R-10 makes the two indistinguishable. Back:
+Seek(`step - 1`), and Seek(`k - 1`) while a Seek to `k` is in progress.
+Stop: discard the runner.
 While the pre-run, a Seek, or a Skip works through its batches `busy` is
 true and Step and Play do nothing; Pause during the pre-run makes the run
 open paused. A run of no step is `done` immediately; a run is `done` or in
