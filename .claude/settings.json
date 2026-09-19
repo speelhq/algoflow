@@ -38,7 +38,12 @@
       "Bash(pnpm build)",
       "Bash(pnpm exec oxfmt*)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(gh issue list*)",
+      "Bash(gh issue view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr checks*)"
     ],
     "ask": [
       "Bash(git push*)",
