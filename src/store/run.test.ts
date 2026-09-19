@@ -339,6 +339,39 @@ describe("run store (T-05: R-11, R-12, R-19)", () => {
     expect(run()).toMatchObject({ status: "idle", caseIndex: 0 });
   });
 
+  it("R-12: a published state is a copy; later steps do not change it", async () => {
+    const write = ast.assignTo({ kind: "index", list: v("nums"), index: num(0) }, num(9));
+    useProgram.setState({
+      program: program([assign("x", num(1)), assign("x", num(2)), write], {
+        inputs: [{ name: "nums", value: [4, 5] }],
+      }),
+    });
+    await paused();
+    await run().seek(2); // enter, write x = 1
+    const kept = run().state;
+    const list = kept?.frames[0]?.vars.get("nums");
+    const items = () => (list && "ref" in list ? kept?.heap.get(list.ref) : undefined);
+    expect(kept?.frames[0]?.vars.get("x")).toEqual({ t: "int", v: 1 });
+    expect(items()).toEqual({
+      kind: "list",
+      items: [
+        { t: "int", v: 4 },
+        { t: "int", v: 5 },
+      ],
+    });
+    await run().seek(run().total);
+    expect(run().state?.frames[0]?.vars.get("x")).toEqual({ t: "int", v: 2 });
+    expect(run().state).not.toBe(kept);
+    expect(kept?.frames[0]?.vars.get("x")).toEqual({ t: "int", v: 1 });
+    expect(items()).toEqual({
+      kind: "list",
+      items: [
+        { t: "int", v: 4 },
+        { t: "int", v: 5 },
+      ],
+    });
+  });
+
   // ------------------------------------------------------------ R-19 breakpoint, Skip
 
   it("R-19: Play and Skip pause at each enter of the breakpoint; Play from it moves on", async () => {
