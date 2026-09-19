@@ -153,8 +153,9 @@ statements entered in the current pass, U-61), `pass` (for a `loop`
 chosen case, U-32), `verdict` (the chosen case's result, C-15, only while
 the run is at step `total`), and `difference` (`{ step, line? }`, the step
 at which a run started by `Watch this case` opened, U-81, until Stop).
-After an error `lastEvent` is none at step `total`. `Done.steps` counts
-every event, visible or not.
+After an error `lastEvent` is none at step `total`. A published `state` is a
+copy of the frames' variables and of the heap: a later step does not change
+it. `Done.steps` counts every event, visible or not.
 
 R-17 Step over: `next()` repeatedly, in R-11 batches, until the frame
 count is at most its value before the first `next()` and the run is at a
