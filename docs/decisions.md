@@ -928,6 +928,70 @@ the next row after the last course problem would place a trainee in the
 first data-structure problem; `Plan complete` returns the choice to the
 learner.
 
+**The driver publishes more than R-12 first listed** (R-11, R-12). These
+fields were found necessary while the driver was built without a screen.
+`taken`: U-61 colours the path of the current pass, which cannot be rebuilt
+from `lastEvent` after a Seek, so the projection keeps it beside `verdicts`
+and a `loop` event clears both. `pass`: `Pass 3` requires a count for each
+loop since its `enter`, which only a replaying projection holds. `busy`: the
+five statuses have no value for a pre-run, a Seek, or a Skip in progress,
+and a program that does not terminate pre-runs for several seconds (500
+timers, which browsers clamp to about 4 ms each); a sixth status would have
+made every test of `status` in the screens three-way. While `busy`, Step
+and Play do nothing, because taking over the runner would leave a Seek at an
+arbitrary step under a position bar that shows another; Pause still cancels
+a Skip, and Pause during the pre-run opens the run paused rather than being
+discarded. `verdict` is judged once, on the pre-run's runner, and published
+only at step `total`, so Back from the end removes it again. `Watch this
+case` is `run({ watch: true })` and not a step passed in: the runners of
+Submit record no print steps, so only the driver's own pre-run determines
+where the differing line was printed, and an outdated difference cannot be
+passed in.
+
+**A step count includes the failing step** (R-11). A step is one call of
+`next()`, and the call that fails is one; an error run therefore has
+`total = events + 1`, step `total` has no event, and the last position of
+the position bar is where the error is shown. A finished run is `done` on
+reaching `total`, not one Step later: U-81 names that step "the last step
+of the run", and the driver makes one further call of `next()` there so
+that the frames have unwound.
+
+**The `compare` event carries values, not text** (R-02, R-06). Its text was
+the operands in Python's `str()` form (`3 == 0`, `True`), which the
+narration could only quote. With the two values, the narration writes them
+as the blocks do and fills the template of the condition from them,
+whatever the blanks hold; the operator is on the node. `is divisible by` is
+the one template whose blanks are not the compared operands (`a % b == 0`
+compares `a % b` with `0`), so it reads a variable blank from the frame and
+applies only when both blanks are variables or literals; otherwise the
+comparison reads as `equals` over its operands. Every comparison matches a
+template, so the former fallback to the event's text no longer exists.
+
+**A diamond asks; a slot states** (U-33, U-50). `Is {cond}?` around a
+template sentence reads `Is x is divisible by 15?`, so each template has a
+question of its own beside its sentence (`Does a equal b?`). Template
+sentences apply to the whole expression of a statement's slot only: inside
+an expression the chips keep their symbols, because `x is less than 2 and x
+is less than 9` under `Is …?` is not legible, and `Is x < 2 and x < 9?`
+matches the generated `Is i < n + 1?` of a `for`. The variable block is
+obtained from the parser (the block a bare name parses to), so the matcher
+and the narration name no block kind (N-01).
+
+**Showing the solution is recorded** (C-17). `solution: true` requires an
+entry, and a learner who only viewed the solution has used the problem as
+much as one who took a hint; the entry is `attempted`. The key holds the
+bare record, as C-17 writes it, through a custom storage of the persist
+middleware.
+
+**`break` and `continue` are drawn as boxes until N-09 has a jump shape**
+(U-33, N-09). Both declare `requires: "loop"`, so only the kind
+distinguishes an exit from a jump to the next pass, and the spec draws
+neither. They keep an ordinary edge to the next node until N-09 gains a
+jump shape (#7). A `Return` is identified by `requires: "function"`: its
+edge runs to `End` along one vertical line on the right, and carries the
+connector after it, since no other edge leaves it. After a branch whose
+regions all return there is no edge and no connector.
+
 ## Process
 
 **The spec is tracked; only the prompts are private** (P-10). Until M-03 the
