@@ -102,7 +102,10 @@ commands, decisions not yet in `docs/spec/`.
 - `private/PROMPTS.md` (ignored by git) holds the milestone prompts the user
   pastes; nothing else is private.
 - Issues: `decision` (the spec lacks an id), `defect`, `debt`, `perf`, or no
-  label for a task; each under the milestone that needs it (P-12).
+  label for a task; each under the milestone that needs it (P-12). A body has
+  the sections Summary, Where, Expected and actual (a `defect` only), and
+  Done when. `gh issue create --body` does not apply the template, so write
+  those sections in the body, and set the milestone with `--milestone`.
 
 A session starts with the milestone's line in `docs/spec/07-plan.md` and
 `gh issue list --milestone <M-xx>`. When you make a choice the spec does not
@@ -129,8 +132,9 @@ Claude, the session, or the prompt.
 Keep pull requests under approximately 600 changed lines; divide a milestone
 into reviewable parts. `main` takes rebase merges only, after CI. The body follows
 `.github/pull_request_template.md`: What / Why (spec ids and milestone) /
-Verification (the command output, pasted) / Notes (deviations,
-and the issue of every review finding not fixed here).
+Closes (`Closes #n` per issue resolved) / Verification (the command output,
+pasted) / Screenshots (when a screen changes) / Notes (deviations, and the
+issue of every review finding not resolved here).
 
 ## Tooling notes
 

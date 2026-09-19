@@ -111,9 +111,11 @@ that implements it.
 P-11 `main` takes only rebase merges of pull requests whose CI passed. A
 pull request is one or several vertical slices under approximately 600
 changed lines; a milestone comprises several pull requests. Its body follows
-`.github/pull_request_template.md`:
-What, Why (spec ids and milestone), Verification (command output), Notes
-(deviations, and the issue of every review finding it does not fix).
+`.github/pull_request_template.md`: What, Why (spec ids and milestone),
+Closes (one `Closes #n` line per issue it resolves, which closes that issue
+on merge), Verification (command output), Screenshots (for a pull request
+that changes a screen), and Notes (deviations, and the issue of every review
+finding it does not resolve).
 
 P-12 Open questions, known faults, and tasks reside in GitHub Issues, not in
 the spec or in a file. Milestones `M-03`..`M-10` correspond to this file. An
@@ -121,9 +123,13 @@ issue that names a problem has one label: `decision` (the spec lacks an id;
 closed by the pull request that records the id and its reason), `defect`
 (behaviour contrary to an id), `debt` (one fact recorded in two places), or
 `perf` (a cost to measure before changing); a task (a board to export, a file
-to migrate) has a milestone and no label. A session starts with the issues of
-its milestone and ends by filing every finding it did not resolve; a pull
-request closes the issues it resolves by number.
+to migrate) has a milestone and no label. An issue's body has the sections
+of `.github/ISSUE_TEMPLATE/issue.md`: Summary (the fact, not the remedy),
+Where (file and line, spec id, or board), Expected and actual (a `defect`
+only), and Done when (the condition that closes it); the milestone is the
+issue's Milestone field and is not repeated in the body. A session starts
+with the issues of its milestone and ends by filing every finding it did not
+resolve; a pull request closes the issues it resolves by number (P-11).
 
 P-13 `docs/design/` holds one PNG per board of the design canvases, under
 the names `docs/design/README.md` lists with what each board shows and where

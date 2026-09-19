@@ -984,3 +984,16 @@ against the tree at its own commit. A withdrawn statement retains its
 number for the same reason: the citations that predate the withdrawal still
 name an existing statement.
 
+**An issue states when it is done; a pull request states what it closes**
+(P-11, P-12). The first issue template had three inline labels, Where, What,
+and When. When repeated the Milestone field, which is one fact recorded in
+two places; nothing stated the condition that closes an issue, although
+P-12 defines one per label; and a `defect` mixed what the id states with
+what the code does in one paragraph. The sections are now the conventional
+ones: Summary, Where, Expected and actual for a `defect`, and Done when. The
+pull request template gained Closes, because GitHub closes an issue on merge
+only when the body names it, and Screenshots, because the pull requests from
+M-03 session 2 onward change screens and T-10 requires the images. A
+checklist was not added: the template asks for pasted command output, and a
+ticked box is an assertion.
+
