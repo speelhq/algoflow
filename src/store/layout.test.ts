@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from "vitest";
-import { LAYOUT_STORAGE_KEY, mergePersisted, PANEL, SPEED, useLayout } from "./layout";
+import { LAYOUT_STORAGE_KEY, mergePersisted, PANEL, panelWidth, SPEED, useLayout } from "./layout";
 
 describe("layout store (U-03, U-24, U-60)", () => {
   beforeEach(() => {
@@ -12,13 +12,27 @@ describe("layout store (U-03, U-24, U-60)", () => {
     expect(useLayout.getState()).toMatchObject({ panel: 320, collapsed: false });
   });
 
-  it("clamps the panel to 280–480 and rounds", () => {
-    useLayout.getState().setPanel(10);
+  it("U-03: the panel is set between 280 px and half the viewport width, rounded", () => {
+    const { setPanel } = useLayout.getState();
+    setPanel(10, 1280);
     expect(useLayout.getState().panel).toBe(280);
-    useLayout.getState().setPanel(9999);
-    expect(useLayout.getState().panel).toBe(480);
-    useLayout.getState().setPanel(300.4);
+    setPanel(9999, 1280);
+    expect(useLayout.getState().panel).toBe(640);
+    setPanel(9999, 1000);
+    expect(useLayout.getState().panel).toBe(500);
+    setPanel(300.4, 1280);
     expect(useLayout.getState().panel).toBe(300);
+    setPanel(Number.NaN, 1280); // a drag that yields no number: the width stays
+    expect(useLayout.getState().panel).toBe(300);
+  });
+
+  it("U-03: panelWidth draws a stored width within the bounds of the present viewport", () => {
+    expect(panelWidth(900, 1280)).toBe(640);
+    expect(panelWidth(900, 1920)).toBe(900);
+    expect(panelWidth(320, 1280)).toBe(320);
+    expect(panelWidth(100, 1280)).toBe(280);
+    expect(panelWidth(400, 500)).toBe(280); // a viewport under 560 px: the lower bound prevails
+    expect(panelWidth(333.3, 1281)).toBe(333);
   });
 
   it("U-60: the speed starts at 3, clamps to 1–50, rounds, and persists", () => {
@@ -39,7 +53,7 @@ describe("layout store (U-03, U-24, U-60)", () => {
   });
 
   it("persists the width and the collapsed state under algoflow:layout", () => {
-    useLayout.getState().setPanel(360);
+    useLayout.getState().setPanel(360, 1280);
     useLayout.getState().setCollapsed(true);
     const raw = localStorage.getItem(LAYOUT_STORAGE_KEY);
     expect(raw).not.toBeNull();
@@ -48,12 +62,14 @@ describe("layout store (U-03, U-24, U-60)", () => {
     expect(localStorage.length).toBe(1);
   });
 
-  it("validates and clamps a stored snapshot instead of trusting it", () => {
+  it("validates a stored snapshot instead of trusting it", () => {
     const current = useLayout.getState();
+    // The upper bound depends on the viewport, so it is applied by panelWidth(), not here.
     expect(mergePersisted({ panel: 9999, collapsed: "yes" }, current)).toMatchObject({
-      panel: 480,
+      panel: 9999,
       collapsed: false,
     });
+    expect(mergePersisted({ panel: 12 }, current).panel).toBe(280);
     expect(mergePersisted({ panel: "wide", collapsed: true }, current)).toMatchObject({
       panel: 320,
       collapsed: true,
@@ -71,6 +87,7 @@ describe("layout store (U-03, U-24, U-60)", () => {
       JSON.stringify({ state: { panel: 5000, collapsed: true }, version: 1 }),
     );
     await useLayout.persist.rehydrate();
-    expect(useLayout.getState()).toMatchObject({ panel: 480, collapsed: true });
+    expect(useLayout.getState()).toMatchObject({ panel: 5000, collapsed: true });
+    expect(panelWidth(useLayout.getState().panel, 1280)).toBe(640);
   });
 });
