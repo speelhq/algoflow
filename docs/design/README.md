@@ -1,47 +1,61 @@
 # Design boards
 
-One PNG per board of the design canvases, exported at 1280 × 800 (P-13).
-The spec (`docs/spec/05-ui.md`) was written from these boards and takes
-precedence over them: a board shows the appearance of a screen, the spec
-states its behaviour. A screen
-the spec describes and no board shows is an issue labelled `decision`.
+One PNG per board of the design canvases, exported at the size of the board
+(P-13). The spec (`docs/spec/05-ui.md`) was written from these boards and
+takes precedence over them: a board shows the appearance of a screen, the spec
+states its behaviour. A screen the spec describes and no board shows is an
+issue labelled `decision`.
 
 ## Canvas "AlgoFlow Screens"
 
-| File                              | Board                | Shows                                                                 |
-| --------------------------------- | -------------------- | --------------------------------------------------------------------- |
-| `screens-problems.png`            | Problems             | one section per plan, progress marks, `Continue` (U-10..U-14)          |
-| `screens-build-1.png`             | Build 1              | the Problem page in build mode, `Problem` tab, the chart (U-03, U-21)  |
-| `screens-build-2.png`             | Build 2              | the `+` menu and a node editor open (U-40, U-41)                       |
-| `screens-build-3.png`             | Build 3              | the condition template row and the chip editor (U-50..U-52)            |
-| `screens-run.png`                 | Run                  | run mode: the transport, the position bar, the narration (U-60..U-63)  |
-| `screens-wrong-answer.png`        | Wrong Answer         | `Result` after a failed submission, the rows, `▶ Watch this case` (U-81) |
-| `screens-accepted.png`            | Accepted             | the Accepted card and its actions (U-83)                               |
-| `screens-solution.png`            | Solution             | the solution shown in the chart region under its band (U-22)           |
-| `screens-run-in-function.png`     | Run inside functions | the path bar as the call stack (U-68)                                  |
-| `screens-module.png`              | Module               | a Module page with cases and `Test` (D-08, D-19, D-20)                 |
-| `screens-python-1.png`            | Python 1             | the `Python` tab with line highlights (U-25)                           |
-| `screens-python-2.png`            | Python 2             | the file row of a program using a module (U-25, E-09)                  |
+Twelve boards of 1280 × 800. Each file has the name of its board on the
+canvas.
+
+| File              | Board title on the canvas                              | Spec                     |
+| ----------------- | ------------------------------------------------------ | ------------------------ |
+| `Main.png`        | 1 Problems: one section per plan                       | U-02, U-10..U-14         |
+| `BuildEmpty.png`  | 2 Build: first launch, an empty chart                  | U-03, U-21, U-34, U-90   |
+| `BuildMenu.png`   | 3 Build: the + menu lists statements only              | U-40, U-33               |
+| `BuildEdit.png`   | 4 Build: editing a block, names and values             | U-41, U-50..U-52         |
+| `Run.png`         | 5 Run: the moment on the chart, the state in Result    | U-60..U-63, U-23, R-19   |
+| `Wrong.png`       | 6 Submit: Wrong Answer, and a way to the cause         | U-81, U-82               |
+| `Accepted.png`    | 7 Submit: Accepted, with what comes next               | U-83                     |
+| `Solution.png`    | 8 Solution: read-only in the chart area                | U-22                     |
+| `FunctionRun.png` | 9 Run inside functions: the path bar is the call stack | U-68                     |
+| `Module.png`      | 10 Module page: run one function, keep cases, Test     | D-06, D-08, D-19, D-20   |
+| `PythonChart.png` | 11 Python tab: a line and its block                    | U-25                     |
+| `PythonFiles.png` | 12 Python tab: a program that uses a module            | U-25, E-09               |
 
 ## Canvas "AlgoFlow Redesign"
 
-| File                              | Board                | Shows                                                                 |
-| --------------------------------- | -------------------- | --------------------------------------------------------------------- |
-| `redesign-flowchart.png`          | Flowchart study      | the shapes of U-33: boxes, diamonds, generated loop nodes, back edges |
-| `redesign-loop-notation.png`      | Loop notation study  | how a counted loop is drawn as init, check, and step                  |
+The earlier canvas, eleven boards of 1200 × 780 or 1200 × 720. One board is
+exported: the study from which the loop notation of U-33 was chosen.
 
-Only the chart drawing itself is current on this canvas. Its tabs, floating
-variables card, output strip, `Check` button, right drawer, and `Is i ≤ n?`
-are superseded by "AlgoFlow Screens" and by the spec.
+| File               | Board title on the canvas    | Spec       |
+| ------------------ | ---------------------------- | ---------- |
+| `LoopNotation.png` | Loop notation: three options | U-33, N-09 |
+
+The other ten boards are not exported, because "AlgoFlow Screens" and the
+spec supersede them: `Problems`, `Main` (Problem: Build), `Running`, `Wrong`,
+`Cleared`, `FisherYates`, `FisherYatesRun`, `VariablesCard`, `FunctionBuild`,
+and `FunctionRun`. They show tabs named Description, Hints, and Solution, a
+floating variables card, a floating transport, a `Check` button, and
+`Is i ≤ n?`, none of which the spec retains.
 
 ## Where the spec deviates from the boards
 
-- The heap-pop and hanoi boards show `[n]` for step counts because those
-  problems have no challenge file yet; the counts are placeholders.
-- `heap.py` and the `heap_pop` chart on the Module board are sketches from
-  D-16, not emitted code.
+- `Accepted.png` shows placeholders for the counts of steps and loops, because
+  `heap-pop` has no challenge file; the same holds for any board of a problem
+  that does not exist yet.
+- `heap.py` on `PythonFiles.png` and the `heap_pop` chart on `Module.png` are
+  drafts derived from D-16, not emitted code.
+- `Main.png` names the first problem `Hello`; its challenge file is
+  `tutorial`, and the title is the one in that file.
 - A diamond's text is the question of U-33 (`Is i divisible by 15?`),
-  regardless of the text on a board.
+  regardless of the text on a board. On `LoopNotation.png` the chosen option
+  writes `Is i ≤ n?`; the generated check of a `for` is `Is i < stop?` (N-09).
+- The boards use a hand-drawn typeface to mark them as drafts; the
+  application uses the typeface of `src/ui/theme.css`.
 
 ## Not drawn yet
 
@@ -52,8 +66,8 @@ before M-05); a built-in module's page with `Clone` (M-08); the path bar's
 
 ## Exporting
 
-Export each board from the canvas as PNG at 1280 × 800 into this folder
-under the file name above. The links to the canvases are in
-`private/PROMPTS.md`; the canvases themselves remain the working copies, and
-a changed board is re-exported in the pull request that changes the spec
-it affects.
+A board is one file of its canvas. It is rendered alone in a browser at the
+size the canvas declares for it and captured as a PNG under the name of the
+board. The links to the canvases are in `private/PROMPTS.md`; the canvases
+themselves remain the working copies, and a changed board is exported again
+in the pull request that changes the spec it affects.
