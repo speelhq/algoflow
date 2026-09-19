@@ -1,8 +1,8 @@
 // R-11, R-12, R-19: the driver. Run first executes the whole program on a throwaway runner
 // (the pre-run), so the length of the run, how it ends, and the step of every print are known
 // before playback. The shown Runner, the play timer, and the cancel token live in module
-// scope; the store holds what the UI renders. Seek replays a fresh runner (R-10), so a step
-// number fully identifies a position.
+// scope; the store holds what the UI renders. A backward Seek replays a fresh runner (R-11),
+// which R-10 makes identical to the first, so a step number fully identifies a position.
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";

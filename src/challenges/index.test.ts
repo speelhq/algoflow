@@ -1,4 +1,4 @@
-// C-14: every challenge file is bundled; U-10 orders by plan order then title; C-16 plans.
+// C-14: every challenge file is bundled; U-12 orders by plan order then title; C-16 plans.
 import { describe, expect, it } from "vitest";
 import { CHALLENGES, getChallenge, PLANS, planOf, planRank } from "./index";
 
@@ -14,7 +14,7 @@ describe("challenge bundle (C-14, C-16)", () => {
     expect(CHALLENGES.some((c) => c.id === "plans")).toBe(false);
   });
 
-  it("orders by plan order (U-10), then title", () => {
+  it("orders by plan order (U-12), then title", () => {
     const course = PLANS.find((plan) => plan.id === "course");
     expect(course).toBeDefined();
     expect(CHALLENGES.slice(0, course?.problems.length).map((c) => c.id)).toEqual(course?.problems);
