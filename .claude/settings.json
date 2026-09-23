@@ -43,7 +43,19 @@
       "Bash(gh issue view*)",
       "Bash(gh pr list*)",
       "Bash(gh pr view*)",
-      "Bash(gh pr checks*)"
+      "Bash(gh pr checks*)",
+      "PowerShell(pnpm test*)",
+      "PowerShell(pnpm lint)",
+      "PowerShell(pnpm check*)",
+      "PowerShell(pnpm build)",
+      "PowerShell(pnpm exec oxfmt*)",
+      "PowerShell(git add *)",
+      "PowerShell(git commit *)",
+      "PowerShell(gh issue list*)",
+      "PowerShell(gh issue view*)",
+      "PowerShell(gh pr list*)",
+      "PowerShell(gh pr view*)",
+      "PowerShell(gh pr checks*)"
     ],
     "ask": [
       "Bash(git push*)",
