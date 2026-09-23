@@ -70,7 +70,7 @@ challenges/      <id>.json plans.json
 modules/         <name>.json (D-15)
 scripts/         check.ts i18n.ts lib/ (functions shared by the scripts and their tests)
 e2e/             *.spec.ts screenshots/
-docs/            spec/ decisions.md design/ (README.md, one PNG per board, P-13)
+docs/            spec/ decisions.md design/ (README.md, the board PNGs, P-13)
 private/         PROMPTS.md (ignored: the milestone prompts and the canvas links, P-10)
 .github/         workflows/ci.yml pull_request_template.md ISSUE_TEMPLATE/ (P-11, P-12)
 components.json
@@ -135,9 +135,11 @@ issue's Milestone field and is not repeated in the body. A session starts
 with the issues of its milestone and ends by filing every finding it did not
 resolve; a pull request closes the issues it resolves by number (P-11).
 
-P-13 `docs/design/` holds one PNG per board of the design canvases, under
-the names `docs/design/README.md` lists with what each board shows and where
-the spec deviates from it; the spec takes precedence over a board. A screen the spec
+P-13 `docs/design/` holds one PNG for each board of the design canvases
+that no later board and no statement of the spec supersedes, under the
+names `docs/design/README.md` lists with what each board shows and where
+the spec deviates from it; the spec takes precedence over a board. A
+superseded board has no PNG and is named in the README. A screen the spec
 describes and no board shows is an issue labelled `decision` under the
 milestone that builds it.
 

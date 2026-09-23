@@ -53,7 +53,7 @@ Data flows one way, and nothing below `src/store` depends on React:
   yields one `Event` (`enter`, `read`, `write`, `swap`, `compare`, `loop`, `call`,
   `return`, `print`). Events are the contract the UI consumes for highlights and
   step counts. Randomness is mulberry32 seeded per run, so the same
-  program, inputs and seed replay identically; Seek is a fresh runner advanced `k` times.
+  program, inputs and seed replay identically (R-10).
 - `src/python` — `emit()` produces the Python file plus a NodeId → line map;
   `parse()` turns typed expression text back into `Expr`; `unparse(parse(s))` is a
   fixed point (G-05). Emitted Python is the behavioural reference, not the interpreter.
@@ -103,9 +103,9 @@ commands, decisions not yet in `docs/spec/`.
   milestone, its issues, and the open pull requests determine what is next. There
   is no handoff file. `docs/decisions.md` holds the reasons, grouped by
   topic; the spec states facts, never history.
-- `docs/design/` holds one PNG per board (P-13); read the board
-  before building its screen. `docs/design/README.md` names them and lists
-  where the spec deviates; the spec takes precedence.
+- `docs/design/` holds the design boards (P-13); read the board before
+  building its screen. `docs/design/README.md` names them and lists where
+  the spec deviates; the spec takes precedence.
 - `private/PROMPTS.md` (ignored by git) holds the milestone prompts the user
   pastes; nothing else is private.
 - Issues: `decision` (the spec lacks an id), `defect`, `debt`, `perf`, or no
