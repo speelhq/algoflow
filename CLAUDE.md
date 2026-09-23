@@ -20,16 +20,18 @@ messages. If a task conflicts with a spec, stop and report the conflict.
 pnpm dev · pnpm test [path] · pnpm lint · pnpm format · pnpm build
 pnpm check [challenge.json]   # schema, interpreter, CPython, i18n
 pnpm test:e2e                 # after build
-gh issue list --milestone M-03 · gh pr list · gh pr checks <n>
+gh issue list --milestone <M-xx> · gh pr list · gh pr checks <n>
 ```
 
 Run `pnpm lint` and the relevant `pnpm test <path>` after each set of edits.
-`pnpm check` runs `python3` and needs CPython 3.12 or later on PATH.
+`pnpm check` needs CPython 3.12 or later, run as `python3` from PATH or as
+named by the `PYTHON` variable.
 
 ## Fixed choices
 
-- TypeScript 7 (`tsgo`), Oxlint and Oxfmt; never add ESLint, Prettier, or
-  TypeScript earlier than 7.
+- TypeScript 7 (its Go compiler is the `tsc` binary), Oxlint with
+  `oxlint-tsgolint`, and Oxfmt; never add ESLint, Prettier, or TypeScript
+  earlier than 7.
 - shadcn/ui on Base UI (not Radix); dnd-kit; Zustand; no graph/flow/editor libraries.
 - `src/lang`, `src/runtime`, `src/python` have no third-party imports.
 - One block per file in `src/nodes/`; nothing else branches on block kind or name.
@@ -45,8 +47,8 @@ Data flows one way, and nothing below `src/store` depends on React:
   `Program` (`edit.ts`), and `Data` ⇄ `Value`/heap conversion (`data.ts`).
 - `src/nodes` — one `NodeDef` per block owning its slots, `create()`, `run`
   (interpreter behaviour), `python()` (exact emitted text), and `chart` (N-09).
-  `index.ts` is the only registry; interpreter, emitter, block menu, chart and
-  node editor all dispatch through it.
+  `index.ts` is the only registry; the interpreter, the emitter, the chart,
+  the block menu, and the node editor dispatch through it (N-01).
 - `src/runtime` — `run(program, inputs, seed)` returns a `Runner`; each `next()`
   yields one `Event` (`enter`, `read`, `write`, `swap`, `compare`, `loop`, `call`,
   `return`, `print`). Events are the contract the UI consumes for highlights and
@@ -57,11 +59,12 @@ Data flows one way, and nothing below `src/store` depends on React:
   fixed point (G-05). Emitted Python is the behavioural reference, not the interpreter.
 - `src/challenges` — the schema, the judge shared with `scripts/check.ts`
   (C-10), and the `Result` rows (U-23, U-81).
-- `src/store` — Zustand stores: `program` (with 100-entry undo history and 500 ms
-  localStorage persistence), `editor` (selection), `run` (the pre-running,
-  timer-driven driver, R-11), `tests` (submission verdicts), `progress`
-  (per-problem status under `algoflow:progress`), `layout` (panel width,
-  collapse, and playback speed under `algoflow:layout`).
+- `src/store` — Zustand stores: `program` (the program, its undo history,
+  and its persistence, L-50..L-55), `editor` (the hovered and the selected
+  node, U-25, U-35), `run` (the pre-running, timer-driven driver, R-11),
+  `tests` (submission verdicts), `progress` (per-problem status under
+  `algoflow:progress`), `layout` (panel width, collapse, and playback speed
+  under `algoflow:layout`).
 - `src/ui/primitives` — shadcn components generated on Base UI (`pnpm dlx shadcn add …`);
   `src/lib/utils.ts` holds `cn()`. Everything else under `src/ui/` is hand-written.
 - `src/ui` — React. The chart is an SVG flowchart with computed layout
@@ -73,8 +76,8 @@ Data flows one way, and nothing below `src/store` depends on React:
   shim replaying `draws()`) and compares both (R-20). "Recorded" expectations are
   captured once from the solution and inserted into the file (C-20).
 
-Work proceeds by milestone M-00 → M-10 (`docs/spec/07-plan.md`), one per session;
-a milestone closes only when its listed tests pass.
+Work proceeds by milestone (`docs/spec/07-plan.md`); a milestone closes only
+when its listed tests pass.
 
 ## Verification
 
@@ -87,6 +90,10 @@ Report command output, not summaries of it.
 Targeted edits over rewrites. Stay within the task; list unrelated findings
 as follow-ups. Batch independent reads. One line before starting; a
 standalone recap at the end (changed files, evidence, remaining work).
+A turn does not end on a plan, a question, or a status report while the
+session's next step is an edit, a test run, a commit, or an issue; it ends
+on a conflict with the spec, or on a step that needs the user's permission
+(`git push`, `rm`), and then names what is ready and what waits.
 When compacting keep: changed files, current milestone exit criteria, test
 commands, decisions not yet in `docs/spec/`.
 
@@ -138,7 +145,8 @@ issue of every review finding not resolved here).
 
 ## Tooling notes
 
-- oxlint: store actions must be function properties (`unbound-method`);
+- oxlint: a store's state type declares its actions as function properties
+  (`seek: (step) => …`), never as method signatures (`unbound-method`);
   `jsx-a11y` rejects mouse and click handlers on `li`/`tr`/`ol` (use one
   delegated listener with `data-*`); `react/set-state-in-effect` rejects
   `setState` inside effects (adjust state during render); `no-base-to-string`
@@ -159,11 +167,10 @@ issue of every review finding not resolved here).
 - `validate()`, `firstAssignments()`, and `nodesById()` are memoized per
   `Program` object: never mutate a `Program` in place.
 - Multi-line edit scripts: write them to the scratchpad and run the file;
-  heredocs passed to the Bash tool fail with certain quoting.
-- `pnpm check` requires `python3` on PATH; the end-to-end suite runs against
-  `dist/`, so build first. A chart can be inspected visually without a screen:
-  write `layout()`'s result as SVG from a temporary Vitest file and capture a
-  screenshot with Playwright.
+  a heredoc passed to the Bash tool turns `\\` into `\`.
+- The end-to-end suite runs against `dist/`, so build first. A chart can be
+  inspected without a screen: write `layout()`'s result as SVG from a
+  temporary Vitest file and capture a screenshot with Playwright.
 
 ## Spec index
 
