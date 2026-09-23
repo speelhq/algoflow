@@ -2,7 +2,7 @@
 name: add-challenge
 description: Create a challenge JSON with tests, hints, and solution per docs/spec/06-challenges.md and verify it with pnpm check. Use when asked to add a challenge, exercise, task, or problem for learners.
 argument-hint: [challenge id]
-allowed-tools: Bash(pnpm check *)
+allowed-tools: Bash(pnpm check *) PowerShell(pnpm check *)
 ---
 
 Create the challenge described in $ARGUMENTS.
@@ -13,7 +13,7 @@ Create the challenge described in $ARGUMENTS.
    texts only if `src/i18n/ja.json` exists), difficulty, topics, inputs, at least
    three tests of which one is a boundary case marked `"edge": true` (C-03; tests
    have no name and are shown by their inputs), three hints,
-   a `takeaway`, and a complete `solution` (plus `starter` in the micrograd plan).
+   a `takeaway`, and a complete `solution`.
    If the problem belongs to a study plan, add its id to `challenges/plans.json`.
 3. For expectations the spec marks as "recorded", run the solution once with the
    stated seed and paste the resulting values into the file.

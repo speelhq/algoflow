@@ -2,7 +2,7 @@
 name: add-node
 description: Add a block to src/nodes with interpreter, Python emission, i18n keys, and tests per docs/spec/03-nodes.md. Use when asked to add, implement, or support a block, builtin, or method.
 argument-hint: [block key or description]
-allowed-tools: Bash(pnpm test *) Bash(pnpm lint)
+allowed-tools: Bash(pnpm test *) Bash(pnpm lint) PowerShell(pnpm test *) PowerShell(pnpm lint)
 ---
 
 Add the block described in $ARGUMENTS.
