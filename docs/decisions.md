@@ -760,9 +760,9 @@ replays. That informs the learner immediately that a loop never ends (at
 playback speed `E_STEP_LIMIT` is five and a half hours away at speed 50),
 gives the position bar its length, and lets a Wrong Answer move directly to
 the step that printed the first wrong line instead of stepping there. Only
-the count, the outcome, and the steps of the prints are kept; seeking
-replays from the start, as Back has always done. Observed while drawing the
-board: with the position bar the transport is too long to float over the
+the count, the outcome, and the steps of the prints are kept, so a backward
+Seek replays from the start, as Back has always done. Observed while drawing
+the board: with the position bar the transport is too long to float over the
 chart's corner without covering the loop's back edge, so it is docked.
 
 **A wrong answer marks no node** (U-81, U-82). A runtime error has a
@@ -1022,12 +1022,14 @@ remain, in `private/PROMPTS.md`, because they are written for a person to
 paste.
 
 **Boards are exported into the repository** (P-13). The screens were drawn
-on a design canvas the spec was written from, reachable only by link. A
-link cannot be read by a session, reviewed in a pull request, or diffed
-when a board changes. One PNG per board in `docs/design/`, with a README
-naming what each shows and where the spec deviates, provides every reader
-with the same source; the canvas remains the tool for drawing, and the spec
-remains the authority.
+on design canvases, reachable only by link. A link cannot be read by a
+session, reviewed in a pull request, or diffed when a board changes. A PNG
+in `docs/design/` for each board, with a README naming what each shows and
+where the spec deviates, provides every reader with the same source; the
+canvas remains the tool for drawing, and the spec remains the authority. A
+board that a later board or the spec supersedes keeps no PNG, because a
+PNG in the repository is read as the source of a screen; the README names
+it so that a reader of the canvas knows it is not current.
 
 **Issues carry the questions; the spec carries the answers** (P-12). The
 spec states facts and never history, so an open question has no place in

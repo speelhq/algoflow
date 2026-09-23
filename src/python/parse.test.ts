@@ -82,7 +82,7 @@ describe("parse (G-01)", () => {
 });
 
 describe("G-02 / G-03 call resolution", () => {
-  it("resolves a class, then a builtin, then a user function, else E_UNKNOWN_CALL", () => {
+  it("resolves a class, a builtin, or a user function by name, else E_UNKNOWN_CALL", () => {
     const scope = { classes: ["Value"], functions: ["fib"] };
     // `new` has no block until M-05, so a constructor call is refused at its name.
     expect(err("Value(1, 2)", scope)).toEqual({ code: "E_PARSE_SYNTAX", position: 0 });

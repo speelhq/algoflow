@@ -1,8 +1,9 @@
 # Design boards
 
-One PNG per board of the design canvases, exported at the size of the board
-(P-13). The spec (`docs/spec/05-ui.md`) was written from these boards and
-takes precedence over them: a board shows the appearance of a screen, the spec
+One PNG for each board that has not been superseded, exported at the size
+of the board (P-13); a superseded board is named below and has no PNG. The
+spec (`docs/spec/05-ui.md`) was written from these boards and takes
+precedence over them: a board shows the appearance of a screen, the spec
 states its behaviour. A screen the spec describes and no board shows is an
 issue labelled `decision`.
 
