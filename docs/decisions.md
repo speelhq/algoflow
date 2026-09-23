@@ -1059,13 +1059,32 @@ name an existing statement.
 and When. When repeated the Milestone field, which is one fact recorded in
 two places; nothing stated the condition that closes an issue, although
 P-12 defines one per label; and a `defect` mixed what the id states with
-what the code does in one paragraph. The sections are now the conventional
-ones: Summary, Where, Expected and actual for a `defect`, and Done when. The
+what the code does in one paragraph. The sections became Summary, Where,
+Expected and actual for a `defect`, and Done when. The
 pull request template gained Closes, because GitHub closes an issue on merge
 only when the body names it, and Screenshots, because the pull requests from
 M-03 session 2 onward change screens and T-10 requires the images. A
 checklist was not added: the template asks for pasted command output, and a
 ticked box is an assertion.
+
+**One template per kind of issue; spec ids follow the facts they cite**
+(P-12). One template for five kinds gave every issue the same sections, and
+the sections fitted none of them. `Where` held a file, a spec id, or a
+board, so a body gave a bare `U-10` before it stated the problem, and ids
+became the subject of sentences the spec does not contain. `Expected and
+actual` compressed a reproduction into two lines and had no section for the
+cause. A `decision` had no section for the options it chooses between, a
+`debt` none for the copies it names, and a `perf` none for the cost. Each
+kind now has its own template and the sections of its kind (Observed and
+Cause, Options, Copies, Cost, Steps), and every issue carries Spec, where
+the statements that apply are written as sentences that end in their ids.
+The issue is readable without the ids, and the ids lead to the spec. The
+title and Summary carry no id, so the issue list and the first paragraph
+state the problem in words. A `decision` may open with Observed, because a
+gap in the spec can show in what the code does, and a measured behaviour is
+the evidence the options are weighed against. A section that does not apply
+states `None` and the reason, because a section that does not apply and a
+section omitted in error are otherwise indistinguishable.
 
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
 The store held a constant maximum of 480 px from the retired shell. Half the

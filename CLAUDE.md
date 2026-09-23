@@ -102,10 +102,13 @@ commands, decisions not yet in `docs/spec/`.
 - `private/PROMPTS.md` (ignored by git) holds the milestone prompts the user
   pastes; nothing else is private.
 - Issues: `decision` (the spec lacks an id), `defect`, `debt`, `perf`, or no
-  label for a task; each under the milestone that needs it (P-12). A body has
-  the sections Summary, Where, Expected and actual (a `defect` only), and
-  Done when. `gh issue create --body` does not apply the template, so write
-  those sections in the body, and set the milestone with `--milestone`.
+  label for a task; each under the milestone that first needs it (P-12). A
+  body has Summary, the sections its kind requires (Observed and Cause,
+  Options, Copies, Cost, or Steps), Spec, and Done when; a spec id follows
+  the fact it cites and never appears in the title or Summary.
+  `gh issue create --body` does not apply the template, so copy the sections
+  from `.github/ISSUE_TEMPLATE/<kind>.md` into the body, and set the
+  milestone with `--milestone`.
 
 A session starts with the milestone's line in `docs/spec/07-plan.md` and
 `gh issue list --milestone <M-xx>`. When you make a choice the spec does not
