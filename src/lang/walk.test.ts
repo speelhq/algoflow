@@ -1,11 +1,11 @@
-// U-38: every node maps to the statement that contains it.
+// U-39: every node maps to the statement that contains it.
 import { describe, expect, it } from "vitest";
 import { ast, program, tid } from "@/nodes/testing";
 import { bodyStmts, ownerStmts } from "./walk";
 
 const { assign, num, bin, v, if_, for_, print, ret } = ast;
 
-describe("ownerStmts (U-38)", () => {
+describe("ownerStmts (U-39)", () => {
   it("maps expressions to their statement and statements, functions, classes to themselves", () => {
     const cond = bin("==", v("n"), num(1));
     const inner = print(v("n"));
