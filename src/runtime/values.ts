@@ -172,6 +172,10 @@ export function str(value: Value, heap: Heap): string {
 }
 
 export function repr(value: Value, heap: Heap): string {
+  return writeValue(value, heap, scalarRepr);
+}
+
+function scalarRepr(value: Value): string {
   switch (value.t) {
     case "int":
       return String(value.v);
@@ -181,29 +185,44 @@ export function repr(value: Value, heap: Heap): string {
       return strRepr(value.v);
     case "bool":
       return value.v ? "True" : "False";
-    case "none":
+    default:
       return "None";
+  }
+}
+
+/** A dict entry key (`i:3`, `s:ab`) as the value it stands for. */
+function keyOf(key: string): Value {
+  return key.startsWith("i:")
+    ? { t: "int", v: Number(key.slice(2)) }
+    : { t: "str", v: key.slice(2) };
+}
+
+/**
+ * A value as Python's `repr()` lays it out, `[a, b]`, `{k: v}`, `Cls(f=v)`, with every
+ * scalar, dict keys included, written by `scalar`: `repr()` and the blocks' text differ only there.
+ */
+export function writeValue(value: Value, heap: Heap, scalar: (value: Value) => string): string {
+  const write = (item: Value) => writeValue(item, heap, scalar);
+  switch (value.t) {
     case "list": {
       const entry = entryOf(heap, value.ref);
-      return entry.kind === "list"
-        ? `[${entry.items.map((item) => repr(item, heap)).join(", ")}]`
-        : "[]";
+      return entry.kind === "list" ? `[${entry.items.map(write).join(", ")}]` : "[]";
     }
     case "dict": {
       const entry = entryOf(heap, value.ref);
       if (entry.kind !== "dict") return "{}";
-      const parts: string[] = [];
-      for (const [key, item] of entry.entries) {
-        const k = key.startsWith("i:") ? key.slice(2) : strRepr(key.slice(2));
-        parts.push(`${k}: ${repr(item, heap)}`);
-      }
+      const parts = [...entry.entries].map(
+        ([key, item]) => `${scalar(keyOf(key))}: ${write(item)}`,
+      );
       return `{${parts.join(", ")}}`;
     }
     case "obj": {
       const entry = entryOf(heap, value.ref);
       if (entry.kind !== "obj") return "<obj>";
-      const fields = [...entry.fields].map(([name, field]) => `${name}=${repr(field, heap)}`);
+      const fields = [...entry.fields].map(([name, field]) => `${name}=${write(field)}`);
       return `${entry.cls}(${fields.join(", ")})`;
     }
+    default:
+      return scalar(value);
   }
 }

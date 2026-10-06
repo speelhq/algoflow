@@ -11,7 +11,7 @@ import type {
 } from "@/lang/types";
 import { programExprs } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
-import type { EmitContext, PyLine } from "@/nodes/types";
+import type { EmitContext, PyLine, Side } from "@/nodes/types";
 import { floatRepr } from "@/runtime/values";
 import { PRECEDENCE, needsParens } from "./precedence";
 
@@ -57,26 +57,36 @@ export function dataToPython(data: Data): string {
 
 // ---------------------------------------------------------------- expression context
 
+/** `text`, the text of `child`, in parentheses where E-05 needs them under a parent of `parent`. */
+export function parenthesise(child: Expr, text: string, parent: number, side: Side): string {
+  const own = getNode(keyOf(child)).precedence?.(child) ?? PRECEDENCE.atom;
+  return needsParens(own, parent, side) ? `(${text})` : text;
+}
+
+/** A target as `name`, `<list>[<index>]`, `<dict>[<key>]`, or `<obj>.<field>`, its parts by `write`. */
+export function writeTarget(target: Target, write: (expr: Expr) => string): string {
+  const head = (expr: Expr) => parenthesise(expr, write(expr), PRECEDENCE.atom, "left");
+  switch (target.kind) {
+    case "var":
+      return target.name;
+    case "index":
+      return `${head(target.list)}[${write(target.index)}]`;
+    case "key":
+      return `${head(target.dict)}[${write(target.key)}]`;
+    case "field":
+      return `${head(target.obj)}.${target.field}`;
+  }
+}
+
 const ctx: EmitContext = {
   expr(expr: Expr) {
     return getNode(keyOf(expr)).python(expr, ctx) as string;
   },
   operand(expr: Expr, parent: number, side) {
-    const child = getNode(keyOf(expr)).precedence?.(expr) ?? PRECEDENCE.atom;
-    const text = ctx.expr(expr);
-    return needsParens(child, parent, side) ? `(${text})` : text;
+    return parenthesise(expr, ctx.expr(expr), parent, side);
   },
   target(target: Target) {
-    switch (target.kind) {
-      case "var":
-        return target.name;
-      case "index":
-        return `${ctx.operand(target.list, PRECEDENCE.atom, "left")}[${ctx.expr(target.index)}]`;
-      case "key":
-        return `${ctx.operand(target.dict, PRECEDENCE.atom, "left")}[${ctx.expr(target.key)}]`;
-      case "field":
-        return `${ctx.operand(target.obj, PRECEDENCE.atom, "left")}.${target.field}`;
-    }
+    return writeTarget(target, (expr) => ctx.expr(expr));
   },
   block(stmts: Stmt[]): PyLine {
     return { block: stmts };

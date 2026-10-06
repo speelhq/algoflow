@@ -31,10 +31,15 @@ export function getLocale(): Locale {
   return current;
 }
 
+/** Replaces each `{name}` with `fill(name)`; a placeholder `fill` has no text for stays as written. */
+export function fillPlaceholders(text: string, fill: (name: string) => string | undefined): string {
+  return text.replace(/\{(\w+)\}/g, (match, name: string) => fill(name) ?? match);
+}
+
 export function interpolate(text: string, params?: Params): string {
   if (!params) return text;
-  return text.replace(/\{(\w+)\}/g, (match, name: string) =>
-    Object.hasOwn(params, name) ? String(params[name]) : match,
+  return fillPlaceholders(text, (name) =>
+    Object.hasOwn(params, name) ? String(params[name]) : undefined,
   );
 }
 
