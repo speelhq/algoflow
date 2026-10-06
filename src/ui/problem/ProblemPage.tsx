@@ -1,29 +1,35 @@
-// U-03: the Problem page. C-13: opening a problem loads its program and discards any runner.
+// U-03: the Problem page: the top bar, then two regions, the panel and the chart region.
+// C-13: opening a problem loads its program and discards any runner; U-20: it opens on
+// the first tab.
 import { useEffect } from "react";
-import { getChallenge } from "@/challenges";
-import { localized, t } from "@/i18n/t";
+import { getChallenge, type Challenge } from "@/challenges";
+import { localized } from "@/i18n/t";
+import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
-import { routeHash } from "@/ui/app/route";
 import { useTitle } from "@/ui/hooks/useTitle";
-import { buttonVariants } from "@/ui/primitives/button";
+import { Panel } from "./Panel";
+import { TopBar } from "./TopBar";
 
 export function ProblemPage({ id }: { id: string }) {
   const challenge = getChallenge(id);
-  const title = challenge ? localized(challenge.title) : "";
+  return challenge ? <Problem challenge={challenge} /> : null;
+}
+
+function Problem({ challenge }: { challenge: Challenge }) {
+  const title = localized(challenge.title);
   useTitle(title);
-  const load = useProgram((s) => s.load);
-  useEffect(() => load(id), [id, load]);
+  useEffect(() => {
+    useProgram.getState().load(challenge.id);
+    useEditor.getState().open("problem");
+  }, [challenge.id]);
+
   return (
     <div className="flex h-full flex-col" data-testid="problem-page">
-      <header className="flex h-13 shrink-0 items-center gap-3 border-b px-4" data-testid="top-bar">
-        <a
-          href={routeHash({ page: "problems" })}
-          className={buttonVariants({ variant: "outline" })}
-        >
-          {t("problem.back")}
-        </a>
-        <h1 className="font-semibold">{title}</h1>
-      </header>
+      <TopBar title={title} />
+      <div className="flex min-h-0 flex-1">
+        <Panel challenge={challenge} />
+        <section className="min-w-0 flex-1 bg-muted/30" data-testid="chart-region" />
+      </div>
     </div>
   );
 }

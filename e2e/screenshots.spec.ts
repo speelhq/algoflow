@@ -1,14 +1,9 @@
 // T-10: one screenshot per screen state, saved under e2e/screenshots/ for review; compared
 // with baselines from M-10. Drawn at 1280 × 800, the size of the boards in docs/design/.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { seedProgress } from "./seed";
 
 const DIR = "e2e/screenshots";
-
-async function seedProgress(page: Page, entries: Record<string, unknown>): Promise<void> {
-  await page.addInitScript((value) => {
-    localStorage.setItem("algoflow:progress", value);
-  }, JSON.stringify(entries));
-}
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
