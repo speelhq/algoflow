@@ -9,7 +9,9 @@ import { useProgram } from "@/store/program";
 import { useTitle } from "@/ui/hooks/useTitle";
 import { ChartRegion } from "./ChartRegion";
 import { Panel } from "./Panel";
+import { RunControls } from "./RunControls";
 import { TopBar } from "./TopBar";
+import { useRunKeys } from "./useRunKeys";
 
 export function ProblemPage({ id }: { id: string }) {
   const challenge = getChallenge(id);
@@ -19,6 +21,7 @@ export function ProblemPage({ id }: { id: string }) {
 function Problem({ challenge }: { challenge: Challenge }) {
   const title = localized(challenge.title);
   useTitle(title);
+  useRunKeys();
   useEffect(() => {
     useProgram.getState().load(challenge.id);
     useEditor.getState().open("problem");
@@ -26,7 +29,9 @@ function Problem({ challenge }: { challenge: Challenge }) {
 
   return (
     <div className="flex h-full flex-col" data-testid="problem-page">
-      <TopBar title={title} />
+      <TopBar title={title}>
+        <RunControls challenge={challenge} />
+      </TopBar>
       <div className="flex min-h-0 flex-1">
         <Panel challenge={challenge} />
         <ChartRegion challenge={challenge} />
