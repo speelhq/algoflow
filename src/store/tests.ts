@@ -19,7 +19,10 @@ export type TestsState = {
   running: boolean;
   /** C-12: every test judged and passing. */
   cleared: boolean;
+  /** U-81, U-86: the chip whose rows are shown: the first failing test once judged, else 0. */
+  selected: number;
   submit: () => Promise<void>;
+  select: (index: number) => void;
   reset: () => void;
 };
 
@@ -68,6 +71,7 @@ export const useTests = create<TestsState>()((set, get) => {
     outcomes: [],
     running: false,
     cleared: false,
+    selected: 0,
 
     submit() {
       const target = current();
@@ -83,12 +87,18 @@ export const useTests = create<TestsState>()((set, get) => {
         }
         // U-80, C-12, C-17: accepted only when every test of this submission passed.
         useProgress.getState().submitted(target.id, passed > 0 && passed === target.tests.length);
+        const failing = get().results.findIndex((result) => result?.status !== "pass");
+        set({ selected: Math.max(failing, 0) });
       });
+    },
+
+    select(index) {
+      if (index >= 0 && index < get().results.length) set({ selected: index });
     },
 
     reset() {
       generation += 1;
-      set({ results: [], outcomes: [], running: false, cleared: false });
+      set({ results: [], outcomes: [], running: false, cleared: false, selected: 0 });
     },
   };
 });
