@@ -35,6 +35,8 @@ canvas.
   drafts derived from D-16, not emitted code.
 - `Main.png` names the first problem `Hello`; its challenge file is
   `tutorial`, and the title is the one in that file.
+- `BuildEmpty.png` shows an earlier statement of `tutorial`, joining a text
+  to `name` with `+`; the statement is the one in its challenge file.
 - A diamond's text is the question of U-33 (`Is i divisible by 15?`),
   regardless of the text on a board.
 - The boards use a hand-drawn typeface to mark them as drafts; the
