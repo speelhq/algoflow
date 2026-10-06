@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
+import { getNode } from "./index";
 import { ast, eventTypes, program, runAll } from "./testing";
 
 const { exprStmt, call, num, bin } = ast;
 
 describe("expr (03-nodes)", () => {
+  it("N-01, N-04: is hidden from the block menu", () => {
+    expect(getNode("expr").hidden).toBe(true);
+  });
+
   it("N-03: emits the expression alone", () => {
     expect(emit(program([exprStmt(call("abs", num(-1)))])).code).toBe("abs(-1)\n");
   });
