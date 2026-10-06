@@ -291,6 +291,7 @@
     }
   },
   "run": {
+    "breakpoint": "breakpoint",
     "narrate": {
       "enter": "{sentence}",
       "check": "Checking {condition}",
