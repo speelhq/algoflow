@@ -71,11 +71,15 @@ export type FormContext = { creates: boolean };
 
 // ---------------------------------------------------------------- chart shape
 
-/** The body regions a block draws, by slot name: a branch, a checked loop, or a counted loop. */
+/**
+ * How the chart draws a block: its body regions by slot name (a branch, a checked loop, a
+ * counted loop), or where its edge jumps to (out of the innermost loop, or into its next pass).
+ */
 export type ChartShape =
   | { branch: { yes: string; no: string } }
   | { check: string }
-  | { counted: string };
+  | { counted: string }
+  | { jump: "exit" | "next" };
 
 // ---------------------------------------------------------------- NodeDef
 

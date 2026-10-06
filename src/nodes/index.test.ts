@@ -10,12 +10,18 @@ const keys = new Set(Object.keys(flatten(en)));
 
 function regionsIn(chart: ChartShape): string[] {
   if ("branch" in chart) return [chart.branch.yes, chart.branch.no];
+  if ("jump" in chart) return [];
   return "check" in chart ? [chart.check] : [chart.counted];
 }
 
 describe("registry (N-02, N-09)", () => {
   it("N-01: the categories are in menu order", () => {
     expect(CATEGORIES).toEqual(["basic", "control", "list", "function", "dict", "class", "math"]);
+  });
+
+  it("N-09: break jumps out of the innermost loop and continue into its next pass", () => {
+    expect(NODES.get("break")?.chart).toEqual({ jump: "exit" });
+    expect(NODES.get("continue")?.chart).toEqual({ jump: "next" });
   });
 
   it("N-02: every block has label, template, and help", () => {
@@ -28,7 +34,9 @@ describe("registry (N-02, N-09)", () => {
 
   it("N-09: a chart names body slots of its block; a counted loop has init, check, and step", () => {
     const shaped = [...NODES.values()].filter((def) => def.chart);
-    expect(new Set(shaped.map((def) => def.key))).toEqual(new Set(["if", "while", "for"]));
+    expect(new Set(shaped.map((def) => def.key))).toEqual(
+      new Set(["if", "while", "for", "break", "continue"]),
+    );
     for (const def of shaped) {
       const regions = def.chart ? regionsIn(def.chart) : [];
       const bodies = def.slots.filter((slot) => slot.role === "body").map((slot) => slot.name);

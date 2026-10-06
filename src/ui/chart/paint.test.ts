@@ -84,6 +84,22 @@ describe("paint (U-61)", () => {
     expect(no && at(first.id).edges.has(no.id)).toBe(false);
   });
 
+  it("U-61: after a loop with a break, the No edge is taken unless the break reached the exit", () => {
+    const stop = ast.brk();
+    const jumpy = for_("i", num(0), num(3), [if_(bin("==", v("i"), num(1)), [stop])]);
+    const next = print(str("done"));
+    const drawn = layout(program([jumpy, next]));
+    const check = drawn.nodes.find((node) => node.owner === jumpy.id && node.role === "check");
+    const no = drawn.edges.find((edge) => edge.from === check?.id && edge.label === "no");
+    const jump = drawn.edges.find((edge) => edge.from === stop.id);
+    const at = (taken: Record<string, true>) => paint(drawn, view({ activeId: next.id, taken }));
+    const ended = at({ [jumpy.id]: true, [next.id]: true });
+    expect(no && ended.edges.has(no.id)).toBe(true);
+    const broke = at({ [jumpy.id]: true, [stop.id]: true, [next.id]: true });
+    expect(no && broke.edges.has(no.id)).toBe(false);
+    expect(jump && broke.edges.has(jump.id)).toBe(true);
+  });
+
   it("marks the breakpoint on a loop's check and End once the run has ended", () => {
     const p = paint(chart, view({ breakpoint: loop.id, ended: true }));
     expect(p.breakpoint).toBe(nodeOf(loop.id, "check"));
