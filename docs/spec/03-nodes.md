@@ -72,7 +72,7 @@ interpreter test (T-02).
 | ------- | -------- | --------------- | ------------------------------------------------------------------- | ---------------------- |
 | `num`   | basic    | value           | `{value}`                                                           | `raw`                  |
 | `str`   | basic    | value           | `"{value}"`                                                         | double-quoted, escaped |
-| `bool`  | basic    | value           | `true` / `false`                                                    | `True` / `False`       |
+| `bool`  | basic    |                 | `true` / `false`                                                    | `True` / `False`       |
 | `none`  | basic    |                 | `none`                                                              | `None`                 |
 | `var`   | basic    | name            | `{name}`                                                            | `name`                 |
 | `binop` | basic    | op, left, right | `{left} {op} {right}` with `×` `÷` for `*` `/`; `{left} in {right}` | infix per E-05         |
