@@ -1,7 +1,8 @@
 // U-40: the block menu's groups, order, disabled entries, search, and This program.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/nodes/testing";
-import { blankTemplate, menuGroups, searchMenu } from "./menu";
+import { blankTemplate } from "@/ui/chart/text";
+import { menuGroups, searchMenu } from "./menu";
 
 const { v, while_ } = ast;
 const MAIN = { parent: "main", slot: "main", index: 0 } as const;

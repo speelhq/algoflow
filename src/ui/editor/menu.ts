@@ -8,7 +8,7 @@ import { placeContext } from "@/lang/scope";
 import type { Expr, Place, Program, Stmt } from "@/lang/types";
 import { getNode, paletteNodes } from "@/nodes";
 import { CATEGORIES, type Category } from "@/nodes/categories";
-import { nodeText } from "@/ui/chart/text";
+import { blankTemplate, nodeText } from "@/ui/chart/text";
 
 export type MenuEntry = {
   /** The registry key, or `call:<name>` for a function of the program. */
@@ -22,13 +22,6 @@ export type MenuEntry = {
   create: () => Stmt;
 };
 export type MenuGroup = { id: Category | "program"; title: string; entries: MenuEntry[] };
-
-const BLANK = "…";
-
-/** A template with every `{slot}` written as `…`. */
-export function blankTemplate(template: string): string {
-  return template.replace(/\{\w+\}/g, BLANK);
-}
 
 /** The groups of the block menu at `place`; empty groups are left out. */
 export function menuGroups(program: Program, place: Place): MenuGroup[] {
@@ -55,7 +48,10 @@ export function menuGroups(program: Program, place: Place): MenuGroup[] {
     }
   }
   const calls = program.functions.map((fn): MenuEntry => {
-    const text = t("node.call.template", { fn: fn.name, args: fn.params.length > 0 ? BLANK : "" });
+    const text = t("node.call.template", {
+      fn: fn.name,
+      args: fn.params.length > 0 ? blankTemplate("{a}") : "",
+    });
     return {
       id: `call:${fn.name}`,
       text,

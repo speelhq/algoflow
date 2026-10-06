@@ -20,6 +20,11 @@ export function nodeText(key: string, part: string, params?: Record<string, stri
   return t(`node.${key}.${part}` as MessageKey, params);
 }
 
+/** A template with every `{slot}` written as `…`. */
+export function blankTemplate(template: string): string {
+  return template.replace(/\{\w+\}/g, "…");
+}
+
 export function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
@@ -27,6 +32,70 @@ export function capitalise(text: string): string {
 /** A template with its slots filled; a sentence drops the space an empty slot leaves. */
 function render(template: string, fill: (name: string) => string): string {
   return fillPlaceholders(template, fill).replace(/\s+/g, " ").trim();
+}
+
+/** A run of a node's text: a slot's text with the slot's name, or the template's own words. */
+export type Part = { text: string; slot?: string; empty?: boolean };
+
+/** The text the parts spell. */
+export function joinParts(parts: readonly Part[]): string {
+  return parts.map((part) => part.text).join("");
+}
+
+/** The empty slot's placeholder, `choose a value`. */
+export function placeholder(): string {
+  return nodeText("empty", "template");
+}
+
+/** Whether a slot holds nothing yet: an empty expression, an empty name, or no item. */
+function isEmptySlot(node: Node, def: NodeDef, name: string): boolean {
+  const slot = def.slots.find((s) => s.name === name);
+  const value = (node as unknown as Bag)[name];
+  switch (slot?.role) {
+    case "expr":
+      return isExpr(value) && value.kind === "empty";
+    case "exprs":
+      return Array.isArray(value) && value.every((item) => isExpr(item) && item.kind === "empty");
+    case "id":
+      return value === "";
+    case "target":
+      return (
+        (value as Target | undefined)?.kind === "var" && (value as { name: string }).name === ""
+      );
+    default:
+      return false;
+  }
+}
+
+/**
+ * A template as parts, each placeholder of a slot of `node` a part naming its slot. Spaces
+ * are collapsed across parts, as `render` does, and a part with no text is dropped.
+ */
+function renderParts(template: string, node: Node, def: NodeDef): Part[] {
+  const parts: Part[] = [];
+  let at = 0;
+  for (const found of template.matchAll(/\{(\w+)\}/g)) {
+    const name = found[1] ?? "";
+    parts.push({ text: template.slice(at, found.index) });
+    const text = slotText(node, def, name);
+    const isSlot = def.slots.some((slot) => slot.name === name);
+    if (!isSlot) parts.push({ text });
+    else if (isEmptySlot(node, def, name))
+      parts.push({ text: placeholder(), slot: name, empty: true });
+    else parts.push({ text, slot: name });
+    at = found.index + found[0].length;
+  }
+  parts.push({ text: template.slice(at) });
+  const out: Part[] = [];
+  for (const part of parts) {
+    const before = out[out.length - 1]?.text ?? "";
+    let text = part.text.replace(/\s+/g, " ");
+    if (before === "" || before.endsWith(" ")) text = text.replace(/^ /, "");
+    if (text !== "") out.push({ ...part, text });
+  }
+  const last = out[out.length - 1];
+  if (last) last.text = last.text.replace(/ $/, "");
+  return out.filter((part) => part.text !== "");
 }
 
 /** A child is parenthesised where the emitter would parenthesise it; one with no parent never is. */
@@ -64,14 +133,15 @@ export function slotText(node: Node, def: NodeDef, name: string): string {
               .join(", ")
           : "";
       case "id":
-        return typeof value === "string" ? value : "";
+        return typeof value === "string" && value !== "" ? value : placeholder();
       case "text":
         return (
           def.text?.(node, slot.name) ||
           (typeof value === "string" || typeof value === "number" ? String(value) : "")
         );
       case "target":
-        return value && typeof value === "object" ? targetText(value as Target) : "";
+        if (!value || typeof value !== "object") return "";
+        return isEmptySlot(node, def, name) ? placeholder() : targetText(value as Target);
       default:
         return "";
     }
@@ -116,14 +186,40 @@ export function exprText(expr: Expr): string {
 export function sentence(node: Node, program: Program): string {
   const def = getNode(keyOf(node));
   if (def.shape === "expr") return exprText(node as Expr);
+  return joinParts(sentenceParts(node, program));
+}
+
+/** The template of a statement in its form for this program (`templateCreate`, …). */
+export function templateOf(node: Node, program: Program): string {
+  const def = getNode(keyOf(node));
   const form = def.form?.(node, { creates: firstAssignments(program).has(node.id) }) ?? "";
-  return render(nodeText(def.key, `template${form}`), (name) => slotText(node, def, name));
+  return nodeText(def.key, `template${form}`);
+}
+
+/** A statement's sentence as parts, one per slot (not capitalised). */
+export function sentenceParts(node: Node, program: Program): Part[] {
+  return renderParts(templateOf(node, program), node, getNode(keyOf(node)));
 }
 
 /** The text of a generated node (`init`, `check`, `step`), with the loop's own slots. */
 export function generatedText(node: Node, part: "init" | "check" | "step"): string {
+  return joinParts(generatedParts(node, part));
+}
+
+/** A generated node's text as parts, its slots being the loop's. */
+export function generatedParts(node: Node, part: "init" | "check" | "step"): Part[] {
   const def = getNode(keyOf(node));
-  return render(nodeText(def.key, part), (name) => slotText(node, def, name));
+  return renderParts(nodeText(def.key, part), node, def);
+}
+
+/** A diamond's text: its question as one part of the condition's slot, or the placeholder. */
+export function questionParts(node: Node): Part[] {
+  const def = getNode(keyOf(node));
+  const slot = def.slots.find((s) => s.role === "expr")?.name;
+  const condition = conditionOf(node);
+  if (!slot || !condition) return [];
+  if (condition.kind === "empty") return [{ text: placeholder(), slot, empty: true }];
+  return [{ text: questionText(condition), slot }];
 }
 
 /** The expression a diamond asks about: the block's first `expr` slot (`branch`, `check`). */
