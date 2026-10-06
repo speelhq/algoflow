@@ -8,6 +8,7 @@ import { emit } from "@/python/emit";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
+import { download } from "@/ui/app/download";
 import { Button } from "@/ui/primitives/button";
 import { highlight, type Token } from "@/ui/python/highlight";
 import { lineOwners, linesOf } from "@/ui/python/lines";
@@ -22,16 +23,6 @@ const COLOUR: Record<Token["kind"], string> = {
 
 /** The shown file is `main.py` (a program that uses modules adds one file per module). */
 const FILE = "main.py";
-
-function download(code: string): void {
-  const url = URL.createObjectURL(new Blob([code], { type: "text/x-python" }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = FILE;
-  anchor.click();
-  // Revoking synchronously can cancel the download in some browsers.
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 function copy(code: string): void {
   // `navigator.clipboard` is absent in insecure contexts; a refused write is not worth surfacing.
@@ -85,7 +76,7 @@ export function PythonTab() {
         <Button variant="outline" onClick={() => copy(code)}>
           {t("python.copy")}
         </Button>
-        <Button variant="outline" onClick={() => download(code)}>
+        <Button variant="outline" onClick={() => download(FILE, code, "text/x-python")}>
           {t("python.download")}
         </Button>
       </div>

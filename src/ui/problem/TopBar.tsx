@@ -1,4 +1,4 @@
-// The 52 px top bar: `← Problems`, the title, the run controls, undo, redo, and `⋯`.
+// The 52 px top bar: the back link, the title, the run controls, undo, redo, and `⋯`.
 import { useState, type ReactNode } from "react";
 import { t } from "@/i18n/t";
 import { useProgram } from "@/store/program";
@@ -13,7 +13,15 @@ import {
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
 
-type Props = { title: string; children?: ReactNode };
+type Props = {
+  /** The page the back link leads to: Problems from a problem, Playground from its programs. */
+  back: "problems" | "playground";
+  title: ReactNode;
+  /** The middle: the run controls. */
+  children?: ReactNode;
+  /** The items of `⋯` before `Help`. */
+  menu?: ReactNode;
+};
 
 /** Undo and redo, disabled when there is nothing to take back or bring back, and while running. */
 function UndoRedo() {
@@ -46,8 +54,7 @@ function UndoRedo() {
   );
 }
 
-/** `children` sits in the middle: the run controls. */
-export function TopBar({ title, children }: Props) {
+export function TopBar({ back, title, children, menu }: Props) {
   const [help, setHelp] = useState(false);
   return (
     <header
@@ -55,13 +62,10 @@ export function TopBar({ title, children }: Props) {
       data-testid="top-bar"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <a
-          href={routeHash({ page: "problems" })}
-          className={buttonVariants({ variant: "outline" })}
-        >
-          {t("problem.back")}
+        <a href={routeHash({ page: back })} className={buttonVariants({ variant: "outline" })}>
+          {t(back === "problems" ? "problem.back" : "playground.back")}
         </a>
-        <h1 className="truncate font-semibold">{title}</h1>
+        {title}
       </div>
       <div className="flex items-center gap-2">{children}</div>
       <div className="flex items-center justify-end gap-2">
@@ -72,7 +76,8 @@ export function TopBar({ title, children }: Props) {
           >
             {t("problem.moreGlyph")}
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-auto min-w-44">
+            {menu}
             <DropdownMenuItem onClick={() => setHelp(true)}>{t("problem.help")}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

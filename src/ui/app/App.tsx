@@ -1,5 +1,7 @@
 import { t } from "@/i18n/t";
 import { useMediaQuery } from "@/ui/hooks/useMediaQuery";
+import { PlaygroundPage } from "@/ui/playground/PlaygroundPage";
+import { ProgramPage } from "@/ui/playground/ProgramPage";
 import { ProblemPage } from "@/ui/problem/ProblemPage";
 import { ProblemsPage } from "@/ui/problems/ProblemsPage";
 import { StubPage } from "@/ui/stubs/StubPage";
@@ -26,7 +28,7 @@ export function App() {
   );
 }
 
-/** One page per route; Playground and Modules are stubs until M-04 and M-07. */
+/** One page per route; Modules is a stub until M-07. */
 function Page({ route }: { route: Route }) {
   switch (route.page) {
     case "problems":
@@ -34,10 +36,11 @@ function Page({ route }: { route: Route }) {
     case "problem":
       return <ProblemPage key={route.id} id={route.id} />;
     case "playground":
+      return <PlaygroundPage />;
     case "program":
-      return <StubPage page="playground" />;
+      return <ProgramPage key={route.id} id={route.id} />;
     case "modules":
     case "module":
-      return <StubPage page="modules" />;
+      return <StubPage />;
   }
 }

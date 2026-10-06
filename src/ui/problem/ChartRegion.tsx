@@ -122,7 +122,7 @@ function useRunPaint(
   }, [chart, run, program]);
 }
 
-export function ChartRegion({ challenge }: { challenge: Challenge }) {
+export function ChartRegion({ challenge }: { challenge?: Challenge }) {
   const mine = useProgram((s) => s.program);
   const solution = useEditor((s) => s.solution);
   const selectedId = useEditor((s) => s.selectedId);
@@ -133,14 +133,19 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
   const selectCase = useRun((s) => s.selectCase);
   const running = useRun((s) => s.status !== "idle");
   const fonts = useFontLoads();
-  const program: Program = solution ? challenge.solution : mine;
-  const inputs = challenge.tests[caseIndex]?.inputs;
+  const shown = solution && challenge !== undefined;
+  const program: Program = shown ? challenge.solution : mine;
+  const inputs = challenge?.tests[caseIndex]?.inputs;
   const chart = useMemo(
     () => (fonts ? layout(program, { inputs, measure: measureText }) : null),
     [program, inputs, fonts],
   );
   const cases = useMemo(
-    () => ({ labels: challenge.tests.map((test) => caseText(test.inputs)), choose: selectCase }),
+    () =>
+      challenge && {
+        labels: challenge.tests.map((test) => caseText(test.inputs)),
+        choose: selectCase,
+      },
     [challenge, selectCase],
   );
   const { paint: painted, note } = useRunPaint(solution ? null : chart, mine);
@@ -196,7 +201,7 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
 
   return (
     <section className="flex min-w-0 flex-1 flex-col" data-testid="chart-region">
-      {solution && <SolutionBand challenge={challenge} />}
+      {shown && <SolutionBand challenge={challenge} />}
       <PathBar />
       {chart && (
         <Chart
