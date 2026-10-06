@@ -1115,6 +1115,44 @@ wide, and a small chart sits at 100 % in the middle. The bounds keep the
 smallest text legible and the largest chart navigable; from 100 %, steps of 1.25
 reach 200 % in four clicks and 25 % in seven.
 
+**A loop that has ended loses its mark** (U-61). A `for` that ended kept the
+`✓` of its last successful pass, because it never evaluates its check as an
+expression, while the same loop written as a `while` showed the `✗` of its
+failing compare. Emitting an event for the failed check would have changed
+every event count of every finished loop; keeping the mark would leave a
+`✓` on a check that has failed. The driver instead clears a loop's own
+diamond at the first `enter` outside the loop, which needs no new event and
+uses the body lists it already keeps for U-61. A loop that is the last
+statement of its frame is followed by no `enter`, so its mark stays; the
+narration at that point (`Finished in N steps`) already says the run is over.
+
+**Running to a node is a click and Skip** (U-60, R-19). A learner who
+wants a paused run to reach a node clicks it, presses `Skip`, and clears the
+breakpoint by clicking again or with Esc. A `Run to this node` action would
+have given nodes a context menu, which nothing else on the chart has, and a
+modifier on the click has no touch equivalent and adds a key that works only
+while running. The three actions are already specified and each is one
+click.
+
+**The driver publishes the statement to highlight** (R-12, U-39). Expression
+events carry the id of an expression, and the chart, the narration, and the
+`Python` tab all need the statement that contains it. The driver already
+holds the owner map for its marks, so it publishes `activeId` once rather
+than each screen resolving the owner again.
+
+**Run leaves the solution** (U-27). The solution band offers no Run of its
+own: the solution is to be read, and its outcome is known. Running the
+learner's program while the chart region shows the solution would put the
+highlight, the marks, and the narration on a chart other than the one
+running, so Run and Submit bring the learner's chart back first.
+
+**A labelled edge is taken by its verdict** (U-61). `taken` lists the
+statements of the current pass, which places both ends of a diamond's `Yes`
+and `No` edges on the path whenever the diamond was entered. The diamond's
+mark says which way the check went, so a `Yes` edge is drawn as taken when
+the mark is `✓`, a `No` edge when it is `✗`, and an unlabelled edge when
+both its ends are on the path.
+
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
 The store held a constant maximum of 480 px from the retired shell. Half the
 viewport width is not a constant, and a store that read `window.innerWidth`
