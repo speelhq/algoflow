@@ -151,6 +151,8 @@ done, error), `frame` (the index of the frame shown, U-68), `stdout`,
 `verdicts` (the last check result per diamond, U-61), `taken` (the
 statements entered in the current pass, U-61), `pass` (for a `loop`
 `lastEvent`, the number of that loop's passes since it was entered, U-63),
+`activeId` (the statement that contains `lastEvent`'s node, or after an
+error the failing node, U-39),
 `breakpoint` (a `NodeId` or none, R-19), `busy` (R-11), `caseIndex` (the
 chosen case, U-32), `verdict` (the chosen case's result, C-15, only while
 the run is at step `total`), and `difference` (`{ step, line? }`, the step
