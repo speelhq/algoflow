@@ -1,7 +1,112 @@
-// U-23: the `Result` tab. Before any run it shows `result.empty`; the case selector, the
-// variables, and the output rows arrive with run mode.
+// U-23: the `Result` tab for one case: the case selector (the same choice as the Input
+// nodes, U-32), the variables of the shown frame, and `Output` beside `Expected`; the
+// chosen case's verdict (C-15) and its first differing row once the run has ended there.
+// Before any run: the selector, the chosen case's `Expected`, and `result.empty`.
+import { useMemo } from "react";
+import type { Challenge } from "@/challenges";
+import { firstDifference, resultRows } from "@/challenges/rows";
 import { t } from "@/i18n/t";
+import { cn } from "@/lib/utils";
+import { mainVars } from "@/runtime/outcome";
+import { useRun } from "@/store/run";
+import { valueText } from "@/ui/chart/text";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/ui/primitives/select";
+import { caseText } from "./caseText";
+import { ResultRows } from "./ResultRows";
 
-export function ResultTab() {
-  return <p className="text-muted-foreground">{t("result.empty")}</p>;
+function CaseSelect({ challenge }: { challenge: Challenge }) {
+  const caseIndex = useRun((s) => s.caseIndex);
+  const selectCase = useRun((s) => s.selectCase);
+  const items = challenge.tests.map((test, index) => ({
+    value: index,
+    label: caseText(test.inputs),
+  }));
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs tracking-wide text-muted-foreground uppercase">
+        {t("result.case")}
+      </span>
+      <Select
+        items={items}
+        value={caseIndex}
+        onValueChange={(value) => typeof value === "number" && selectCase(value)}
+      >
+        <SelectTrigger className="font-mono text-xs" data-testid="case-select">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {items.map((item) => (
+            <SelectItem key={item.value} value={item.value} className="font-mono text-xs">
+              {item.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function Variables() {
+  const state = useRun((s) => s.state);
+  const frame = useRun((s) => s.frame);
+  const shown = state?.frames[frame];
+  if (!state || !shown) return null;
+  return (
+    <section>
+      <h3 className="mb-1 text-xs tracking-wide text-muted-foreground uppercase">
+        {t("result.variables")}
+      </h3>
+      <ul className="flex flex-wrap gap-1.5" data-testid="variables">
+        {[...shown.vars].map(([name, value]) => (
+          <li key={name} className="rounded-full border px-2.5 py-0.5 font-mono text-xs">
+            {t("problem.assignment", { name, value: valueText(value, state.heap) })}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function ResultTab({ challenge }: { challenge: Challenge }) {
+  const status = useRun((s) => s.status);
+  const caseIndex = useRun((s) => s.caseIndex);
+  const stdout = useRun((s) => s.stdout);
+  const state = useRun((s) => s.state);
+  const verdict = useRun((s) => s.verdict);
+  const test = challenge.tests[caseIndex];
+  const idle = status === "idle";
+  const rows = useMemo(
+    () =>
+      resultRows(test?.expect, {
+        stdout: idle ? [] : stdout,
+        vars: idle || !state ? {} : mainVars(state),
+      }),
+    [test, idle, stdout, state],
+  );
+  const marked = verdict ? firstDifference(rows) : null;
+
+  return (
+    <div className="space-y-4" data-testid="result-tab">
+      <CaseSelect challenge={challenge} />
+      {idle ? <p className="text-muted-foreground">{t("result.empty")}</p> : <Variables />}
+      {verdict && (
+        <p
+          className={cn(
+            "font-semibold",
+            verdict.status === "pass" ? "text-taken" : "text-destructive",
+          )}
+          data-testid="case-verdict"
+        >
+          {t(verdict.status === "pass" ? "result.casePassed" : "result.caseFailed")}
+        </p>
+      )}
+      <ResultRows rows={rows} marked={marked} expected={test?.expect.stdout !== undefined} />
+    </div>
+  );
 }
