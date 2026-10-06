@@ -2,15 +2,15 @@
 // slots; a statement's slot holding an expression that matches a condition template
 // reads as that template's sentence, while the chips nested inside an expression keep symbols.
 // Reads slot roles, `params`, `form`, `text`, and `precedence` only, never a kind.
-import { t, type MessageKey } from "@/i18n/t";
-import { keyValue, toValue } from "@/lang/data";
+import { fillPlaceholders, t, type MessageKey } from "@/i18n/t";
+import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Node, Program, Target, Value } from "@/lang/types";
 import { firstAssignments } from "@/lang/validate";
 import { isExpr } from "@/lang/walk";
 import { getNode, hasNode, keyOf } from "@/nodes";
 import type { NodeDef, Side } from "@/nodes/types";
-import { needsParens } from "@/python/precedence";
-import { str } from "@/runtime/values";
+import { parenthesise, writeTarget } from "@/python/emit";
+import { str, writeValue } from "@/runtime/values";
 import { matchTemplate, type TemplateMatch } from "@/ui/expression/templates";
 
 type Bag = Record<string, unknown>;
@@ -24,32 +24,22 @@ export function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** `{name}` placeholders of a template, filled by `fill`; unknown names become empty. */
+/** A template with its slots filled; a sentence drops the space an empty slot leaves. */
 function render(template: string, fill: (name: string) => string): string {
-  return template
-    .replace(/\{(\w+)\}/g, (_, name: string) => fill(name))
-    .replace(/\s+/g, " ")
-    .trim();
+  return fillPlaceholders(template, fill).replace(/\s+/g, " ").trim();
 }
 
-/** A child is parenthesised where the emitter would parenthesise it. */
+/** A child is parenthesised where the emitter would parenthesise it; one with no parent never is. */
 function operand(child: Expr, parent: number | undefined, side: Side): string {
   const text = exprText(child);
-  const own = getNode(keyOf(child)).precedence?.(child);
-  return own !== undefined && parent !== undefined && needsParens(own, parent, side)
-    ? `(${text})`
-    : text;
+  return parent === undefined ? text : parenthesise(child, text, parent, side);
 }
 
+/** A target reads as the expression of the same shape once that block exists (`index`, `key`, `field`). */
 function targetText(target: Target): string {
-  if (target.kind === "var") return target.name;
-  // A target reads as the expression of the same shape once that block exists (`index`, `key`, `field`).
   const { kind, ...rest } = target;
-  if (hasNode(kind)) return exprText({ id: "", kind, ...rest } as Expr);
-  if (target.kind === "field") return `${exprText(target.obj)}.${target.field}`;
-  return target.kind === "index"
-    ? `${exprText(target.list)}[${exprText(target.index)}]`
-    : `${exprText(target.dict)}[${exprText(target.key)}]`;
+  if (kind !== "var" && hasNode(kind)) return exprText({ id: "", kind, ...rest } as Expr);
+  return writeTarget(target, exprText);
 }
 
 /** The text of one `{name}` placeholder of `node`'s template. */
@@ -146,34 +136,18 @@ export function conditionOf(node: Node): Expr | undefined {
 
 /** A value as the blocks write it: `true` / `false` / `none`, a text in quotes, the rest as `str()`. */
 export function valueText(value: Value, heap: Heap): string {
-  switch (value.t) {
-    case "bool":
-      return t(value.v ? "node.bool.template" : "node.bool.templateFalse");
-    case "none":
-      return t("node.none.template");
-    case "str":
-      return t("node.str.template", { value: value.v });
-    case "int":
-    case "float":
-      return str(value, heap);
-    default: {
-      const entry = heap.get(value.ref);
-      if (entry?.kind === "list") {
-        return `[${entry.items.map((item) => valueText(item, heap)).join(", ")}]`;
-      }
-      if (entry?.kind === "dict") {
-        const pairs = [...entry.entries].map(
-          ([key, item]) => `${valueText(keyValue(key), heap)}: ${valueText(item, heap)}`,
-        );
-        return `{${pairs.join(", ")}}`;
-      }
-      if (entry?.kind === "obj") {
-        const fields = [...entry.fields].map(([name, item]) => `${name}=${valueText(item, heap)}`);
-        return `${entry.cls}(${fields.join(", ")})`;
-      }
-      return str(value, heap);
+  return writeValue(value, heap, (scalar) => {
+    switch (scalar.t) {
+      case "bool":
+        return t(scalar.v ? "node.bool.template" : "node.bool.templateFalse");
+      case "none":
+        return t("node.none.template");
+      case "str":
+        return t("node.str.template", { value: scalar.v });
+      default:
+        return str(scalar, heap);
     }
-  }
+  });
 }
 
 /** A case's input value (`Input n = 15`), written like any other value. */
