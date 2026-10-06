@@ -129,18 +129,20 @@ tuple id type self math random round sorted`.split(/\s+/),
 
 // ---------------------------------------------------------------- Validation (02 "Validation")
 
-export type DiagnosticCode =
-  | "E_UNDEFINED"
-  | "E_DECLARE_FIRST"
-  | "E_BAD_NAME"
-  | "E_DUPLICATE_NAME"
-  | "E_BREAK_OUTSIDE"
-  | "E_RETURN_OUTSIDE"
-  | "E_ARITY"
-  | "E_UNKNOWN_CALL"
-  | "E_EMPTY_SLOT"
-  | "E_DEFAULT"
-  | "E_DUPLICATE_ID";
+export const DIAGNOSTIC_CODES = [
+  "E_UNDEFINED",
+  "E_DECLARE_FIRST",
+  "E_BAD_NAME",
+  "E_DUPLICATE_NAME",
+  "E_BREAK_OUTSIDE",
+  "E_RETURN_OUTSIDE",
+  "E_ARITY",
+  "E_UNKNOWN_CALL",
+  "E_EMPTY_SLOT",
+  "E_DEFAULT",
+  "E_DUPLICATE_ID",
+] as const;
+export type DiagnosticCode = (typeof DIAGNOSTIC_CODES)[number];
 
 export type Diagnostic = {
   nodeId: NodeId;

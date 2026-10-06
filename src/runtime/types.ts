@@ -15,17 +15,19 @@ export type Done =
 export type State = { frames: Frame[]; heap: Heap };
 export type Frame = { fn: Id | "main"; callNodeId?: NodeId; vars: Map<Id, Value> };
 
-export type RuntimeCode =
-  | "E_UNDEFINED"
-  | "E_INDEX"
-  | "E_KEY"
-  | "E_FIELD"
-  | "E_TYPE"
-  | "E_DIV_ZERO"
-  | "E_POP_EMPTY"
-  | "E_ARITY"
-  | "E_RECURSION"
-  | "E_STEP_LIMIT";
+export const RUNTIME_CODES = [
+  "E_UNDEFINED",
+  "E_INDEX",
+  "E_KEY",
+  "E_FIELD",
+  "E_TYPE",
+  "E_DIV_ZERO",
+  "E_POP_EMPTY",
+  "E_ARITY",
+  "E_RECURSION",
+  "E_STEP_LIMIT",
+] as const;
+export type RuntimeCode = (typeof RUNTIME_CODES)[number];
 
 export type RuntimeError = {
   nodeId: NodeId;
