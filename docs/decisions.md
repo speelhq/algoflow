@@ -325,6 +325,14 @@ the first step and ends with that case's verdict; Submit is the same view
 with one chip per case. The learner observes that Submit is Run on every
 case, and the comparison step no longer waits for a submission.
 
+**The Playground page reuses the Problems page** (U-15). Both pages list
+rows under one header, so the Playground page takes the Problems page's
+section card for its title, description, `Import…`, and `New`, and its row
+style for the programs; a row needs only what tells two programs apart, the
+title and the last edit. `Delete` asks first, in a dialog, because a
+deleted program has no other copy and no undo reaches across pages; the
+editor's undo history belongs to the open program.
+
 **Python is opened, never shown** (U-25, U-20). A per-block Python fragment
 and Python visible by default taught syntax before the flow was
 understood. Python is a tab of the panel that nothing selects for the
