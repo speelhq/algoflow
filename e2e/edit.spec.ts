@@ -80,3 +80,33 @@ test("M-04 exit: FizzBuzz is built from an empty chart and accepted", async ({ p
   await page.getByTestId("tab-python").click();
   await expect(page.getByTestId("python-code")).toContainText("for i in range(1, n + 1):");
 });
+
+test("Type as text parses on Enter and keeps the expression on an error; chips Unwrap and Delete (U-55, U-54)", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/fizzbuzz");
+  await insert(page, "main/main/0", "assign");
+  await editor(page).locator('[data-name-slot="target"]').fill("x");
+  await openEmpty(page);
+  await type(page, "1");
+  await expect(page.getByTestId("chart")).toContainText("Create x and set it to 1");
+
+  await editor(page).locator("[data-chip]", { hasText: /^1$/ }).click();
+  await menu(page).getByRole("button", { name: "Type as text" }).click();
+  const text = menu(page).getByTestId("type-as-text");
+  await text.fill("n +");
+  await text.press("Enter");
+  await expect(menu(page).getByRole("alert")).toHaveText("Syntax error at character 3");
+  await expect(page.getByTestId("chart")).toContainText("Create x and set it to 1");
+  await text.fill("n + 2");
+  await text.press("Enter");
+  await expect(page.getByTestId("chart")).toContainText("Create x and set it to n + 2");
+
+  await editor(page).locator("[data-chip]", { hasText: "+" }).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Unwrap" }).click();
+  await expect(page.getByTestId("chart")).toContainText("Create x and set it to n");
+  await editor(page).locator("[data-chip]", { hasText: /^n$/ }).click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await expect(page.getByTestId("chart")).toContainText("Create x and set it to choose a value");
+});
