@@ -388,19 +388,23 @@ requires the learner to manage edge drawing and loops manually and does not
 suit a structured `Program`. The auto-laid-out flowchart shows Yes/No paths
 and loop-backs graphically and keeps the AST as the source of truth.
 
-**Loops are drawn as init, check, and step** (U-33, N-09). The JIS X 0121 /
-ISO 5807 loop-limit pair is the standard form for counted loops, and a
-dashed container is legible, but both conceal the check. Python's
-`for i in range(...)` and JavaScript's `for (init; check; step)` both run as
-init → check → body → step → check, and `while` is that shape, so one form
-serves every loop and matches the execution order. The generated nodes
-are grey and owned by the loop block so the program retains one `for` and the
-emitter is unchanged. The check reads `Is i < stop?` with the bound as
-written, not an inclusive `Repeat i from 1 to n` (emitting
-`range(1, n + 1)`) and not a display-only `Is i ≤ n?` for `x + 1` bounds:
-the check reads as the emitted `range` does, so the chart and the `Python`
-tab agree (the third commitment of `00-conventions.md`), and a
-display rule for one bound form would mix `<` and `≤` across loops.
+**Loops are drawn as init, check, and step** (U-33, N-09). Three notations
+were compared on the study "Loop notation: three options" of the canvas
+"AlgoFlow Redesign". The JIS X 0121 / ISO 5807 loop-limit pair is the
+standard form for counted loops and the one Japanese textbooks and the FE
+exam use, and a dashed container is legible, but both conceal the check.
+Python's `for i in range(...)` and JavaScript's `for (init; check; step)`
+both run as init → check → body → step → check, and `while` is that
+shape, so one form serves every loop and matches the execution order. The
+form adds three nodes to every counted loop; they are generated, grey, and
+owned by the loop block, so the learner does not edit them, the program
+retains one `for`, and the emitter is unchanged. The check reads
+`Is i < stop?` with the bound as written, not an inclusive
+`Repeat i from 1 to n` (emitting `range(1, n + 1)`) and not a display-only
+`Is i ≤ n?` for `x + 1` bounds: the check reads as the emitted `range`
+does, so the chart and the `Python` tab agree (the third commitment of
+`00-conventions.md`), and a display rule for one bound form would mix `<`
+and `≤` across loops.
 
 **The catalog is its plans** (U-10..U-14, C-16). "Day 1/2/3" tabs and a
 "micrograd" tab grouped problems by course logistics; ordered study plans
@@ -760,9 +764,9 @@ replays. That informs the learner immediately that a loop never ends (at
 playback speed `E_STEP_LIMIT` is five and a half hours away at speed 50),
 gives the position bar its length, and lets a Wrong Answer move directly to
 the step that printed the first wrong line instead of stepping there. Only
-the count, the outcome, and the steps of the prints are kept; seeking
-replays from the start, as Back has always done. Observed while drawing the
-board: with the position bar the transport is too long to float over the
+the count, the outcome, and the steps of the prints are kept, so a backward
+Seek replays from the start, as Back has always done. Observed while drawing
+the board: with the position bar the transport is too long to float over the
 chart's corner without covering the loop's back edge, so it is docked.
 
 **A wrong answer marks no node** (U-81, U-82). A runtime error has a
@@ -1022,12 +1026,13 @@ remain, in `private/PROMPTS.md`, because they are written for a person to
 paste.
 
 **Boards are exported into the repository** (P-13). The screens were drawn
-on a design canvas the spec was written from, reachable only by link. A
-link cannot be read by a session, reviewed in a pull request, or diffed
-when a board changes. One PNG per board in `docs/design/`, with a README
-naming what each shows and where the spec deviates, provides every reader
-with the same source; the canvas remains the tool for drawing, and the spec
-remains the authority.
+on design canvases, reachable only by link. A link cannot be read by a
+session, reviewed in a pull request, or diffed when a board changes. A PNG
+in `docs/design/` for each board, with a README naming what each shows and
+where the spec deviates, provides every reader with the same source; the
+canvas remains the tool for drawing, and the spec remains the authority. A
+board that a later board or the spec has replaced has no PNG, because a
+PNG in the repository is read as the source of a screen.
 
 **Issues carry the questions; the spec carries the answers** (P-12). The
 spec states facts and never history, so an open question has no place in
