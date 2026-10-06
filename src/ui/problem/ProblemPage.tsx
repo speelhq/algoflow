@@ -7,6 +7,7 @@ import { localized } from "@/i18n/t";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
+import { useEditKeys } from "@/ui/editor/useEditKeys";
 import { useTitle } from "@/ui/hooks/useTitle";
 import { ChartRegion } from "./ChartRegion";
 import { Panel } from "./Panel";
@@ -23,6 +24,7 @@ function Problem({ challenge }: { challenge: Challenge }) {
   const title = localized(challenge.title);
   useTitle(title);
   useRunKeys();
+  useEditKeys();
   useEffect(() => {
     useProgram.getState().load(challenge.id);
     // Opening a problem selects the first test's inputs, also when it was open before.

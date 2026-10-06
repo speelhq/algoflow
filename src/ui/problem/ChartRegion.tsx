@@ -3,18 +3,21 @@
 // the chosen case and list every case.
 import { useCallback, useMemo } from "react";
 import type { Challenge } from "@/challenges";
-import { errorText, t } from "@/i18n/t";
+import { t } from "@/i18n/t";
 import type { NodeId, Place, Program } from "@/lang/types";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useShallow } from "zustand/react/shallow";
 import { useRun, type RunState } from "@/store/run";
 import { Chart, type Note } from "@/ui/chart/Chart";
+import type { Moves } from "@/ui/chart/drag";
 import { layout, type ChartLayout } from "@/ui/chart/layout";
 import { measureText, useFontLoads } from "@/ui/chart/measure";
-import { nodeFor, paint, type Paint } from "@/ui/chart/paint";
+import { paint, type Paint } from "@/ui/chart/paint";
 import { PathBar } from "@/ui/chart/PathBar";
 import { Connector } from "@/ui/editor/BlockMenu";
+import { apply } from "@/ui/editor/edits";
+import { accepts, tryMove } from "@/ui/editor/moves";
 import { NodeEditor } from "@/ui/editor/NodeEditor";
 import { Button } from "@/ui/primitives/button";
 import { narrate, narrateDifference, narrateEnd, type Narration } from "@/ui/run/narrate";
@@ -69,7 +72,7 @@ function narration(run: Shown, program: Program): string | null {
   return say(narrate(lastEvent, { program, state, frame: run.frame, pass: run.pass }));
 }
 
-/** What the chart draws and says: the run while running, else the diagnostic Run led to. */
+/** What the chart draws and says while running; in build mode the editor shows a diagnostic. */
 function useRunPaint(
   chart: ChartLayout | null,
   program: Program,
@@ -91,17 +94,8 @@ function useRunPaint(
       breakpoint: s.breakpoint,
     })),
   );
-  const diagnostic = useEditor((s) => s.diagnostic);
-  const selectedId = useEditor((s) => s.selectedId);
   return useMemo(() => {
-    if (!chart) return { note: null };
-    if (run.status === "idle") {
-      const node = diagnostic && selectedId ? nodeFor(chart.nodes, selectedId) : undefined;
-      return {
-        note:
-          node && diagnostic ? { node: node.id, text: errorText(diagnostic), tone: "error" } : null,
-      };
-    }
+    if (!chart || run.status === "idle") return { note: null };
     const painted = paint(chart, {
       ended: run.status === "done",
       activeId: run.activeId,
@@ -116,7 +110,7 @@ function useRunPaint(
     const note: Note | null =
       painted.current && text ? { node: painted.current, text, tone } : null;
     return { paint: painted, note };
-  }, [chart, run, program, diagnostic, selectedId]);
+  }, [chart, run, program]);
 }
 
 export function ChartRegion({ challenge }: { challenge: Challenge }) {
@@ -142,6 +136,18 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
   );
   const { paint: painted, note } = useRunPaint(solution ? null : chart, mine);
   const empty = mine.main.length === 0;
+  const moves: Moves = useMemo(
+    () => ({
+      accepts: (owner, place) => accepts(useProgram.getState().program, owner, place),
+      onMove: (owner, place) => {
+        const result = tryMove(useProgram.getState().program, owner, place);
+        if ("refused" in result) return result.refused;
+        apply(() => result.program);
+        return null;
+      },
+    }),
+    [],
+  );
   const connector = useCallback(
     ({ place }: { place: Place }) => (
       <Connector place={place} first={empty && place.parent === "main"} />
@@ -180,6 +186,7 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
           paint={painted}
           note={note}
           connector={solution || running ? undefined : connector}
+          moves={solution || running ? undefined : moves}
           editor={
             solution || running || !selectedId || !editing ? undefined : (
               <NodeEditor id={selectedId} />

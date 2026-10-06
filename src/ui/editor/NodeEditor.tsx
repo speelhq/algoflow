@@ -392,6 +392,9 @@ export function NodeEditor({ id }: { id: NodeId }) {
         align="start"
         className="w-104"
         aria-label={t("editor.label")}
+        // Focus stays on the chart, so the editing keys act on the selected node.
+        initialFocus={false}
+        finalFocus={false}
       >
         <Body key={`${id}:${slot ?? ""}`} stmt={node as Stmt} program={program} initial={slot} />
       </PopoverContent>
