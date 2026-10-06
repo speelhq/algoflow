@@ -1100,6 +1100,14 @@ unsolved problem has no destination, so the button is removed rather than
 pointed at a solved problem. `More problems` is omitted while empty for the
 reason C-18 gives for plans: an empty section is inert.
 
+**Markdown is a four-rule subset** (U-26). Challenge texts are written in
+the repository and use paragraphs, code, bold, and italic; a markdown
+library would add a dependency, an HTML sanitiser for its output, and
+headings, tables, and links that a statement in a 320 px panel should not
+contain. Rendering React elements from four rules emits no HTML string, so
+nothing needs sanitising, and a construct outside the subset shows as typed
+rather than failing.
+
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
 The store held a constant maximum of 480 px from the retired shell. Half the
 viewport width is not a constant, and a store that read `window.innerWidth`
