@@ -683,7 +683,7 @@ matches the generated `Is i < n + 1?` of a `for`. The variable block is
 obtained from the parser (the block a bare name parses to), so the matcher
 and the narration name no block kind (N-01).
 
-**`break` and `continue` draw where they jump** (U-33, N-09). An edge to
+**`break` and `continue` draw where they jump** (U-33, U-34, N-09). An edge to
 the next node, the earlier drawing, is a path the run never takes, and a
 learner reading the chart follows it. Both blocks declare
 `requires: "loop"`, so only the kind distinguishes an exit from a jump to
