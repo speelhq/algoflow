@@ -3,8 +3,9 @@
 import type { Challenge } from "@/challenges";
 import { t } from "@/i18n/t";
 import { useRun } from "@/store/run";
+import { useTests } from "@/store/tests";
 import { Button } from "@/ui/primitives/button";
-import { startRun } from "./actions";
+import { startRun, startSubmit } from "./actions";
 import { caseText } from "./caseText";
 
 export function RunControls({ challenge }: { challenge: Challenge }) {
@@ -12,11 +13,26 @@ export function RunControls({ challenge }: { challenge: Challenge }) {
   const busy = useRun((s) => s.busy);
   const caseIndex = useRun((s) => s.caseIndex);
   const stop = useRun((s) => s.stop);
+  const submitting = useTests((s) => s.running);
+  // U-86: Submit does not depend on the run, so it is offered in both modes.
+  const submit = (
+    <Button
+      variant="outline"
+      className="border-selection/60 bg-selection/10"
+      disabled={submitting}
+      onClick={startSubmit}
+    >
+      {t("problem.submit")}
+    </Button>
+  );
   if (status === "idle") {
     return (
-      <Button variant="outline" disabled={busy} onClick={() => startRun()}>
-        {t("problem.run")}
-      </Button>
+      <>
+        <Button variant="outline" disabled={busy} onClick={() => startRun()}>
+          {t("problem.run")}
+        </Button>
+        {submit}
+      </>
     );
   }
   const inputs = challenge.tests[caseIndex]?.inputs ?? {};
@@ -31,6 +47,7 @@ export function RunControls({ challenge }: { challenge: Challenge }) {
       <Button variant="outline" onClick={stop}>
         {t("problem.stop")}
       </Button>
+      {submit}
     </>
   );
 }

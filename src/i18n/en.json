@@ -70,6 +70,7 @@
     "back": "← Problems",
     "run": "▶ Run",
     "stop": "■ Stop",
+    "submit": "✓ Submit",
     "running": "Running with {inputs}",
     "more": "More",
     "help": "Help",
@@ -109,7 +110,19 @@
     "output": "Output",
     "expected": "Expected",
     "casePassed": "✓ This case passes",
-    "caseFailed": "✗ This case does not pass"
+    "caseFailed": "✗ This case does not pass",
+    "submitting": "Checking every case…",
+    "accepted": "Accepted",
+    "wrong": "Wrong Answer",
+    "passedCount": "{k} of {n} cases passed",
+    "watch": "▶ Watch this case",
+    "stepsLoops": "Steps {steps} · Loops {loops} (first case)",
+    "whatYouUsed": "What you used",
+    "seePython": "See your program as Python",
+    "compare": "Compare with the solution",
+    "nextProblem": "Next problem →",
+    "planComplete": "Plan complete",
+    "backToProblems": "Back to Problems"
   },
   "playground": {
     "title": "Playground",

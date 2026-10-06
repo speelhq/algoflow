@@ -50,6 +50,13 @@ test.describe("FizzBuzz", () => {
     await page.screenshot({ path: `${DIR}/run.png`, animations: "disabled" });
   });
 
+  test("Accepted", async ({ page }) => {
+    await page.goto("/#/p/fizzbuzz");
+    await page.getByRole("button", { name: "✓ Submit" }).click();
+    await expect(page.getByTestId("verdict")).toHaveText("Accepted");
+    await page.screenshot({ path: `${DIR}/accepted.png`, animations: "disabled" });
+  });
+
   test("Python tab", async ({ page }) => {
     await page.goto("/#/p/fizzbuzz");
     await page.getByTestId("tab-python").click();
@@ -60,4 +67,16 @@ test.describe("FizzBuzz", () => {
     );
     await page.screenshot({ path: `${DIR}/python.png`, animations: "disabled" });
   });
+});
+
+test("Wrong Answer", async ({ page }) => {
+  await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
+  const program = solutionOf("fizzbuzz");
+  const [loop] = program.main as Array<Record<string, unknown>>;
+  if (loop) loop.start = { id: "fzb-one0-001", kind: "num", value: 0, float: false, raw: "0" };
+  await seedProgram(page, "fizzbuzz", program);
+  await page.goto("/#/p/fizzbuzz");
+  await page.getByRole("button", { name: "✓ Submit" }).click();
+  await expect(page.getByTestId("verdict")).toHaveText("Wrong Answer");
+  await page.screenshot({ path: `${DIR}/wrong.png`, animations: "disabled" });
 });

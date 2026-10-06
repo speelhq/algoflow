@@ -25,3 +25,10 @@ export function startRun(opts?: { watch?: boolean }): void {
   useEditor.getState().setTab("result");
   void useRun.getState().run(opts);
 }
+
+/** U-80: Submit judges every test on its own runner and selects `Result` (U-86). */
+export function startSubmit(): void {
+  if (!readyToRun()) return;
+  useEditor.getState().setTab("result");
+  void useTests.getState().submit();
+}

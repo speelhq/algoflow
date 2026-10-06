@@ -39,8 +39,11 @@ const say = (sentence: Narration) => t(sentence.key, sentence.params);
 /** U-63, U-81, U-65: the sentence for the run's position, or none before the first step. */
 function narration(run: RunState, program: Program): string | null {
   const { step, total, outcome, lastEvent, state, difference } = run;
+  const end = outcome && step === total ? narrateEnd(outcome, total) : null;
+  // An error is said wherever the run stops on it; a difference is said in place of the step.
+  if (end && outcome?.type === "error") return say(end);
   if (difference && step === difference.step) return say(narrateDifference(difference));
-  if (outcome && step === total) return say(narrateEnd(outcome, total));
+  if (end) return say(end);
   if (!lastEvent || !state) return null;
   return say(narrate(lastEvent, { program, state, frame: run.frame, pass: run.pass }));
 }

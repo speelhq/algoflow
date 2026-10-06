@@ -9,6 +9,7 @@ import { t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { mainVars } from "@/runtime/outcome";
 import { useRun } from "@/store/run";
+import { useTests } from "@/store/tests";
 import { valueText } from "@/ui/chart/text";
 import {
   Select,
@@ -19,6 +20,7 @@ import {
 } from "@/ui/primitives/select";
 import { caseText } from "./caseText";
 import { ResultRows } from "./ResultRows";
+import { SubmissionView } from "./SubmissionView";
 
 function CaseSelect({ challenge }: { challenge: Challenge }) {
   const caseIndex = useRun((s) => s.caseIndex);
@@ -73,7 +75,13 @@ function Variables() {
   );
 }
 
+/** U-86: the submission, while one is shown, else the run of the chosen case. */
 export function ResultTab({ challenge }: { challenge: Challenge }) {
+  const submitted = useTests((s) => s.running || s.results.length > 0);
+  return submitted ? <SubmissionView challenge={challenge} /> : <RunResult challenge={challenge} />;
+}
+
+function RunResult({ challenge }: { challenge: Challenge }) {
   const status = useRun((s) => s.status);
   const caseIndex = useRun((s) => s.caseIndex);
   const stdout = useRun((s) => s.stdout);
