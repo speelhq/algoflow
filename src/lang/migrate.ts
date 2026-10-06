@@ -3,6 +3,7 @@
 import { getNode, hasNode, keyOf } from "@/nodes";
 import { isNodeId } from "./id";
 import type { Expr, Program, Stmt, Target } from "./types";
+import { isRecord } from "./record";
 import { regionsOf, targetExprs } from "./walk";
 
 export class MigrateError extends Error {
@@ -16,10 +17,6 @@ export class MigrateError extends Error {
 }
 
 export const CURRENT_VERSION = 1;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
 
 function expectArray(value: unknown, path: string): unknown[] {
   if (!Array.isArray(value)) throw new MigrateError(path, "expected an array");

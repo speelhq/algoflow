@@ -2,8 +2,9 @@
 // submission, hint, or shown solution; `solved` is never cleared. The stored value is the
 // bare record, validated when read back, so storage never yields a malformed entry.
 import { create } from "zustand";
-import { persist, type PersistStorage } from "zustand/middleware";
-import { isRecord } from "@/i18n/flatten";
+import { persist } from "zustand/middleware";
+import { isRecord } from "@/lang/record";
+import { persistStorage } from "./storage";
 import { clamp } from "./layout";
 
 export const PROGRESS_STORAGE_KEY = "algoflow:progress";
@@ -37,7 +38,7 @@ export function solvedCount(entries: Progress, ids: readonly string[]): number {
 }
 
 function entryOf(value: unknown): ProgressEntry | undefined {
-  if (!isRecord(value) || Array.isArray(value)) return undefined;
+  if (!isRecord(value)) return undefined;
   if (value.status !== "attempted" && value.status !== "solved") return undefined;
   const hints = typeof value.hints === "number" && Number.isFinite(value.hints) ? value.hints : 0;
   return {
@@ -50,7 +51,7 @@ function entryOf(value: unknown): ProgressEntry | undefined {
 /** Validates a stored record; malformed entries are dropped. */
 export function readProgress(stored: unknown): Progress {
   const entries: Progress = {};
-  if (!isRecord(stored) || Array.isArray(stored)) return entries;
+  if (!isRecord(stored)) return entries;
   for (const [id, value] of Object.entries(stored)) {
     const entry = entryOf(value);
     if (entry) entries[id] = entry;
@@ -61,27 +62,10 @@ export function readProgress(stored: unknown): Progress {
 type Persisted = { entries: Progress };
 
 /** The key holds `Record<id, entry>` itself, with no wrapper around it. */
-const storage: PersistStorage<Persisted> = {
-  getItem(name) {
-    if (typeof localStorage === "undefined") return null;
-    try {
-      const raw = localStorage.getItem(name);
-      if (raw === null) return null;
-      const stored: unknown = JSON.parse(raw);
-      return { state: { entries: readProgress(stored) } };
-    } catch {
-      return null;
-    }
-  },
-  setItem(name, value) {
-    if (typeof localStorage !== "undefined") {
-      localStorage.setItem(name, JSON.stringify(value.state.entries));
-    }
-  },
-  removeItem(name) {
-    if (typeof localStorage !== "undefined") localStorage.removeItem(name);
-  },
-};
+const storage = persistStorage<Persisted>(
+  (stored) => ({ entries: readProgress(stored) }),
+  (state) => state.entries,
+);
 
 export const useProgress = create<ProgressState>()(
   persist(

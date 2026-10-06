@@ -21,17 +21,3 @@ export function firstLaunchTarget(
   const first = plans[0]?.problems[0];
   return worked || first === undefined ? null : routeHash({ page: "problem", id: first });
 }
-
-/** Every `localStorage` key, or none where storage is unavailable. */
-export function storedKeys(): string[] {
-  try {
-    const keys: string[] = [];
-    for (let i = 0; i < localStorage.length; i += 1) {
-      const key = localStorage.key(i);
-      if (key !== null) keys.push(key);
-    }
-    return keys;
-  } catch {
-    return [];
-  }
-}
