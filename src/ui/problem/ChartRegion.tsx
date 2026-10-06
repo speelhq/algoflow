@@ -18,7 +18,7 @@ import { PathBar } from "@/ui/chart/PathBar";
 import { Connector } from "@/ui/editor/BlockMenu";
 import { apply } from "@/ui/editor/edits";
 import { accepts, tryMove } from "@/ui/editor/moves";
-import { NodeEditor } from "@/ui/editor/NodeEditor";
+import { DiagnosticMessage, flaggedStatements, NodeEditor } from "@/ui/editor/NodeEditor";
 import { Button } from "@/ui/primitives/button";
 import { narrate, narrateDifference, narrateEnd, type Narration } from "@/ui/run/narrate";
 import { caseText } from "./caseText";
@@ -136,6 +136,20 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
   );
   const { paint: painted, note } = useRunPaint(solution ? null : chart, mine);
   const empty = mine.main.length === 0;
+  const flags = useMemo(() => {
+    const flagged = flaggedStatements(mine);
+    return {
+      owners: new Set(flagged.keys()),
+      card: (owner: NodeId) => (
+        <div className="flex flex-col gap-2">
+          {(flagged.get(owner) ?? []).map((diagnostic, i) => (
+            // oxlint-disable-next-line react/no-array-index-key -- diagnostics have no id of their own
+            <DiagnosticMessage key={i} diagnostic={diagnostic} />
+          ))}
+        </div>
+      ),
+    };
+  }, [mine]);
   const moves: Moves = useMemo(
     () => ({
       accepts: (owner, place) => accepts(useProgram.getState().program, owner, place),
@@ -187,6 +201,7 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
           note={note}
           connector={solution || running ? undefined : connector}
           moves={solution || running ? undefined : moves}
+          flags={solution || running ? undefined : flags}
           editor={
             solution || running || !selectedId || !editing ? undefined : (
               <NodeEditor id={selectedId} />

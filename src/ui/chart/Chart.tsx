@@ -2,7 +2,7 @@
 // and never from a block kind; generated nodes are grey. An HTML layer over the SVG,
 // under the same scale, holds the parts a learner interacts with (the Input nodes' menus)
 // and the note beside a node (the narration, or the message of an error or a diagnostic).
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { t } from "@/i18n/t";
 import type { NodeId } from "@/lang/types";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,8 @@ type Props = {
   connector?: (edge: ChartEdge & { place: NonNullable<ChartEdge["place"]> }) => ReactNode;
   /** Dragging a node onto a connector; absent while read-only. */
   moves?: Moves;
+  /** Statements with a diagnostic to mark with a red dot, and what hovering one shows. */
+  flags?: { owners: ReadonlySet<NodeId>; card: (owner: NodeId) => ReactNode };
 };
 
 export type Note = { node: string; text: string; tone: "narration" | "error" };
@@ -71,6 +73,7 @@ function NodeShape({ node }: { node: ChartNode }) {
 }
 
 type Look = {
+  flagged: boolean;
   outline: "selected" | "hovered" | null;
   taken: boolean;
   current: "running" | "error" | null;
@@ -189,6 +192,15 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
         </text>
       )}
       {look.mark !== undefined && <Mark node={node} mark={look.mark} />}
+      {look.flagged && (
+        <circle
+          cx={node.x + node.w - 4}
+          cy={node.y + 4}
+          r={5}
+          className="fill-destructive stroke-background stroke-2"
+          data-testid="diagnostic-dot"
+        />
+      )}
       {look.breakpoint && <BreakpointMark node={node} />}
     </g>
   );
@@ -292,6 +304,7 @@ export function Chart(props: Props) {
     connector,
     editor,
     moves,
+    flags,
   } = props;
   const edited = editor && selectedId ? nodeFor(chart.nodes, selectedId) : undefined;
   const scroller = useRef<HTMLDivElement>(null);
@@ -324,7 +337,41 @@ export function Chart(props: Props) {
     node?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [current]);
 
+  // The node with a diagnostic under the pointer shows its card until the pointer leaves both.
+  const [flagHover, setFlagHover] = useState<NodeId | null>(null);
+  const leave = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hold = useCallback((owner: NodeId | null) => {
+    if (leave.current !== null) clearTimeout(leave.current);
+    leave.current = null;
+    if (owner !== null) setFlagHover(owner);
+    else leave.current = setTimeout(() => setFlagHover(null), 250);
+  }, []);
+  useEffect(() => {
+    const element = svg.current;
+    if (!element || !flags) return;
+    const over = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const owner = target?.closest<SVGGElement>("[data-node-id]")?.dataset.nodeId;
+      hold(owner && flags.owners.has(owner) ? owner : null);
+    };
+    const out = () => hold(null);
+    element.addEventListener("mouseover", over);
+    element.addEventListener("mouseleave", out);
+    return () => {
+      element.removeEventListener("mouseover", over);
+      element.removeEventListener("mouseleave", out);
+    };
+  }, [flags, hold]);
+  const flagNode =
+    flags && flagHover !== null && flags.owners.has(flagHover)
+      ? nodeFor(chart.nodes, flagHover)
+      : undefined;
+
   const look = (node: ChartNode): Look => ({
+    flagged:
+      node.owner !== null &&
+      (flags?.owners.has(node.owner) ?? false) &&
+      nodeFor(chart.nodes, node.owner)?.id === node.id,
     outline:
       node.owner === null
         ? null
@@ -396,13 +443,24 @@ export function Chart(props: Props) {
                   />
                 ))}
               </svg>
-              {(cases || noted || connector || edited) && (
+              {(cases || noted || connector || edited || flagNode) && (
                 <div
                   className="pointer-events-none absolute top-0 left-0 origin-top-left"
                   style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
                 >
                   {note && noted && <NoteView note={note} node={noted} width={chart.width} />}
-                  {edited && (
+                  {flagNode && flags && flagHover !== null && (
+                <div
+                  className="pointer-events-auto absolute w-72 rounded-lg border bg-background p-2 shadow-md"
+                  style={{ left: flagNode.x + flagNode.w + 12, top: flagNode.y }}
+                  data-testid="diagnostic-card"
+                  onMouseEnter={() => hold(flagHover)}
+                  onMouseLeave={() => hold(null)}
+                >
+                  {flags.card(flagHover)}
+                </div>
+              )}
+              {edited && (
                     <div
                       className="absolute"
                       style={{ left: edited.x, top: edited.y, width: edited.w, height: edited.h }}
