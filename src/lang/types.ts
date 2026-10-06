@@ -160,13 +160,16 @@ export type EditName =
   | "duplicateStmt"
   | "setSlot"
   | "setExpr"
+  | "removeItem"
   | "renameName"
   | "addFunction"
   | "removeFunction"
   | "addClass"
   | "removeClass"
   | "setFields"
-  | "hoistAssign";
+  | "setParams"
+  | "hoistAssign"
+  | "resetProgram";
 
 /** A statement position. `parent` is a frame or function id, or "main". */
 export type Place = {
