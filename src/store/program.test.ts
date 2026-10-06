@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// C-13: restore from storage, else starter, else an empty main; L-55: stored shape and rejection.
+// C-13: restore from storage, else an empty main; L-55: stored shape and rejection.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Challenge } from "@/challenges/types";
 import { ast, program } from "@/nodes/testing";
@@ -7,29 +7,20 @@ import { emptyProgram, programKey, restore, useProgram } from "./program";
 
 const { assign, num, print, v } = ast;
 
-const withStarter: Challenge = {
-  id: "with-starter",
-  title: { en: "With starter" },
+const bare: Challenge = {
+  id: "bare",
+  title: { en: "Bare" },
   difficulty: "easy",
   topics: ["output"],
   description: { en: "" },
-  inputs: [{ name: "n", value: 3 }],
+  inputs: [{ name: "m", value: 7 }],
   tests: [],
   hints: [],
-  starter: { ...program([assign("x", num(0))], { inputs: [{ name: "n", value: 3 }] }), title: "S" },
-  solution: program([]),
-};
-const bare: Challenge = {
-  ...withStarter,
-  id: "bare",
-  title: { en: "Bare" },
-  inputs: [{ name: "m", value: 7 }],
-  starter: undefined,
+  solution: program([assign("x", num(0))]),
 };
 
 vi.mock("@/challenges", () => ({
-  getChallenge: (id: string | undefined) =>
-    [withStarter, bare].find((challenge) => challenge.id === id),
+  getChallenge: (id: string | undefined) => [bare].find((challenge) => challenge.id === id),
 }));
 
 describe("program store (C-13, L-53, L-55)", () => {
@@ -40,15 +31,7 @@ describe("program store (C-13, L-53, L-55)", () => {
     expect(programKey(undefined)).toBe("algoflow:program:free");
   });
 
-  it("creates from starter when nothing is stored, with challengeId and inputs set", () => {
-    const p = restore("with-starter");
-    expect(p.challengeId).toBe("with-starter");
-    expect(p.inputs).toEqual([{ name: "n", value: 3 }]);
-    expect(p.main).toEqual(withStarter.starter?.main);
-    expect(p.main).not.toBe(withStarter.starter?.main); // a copy, never the bundled object
-  });
-
-  it("creates an empty main when there is no starter", () => {
+  it("creates an empty main when nothing is stored, with challengeId and inputs set", () => {
     expect(restore("bare")).toEqual({
       ...emptyProgram(),
       challengeId: "bare",
@@ -74,8 +57,8 @@ describe("program store (C-13, L-53, L-55)", () => {
     expect(restore("bare").main).toEqual([]);
     localStorage.setItem(programKey("bare"), JSON.stringify({ version: 2 }));
     expect(restore("bare").main).toEqual([]);
-    localStorage.setItem(programKey("with-starter"), JSON.stringify({ version: 1, main: [{}] }));
-    expect(restore("with-starter").main).toEqual(withStarter.starter?.main);
+    localStorage.setItem(programKey("bare"), JSON.stringify({ version: 1, main: [{}] }));
+    expect(restore("bare").main).toEqual([]);
   });
 
   it("free mode restores algoflow:program:free without challengeId or inputs", () => {

@@ -41,7 +41,6 @@ export type Challenge = {
   hints: Localized[];
   /** U-83: one sentence shown as `What you used`. */
   takeaway?: Localized;
-  starter?: Program;
   solution: Program;
 };
 
