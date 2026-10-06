@@ -9,7 +9,7 @@ describe("break (03-nodes)", () => {
     expect(emit(program([while_(bool(true), [brk()])])).code).toBe("while True:\n    break\n");
   });
 
-  it("T-02: leaves the innermost loop only", () => {
+  it("N-10: leaves the innermost loop only", () => {
     const result = runAll(
       program([
         assign("outer", num(0)),

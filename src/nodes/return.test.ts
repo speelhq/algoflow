@@ -18,7 +18,7 @@ describe("return (03-nodes)", () => {
     );
   });
 
-  it("T-02: leaves the function from inside a loop with the value", () => {
+  it("N-10: leaves the function from inside a loop with the value", () => {
     const first: FunctionDef = {
       id: "f0000000000f",
       name: "first_even",

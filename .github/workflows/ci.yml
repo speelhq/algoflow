@@ -1,4 +1,4 @@
-# 07-plan: lint, test, check, build, test:e2e on every pull request and on every push
+# lint, test, check, build, test:e2e on every pull request and on every push
 # to main; S-04: main deploys dist/ to GitHub Pages.
 name: CI
 

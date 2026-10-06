@@ -11,7 +11,7 @@ describe("str (03-nodes)", () => {
     expect(unparse(str("it's"))).toBe('"it\'s"');
   });
 
-  it("T-02: evaluates to a str value with no events", () => {
+  it("N-10: evaluates to a str value with no events", () => {
     expect(evalExpr(str("ab"))).toMatchObject({
       value: { t: "str", v: "ab" },
       data: "ab",

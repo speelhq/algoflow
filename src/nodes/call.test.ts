@@ -20,7 +20,7 @@ describe("call (03-nodes)", () => {
     );
   });
 
-  it("T-02 / R-14: call and return events around the body; the value comes back", () => {
+  it("N-10 / R-14: call and return events around the body; the value comes back", () => {
     const stmt = assign("y", call("twice", num(3)));
     const result = runAll(program([stmt], { functions: [twice] }));
     expect(eventTypes(result.events)).toEqual(["enter", "call", "enter", "return", "write"]);
@@ -38,7 +38,7 @@ describe("call (03-nodes)", () => {
     expect(result.state.frames).toHaveLength(1);
   });
 
-  it("T-02 / L-28: a function without return yields None; depth over 200 → E_RECURSION", () => {
+  it("N-10 / L-28: a function without return yields None; depth over 200 → E_RECURSION", () => {
     const noReturn: FunctionDef = {
       id: "f0000000000g",
       name: "noop",

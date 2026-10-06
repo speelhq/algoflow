@@ -1,4 +1,4 @@
-// G-01..G-05 and T-04.
+// G-01..G-05 and G-06.
 import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
 import { NODES } from "@/nodes";
@@ -135,7 +135,7 @@ describe("G-04 errors carry a position", () => {
   });
 });
 
-// ---------------------------------------------------------------- T-04 property test
+// ---------------------------------------------------------------- G-06 property test
 
 const BUILTINS = [...NODES.values()].filter((def) => def.key.startsWith("call:"));
 const NAMES = ["a", "b", "c", "n", "total", "xs"];
@@ -196,7 +196,7 @@ function generator(seed: number) {
   return () => gen(4);
 }
 
-describe("G-05 / T-04: unparse(parse(s)) is a fixed point", () => {
+describe("G-05 / G-06: unparse(parse(s)) is a fixed point", () => {
   it("holds for 1,000 generated expressions", () => {
     const next = generator(20260903);
     for (let i = 0; i < 1000; i += 1) {

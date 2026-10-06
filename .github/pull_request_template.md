@@ -4,7 +4,7 @@
 
 ## Why
 
-<!-- The spec ids and the milestone (docs/spec/07-plan.md). -->
+<!-- The spec ids and the milestone. -->
 
 ## Closes
 

@@ -1,4 +1,4 @@
-// T-08 / U-71: every `t("...")` literal key in src/ must exist in en.json;
+// U-71: every `t("...")` literal key in src/ must exist in en.json;
 // once ja.json exists, both catalogs must have the same key set.
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";

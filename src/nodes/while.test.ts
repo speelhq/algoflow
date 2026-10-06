@@ -14,7 +14,7 @@ describe("while (03-nodes)", () => {
     ).toEqual(["while k > 0:", "    k = k - 1"]);
   });
 
-  it("T-02 / R-07: loop event after each true compare", () => {
+  it("N-10 / R-07: loop event after each true compare", () => {
     const stmt = while_(bin(">", v("k"), num(0)), [assign("k", bin("-", v("k"), num(1)))]);
     const result = runAll(program([assign("k", num(2)), stmt]));
     expect(eventTypes(result.events)).toEqual([
@@ -36,7 +36,7 @@ describe("while (03-nodes)", () => {
     expect(result.done).toMatchObject({ loops: 2 });
   });
 
-  it("T-02: break leaves the loop", () => {
+  it("N-10: break leaves the loop", () => {
     const result = runAll(
       program([
         assign("n", num(0)),

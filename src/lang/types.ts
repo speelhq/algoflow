@@ -1,5 +1,5 @@
 // 02-language.md: the Program AST, run-time values, diagnostics, and edit names.
-// No third-party imports (P-01).
+// No third-party imports.
 
 export type NodeId = string; // 12 characters from the nanoid alphabet (id.ts)
 export type Id = string;

@@ -10,7 +10,7 @@ modules and reused across programs (`docs/spec/08-modules.md`). Specs in
 `docs/spec/` are normative; every statement has an id like `L-20`, assigned
 once and never renumbered (00-conventions). Read
 `docs/spec/00-conventions.md`
-first (its Terms table names the process terms too), then the file for the
+first, then the file for the
 area you change. Cite ids in tests and commit
 messages. If a task conflicts with a spec, stop and report the conflict.
 
@@ -69,6 +69,9 @@ Data flows one way, and nothing below `src/store` depends on React:
   under `algoflow:layout`).
 - `src/ui/primitives` — shadcn components generated on Base UI (`pnpm dlx shadcn add …`);
   `src/lib/utils.ts` holds `cn()`. Everything else under `src/ui/` is hand-written.
+  A generated file is regenerated, never edited, except that `shadcn add`
+  writes `import { cn } from "cn"` and adds an npm package `cn`: correct the
+  import to `@/lib/utils` and revert `package.json` and the lockfile.
 - `src/ui` — React. The chart is an SVG flowchart with computed layout
   (`src/ui/chart/layout.ts`, U-30, N-09); node text and narration are plain
   strings from `src/ui/chart/text.ts` and `src/ui/run/narrate.ts`; variable
@@ -78,12 +81,15 @@ Data flows one way, and nothing below `src/store` depends on React:
   shim replaying `draws()`) and compares both (R-20). "Recorded" expectations are
   captured once from the solution and inserted into the file (C-20).
 
-Work proceeds by milestone (`docs/spec/07-plan.md`); a milestone closes only
-when its listed tests pass.
+Work proceeds by GitHub milestone: its description states the goal, the
+exit criterion, and, until `/milestone <M-xx>` splits it into task issues,
+the scope (a paragraph starting `Scope:`). Milestone work runs through `/milestone`, which holds its
+start, its reviews, and its pull request. The spec states what must be,
+never when.
 
 ## Verification
 
-Each block: codegen test with exact text and interpreter test (T-02).
+Each block: codegen test with exact text and interpreter test (N-10).
 Each error code: a test. `pnpm check` passes before a milestone closes.
 Report command output, not summaries of it.
 
@@ -99,30 +105,26 @@ on a conflict with the spec, or on a step that needs the user's permission
 When compacting keep: changed files, current milestone exit criteria, test
 commands, decisions not yet in `docs/spec/`.
 
-## Sources of truth (P-10..P-14)
+## Sources of truth
 
 - `docs/spec/` states what must be; the code states what is; the open GitHub
   milestone, its issues, and the open pull requests determine what is next. There
-  is no handoff file. `docs/decisions.md` holds the reasons, grouped by
-  topic; the spec states facts, never history.
-- `docs/design/` holds the design boards (P-13); read the board before
+  is no handoff file. `docs/decisions.md` holds the reasons, in one section
+  per spec file; the spec states facts, never history.
+- `docs/design/` holds the design boards; read the board before
   building its screen. `docs/design/README.md` names them and lists where
   the spec deviates; the spec takes precedence.
 - `gh issue create --body` applies no template: copy the sections of
   `.github/ISSUE_TEMPLATE/<kind>.md` into the body, and set its label with
-  `--label` and the milestone with `--milestone` (P-12).
+  `--label` and the milestone with `--milestone`. A problem's title states
+  the problem as a fact; a task's title names the work. Every finding not
+  fixed where it was found becomes an issue.
 
-A session starts with the milestone's line in `docs/spec/07-plan.md` and
-`gh issue list --milestone <M-xx>`. When you make a choice the spec does not
-cover, add the fact as a new id in the spec file for that area and the reason
+When you make a choice the spec does not cover, add the fact as a new id in the spec file for that area and the reason
 to `docs/decisions.md`, in a commit before the code. After changing a spec
 statement, search `docs/decisions.md` for its id and update, in the same
 commit, every entry that no longer matches it. An entry records why
-something was chosen, never how far the work has got. A session ends by
-opening its pull requests and filing every finding it did not fix as an
-issue. Before a milestone closes: `/code-review`, then a subagent review of
-the diff against `docs/spec` that reports only violations of an id and
-behaviour no id requires (with id and file:line); fix or file each finding.
+something was chosen, never how far the work has got.
 
 ## Commits and pull requests
 
@@ -137,8 +139,9 @@ those). A body only when the reason is not evident from the subject. No
 trailers. Never mention
 Claude, the session, or the prompt.
 
-Keep pull requests under approximately 600 changed lines; divide a milestone
-into reviewable parts. `main` takes rebase merges only, after CI. The body follows
+A milestone is one pull request from `main`; pull requests are never stacked,
+and only a part that does not depend on the rest gets its own pull request
+from `main`. `main` takes rebase merges only, after CI. The body follows
 `.github/pull_request_template.md`: What / Why (spec ids and milestone) /
 Closes (`Closes #n` per issue resolved) / Verification (the command output,
 pasted) / Screenshots (when a screen changes) / Notes (deviations, and the
@@ -164,7 +167,8 @@ issue of every review finding not resolved here).
   (`settle()` in `src/store/run.test.ts`). Stores that persist need
   `// @vitest-environment jsdom`.
 - `MessageKey` is derived from `en.json`, so a removed key fails type-check;
-  T-08 flags unknown literal keys only, never unused or template-literal ones.
+  `scripts/i18n.ts` flags unknown literal keys only, never unused or
+  template-literal ones.
 - `validate()`, `firstAssignments()`, and `nodesById()` are memoized per
   `Program` object: never mutate a `Program` in place.
 - Multi-line edit scripts: write them to the scratchpad and run the file;
@@ -184,7 +188,6 @@ issue of every review finding not resolved here).
 | `docs/spec/04-runtime.md`     | R, E, G          |
 | `docs/spec/05-ui.md`          | U, V             |
 | `docs/spec/06-challenges.md`  | C                |
-| `docs/spec/07-plan.md`        | P, T, M          |
 | `docs/spec/08-modules.md`     | D                |
 
-Skills: `/add-node`, `/add-challenge`.
+Skills: `/milestone`, `/add-node`, `/add-challenge`.

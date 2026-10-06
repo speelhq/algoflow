@@ -8,7 +8,7 @@ browser, with no server and no accounts.
 S-02 The application targets desktop browsers at 1280 px width or more;
 narrower viewports show `app.desktopOnly` and no editor.
 
-S-03 The UI is available in English and, from M-10, Japanese. The
+S-03 The UI is available in English and Japanese. The
 initial language is the browser language when a locale for it exists,
 otherwise English; the header switches it and the choice is stored in
 `localStorage`.

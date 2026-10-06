@@ -7,7 +7,7 @@ describe("var (03-nodes)", () => {
     expect(unparse(ast.v("total"))).toBe("total");
   });
 
-  it("T-02 / R-04: reads the variable and emits no event", () => {
+  it("N-10 / R-04: reads the variable and emits no event", () => {
     expect(evalExpr(ast.v("n"), { n: 7 })).toMatchObject({ data: 7, events: [] });
   });
 });

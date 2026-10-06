@@ -1,4 +1,4 @@
-// G-01..G-05: typed expression text → Expr. No third-party imports (P-01).
+// G-01..G-05: typed expression text → Expr. No third-party imports.
 import { newId } from "@/lang/id";
 import type { BinOp, Expr, Id } from "@/lang/types";
 import { NODES, hasNode, keyOf } from "@/nodes";

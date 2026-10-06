@@ -16,7 +16,7 @@ describe("if (03-nodes)", () => {
     expect(lines([if_(v("ok"), [])])).toEqual(["if ok:", "    pass"]);
   });
 
-  it("T-02: compare event, then only the taken branch runs", () => {
+  it("N-10: compare event, then only the taken branch runs", () => {
     const stmt = if_(bin("<", num(1), num(2)), [assign("x", num(1))], [assign("x", num(2))]);
     const result = runAll(program([stmt]));
     expect(eventTypes(result.events)).toEqual(["enter", "compare", "enter", "write"]);
@@ -29,12 +29,12 @@ describe("if (03-nodes)", () => {
     expect(varData(result, "x")).toBe(1);
   });
 
-  it("T-02: a false condition runs else (L-18 truthiness)", () => {
+  it("N-10: a false condition runs else (L-18 truthiness)", () => {
     const result = runAll(program([if_(num(0), [assign("x", num(1))], [assign("x", num(2))])]));
     expect(varData(result, "x")).toBe(2);
   });
 
-  it("T-02: break inside an if leaves the enclosing loop", () => {
+  it("N-10: break inside an if leaves the enclosing loop", () => {
     const loop = for_("i", num(0), num(10), [
       if_(bin("==", v("i"), num(2)), [brk()]),
       assign("last", v("i")),

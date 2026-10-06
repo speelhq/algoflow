@@ -1,4 +1,4 @@
-// 04-runtime.md R-01, R-02, R-09. No third-party imports (P-01).
+// 04-runtime.md R-01, R-02, R-09. No third-party imports.
 import type { Heap, HeapId, Id, NodeId, Value } from "@/lang/types";
 
 export type Runner = {

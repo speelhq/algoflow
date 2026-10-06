@@ -1,4 +1,4 @@
-// T-01: every validation code has a failing and a passing case; L-40, L-41, L-42.
+// L-56: every validation code has a failing and a passing case; L-40, L-41, L-42.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/nodes/testing";
 import type { Diagnostic, Program, Stmt } from "./types";

@@ -14,7 +14,7 @@ describe("assign (03-nodes)", () => {
     ]);
   });
 
-  it("T-02 / R-05: enter then write, and the variable is set", () => {
+  it("N-10 / R-05: enter then write, and the variable is set", () => {
     const stmt = assign("x", num(5));
     const result = runAll(program([stmt]));
     expect(eventTypes(result.events)).toEqual(["enter", "write"]);
@@ -28,14 +28,14 @@ describe("assign (03-nodes)", () => {
     expect(result.done).toEqual({ type: "done", steps: 2, loops: 0 });
   });
 
-  it("T-02: an index target writes the heap slot (L-20, negative from the end)", () => {
+  it("N-10: an index target writes the heap slot (L-20, negative from the end)", () => {
     const stmt = assignTo({ kind: "index", list: v("xs"), index: num(-1) }, num(9));
     const result = runAll(program([stmt], { inputs: [{ name: "xs", value: [1, 2] }] }));
     expect(varData(result, "xs")).toEqual([1, 9]);
     expect(result.events[1]).toMatchObject({ type: "write", ref: { heap: 1, index: 1 } });
   });
 
-  it("T-02: an index out of range → E_INDEX with index and length", () => {
+  it("N-10: an index out of range → E_INDEX with index and length", () => {
     const stmt = assignTo({ kind: "index", list: v("xs"), index: num(5) }, num(0));
     const result = runAll(program([stmt], { inputs: [{ name: "xs", value: [1, 2] }] }));
     expect(result.done).toMatchObject({

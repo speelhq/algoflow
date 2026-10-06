@@ -10,7 +10,7 @@ describe("bool (03-nodes)", () => {
     expect(unparse(bool(false))).toBe("False");
   });
 
-  it("T-02: evaluates to a bool value", () => {
+  it("N-10: evaluates to a bool value", () => {
     expect(evalExpr(bool(false))).toMatchObject({
       value: { t: "bool", v: false },
       data: false,

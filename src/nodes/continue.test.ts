@@ -11,7 +11,7 @@ describe("continue (03-nodes)", () => {
     );
   });
 
-  it("T-02: skips the rest of the body and moves to the next iteration", () => {
+  it("N-10: skips the rest of the body and moves to the next iteration", () => {
     const result = runAll(
       program([
         assign("n", num(0)),
@@ -22,7 +22,7 @@ describe("continue (03-nodes)", () => {
     expect(result.done).toMatchObject({ loops: 3 });
   });
 
-  it("T-02: re-evaluates a while condition", () => {
+  it("N-10: re-evaluates a while condition", () => {
     const result = runAll(
       program([
         assign("k", num(3)),

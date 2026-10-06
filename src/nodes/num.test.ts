@@ -12,7 +12,7 @@ describe("num (03-nodes)", () => {
     expect(unparse(float(2))).toBe("2.0");
   });
 
-  it("T-02: evaluates to int or float by the float flag, with no events", () => {
+  it("N-10: evaluates to int or float by the float flag, with no events", () => {
     expect(evalExpr(num(5))).toMatchObject({ value: { t: "int", v: 5 }, events: [] });
     expect(evalExpr(float(2))).toMatchObject({ value: { t: "float", v: 2 }, data: { $float: 2 } });
     expect(evalExpr(num(2.5)).value).toEqual({ t: "float", v: 2.5 });

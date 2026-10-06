@@ -1,5 +1,5 @@
-// C-02, R-20, T-06: schema, validation, interpreter, and CPython agreement for
-// every challenge (or the files given as arguments), then the i18n check (T-08).
+// C-02, R-20, C-23: schema, validation, interpreter, and CPython agreement for
+// every challenge (or the files given as arguments), then the i18n check (U-71).
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,7 +17,7 @@ import { checkPlans } from "./lib/plans";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const PLANS_FILE = "plans.json";
 const args = process.argv.slice(2);
-/** T-08, U-71: `ja` texts become mandatory in every file once the Japanese catalog exists. */
+/** C-24: `ja` texts are checked in every file once the Japanese catalog exists. */
 const requireJa = existsSync(join(root, "src", "i18n", "ja.json"));
 /** Every challenge file on disk; `plans.json` sits beside them and is checked separately (C-16). */
 const allFiles = readdirSync(join(root, "challenges"))

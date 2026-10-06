@@ -1,4 +1,4 @@
-// U-30..U-33, P-02: the chart's layout, computed and never placed by hand. Every statement
+// U-30..U-33: the chart's layout, computed and never placed by hand. Every statement
 // becomes a fragment around a vertical axis with a left and a right extent; a region stacks
 // its fragments on one axis, a branch puts its Yes column to the right of its whole No
 // column, and a loop keeps a lane on its left for the back edge and one on its right for the

@@ -1,6 +1,6 @@
 # Design boards
 
-One PNG for each current board, exported at the size of the board (P-13).
+One PNG for each current board, exported at the size of the board.
 The spec (`docs/spec/05-ui.md`) was written from these boards and takes
 precedence over them: a board shows the appearance of a screen, the spec
 states its behaviour. A screen the spec describes and no board shows is an
@@ -46,3 +46,10 @@ A board is one file of its canvas. It is rendered alone in a browser at the
 size the canvas declares for it and captured as a PNG under the name of the
 board. The canvases remain the working copies, and a changed board is
 exported again in the pull request that changes the spec it affects.
+
+| Canvas             | Holds                                         |
+| ------------------ | --------------------------------------------- |
+| [AlgoFlow Screens](https://claude.ai/artifact/SD2jKu4HfkPTh4CoeS7Tpe) | the twelve boards above |
+| [AlgoFlow Redesign](https://claude.ai/artifact/D91141RiyMCW4XLsyJk8E5) | the flowchart and loop-notation studies; no exported board |
+
+The canvases open only for their owner and the people it is shared with.

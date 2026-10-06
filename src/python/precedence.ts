@@ -1,4 +1,4 @@
-// E-05: the one operator table the parser and the emitter share. No third-party imports (P-01).
+// E-05: the one operator table the parser and the emitter share. No third-party imports.
 import type { BinOp } from "@/lang/types";
 
 export const PRECEDENCE = {

@@ -1,4 +1,4 @@
-// E-01..E-06 and T-03.
+// E-01..E-06 and E-10.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/nodes/testing";
 import { dataToPython, emit, pyString, unparse } from "./emit";
@@ -122,7 +122,7 @@ describe("emit (04-runtime)", () => {
   });
 });
 
-describe("T-03: 200-expression fixture (E-05)", () => {
+describe("E-10: 200-expression fixture (E-05)", () => {
   it("has at least 200 cases", () => {
     expect(EXPRESSION_FIXTURE.length).toBeGreaterThanOrEqual(200);
   });

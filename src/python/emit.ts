@@ -1,4 +1,4 @@
-// E-01..E-08: Program → Python text plus the NodeId → line map. No third-party imports (P-01).
+// E-01..E-08: Program → Python text plus the NodeId → line map. No third-party imports.
 import type {
   ClassDef,
   Data,
