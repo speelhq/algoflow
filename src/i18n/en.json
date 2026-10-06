@@ -309,6 +309,7 @@
     "solution": "Solution",
     "readOnly": "read-only",
     "backToMine": "Back to my chart",
+    "load": "Load into my chart",
     "addFirst": "Add your first block",
     "connector": "Add a block here",
     "connectorGlyph": "+",

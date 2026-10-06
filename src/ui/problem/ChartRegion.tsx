@@ -24,7 +24,15 @@ import { narrate, narrateDifference, narrateEnd, type Narration } from "@/ui/run
 import { caseText } from "./caseText";
 import { Transport } from "./Transport";
 
-function SolutionBand() {
+/** Replaces the learner's program with the solution, as one undoable edit. */
+function loadSolution(challenge: Challenge): void {
+  const program = useProgram.getState().program;
+  const solution = structuredClone(challenge.solution);
+  useProgram.getState().edit({ ...solution, challengeId: challenge.id, inputs: program.inputs });
+  useEditor.getState().showSolution(false);
+}
+
+function SolutionBand({ challenge }: { challenge: Challenge }) {
   const showSolution = useEditor((s) => s.showSolution);
   return (
     <div
@@ -33,9 +41,10 @@ function SolutionBand() {
     >
       <span className="font-semibold">{t("chart.solution")}</span>
       <span className="text-muted-foreground">{t("chart.readOnly")}</span>
-      <Button className="ml-auto" onClick={() => showSolution(false)}>
-        {t("chart.backToMine")}
+      <Button className="ml-auto" variant="outline" onClick={() => loadSolution(challenge)}>
+        {t("chart.load")}
       </Button>
+      <Button onClick={() => showSolution(false)}>{t("chart.backToMine")}</Button>
     </div>
   );
 }
@@ -187,7 +196,7 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
 
   return (
     <section className="flex min-w-0 flex-1 flex-col" data-testid="chart-region">
-      {solution && <SolutionBand />}
+      {solution && <SolutionBand challenge={challenge} />}
       <PathBar />
       {chart && (
         <Chart

@@ -72,10 +72,23 @@ test("Show solution draws the solution read-only; Back to my chart returns (U-22
   await expect(page.getByTestId("chart").locator("[data-chart-node]")).toHaveCount(3);
   await page.getByRole("button", { name: "Show solution" }).click();
   await expect(page.getByTestId("solution-band")).toContainText("Solution");
-  await expect(page.getByTestId("solution-band")).not.toContainText("Load into my chart");
+  await expect(page.getByTestId("connector")).toHaveCount(0);
   await expect(page.getByTestId("chart")).toContainText("Is i divisible by 15?");
   await expect(page.getByTestId("input-node")).toHaveCount(0);
   await page.getByRole("button", { name: "Back to my chart" }).click();
   await expect(page.getByTestId("solution-band")).toHaveCount(0);
+  await expect(page.getByTestId("chart").locator("[data-chart-node]")).toHaveCount(3);
+});
+
+test("Load into my chart replaces the program with the solution as one undoable edit (U-22)", async ({
+  page,
+}) => {
+  await page.goto("/#/p/fizzbuzz");
+  await page.getByRole("button", { name: "Show solution" }).click();
+  await page.getByRole("button", { name: "Load into my chart" }).click();
+  await expect(page.getByTestId("solution-band")).toHaveCount(0);
+  await expect(page.getByTestId("chart")).toContainText("Is i divisible by 15?");
+  await expect(page.getByTestId("connector").first()).toBeVisible();
+  await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByTestId("chart").locator("[data-chart-node]")).toHaveCount(3);
 });
