@@ -5,8 +5,9 @@ import { NODES, hasNode, keyOf } from "@/nodes";
 import { BINOPS, PRECEDENCE, binopsAt, isBinOp, isComparison } from "./precedence";
 
 export type ParseScope = { classes: Id[]; functions: Id[] };
+export const PARSE_CODES = ["E_PARSE_SYNTAX", "E_PARSE_CHAIN", "E_UNKNOWN_CALL"] as const;
 export type ParseError = {
-  code: "E_PARSE_SYNTAX" | "E_PARSE_CHAIN" | "E_UNKNOWN_CALL";
+  code: (typeof PARSE_CODES)[number];
   position: number;
   params?: Record<string, string>;
 };
