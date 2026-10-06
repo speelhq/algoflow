@@ -22,7 +22,82 @@
   "overrides": [
     {
       "files": ["e2e/**/*.ts"],
-      "rules": { "no-await-in-loop": "off" }
+      "rules": {
+        "no-await-in-loop": "off"
+      }
+    },
+    {
+      "files": ["src/lang/**", "src/runtime/**", "src/python/**", "src/nodes/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "*",
+                  "@*",
+                  "!.",
+                  "!./**",
+                  "!@/lang",
+                  "!@/runtime",
+                  "!@/python",
+                  "!@/nodes",
+                  "!@/lang/**",
+                  "!@/runtime/**",
+                  "!@/python/**",
+                  "!@/nodes/**",
+                  "./**/../**",
+                  "./**/..",
+                  "@/**/../**",
+                  "@/**/.."
+                ],
+                "message": "src/lang, src/runtime, src/python, and src/nodes import only each other: through @/ across folders, through ./ within one (CLAUDE.md)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/lang/**/*.test.ts",
+        "src/runtime/**/*.test.ts",
+        "src/python/**/*.test.ts",
+        "src/nodes/**/*.test.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "*",
+                  "@*",
+                  "!.",
+                  "!./**",
+                  "!@/lang",
+                  "!@/runtime",
+                  "!@/python",
+                  "!@/nodes",
+                  "!@/lang/**",
+                  "!@/runtime/**",
+                  "!@/python/**",
+                  "!@/nodes/**",
+                  "!vitest",
+                  "!@/i18n/**",
+                  "./**/../**",
+                  "./**/..",
+                  "@/**/../**",
+                  "@/**/.."
+                ],
+                "message": "src/lang, src/runtime, src/python, and src/nodes import only each other: through @/ across folders, through ./ within one (CLAUDE.md)."
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }
