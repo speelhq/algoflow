@@ -55,6 +55,12 @@ describe("checkChallengeSchema (C-01, C-03)", () => {
     );
   });
 
+  it("C-01: rejects a key the schema does not have, such as the removed starter", () => {
+    const c = valid() as unknown as Record<string, unknown>;
+    c.starter = c.solution;
+    expect(checkChallengeSchema(c, "demo").problems).toEqual(['unknown key "starter" (C-01)']);
+  });
+
   it("C-01: checks difficulty, topics (U-14), and takeaway", () => {
     const c = valid() as unknown as Record<string, unknown>;
     c.difficulty = "trivial";

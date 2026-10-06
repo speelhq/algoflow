@@ -18,6 +18,22 @@ function sameData(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
+/** C-01: the keys a challenge file may hold. */
+const KEYS: ReadonlySet<string> = new Set([
+  "id",
+  "title",
+  "difficulty",
+  "topics",
+  "description",
+  "inputs",
+  "tests",
+  "hints",
+  "takeaway",
+  "module",
+  "defines",
+  "solution",
+]);
+
 export type SchemaResult = { challenge: Challenge | null; problems: string[] };
 
 /** Validates one challenge file's JSON. `fileId` is the file name without `.json`. */
@@ -32,6 +48,8 @@ export function checkChallengeSchema(
 
   if (json.id !== fileId)
     problems.push(`id "${String(json.id)}" does not match the file name "${fileId}"`);
+  for (const key of Object.keys(json))
+    if (!KEYS.has(key)) problems.push(`unknown key "${key}" (C-01)`);
   if (!isLocalized(json.title, requireJa)) problems.push("title must be { en, ja? }");
   if (!DIFFICULTIES.some((d) => d === json.difficulty))
     problems.push(
