@@ -41,7 +41,7 @@ export function Header({ current }: { current: Tab }) {
         aria-label={t("app.help.open")}
         onClick={() => setHelp(true)}
       >
-        ?
+        {t("app.help.glyph")}
       </Button>
       <HelpDialog open={help} onOpenChange={setHelp} />
     </header>

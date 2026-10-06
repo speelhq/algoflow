@@ -20,7 +20,7 @@ export function PathBar() {
         <DropdownMenuTrigger
           render={<Button variant="outline" size="icon-sm" aria-label={t("chart.charts")} />}
         >
-          ▾
+          {t("chart.chartsGlyph")}
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuItem>{t("chart.main")}</DropdownMenuItem>

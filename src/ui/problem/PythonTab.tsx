@@ -47,7 +47,7 @@ export function PythonTab() {
   const select = useEditor((s) => s.select);
 
   const { code, map } = useMemo(() => emit(program), [program]);
-  const lines = useMemo(() => code.replace(/\n$/, "").split("\n"), [code]);
+  const lines = useMemo(() => code.replace(/\n$/, "").split("\n").map(highlight), [code]);
   const owners = useMemo(() => lineOwners(map), [map]);
   const selected = useMemo(() => linesOf(map, selectedId), [map, selectedId]);
   const active = useMemo(() => linesOf(map, running ? activeId : null), [map, running, activeId]);
@@ -95,7 +95,7 @@ export function PythonTab() {
         data-testid="python-code"
         className="rounded-lg border py-2 font-mono text-xs leading-5"
       >
-        {lines.map((text, i) => {
+        {lines.map((tokens, i) => {
           const line = i + 1;
           return (
             <li
@@ -114,7 +114,7 @@ export function PythonTab() {
                 {line}
               </span>
               <pre className="whitespace-pre">
-                {highlight(text).map((token, j) => (
+                {tokens.map((token, j) => (
                   // oxlint-disable-next-line react/no-array-index-key -- tokens are positional
                   <span key={j} className={COLOUR[token.kind]}>
                     {token.text}

@@ -11,6 +11,7 @@
     },
     "help": {
       "open": "Help",
+      "glyph": "?",
       "title": "Help",
       "close": "Close",
       "loop": {
@@ -42,6 +43,10 @@
     "start": "Start",
     "continue": "Continue",
     "more": "More problems",
+    "mark": {
+      "solved": "✓",
+      "attempted": "•"
+    },
     "status": {
       "solved": "Solved",
       "attempted": "Attempted",
@@ -73,6 +78,7 @@
     "submit": "✓ Submit",
     "running": "Running with {inputs}",
     "more": "More",
+    "moreGlyph": "⋯",
     "help": "Help",
     "assignment": "{name} = {value}",
     "tabs": {
@@ -84,7 +90,9 @@
       "label": "Panel",
       "collapse": "Collapse the panel",
       "expand": "Expand the panel",
-      "resize": "Resize the panel"
+      "resize": "Resize the panel",
+      "collapseGlyph": "«",
+      "expandGlyph": "»"
     },
     "example": "Example",
     "exampleOutput": "Output",
@@ -122,7 +130,9 @@
     "compare": "Compare with the solution",
     "nextProblem": "Next problem →",
     "planComplete": "Plan complete",
-    "backToProblems": "Back to Problems"
+    "backToProblems": "Back to Problems",
+    "chipPass": "✓ {case}",
+    "chipFail": "✗ {case}"
   },
   "playground": {
     "title": "Playground",
@@ -281,6 +291,12 @@
     "no": "No",
     "path": "Chart path",
     "charts": "Charts",
+    "chartsGlyph": "▾",
+    "inputGlyph": "▾",
+    "zoomInGlyph": "+",
+    "zoomOutGlyph": "−",
+    "markYes": "✓",
+    "markNo": "✗",
     "main": "main",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out",

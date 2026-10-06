@@ -37,7 +37,7 @@ export function TopBar({ title, children }: Props) {
           <DropdownMenuTrigger
             render={<Button variant="outline" size="icon" aria-label={t("problem.more")} />}
           >
-            ⋯
+            {t("problem.moreGlyph")}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setHelp(true)}>{t("problem.help")}</DropdownMenuItem>
