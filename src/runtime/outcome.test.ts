@@ -18,8 +18,18 @@ describe("advance and outcomeOf", () => {
     const runner = run(program([assign("x", num(2))]), {}, 1);
     const done = advance(runner, 100);
     expect(done).toEqual({ type: "done", steps: 2, loops: 0 });
-    // Further calls keep returning the same Done.
-    expect(advance(runner, 1)).toEqual(done);
+  });
+
+  it("R-22: next() after the end returns the same Done, after done and after an error", () => {
+    const finished = run(program([assign("x", num(2))]), {}, 1);
+    const done = advance(finished, 100);
+    expect(finished.next()).toBe(done);
+    expect(finished.next()).toBe(done);
+
+    const failed = run(program([print(v("missing"))]), {}, 1);
+    const error = advance(failed, 100);
+    expect(error?.type).toBe("error");
+    expect(failed.next()).toBe(error);
   });
 
   it("outcomeOf reports main variables as Data, stdout, and draws", () => {
