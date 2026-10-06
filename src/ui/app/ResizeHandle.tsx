@@ -1,4 +1,4 @@
-// U-01: drag handles between panels. The parent decides the sign of the delta.
+// U-03, P-05: drag handles between panels. The parent decides the sign of the delta.
 import { useRef, type PointerEvent } from "react";
 import { cn } from "@/lib/utils";
 
