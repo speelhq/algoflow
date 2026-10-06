@@ -82,7 +82,7 @@ export function Panel({ challenge }: { challenge: Challenge }) {
             <ProblemTab challenge={challenge} />
           </TabsContent>
           <TabsContent value="result" className="min-h-0 overflow-y-auto p-4">
-            <ResultTab />
+            <ResultTab challenge={challenge} />
           </TabsContent>
           <TabsContent value="python" className="min-h-0 overflow-y-auto p-4">
             <PythonTab />
