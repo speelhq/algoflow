@@ -1,6 +1,6 @@
-// Editor-side UI state of a page: the panel tab, the selected node and the node
-// outlined from a hovered Python line, whether the chart region shows the solution,
-// and the diagnostic Run or Submit led to. Editing joins in M-04.
+// Editor-side UI state of a page: the panel tab, the selected node (whose editor is open)
+// and the slot a click on it chose, the node outlined from a hovered Python line, whether
+// the chart region shows the solution, and the diagnostic Run or Submit led to.
 import { create } from "zustand";
 import type { Diagnostic, NodeId } from "@/lang/types";
 
@@ -9,12 +9,14 @@ export type PanelTab = "problem" | "result" | "python";
 export type EditorState = {
   tab: PanelTab;
   selectedId: NodeId | null;
+  /** The slot whose menu the editor opens with: the one clicked on the node. */
+  slot: string | null;
   hoveredId: NodeId | null;
   solution: boolean;
   /** Shown beside its node until the selection changes. */
   diagnostic: Diagnostic | null;
   setTab: (tab: PanelTab) => void;
-  select: (id: NodeId | null) => void;
+  select: (id: NodeId | null, slot?: string) => void;
   setHovered: (id: NodeId | null) => void;
   showSolution: (shown: boolean) => void;
   /** Selects `owner`, the statement holding the diagnostic, and shows its message. */
@@ -26,13 +28,15 @@ export type EditorState = {
 export const useEditor = create<EditorState>()((set) => ({
   tab: "problem",
   selectedId: null,
+  slot: null,
   hoveredId: null,
   solution: false,
   diagnostic: null,
   setTab: (tab) => set({ tab }),
-  select: (id) => set({ selectedId: id, diagnostic: null }),
+  select: (id, slot) => set({ selectedId: id, slot: slot ?? null, diagnostic: null }),
   setHovered: (id) => set({ hoveredId: id }),
   showSolution: (shown) => set({ solution: shown }),
-  lead: (owner, diagnostic) => set({ selectedId: owner, diagnostic, solution: false }),
-  open: (tab) => set({ tab, selectedId: null, hoveredId: null, solution: false, diagnostic: null }),
+  lead: (owner, diagnostic) => set({ selectedId: owner, slot: null, diagnostic, solution: false }),
+  open: (tab) =>
+    set({ tab, selectedId: null, slot: null, hoveredId: null, solution: false, diagnostic: null }),
 }));

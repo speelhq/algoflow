@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
 import { PILL, type ChartEdge, type ChartLayout, type ChartNode } from "./layout";
-import type { Paint } from "./paint";
+import { nodeFor, type Paint } from "./paint";
 import { CHART_FONT } from "./measure";
 import { fitScale, zoomStep } from "./zoom";
 
@@ -35,6 +35,8 @@ type Props = {
   paint?: Paint;
   /** A sentence beside a chart node: the narration, or an error's or a diagnostic's message. */
   note?: Note | null;
+  /** The editor anchored to the selected node; absent while nothing is edited. */
+  editor?: ReactNode;
   /** What sits on an edge that carries a place (the `+` connector); absent while read-only. */
   connector?: (edge: ChartEdge & { place: NonNullable<ChartEdge["place"]> }) => ReactNode;
 };
@@ -282,7 +284,9 @@ export function Chart(props: Props) {
     paint,
     note,
     connector,
+    editor,
   } = props;
+  const edited = editor && selectedId ? nodeFor(chart.nodes, selectedId) : undefined;
   const scroller = useRef<HTMLDivElement>(null);
   const region = useElementWidth(scroller);
   const [zoom, setZoom] = useState<number | null>(null);
@@ -378,12 +382,21 @@ export function Chart(props: Props) {
               <NodeView key={node.id} node={node} look={look(node)} />
             ))}
           </svg>
-          {(cases || noted || connector) && (
+          {(cases || noted || connector || edited) && (
             <div
               className="pointer-events-none absolute top-0 left-0 origin-top-left"
               style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
             >
               {note && noted && <NoteView note={note} node={noted} width={chart.width} />}
+              {edited && (
+                <div
+                  className="absolute"
+                  style={{ left: edited.x, top: edited.y, width: edited.w, height: edited.h }}
+                  data-testid="editor-anchor"
+                >
+                  {editor}
+                </div>
+              )}
               {connector &&
                 chart.edges.map((edge) => {
                   const { place } = edge;

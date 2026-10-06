@@ -15,6 +15,7 @@ import { measureText, useFontLoads } from "@/ui/chart/measure";
 import { nodeFor, paint, type Paint } from "@/ui/chart/paint";
 import { PathBar } from "@/ui/chart/PathBar";
 import { Connector } from "@/ui/editor/BlockMenu";
+import { NodeEditor } from "@/ui/editor/NodeEditor";
 import { Button } from "@/ui/primitives/button";
 import { narrate, narrateDifference, narrateEnd, type Narration } from "@/ui/run/narrate";
 import { caseText } from "./caseText";
@@ -150,9 +151,9 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
   // In build mode a click selects; while running it sets or clears the breakpoint,
   // pausing first; once the run has ended it returns to build mode with the node selected.
   const onSelect = useCallback(
-    (owner: NodeId) => {
+    (owner: NodeId, slot?: string) => {
       const run = useRun.getState();
-      if (run.status === "idle") return select(owner);
+      if (run.status === "idle") return select(owner, slot);
       if (run.status === "done" || run.status === "error") {
         run.stop();
         return select(owner);
@@ -178,6 +179,7 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
           paint={painted}
           note={note}
           connector={solution || running ? undefined : connector}
+          editor={solution || running || !selectedId ? undefined : <NodeEditor id={selectedId} />}
         />
       )}
       {running && !solution && <Transport />}

@@ -339,6 +339,39 @@
     }
   },
   "editor": {
+    "label": "Edit block",
+    "names": "Names",
+    "asked": "asked for by this problem",
+    "value": "Value",
+    "field": "a number, \"text\", or a name",
+    "number": "number",
+    "text": "text",
+    "buildOwn": "Build my own…",
+    "noItems": "Nothing matches",
+    "typeAsText": "Type as text",
+    "showChips": "Show chips",
+    "groupMenu": "{group} ▸",
+    "group": {
+      "variables": "Variables",
+      "values": "Values",
+      "list": "List",
+      "math": "Math",
+      "compare": "Compare",
+      "logic": "Logic",
+      "call": "Call"
+    },
+    "addValue": "+ value",
+    "removeValue": "Remove this value",
+    "removeGlyph": "×",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "chip": {
+      "delete": "Delete",
+      "unwrap": "Unwrap"
+    },
+    "fix": {
+      "hoistAssign": "Create {name} before it"
+    },
     "template": {
       "divisible": "{a} is divisible by {b}",
       "equals": "{a} equals {b}",
