@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import en from "@/i18n/en.json";
 import { flatten } from "@/i18n/flatten";
+import { CATEGORIES } from "./categories";
 import { NODES } from "./index";
 import type { ChartShape } from "./types";
 
@@ -13,6 +14,10 @@ function regionsIn(chart: ChartShape): string[] {
 }
 
 describe("registry (N-02, N-09)", () => {
+  it("N-01: the categories are in menu order", () => {
+    expect(CATEGORIES).toEqual(["basic", "control", "list", "function", "dict", "class", "math"]);
+  });
+
   it("N-02: every block has label, template, and help", () => {
     for (const key of NODES.keys()) {
       for (const part of ["label", "template", "help"]) {
