@@ -29,12 +29,21 @@ import { nameChars, nameSuggestions } from "./names";
 
 type Bag = Record<string, unknown>;
 
-/** The diagnostics a node shows: its own, but no empty slot (its placeholder is its mark). */
-export function nodeDiagnostics(program: Program, id: NodeId): Diagnostic[] {
+/** The diagnostics nodes show, by statement: no empty slot, whose placeholder is its mark. */
+export function flaggedStatements(program: Program): Map<NodeId, Diagnostic[]> {
   const owners = ownerStmts(program);
-  return validate(program).filter(
-    (d) => d.code !== "E_EMPTY_SLOT" && (owners.get(d.nodeId) ?? d.nodeId) === id,
-  );
+  const flagged = new Map<NodeId, Diagnostic[]>();
+  for (const d of validate(program)) {
+    if (d.code === "E_EMPTY_SLOT") continue;
+    const owner = owners.get(d.nodeId) ?? d.nodeId;
+    flagged.set(owner, [...(flagged.get(owner) ?? []), d]);
+  }
+  return flagged;
+}
+
+/** The diagnostics node `id` shows. */
+export function nodeDiagnostics(program: Program, id: NodeId): Diagnostic[] {
+  return flaggedStatements(program).get(id) ?? [];
 }
 
 /** Applies a diagnostic's fix; only the fixes validation names exist. */
@@ -46,7 +55,8 @@ export function applyFix(diagnostic: Diagnostic): void {
   }
 }
 
-function Message({ diagnostic }: { diagnostic: Diagnostic }) {
+/** A diagnostic's message, with the button applying its fix when it has one. */
+export function DiagnosticMessage({ diagnostic }: { diagnostic: Diagnostic }) {
   return (
     <div
       className="flex items-start gap-2 rounded-md border border-destructive/50 bg-destructive/5 p-2"
@@ -295,7 +305,7 @@ function Body({
     <div className="flex flex-col gap-3" data-testid="node-editor" data-node={stmt.id}>
       {diagnostics.map((d, i) => (
         // oxlint-disable-next-line react/no-array-index-key -- diagnostics have no id of their own
-        <Message key={i} diagnostic={d} />
+        <DiagnosticMessage key={i} diagnostic={d} />
       ))}
       <div
         className="flex flex-wrap items-center gap-1.5 text-[0.95rem]"
