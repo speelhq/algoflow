@@ -4,7 +4,7 @@
 // no block kind; what an operator or a variable is comes from what the parser makes.
 import { newId } from "@/lang/id";
 import type { BinOp, Expr, Id, Node, Program } from "@/lang/types";
-import { allExprs, childSlots, isExpr } from "@/lang/walk";
+import { allExprs, childSlots, isEmptyExpr, isExpr } from "@/lang/walk";
 import { getNode, keyOf, NODES } from "@/nodes";
 import { pyString } from "@/python/emit";
 import { isParseError, parse, type ParseError, type ParseScope } from "@/python/parse";
@@ -15,7 +15,7 @@ import { CONDITION_TEMPLATES, variableName, type ConditionTemplate } from "./tem
 type Bag = Record<string, unknown>;
 
 export type Group = "variables" | "values" | "list" | "math" | "compare" | "logic" | "call";
-/** The groups of U-52, in order. */
+/** The groups below the template row, in order. */
 export const GROUPS: readonly Group[] = [
   "variables",
   "values",
@@ -82,7 +82,7 @@ export function withBlanks(pattern: Expr): Expr {
 
 /** The first empty expression inside `expr`, pre-order, if any. */
 export function firstEmpty(expr: Expr): Expr | undefined {
-  if (expr.kind === "empty") return expr;
+  if (isEmptyExpr(expr)) return expr;
   for (const { expr: child } of childSlots(expr)) {
     const found = firstEmpty(child);
     if (found) return found;
@@ -91,7 +91,7 @@ export function firstEmpty(expr: Expr): Expr | undefined {
 }
 
 /**
- * U-53: the block made by `make` with `current` as its first operand (its first `expr` slot,
+ * The block made by `make` with `current` as its first operand (its first `expr` slot,
  * or the first item of an `exprs` slot), focusing its next empty slot; a block with no
  * expression slot replaces the chip. `focus` is null when nothing is left to fill.
  */
@@ -189,7 +189,7 @@ export function typedItem(text: string): Item | undefined {
 }
 
 /** Every operator the parser reads, by group: arithmetic, comparisons with `in`, and logic. */
-/** The operators of the Math, Compare, and Logic groups, in the order of U-52's table. */
+/** The operators of the Math, Compare, and Logic groups, in the order the menu lists them. */
 const OPERATORS: readonly BinOp[] = [
   "+",
   "-",
@@ -264,7 +264,7 @@ export function functionItems(program: Program): Item[] {
   });
 }
 
-/** The condition templates of U-50, each as its sentence and its expression with empty blanks. */
+/** The condition templates, each as its sentence and its expression with empty blanks. */
 export type TemplateItem = { template: ConditionTemplate; label: string; make: () => Expr };
 
 export function templateItems(): TemplateItem[] {

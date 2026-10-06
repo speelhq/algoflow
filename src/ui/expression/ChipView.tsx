@@ -5,7 +5,7 @@
 import type { ReactNode } from "react";
 import { t } from "@/i18n/t";
 import type { Expr, NodeId } from "@/lang/types";
-import { isExpr } from "@/lang/walk";
+import { isEmptyExpr, isExpr } from "@/lang/walk";
 import { cn } from "@/lib/utils";
 import { getNode, keyOf } from "@/nodes";
 import { exprText, nodeText, placeholder, slotText } from "@/ui/chart/text";
@@ -88,8 +88,8 @@ const chip =
 
 export function ChipView({ expr, actions }: { expr: Expr; actions: ChipActions }) {
   const open = actions.open === expr.id;
-  if (expr.kind === "empty" || !hasChildren(expr)) {
-    const empty = expr.kind === "empty";
+  const empty = isEmptyExpr(expr);
+  if (empty || !hasChildren(expr)) {
     return (
       <Menu expr={expr} actions={actions}>
         <button
@@ -126,7 +126,7 @@ export function ChipView({ expr, actions }: { expr: Expr; actions: ChipActions }
               <span key={key} className="inline-flex items-center gap-1">
                 {piece.list.map((item, j) => (
                   <span key={item.id} className="inline-flex items-center gap-1">
-                    {j > 0 && <span>,</span>}
+                    {j > 0 && <span>{t("editor.listSeparator")}</span>}
                     <ChipView expr={item} actions={actions} />
                   </span>
                 ))}

@@ -2,7 +2,7 @@
 // and never from a block kind; generated nodes are grey. An HTML layer over the SVG,
 // under the same scale, holds the parts a learner interacts with (the Input nodes' menus)
 // and the note beside a node (the narration, or the message of an error or a diagnostic).
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/i18n/t";
 import type { NodeId } from "@/lang/types";
 import { cn } from "@/lib/utils";
@@ -386,11 +386,15 @@ export function Chart(props: Props) {
       ? nodeFor(chart.nodes, flagHover)
       : undefined;
 
+  // The node that carries each flagged statement's dot.
+  const flaggedNodes = useMemo(
+    () =>
+      new Set([...(flags?.owners ?? [])].flatMap((owner) => nodeFor(chart.nodes, owner)?.id ?? [])),
+    [flags, chart],
+  );
+
   const look = (node: ChartNode): Look => ({
-    flagged:
-      node.owner !== null &&
-      (flags?.owners.has(node.owner) ?? false) &&
-      nodeFor(chart.nodes, node.owner)?.id === node.id,
+    flagged: flaggedNodes.has(node.id),
     outline:
       node.owner === null
         ? null

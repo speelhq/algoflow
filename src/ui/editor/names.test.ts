@@ -27,5 +27,6 @@ describe("name suggestions (U-41)", () => {
   it("U-41: a name input keeps only the characters of L-01", () => {
     expect(nameChars("Total Sum-1_x")).toBe("otalum1_x");
     expect(nameChars("i")).toBe("i");
+    expect(nameChars("1x2")).toBe("x2");
   });
 });

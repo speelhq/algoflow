@@ -6,7 +6,7 @@ import { fillPlaceholders, t, type MessageKey } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Node, Program, Target, Value } from "@/lang/types";
 import { firstAssignments } from "@/lang/validate";
-import { isExpr } from "@/lang/walk";
+import { isEmptyExpr, isExpr } from "@/lang/walk";
 import { getNode, hasNode, keyOf } from "@/nodes";
 import type { NodeDef, Side } from "@/nodes/types";
 import { parenthesise, writeTarget } from "@/python/emit";
@@ -22,7 +22,7 @@ export function nodeText(key: string, part: string, params?: Record<string, stri
 
 /** A template with every `{slot}` written as `…`. */
 export function blankTemplate(template: string): string {
-  return template.replace(/\{\w+\}/g, "…");
+  return template.replace(/\{\w+\}/g, t("chart.blank"));
 }
 
 export function capitalise(text: string): string {
@@ -53,9 +53,13 @@ function isEmptySlot(node: Node, def: NodeDef, name: string): boolean {
   const value = (node as unknown as Bag)[name];
   switch (slot?.role) {
     case "expr":
-      return isExpr(value) && value.kind === "empty";
+      return isEmptyExpr(value);
     case "exprs":
-      return Array.isArray(value) && value.every((item) => isExpr(item) && item.kind === "empty");
+      // A list with no item is empty only where the slot is required.
+      return (
+        Array.isArray(value) &&
+        (value.length === 0 ? slot?.required === true : value.every(isEmptyExpr))
+      );
     case "id":
       return value === "";
     case "target":
@@ -218,7 +222,7 @@ export function questionParts(node: Node): Part[] {
   const slot = def.slots.find((s) => s.role === "expr")?.name;
   const condition = conditionOf(node);
   if (!slot || !condition) return [];
-  if (condition.kind === "empty") return [{ text: placeholder(), slot, empty: true }];
+  if (isEmptyExpr(condition)) return [{ text: placeholder(), slot, empty: true }];
   return [{ text: questionText(condition), slot }];
 }
 

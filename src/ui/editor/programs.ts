@@ -16,7 +16,7 @@ export function startOver(): void {
   apply(resetProgram);
 }
 
-/** An input as the assignment E-03 writes for it: `name = <value>`. */
+/** An input as the emitter writes it: `name = <value>`. */
 function inputAssignment(input: Input): Stmt | undefined {
   const value = parse(dataToPython(input.value));
   if (isParseError(value)) return undefined;

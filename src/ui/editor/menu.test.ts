@@ -64,6 +64,8 @@ describe("block menu (U-40)", () => {
     expect(found.flatMap((group) => group.entries.map((e) => e.id))).not.toContain("print");
     expect(searchMenu(groups, "  ")).toBe(groups);
     expect(searchMenu(groups, "zzz")).toEqual([]);
+    // The template text is not searched: `#` is in no label or help.
+    expect(searchMenu(groups, "#")).toEqual([]);
   });
 
   it("U-40: each created block is a fresh statement", () => {

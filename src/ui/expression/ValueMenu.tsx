@@ -1,10 +1,11 @@
 // An expression slot's menu, for the chip it is open on: one field taking a number, a quoted
 // text, or letters that filter the items below; a template row (the condition templates for a
-// condition slot, else the visible variables and the values); the groups of U-52; and
+// condition slot, else the visible variables and the values); the groups of blocks; and
 // `Type as text`, which parses the slot's text on Enter or blur.
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { errorText, t, type MessageKey } from "@/i18n/t";
 import type { Expr, Id, Program } from "@/lang/types";
+import { isEmptyExpr } from "@/lang/walk";
 import { cn } from "@/lib/utils";
 import { isParseError } from "@/python/parse";
 import { unparse } from "@/python/emit";
@@ -52,9 +53,12 @@ const pill =
   "inline-flex h-7 cursor-pointer items-center rounded-full border px-2.5 text-sm whitespace-nowrap hover:bg-muted";
 
 function TextMode({ program, root, typed }: Pick<Props, "program" | "root" | "typed">) {
-  const [text, setText] = useState(root.kind === "empty" ? "" : unparse(root));
+  const initial = isEmptyExpr(root) ? "" : unparse(root);
+  const [text, setText] = useState(initial);
   const [error, setError] = useState<{ position: number; message: string } | null>(null);
   const commit = () => {
+    // Leaving the field unchanged, as toggling back to chips does, changes nothing.
+    if (text === initial) return;
     const result = parseText(text, program);
     if (isParseError(result)) {
       setError({
@@ -199,7 +203,7 @@ export function ValueMenu(props: Props) {
                       data-template={item.template.name}
                       onClick={() => template(item.make)}
                     >
-                      {t(item.template.key, { a: "□", b: "□" })}
+                      {t(item.template.key, { a: t("editor.blank"), b: t("editor.blank") })}
                     </button>
                   ))
                 : [
@@ -249,6 +253,16 @@ export function ValueMenu(props: Props) {
                     {t("editor.groupMenu", { group: t(`editor.group.${group}` as MessageKey) })}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-auto min-w-40">
+                    {group === "values" && (
+                      <>
+                        <DropdownMenuItem onClick={() => fill("0")}>
+                          {t("editor.number")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => fill('"')}>
+                          {t("editor.text")}
+                        </DropdownMenuItem>
+                      </>
+                    )}
                     {members.map((item) => (
                       <DropdownMenuItem
                         key={item.id}

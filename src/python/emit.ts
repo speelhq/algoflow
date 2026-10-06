@@ -57,7 +57,7 @@ export function dataToPython(data: Data): string {
 
 // ---------------------------------------------------------------- expression context
 
-/** `text`, the text of `child`, in parentheses where E-05 needs them under a parent of `parent`. */
+/** `text`, the text of `child`, in parentheses where the operator table needs them under `parent`. */
 export function parenthesise(child: Expr, text: string, parent: number, side: Side): string {
   const own = getNode(keyOf(child)).precedence?.(child) ?? PRECEDENCE.atom;
   return needsParens(own, parent, side) ? `(${text})` : text;
