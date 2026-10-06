@@ -1020,7 +1020,7 @@ itself instead.
 **The end-to-end tests load a solution through storage**. C-13's restore path
 places a finished program on the page in one step; building each one through
 the `+` menu would make every test of running or submitting depend on the
-editor, which the editing tests and the M-04 exit test cover once. A
+editor, which the editing tests and the build of FizzBuzz from an empty chart cover. A
 development-only affordance would be untested UI.
 
 ## Process
