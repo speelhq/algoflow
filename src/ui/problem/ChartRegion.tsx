@@ -123,6 +123,7 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
   const mine = useProgram((s) => s.program);
   const solution = useEditor((s) => s.solution);
   const selectedId = useEditor((s) => s.selectedId);
+  const editing = useEditor((s) => s.editing);
   const hoveredId = useEditor((s) => s.hoveredId);
   const select = useEditor((s) => s.select);
   const caseIndex = useRun((s) => s.caseIndex);
@@ -179,7 +180,11 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
           paint={painted}
           note={note}
           connector={solution || running ? undefined : connector}
-          editor={solution || running || !selectedId ? undefined : <NodeEditor id={selectedId} />}
+          editor={
+            solution || running || !selectedId || !editing ? undefined : (
+              <NodeEditor id={selectedId} />
+            )
+          }
         />
       )}
       {running && !solution && <Transport />}

@@ -76,7 +76,7 @@ export function Connector({ place, first }: { place: Place; first: boolean }) {
           render={
             <button
               type="button"
-              aria-label={first ? t("chart.addFirst") : t("chart.connector")}
+              aria-label={t("chart.connector")}
               data-testid="connector"
               data-place={`${place.parent}/${place.slot}/${place.index}`}
               className="flex size-[18px] cursor-pointer items-center justify-center rounded-full border border-dashed border-selection bg-background text-xs leading-none text-selection hover:bg-selection/10"
