@@ -134,10 +134,6 @@ function directly against a temporary fixture directory.
 
 ## Scripts and CI
 
-**`pnpm check` runs only `scripts/i18n.ts` until M-01**. `scripts/check.ts`
-(C-02, R-20) does not exist yet; M-01 prepends it. Python setup in CI is
-deferred to the same milestone (the workflow marks the location).
-
 **`VITE_BASE`** (P-07). Project Pages serve from `/<repo>/`; a build with
 `base: "/"` would return 404 for every asset. Reading the value from the
 environment keeps local builds at `/` and lets CI derive it from
