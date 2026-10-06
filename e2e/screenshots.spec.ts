@@ -37,6 +37,19 @@ test.describe("FizzBuzz", () => {
     await page.screenshot({ path: `${DIR}/solution.png`, animations: "disabled" });
   });
 
+  test("Run", async ({ page }) => {
+    await page.goto("/#/p/fizzbuzz");
+    await page.getByRole("button", { name: "▶ Run" }).click();
+    await page.getByRole("button", { name: "❚❚ Pause" }).click();
+    await page.locator('[data-chart-node="fzb-if03-001"]').click();
+    for (let pass = 0; pass < 3; pass += 1) {
+      await page.getByRole("button", { name: "Skip ▶▶" }).click();
+      await expect(page.getByTestId("variables")).toContainText(`i = ${pass + 1}`);
+    }
+    await expect(page.getByTestId("narration")).toHaveText("Checking i is divisible by 3");
+    await page.screenshot({ path: `${DIR}/run.png`, animations: "disabled" });
+  });
+
   test("Python tab", async ({ page }) => {
     await page.goto("/#/p/fizzbuzz");
     await page.getByTestId("tab-python").click();
