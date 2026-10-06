@@ -1,5 +1,7 @@
+// @vitest-environment jsdom
 // U-01: the hash routes of the six pages; U-07: anything else shows the Problems page.
 import { describe, expect, it } from "vitest";
+import { PLAYGROUND_KEY } from "@/store/playground";
 import { parseRoute, resolveRoute, routeHash, type Route } from "./route";
 
 describe("routes (U-01)", () => {
@@ -41,5 +43,15 @@ describe("unknown routes (U-07)", () => {
   it("shows Problems for a problem id with no challenge", () => {
     expect(resolveRoute("#/p/nope")).toEqual({ page: "problems" });
     expect(resolveRoute("#/p/fizzbuzz")).toEqual({ page: "problem", id: "fizzbuzz" });
+  });
+
+  it("U-07: shows Problems for a Playground id the Playground does not list", () => {
+    localStorage.setItem(PLAYGROUND_KEY, JSON.stringify({ "play-abcdefghijkl": { edited: 1 } }));
+    expect(resolveRoute("#/play/play-abcdefghijkl")).toEqual({
+      page: "program",
+      id: "play-abcdefghijkl",
+    });
+    expect(resolveRoute("#/play/play-zzzzzzzzzzzz")).toEqual({ page: "problems" });
+    localStorage.clear();
   });
 });

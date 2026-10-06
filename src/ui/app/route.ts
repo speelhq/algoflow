@@ -1,7 +1,8 @@
-// The six pages and their hash routes; a hash that names nothing, or a problem
-// id with no challenge, shows the Problems page.
+// The six pages and their hash routes; a hash that names nothing, a problem id with no
+// challenge, or a Playground id the Playground does not list, shows the Problems page.
 import { useMemo, useSyncExternalStore } from "react";
 import { getChallenge } from "@/challenges";
+import { isListed } from "@/store/playground";
 
 export type Route =
   | { page: "problems" }
@@ -38,10 +39,12 @@ export function parseRoute(hash: string): Route {
   return PROBLEMS;
 }
 
-/** As `parseRoute`, with a problem id that names no challenge sent to Problems. */
+/** As `parseRoute`, with an id that names no challenge or no Playground program sent to Problems. */
 export function resolveRoute(hash: string): Route {
   const route = parseRoute(hash);
-  return route.page === "problem" && !getChallenge(route.id) ? PROBLEMS : route;
+  if (route.page === "problem" && !getChallenge(route.id)) return PROBLEMS;
+  if (route.page === "program" && !isListed(route.id)) return PROBLEMS;
+  return route;
 }
 
 export function routeHash(route: Route): string {

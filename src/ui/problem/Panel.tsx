@@ -1,4 +1,5 @@
-// The left region: the `Problem`, `Result`, and `Python` tabs, resizable
+// The left region: the `Problem`, `Result`, and `Python` tabs (no `Problem` without a
+// challenge), resizable
 // from 280 px to half the viewport, collapsible to a 40 px rail; width and state persist.
 import type { Challenge } from "@/challenges";
 import { t } from "@/i18n/t";
@@ -18,7 +19,8 @@ function isPanelTab(value: unknown): value is PanelTab {
   return TABS.some((tab) => tab === value);
 }
 
-export function Panel({ challenge }: { challenge: Challenge }) {
+export function Panel({ challenge }: { challenge?: Challenge }) {
+  const tabs = challenge ? TABS : TABS.filter((name) => name !== "problem");
   const tab = useEditor((s) => s.tab);
   const setTab = useEditor((s) => s.setTab);
   const panel = useLayout((s) => s.panel);
@@ -62,7 +64,7 @@ export function Panel({ challenge }: { challenge: Challenge }) {
         >
           <div className="flex h-11 shrink-0 items-center border-b px-3">
             <TabsList variant="line">
-              {TABS.map((name) => (
+              {tabs.map((name) => (
                 <TabsTrigger key={name} value={name} data-testid={`tab-${name}`}>
                   {t(`problem.tabs.${name}`)}
                 </TabsTrigger>
@@ -78,9 +80,11 @@ export function Panel({ challenge }: { challenge: Challenge }) {
               {t("problem.panel.collapseGlyph")}
             </Button>
           </div>
-          <TabsContent value="problem" className="min-h-0 overflow-y-auto p-4">
-            <ProblemTab challenge={challenge} />
-          </TabsContent>
+          {challenge && (
+            <TabsContent value="problem" className="min-h-0 overflow-y-auto p-4">
+              <ProblemTab challenge={challenge} />
+            </TabsContent>
+          )}
           <TabsContent value="result" className="min-h-0 overflow-y-auto p-4">
             <ResultTab challenge={challenge} />
           </TabsContent>

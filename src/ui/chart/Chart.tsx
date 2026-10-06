@@ -450,17 +450,17 @@ export function Chart(props: Props) {
                 >
                   {note && noted && <NoteView note={note} node={noted} width={chart.width} />}
                   {flagNode && flags && flagHover !== null && (
-                <div
-                  className="pointer-events-auto absolute w-72 rounded-lg border bg-background p-2 shadow-md"
-                  style={{ left: flagNode.x + flagNode.w + 12, top: flagNode.y }}
-                  data-testid="diagnostic-card"
-                  onMouseEnter={() => hold(flagHover)}
-                  onMouseLeave={() => hold(null)}
-                >
-                  {flags.card(flagHover)}
-                </div>
-              )}
-              {edited && (
+                    <div
+                      className="pointer-events-auto absolute w-72 rounded-lg border bg-background p-2 shadow-md"
+                      style={{ left: flagNode.x + flagNode.w + 12, top: flagNode.y }}
+                      data-testid="diagnostic-card"
+                      onMouseEnter={() => hold(flagHover)}
+                      onMouseLeave={() => hold(null)}
+                    >
+                      {flags.card(flagHover)}
+                    </div>
+                  )}
+                  {edited && (
                     <div
                       className="absolute"
                       style={{ left: edited.x, top: edited.y, width: edited.w, height: edited.h }}

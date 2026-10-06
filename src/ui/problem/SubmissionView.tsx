@@ -9,10 +9,12 @@ import { firstDifference, resultRows } from "@/challenges/rows";
 import { errorText, localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor";
+import { useProgram } from "@/store/program";
 import { statusOf, useProgress } from "@/store/progress";
 import { useRun } from "@/store/run";
 import { useTests } from "@/store/tests";
 import { navigate, routeHash } from "@/ui/app/route";
+import { openInPlayground } from "@/ui/editor/programs";
 import { Button, buttonVariants } from "@/ui/primitives/button";
 import { Markdown } from "@/ui/text/MarkdownText";
 import { startRun } from "./actions";
@@ -144,6 +146,14 @@ function Accepted({ challenge }: { challenge: Challenge }) {
           }}
         >
           {t("result.compare")}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() =>
+            openInPlayground(useProgram.getState().program, localized(challenge.title))
+          }
+        >
+          {t("problem.openInPlayground")}
         </Button>
         <Next id={challenge.id} />
       </div>

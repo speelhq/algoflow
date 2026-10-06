@@ -1,7 +1,7 @@
 // U-91: one screenshot per screen state, saved under e2e/screenshots/ for review; compared
 // with baselines from M-10. Drawn at 1280 × 800, the size of the boards in docs/design/.
 import { expect, test } from "@playwright/test";
-import { seedProgram, seedProgress, solutionOf } from "./seed";
+import { programWith, seedProgram, seedProgress, solutionOf } from "./seed";
 
 const DIR = "e2e/screenshots";
 
@@ -79,4 +79,26 @@ test("Wrong Answer", async ({ page }) => {
   await page.getByRole("button", { name: "✓ Submit" }).click();
   await expect(page.getByTestId("verdict")).toHaveText("Wrong Answer");
   await page.screenshot({ path: `${DIR}/wrong.png`, animations: "disabled" });
+});
+
+test("Playground", async ({ page }) => {
+  await seedProgress(page, {});
+  const programs = [
+    ["play-fizzbuzz00001", "FizzBuzz up to 100", "2026-10-07T14:05:00"],
+    ["play-squares000001", "Sum of squares", "2026-10-06T18:40:00"],
+    ["play-untitled00001", "Untitled", "2026-10-06T09:12:00"],
+    ["play-hello00000001", "Hello, everyone", "2026-10-03T16:58:00"],
+  ] as const;
+  const index: Record<string, { edited: number }> = {};
+  for (const [id, title, time] of programs) {
+    index[id] = { edited: new Date(time).getTime() };
+    await seedProgram(page, id, { ...programWith([]), title });
+  }
+  await page.addInitScript(
+    (value) => localStorage.setItem("algoflow:playground", value),
+    JSON.stringify(index),
+  );
+  await page.goto("/#/play");
+  await expect(page.getByTestId("playground-row")).toHaveCount(4);
+  await page.screenshot({ path: `${DIR}/playground.png`, animations: "disabled" });
 });

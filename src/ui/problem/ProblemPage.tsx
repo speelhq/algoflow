@@ -3,12 +3,14 @@
 // the first tab.
 import { useEffect } from "react";
 import { getChallenge, type Challenge } from "@/challenges";
-import { localized } from "@/i18n/t";
+import { localized, t } from "@/i18n/t";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
+import { openInPlayground, startOver } from "@/ui/editor/programs";
 import { useEditKeys } from "@/ui/editor/useEditKeys";
 import { useTitle } from "@/ui/hooks/useTitle";
+import { DropdownMenuItem } from "@/ui/primitives/dropdown-menu";
 import { ChartRegion } from "./ChartRegion";
 import { Panel } from "./Panel";
 import { RunControls } from "./RunControls";
@@ -18,6 +20,16 @@ import { useRunKeys } from "./useRunKeys";
 export function ProblemPage({ id }: { id: string }) {
   const challenge = getChallenge(id);
   return challenge ? <Problem challenge={challenge} /> : null;
+}
+
+/** `⋯`'s `Start over`, which nothing does while the program runs. */
+export function StartOverItem() {
+  const running = useRun((s) => s.status !== "idle");
+  return (
+    <DropdownMenuItem disabled={running} onClick={startOver}>
+      {t("problem.startOver")}
+    </DropdownMenuItem>
+  );
 }
 
 function Problem({ challenge }: { challenge: Challenge }) {
@@ -34,7 +46,20 @@ function Problem({ challenge }: { challenge: Challenge }) {
 
   return (
     <div className="flex h-full flex-col" data-testid="problem-page">
-      <TopBar title={title}>
+      <TopBar
+        back="problems"
+        title={<h1 className="truncate font-semibold">{title}</h1>}
+        menu={
+          <>
+            <DropdownMenuItem
+              onClick={() => openInPlayground(useProgram.getState().program, title)}
+            >
+              {t("problem.openInPlayground")}
+            </DropdownMenuItem>
+            <StartOverItem />
+          </>
+        }
+      >
         <RunControls challenge={challenge} />
       </TopBar>
       <div className="flex min-h-0 flex-1">

@@ -79,18 +79,23 @@ function Variables() {
 }
 
 /** The submission, while one is shown, else the run of the chosen case. */
-export function ResultTab({ challenge }: { challenge: Challenge }) {
+export function ResultTab({ challenge }: { challenge?: Challenge }) {
   const submitted = useTests((s) => s.running || s.results.length > 0);
-  return submitted ? <SubmissionView challenge={challenge} /> : <RunResult challenge={challenge} />;
+  return submitted && challenge ? (
+    <SubmissionView challenge={challenge} />
+  ) : (
+    <RunResult challenge={challenge} />
+  );
 }
 
-function RunResult({ challenge }: { challenge: Challenge }) {
+/** A Playground program has no case selector and no `Expected`. */
+function RunResult({ challenge }: { challenge: Challenge | undefined }) {
   const status = useRun((s) => s.status);
   const caseIndex = useRun((s) => s.caseIndex);
   const stdout = useRun((s) => s.stdout);
   const state = useRun((s) => s.state);
   const verdict = useRun((s) => s.verdict);
-  const test = challenge.tests[caseIndex];
+  const test = challenge?.tests[caseIndex];
   const idle = status === "idle";
   const rows = useMemo(
     () =>
@@ -104,7 +109,7 @@ function RunResult({ challenge }: { challenge: Challenge }) {
 
   return (
     <div className="space-y-4" data-testid="result-tab">
-      <CaseSelect challenge={challenge} />
+      {challenge && <CaseSelect challenge={challenge} />}
       {idle ? <p className="text-muted-foreground">{t("result.empty")}</p> : <Variables />}
       {verdict && (
         <p

@@ -1,0 +1,72 @@
+// A Playground program: the Problem page without the `Problem` tab, the Input nodes, and
+// Submit; its top bar has `← Playground`, an editable title, and `Export`.
+import { useEffect } from "react";
+import { t } from "@/i18n/t";
+import { useEditor } from "@/store/editor";
+import { useProgram } from "@/store/program";
+import { useRun } from "@/store/run";
+import { download } from "@/ui/app/download";
+import { apply } from "@/ui/editor/edits";
+import { exportName } from "@/ui/editor/programs";
+import { useEditKeys } from "@/ui/editor/useEditKeys";
+import { useTitle } from "@/ui/hooks/useTitle";
+import { Button } from "@/ui/primitives/button";
+import { Input } from "@/ui/primitives/input";
+import { ChartRegion } from "@/ui/problem/ChartRegion";
+import { Panel } from "@/ui/problem/Panel";
+import { StartOverItem } from "@/ui/problem/ProblemPage";
+import { RunControls } from "@/ui/problem/RunControls";
+import { TopBar } from "@/ui/problem/TopBar";
+import { useRunKeys } from "@/ui/problem/useRunKeys";
+
+function TitleField() {
+  const title = useProgram((s) => s.program.title);
+  const running = useRun((s) => s.status !== "idle");
+  return (
+    <Input
+      value={title}
+      aria-label={t("playground.titleLabel")}
+      placeholder={t("playground.untitled")}
+      disabled={running}
+      className="h-8 w-64 font-semibold"
+      data-testid="program-title"
+      onChange={(event) => {
+        const next = event.target.value;
+        apply((program) => ({ ...program, title: next }), "title");
+      }}
+    />
+  );
+}
+
+function exportProgram(): void {
+  const { program } = useProgram.getState();
+  const name = exportName(program.title, t("playground.untitled"));
+  download(name, `${JSON.stringify(program, null, 2)}\n`, "application/json");
+}
+
+export function ProgramPage({ id }: { id: string }) {
+  const title = useProgram((s) => (s.id === id ? s.program.title : ""));
+  useTitle(title || t("playground.untitled"));
+  useRunKeys();
+  useEditKeys();
+  useEffect(() => {
+    useProgram.getState().load(id);
+    useRun.getState().selectCase(0);
+    useEditor.getState().open("result");
+  }, [id]);
+
+  return (
+    <div className="flex h-full flex-col" data-testid="program-page">
+      <TopBar back="playground" title={<TitleField />} menu={<StartOverItem />}>
+        <RunControls />
+        <Button variant="outline" onClick={exportProgram}>
+          {t("playground.export")}
+        </Button>
+      </TopBar>
+      <div className="flex min-h-0 flex-1">
+        <Panel />
+        <ChartRegion />
+      </div>
+    </div>
+  );
+}

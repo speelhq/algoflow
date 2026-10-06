@@ -80,6 +80,9 @@
     "more": "More",
     "moreGlyph": "⋯",
     "help": "Help",
+    "openInPlayground": "Open in Playground",
+    "startOver": "Start over",
+    "runningAlone": "Running",
     "undo": "Undo",
     "redo": "Redo",
     "undoGlyph": "↶",
@@ -140,7 +143,20 @@
   },
   "playground": {
     "title": "Playground",
-    "stub": "Your Playground programs will be listed here."
+    "description": "Programs of your own: no problem, no inputs, no Submit. The last one you edited comes first.",
+    "new": "New",
+    "import": "Import…",
+    "importFailed": "This file is not an AlgoFlow program, so nothing was added.",
+    "empty": "No programs yet. New opens an empty one.",
+    "untitled": "Untitled",
+    "delete": "Delete",
+    "deleteTitle": "Delete “{title}”?",
+    "deleteText": "The program is removed from this browser. This cannot be undone.",
+    "cancel": "Cancel",
+    "back": "← Playground",
+    "export": "Export",
+    "titleLabel": "Program title",
+    "rows": "Playground programs"
   },
   "modules": {
     "title": "Modules",
