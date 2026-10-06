@@ -1079,6 +1079,27 @@ it, and Screenshots, because the pull requests from M-03 session 2 onward
 change screens and T-10 requires the images. A checklist was not added: the
 template asks for pasted command output, and a ticked box is an assertion.
 
+**Routes are parsed by hand** (U-01, U-07). Six hash routes with at most
+one parameter are a `parseRoute()` function and a `hashchange` subscription
+through `useSyncExternalStore`; a router dependency would bring nested
+layouts, loaders, and history modes that a hash-addressed single page does
+not use. A route that names nothing falls back to the Problems page rather
+than an error page, because every page is reachable from there.
+
+**First launch counts the learner's work, once** (U-90). The layout store
+writes `algoflow:layout` as soon as the panel is resized, so "no
+`localStorage` data" would turn false without any problem having been
+touched; progress and programs are what a learner's work leaves. The check
+runs once per load: the tutorial records nothing until its first
+submission, hint, or shown solution, so a check on every visit to the
+Problems page would send `← Problems` straight back to the tutorial.
+
+**A plan's button follows its progress** (U-12). `Start` on a plan with
+entries would hide that the learner has begun; `Continue` on a plan with no
+unsolved problem has no destination, so the button is removed rather than
+pointed at a solved problem. `More problems` is omitted while empty for the
+reason C-18 gives for plans: an empty section is inert.
+
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
 The store held a constant maximum of 480 px from the retired shell. Half the
 viewport width is not a constant, and a store that read `window.innerWidth`
