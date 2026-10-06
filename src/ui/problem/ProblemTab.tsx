@@ -6,6 +6,7 @@ import { localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor";
 import { HINTS, useProgress } from "@/store/progress";
+import { useRun } from "@/store/run";
 import { dataText } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { foldLines } from "@/ui/text/fold";
@@ -65,6 +66,8 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
   const solutionShown = useProgress((s) => s.solutionShown);
   const solution = useEditor((s) => s.solution);
   const showSolution = useEditor((s) => s.showSolution);
+  // U-27: the chart stays the run's while running.
+  const running = useRun((s) => s.status !== "idle");
   const revealed = Math.min(entry?.hints ?? 0, challenge.hints.length);
 
   return (
@@ -115,6 +118,7 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
           variant="outline"
           className={cn("ml-auto", solution && "border-ring bg-accent")}
           aria-pressed={solution}
+          disabled={running}
           onClick={() => {
             showSolution(true);
             solutionShown(id);

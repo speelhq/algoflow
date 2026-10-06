@@ -25,6 +25,8 @@ import { SubmissionView } from "./SubmissionView";
 function CaseSelect({ challenge }: { challenge: Challenge }) {
   const caseIndex = useRun((s) => s.caseIndex);
   const selectCase = useRun((s) => s.selectCase);
+  // U-32: the case stays the run's while running.
+  const running = useRun((s) => s.status !== "idle");
   const items = challenge.tests.map((test, index) => ({
     value: index,
     label: caseText(test.inputs),
@@ -37,6 +39,7 @@ function CaseSelect({ challenge }: { challenge: Challenge }) {
       <Select
         items={items}
         value={caseIndex}
+        disabled={running}
         onValueChange={(value) => typeof value === "number" && selectCase(value)}
       >
         <SelectTrigger className="font-mono text-xs" data-testid="case-select">

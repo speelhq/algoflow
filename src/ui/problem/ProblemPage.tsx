@@ -6,6 +6,7 @@ import { getChallenge, type Challenge } from "@/challenges";
 import { localized } from "@/i18n/t";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
+import { useRun } from "@/store/run";
 import { useTitle } from "@/ui/hooks/useTitle";
 import { ChartRegion } from "./ChartRegion";
 import { Panel } from "./Panel";
@@ -24,6 +25,8 @@ function Problem({ challenge }: { challenge: Challenge }) {
   useRunKeys();
   useEffect(() => {
     useProgram.getState().load(challenge.id);
+    // C-13: opening a problem selects the first test's inputs, also when it was open before.
+    useRun.getState().selectCase(0);
     useEditor.getState().open("problem");
   }, [challenge.id]);
 
