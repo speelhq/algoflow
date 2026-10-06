@@ -1151,7 +1151,9 @@ statements of the current pass, which places both ends of a diamond's `Yes`
 and `No` edges on the path whenever the diamond was entered. The diamond's
 mark says which way the check went, so a `Yes` edge is drawn as taken when
 the mark is `✓`, a `No` edge when it is `✗`, and an unlabelled edge when
-both its ends are on the path.
+both its ends are on the path. A loop that has ended has lost its mark
+(U-61), so its `No` edge is drawn as taken when the statement it leads to
+is on the path.
 
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
 The store held a constant maximum of 480 px from the retired shell. Half the
