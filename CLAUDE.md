@@ -106,11 +106,9 @@ commands, decisions not yet in `docs/spec/`.
 - `docs/design/` holds the design boards (P-13); read the board before
   building its screen. `docs/design/README.md` names them and lists where
   the spec deviates; the spec takes precedence.
-- Issues: `decision` (the spec lacks an id), `defect`, `debt`, `perf`, or no
-  label for a task; each under the milestone that needs it (P-12). A body has
-  the sections Summary, Where, Expected and actual (a `defect` only), and
-  Done when. `gh issue create --body` does not apply the template, so write
-  those sections in the body, and set the milestone with `--milestone`.
+- `gh issue create --body` applies no template: copy the sections of
+  `.github/ISSUE_TEMPLATE/<kind>.md` into the body, and set its label with
+  `--label` and the milestone with `--milestone` (P-12).
 
 A session starts with the milestone's line in `docs/spec/07-plan.md` and
 `gh issue list --milestone <M-xx>`. When you make a choice the spec does not
