@@ -1,8 +1,8 @@
 # Design boards
 
-One PNG per board of the design canvases, exported at the size of the board
-(P-13). The spec (`docs/spec/05-ui.md`) was written from these boards and
-takes precedence over them: a board shows the appearance of a screen, the spec
+One PNG for each current board, exported at the size of the board (P-13).
+The spec (`docs/spec/05-ui.md`) was written from these boards and takes
+precedence over them: a board shows the appearance of a screen, the spec
 states its behaviour. A screen the spec describes and no board shows is an
 issue labelled `decision`.
 
@@ -26,22 +26,6 @@ canvas.
 | `PythonChart.png` | 11 Python tab: a line and its block                    | U-25                     |
 | `PythonFiles.png` | 12 Python tab: a program that uses a module            | U-25, E-09               |
 
-## Canvas "AlgoFlow Redesign"
-
-The earlier canvas, eleven boards of 1200 × 780 or 1200 × 720. One board is
-exported: the study from which the loop notation of U-33 was chosen.
-
-| File               | Board title on the canvas    | Spec       |
-| ------------------ | ---------------------------- | ---------- |
-| `LoopNotation.png` | Loop notation: three options | U-33, N-09 |
-
-The other ten boards are not exported, because "AlgoFlow Screens" and the
-spec supersede them: `Problems`, `Main` (Problem: Build), `Running`, `Wrong`,
-`Cleared`, `FisherYates`, `FisherYatesRun`, `VariablesCard`, `FunctionBuild`,
-and `FunctionRun`. They show tabs named Description, Hints, and Solution, a
-floating variables card, a floating transport, a `Check` button, and
-`Is i ≤ n?`, none of which the spec retains.
-
 ## Where the spec deviates from the boards
 
 - `Accepted.png` shows placeholders for the counts of steps and loops, because
@@ -52,17 +36,9 @@ floating variables card, a floating transport, a `Check` button, and
 - `Main.png` names the first problem `Hello`; its challenge file is
   `tutorial`, and the title is the one in that file.
 - A diamond's text is the question of U-33 (`Is i divisible by 15?`),
-  regardless of the text on a board. On `LoopNotation.png` the chosen option
-  writes `Is i ≤ n?`; the generated check of a `for` is `Is i < stop?` (N-09).
+  regardless of the text on a board.
 - The boards use a hand-drawn typeface to mark them as drafts; the
   application uses the typeface of `src/ui/theme.css`.
-
-## Not drawn yet
-
-Each is an issue labelled `decision` under the milestone that needs it: the
-`Result` tab with the view switch and the `tree` view on a heap (V-06,
-before M-05); a built-in module's page with `Clone` (M-08); the path bar's
-`▾` menu open (M-06).
 
 ## Exporting
 
