@@ -1,7 +1,7 @@
 // T-10: one screenshot per screen state, saved under e2e/screenshots/ for review; compared
 // with baselines from M-10. Drawn at 1280 × 800, the size of the boards in docs/design/.
 import { expect, test } from "@playwright/test";
-import { seedProgress } from "./seed";
+import { seedProgram, seedProgress, solutionOf } from "./seed";
 
 const DIR = "e2e/screenshots";
 
@@ -15,5 +15,36 @@ test("Problems", async ({ page }) => {
   });
   await page.goto("/#/");
   await expect(page.getByTestId("problems")).toBeVisible();
-  await page.screenshot({ path: `${DIR}/problems.png` });
+  await page.screenshot({ path: `${DIR}/problems.png`, animations: "disabled" });
+});
+
+test.describe("FizzBuzz", () => {
+  test.beforeEach(async ({ page }) => {
+    await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 1, solution: false } });
+    await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  });
+
+  test("Build", async ({ page }) => {
+    await page.goto("/#/p/fizzbuzz");
+    await expect(page.getByTestId("chart")).toContainText("Is i divisible by 15?");
+    await page.screenshot({ path: `${DIR}/build.png`, animations: "disabled" });
+  });
+
+  test("Solution", async ({ page }) => {
+    await page.goto("/#/p/fizzbuzz");
+    await page.getByRole("button", { name: "Show solution" }).click();
+    await expect(page.getByTestId("solution-band")).toBeVisible();
+    await page.screenshot({ path: `${DIR}/solution.png`, animations: "disabled" });
+  });
+
+  test("Python tab", async ({ page }) => {
+    await page.goto("/#/p/fizzbuzz");
+    await page.getByTestId("tab-python").click();
+    await page.getByTestId("python-line").nth(5).click();
+    await expect(page.locator('[data-chart-node="fzb-if03-001"]')).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+    await page.screenshot({ path: `${DIR}/python.png`, animations: "disabled" });
+  });
 });
