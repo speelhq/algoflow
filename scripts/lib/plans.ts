@@ -1,6 +1,7 @@
 // Structural checks of `challenges/plans.json` (used by scripts/check.ts).
 import type { Plan } from "@/challenges/types";
-import { isLocalized, isRecord } from "./challenge";
+import { isRecord } from "@/lang/record";
+import { isLocalized } from "./challenge";
 
 export type PlansResult = { plans: Plan[] | null; problems: string[] };
 

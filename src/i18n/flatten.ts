@@ -1,9 +1,6 @@
 // Catalog keys are the dotted paths of en.json's string leaves.
 // Dependency-free so both t.ts and scripts/lib/i18n-check.ts share it.
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object";
-}
+import { isRecord } from "@/lang/record";
 
 export function flatten(
   value: unknown,

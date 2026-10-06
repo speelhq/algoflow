@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { getChallenge } from "@/challenges";
 import { migrate } from "@/lang/migrate";
 import type { Program } from "@/lang/types";
+import { readStored } from "./storage";
 
 export const FREE = "free";
 export const PROGRAM_KEY_PREFIX = "algoflow:program:";
@@ -18,21 +19,21 @@ export function emptyProgram(title = ""): Program {
 }
 
 /** The stored value is the raw Program JSON; anything migrate() rejects is ignored. */
-function readStored(key: string): Program | undefined {
-  try {
-    if (typeof localStorage === "undefined") return undefined;
-    const raw = localStorage.getItem(key);
-    return raw === null ? undefined : migrate(JSON.parse(raw));
-  } catch {
-    return undefined;
-  }
+function readProgram(key: string): Program | undefined {
+  return readStored(key, (stored) => {
+    try {
+      return migrate(stored);
+    } catch {
+      return undefined;
+    }
+  });
 }
 
 /** Storage, else an empty main; `challengeId` and `inputs` follow the challenge. */
 export function restore(id: string): Program {
   const challenge = id === FREE ? undefined : getChallenge(id);
   const key = programKey(challenge?.id);
-  const stored = readStored(key);
+  const stored = readProgram(key);
   if (!challenge) {
     const { challengeId: _ignored, ...free } = stored ?? emptyProgram();
     return { ...free, inputs: [] };

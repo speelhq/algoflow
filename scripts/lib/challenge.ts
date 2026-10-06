@@ -2,11 +2,8 @@
 // The schema types live in src/challenges/types.ts.
 import { DIFFICULTIES, TOPICS, type Challenge, type Localized } from "@/challenges/types";
 import { migrate } from "@/lang/migrate";
+import { isRecord } from "@/lang/record";
 import { isValidName, validate } from "@/lang/validate";
-
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
-}
 
 export function isLocalized(value: unknown, requireJa: boolean): value is Localized {
   if (!isRecord(value) || typeof value.en !== "string") return false;

@@ -3,7 +3,8 @@
 // back, so storage never yields an out-of-range width or a non-boolean flag.
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { isRecord } from "@/i18n/flatten";
+import { isRecord } from "@/lang/record";
+import { persistStorage } from "./storage";
 
 export const LAYOUT_STORAGE_KEY = "algoflow:layout";
 
@@ -44,16 +45,28 @@ function size(value: unknown, fallback: number, min: number, max: number): numbe
     : fallback;
 }
 
-/** Validates a persisted snapshot; unknown or malformed fields fall back to defaults. */
-export function mergePersisted(persisted: unknown, current: LayoutState): LayoutState {
+type Persisted = Pick<LayoutState, "panel" | "collapsed" | "speed">;
+
+/** A snapshot's fields, each validated; unknown or malformed fields fall back to defaults. */
+function readLayout(persisted: unknown): Persisted {
   const stored = isRecord(persisted) ? persisted : {};
   return {
-    ...current,
     panel: size(stored.panel, PANEL.default, PANEL.min, Number.MAX_SAFE_INTEGER),
     collapsed: typeof stored.collapsed === "boolean" ? stored.collapsed : false,
     speed: size(stored.speed, SPEED.default, SPEED.min, SPEED.max),
   };
 }
+
+/** Validates a persisted snapshot; unknown or malformed fields fall back to defaults. */
+export function mergePersisted(persisted: unknown, current: LayoutState): LayoutState {
+  return { ...current, ...readLayout(persisted) };
+}
+
+/** The key holds `{ state, version: 1 }`, as zustand's default storage wrote it. */
+const storage = persistStorage<Persisted>(
+  (stored) => (isRecord(stored) ? readLayout(stored.state) : undefined),
+  (state) => ({ state, version: 1 }),
+);
 
 export const useLayout = create<LayoutState>()(
   persist(
@@ -73,6 +86,7 @@ export const useLayout = create<LayoutState>()(
     {
       name: LAYOUT_STORAGE_KEY,
       version: 1,
+      storage,
       partialize: ({ panel, collapsed, speed }) => ({ panel, collapsed, speed }),
       merge: mergePersisted,
     },

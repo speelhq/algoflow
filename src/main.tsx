@@ -3,7 +3,8 @@ import { createRoot } from "react-dom/client";
 import { PLANS } from "@/challenges";
 import { t } from "@/i18n/t";
 import { App } from "@/ui/app/App";
-import { firstLaunchTarget, storedKeys } from "@/ui/app/firstLaunch";
+import { storedKeys } from "@/store/storage";
+import { firstLaunchTarget } from "@/ui/app/firstLaunch";
 import "@/ui/theme.css";
 
 const root = document.getElementById("root");
