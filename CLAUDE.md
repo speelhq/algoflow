@@ -7,12 +7,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Block-based algorithm learning tool (browser only; English UI, Japanese added last)
 whose blocks are a fixed Python subset; functions and classes can be moved into
 modules and reused across programs (`docs/spec/08-modules.md`). Specs in
-`docs/spec/` are normative; every statement has an id like `L-20`, assigned
-once and never renumbered (00-conventions). Read
+`docs/spec/` are normative; every statement has an id like `L-20`, never
+renumbered (00-conventions). Read
 `docs/spec/00-conventions.md`
 first, then the file for the
-area you change. Cite ids in tests and commit
-messages. If a task conflicts with a spec, stop and report the conflict.
+area you change. Tests name the ids they verify; code comments and commit
+messages cite none. If a task conflicts with a spec, stop and report the conflict.
 
 ## Commands
 
