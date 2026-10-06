@@ -67,7 +67,40 @@
     }
   },
   "problem": {
-    "back": "← Problems"
+    "back": "← Problems",
+    "more": "More",
+    "help": "Help",
+    "assignment": "{name} = {value}",
+    "tabs": {
+      "problem": "Problem",
+      "result": "Result",
+      "python": "Python"
+    },
+    "panel": {
+      "label": "Panel",
+      "collapse": "Collapse the panel",
+      "expand": "Expand the panel",
+      "resize": "Resize the panel"
+    },
+    "example": "Example",
+    "exampleOutput": "Output",
+    "exampleVariables": "Variables",
+    "fold": "… {n} more",
+    "cases": "Cases used by Submit",
+    "hints": "Hints",
+    "hintsShown": "{n} of {m} shown",
+    "showHint": "Show next hint",
+    "solution": "Solution",
+    "showSolution": "Show solution",
+    "solutionShown": "shown in the chart"
+  },
+  "python": {
+    "copy": "Copy",
+    "download": "Download .py",
+    "code": "Python code"
+  },
+  "result": {
+    "empty": "Run to see the values"
   },
   "playground": {
     "title": "Playground",
