@@ -4,7 +4,7 @@
   "difficulty": "easy",
   "topics": ["output"],
   "description": {
-    "en": "Say hello to `name`.\n\nAdd a **print** block with the `+` under `Start` and give it the text `\"Hello, \"` joined to `name` with `+`."
+    "en": "Say hello to `name`.\n\nAdd a **print** block with the `+` under `Start` and give it two values: the text `\"Hello,\"`, then `name`."
   },
   "inputs": [{ "name": "name", "value": "Claude" }],
   "tests": [
@@ -21,10 +21,16 @@
   ],
   "hints": [
     { "en": "Click the `+` under `Start` and choose **Print** under Basic." },
-    { "en": "Click the print slot and choose a text value, then use `+` to join `name` to it." },
-    { "en": "The text is `\"Hello, \"` with a space after the comma." }
+    {
+      "en": "Fill the print's first value with a text, then add a second value and choose `name`."
+    },
+    {
+      "en": "The text is `\"Hello,\"` with the comma inside the quotes; **print** puts one space between its values."
+    }
   ],
-  "takeaway": { "en": "You printed text joined to an input with `+`." },
+  "takeaway": {
+    "en": "You printed two values, a text and an input, and print put a space between them."
+  },
   "solution": {
     "version": 1,
     "title": "Hello",
@@ -37,13 +43,8 @@
         "id": "tut-prnt-001",
         "kind": "print",
         "args": [
-          {
-            "id": "tut-plus-001",
-            "kind": "binop",
-            "op": "+",
-            "left": { "id": "tut-text-001", "kind": "str", "value": "Hello, " },
-            "right": { "id": "tut-name-001", "kind": "var", "name": "name" }
-          }
+          { "id": "tut-text-001", "kind": "str", "value": "Hello," },
+          { "id": "tut-name-001", "kind": "var", "name": "name" }
         ]
       }
     ]
