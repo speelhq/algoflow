@@ -113,7 +113,10 @@ commands, decisions not yet in `docs/spec/`.
 A session starts with the milestone's line in `docs/spec/07-plan.md` and
 `gh issue list --milestone <M-xx>`. When you make a choice the spec does not
 cover, add the fact as a new id in the spec file for that area and the reason
-to `docs/decisions.md`, in a commit before the code. A session ends by
+to `docs/decisions.md`, in a commit before the code. After changing a spec
+statement, search `docs/decisions.md` for its id and update, in the same
+commit, every entry that no longer matches it. An entry records why
+something was chosen, never how far the work has got. A session ends by
 opening its pull requests and filing every finding it did not fix as an
 issue. Before a milestone closes: `/code-review`, then a subagent review of
 the diff against `docs/spec` that reports only violations of an id and
