@@ -42,14 +42,20 @@ needs its postinstall to place the platform binary.
 - `react/react-in-jsx-scope`: the automatic JSX runtime (`jsx: react-jsx`)
   never needs `React` in scope; the rule reports every element.
 - `jsx-a11y/prefer-tag-over-role`: the resize handle is an interactive
-  `role="separator"` (a splitter); `<hr>` is a static separator and the
-  language switch uses `<fieldset>` instead of `role="group"`.
+  `role="separator"` (a splitter); `<hr>` is a static separator.
+- `require-yield`: literal and variable runners are generators that never
+  yield, by design.
+- `unicorn/no-thenable`: 02-language names the `if` regions `then` and
+  `else`.
+- `no-redundant-type-constituents`: `Id | "main"` and `NodeId | "main"` are
+  written as in the spec to document intent.
 - `no-await-in-loop` in `e2e/`: Playwright assertions in a loop are
   intentionally sequential; `Promise.all` would race the browser.
 
-**Warnings do not fail `pnpm lint`** (P-06). The remaining warnings are
-`no-unsafe-type-assertion` on `JSON.parse` results, which cannot be typed
-without a validator; introducing one for four call sites is not justified.
+**Warnings do not fail `pnpm lint`** (P-06). Most warnings are
+`no-unsafe-type-assertion` where something the type checker cannot follow
+establishes a value's shape, such as the registry's slot list or a check
+after `JSON.parse`; expressing each in the types is not justified.
 
 **Oxfmt does not format `docs/`** (P-08). The spec is hand-written prose
 with aligned tables; a formatter must not rewrite it.
@@ -71,17 +77,18 @@ and collapsed state, U-03/U-24, and the playback speed, U-60).
 
 **Stored values are validated on both paths**. Setters clamp, and
 `mergePersisted` re-validates whatever is returned from `localStorage`: a
-non-number or out-of-range size falls back to the default or the limit.
-Trusting the snapshot would allow a hand-edited or stale entry to render a
-5000 px panel. Because both paths validate, a snapshot written under an
-older shape needs no `migrate` step: its unknown fields resolve to the
-defaults, so `version` remains `1`.
+non-number or out-of-range size falls back to the default or the lower
+limit, and the upper limit, half the viewport, is applied by `panelWidth()`
+where the width is set and where it is drawn. Trusting the snapshot would
+allow a hand-edited or stale entry to render an unusable panel. Because both
+paths validate, a snapshot written under an older shape needs no `migrate`
+step: its unknown fields resolve to the defaults, so `version` remains `1`.
 
 **Categories live in `src/nodes/categories.ts`**. `NodeDef.category`
-(03-nodes) is owned by the node registry; the block menu imports the tuple
-from there rather than declaring its own copy, so adding a category cannot
-leave the menu and the registry inconsistent. The file has no imports, so
-`src/nodes` remains free of store and React dependencies.
+(03-nodes) is owned by the node registry; the block menu (U-40) takes the
+order from there rather than declaring its own copy, so adding a category
+cannot leave the menu and the registry inconsistent. The file has no
+imports, so `src/nodes` remains free of store and React dependencies.
 
 **Generated primitives are added when first used** (P-04). Unreferenced
 generated code would still have to track theme changes.
@@ -91,17 +98,17 @@ generated code would still have to track theme changes.
 whose `pointerup` the context menu can suppress, and a second touch would
 overwrite the drag origin during a drag.
 
-**Stable test ids**. Panels, the chart, nodes (`data-node-id`), the
-transport, the path bar, and the panel's tabs carry `data-testid`
-hooks for end-to-end tests; role and label queries are used for everything
-user-visible.
+**Stable test ids**. Each region of a page, the chart's nodes
+(`data-node-id`), the transport, the path bar, and the panel's tabs carry
+`data-testid` hooks for end-to-end tests; role and label queries are used
+for everything user-visible.
 
 ## i18n
 
-**`t()` keys are typed** (U-73). `MessageKey` is derived from `en.json`
-with a template-literal type, so an unknown literal key is a compile error
-as well as a `scripts/i18n.ts` failure (T-08). Dynamic keys such as
-`` t(`view.${view}`) `` type-check against the union and are not scanned.
+**`t()` keys are typed** (U-73). `MessageKey` is derived from `en.json` with
+a template-literal type, so an unknown literal key is a compile error as
+well as a `scripts/i18n.ts` failure (T-08). A key built at run time is cast
+to `MessageKey` and is not scanned.
 
 **`t()` falls back to `en` and then to the key**. Until M-10 the `ja`
 catalog is empty; returning the key (with a development-only warning) keeps
@@ -110,10 +117,10 @@ the UI readable if a translation is missing.
 **Scan is a regex, not a parser** (T-08). The pattern matches `t("…")` and
 `t('…')` while ignoring `at(`, `obj.t(`, and template literals; it also
 matches inside comments, which is accepted. A parser would be more precise
-but adds a dependency to a script that must remain fast and simple. Test files
-are skipped because they call `t()` with deliberately unknown keys. Dynamic
-keys (`node.*`, `error.*` from M-01) are covered by registry-driven checks
-in their milestones, not by this scan.
+but adds a dependency to a script that must remain fast and simple. Test
+files are skipped because they call `t()` with deliberately unknown keys.
+Keys built at run time are not scanned; the `node.*` keys are checked
+against the registry in `src/nodes/index.test.ts`.
 
 **`flatten()` is shared** (`src/i18n/flatten.ts`). `t.ts` and the check
 script must agree on the key scheme; a single dependency-free module keeps
@@ -144,13 +151,14 @@ and matches the desktop-only scope (S-02); the viewport exceeds the 1280 px
 gate with margin for the default panel sizes.
 
 **No React Testing Library**. Unit tests cover stores, `t()`, and script
-logic; component behaviour is exercised end to end by Playwright (T-07 to
+logic; component behaviour is exercised end to end by Playwright (T-07,
 T-10). Installing a DOM testing library for components that are largely
 placeholders would add a second, slower means of testing the same behaviour.
 
-**Vitest environment is `node`, jsdom per file**. Only the layout store test
-needs `localStorage`; a file-level `// @vitest-environment jsdom` keeps the
-other suites fast (jsdom start-up accounts for most of the run time).
+**Vitest environment is `node`, jsdom per file**. Only the store tests that
+persist need `localStorage`; a file-level `// @vitest-environment jsdom`
+keeps the other suites fast (jsdom start-up accounts for most of the run
+time).
 
 ## Language core (M-01)
 
@@ -194,13 +202,13 @@ boolean, and `2 in [1, 2]` is narrated (U-63) and marked on the
 diamond (U-61) as any other test is; the per-element `read`s (R-04) precede
 the `compare`.
 
-**A `for` variable belongs to the enclosing region** (L-40). Python leaves
+**A `for` variable belongs to the enclosing region** (L-43). Python leaves
 the loop variable defined after the loop, and `for` reads its bounds before
 the body runs, so the variable is treated as assigned by the statement that
 owns the loop, not inside its body. Names first assigned in the body still
 raise `E_DECLARE_FIRST` afterwards.
 
-**`hoistAssign` picks the default from the first inner assignment** (L-41).
+**`hoistAssign` picks the default from the first inner assignment** (L-44).
 The fix must be type-consistent as the learner reads it: a counter starts at
 `0`, a message at `""`, a flag at `False`, a collection empty. When the first
 value is not a literal the default is `None`, which any later assignment
@@ -234,20 +242,13 @@ no module lists block kinds; literal fields get `text` so the node editor
 `unop` have two node texts in 03-nodes; a suffixed key keeps the three
 standard keys per block intact for the parity check.
 
-**Lint rules for the core** (P-06). `require-yield`: literal and variable
-runners are generators that never yield, by design. `unicorn/no-thenable`:
-02-language names the `if` regions `then` and `else`. `no-redundant-type-constituents`:
-`Id | "main"` and `NodeId | "main"` are written as in the spec to document
-intent.
-
 **`pnpm check` is one script**. pnpm appends command-line arguments to the end
 of the script string, so `tsx scripts/check.ts && tsx scripts/i18n.ts` would
 pass `challenges/x.json` to the i18n script; `check.ts` invokes the i18n check
 itself instead.
 
-**`E_DUPLICATE_ID` has a message** (U-70). The code exists in 02; the UI
-table omitted it. The text is generic because the condition cannot arise
-from editing, only from a corrupted import.
+**`E_DUPLICATE_ID` has a message** (U-70). The text is generic because the
+condition cannot arise from editing, only from a corrupted import.
 
 **Input names are checked by `scripts/check.ts`, not by `validate()`**. Inputs
 have no NodeId to attach a diagnostic to and are read-only in the editor
@@ -274,18 +275,18 @@ the divisor; `floatMod` and `floatFloorDiv` port the C code so R-20 agrees.
 CPython; the same holds for a function named after a builtin such as
 `random_int`, whose registry key would take precedence without notice.
 
-**The parser consults the registry** (G-01). Grammar-legal forms whose
-block does not exist yet (`[1, 2]`, `xs[i]`, `p.x`, `Cls()`) would pass the
-parser and cause `unparse`, `validate`, or `run` to fail with an unknown-node
-error; reporting `E_PARSE_SYNTAX` at the token keeps the failure a diagnostic,
-and the condition is removed as M-04/M-05 register the blocks.
+**The parser consults the registry** (G-01). Grammar-legal forms whose block
+is not registered (`[1, 2]`, `xs[i]`, `p.x`, `Cls()`) would pass the parser
+and cause `unparse`, `validate`, or `run` to fail with an unknown-node
+error; reporting `E_PARSE_SYNTAX` at the token keeps the failure a
+diagnostic, and the registry alone decides what parses.
 
 **The CPython harness runs the program in its own namespace** (R-20).
 Harness helpers (`sys`, `json`, `next`, …) previously shared the module
 globals with the learner's variables, so `next = 0` invalidated the shim.
 `exec` into a fresh dict isolates them, and a `print` hook records one entry
 per call so a printed newline compares equal to the interpreter's `stdout()`.
-The shimmed `random` functions come from the registry's aliases (N-05).
+The shimmed `random` functions come from the registry's aliases (G-02).
 
 ## Playback (M-02)
 
@@ -311,12 +312,13 @@ level is sufficient. The cost per publish is proportional to the size of
 the heap and is among the costs to measure (#18). Batches publish once per
 batch.
 
-**The chart highlights the owning statement** (U-39). `compare`, `read`, and
-`call` events carry expression ids while the chart has nodes only for
-statements; `ownerStmts()` resolves them once per program. The ✓/✗ mark is
-the last `compare` under the diamond's condition, cleared on `enter`, so a
-loop shows the current iteration; `not (a < b)` shows the inner compare,
-which is accepted.
+**The chart highlights the owning statement** (U-39, U-61). `compare`,
+`read`, and `call` events carry expression ids while the chart has nodes
+only for statements; `ownerStmts()` resolves them once per program. A
+diamond's ✓/✗ comes from its last `compare`, or from the `loop` event of a
+generated check, and clears when the diamond is entered again or a loop
+containing it starts a new pass, so a loop shows the current iteration;
+`not (a < b)` shows the inner compare, which is accepted.
 
 **Template hooks on `NodeDef`** (N-08). Selecting `templateCreate`,
 `templateFalse`, or `templateNot` requires facts the slots do not carry
@@ -342,7 +344,7 @@ exists, and a development-only affordance would be untested UI.
 **Hover and click on generated markup use delegated DOM listeners**.
 `jsx-a11y` forbids mouse handlers on `ol`/`li`/`tr`; one listener on the
 container reads a `data-*` attribute and satisfies the rule without
-converting code lines into buttons. Used by the `Python` tab (U-25).
+converting code lines into buttons.
 
 **Validation is memoized per Program object**. The driver, the chart
 (`firstAssignments`), the run controls, and Submit all request it; a
@@ -474,9 +476,7 @@ development locale and Japanese is a translation milestone.
 encounter elsewhere, and an attempt marks the problem `attempted` (C-17).
 
 **Solution revealed on request**. A learner may view the solution; hiding
-it entirely would cause self-learners to look elsewhere. Whether it was
-shown is stored (C-17) only so the tab remains open after a reload, as the
-number of revealed hints does.
+it entirely would cause self-learners to look elsewhere.
 
 **Plans grow with the files** (C-18). C-16 makes `pnpm check` fail on an id
 without a file, and a plan with no members would render an inert U-12 card
@@ -522,16 +522,15 @@ module.
 semantics are a function's; the difference is ownership and lifetime: a
 function belongs to one `Program`, a module belongs to the learner and is
 referenced by many programs. FlutterFlow's Action Blocks are the model:
-defined once per project, parameterised, called from any flow, edited in
-one place with the change reaching every use. Here a `Program` is the size
-of one FlutterFlow flow, so the project-level layer had to be added outside
-`Program`. `Module` was chosen over `Functions` (collides with a program's
-own function tabs, excludes classes, cannot group a `heap`) and `Library`
-(a single flat collection, and already used in `docs/` for
-dependencies); it is the Python word, the learner encounters it again as
-`import`, and it groups
-`heap_push`, `heap_pop`, and `heapify` the way the note's data-structure
-tree does.
+defined once per project, parameterised, called from any flow, edited in one
+place with the change reaching every use. Here a `Program` is the size of
+one FlutterFlow flow, so the project-level layer had to be added outside
+`Program`. `Module` was chosen over `Functions` (collides with the block
+menu's `Function` category and a program's own functions, excludes classes,
+cannot group a `heap`) and `Library` (a single flat collection, and already
+used in `docs/` for dependencies); it is the Python word, the learner
+encounters it again as `import`, and it groups `heap_push`, `heap_pop`, and
+`heapify` the way the note's data-structure tree does.
 
 **Plans chain through modules, not starters** (S-05, C-19, C-21). A
 starter chain (each problem starts from the previous solution) discards
@@ -636,10 +635,10 @@ chart was rejected: the flowchart loses legibility one level down, and a
 function would have two editing locations.
 
 **No `Make a function` from a selection**. Extracting statements into a
-function needs parameter and return inference and a multi-select UI; the
-existing `Add function` tab plus dragging nodes into it (U-36) achieves the
-same result, and choosing the parameters manually is where a beginner
-learns what a parameter is.
+function needs parameter and return inference and a multi-select UI;
+`Add function` in the path bar's `▾` (U-30) gives an empty function whose
+body the learner builds, and choosing the parameters manually is where a
+beginner learns what a parameter is.
 
 **Cards before bars** (V-01, V-03). Bars show the pattern of a list
 immediately and are the conventional sorting representation, but course
@@ -721,9 +720,9 @@ that plan mirrors a fixed three-day course.
 
 Every part of the page was re-examined for whether the learner's loop
 (S-10, S-11) needs it, with modules, Step over, many Playground programs,
-and the view switch in place. The screens are on the canvas "AlgoFlow Screens"
-(link under "UX redesign"), drawn at 1280 × 800, the narrowest supported
-width, so that a two-region page is checked where it is tightest.
+and the view switch in place. The screens are on the canvas "AlgoFlow
+Screens", drawn at 1280 × 800, the narrowest supported width, so that a
+two-region page is checked where it is tightest.
 
 **Two regions, on every page** (U-03, U-20). Panel and chart, nothing
 else: the `Result` tab absorbed the floating variables card and the output
@@ -740,8 +739,8 @@ beside a `+` prompting a function, and needed a second component while
 running (a call-stack strip) plus a rule exchanging one for the other. One
 path states the current position in both modes: in build mode the trail of
 `Open <name>`, while running the call stack. It is always shown, even with
-`main` alone: hiding it would remove the only place to add a first
-function, would make a new component appear at the moment functions are
+`main` alone: hiding it would remove the chart list and `Add function`
+from the page, would make a new component appear at the moment functions are
 introduced, and would need a display condition; shown, it introduces the
 term `main` that the `Python` tab's `main.py` repeats. All charts side by
 side on one canvas was rejected: three charts do not fit 960 px legibly.
@@ -822,8 +821,7 @@ values beside the one blocks use. `Custom…` opens the value editor of a
 slot limited to literals, so anyone able to fill a block can change an
 input and conversely, lists are built as chips, and `Type as text` remains
 for those who prefer to type. A value of the wrong type for an input is not
-validated: the runtime error explains it. It is delivered with the editor
-in M-04; the read-only M-03 lists the cases only.
+validated: the runtime error explains it.
 
 **Small rules settled with the boards** (U-33, U-40, D-22, U-85). A slot
 drawn on a generated loop node is the loop's slot, so the rule for slots
@@ -884,9 +882,9 @@ occurrences, consistent with the machine performing one operation at a
 time, so event stepping is retained, with sentences added for `enter`,
 `read`, `swap`, and the end. A comparison is narrated
 with its template sentence and the values (`"3 is divisible by 15" is
-false`) when the condition matches a template, because the event's own
-text is the evaluated operands (`3 == 0`), which conceals the origin of the
-3, and because the diamond itself is written as that sentence. Python
+false`), because the compared operands alone (`3` and `0`) conceal the
+origin of the 3, and because the diamond itself is written as that
+sentence. Python
 notation is excluded from the narration.
 
 **The `+` menu offers statements, in a beginner's order** (U-40). Listing
@@ -989,14 +987,14 @@ much as one who took a hint; the entry is `attempted`. The key holds the
 bare record, as C-17 writes it, through a custom storage of the persist
 middleware.
 
-**`break` and `continue` are drawn as boxes until N-09 has a jump shape**
-(U-33, N-09). Both declare `requires: "loop"`, so only the kind
-distinguishes an exit from a jump to the next pass, and the spec draws
-neither. They keep an ordinary edge to the next node until N-09 gains a
-jump shape (#7). A `Return` is identified by `requires: "function"`: its
-edge runs to `End` along one vertical line on the right, and carries the
-connector after it, since no other edge leaves it. After a branch whose
-regions all return there is no edge and no connector.
+**`break` and `continue` are drawn as boxes** (U-33, N-09). Both declare
+`requires: "loop"`, so only the kind distinguishes an exit from a jump to
+the next pass, and the chart may not branch on the kind (N-01); both are
+therefore boxes with an ordinary edge to the next node. A `Return` is
+identified by `requires: "function"`: its edge runs to `End` along one
+vertical line on the right, and carries the connector after it, since no
+other edge leaves it. After a branch whose regions all return there is no
+edge and no connector.
 
 ## Process
 
