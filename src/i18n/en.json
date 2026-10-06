@@ -305,6 +305,9 @@
     "solution": "Solution",
     "readOnly": "read-only",
     "backToMine": "Back to my chart",
+    "addFirst": "Add your first block",
+    "connector": "Add a block here",
+    "connectorGlyph": "+",
     "question": {
       "divisible": "Is {a} divisible by {b}?",
       "equals": "Does {a} equal {b}?",
@@ -314,6 +317,25 @@
       "atLeast": "Is {a} at least {b}?",
       "atMost": "Is {a} at most {b}?",
       "in": "Is {a} in {b}?"
+    }
+  },
+  "menu": {
+    "label": "Blocks",
+    "search": "Search blocks",
+    "empty": "No block matches",
+    "program": "This program",
+    "category": {
+      "basic": "Basic",
+      "control": "Control",
+      "list": "List",
+      "function": "Function",
+      "dict": "Dict",
+      "class": "Class",
+      "math": "Math"
+    },
+    "requires": {
+      "loop": "only inside a loop",
+      "function": "only inside a function"
     }
   },
   "editor": {

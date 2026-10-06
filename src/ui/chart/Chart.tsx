@@ -2,7 +2,7 @@
 // and never from a block kind; generated nodes are grey. An HTML layer over the SVG,
 // under the same scale, holds the parts a learner interacts with (the Input nodes' menus)
 // and the note beside a node (the narration, or the message of an error or a diagnostic).
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { t } from "@/i18n/t";
 import type { NodeId } from "@/lang/types";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,8 @@ type Props = {
   paint?: Paint;
   /** A sentence beside a chart node: the narration, or an error's or a diagnostic's message. */
   note?: Note | null;
+  /** What sits on an edge that carries a place (the `+` connector); absent while read-only. */
+  connector?: (edge: ChartEdge & { place: NonNullable<ChartEdge["place"]> }) => ReactNode;
 };
 
 export type Note = { node: string; text: string; tone: "narration" | "error" };
@@ -248,7 +250,8 @@ function EdgeView({ edge, taken }: { edge: ChartEdge; taken: boolean }) {
 }
 
 export function Chart(props: Props) {
-  const { chart, selectedId = null, hoveredId = null, onSelect, cases, paint, note } = props;
+  const { chart, selectedId = null, hoveredId = null, onSelect, cases, paint, note, connector } =
+    props;
   const scroller = useRef<HTMLDivElement>(null);
   const region = useElementWidth(scroller);
   const [zoom, setZoom] = useState<number | null>(null);
@@ -343,12 +346,26 @@ export function Chart(props: Props) {
               <NodeView key={node.id} node={node} look={look(node)} />
             ))}
           </svg>
-          {(cases || noted) && (
+          {(cases || noted || connector) && (
             <div
               className="pointer-events-none absolute top-0 left-0 origin-top-left"
               style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
             >
               {note && noted && <NoteView note={note} node={noted} width={chart.width} />}
+              {connector &&
+                chart.edges.map((edge) => {
+                  const { place } = edge;
+                  if (!place) return null;
+                  return (
+                    <div
+                      key={edge.id}
+                      className="pointer-events-auto absolute"
+                      style={{ left: edge.anchor.x, top: edge.anchor.y }}
+                    >
+                      {connector({ ...edge, place })}
+                    </div>
+                  );
+                })}
               {cases &&
                 chart.nodes
                   .filter((node) => node.role === "input")
