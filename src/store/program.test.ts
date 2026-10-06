@@ -1,9 +1,22 @@
 // @vitest-environment jsdom
-// C-13: restore from storage, else an empty main; L-55: stored shape and rejection.
-import { beforeEach, describe, expect, it, vi } from "vitest";
+// C-13: opening a problem; L-52: history; L-53, L-55: storage; L-57: Playground programs.
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Challenge } from "@/challenges/types";
+import type { Program } from "@/lang/types";
 import { ast, program } from "@/nodes/testing";
-import { emptyProgram, programKey, restore, useProgram } from "./program";
+import { isPlaygroundId, PLAYGROUND_KEY, playgroundRows, readIndex } from "./playground";
+import {
+  createPlaygroundProgram,
+  deletePlaygroundProgram,
+  emptyProgram,
+  flushSave,
+  HISTORY,
+  programKey,
+  restore,
+  SAVE_DELAY,
+  storedTitle,
+  useProgram,
+} from "./program";
 
 const { assign, num, print, v } = ast;
 
@@ -23,15 +36,20 @@ vi.mock("@/challenges", () => ({
   getChallenge: (id: string | undefined) => [bare].find((challenge) => challenge.id === id),
 }));
 
-describe("program store (C-13, L-53, L-55)", () => {
-  beforeEach(() => localStorage.clear());
+const stored = (id: string): unknown => JSON.parse(localStorage.getItem(programKey(id)) ?? "null");
+const withMain = (p: Program, main: Program["main"]): Program => ({ ...p, main });
 
-  it("starts in free mode with an empty program", () => {
-    expect(useProgram.getState().program).toEqual(emptyProgram());
-    expect(programKey(undefined)).toBe("algoflow:program:free");
+describe("program store", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    flushSave();
+    vi.useRealTimers();
   });
 
-  it("creates an empty main when nothing is stored, with challengeId and inputs set", () => {
+  it("C-13: creates an empty main when nothing is stored, with challengeId and inputs set", () => {
     expect(restore("bare")).toEqual({
       ...emptyProgram(),
       challengeId: "bare",
@@ -39,20 +57,20 @@ describe("program store (C-13, L-53, L-55)", () => {
     });
   });
 
-  it("restores the stored program and lets the challenge overwrite challengeId and inputs", () => {
-    const stored = {
+  it("L-55: restores the stored program and lets the challenge overwrite challengeId and inputs", () => {
+    const saved = {
       ...program([print(v("m"))], { inputs: [{ name: "m", value: 1 }] }),
       title: "Mine",
     };
-    localStorage.setItem(programKey("bare"), JSON.stringify(stored));
+    localStorage.setItem(programKey("bare"), JSON.stringify(saved));
     const p = restore("bare");
     expect(p.title).toBe("Mine");
-    expect(p.main).toEqual(stored.main);
+    expect(p.main).toEqual(saved.main);
     expect(p.challengeId).toBe("bare");
     expect(p.inputs).toEqual([{ name: "m", value: 7 }]);
   });
 
-  it("ignores a stored value that migrate() rejects", () => {
+  it("L-55: ignores a stored value that migrate() rejects", () => {
     localStorage.setItem(programKey("bare"), "{not json");
     expect(restore("bare").main).toEqual([]);
     localStorage.setItem(programKey("bare"), JSON.stringify({ version: 2 }));
@@ -61,24 +79,124 @@ describe("program store (C-13, L-53, L-55)", () => {
     expect(restore("bare").main).toEqual([]);
   });
 
-  it("free mode restores algoflow:program:free without challengeId or inputs", () => {
-    const stored = {
+  it("L-55: a Playground program restores without challengeId or inputs", () => {
+    const saved = {
       ...program([assign("k", num(2))], { inputs: [{ name: "n", value: 1 }] }),
       challengeId: "stale",
     };
-    localStorage.setItem(programKey(undefined), JSON.stringify(stored));
-    const p = restore("free");
-    expect(p.main).toEqual(stored.main);
+    localStorage.setItem(programKey("play-abcdefghijkl"), JSON.stringify(saved));
+    const p = restore("play-abcdefghijkl");
+    expect(p.main).toEqual(saved.main);
     expect(p.challengeId).toBeUndefined();
     expect(p.inputs).toEqual([]);
   });
 
-  it("load() swaps the program in the store", () => {
+  it("C-13: load() swaps the program and starts an empty history", () => {
+    const store = useProgram.getState();
+    store.load("bare");
+    store.edit(withMain(useProgram.getState().program, [print(num(1))]));
+    expect(useProgram.getState().past).toHaveLength(1);
     useProgram.getState().load("bare");
+    expect(useProgram.getState()).toMatchObject({ id: "bare", past: [], future: [] });
     expect(useProgram.getState().program.challengeId).toBe("bare");
-    useProgram.getState().load("free");
-    expect(useProgram.getState().program.challengeId).toBeUndefined();
-    useProgram.getState().load("unknown-id");
-    expect(useProgram.getState().program).toEqual(emptyProgram());
+  });
+
+  it("L-52: undo and redo walk the history", () => {
+    useProgram.getState().load("bare");
+    const opened = useProgram.getState().program;
+    const one = withMain(opened, [print(num(1))]);
+    const two = withMain(opened, [print(num(2))]);
+    useProgram.getState().edit(one);
+    useProgram.getState().edit(two);
+    useProgram.getState().undo();
+    expect(useProgram.getState().program).toBe(one);
+    useProgram.getState().undo();
+    expect(useProgram.getState().program).toBe(opened);
+    useProgram.getState().undo();
+    expect(useProgram.getState().program).toBe(opened);
+    useProgram.getState().redo();
+    useProgram.getState().redo();
+    expect(useProgram.getState().program).toBe(two);
+    useProgram.getState().undo();
+    useProgram.getState().edit(withMain(opened, [print(num(3))]));
+    expect(useProgram.getState().future).toEqual([]);
+  });
+
+  it("L-52: history keeps the last 100 programs", () => {
+    useProgram.getState().load("bare");
+    for (let i = 0; i <= HISTORY; i += 1) {
+      useProgram.getState().edit(withMain(useProgram.getState().program, [print(num(i))]));
+    }
+    expect(useProgram.getState().past).toHaveLength(HISTORY);
+  });
+
+  it("L-52: consecutive changes typed into one field form one entry", () => {
+    useProgram.getState().load("bare");
+    const opened = useProgram.getState().program;
+    useProgram.getState().edit(withMain(opened, [print(num(1))]), "node:value");
+    useProgram.getState().edit(withMain(opened, [print(num(12))]), "node:value");
+    useProgram.getState().edit(withMain(opened, [print(num(123))]), "node:value");
+    expect(useProgram.getState().past).toEqual([opened]);
+    useProgram.getState().edit(withMain(opened, [print(num(4))]), "other:value");
+    expect(useProgram.getState().past).toHaveLength(2);
+    useProgram.getState().undo();
+    useProgram.getState().undo();
+    expect(useProgram.getState().program).toBe(opened);
+  });
+
+  it("L-53: an edit is saved 500 ms after the last edit, and opening alone saves nothing", () => {
+    useProgram.getState().load("bare");
+    expect(stored("bare")).toBeNull();
+    const next = withMain(useProgram.getState().program, [print(num(1))]);
+    useProgram.getState().edit(next);
+    vi.advanceTimersByTime(SAVE_DELAY - 1);
+    expect(stored("bare")).toBeNull();
+    vi.advanceTimersByTime(1);
+    expect(stored("bare")).toEqual(next);
+  });
+
+  it("L-53: hiding the page saves at once, and opening another program saves the pending edit", () => {
+    useProgram.getState().load("bare");
+    const next = withMain(useProgram.getState().program, [print(num(1))]);
+    useProgram.getState().edit(next);
+    window.dispatchEvent(new Event("pagehide"));
+    expect(stored("bare")).toEqual(next);
+    localStorage.clear();
+    useProgram.getState().edit(withMain(next, [print(num(2))]));
+    useProgram.getState().load("play-abcdefghijkl");
+    expect(stored("bare")).toMatchObject({ main: [{ kind: "print" }] });
+  });
+
+  it("L-57: a Playground program has a play- id, and its saves are indexed by time", () => {
+    vi.setSystemTime(1000);
+    const id = createPlaygroundProgram({ ...emptyProgram("Mine"), challengeId: "bare" });
+    expect(isPlaygroundId(id)).toBe(true);
+    expect(id).toMatch(/^play-[A-Za-z0-9_-]{12}$/);
+    expect(readIndex()).toEqual({ [id]: { edited: 1000 } });
+    expect(stored(id)).toEqual(emptyProgram("Mine"));
+
+    useProgram.getState().load(id);
+    vi.setSystemTime(5000);
+    useProgram.getState().edit({ ...useProgram.getState().program, title: "Renamed" });
+    vi.advanceTimersByTime(SAVE_DELAY);
+    expect(readIndex()[id]?.edited).toBe(5000 + SAVE_DELAY);
+    expect(storedTitle(id)).toBe("Renamed");
+    expect(playgroundRows(storedTitle)).toEqual([
+      { id, title: "Renamed", edited: 5000 + SAVE_DELAY },
+    ]);
+
+    deletePlaygroundProgram(id);
+    expect(readIndex()).toEqual({});
+    expect(stored(id)).toBeNull();
+    expect(localStorage.getItem(PLAYGROUND_KEY)).toBe("{}");
+  });
+
+  it("L-57: rows are ordered by last edit, the latest first", () => {
+    localStorage.setItem(
+      PLAYGROUND_KEY,
+      JSON.stringify({ "play-a": { edited: 1 }, "play-b": { edited: 3 }, "play-c": { edited: 2 } }),
+    );
+    const rows = playgroundRows((id) => id);
+    expect(rows.map((row) => row.id)).toEqual(["play-b", "play-c", "play-a"]);
   });
 });
