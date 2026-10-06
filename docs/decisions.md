@@ -1167,6 +1167,19 @@ it would stop the run on the chart, which C-15 keeps untouched, and
 running for the same reason: Submit does not depend on the run, and making
 the learner press `Stop` first would add a step to the loop of S-10.
 
+**While running, the case and the chart stay the run's** (U-27, U-32).
+Choosing another case discards the runner (C-13), and showing the solution
+would replace the running chart with one the run is not on, leaving the
+transport without the chart it drives. Both are therefore unavailable until
+`Stop`, as editing is (U-60): a learner who wants another case or the
+solution stops first, which is one click and says what happens to the run.
+
+**`Next problem` wraps round the plan** (U-83). After the plan's last row,
+a learner who skipped an earlier problem has not completed the plan, so
+`Plan complete` would be untrue; the first unsolved problem after the
+current one, counting round from the plan's start, is the one the plan
+still asks for. `Plan complete` therefore means every problem is solved.
+
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
 The store held a constant maximum of 480 px from the retired shell. Half the
 viewport width is not a constant, and a store that read `window.innerWidth`
