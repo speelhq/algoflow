@@ -92,6 +92,24 @@ and a cycle degrades to `{ $cls, $id }` so the conversion terminates.
 CPython; the same holds for a function named after a builtin such as
 `random_int`, whose registry key would take precedence without notice.
 
+**Typing is one step of history** (L-52). A name typed into a slot
+changes the chart with every key, so that the generated nodes follow the
+variable as it is typed (U-42); one history entry per key would spend the
+100 entries on one word and make undo remove a letter at a time. A field
+that changed only on leaving it would keep the chart behind the editor.
+
+**A save also happens when the page is hidden** (L-53). The 500 ms delay
+spares storage a write per key, but a tab closed within it would lose the
+last edit; the browser's `pagehide` is the last moment a page may write.
+
+**Playground programs have an index** (L-57). The stored value is the
+`Program` itself (L-55), which has no field for the time of its last edit,
+and a Playground row needs that time (U-15); adding a field to `Program`
+would put a storage concern into every export and every challenge file. A
+key holding the ids and their times also gives the Playground page its list
+without scanning every key of the origin, and the `play-` prefix keeps a
+Playground id from ever reading as a challenge id.
+
 **Storage holds the raw `Program` JSON** (L-55). A zustand `persist` wrapper
 does not suit one key per challenge, and `migrate()` must validate whatever
 is returned; the raw form is also what Export writes (L-53). A rejected value
@@ -324,6 +342,45 @@ there has an expectation, so a Run shows `Expected` beside `Output` from
 the first step and ends with that case's verdict; Submit is the same view
 with one chip per case. The learner observes that Submit is Run on every
 case, and the comparison step no longer waits for a submission.
+
+**A Playground program goes back to the Playground** (U-01, U-05). The
+page a Playground program is opened from is the Playground page, so its back
+link leads there. `Open in Playground` on a Playground program would copy
+it under the same title, which `⋯` has no reason to offer; the title of a
+program opened from a problem is the problem's, because the program of a
+problem has no title the learner ever sees.
+
+**The case is read from the values** (U-32, C-15). Run judges the test
+whose inputs the Input nodes hold, whichever way they were set, so the
+selector names that test too: `Custom…` set back to `n = 15` is the case
+`n = 15`, with its `Expected` and its verdict, and a learner never sees a
+run judged under a selector that reads `Custom…`.
+
+**A drop cannot land inside the dragged node** (U-36). Moving a loop into
+its own body has no result: the region would be removed with the
+statement that holds it. Its connectors accept no drop rather than refusing
+it with a message, because nothing a learner could change makes that drop
+valid.
+
+**A target is a name with forms** (U-41). An assignment's target is a
+variable far more often than an item or a field, so the slot is the name
+input of an `id` slot with its suggestions; the item, key, and field forms
+are offered from its menu once their blocks exist, and their parts are
+ordinary expression slots.
+
+**A leading minus makes a number** (U-50). `found = -1` is the commonest
+negative a learner types; requiring the unary minus from a group would make
+it the one number not typed. The text is read by the parser, so `-1` is
+the negation of `1`, as Python reads it, and `-3 ** 2` keeps Python's
+meaning in the chart and the emitted code.
+
+**Everything with slots wraps the chip** (U-53). Operators wrapped the
+current chip and list operations wrapped it as the list; a call that
+replaced the chip would make `abs` of a value the learner has already built
+into two steps of rebuilding it. One rule for every block with an
+expression slot, the chip becoming its first slot, covers operators, list
+operations, builtins, and calls alike, and needs no list of which blocks
+wrap.
 
 **The Playground page reuses the Problems page** (U-15). Both pages list
 rows under one header, so the Playground page takes the Problems page's

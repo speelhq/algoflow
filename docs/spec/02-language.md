@@ -253,11 +253,13 @@ L-50 `edit.ts` exports pure functions returning a new `Program`:
 
 L-51 Every edit preserves L-04.
 
-L-52 History keeps the last 100 programs for undo and redo.
+L-52 History keeps the last 100 programs for undo and redo; consecutive
+changes typed into one field of the node editor form one entry, and
+opening a program starts an empty history.
 
 L-53 Programs persist to `localStorage` key
 `algoflow:program:<challengeId | playground id>` 500 ms after the last
-edit; export writes `<title>.algoflow.json` with the modules the program
+edit, and at once when the browser hides the page; export writes `<title>.algoflow.json` with the modules the program
 uses embedded (D-13); import validates and migrates by `version`
 (`src/lang/migrate.ts`).
 
@@ -272,6 +274,11 @@ L-55 The value stored under `algoflow:program:<id>` is the `Program` JSON
 itself; loading passes it through `migrate()` and treats a rejected value as
 absent (C-13 then applies); the challenge's `challengeId` and `inputs`
 replace those of a restored program, and a Playground program has neither.
+
+L-57 A Playground program's id is `play-` followed by a NodeId;
+`algoflow:playground` holds `Record<id, { edited: number }>`, the time of
+each Playground program's last save in milliseconds since the epoch, and
+lists exactly the Playground programs in storage.
 
 ## Verification
 
