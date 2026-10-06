@@ -6,6 +6,7 @@ export const breakStmt = defineStmt<"break">({
   key: "break",
   category: "control",
   requires: "loop",
+  chart: { jump: "exit" },
   slots: [],
   create: () => ({ id: newId(), kind: "break" }),
   *run() {

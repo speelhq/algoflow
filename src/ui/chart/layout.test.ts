@@ -68,12 +68,34 @@ const SYNTHETIC: Array<[string, Program]> = [
     ]),
   ],
   [
-    "break, continue, and a comment as ordinary boxes",
+    "break and continue in a for, with a comment",
     program([
       for_("i", num(0), num(9), [
         if_(lt("i", 2), [cont()]),
         if_(lt("i", 5), [], [brk()]),
         comment("go on"),
+      ]),
+      print(str("after")),
+    ]),
+  ],
+  [
+    "break and continue in a while, and a while ending in break",
+    program([
+      assign("i", num(0)),
+      while_(lt("i", 9), [
+        assign("i", bin("+", v("i"), num(1))),
+        if_(lt("i", 2), [cont()]),
+        if_(lt("i", 5), [print(v("i"))], [brk()]),
+      ]),
+      while_(lt("i", 20), [assign("i", bin("+", v("i"), num(1))), brk()]),
+    ]),
+  ],
+  [
+    "a continue and a break in nested loops",
+    program([
+      for_("i", num(0), num(3), [
+        while_(lt("i", 2), [cont()]),
+        for_("j", num(0), num(2), [if_(lt("j", 1), [brk()])]),
       ]),
     ]),
   ],
@@ -108,12 +130,16 @@ const bodyOf = (c: Case): Stmt[] =>
 const lay = (c: Case, measure?: Measure): ChartLayout =>
   layout(c.program, { ...(c.chart ? { chart: c.chart } : {}), ...(measure ? { measure } : {}) });
 
-const leaves = (stmt: Stmt): boolean => getNode(keyOf(stmt)).requires === "function";
+/** A Return, or a jump (every jump of these cases is inside a loop): no edge to the next node. */
+const leaves = (stmt: Stmt): boolean => {
+  const def = getNode(keyOf(stmt));
+  return def.requires === "function" || (def.chart !== undefined && "jump" in def.chart);
+};
 
-/** Something flows out of the bottom of the statement: not a Return, nor a branch whose regions all return. */
+/** Something flows out of the bottom of the statement: not a Return or jump, nor a branch whose regions all leave. */
 function flows(stmt: Stmt): boolean {
   const shape = getNode(keyOf(stmt)).chart;
-  if (!shape) return !leaves(stmt);
+  if (!shape || "jump" in shape) return !leaves(stmt);
   if (!("branch" in shape)) return true; // a loop's No edge
   return regionsOf(stmt).some((region) => {
     const final = region.stmts.at(-1);
@@ -244,7 +270,7 @@ describe.each([
       chart.edges.filter((edge) => edge.from === id && edge.label === label);
     for (const stmt of allStmts(bodyOf(c))) {
       const shape = getNode(keyOf(stmt)).chart;
-      if (!shape) {
+      if (!shape || "jump" in shape) {
         expect(nodes.get(stmt.id)?.shape).toBe("box");
         continue;
       }
@@ -309,6 +335,8 @@ describe.each([
         for (const node of under) expect(node.y + node.h).toBeLessThan(step.y);
         expect(backs.map((edge) => edge.from)).toEqual([step.id]);
       }
+      const next = nodes.get(`${stmt.id}:next`);
+      if (next) expect(backs.map((edge) => edge.from)).toEqual([next.id]);
     }
   });
 
@@ -353,6 +381,45 @@ function onBorder(point: { x: number; y: number }, node: ChartNode): boolean {
   const inY = point.y >= node.y && point.y <= node.y + node.h;
   return (onX && inY) || (onY && inX);
 }
+
+describe("layout of jumps (U-33, N-09)", () => {
+  const jumpsOf = (chart: ChartLayout, id: string) => chart.edges.filter((edge) => edge.from === id);
+
+  it("U-33: in a for, break leads past the loop and continue to its step", () => {
+    const stop = brk();
+    const skip = cont();
+    const loop = for_("i", num(0), num(9), [if_(lt("i", 2), [skip], [stop])]);
+    const after = print(str("after"));
+    const chart = layout(program([loop, after]));
+    expect(jumpsOf(chart, stop.id).map((edge) => edge.to)).toEqual([`${loop.id}:exit`]);
+    expect(jumpsOf(chart, skip.id).map((edge) => edge.to)).toEqual([`${loop.id}:step`]);
+    const no = chart.edges.find((edge) => edge.from === `${loop.id}:check` && edge.label === "no");
+    expect(no?.to).toBe(`${loop.id}:exit`);
+    expect(jumpsOf(chart, `${loop.id}:exit`)).toMatchObject([
+      { to: after.id, place: { parent: "main", slot: "main", index: 1 } },
+    ]);
+  });
+
+  it("U-33: in a while, continue meets the back edge and break leads past the loop", () => {
+    const stop = brk();
+    const skip = cont();
+    const loop = while_(lt("i", 9), [if_(lt("i", 2), [skip]), stop]);
+    const chart = layout(program([assign("i", num(0)), loop]));
+    expect(jumpsOf(chart, skip.id).map((edge) => edge.to)).toEqual([`${loop.id}:next`]);
+    expect(jumpsOf(chart, stop.id)).toMatchObject([
+      { to: `${loop.id}:exit`, place: { parent: loop.id, slot: "body", index: 2 } },
+    ]);
+    const back = chart.edges.find((edge) => edge.back);
+    expect(back).toMatchObject({ from: `${loop.id}:next`, to: `${loop.id}:junction` });
+  });
+
+  it("U-33: a jump outside every loop is an ordinary box with an edge to the next node", () => {
+    const stop = brk();
+    const chart = layout(program([stop, print(num(1))]));
+    expect(jumpsOf(chart, stop.id)).toHaveLength(1);
+    expect(jumpsOf(chart, stop.id)[0]?.jump).toBeUndefined();
+  });
+});
 
 describe("layout (U-31, U-33 texts)", () => {
   it("main: Start, one Input node per input with the chosen values, the statements, End", () => {

@@ -6,6 +6,7 @@ export const continueStmt = defineStmt<"continue">({
   key: "continue",
   category: "control",
   requires: "loop",
+  chart: { jump: "next" },
   slots: [],
   create: () => ({ id: newId(), kind: "continue" }),
   *run() {

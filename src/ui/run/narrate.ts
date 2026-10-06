@@ -101,7 +101,8 @@ function decisions(program: Program): Set<string> {
     ids = new Set();
     for (const node of nodesById(program).values()) {
       const chart = getNode(keyOf(node)).chart;
-      const condition = chart && !("counted" in chart) ? conditionOf(node) : undefined;
+      const diamond = chart !== undefined && ("branch" in chart || "check" in chart);
+      const condition = diamond ? conditionOf(node) : undefined;
       if (condition) ids.add(condition.id);
     }
     decided.set(program, ids);
@@ -117,7 +118,8 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
     case "enter": {
       if (!node) return { key: "run.narrate.enter", params: { sentence: "" } };
       const chart = getNode(keyOf(node)).chart;
-      const condition = chart && !("counted" in chart) ? conditionOf(node) : undefined;
+      const diamond = chart !== undefined && ("branch" in chart || "check" in chart);
+      const condition = diamond ? conditionOf(node) : undefined;
       return condition
         ? { key: "run.narrate.check", params: { condition: slotSentence(condition) } }
         : {

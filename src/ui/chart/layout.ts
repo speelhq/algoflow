@@ -3,6 +3,8 @@
 // its fragments on one axis, a branch puts its Yes column to the right of its whole No
 // column, and a loop keeps a lane on its left for the back edge and one on its right for the
 // No edge. A fragment's lanes lie inside its own extents, so nested lanes never collide.
+// A `Return` and a jump leave by the right: a `Return` for `End`, a jump for its loop, whose
+// `next` lane and `No` lane take it to the next pass or past the loop.
 // Reads `def.chart`, `def.requires`, and the regions of a statement, never a kind.
 import { t } from "@/i18n/t";
 import type { Data, Id, NodeId, Place, Program, Stmt } from "@/lang/types";
@@ -25,7 +27,18 @@ export type ChartNode = {
   id: string;
   /** The statement a click selects and a step highlights; null for terminals and inputs. */
   owner: NodeId | null;
-  role: "start" | "end" | "input" | "stmt" | "init" | "check" | "step" | "junction" | "merge";
+  role:
+    | "start"
+    | "end"
+    | "input"
+    | "stmt"
+    | "init"
+    | "check"
+    | "step"
+    | "junction"
+    | "merge"
+    | "exit"
+    | "next";
   shape: Shape;
   /** Drawn grey, not selectable on its own. */
   generated: boolean;
@@ -83,8 +96,17 @@ const defaultMeasure: Measure = (text) => text.length * 7.2;
 /** Room on each side of an empty slot's text for its dashed outline. */
 export const PILL = 8;
 
+/** Where a flow that leaves its region goes: `End`, past its loop, or into the loop's next pass. */
+type Leave = "end" | "exit" | "next";
 /** A flow that still needs its target: the points so far, and the place its edge will carry. */
-type Stub = { from: string; label?: "yes" | "no"; points: Point[]; place: Place | null };
+type Stub = {
+  from: string;
+  label?: "yes" | "no";
+  points: Point[];
+  place: Place | null;
+  /** For a flow leaving its region, where it goes. */
+  to?: Leave;
+};
 type Frag = {
   left: number;
   right: number;
@@ -95,7 +117,7 @@ type Frag = {
   entry: string | null;
   /** Falls through to whatever follows; null when nothing does (a `Return`). */
   out: Stub | null;
-  /** Flows that leave for `End`, each ending on the fragment's right boundary. */
+  /** Flows that leave the region (for `End`, or for a loop), each ending on its right boundary. */
   escapes: Stub[];
 };
 type Slot = Place["slot"];
@@ -178,6 +200,9 @@ function edge(
 }
 
 class Builder {
+  /** Loops around the statement being placed: a jump outside every loop is an ordinary box. */
+  private depth = 0;
+
   constructor(
     private readonly program: Program,
     private readonly measure: Measure,
@@ -265,14 +290,16 @@ class Builder {
   statement(stmt: Stmt): Frag {
     const def = getNode(keyOf(stmt));
     const chart = def.chart;
-    if (!chart) return this.box(stmt, def.requires === "function");
+    if (!chart) return this.box(stmt, def.requires === "function" ? "end" : null);
+    if ("jump" in chart) return this.box(stmt, this.depth > 0 ? chart.jump : null);
     if ("branch" in chart) return this.branch(stmt, chart.branch);
     return "check" in chart
       ? this.loop(stmt, chart.check, false)
       : this.loop(stmt, chart.counted, true);
   }
 
-  private box(stmt: Stmt, leaves: boolean): Frag {
+  /** A box; `leaves` names where its edge goes when it is not to the next node. */
+  private box(stmt: Stmt, leaves: Leave | null): Frag {
     const parts = sentenceParts(stmt, this.program);
     const [first] = parts;
     if (first) parts[0] = { ...first, text: capitalise(first.text) };
@@ -286,8 +313,10 @@ class Builder {
       edges: [],
       entry: node.id,
       out: leaves ? null : { from: node.id, points: [{ x: 0, y: node.h }], place: null },
-      // A Return's edge leads to End, leaving by the node's right side.
-      escapes: leaves ? [{ from: node.id, points: [{ x: half, y: node.h / 2 }], place: null }] : [],
+      // A Return's or a jump's edge leaves by the node's right side.
+      escapes: leaves
+        ? [{ from: node.id, points: [{ x: half, y: node.h / 2 }], place: null, to: leaves }]
+        : [],
     };
   }
 
@@ -397,16 +426,23 @@ class Builder {
       edge({ from: junction.id, points: [{ x: 0, y: yJoin }], place: null }, d.id, [{ x: 0, y }]),
     );
 
+    this.depth += 1;
     const body = this.regionOf(stmt, slot);
+    this.depth -= 1;
+    // Jumps reaching this loop are its own: an inner loop has routed those for itself.
+    const exits = body.escapes.filter((escape) => escape.to === "exit");
+    const nexts = body.escapes.filter((escape) => escape.to === "next");
+    const passing = body.escapes.filter((escape) => escape.to !== "exit" && escape.to !== "next");
     const yBody = y + d.h + GAP_Y;
     const yesStub: Stub = { from: d.id, label: "yes", points: [{ x: 0, y: y + d.h }], place: null };
     let tail = this.enter(yesStub, body, { x: 0, y: yBody }, frag, stmt.id, slot as Slot);
     let bottom = yBody + body.height;
     let half = d.w / 2;
+    let step: ChartNode | null = null;
 
     if (counted) {
       const yStep = body.entry === null ? yBody : bottom + GAP_Y;
-      const step = this.node(
+      step = this.node(
         `${stmt.id}:step`,
         stmt.id,
         "step",
@@ -423,18 +459,64 @@ class Builder {
 
     const yTurn = bottom + GAP_Y / 2;
     const xBack = -(Math.max(half, body.left) + LANE);
-    const xNo = Math.max(half, body.right) + LANE;
-    if (tail) {
-      const up = [
-        { x: 0, y: yTurn },
-        { x: xBack, y: yTurn },
-        { x: xBack, y: yJoin },
-        { x: 0, y: yJoin },
-      ];
+    // A `next` lane runs down inside the `No` lane when the body has a jump to the next pass.
+    const xNext = Math.max(half, body.right) + LANE;
+    const xNo = nexts.length > 0 ? xNext + LANE : xNext;
+    const up = [
+      { x: 0, y: yTurn },
+      { x: xBack, y: yTurn },
+      { x: xBack, y: yJoin },
+      { x: 0, y: yJoin },
+    ];
+    const toLane = (escape: Stub, x: number) => escape.points.push({ x, y: last(escape.points).y });
+
+    if (step) {
+      // The next pass of a counted loop starts at its step.
+      const yStep = step.y + step.h / 2;
+      for (const escape of nexts) {
+        toLane(escape, xNext);
+        frag.edges.push(
+          edge(
+            escape,
+            step.id,
+            [
+              { x: xNext, y: yStep },
+              { x: step.w / 2, y: yStep },
+            ],
+            {
+              anchor: "start",
+            },
+          ),
+        );
+      }
+      if (tail) frag.edges.push(edge(tail, junction.id, up, { anchor: "first", back: true }));
+    } else if (nexts.length > 0) {
+      // The next pass of a checked loop starts where the back edge does.
+      const next = this.node(`${stmt.id}:next`, stmt.id, "next", "junction", "", yTurn);
+      frag.nodes.push(next);
+      for (const escape of nexts) {
+        toLane(escape, xNext);
+        frag.edges.push(
+          edge(
+            escape,
+            next.id,
+            [
+              { x: xNext, y: yTurn },
+              { x: 0, y: yTurn },
+            ],
+            { anchor: "start" },
+          ),
+        );
+      }
+      if (tail) frag.edges.push(edge(tail, next.id, [{ x: 0, y: yTurn }]));
+      const from: Stub = { from: next.id, points: [{ x: 0, y: yTurn }], place: null };
+      frag.edges.push(edge(from, junction.id, up.slice(1), { anchor: "first", back: true }));
+    } else if (tail) {
       frag.edges.push(edge(tail, junction.id, up, { anchor: "first", back: true }));
     }
+
     frag.height = yTurn + LANE;
-    frag.out = {
+    const no: Stub = {
       from: d.id,
       label: "no",
       points: [
@@ -445,11 +527,25 @@ class Builder {
       ],
       place: null,
     };
+    if (exits.length > 0) {
+      // `No` and every exit meet below the loop, and what follows starts there.
+      const exit = this.node(`${stmt.id}:exit`, stmt.id, "exit", "junction", "", frag.height);
+      frag.nodes.push(exit);
+      frag.edges.push(edge(no, exit.id, []));
+      for (const escape of exits) {
+        toLane(escape, xNo);
+        const down = [
+          { x: xNo, y: frag.height },
+          { x: 0, y: frag.height },
+        ];
+        frag.edges.push(edge(escape, exit.id, down, { anchor: "start" }));
+      }
+      frag.out = { from: exit.id, points: [{ x: 0, y: frag.height }], place: null };
+    } else frag.out = no;
     frag.left = Math.max(-xBack + 4, widest);
     frag.right = Math.max(xNo + 4, widest);
-    for (const escape of body.escapes)
-      escape.points.push({ x: frag.right, y: last(escape.points).y });
-    frag.escapes.push(...body.escapes);
+    for (const escape of passing) toLane(escape, frag.right);
+    frag.escapes.push(...passing);
     return frag;
   }
 }
