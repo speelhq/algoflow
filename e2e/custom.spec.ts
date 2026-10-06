@@ -31,8 +31,6 @@ test("U-32: a Custom… value that is not a literal is refused", async ({ page }
   await page.getByRole("menuitem", { name: "Custom…" }).click();
   await page.getByTestId("custom-field").fill("n + 1");
   await page.getByTestId("custom-field").press("Enter");
-  await expect(page.getByTestId("custom-editor").getByRole("alert")).toContainText(
-    "Only a number",
-  );
+  await expect(page.getByTestId("custom-editor").getByRole("alert")).toContainText("Only a number");
   await expect(page.getByTestId("chart")).toContainText("Input n = 15");
 });
