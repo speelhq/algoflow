@@ -616,14 +616,24 @@ matches the generated `Is i < n + 1?` of a `for`. The variable block is
 obtained from the parser (the block a bare name parses to), so the matcher
 and the narration name no block kind (N-01).
 
-**`break` and `continue` are drawn as boxes** (U-33, N-09). Both declare
+**`break` and `continue` draw where they jump** (U-33, N-09). An edge to
+the next node, the earlier drawing, is a path the run never takes, and a
+learner reading the chart follows it. Both blocks declare
 `requires: "loop"`, so only the kind distinguishes an exit from a jump to
-the next pass, and the chart may not branch on the kind (N-01); both are
-therefore boxes with an ordinary edge to the next node. A `Return` is
-identified by `requires: "function"`: its edge runs to `End` along one
-vertical line on the right, and carries the connector after it, since no
-other edge leaves it. After a branch whose regions all return there is no
-edge and no connector.
+the next pass, and the chart may not branch on the kind (N-01); each
+therefore declares its jump in `chart`, as `if` and the loops declare their
+regions, and the layout routes the edge from the declaration, so the two
+work inside any loop block added later. A rule in the layout for the two
+kinds was rejected for N-01, and a node with no edge states where control
+does not go without stating where it goes. The edges leave by the right
+like a `Return`'s and run down lanes inside the loop's right extent: `exit`
+joins the `No` lane, and `next` meets the end of the body, at the step node
+of a counted loop, where `continue` lands in Python's `for`, or at the
+start of the back edge. A `Return` is identified by
+`requires: "function"`: its edge runs to `End` along one vertical line on
+the right. A `Return` or a jump carries the connector after it, since no
+other edge leaves it. After a branch whose regions all return or jump there
+is no edge and no connector.
 
 **Routes are parsed by hand** (U-01, U-07). Six hash routes with at most
 one parameter are a `parseRoute()` function and a `hashchange` subscription

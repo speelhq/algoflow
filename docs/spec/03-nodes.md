@@ -24,7 +24,11 @@ export type NodeDef = {
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // E-08: stmt → lines, expr → text
   form?(node: Stmt | Expr, ctx: { creates: boolean }): string; // N-08
   text?(node: Stmt | Expr, slot: string): string; // N-08
-  chart?: { branch: { yes: string; no: string } } | { check: string } | { counted: string }; // N-09
+  chart?:
+    | { branch: { yes: string; no: string } }
+    | { check: string }
+    | { counted: string }
+    | { jump: "exit" | "next" }; // N-09
 };
 export type Slot = {
   name: string;
@@ -155,7 +159,8 @@ chips, the block menu, and the editor show the template as written.
 
 ## Chart shape
 
-N-09 A block with body regions declares `chart` (U-33): `if` declares
+N-09 A block with body regions, or one that sends control elsewhere than
+the next statement in a loop, declares `chart` (U-33): `if` declares
 `{ branch: { yes: "then", no: "else" } }`; `while` declares
 `{ check: "body" }`; `for` and `foreach` declare `{ counted: "body" }` and
 carry three more keys, `node.<key>.init`, `node.<key>.check`, and
@@ -165,6 +170,10 @@ carry three more keys, `node.<key>.init`, `node.<key>.check`, and
 | --------- | ----------------------- | ------------------------------ | --------------------------- |
 | `for`     | `Set {var} to {start}`  | `Is {var} < {stop}?`           | `Set {var} to {var} + 1`    |
 | `foreach` | `Start at the first item of {list}` | `Is there an item left?` | `Set {var} to the next item` |
+
+`break` declares `{ jump: "exit" }` and `continue` declares
+`{ jump: "next" }`: the edge of each leads where control goes, out of the
+innermost loop or into its next pass (U-33).
 
 The chart renders every other block as a box with its sentence; the
 interpreter and emitter are unaffected by `chart`.
