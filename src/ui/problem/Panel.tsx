@@ -41,7 +41,7 @@ export function Panel({ challenge }: { challenge: Challenge }) {
           aria-label={t("problem.panel.expand")}
           onClick={() => setCollapsed(false)}
         >
-          »
+          {t("problem.panel.expandGlyph")}
         </Button>
       </aside>
     );
@@ -75,7 +75,7 @@ export function Panel({ challenge }: { challenge: Challenge }) {
               aria-label={t("problem.panel.collapse")}
               onClick={() => setCollapsed(true)}
             >
-              «
+              {t("problem.panel.collapseGlyph")}
             </Button>
           </div>
           <TabsContent value="problem" className="min-h-0 overflow-y-auto p-4">

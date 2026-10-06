@@ -85,7 +85,7 @@ function Mark({ node, mark }: { node: ChartNode; mark: boolean }) {
         dominantBaseline="central"
         className="fill-current text-[10px] font-bold"
       >
-        {mark ? "✓" : "✗"}
+        {t(mark ? "chart.markYes" : "chart.markNo")}
       </text>
     </g>
   );
@@ -152,7 +152,7 @@ function NodeView({ node, look }: { node: ChartNode; look: Look }) {
           dominantBaseline="central"
           className="fill-muted-foreground text-[10px]"
         >
-          ▾
+          {t("chart.inputGlyph")}
         </text>
       )}
       {look.mark !== undefined && <Mark node={node} mark={look.mark} />}
@@ -296,7 +296,11 @@ export function Chart(props: Props) {
 
   return (
     <div className="relative min-h-0 flex-1">
-      <div ref={scroller} className="absolute inset-0 overflow-auto" data-testid="chart-scroll">
+      <div
+        ref={scroller}
+        className="absolute inset-0 overflow-auto [scrollbar-gutter:stable]"
+        data-testid="chart-scroll"
+      >
         <div className="relative mx-auto" style={{ width, height }}>
           <svg
             ref={svg}
@@ -368,7 +372,7 @@ export function Chart(props: Props) {
           aria-label={t("chart.zoomOut")}
           onClick={() => setZoom(zoomStep(scale, -1))}
         >
-          −
+          {t("chart.zoomOutGlyph")}
         </Button>
         <Button
           variant="outline"
@@ -384,7 +388,7 @@ export function Chart(props: Props) {
           aria-label={t("chart.zoomIn")}
           onClick={() => setZoom(zoomStep(scale, 1))}
         >
-          +
+          {t("chart.zoomInGlyph")}
         </Button>
       </div>
     </div>

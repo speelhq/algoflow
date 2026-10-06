@@ -21,7 +21,8 @@ export function useRunKeys(): void {
       const running = run.status !== "idle";
       let handled = true;
       if (mod && event.key === "Enter") {
-        if (run.status === "playing") run.pause();
+        // A pause during the pre-run opens the run paused (R-11).
+        if (run.status === "playing" || (run.status === "idle" && run.busy)) run.pause();
         else if (run.status === "paused") run.play();
         else startRun();
       } else if (running && mod && event.key === "ArrowRight") void run.skip();

@@ -34,9 +34,23 @@ export function ResultRows({ rows, marked, error, expected }: Props) {
         )}
       </div>
       {error !== undefined ? (
-        <p className="rounded-lg border border-destructive/40 bg-destructive/10 p-2 text-destructive">
-          {error}
-        </p>
+        <div className={cn("grid gap-x-2", expected ? "grid-cols-2" : "grid-cols-1")}>
+          <p
+            className="self-start rounded-lg border border-destructive/40 bg-destructive/10 p-2 text-destructive"
+            data-testid="result-error"
+          >
+            {error}
+          </p>
+          {expected && (
+            <div className="rounded-lg border py-1">
+              {rows.output.map((row) => (
+                <div key={row.line} className={cell}>
+                  {row.expected ?? ""}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       ) : (
         <div
           className={cn(

@@ -63,8 +63,6 @@ function PlanSection({ section, status }: { section: Section; status: Status }) 
   );
 }
 
-const MARK = { solved: "✓", attempted: "•" } as const;
-
 /** U-10: status mark, title, difficulty, topic tags; the row opens the Problem page. */
 function ProblemRow({ challenge, mark }: { challenge: Challenge; mark: ReturnType<Status> }) {
   return (
@@ -83,7 +81,7 @@ function ProblemRow({ challenge, mark }: { challenge: Challenge; mark: ReturnTyp
             mark === "attempted" && "border-attempted text-attempted",
           )}
         >
-          {mark ? MARK[mark] : ""}
+          {mark ? t(`problems.mark.${mark}`) : ""}
         </span>
         <span>{localized(challenge.title)}</span>
         <span className="text-sm text-muted-foreground">

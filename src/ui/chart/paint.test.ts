@@ -61,11 +61,27 @@ describe("paint (U-61)", () => {
   });
 
   it("takes a loop's No edge to the next statement once the loop's mark is cleared", () => {
-    const p = paint(chart, view({ taken: { [loop.id]: true, [after.id]: true } }));
+    const p = paint(
+      chart,
+      view({ activeId: after.id, taken: { [loop.id]: true, [after.id]: true } }),
+    );
     const no = chart.edges.find(
       (edge) => edge.from === nodeOf(loop.id, "check") && edge.label === "no",
     );
     expect(no && p.edges.has(no.id)).toBe(true);
+  });
+
+  it("takes a loop's No edge into a following loop's junction once control is there", () => {
+    const first = for_("i", num(0), num(2), [print(v("i"))]);
+    const second = for_("j", num(0), num(2), [print(v("j"))]);
+    const twice = layout(program([first, second]));
+    const check = twice.nodes.find((node) => node.owner === first.id && node.role === "check");
+    const no = twice.edges.find((edge) => edge.from === check?.id && edge.label === "no");
+    const at = (activeId: string) =>
+      paint(twice, view({ activeId, taken: { [first.id]: true, [second.id]: true } }));
+    expect(no && at(second.id).edges.has(no.id)).toBe(true);
+    // Before its first check the loop is current and has no mark: its No edge is not taken.
+    expect(no && at(first.id).edges.has(no.id)).toBe(false);
   });
 
   it("marks the breakpoint on a loop's check and End once the run has ended", () => {

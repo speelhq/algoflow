@@ -57,14 +57,12 @@ export function paint(chart: ChartLayout, view: RunView): Paint {
     if (!from || !to || !nodes.has(from.id) || !nodes.has(to.id)) continue;
     const verdict = from.owner === null ? undefined : view.verdicts[from.owner];
     // A labelled edge follows its diamond's mark; once a loop's mark is cleared on leaving
-    // it, its `No` edge is taken when the statement it leads to is (another statement).
+    // it (control is elsewhere), its `No` edge is taken when what it leads to is.
+    const left = verdict === undefined && from.owner !== null && from.owner !== view.activeId;
     const follows =
       !edge.label ||
       verdict === (edge.label === "yes") ||
-      (verdict === undefined &&
-        edge.label === "no" &&
-        to.owner !== from.owner &&
-        (to.role === "stmt" || to.role === "init" || to.role === "end"));
+      (left && edge.label === "no" && to.owner !== from.owner);
     if (follows) edges.add(edge.id);
   }
   const marks = new Map<string, boolean>();

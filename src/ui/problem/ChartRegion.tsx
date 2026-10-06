@@ -7,10 +7,11 @@ import { errorText, t } from "@/i18n/t";
 import type { NodeId, Program } from "@/lang/types";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
+import { useShallow } from "zustand/react/shallow";
 import { useRun, type RunState } from "@/store/run";
 import { Chart, type Note } from "@/ui/chart/Chart";
 import { layout, type ChartLayout } from "@/ui/chart/layout";
-import { measureText, useFontStatus } from "@/ui/chart/measure";
+import { measureText, useFontLoads } from "@/ui/chart/measure";
 import { nodeFor, paint, type Paint } from "@/ui/chart/paint";
 import { PathBar } from "@/ui/chart/PathBar";
 import { Button } from "@/ui/primitives/button";
@@ -37,7 +38,25 @@ function SolutionBand() {
 const say = (sentence: Narration) => t(sentence.key, sentence.params);
 
 /** U-63, U-81, U-65: the sentence for the run's position, or none before the first step. */
-function narration(run: RunState, program: Program): string | null {
+/** The driver fields the chart draws and narrates from. */
+type Shown = Pick<
+  RunState,
+  | "status"
+  | "step"
+  | "total"
+  | "outcome"
+  | "lastEvent"
+  | "state"
+  | "frame"
+  | "pass"
+  | "difference"
+  | "activeId"
+  | "taken"
+  | "verdicts"
+  | "breakpoint"
+>;
+
+function narration(run: Shown, program: Program): string | null {
   const { step, total, outcome, lastEvent, state, difference } = run;
   const end = outcome && step === total ? narrateEnd(outcome, total) : null;
   // An error is said wherever the run stops on it; a difference is said in place of the step.
@@ -53,7 +72,23 @@ function useRunPaint(
   chart: ChartLayout | null,
   program: Program,
 ): { paint?: Paint; note: Note | null } {
-  const run = useRun();
+  const run: Shown = useRun(
+    useShallow((s) => ({
+      status: s.status,
+      step: s.step,
+      total: s.total,
+      outcome: s.outcome,
+      lastEvent: s.lastEvent,
+      state: s.state,
+      frame: s.frame,
+      pass: s.pass,
+      difference: s.difference,
+      activeId: s.activeId,
+      taken: s.taken,
+      verdicts: s.verdicts,
+      breakpoint: s.breakpoint,
+    })),
+  );
   const diagnostic = useEditor((s) => s.diagnostic);
   const selectedId = useEditor((s) => s.selectedId);
   return useMemo(() => {
@@ -91,7 +126,7 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
   const caseIndex = useRun((s) => s.caseIndex);
   const selectCase = useRun((s) => s.selectCase);
   const running = useRun((s) => s.status !== "idle");
-  const fonts = useFontStatus();
+  const fonts = useFontLoads();
   const program: Program = solution ? challenge.solution : mine;
   const inputs = challenge.tests[caseIndex]?.inputs;
   const chart = useMemo(

@@ -41,7 +41,7 @@ function Chips({ challenge }: { challenge: Challenge }) {
             )}
             onClick={() => select(index)}
           >
-            {pass ? "✓" : "✗"} {caseText(test.inputs)}
+            {t(pass ? "result.chipPass" : "result.chipFail", { case: caseText(test.inputs) })}
           </Button>
         );
       })}
