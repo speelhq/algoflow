@@ -97,7 +97,7 @@ describe("checkChallengeSchema (C-01, C-03)", () => {
     ]);
   });
 
-  it("requires ja texts only when asked (M-06)", () => {
+  it("requires ja texts only when asked (M-10)", () => {
     expect(checkChallengeSchema(valid(), "demo", { requireJa: true }).problems).toEqual(
       expect.arrayContaining([expect.stringContaining("title must be { en, ja? }")]),
     );

@@ -18,7 +18,7 @@ describe("advance and outcomeOf", () => {
     const runner = run(program([assign("x", num(2))]), {}, 1);
     const done = advance(runner, 100);
     expect(done).toEqual({ type: "done", steps: 2, loops: 0 });
-    // Further calls keep returning the same Done (R-14).
+    // Further calls keep returning the same Done.
     expect(advance(runner, 1)).toEqual(done);
   });
 

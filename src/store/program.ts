@@ -1,5 +1,5 @@
 // C-13, L-53, L-55: the current program and challenge loading. Editing, history,
-// and the 500 ms persistence writes arrive in M-03; this store only reads storage.
+// and the 500 ms persistence writes arrive in M-04; this store only reads storage.
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
 import { migrate } from "@/lang/migrate";

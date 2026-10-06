@@ -236,7 +236,7 @@ describe("run store (T-05: R-11, R-12, R-19)", () => {
 
   // ------------------------------------------------------------ R-11 Seek, Back, Stop
 
-  it("Seek rebuilds the position from every event it passes, forward or from a fresh runner (R-10)", async () => {
+  it("Seek rebuilds the position from every event it passes, forward or from a fresh runner (R-11, R-10)", async () => {
     const hit = if_(bin("==", v("i"), num(1)), [print(v("i"))]);
     useProgram.setState({ program: program([for_("i", num(0), num(3), [hit])]) });
     const reference = runAll(useProgram.getState().program).events;

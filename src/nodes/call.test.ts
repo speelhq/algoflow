@@ -20,7 +20,7 @@ describe("call (03-nodes)", () => {
     );
   });
 
-  it("T-02 / L-28: call and return events around the body; the value comes back", () => {
+  it("T-02 / R-14: call and return events around the body; the value comes back", () => {
     const stmt = assign("y", call("twice", num(3)));
     const result = runAll(program([stmt], { functions: [twice] }));
     expect(eventTypes(result.events)).toEqual(["enter", "call", "enter", "return", "write"]);

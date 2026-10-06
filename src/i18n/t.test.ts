@@ -28,7 +28,7 @@ describe("t (U-71, U-73)", () => {
     expect(warn).toHaveBeenCalledOnce();
   });
 
-  it("falls back to en while ja has no catalog yet (M-06)", () => {
+  it("falls back to en while ja has no catalog yet (M-10)", () => {
     setLocale("ja");
     expect(getLocale()).toBe("ja");
     expect(t("app.name")).toBe("AlgoFlow");

@@ -42,7 +42,7 @@ describe("for (03-nodes)", () => {
     expect(result.done).toEqual({ type: "done", steps: 7, loops: 2 });
   });
 
-  it("T-02 / L-25: bounds are evaluated once; the variable stays visible after the loop", () => {
+  it("T-02 / L-25, L-43: bounds are evaluated once; the variable stays visible after the loop", () => {
     const result = runAll(
       program([for_("i", num(0), v("n"), [assign("n", bin("+", v("n"), num(1)))])], {
         inputs: [{ name: "n", value: 3 }],

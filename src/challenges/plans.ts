@@ -12,7 +12,7 @@ let position = 0;
 for (const plan of PLANS)
   for (const id of plan.problems) members.set(id, { rank: position++, plan });
 
-/** U-10 order: position across the plans (plan order, then member order); challenges in no plan rank last. */
+/** U-12 order: position across the plans (plan order, then member order); challenges in no plan rank last. */
 export function planRank(id: string): number {
   return members.get(id)?.rank ?? NO_PLAN;
 }
