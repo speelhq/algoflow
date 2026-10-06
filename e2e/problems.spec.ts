@@ -1,12 +1,8 @@
 // U-01, U-02, U-04, U-06, U-07, U-10..U-14, U-90: routes, the Problems page, Help, first launch.
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { seedProgress } from "./seed";
 
 /** Stores `entries` under `algoflow:progress` (C-17) before the app loads. */
-async function seedProgress(page: Page, entries: Record<string, unknown>): Promise<void> {
-  await page.addInitScript((value) => {
-    localStorage.setItem("algoflow:progress", value);
-  }, JSON.stringify(entries));
-}
 
 test.describe("first launch (U-90)", () => {
   test("with nothing stored, the first problem of the first plan opens", async ({ page }) => {
