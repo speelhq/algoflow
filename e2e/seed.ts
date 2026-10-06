@@ -1,5 +1,5 @@
-// Storage the app reads on load: progress and a problem's program. Until
-// editing exists (M-04), the stored program is how a test puts a chart on the page.
+// Storage the app reads on load: progress and a program. A stored program puts a finished
+// chart on the page in one step; the editing tests build theirs through the editor.
 import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
 

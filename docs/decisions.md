@@ -1017,9 +1017,11 @@ of the script string, so `tsx scripts/check.ts && tsx scripts/i18n.ts` would
 pass `challenges/x.json` to the i18n script; `check.ts` invokes the i18n check
 itself instead.
 
-**The end-to-end tests load a solution through storage**. C-13's restore path is
-the only means of placing a finished program on the page before editing
-exists, and a development-only affordance would be untested UI.
+**The end-to-end tests load a solution through storage**. C-13's restore path
+places a finished program on the page in one step; building each one through
+the `+` menu would make every test of running or submitting depend on the
+editor, which the editing tests and the M-04 exit test cover once. A
+development-only affordance would be untested UI.
 
 ## Process
 
