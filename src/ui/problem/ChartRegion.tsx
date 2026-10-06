@@ -8,7 +8,7 @@ import type { NodeId, Place, Program } from "@/lang/types";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useShallow } from "zustand/react/shallow";
-import { useRun, type RunState } from "@/store/run";
+import { shownInputs, useRun, type RunState } from "@/store/run";
 import { Chart, type Note } from "@/ui/chart/Chart";
 import type { Moves } from "@/ui/chart/drag";
 import { layout, type ChartLayout } from "@/ui/chart/layout";
@@ -19,6 +19,7 @@ import { Connector } from "@/ui/editor/BlockMenu";
 import { apply } from "@/ui/editor/edits";
 import { accepts, tryMove } from "@/ui/editor/moves";
 import { DiagnosticMessage, flaggedStatements, NodeEditor } from "@/ui/editor/NodeEditor";
+import { LiteralEditor } from "@/ui/expression/LiteralEditor";
 import { Button } from "@/ui/primitives/button";
 import { narrate, narrateDifference, narrateEnd, type Narration } from "@/ui/run/narrate";
 import { caseText } from "./caseText";
@@ -135,7 +136,8 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
   const fonts = useFontLoads();
   const shown = solution && challenge !== undefined;
   const program: Program = shown ? challenge.solution : mine;
-  const inputs = challenge?.tests[caseIndex]?.inputs;
+  const custom = useRun((s) => s.custom);
+  const inputs = shownInputs(challenge?.tests, caseIndex, custom);
   const chart = useMemo(
     () => (fonts ? layout(program, { inputs, measure: measureText }) : null),
     [program, inputs, fonts],
@@ -145,6 +147,15 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
       challenge && {
         labels: challenge.tests.map((test) => caseText(test.inputs)),
         choose: selectCase,
+        custom: (name: string, done: () => void) => (
+          <LiteralEditor
+            name={name}
+            choose={(value) => {
+              useRun.getState().setInput(name, value);
+              done();
+            }}
+          />
+        ),
       },
     [challenge, selectCase],
   );

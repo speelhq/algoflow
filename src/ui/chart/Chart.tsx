@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/ui/primitives/popover";
 import { ChartDrag, DropZone, useNodeDrag, type Moves } from "./drag";
 import { PILL, type ChartEdge, type ChartLayout, type ChartNode } from "./layout";
 import { nodeFor, type Paint } from "./paint";
@@ -31,7 +32,12 @@ type Props = {
   /** A click on a statement's node (or a generated node of it), with the slot clicked on it. */
   onSelect?: (owner: NodeId, slot?: string) => void;
   /** The cases an Input node's menu lists, and what choosing one does; absent while read-only. */
-  cases?: { labels: string[]; choose: (index: number) => void };
+  cases?: {
+    labels: string[];
+    choose: (index: number) => void;
+    /** `Custom…`'s value editor for input `name`; `done` closes it. */
+    custom: (name: string, done: () => void) => ReactNode;
+  };
   /** The run drawn on the chart. */
   paint?: Paint;
   /** A sentence beside a chart node: the narration, or an error's or a diagnostic's message. */
@@ -207,28 +213,41 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
 }
 
 /** Clicking an Input node lists the problem's cases; choosing one sets every Input node. */
-function InputMenu({ label, cases }: { label: string; cases: NonNullable<Props["cases"]> }) {
+function InputMenu(props: { label: string; name: string; cases: NonNullable<Props["cases"]> }) {
+  const { label, name, cases } = props;
+  const [editing, setEditing] = useState(false);
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button
-            type="button"
-            aria-label={label}
-            className="size-full cursor-pointer rounded-md"
-            data-testid="input-node"
-          />
-        }
-      />
-      <DropdownMenuContent>
-        {cases.labels.map((text, index) => (
-          // oxlint-disable-next-line react/no-array-index-key -- a case is its index in the tests
-          <DropdownMenuItem key={index} onClick={() => cases.choose(index)}>
-            {text}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="relative size-full">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              aria-label={label}
+              className="size-full cursor-pointer rounded-md"
+              data-testid="input-node"
+            />
+          }
+        />
+        <DropdownMenuContent>
+          {cases.labels.map((text, index) => (
+            // oxlint-disable-next-line react/no-array-index-key -- a case is its index in the tests
+            <DropdownMenuItem key={index} onClick={() => cases.choose(index)}>
+              {text}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuItem onClick={() => setEditing(true)}>{t("chart.custom")}</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Popover open={editing} onOpenChange={setEditing}>
+        <PopoverTrigger
+          render={<div className="pointer-events-none absolute inset-0" aria-hidden />}
+        />
+        <PopoverContent side="right" align="start" className="w-72">
+          {cases.custom(name, () => setEditing(false))}
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
 
@@ -505,7 +524,11 @@ export function Chart(props: Props) {
                           className="pointer-events-auto absolute"
                           style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
                         >
-                          <InputMenu label={node.text} cases={cases} />
+                          <InputMenu
+                            label={node.text}
+                            name={node.id.slice("input:".length)}
+                            cases={cases}
+                          />
                         </div>
                       ))}
                 </div>

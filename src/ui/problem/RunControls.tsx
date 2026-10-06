@@ -2,7 +2,7 @@
 // `■ Stop` while running; `✓ Submit` in both, on a problem.
 import type { Challenge } from "@/challenges";
 import { t } from "@/i18n/t";
-import { useRun } from "@/store/run";
+import { shownInputs, useRun } from "@/store/run";
 import { useTests } from "@/store/tests";
 import { Button } from "@/ui/primitives/button";
 import { startRun, startSubmit } from "./actions";
@@ -12,6 +12,7 @@ export function RunControls({ challenge }: { challenge?: Challenge }) {
   const status = useRun((s) => s.status);
   const busy = useRun((s) => s.busy);
   const caseIndex = useRun((s) => s.caseIndex);
+  const custom = useRun((s) => s.custom);
   const stop = useRun((s) => s.stop);
   const submitting = useTests((s) => s.running);
   // Submit does not depend on the run, so it is offered in both modes.
@@ -35,7 +36,7 @@ export function RunControls({ challenge }: { challenge?: Challenge }) {
       </>
     );
   }
-  const inputs = challenge?.tests[caseIndex]?.inputs;
+  const inputs = shownInputs(challenge?.tests, caseIndex, custom);
   return (
     <>
       <span
