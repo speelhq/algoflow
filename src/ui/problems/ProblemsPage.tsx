@@ -1,0 +1,102 @@
+// U-02, U-10..U-14: one section per study plan in C-16 order, then `More problems`; the
+// status marks and plan counts come from progress (C-17).
+import { getChallenge, type Challenge } from "@/challenges";
+import { planAction, sections, type Section, type Status } from "@/challenges/next";
+import { localized, t } from "@/i18n/t";
+import { cn } from "@/lib/utils";
+import { statusOf, useProgress } from "@/store/progress";
+import { Header } from "@/ui/app/Header";
+import { routeHash } from "@/ui/app/route";
+import { useTitle } from "@/ui/hooks/useTitle";
+import { buttonVariants } from "@/ui/primitives/button";
+
+export function ProblemsPage() {
+  useTitle(t("problems.title"));
+  const entries = useProgress((s) => s.entries);
+  const status: Status = (id) => statusOf(entries, id);
+  return (
+    <div className="flex h-full flex-col">
+      <Header current="problems" />
+      <main className="flex-1 overflow-y-auto px-6 py-4" data-testid="problems">
+        {sections().map((section) => (
+          <PlanSection key={section.plan?.id ?? "more"} section={section} status={status} />
+        ))}
+      </main>
+    </div>
+  );
+}
+
+function PlanSection({ section, status }: { section: Section; status: Status }) {
+  const { plan, problems } = section;
+  const challenges = problems.flatMap((id) => getChallenge(id) ?? []);
+  const action = plan ? planAction(problems, status) : null;
+  const solved = problems.filter((id) => status(id) === "solved").length;
+  return (
+    <section className="mb-6" data-testid={`plan-${plan?.id ?? "more"}`}>
+      <div className="flex items-center gap-4 rounded-xl border bg-muted/40 px-4 py-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-semibold">{plan ? localized(plan.title) : t("problems.more")}</h2>
+          {plan && <p className="text-sm text-muted-foreground">{localized(plan.description)}</p>}
+        </div>
+        {plan && (
+          <span className="text-sm text-muted-foreground">
+            {t("problems.solved", { n: solved, m: problems.length })}
+          </span>
+        )}
+        {action && (
+          <a
+            href={routeHash({ page: "problem", id: action.id })}
+            className={buttonVariants({
+              variant: action.kind === "continue" ? "default" : "outline",
+            })}
+          >
+            {t(action.kind === "continue" ? "problems.continue" : "problems.start")}
+          </a>
+        )}
+      </div>
+      <ul className="mt-1">
+        {challenges.map((challenge) => (
+          <ProblemRow key={challenge.id} challenge={challenge} mark={status(challenge.id)} />
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+const MARK = { solved: "✓", attempted: "•" } as const;
+
+/** U-10: status mark, title, difficulty, topic tags; the row opens the Problem page. */
+function ProblemRow({ challenge, mark }: { challenge: Challenge; mark: ReturnType<Status> }) {
+  return (
+    <li className="border-b">
+      <a
+        href={routeHash({ page: "problem", id: challenge.id })}
+        className="grid grid-cols-[2rem_1fr_8rem_20rem] items-center gap-2 px-2 py-1.5 hover:bg-muted/60"
+        data-testid={`problem-${challenge.id}`}
+      >
+        <span
+          role="img"
+          aria-label={t(`problems.status.${mark ?? "untouched"}`)}
+          className={cn(
+            "flex size-6 items-center justify-center rounded-full border text-sm",
+            mark === "solved" && "border-solved bg-solved text-white",
+            mark === "attempted" && "border-attempted text-attempted",
+          )}
+        >
+          {mark ? MARK[mark] : ""}
+        </span>
+        <span>{localized(challenge.title)}</span>
+        <span className="text-sm text-muted-foreground">
+          {t(`problems.difficulty.${challenge.difficulty}`)}
+        </span>
+        <span className="flex flex-wrap gap-1">
+          {challenge.topics.map((topic) => (
+            <span key={topic} className="rounded-full border px-2 text-xs text-muted-foreground">
+              {t(`problems.topic.${topic}`)}
+            </span>
+          ))}
+        </span>
+      </a>
+    </li>
+  );
+}

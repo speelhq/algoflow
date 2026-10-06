@@ -1,7 +1,81 @@
 {
   "app": {
     "name": "AlgoFlow",
-    "desktopOnly": "AlgoFlow needs a window at least 1280 px wide. Please open it in a desktop browser."
+    "title": "{title} — AlgoFlow",
+    "desktopOnly": "AlgoFlow needs a window at least 1280 px wide. Please open it in a desktop browser.",
+    "nav": {
+      "label": "Pages",
+      "problems": "Problems",
+      "playground": "Playground",
+      "modules": "Modules"
+    },
+    "help": {
+      "open": "Help",
+      "title": "Help",
+      "close": "Close",
+      "loop": {
+        "build": "Build: add blocks to the chart under Start.",
+        "run": "Run: watch the chart work on one input, step by step, and compare its output with the expected one.",
+        "submit": "Submit: check every case; fix the chart until all of them pass."
+      },
+      "keysTitle": "Keyboard",
+      "keysColumn": "Keys",
+      "actionColumn": "Action",
+      "keys": {
+        "delete": { "keys": "Delete, Backspace", "action": "Remove the selected block" },
+        "undo": { "keys": "Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z", "action": "Undo, redo" },
+        "duplicate": { "keys": "Ctrl/Cmd+D", "action": "Duplicate the selected block" },
+        "run": { "keys": "Ctrl/Cmd+Enter", "action": "Run / Pause" },
+        "step": { "keys": "→, ←", "action": "Step, Back (while running)" },
+        "stepOver": { "keys": "Shift+→", "action": "Step over (while running)" },
+        "skip": { "keys": "Ctrl/Cmd+→", "action": "Skip (while running)" },
+        "escape": {
+          "keys": "Esc",
+          "action": "Close a menu or editor and clear the selection; while running, clear the breakpoint, else Stop"
+        }
+      }
+    }
+  },
+  "problems": {
+    "title": "Problems",
+    "solved": "{n} of {m} solved",
+    "start": "Start",
+    "continue": "Continue",
+    "more": "More problems",
+    "status": {
+      "solved": "Solved",
+      "attempted": "Attempted",
+      "untouched": "Not started"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "topic": {
+      "output": "Output",
+      "variables": "Variables",
+      "loops": "Loops",
+      "conditions": "Conditions",
+      "lists": "Lists",
+      "searching": "Searching",
+      "sorting": "Sorting",
+      "recursion": "Recursion",
+      "dictionaries": "Dictionaries",
+      "classes": "Classes",
+      "gradients": "Gradients"
+    }
+  },
+  "problem": {
+    "back": "← Problems"
+  },
+  "playground": {
+    "title": "Playground",
+    "stub": "Your Playground programs will be listed here."
+  },
+  "modules": {
+    "title": "Modules",
+    "stub": "Your modules will be listed here."
   },
   "node": {
     "empty": {

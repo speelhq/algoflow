@@ -6,10 +6,11 @@ import { migrate } from "@/lang/migrate";
 import type { Program } from "@/lang/types";
 
 export const FREE = "free";
+export const PROGRAM_KEY_PREFIX = "algoflow:program:";
 
 /** L-53: `algoflow:program:<challengeId | "free">`. */
 export function programKey(challengeId: string | undefined): string {
-  return `algoflow:program:${challengeId ?? FREE}`;
+  return `${PROGRAM_KEY_PREFIX}${challengeId ?? FREE}`;
 }
 
 export function emptyProgram(title = ""): Program {
