@@ -490,6 +490,32 @@ describe("run store (T-05: R-11, R-12, R-19)", () => {
     expect(run()).toMatchObject({ status: "done", verdicts: { [loop.id]: false } });
   });
 
+  it("U-61: a for that ends loses its mark at the first statement after it", async () => {
+    const loop = for_("i", num(0), num(2), [print(v("i"))]);
+    const after = print(str("x"));
+    useProgram.setState({ program: program([loop, after]) });
+    await paused();
+    // enter for, loop, enter print, print, loop, enter print, print, enter after, print
+    await run().seek(7);
+    expect(run().verdicts).toEqual({ [loop.id]: true });
+    await run().seek(8);
+    expect(run()).toMatchObject({ activeId: after.id, verdicts: {} });
+  });
+
+  it("U-61: a for left by break loses its mark too; a statement inside keeps it", async () => {
+    const exit = if_(bin("==", v("i"), num(1)), [ast.brk()]);
+    const loop = for_("i", num(0), num(5), [exit]);
+    const after = print(str("x"));
+    useProgram.setState({ program: program([loop, after]) });
+    await paused();
+    // enter for, loop, enter if, compare(false), loop, enter if, compare(true), enter break,
+    // enter after, print
+    await run().seek(8);
+    expect(run().verdicts).toEqual({ [loop.id]: true, [exit.id]: true });
+    await run().seek(9);
+    expect(run().verdicts).toEqual({ [exit.id]: true });
+  });
+
   // ------------------------------------------------------------ C-15 verdict
 
   it("C-15: the chosen case is judged at the end of the run, and only there", async () => {

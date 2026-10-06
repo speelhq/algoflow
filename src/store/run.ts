@@ -10,7 +10,8 @@ import { firstDifference, resultRows, watchStep, type WatchStep } from "@/challe
 import type { Test } from "@/challenges/types";
 import type { Data, HeapEntry, Id, NodeId, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
-import { bodyStmts, ownerStmts } from "@/lang/walk";
+import { bodyStmts, nodesById, ownerStmts } from "@/lang/walk";
+import { getNode, keyOf } from "@/nodes";
 import { outcomeOf, type Outcome } from "@/runtime/outcome";
 import { run as startRunner } from "@/runtime/run";
 import type { Done, Event, Runner, State } from "@/runtime/types";
@@ -100,6 +101,8 @@ let origin: Origin | null = null;
 let plan: Plan | null = null;
 let owners = new Map<NodeId, NodeId>();
 let bodies = new Map<NodeId, NodeId[]>();
+/** U-61: each loop with the statements inside it; leaving the loop clears its own mark. */
+let loops = new Map<NodeId, Set<NodeId>>();
 let projection: Projection = freshProjection();
 let breakpoint: NodeId | null = null;
 let timer: ReturnType<typeof setInterval> | null = null;
@@ -178,6 +181,12 @@ function apply(event: Event): void {
     p.taken[event.nodeId] = true;
     p.dirty.taken = true;
     p.passes.delete(event.nodeId);
+    for (const [loop, inside] of loops) {
+      if (loop in p.verdicts && loop !== event.nodeId && !inside.has(event.nodeId)) {
+        delete p.verdicts[loop];
+        p.dirty.verdicts = true;
+      }
+    }
   } else if (event.type === "compare") {
     const owner = owners.get(event.nodeId);
     if (owner !== undefined) {
@@ -195,6 +204,17 @@ function apply(event: Event): void {
     p.dirty.taken = true;
     p.passes.set(event.nodeId, (p.passes.get(event.nodeId) ?? 0) + 1);
   } else if (event.type === "print") p.dirty.stdout = true;
+}
+
+/** The loops among the statements with bodies, read from the registry (N-01 `loop`). */
+function loopBodies(program: Program, all: Map<NodeId, NodeId[]>): Map<NodeId, Set<NodeId>> {
+  const nodes = nodesById(program);
+  const found = new Map<NodeId, Set<NodeId>>();
+  for (const [id, inside] of all) {
+    const node = nodes.get(id);
+    if (node && getNode(keyOf(node)).loop) found.set(id, new Set(inside));
+  }
+  return found;
 }
 
 function atEnd(): boolean {
@@ -389,6 +409,7 @@ export const useRun = create<RunState>()((set, get) => {
       plan = made;
       owners = ownerStmts(from.program);
       bodies = bodyStmts(from.program);
+      loops = loopBodies(from.program, bodies);
       reset(from);
       watching = opts?.watch === true;
       if (watching) {
