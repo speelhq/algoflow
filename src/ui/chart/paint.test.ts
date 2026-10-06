@@ -1,0 +1,76 @@
+// U-39, U-60, U-61: the taken path, marks, current node, and breakpoint drawn while running.
+import { describe, expect, it } from "vitest";
+import { ast, program } from "@/nodes/testing";
+import { layout } from "./layout";
+import { currentNode, paint, type RunView } from "./paint";
+
+const { bin, for_, if_, num, print, str, v } = ast;
+
+const yes = print(str("zero"));
+const branch = if_(bin("==", v("i"), num(0)), [yes], [print(v("i"))]);
+const loop = for_("i", num(0), num(3), [branch]);
+const after = print(str("done"));
+const chart = layout(program([loop, after]));
+
+const nodeOf = (owner: string, role: string) =>
+  chart.nodes.find((node) => node.owner === owner && node.role === role)?.id;
+
+function view(partial: Partial<RunView>): RunView {
+  return {
+    ended: false,
+    activeId: null,
+    lastEvent: null,
+    taken: {},
+    verdicts: {},
+    breakpoint: null,
+    ...partial,
+  };
+}
+
+describe("currentNode (U-61)", () => {
+  it("is a counted loop's init on its enter and its check on a pass", () => {
+    const enter = view({ activeId: loop.id, lastEvent: { type: "enter", nodeId: loop.id } });
+    expect(currentNode(chart, enter)).toBe(nodeOf(loop.id, "init"));
+    const pass = view({ activeId: loop.id, lastEvent: { type: "loop", nodeId: loop.id } });
+    expect(currentNode(chart, pass)).toBe(nodeOf(loop.id, "check"));
+  });
+
+  it("is the statement's own node otherwise, and none before the first step", () => {
+    expect(currentNode(chart, view({ activeId: branch.id }))).toBe(branch.id);
+    expect(currentNode(chart, view({}))).toBeNull();
+  });
+});
+
+describe("paint (U-61)", () => {
+  it("draws the path of the current pass, a labelled edge by its diamond's mark", () => {
+    const p = paint(
+      chart,
+      view({
+        taken: { [loop.id]: true, [branch.id]: true, [yes.id]: true },
+        verdicts: { [loop.id]: true, [branch.id]: true },
+      }),
+    );
+    expect(p.nodes.has("start")).toBe(true);
+    expect(p.nodes.has(branch.id)).toBe(true);
+    expect(p.nodes.has("end")).toBe(false);
+    const labelled = chart.edges.filter((edge) => edge.from === branch.id);
+    const taken = labelled.filter((edge) => p.edges.has(edge.id)).map((edge) => edge.label);
+    expect(taken).toEqual(["yes"]);
+    expect(p.marks.get(branch.id)).toBe(true);
+    expect(p.marks.get(nodeOf(loop.id, "check") ?? "")).toBe(true);
+  });
+
+  it("takes a loop's No edge to the next statement once the loop's mark is cleared", () => {
+    const p = paint(chart, view({ taken: { [loop.id]: true, [after.id]: true } }));
+    const no = chart.edges.find(
+      (edge) => edge.from === nodeOf(loop.id, "check") && edge.label === "no",
+    );
+    expect(no && p.edges.has(no.id)).toBe(true);
+  });
+
+  it("marks the breakpoint on a loop's check and End once the run has ended", () => {
+    const p = paint(chart, view({ breakpoint: loop.id, ended: true }));
+    expect(p.breakpoint).toBe(nodeOf(loop.id, "check"));
+    expect(p.nodes.has("end")).toBe(true);
+  });
+});

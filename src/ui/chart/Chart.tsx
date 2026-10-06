@@ -1,6 +1,7 @@
 // U-30..U-33, U-38: the flowchart as SVG from `layout()`. Shapes come from `ChartNode.shape`
 // and never from a block kind (N-01); generated nodes are grey. An HTML layer over the SVG,
-// under the same scale, holds the parts a learner interacts with (the Input nodes' menus).
+// under the same scale, holds the parts a learner interacts with (the Input nodes' menus)
+// and the note beside a node (the narration, U-63; an error or a diagnostic, U-60, U-65).
 import { useEffect, useRef, useState } from "react";
 import { t } from "@/i18n/t";
 import type { NodeId } from "@/lang/types";
@@ -14,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
 import type { ChartEdge, ChartLayout, ChartNode } from "./layout";
+import type { Paint } from "./paint";
 import { CHART_FONT } from "./measure";
 import { fitScale, zoomStep } from "./zoom";
 
@@ -29,13 +31,22 @@ type Props = {
   onSelect?: (owner: NodeId) => void;
   /** U-32: the cases an Input node's menu lists, and what choosing one does; absent while read-only. */
   cases?: { labels: string[]; choose: (index: number) => void };
+  /** U-61: the run drawn on the chart. */
+  paint?: Paint;
+  /** A sentence beside a chart node: the narration, or an error's or a diagnostic's message. */
+  note?: Note | null;
 };
+
+export type Note = { node: string; text: string; tone: "narration" | "error" };
+
+/** Width of the note beside a node, in chart units. */
+const NOTE = 220;
 
 function NodeShape({ node }: { node: ChartNode }) {
   const { x, y, w, h } = node;
   switch (node.shape) {
     case "junction":
-      return <circle cx={x} cy={y} r={3} className="fill-foreground" />;
+      return <circle cx={x} cy={y} r={3} className="fill-foreground" data-junction />;
     case "diamond":
       return (
         <polygon
@@ -52,12 +63,61 @@ function NodeShape({ node }: { node: ChartNode }) {
   }
 }
 
-function NodeView({ node, outline }: { node: ChartNode; outline: "selected" | "hovered" | null }) {
+type Look = {
+  outline: "selected" | "hovered" | null;
+  taken: boolean;
+  current: "running" | "error" | null;
+  mark: boolean | undefined;
+  breakpoint: boolean;
+};
+
+/** U-61: ✓ or ✗ at a diamond's upper right. */
+function Mark({ node, mark }: { node: ChartNode; mark: boolean }) {
+  const cx = node.x + node.w * 0.75 + 14;
+  const cy = node.y + 4;
+  return (
+    <g data-mark={mark ? "yes" : "no"} className={mark ? "text-taken" : "text-destructive"}>
+      <circle cx={cx} cy={cy} r={8} className="fill-background stroke-current" />
+      <text
+        x={cx}
+        y={cy}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-current text-[10px] font-bold"
+      >
+        {mark ? "✓" : "✗"}
+      </text>
+    </g>
+  );
+}
+
+/** U-60: the breakpoint mark: a dot at the node's left, its word above the node's corner. */
+function BreakpointMark({ node }: { node: ChartNode }) {
+  return (
+    <g data-testid="breakpoint">
+      <circle cx={node.x - 9} cy={node.y + node.h / 2} r={5} className="fill-destructive" />
+      <text
+        x={node.x - 14}
+        y={node.y - 4}
+        textAnchor="start"
+        dominantBaseline="auto"
+        className="fill-muted-foreground text-[11px]"
+      >
+        {t("run.breakpoint")}
+      </text>
+    </g>
+  );
+}
+
+function NodeView({ node, look }: { node: ChartNode; look: Look }) {
+  const { outline, taken, current } = look;
   return (
     <g
       data-chart-node={node.id}
       data-node-id={node.owner ?? undefined}
       data-selected={outline === "selected" || undefined}
+      data-taken={taken || undefined}
+      data-current={current ?? undefined}
       className={cn(
         "[&_[data-shape]]:fill-background [&_[data-shape]]:stroke-foreground [&_[data-shape]]:stroke-[1.25]",
         node.shape === "input" && "[&_[data-shape]]:fill-muted",
@@ -66,6 +126,9 @@ function NodeView({ node, outline }: { node: ChartNode; outline: "selected" | "h
         outline === "selected" && "[&_[data-shape]]:stroke-selection [&_[data-shape]]:stroke-[2.5]",
         outline === "hovered" &&
           "[&_[data-shape]]:stroke-selection [&_[data-shape]]:stroke-[1.5] [&_[data-shape]]:[stroke-dasharray:4_3]",
+        taken && "[&_[data-shape]]:stroke-taken [&_[data-junction]]:fill-taken",
+        current === "running" && "[&_[data-shape]]:stroke-selection [&_[data-shape]]:stroke-[3]",
+        current === "error" && "[&_[data-shape]]:stroke-destructive [&_[data-shape]]:stroke-[3]",
       )}
     >
       <NodeShape node={node} />
@@ -92,6 +155,8 @@ function NodeView({ node, outline }: { node: ChartNode; outline: "selected" | "h
           ▾
         </text>
       )}
+      {look.mark !== undefined && <Mark node={node} mark={look.mark} />}
+      {look.breakpoint && <BreakpointMark node={node} />}
     </g>
   );
 }
@@ -122,6 +187,33 @@ function InputMenu({ label, cases }: { label: string; cases: NonNullable<Props["
   );
 }
 
+/** U-63, U-65: a sentence beside its node, to the left where there is room, else the right. */
+function NoteView({ note, node, width }: { note: Note; node: ChartNode; width: number }) {
+  // Left of the node when it fits inside the chart's margin, else right when that fits.
+  const leftAt = node.x - NOTE - 24;
+  const rightAt = node.x + node.w + 24;
+  const left = leftAt >= -PAD || rightAt + NOTE > width + PAD;
+  return (
+    <div
+      role="status"
+      data-testid={note.tone === "error" ? "chart-error" : "narration"}
+      className={cn(
+        "absolute -translate-y-1/2 rounded-lg border px-3 py-2 text-sm shadow-sm",
+        note.tone === "error"
+          ? "border-destructive/60 bg-background text-destructive"
+          : "border-selection/60 bg-background",
+      )}
+      style={{
+        width: NOTE,
+        top: node.y + node.h / 2,
+        left: left ? Math.max(leftAt, -PAD) : rightAt,
+      }}
+    >
+      {note.text}
+    </div>
+  );
+}
+
 /** A `Yes` / `No` label beside the first segment of its edge. */
 function EdgeLabel({ edge }: { edge: ChartEdge }) {
   const [a, b] = edge.points;
@@ -140,22 +232,23 @@ function EdgeLabel({ edge }: { edge: ChartEdge }) {
   );
 }
 
-function EdgeView({ edge }: { edge: ChartEdge }) {
+function EdgeView({ edge, taken }: { edge: ChartEdge; taken: boolean }) {
   return (
-    <g data-edge={edge.id}>
+    <g data-edge={edge.id} data-taken={taken || undefined}>
       <polyline
         points={edge.points.map((p) => `${p.x},${p.y}`).join(" ")}
         fill="none"
-        markerEnd="url(#chart-arrow)"
-        className="stroke-foreground/80"
-        strokeWidth={1.25}
+        markerEnd={taken ? "url(#chart-arrow-taken)" : "url(#chart-arrow)"}
+        className={taken ? "stroke-taken" : "stroke-foreground/80"}
+        strokeWidth={taken ? 2 : 1.25}
       />
       <EdgeLabel edge={edge} />
     </g>
   );
 }
 
-export function Chart({ chart, selectedId = null, hoveredId = null, onSelect, cases }: Props) {
+export function Chart(props: Props) {
+  const { chart, selectedId = null, hoveredId = null, onSelect, cases, paint, note } = props;
   const scroller = useRef<HTMLDivElement>(null);
   const region = useElementWidth(scroller);
   const [zoom, setZoom] = useState<number | null>(null);
@@ -177,14 +270,29 @@ export function Chart({ chart, selectedId = null, hoveredId = null, onSelect, ca
     return () => element.removeEventListener("click", click);
   }, [onSelect]);
 
-  const outline = (node: ChartNode) =>
-    node.owner === null
-      ? null
-      : node.owner === selectedId
-        ? "selected"
-        : node.owner === hoveredId
-          ? "hovered"
-          : null;
+  // U-61: the current node is scrolled into view.
+  const current = paint?.current ?? null;
+  useEffect(() => {
+    if (current === null) return;
+    const node = svg.current?.querySelector(`[data-chart-node="${CSS.escape(current)}"]`);
+    node?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [current]);
+
+  const look = (node: ChartNode): Look => ({
+    outline:
+      node.owner === null
+        ? null
+        : node.owner === selectedId
+          ? "selected"
+          : node.owner === hoveredId
+            ? "hovered"
+            : null,
+    taken: paint?.nodes.has(node.id) ?? false,
+    current: node.id === current ? (note?.tone === "error" ? "error" : "running") : null,
+    mark: paint?.marks.get(node.id),
+    breakpoint: paint?.breakpoint === node.id,
+  });
+  const noted = note ? chart.nodes.find((node) => node.id === note.node) : undefined;
 
   return (
     <div className="relative min-h-0 flex-1">
@@ -212,30 +320,43 @@ export function Chart({ chart, selectedId = null, hoveredId = null, onSelect, ca
               >
                 <path d="M 0 0 L 10 5 L 0 10 z" className="fill-foreground/80" />
               </marker>
+              <marker
+                id="chart-arrow-taken"
+                viewBox="0 0 10 10"
+                refX="10"
+                refY="5"
+                markerWidth="6"
+                markerHeight="6"
+                orient="auto-start-reverse"
+              >
+                <path d="M 0 0 L 10 5 L 0 10 z" className="fill-taken" />
+              </marker>
             </defs>
             {chart.edges.map((edge) => (
-              <EdgeView key={edge.id} edge={edge} />
+              <EdgeView key={edge.id} edge={edge} taken={paint?.edges.has(edge.id) ?? false} />
             ))}
             {chart.nodes.map((node) => (
-              <NodeView key={node.id} node={node} outline={outline(node)} />
+              <NodeView key={node.id} node={node} look={look(node)} />
             ))}
           </svg>
-          {cases && (
+          {(cases || noted) && (
             <div
               className="pointer-events-none absolute top-0 left-0 origin-top-left"
               style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
             >
-              {chart.nodes
-                .filter((node) => node.role === "input")
-                .map((node) => (
-                  <div
-                    key={node.id}
-                    className="pointer-events-auto absolute"
-                    style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
-                  >
-                    <InputMenu label={node.text} cases={cases} />
-                  </div>
-                ))}
+              {note && noted && <NoteView note={note} node={noted} width={chart.width} />}
+              {cases &&
+                chart.nodes
+                  .filter((node) => node.role === "input")
+                  .map((node) => (
+                    <div
+                      key={node.id}
+                      className="pointer-events-auto absolute"
+                      style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
+                    >
+                      <InputMenu label={node.text} cases={cases} />
+                    </div>
+                  ))}
             </div>
           )}
         </div>
