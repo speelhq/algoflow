@@ -44,6 +44,5 @@ canvas.
 
 A board is one file of its canvas. It is rendered alone in a browser at the
 size the canvas declares for it and captured as a PNG under the name of the
-board. The links to the canvases are in `private/PROMPTS.md`; the canvases
-themselves remain the working copies, and a changed board is exported again
-in the pull request that changes the spec it affects.
+board. The canvases remain the working copies, and a changed board is
+exported again in the pull request that changes the spec it affects.

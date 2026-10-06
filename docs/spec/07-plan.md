@@ -71,7 +71,6 @@ modules/         <name>.json (D-15)
 scripts/         check.ts i18n.ts lib/ (functions shared by the scripts and their tests)
 e2e/             *.spec.ts screenshots/
 docs/            spec/ decisions.md design/ (README.md, the board PNGs, P-13)
-private/         PROMPTS.md (ignored: the milestone prompts and the canvas links, P-10)
 .github/         workflows/ci.yml pull_request_template.md ISSUE_TEMPLATE/ (P-11, P-12)
 components.json
 ```
@@ -106,11 +105,9 @@ and on every push to `main`, which also deploys `dist/` to GitHub Pages
 
 ## Process
 
-P-10 `docs/` is tracked: the spec, `decisions.md`, and `design/`. `private/`
-is ignored and holds only `PROMPTS.md`, the milestone prompts with the links
-to the design canvases; nothing required by the code, the spec, or a review
-resides there. A change to the spec is committed separately, before the code
-that implements it.
+P-10 `docs/` is tracked: the spec, `decisions.md`, and `design/`.
+Everything the code, the spec, or a review needs is tracked. A change to the
+spec is committed separately, before the code that implements it.
 
 P-11 `main` takes only rebase merges of pull requests whose CI passed. A
 pull request is one or several vertical slices under approximately 600

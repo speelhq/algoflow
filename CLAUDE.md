@@ -106,8 +106,6 @@ commands, decisions not yet in `docs/spec/`.
 - `docs/design/` holds the design boards (P-13); read the board before
   building its screen. `docs/design/README.md` names them and lists where
   the spec deviates; the spec takes precedence.
-- `private/PROMPTS.md` (ignored by git) holds the milestone prompts the user
-  pastes; nothing else is private.
 - Issues: `decision` (the spec lacks an id), `defect`, `debt`, `perf`, or no
   label for a task; each under the milestone that needs it (P-12). A body has
   the sections Summary, Where, Expected and actual (a `defect` only), and

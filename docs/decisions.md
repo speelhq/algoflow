@@ -378,8 +378,8 @@ control flow invisible, placed values in a table separated from the program,
 and placed instructor tools at the same level as the core loop. The screens
 behind the ids in `05-ui.md` are on the design canvas "AlgoFlow Screens"
 (the flowchart and loop notation studies are on the earlier canvas "AlgoFlow
-Redesign"; both links are in `private/PROMPTS.md`). The division of the page
-is described under "Screen structure" below.
+Redesign"). The division of the page is described under "Screen structure"
+below.
 
 **A flowchart, not sentence blocks or a node graph** (U-30). Three
 directions were drawn. Scratch-style sentence blocks keep branches as
@@ -1004,15 +1004,12 @@ regions all return there is no edge and no connector.
 
 ## Process
 
-**The spec is tracked; only the prompts are private** (P-10). Until M-03 the
-whole of `docs/` was untracked: a working spec edited freely, with no
-history. Once every commit and test cited an id, a reviewer required the
-spec the code was written against at that commit, and a session that
-reverted a branch lost a file that had never been committed. What remains
-outside the repository is what has no reader other than the person running
-the sessions: the milestone prompts and the links to the design canvases.
-Everything a reviewer, a contributor, or a later session needs is in git or
-on GitHub.
+**The spec is tracked** (P-10). Until M-03 the whole of `docs/` was
+untracked: a working spec edited freely, with no history. Once every commit
+and test cited an id, a reviewer required the spec the code was written
+against at that commit, and a session that reverted a branch lost a file
+that had never been committed. Everything a reviewer, a contributor, or a
+later session needs is in git or on GitHub.
 
 **No handoff file** (P-14). `NEXT.md` held four kinds of text: the state of
 the repository (git and the pull requests state it), what a session built
@@ -1021,9 +1018,7 @@ and follow-ups (issues state them, with a milestone and a history), and
 tool behaviour (`CLAUDE.md` states it, and it is loaded at every start). A
 file rewritten at the end of every session and read at the start of the
 next was a fifth copy of the same facts, diverged between sessions, and,
-being untracked, was the one file a reset could lose. Milestone prompts
-remain, in `private/PROMPTS.md`, because they are written for a person to
-paste.
+being untracked, was the one file a reset could lose.
 
 **Boards are exported into the repository** (P-13). The screens were drawn
 on design canvases, reachable only by link. A link cannot be read by a

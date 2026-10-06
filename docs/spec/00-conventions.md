@@ -78,9 +78,9 @@ and the identifier that supersedes it, if any.
 | label           | the one word on an issue that names its kind: `decision`, `defect`, `debt`, `perf`; a task has none |
 | task            | an issue that names work to do rather than a problem to decide or fix       |
 | finding         | one item a review reports; fixed in the pull request under review or filed as an issue |
-| canvas          | a design document on which screens are drawn; linked from `private/PROMPTS.md`   |
+| canvas          | a design document on which screens are drawn                                     |
 | board           | one screen drawing on a canvas (P-13)                                            |
-| milestone prompt | the text pasted to start a session, kept in `private/PROMPTS.md`               |
+| milestone prompt | the text pasted to start a session                                             |
 
 ## Rationale (informative)
 
