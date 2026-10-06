@@ -33,7 +33,9 @@ named by the `PYTHON` variable.
   `oxlint-tsgolint`, and Oxfmt; never add ESLint, Prettier, or TypeScript
   earlier than 7.
 - shadcn/ui on Base UI (not Radix); dnd-kit; Zustand; no graph/flow/editor libraries.
-- `src/lang`, `src/runtime`, `src/python` have no third-party imports.
+- `src/lang`, `src/runtime`, `src/python`, and `src/nodes` import only each
+  other: through `@/` across folders and `./` within one, never `../`; tests
+  may add `vitest` and `@/i18n` (an oxlint rule).
 - One block per file in `src/nodes/`; nothing else branches on block kind or name.
 - Every user-visible string comes from `src/i18n/en.json` (and `ja.json` once it exists).
 - `int` and `float` are distinct values; lists, dicts, and objects reside on the heap.
