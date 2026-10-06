@@ -18,8 +18,8 @@ export type EditorState = {
   /** Shown beside its node until the selection changes. */
   diagnostic: Diagnostic | null;
   setTab: (tab: PanelTab) => void;
-  /** Selects a node and opens its editor, on `slot` when one was clicked. */
-  select: (id: NodeId | null, slot?: string) => void;
+  /** Selects a node and opens its editor, on `slot` when one was clicked; `edit: false` only selects. */
+  select: (id: NodeId | null, slot?: string, edit?: boolean) => void;
   closeEditor: () => void;
   setHovered: (id: NodeId | null) => void;
   showSolution: (shown: boolean) => void;
@@ -38,8 +38,8 @@ export const useEditor = create<EditorState>()((set) => ({
   solution: false,
   diagnostic: null,
   setTab: (tab) => set({ tab }),
-  select: (id, slot) =>
-    set({ selectedId: id, slot: slot ?? null, editing: id !== null, diagnostic: null }),
+  select: (id, slot, edit = true) =>
+    set({ selectedId: id, slot: slot ?? null, editing: id !== null && edit, diagnostic: null }),
   closeEditor: () => set({ editing: false }),
   setHovered: (id) => set({ hoveredId: id }),
   showSolution: (shown) => set({ solution: shown }),

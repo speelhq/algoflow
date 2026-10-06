@@ -57,7 +57,8 @@ export function PythonTab() {
     const out = () => setHovered(null);
     const click = (event: MouseEvent) => {
       const owner = ownerAt(event);
-      if (owner !== null) select(owner);
+      // A line selects its node, which the chart outlines; the editor opens from the chart.
+      if (owner !== null) select(owner, undefined, false);
     };
     element.addEventListener("mouseover", over);
     element.addEventListener("mouseleave", out);
