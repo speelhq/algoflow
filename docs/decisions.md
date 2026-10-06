@@ -1155,6 +1155,17 @@ both its ends are on the path. A loop that has ended has lost its mark
 (U-61), so its `No` edge is drawn as taken when the statement it leads to
 is on the path.
 
+**A submission is shown until the next run** (U-86, C-15). Submit judges
+every test without touching the driver, so a run may be on the chart when
+the verdict arrives; the tab cannot show both sets of rows in 320 px. The
+submission is the newer result and replaces the run's rows; the next Run,
+including `Watch this case`, is the newer result again and replaces it. A
+chip only chooses which test's rows are read: setting the Input nodes from
+it would stop the run on the chart, which C-15 keeps untouched, and
+`Watch this case` already sets them. Submit stays in the top bar while
+running for the same reason: Submit does not depend on the run, and making
+the learner press `Stop` first would add a step to the loop of S-10.
+
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
 The store held a constant maximum of 480 px from the retired shell. Half the
 viewport width is not a constant, and a store that read `window.innerWidth`
