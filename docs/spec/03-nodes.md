@@ -40,13 +40,13 @@ field (`num.value`, `str.value`, `comment.text`, an operator).
 N-02 i18n keys per block in `en.json`: `node.<key>.label`,
 `node.<key>.template` (the node's sentence with `{slot}` placeholders),
 `node.<key>.help`. The template column below is the `en.json` text;
-`ja.json` provides the same keys with the same placeholders (M-10). A block
+`ja.json` provides the same keys with the same placeholders. A block
 with a second template form keeps it under `node.<key>.template<Form>`:
 `assign.templateCreate`, `bool.templateFalse`, `unop.templateNot`.
 
 N-03 The Python column is the exact emitted text; `<x>` denotes an
 emitted slot. Each block has a codegen test asserting this text and an
-interpreter test (T-02).
+interpreter test (N-10).
 
 ## Statements
 
@@ -173,3 +173,9 @@ interpreter and emitter are unaffected by `chart`.
 
 `/add-node`: create `src/nodes/<key>.ts`; add the three i18n keys to both
 locales; register; add a codegen test (exact text) and an interpreter test.
+
+## Verification
+
+N-10 Each block has a test asserting its exact Python text (N-03), one
+asserting its event sequence and result, and, where it can fail, one
+error case.

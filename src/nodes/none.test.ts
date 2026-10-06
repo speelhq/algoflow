@@ -7,7 +7,7 @@ describe("none (03-nodes)", () => {
     expect(unparse(ast.none())).toBe("None");
   });
 
-  it("T-02: evaluates to none", () => {
+  it("N-10: evaluates to none", () => {
     expect(evalExpr(ast.none())).toMatchObject({ value: { t: "none" }, data: null, events: [] });
   });
 });

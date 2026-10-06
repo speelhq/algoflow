@@ -272,3 +272,10 @@ L-55 The value stored under `algoflow:program:<id>` is the `Program` JSON
 itself; loading passes it through `migrate()` and treats a rejected value as
 absent (C-13 then applies); the challenge's `challengeId` and `inputs`
 replace those of a restored program, and a Playground program has neither.
+
+## Verification
+
+L-56 The tests of `src/lang` give every validation code a failing and a
+passing case, show that every edit preserves L-04, and show that
+`migrate()` accepts each supported version and rejects a malformed program
+with the path of the fault.

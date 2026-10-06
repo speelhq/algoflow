@@ -1,5 +1,5 @@
 // NodeId: 12 characters from the nanoid URL alphabet, generated without the
-// nanoid package because src/lang imports no third-party code (P-01).
+// nanoid package because src/lang imports no third-party code.
 
 const ALPHABET = "useandom-26T198340PX75pxJACKVERYMINDBUSHWOLF_GQZbfghjklqvwyzrict";
 export const NODE_ID_LENGTH = 12;

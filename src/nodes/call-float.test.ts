@@ -9,14 +9,14 @@ describe("builtin float (03-nodes)", () => {
     expect(unparse(call("float", num(1)))).toBe("float(1)");
   });
 
-  it("T-02: converts numbers, numeric text, and bools to float", () => {
+  it("N-10: converts numbers, numeric text, and bools to float", () => {
     expect(evalExpr(call("float", num(3))).value).toEqual({ t: "float", v: 3 });
     expect(evalExpr(call("float", str("2.5"))).value).toEqual({ t: "float", v: 2.5 });
     expect(evalExpr(call("float", str("1e3"))).value).toEqual({ t: "float", v: 1000 });
     expect(evalExpr(call("float", bool(false))).value).toEqual({ t: "float", v: 0 });
   });
 
-  it("T-02: non-numeric text or none → E_TYPE", () => {
+  it("N-10: non-numeric text or none → E_TYPE", () => {
     expect(evalExpr(call("float", str("x"))).done).toMatchObject({
       type: "error",
       error: { code: "E_TYPE" },

@@ -25,7 +25,7 @@ export type Test = {
   seed?: number; // default 1
   expect: { variables?: Record<Id, Data>; stdout?: string[] }; // ≥ 1
 };
-export type Localized = { en: string; ja?: string }; // ja required from M-10
+export type Localized = { en: string; ja?: string }; // ja: C-24
 export type Topic = "output" | "variables" | "loops" | "conditions" | "lists" | "searching"
   | "sorting" | "recursion" | "dictionaries" | "classes" | "gradients";
 ```
@@ -37,6 +37,9 @@ checks every built-in module with its cases (D-15).
 
 C-03 Every challenge has at least one test with `edge: true`, a boundary
 case such as an empty list, zero, or a single item.
+
+C-24 Every `Localized` text of a challenge, a plan, and a built-in module
+has its `ja` text (S-03).
 
 C-19 `module` names the learner module the challenge's functions and
 classes belong to; the Accepted card then offers `Move to module <name>`
@@ -189,3 +192,8 @@ then `hard`.
 C-20 "Recorded" expectations are obtained by running `solution` once with
 the stated seed and inserted into the file; `scripts/check.ts` enforces them
 in both engines.
+
+## Verification
+
+C-23 `pnpm check` passes: every challenge, every test in both engines,
+the plans (C-16), and the built-in modules (D-15).

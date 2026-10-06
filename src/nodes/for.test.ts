@@ -20,7 +20,7 @@ describe("for (03-nodes)", () => {
     expect(lines([for_("i", float(0), num(3), [])])[0]).toBe("for i in range(0.0, 3):");
   });
 
-  it("T-02 / R-07: one loop event per iteration carrying var and value", () => {
+  it("N-10 / R-07: one loop event per iteration carrying var and value", () => {
     const stmt = for_("i", num(0), num(2), [assign("x", v("i"))]);
     const result = runAll(program([stmt]));
     expect(eventTypes(result.events)).toEqual([
@@ -42,7 +42,7 @@ describe("for (03-nodes)", () => {
     expect(result.done).toEqual({ type: "done", steps: 7, loops: 2 });
   });
 
-  it("T-02 / L-25, L-43: bounds are evaluated once; the variable stays visible after the loop", () => {
+  it("N-10 / L-25, L-43: bounds are evaluated once; the variable stays visible after the loop", () => {
     const result = runAll(
       program([for_("i", num(0), v("n"), [assign("n", bin("+", v("n"), num(1)))])], {
         inputs: [{ name: "n", value: 3 }],
@@ -52,7 +52,7 @@ describe("for (03-nodes)", () => {
     expect(varData(result, "i")).toBe(2);
   });
 
-  it("T-02: break stops and continue skips the rest of the body", () => {
+  it("N-10: break stops and continue skips the rest of the body", () => {
     const result = runAll(
       program([
         assign("acc", num(0)),
@@ -66,7 +66,7 @@ describe("for (03-nodes)", () => {
     expect(varData(result, "acc")).toBe(0 + 2 + 3);
   });
 
-  it("T-02 / L-25: a float bound → E_TYPE", () => {
+  it("N-10 / L-25: a float bound → E_TYPE", () => {
     const stmt = for_("i", num(0), float(2.5), []);
     const result = runAll(program([stmt]));
     expect(result.done).toMatchObject({

@@ -1,4 +1,4 @@
-// T-05: the driver. R-11 pre-run, Step, Play, Seek, Back, Stop; R-12 state; R-19 breakpoint
+// R-21: the driver. R-11 pre-run, Step, Play, Seek, Back, Stop; R-12 state; R-19 breakpoint
 // and Skip; U-61 marks; C-15 verdict; R-10: Seek replays identically.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getChallenge } from "@/challenges";
@@ -54,7 +54,7 @@ function fizzbuzz() {
   return challenge;
 }
 
-describe("run store (T-05: R-11, R-12, R-19)", () => {
+describe("run store (R-21: R-11, R-12, R-19)", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     useProgram.setState({ program: counting() });

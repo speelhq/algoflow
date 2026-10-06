@@ -1,4 +1,4 @@
-// T-01: import validates and migrates by version (L-53).
+// L-56: import validates and migrates by version (L-53).
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/nodes/testing";
 import { MigrateError, migrate } from "./migrate";

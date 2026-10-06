@@ -15,7 +15,7 @@ import { matchTemplate, type TemplateMatch } from "@/ui/expression/templates";
 
 type Bag = Record<string, unknown>;
 
-/** The one place a registry key becomes an i18n key (dynamic keys are not scanned by T-08). */
+/** The one place a registry key becomes an i18n key (dynamic keys are not scanned by U-71). */
 export function nodeText(key: string, part: string, params?: Record<string, string>): string {
   return t(`node.${key}.${part}` as MessageKey, params);
 }

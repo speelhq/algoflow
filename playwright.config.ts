@@ -5,7 +5,7 @@ const port = 4173;
 const url = `http://localhost:${port}${base}`;
 const desktop = { width: 1440, height: 900 };
 
-// 07-plan: `test:e2e` runs Playwright against `dist/` (build first).
+// `test:e2e` runs Playwright against `dist/` (build first).
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,

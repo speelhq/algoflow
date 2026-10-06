@@ -15,7 +15,7 @@ describe("unop (03-nodes)", () => {
     expect(unparse(bin("and", not(v("a")), v("b")))).toBe("not a and b");
   });
 
-  it("T-02: negation keeps int/float; not yields a bool by truthiness (L-18)", () => {
+  it("N-10: negation keeps int/float; not yields a bool by truthiness (L-18)", () => {
     expect(evalExpr(neg(num(5))).value).toEqual({ t: "int", v: -5 });
     expect(evalExpr(neg(float(2))).value).toEqual({ t: "float", v: -2 });
     expect(evalExpr(not(num(0))).data).toBe(true);
@@ -23,7 +23,7 @@ describe("unop (03-nodes)", () => {
     expect(evalExpr(not(v("xs")), { xs: [] }).data).toBe(true);
   });
 
-  it("T-02: negating a non-number → E_TYPE", () => {
+  it("N-10: negating a non-number → E_TYPE", () => {
     const e = neg(str("a"));
     expect(evalExpr(e).done).toMatchObject({
       type: "error",

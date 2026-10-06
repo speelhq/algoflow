@@ -12,7 +12,7 @@ describe("builtin random_int (03-nodes)", () => {
     );
   });
 
-  it("T-02 / L-32: inclusive int draws, recorded in draws(), identical for the same seed (R-10)", () => {
+  it("N-10 / L-32: inclusive int draws, recorded in draws(), identical for the same seed (R-10)", () => {
     const prog = program([
       for_("i", num(0), num(50), [assign("d", call("random_int", num(1), num(3)))]),
     ]);
@@ -26,7 +26,7 @@ describe("builtin random_int (03-nodes)", () => {
     expect(runAll(prog, {}, 8).draws).not.toEqual(a.draws);
   });
 
-  it("T-02: float bounds → E_TYPE", () => {
+  it("N-10: float bounds → E_TYPE", () => {
     expect(evalExpr(call("random_int", float(1), num(2))).done).toMatchObject({
       type: "error",
       error: { code: "E_TYPE" },

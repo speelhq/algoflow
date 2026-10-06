@@ -9,7 +9,7 @@ describe("builtin str (03-nodes)", () => {
     expect(unparse(call("str", num(1)))).toBe("str(1)");
   });
 
-  it("T-02 / L-29: the str() form of any value", () => {
+  it("N-10 / L-29: the str() form of any value", () => {
     expect(evalExpr(call("str", num(12))).data).toBe("12");
     expect(evalExpr(call("str", float(2))).data).toBe("2.0");
     expect(evalExpr(call("str", bool(true))).data).toBe("True");

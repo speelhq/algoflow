@@ -1,4 +1,4 @@
-// T-10: one screenshot per screen state, saved under e2e/screenshots/ for review; compared
+// U-91: one screenshot per screen state, saved under e2e/screenshots/ for review; compared
 // with baselines from M-10. Drawn at 1280 × 800, the size of the boards in docs/design/.
 import { expect, test } from "@playwright/test";
 import { seedProgram, seedProgress, solutionOf } from "./seed";

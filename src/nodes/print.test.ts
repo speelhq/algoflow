@@ -12,7 +12,7 @@ describe("print (03-nodes)", () => {
     expect(lines([print()])).toEqual(["print()"]);
   });
 
-  it("T-02 / L-29: joins str() forms with one space, emits a print event, appends to stdout", () => {
+  it("N-10 / L-29: joins str() forms with one space, emits a print event, appends to stdout", () => {
     const stmt = print(bool(true), none(), float(2), str("a b"), bin("/", num(1), num(4)));
     const result = runAll(program([stmt]));
     expect(eventTypes(result.events)).toEqual(["enter", "print"]);
@@ -24,7 +24,7 @@ describe("print (03-nodes)", () => {
     expect(result.stdout).toEqual(["True None 2.0 a b 0.25"]);
   });
 
-  it("T-02: a list argument prints in repr form with single-quoted strings", () => {
+  it("N-10: a list argument prints in repr form with single-quoted strings", () => {
     const result = runAll(
       program([print(v("xs"))], { inputs: [{ name: "xs", value: [1, "a", { $float: 2 }] }] }),
     );

@@ -16,7 +16,7 @@ function run() {
   return checkI18n({ root, srcDir: join(root, "src"), i18nDir: join(root, "src", "i18n") });
 }
 
-describe("scripts/i18n (T-08)", () => {
+describe("scripts/i18n (U-71)", () => {
   beforeEach(() => {
     root = mkdtempSync(join(tmpdir(), "algoflow-i18n-"));
     write("src/i18n/en.json", JSON.stringify({ app: { name: "AlgoFlow", saved: "Saved" } }));

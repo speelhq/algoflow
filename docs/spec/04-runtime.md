@@ -221,7 +221,7 @@ escaped and any other control character as `\xNN`; `bool` emits
 
 E-07 For every challenge solution the emitted files, run by `python3`,
 produce the same stdout and final main-level variables as the interpreter
-(T-06).
+(C-23).
 
 E-08 A statement block's `python()` returns `PyLine[]` where
 `PyLine = string | { block: Stmt[] }`; an expression block's returns text.
@@ -274,7 +274,7 @@ G-04 Chained comparison → `E_PARSE_CHAIN`; other syntax errors →
 `E_PARSE_SYNTAX`; both carry `position`.
 
 G-05 `unparse` is the emitter's expression function;
-`unparse(parse(s))` is a fixed point of `parse ∘ unparse` (T-04).
+`unparse(parse(s))` is a fixed point of `parse ∘ unparse` (G-06).
 
 ## CPython check (`scripts/check.ts`)
 
@@ -287,3 +287,13 @@ the `toData` rules; write each module the solution uses (E-09) as
 `<name>.py` alongside the script; run `python3`; compare with the
 interpreter under C-10. Every built-in module (D-15) is also emitted
 alone and compiled by `python3 -m py_compile`.
+
+## Verification
+
+R-21 The tests of `src/runtime` and `src/store/run.ts` cover every
+semantics example of `02-language.md`, every R-09 code, R-10, and the
+driver's R-11, R-12, R-17, and R-19.
+
+E-10 A fixture of 200 expressions emits the expected text (E-05).
+
+G-06 A property test generates 1,000 expressions and checks G-05 on each.

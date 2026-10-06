@@ -1,4 +1,4 @@
-// T-08: `pnpm check` runs this after scripts/check.ts.
+// U-71: `pnpm check` runs this after scripts/check.ts.
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
 import { checkI18n, formatReport } from "./lib/i18n-check";

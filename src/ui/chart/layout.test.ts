@@ -1,4 +1,4 @@
-// T-11: layout() places every node of every challenge solution without overlap; loops and
+// U-92: layout() places every node of every challenge solution without overlap; loops and
 // branches match U-33. Synthetic programs cover the nestings no challenge has yet.
 import { describe, expect, it } from "vitest";
 import { CHALLENGES } from "@/challenges";
@@ -148,7 +148,7 @@ function segments(edge: ChartEdge) {
 describe.each([
   ["the default measure", undefined],
   ["a measure twice as wide", wide],
-] as const)("layout (T-11) with %s", (_, measure) => {
+] as const)("layout (U-92) with %s", (_, measure) => {
   it.each(CASES.map((c) => [c.name, c] as const))(
     "%s: every node placed once, inside the chart",
     (_n, c) => {

@@ -1,4 +1,4 @@
-// L-07, L-15, L-16, L-18, L-29: value helpers shared by node runners. No third-party imports (P-01).
+// L-07, L-15, L-16, L-18, L-29: value helpers shared by node runners. No third-party imports.
 import type { Heap, HeapEntry, Value } from "@/lang/types";
 
 export type NumberValue = { t: "int"; v: number } | { t: "float"; v: number };

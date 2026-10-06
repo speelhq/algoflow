@@ -148,3 +148,10 @@ D-17 The built-in module `micrograd` (title `Tiny Neural Network`) defines
 `build_topo`, `backward`, `Neuron`, `make_neuron`, `forward_neuron`,
 `Layer`, `MLP`, `make_mlp`, `forward_mlp`, `parameters`, and `zero_grad`,
 as the micrograd rows of `06-challenges.md` define them.
+
+## Verification
+
+D-23 Tests cover the resolution and shadowing of L-46, the E-09 file text
+of a program using `heap`, the frames and visible steps of R-16 and R-11,
+R-17, R-18 entry runs, the D-13 round trip, D-20 verdicts, and D-21 case
+copying.

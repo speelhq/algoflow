@@ -1,166 +1,64 @@
 # Decisions
 
-Why the choices recorded in `docs/spec/` were made. The spec states the
-fact; this file keeps the reason and the alternatives that were rejected,
-grouped by topic. When a decision changes, edit its entry (and the spec id)
-rather than appending a new one.
+Why the facts in `docs/spec/` were chosen, and the alternatives rejected.
+One section per specification file, then the engineering choices and the
+process. An entry names the ids it explains; when a statement changes, its
+entry changes in the same commit, and an entry whose statement is deleted
+is deleted with it. An entry records a reason, never how far the work has
+got.
 
-## Stack and tooling
+## Scope
 
-**TypeScript 7 ships the Go compiler as `tsc`** (07-plan stack table).
-`typescript@7` has a single binary, `tsc`; the `tsgo` name belonged to the
-`@typescript/native-preview` package. `oxlint-tsgolint` follows the same
-major (P-03), so `7.0.x` pairs with `7.0.x`.
+<!-- `01-scope.md` -->
 
-**Base UI package is `@base-ui/react`** (P-04). `@base-ui-components/react`
-is deprecated in favour of the renamed package; shadcn's `--base base`
-targets the new name.
+**English first** (S-03). The product is not Japan-specific; `en` is the
+development locale and Japanese is a translation milestone.
 
-**shadcn preset `nova`** (P-04). shadcn 4 offers `nova`, `vega`, `maia`,
-`lyra`, `mira`, `luma`, `sera`, `rhea`; `nova` is the default appearance. The
-preset's `theme.css` imports `shadcn/tailwind.css` and `tw-animate-css`, so
-`shadcn` and `tw-animate-css` are runtime dependencies rather than
-dependencies invoked only through `dlx`.
+**The learner and the loop are spec facts** (S-09..S-11). U-50's
+templates, U-72's vocabulary, and U-61's drawing of the run on the chart
+all follow from "a person who has never programmed doing one loop per
+problem", so the facts belong in `01-scope.md`, where every U id and every
+later proposal can be judged against them. A table of users by role was
+dropped: the application has no roles (S-01), a trainee and a self-learner
+use the same features, and an instructor's work (challenge files, plans,
+built-in modules) is repository authoring covered by `06` and `07`, not a
+feature. "The environment is the core and the problems are a curriculum"
+was rejected as a spec sentence because it states nothing testable.
 
-**Generated primitives live in `src/ui/primitives/`, `cn()` in
-`src/lib/utils.ts`** (P-04, repository layout). shadcn defaults to
-`src/components/ui`; the spec keeps everything visual under `src/ui/`, so
-`components.json` aliases were changed before the first `shadcn add`.
+**Plans chain through modules, not starters** (S-05, C-19, C-21). A
+starter chain (each problem starts from the previous solution) discards
+the learner's own version; a module chain keeps it, and a bug in the
+learner's `heap_pop` surfacing in `dijkstra-heap` is the note's "inspect
+the block you rely on", not a defect. A built-in module with the same
+names lets a learner who skipped a problem, or a self-learner, start
+anywhere (the note's "predefined blocks as shortcuts, still inspectable"),
+but it would let every problem after the first be passed without building
+anything; `defines` (C-21) refuses a submission whose named function
+resolves to a built-in module, so the exercise is retained while the
+shortcut remains available for later problems.
 
-**pnpm `onlyBuiltDependencies: ["esbuild"]`**. pnpm 10 refuses package
-build scripts unless listed; `esbuild` (introduced transitively by `tsx`)
-needs its postinstall to place the platform binary.
+**Playground holds many programs** (S-07, U-15, U-05). One `free` slot
+made starting a new program an act of destruction; the note's "use it in
+a larger program" has nowhere else to happen than Playground once a plan
+ends. `Open in Playground` converts a solved problem into the start of that
+larger program, with inputs fixed as the assignments E-03 already emits.
 
-**Exact version pins** (P-03). `.npmrc` sets `save-exact=true` so every
-`pnpm add` records an exact version; `@types/node` is pinned to the latest
-22.x to match `.node-version`.
+**Plans `structures` and `dp`; the rest stays out of plans** (S-05). A
+plan's order must be significant. The seven `structures` problems build on
+one another through the list-as-stack, list-as-queue, and `heap` module;
+`dijkstra-grid` then `dijkstra-heap` shows a block being swapped for a
+faster one with the same answer, visible in the step count on the Accepted
+card. The three `dp` problems widen the same table technique (one
+dimension, two, strings), which is the same form of concept progression as
+the course plan. `gcd`, `is-prime`, and `fisher-yates` are not built upon
+later; `fibonacci-memo` and `hanoi` would form a two-problem recursion
+plan, which is insufficient until further recursion problems are added.
+Adding any of them to the course plan is the instructor's decision, since
+that plan mirrors a fixed three-day course.
 
-## Linting and formatting
+## Language
 
-**Rules turned off** (P-06).
-
-- `react/react-in-jsx-scope`: the automatic JSX runtime (`jsx: react-jsx`)
-  never needs `React` in scope; the rule reports every element.
-- `jsx-a11y/prefer-tag-over-role`: the resize handle is an interactive
-  `role="separator"` (a splitter); `<hr>` is a static separator.
-- `require-yield`: literal and variable runners are generators that never
-  yield, by design.
-- `unicorn/no-thenable`: 02-language names the `if` regions `then` and
-  `else`.
-- `no-redundant-type-constituents`: `Id | "main"` and `NodeId | "main"` are
-  written as in the spec to document intent.
-- `no-await-in-loop` in `e2e/`: Playwright assertions in a loop are
-  intentionally sequential; `Promise.all` would race the browser.
-
-**Warnings do not fail `pnpm lint`** (P-06). Most warnings are
-`no-unsafe-type-assertion` where something the type checker cannot follow
-establishes a value's shape, such as the registry's slot list or a check
-after `JSON.parse`; expressing each in the types is not justified.
-
-**Oxfmt does not format `docs/`** (P-08). The spec is hand-written prose
-with aligned tables; a formatter must not rewrite it.
-
-**LF line endings** (P-08). The repository is edited on Windows; without
-`.gitattributes`, git warned about CRLF on every commit and CI diffs would
-contain unrelated changes.
-
-## UI shell (M-00)
-
-**Custom resize handle instead of `react-resizable-panels`** (P-05). U-03
-states limits in pixels; the library works in percentages, and the handle
-is approximately sixty lines with pointer capture. It also avoids one
-dependency that P-02 does not forbid but does not require.
-
-**Layout store `src/store/layout.ts`** (repository layout). One Zustand
-`persist` store owns everything under `algoflow:layout` (the panel width
-and collapsed state, U-03/U-24, and the playback speed, U-60).
-
-**Stored values are validated on both paths**. Setters clamp, and
-`mergePersisted` re-validates whatever is returned from `localStorage`: a
-non-number or out-of-range size falls back to the default or the lower
-limit, and the upper limit, half the viewport, is applied by `panelWidth()`
-where the width is set and where it is drawn. Trusting the snapshot would
-allow a hand-edited or stale entry to render an unusable panel. Because both
-paths validate, a snapshot written under an older shape needs no `migrate`
-step: its unknown fields resolve to the defaults, so `version` remains `1`.
-
-**Categories live in `src/nodes/categories.ts`**. `NodeDef.category`
-(03-nodes) is owned by the node registry; the block menu (U-40) takes the
-order from there rather than declaring its own copy, so adding a category
-cannot leave the menu and the registry inconsistent. The file has no
-imports, so `src/nodes` remains free of store and React dependencies.
-
-**Generated primitives are added when first used** (P-04). Unreferenced
-generated code would still have to track theme changes.
-
-**Resize handle ignores secondary pointers**. `onPointerDown` returns unless
-`button === 0` and `isPrimary`; a right-click would otherwise begin a drag
-whose `pointerup` the context menu can suppress, and a second touch would
-overwrite the drag origin during a drag.
-
-**Stable test ids**. Each region of a page, the chart's nodes
-(`data-node-id`), the transport, the path bar, and the panel's tabs carry
-`data-testid` hooks for end-to-end tests; role and label queries are used
-for everything user-visible.
-
-## i18n
-
-**`t()` keys are typed** (U-73). `MessageKey` is derived from `en.json` with
-a template-literal type, so an unknown literal key is a compile error as
-well as a `scripts/i18n.ts` failure (T-08). A key built at run time is cast
-to `MessageKey` and is not scanned.
-
-**`t()` falls back to `en` and then to the key**. Until M-10 the `ja`
-catalog is empty; returning the key (with a development-only warning) keeps
-the UI readable if a translation is missing.
-
-**Scan is a regex, not a parser** (T-08). The pattern matches `t("…")` and
-`t('…')` while ignoring `at(`, `obj.t(`, and template literals; it also
-matches inside comments, which is accepted. A parser would be more precise
-but adds a dependency to a script that must remain fast and simple. Test
-files are skipped because they call `t()` with deliberately unknown keys.
-Keys built at run time are not scanned; the `node.*` keys are checked
-against the registry in `src/nodes/index.test.ts`.
-
-**`flatten()` is shared** (`src/i18n/flatten.ts`). `t.ts` and the check
-script must agree on the key scheme; a single dependency-free module keeps
-one definition, and the script does not import `t.ts` because doing so
-introduces `en.json` and Vite's `import.meta.env`.
-
-**`en.json` holds only keys something renders**. Keys for later milestones
-are added with the code that uses them, so wording is decided when the UI
-exists and the M-10 parity check never requires translating unused strings.
-
-**`import.meta.env` is read defensively**. `t.ts` uses `import.meta.env?.DEV`
-because the module is dependency-free and scripts run with `tsx` (P-09),
-where `import.meta.env` is undefined.
-
-**Script logic lives in `scripts/lib/`**. `scripts/i18n.ts` is a minimal
-command-line wrapper over `scripts/lib/i18n-check.ts` so Vitest can test the
-function directly against a temporary fixture directory.
-
-## Scripts and CI
-
-**`VITE_BASE`** (P-07). Project Pages serve from `/<repo>/`; a build with
-`base: "/"` would return 404 for every asset. Reading the value from the
-environment keeps local builds at `/` and lets CI derive it from
-`github.event.repository.name` without hard-coding the repository.
-
-**Chromium only, 1440 × 900** (P-09). One browser keeps CI under one minute
-and matches the desktop-only scope (S-02); the viewport exceeds the 1280 px
-gate with margin for the default panel sizes.
-
-**No React Testing Library**. Unit tests cover stores, `t()`, and script
-logic; component behaviour is exercised end to end by Playwright (T-07,
-T-10). Installing a DOM testing library for components that are largely
-placeholders would add a second, slower means of testing the same behaviour.
-
-**Vitest environment is `node`, jsdom per file**. Only the store tests that
-persist need `localStorage`; a file-level `// @vitest-environment jsdom`
-keeps the other suites fast (jsdom start-up accounts for most of the run
-time).
-
-## Language core (M-01)
+<!-- `02-language.md` -->
 
 **An empty slot is an expression kind** (L-09). `create()` must return a
 statement whose required slots exist; making the slot type `Expr | null`
@@ -168,7 +66,7 @@ would distribute null checks through every block and the emitter. A dedicated
 `empty` kind keeps `Expr` a closed union, lets validation report
 `E_EMPTY_SLOT` generically, and emits `...` so the Python tab still renders.
 
-**NodeId generation without `nanoid`** (02 Program, P-01). `src/lang` may
+**NodeId generation without `nanoid`** (02 Program). `src/lang` may
 not import third-party code, and `edit.ts` must mint ids for duplicates and
 hoisted assignments. `crypto.getRandomValues` over the nanoid alphabet gives
 the same 12-character format; the dependency was removed.
@@ -179,6 +77,93 @@ region (main, a function body, a frame region) without exposing array
 references. `moveStmt` counts the index after removal because a drag within
 one region is the common case and the drop indicator is computed on the
 list without the dragged card.
+
+**A `for` variable belongs to the enclosing region** (L-43). Python leaves
+the loop variable defined after the loop, and `for` reads its bounds before
+the body runs, so the variable is treated as assigned by the statement that
+owns the loop, not inside its body. Names first assigned in the body still
+raise `E_DECLARE_FIRST` afterwards.
+
+**`hoistAssign` picks the default from the first inner assignment** (L-44).
+The fix must be type-consistent as the learner reads it: a counter starts at
+`0`, a message at `""`, a flag at `False`, a collection empty. When the first
+value is not a literal the default is `None`, which any later assignment
+replaces.
+
+**Python float text** (L-29). `str()` of a float follows `repr` in CPython
+(`2.0`, `1e-06`, `1e+16`); JavaScript's `toString` differs in the exponent
+thresholds and format, so `floatRepr` re-implements the rule. The rule
+affects the Output of the `Result` tab (U-23), the narration (U-63), and R-20
+agreement.
+
+**Repeated objects carry the same `$id` in `toData`** (L-06). A list holding
+the same object twice (micrograd `mul(a, a)`) must show identity; a second
+full copy with the same `$id` is simpler to compare than a reference node,
+and a cycle degrades to `{ $cls, $id }` so the conversion terminates.
+
+**Float `//` and `%` follow CPython's algorithms** (L-12). `Math.floor(a / b)`
+differs from `float.__floordiv__` when `a / b` rounds to an integer
+(`1 // 0.1` is `9.0`, not `10.0`), and the sign of a zero result must follow
+the divisor; `floatMod` and `floatFloorDiv` port the C code so R-20 agrees.
+
+**Variables may not shadow callables** (L-45). `count = 0` alongside
+`def count()` runs in the interpreter (calls resolve by name) but fails in
+CPython; the same holds for a function named after a builtin such as
+`random_int`, whose registry key would take precedence without notice.
+
+**Storage holds the raw `Program` JSON** (L-55). A zustand `persist` wrapper
+does not suit one key per challenge, and `migrate()` must validate whatever
+is returned; the raw form is also what Export writes (L-53). A rejected value
+resolves to an empty main rather than failing the load.
+
+**Validation is memoized per Program object**. The driver, the chart
+(`firstAssignments`), the run controls, and Submit all request it; a
+`WeakMap<Program, Analysis>` in `validate.ts` runs the Collector once per
+program identity, which also matches how diagnostics are published.
+
+## Nodes
+
+<!-- `03-nodes.md` -->
+
+**Categories live in `src/nodes/categories.ts`**. `NodeDef.category`
+(03-nodes) is owned by the node registry; the block menu (U-40) takes the
+order from there rather than declaring its own copy, so adding a category
+cannot leave the menu and the registry inconsistent. The file has no
+imports, so `src/nodes` remains free of store and React dependencies.
+
+**`call` and `return` exist before functions are offered** (N-01).
+Validation must resolve user-function calls (E_ARITY, E_UNKNOWN_CALL) and
+refuse `return` in main, and traversal dispatches through the registry, so
+the two blocks are registered with the language core; their category stays
+`function`, which the block menu offers once functions can be created.
+
+**Block files replace `:` with `-`** (N-01). Windows file names cannot contain
+a colon; `call-abs.ts` is the only legible alternative that keeps one file
+per key.
+
+**Slot roles `target` and `text`** (N-01). Registry-driven traversal needs to
+know which slots hold expressions (including inside an assignment target) so
+no module lists block kinds; literal fields get `text` so the node editor
+(U-41) and `E_EMPTY_SLOT` can treat them uniformly.
+
+**Variant templates use `template<Form>` keys** (N-02). `assign`, `bool`, and
+`unop` have two node texts in 03-nodes; a suffixed key keeps the three
+standard keys per block intact for the parity check.
+
+**Template hooks on `NodeDef`** (N-08). Selecting `templateCreate`,
+`templateFalse`, or `templateNot` requires facts the slots do not carry
+(`bool` has no slots; `num.raw` is not a slot), and a switch on kind in the
+UI is forbidden by N-01. `form()` and `text()` keep the choice with the
+block. The `empty` block receives i18n keys for the same reason: chips render
+every kind through its template.
+
+**A `create` template after a frame**. `if c: y = 1` followed by `y = 2`
+renders both as `create y`: L-41 makes `y` invisible after the frame, so the
+outer assignment is where the region gains the name.
+
+## Runtime
+
+<!-- `04-runtime.md` -->
 
 **Blocks run as generators** (R-13, R-14). Each `next()` must yield exactly
 one event and leave the program suspended for Back, Step, and Play; a
@@ -202,78 +187,14 @@ boolean, and `2 in [1, 2]` is narrated (U-63) and marked on the
 diamond (U-61) as any other test is; the per-element `read`s (R-04) precede
 the `compare`.
 
-**A `for` variable belongs to the enclosing region** (L-43). Python leaves
-the loop variable defined after the loop, and `for` reads its bounds before
-the body runs, so the variable is treated as assigned by the statement that
-owns the loop, not inside its body. Names first assigned in the body still
-raise `E_DECLARE_FIRST` afterwards.
-
-**`hoistAssign` picks the default from the first inner assignment** (L-44).
-The fix must be type-consistent as the learner reads it: a counter starts at
-`0`, a message at `""`, a flag at `False`, a collection empty. When the first
-value is not a literal the default is `None`, which any later assignment
-replaces.
-
-**Python float text** (L-29). `str()` of a float follows `repr` in CPython
-(`2.0`, `1e-06`, `1e+16`); JavaScript's `toString` differs in the exponent
-thresholds and format, so `floatRepr` re-implements the rule. The rule
-affects the Output of the `Result` tab (U-23), the narration (U-63), and R-20
-agreement.
-
 **`bool` is not a number** (R-15). Python treats `True` as `1`, but block
 programs never rely on it and the interpreter's `E_TYPE` keeps the type model
 simple for learners; solutions avoid the construct so CPython agrees.
-
-**`call` and `return` are delivered in M-01**. Validation must resolve
-user-function calls (E_ARITY, E_UNKNOWN_CALL) and refuse `return` in main,
-and traversal dispatches through the registry, so the two blocks exist now;
-their category remains `function` and the block menu shows them from M-06.
-
-**Block files replace `:` with `-`** (N-01). Windows file names cannot contain
-a colon; `call-abs.ts` is the only legible alternative that keeps one file
-per key.
-
-**Slot roles `target` and `text`** (N-01). Registry-driven traversal needs to
-know which slots hold expressions (including inside an assignment target) so
-no module lists block kinds; literal fields get `text` so the node editor
-(U-41) and `E_EMPTY_SLOT` can treat them uniformly.
-
-**Variant templates use `template<Form>` keys** (N-02). `assign`, `bool`, and
-`unop` have two node texts in 03-nodes; a suffixed key keeps the three
-standard keys per block intact for the parity check.
-
-**`pnpm check` is one script**. pnpm appends command-line arguments to the end
-of the script string, so `tsx scripts/check.ts && tsx scripts/i18n.ts` would
-pass `challenges/x.json` to the i18n script; `check.ts` invokes the i18n check
-itself instead.
-
-**`E_DUPLICATE_ID` has a message** (U-70). The text is generic because the
-condition cannot arise from editing, only from a corrupted import.
-
-**Input names are checked by `scripts/check.ts`, not by `validate()`**. Inputs
-have no NodeId to attach a diagnostic to and are read-only in the editor
-(U-31); challenge files are the only source, so the schema check covers L-01
-for them.
-
-**Repeated objects carry the same `$id` in `toData`** (L-06). A list holding
-the same object twice (micrograd `mul(a, a)`) must show identity; a second
-full copy with the same `$id` is simpler to compare than a reference node,
-and a cycle degrades to `{ $cls, $id }` so the conversion terminates.
 
 **Reading an unbound variable is a runtime `E_UNDEFINED`** (R-09). L-43
 makes a `for` variable visible after its loop, but a loop with no iteration
 never binds it; the interpreter reports the read as a runtime error at the
 `var` node instead of crashing the runner, mirroring CPython's `NameError`.
-
-**Float `//` and `%` follow CPython's algorithms** (L-12). `Math.floor(a / b)`
-differs from `float.__floordiv__` when `a / b` rounds to an integer
-(`1 // 0.1` is `9.0`, not `10.0`), and the sign of a zero result must follow
-the divisor; `floatMod` and `floatFloorDiv` port the C code so R-20 agrees.
-
-**Variables may not shadow callables** (L-45). `count = 0` alongside
-`def count()` runs in the interpreter (calls resolve by name) but fails in
-CPython; the same holds for a function named after a builtin such as
-`random_int`, whose registry key would take precedence without notice.
 
 **The parser consults the registry** (G-01). Grammar-legal forms whose block
 is not registered (`[1, 2]`, `xs[i]`, `p.x`, `Cls()`) would pass the parser
@@ -288,19 +209,6 @@ globals with the learner's variables, so `next = 0` invalidated the shim.
 per call so a printed newline compares equal to the interpreter's `stdout()`.
 The shimmed `random` functions come from the registry's aliases (G-02).
 
-## Playback (M-02)
-
-**Challenges are bundled with `import.meta.glob`** (C-14). Fetching the JSON
-at run time would need a manifest, asynchronous loading, and the Pages base
-path; a generated module would add a build step. The glob is typed by
-`vite/client`, works under Vitest, and the check script keeps reading from
-disk. The types reside in a leaf module so `tsx` never evaluates the glob.
-
-**Storage holds the raw `Program` JSON** (L-55). A zustand `persist` wrapper
-does not suit one key per challenge, and `migrate()` must validate whatever
-is returned; the raw form is also what Export writes (L-53). A rejected value
-resolves to an empty main rather than failing the load.
-
 **`state` is refreshed while playing, as a copy** (R-12). The `Result` tab
 must update per step at speed 50. The refresh was a shallow copy of the
 frame list, which shared the runner's variable maps and heap: a published
@@ -312,60 +220,80 @@ level is sufficient. The cost per publish is proportional to the size of
 the heap and is among the costs to measure (#18). Batches publish once per
 batch.
 
-**The chart highlights the owning statement** (U-39, U-61). `compare`,
-`read`, and `call` events carry expression ids while the chart has nodes
-only for statements; `ownerStmts()` resolves them once per program. A
-diamond's ✓/✗ comes from its last `compare`, or from the `loop` event of a
-generated check, and clears when the diamond is entered again or a loop
-containing it starts a new pass, so a loop shows the current iteration;
-`not (a < b)` shows the inner compare, which is accepted.
-
-**Template hooks on `NodeDef`** (N-08). Selecting `templateCreate`,
-`templateFalse`, or `templateNot` requires facts the slots do not carry
-(`bool` has no slots; `num.raw` is not a slot), and a switch on kind in the
-UI is forbidden by N-01. `form()` and `text()` keep the choice with the
-block. The `empty` block receives i18n keys for the same reason: chips render
-every kind through its template.
-
-**Tests are judged on disposable runners** (C-15). The driver shows one run;
-judging three tests through it would discard the learner's position. Each test
-runs in R-11 batches with `setTimeout(0)` between them so a non-terminating
-program cannot block the tab. `judge()` is shared with `scripts/check.ts` so
-the Result tab and CI agree on C-10.
-
-**The end-to-end tests load a solution through storage**. C-13's restore path is
-the only means of placing a finished program on the page before editing
-exists, and a development-only affordance would be untested UI.
-
-**Store actions are function properties, not methods**. oxlint's
-`unbound-method` flags a method signature whenever a selector extracts it
-(`useRun((s) => s.seek)`); the layout store already used the property form.
-
-**Hover and click on generated markup use delegated DOM listeners**.
-`jsx-a11y` forbids mouse handlers on `ol`/`li`/`tr`; one listener on the
-container reads a `data-*` attribute and satisfies the rule without
-converting code lines into buttons.
-
-**Validation is memoized per Program object**. The driver, the chart
-(`firstAssignments`), the run controls, and Submit all request it; a
-`WeakMap<Program, Analysis>` in `validate.ts` runs the Collector once per
-program identity, which also matches how diagnostics are published.
-
 **`print` records its line before yielding**. R-03 orders the event after
 the expression events; whether the runner's `stdout()` is updated before or
 after the yield is unobservable in events, and updating first lets the
 driver read `runner.stdout()` instead of rebuilding it from `print` events.
-
-**A `create` template after a frame**. `if c: y = 1` followed by `y = 2`
-renders both as `create y`: L-41 makes `y` invisible after the frame, so the
-outer assignment is where the region gains the name.
 
 **The CPython epilogue converts values in Python** (R-20). Serialising Python
 values as `Data` on the Python side (`$float`, `$int:` keys, `$cls`/`$id`)
 lets the TypeScript side compare with the same `dataEquals` used for
 expectations, so one equality rule (C-10) serves both engines.
 
-## UX redesign
+**Python stays the only generated language** (04-runtime). The note
+lists JavaScript and Dart; JavaScript would not preserve the third
+commitment: it has no int/float distinction, `-7 % 2` is `-1`, there is
+no `//`, and `in` on an array tests indices, so a faithful emitter would
+either produce output differing from the chart or wrap arithmetic in
+helper functions unsuitable for a learner to read. If a second language is
+required later, the block language must first be narrowed or the helpers
+accepted.
+
+**No statement-level Python import** (G-01). The beginner's loop never
+involves typing Python, and a learner able to type it does not need blocks;
+the block language is a strict subset, so most pasted Python would fail
+without a clear diagnostic. Text entry remains at expression level (U-55),
+and the `Python` tab, whose lines and nodes select each other (U-25),
+provides the transition from chart to text.
+
+**The driver publishes more than R-12 first listed** (R-11, R-12). These
+fields were found necessary while the driver was built without a screen.
+`taken`: U-61 colours the path of the current pass, which cannot be rebuilt
+from `lastEvent` after a Seek, so the projection keeps it beside `verdicts`
+and a `loop` event clears both. `pass`: `Pass 3` requires a count for each
+loop since its `enter`, which only a replaying projection holds. `busy`: the
+five statuses have no value for a pre-run, a Seek, or a Skip in progress,
+and a program that does not terminate pre-runs for several seconds (500
+timers, which browsers clamp to about 4 ms each); a sixth status would have
+made every test of `status` in the screens three-way. While `busy`, Step
+and Play do nothing, because taking over the runner would leave a Seek at an
+arbitrary step under a position bar that shows another; Pause still cancels
+a Skip, and Pause during the pre-run opens the run paused rather than being
+discarded. `verdict` is judged once, on the pre-run's runner, and published
+only at step `total`, so Back from the end removes it again. `Watch this
+case` is `run({ watch: true })` and not a step passed in: the runners of
+Submit record no print steps, so only the driver's own pre-run determines
+where the differing line was printed, and an outdated difference cannot be
+passed in.
+
+**A step count includes the failing step** (R-11). A step is one call of
+`next()`, and the call that fails is one; an error run therefore has
+`total = events + 1`, step `total` has no event, and the last position of
+the position bar is where the error is shown. A finished run is `done` on
+reaching `total`, not one Step later: U-81 names that step "the last step
+of the run", and the driver makes one further call of `next()` there so
+that the frames have unwound.
+
+**The `compare` event carries values, not text** (R-02, R-06). Its text was
+the operands in Python's `str()` form (`3 == 0`, `True`), which the
+narration could only quote. With the two values, the narration writes them
+as the blocks do and fills the template of the condition from them,
+whatever the blanks hold; the operator is on the node. `is divisible by` is
+the one template whose blanks are not the compared operands (`a % b == 0`
+compares `a % b` with `0`), so it reads a variable blank from the frame and
+applies only when both blanks are variables or literals; otherwise the
+comparison reads as `equals` over its operands. Every comparison matches a
+template, so the former fallback to the event's text no longer exists.
+
+**The driver publishes the statement to highlight** (R-12, U-39). Expression
+events carry the id of an expression, and the chart, the narration, and the
+`Python` tab all need the statement that contains it. The driver already
+holds the owner map for its marks, so it publishes `activeId` once rather
+than each screen resolving the owner again.
+
+## UI
+
+<!-- `05-ui.md` -->
 
 The UI is designed for a person who has never programmed (S-09), around
 one task, building a program as a flowchart and observing it run, and one
@@ -376,8 +304,67 @@ control flow invisible, placed values in a table separated from the program,
 and placed instructor tools at the same level as the core loop. The screens
 behind the ids in `05-ui.md` are on the design canvas "AlgoFlow Screens"
 (the flowchart and loop notation studies are on the earlier canvas "AlgoFlow
-Redesign"). The division of the page is described under "Screen structure"
-below.
+Redesign").
+
+Every part of the page was re-examined for whether the learner's loop
+(S-10, S-11) needs it, with modules, Step over, many Playground programs,
+and the view switch in place. The screens are on the canvas "AlgoFlow
+Screens", drawn at 1280 × 800, the narrowest supported width, so that a
+two-region page is checked where it is tightest.
+
+**Layout store `src/store/layout.ts`**. One Zustand
+`persist` store owns everything under `algoflow:layout` (the panel width
+and collapsed state, U-03/U-24, and the playback speed, U-60).
+
+**Stored values are validated on both paths**. Setters clamp, and
+`mergePersisted` re-validates whatever is returned from `localStorage`: a
+non-number or out-of-range size falls back to the default or the lower
+limit, and the upper limit, half the viewport, is applied by `panelWidth()`
+where the width is set and where it is drawn. Trusting the snapshot would
+allow a hand-edited or stale entry to render an unusable panel. Because both
+paths validate, a snapshot written under an older shape needs no `migrate`
+step: its unknown fields resolve to the defaults, so `version` remains `1`.
+
+**`t()` keys are typed** (U-73). `MessageKey` is derived from `en.json` with
+a template-literal type, so an unknown literal key is a compile error as
+well as a `scripts/i18n.ts` failure (U-71). A key built at run time is cast
+to `MessageKey` and is not scanned.
+
+**`t()` falls back to `en` and then to the key** (U-73). A `ja` text may
+be missing while a screen is new; returning the key (with a
+development-only warning) keeps the UI readable when it is.
+
+**Scan is a regex, not a parser** (U-71). The pattern matches `t("…")` and
+`t('…')` while ignoring `at(`, `obj.t(`, and template literals; it also
+matches inside comments, which is accepted. A parser would be more precise
+but adds a dependency to a script that must remain fast and simple. Test
+files are skipped because they call `t()` with deliberately unknown keys.
+Keys built at run time are not scanned; the `node.*` keys are checked
+against the registry in `src/nodes/index.test.ts`.
+
+**`flatten()` is shared** (`src/i18n/flatten.ts`). `t.ts` and the check
+script must agree on the key scheme; a single dependency-free module keeps
+one definition, and the script does not import `t.ts` because doing so
+introduces `en.json` and Vite's `import.meta.env`.
+
+**`en.json` holds only keys something renders** (U-71). Keys are added
+with the code that uses them, so wording is decided when the UI exists and
+the parity check never requires translating unused strings.
+
+**`import.meta.env` is read defensively**. `t.ts` uses `import.meta.env?.DEV`
+because the module is dependency-free and scripts run with `tsx`,
+where `import.meta.env` is undefined.
+
+**`E_DUPLICATE_ID` has a message** (U-70). The text is generic because the
+condition cannot arise from editing, only from a corrupted import.
+
+**The chart highlights the owning statement** (U-39, U-61). `compare`,
+`read`, and `call` events carry expression ids while the chart has nodes
+only for statements; `ownerStmts()` resolves them once per program. A
+diamond's ✓/✗ comes from its last `compare`, or from the `loop` event of a
+generated check, and clears when the diamond is entered again or a loop
+containing it starts a new pass, so a loop shows the current iteration;
+`not (a < b)` shows the inner compare, which is accepted.
 
 **A flowchart, not sentence blocks or a node graph** (U-30). Three
 directions were drawn. Scratch-style sentence blocks keep branches as
@@ -469,142 +456,11 @@ node, keeps the learner's attention on the chart. Conditions are offered as
 sentence templates first (`is divisible by`, `equals`, …) with the chip
 editor behind `Build my own`.
 
-**English first** (S-03). The product is not Japan-specific; `en` is the
-development locale and Japanese is a translation milestone.
-
 **Submit, not Check**. The word matches the problem-set vocabulary learners
 encounter elsewhere, and an attempt marks the problem `attempted` (C-17).
 
 **Solution revealed on request**. A learner may view the solution; hiding
 it entirely would cause self-learners to look elsewhere.
-
-**Plans grow with the files** (C-18). C-16 makes `pnpm check` fail on an id
-without a file, and a plan with no members would render an inert U-12 card
-(`0 of 0 solved`, `Start` with no destination), so a plan enters
-`plans.json` with its first member and lists the members that exist. The
-plans are bundled by a static import in `src/challenges/plans.ts` rather
-than the challenge glob of `index.ts`, which lets the glob exclude
-`plans.json` with a negated pattern. Membership and order are not checked
-against the S-05 table by code: copying the table into `scripts/` would
-duplicate a spec fact, and making `plans.json` the authority would remove
-the curriculum from the spec. `pnpm check` prints `in no plan: …` after
-the plans line so an omitted entry is visible on every run.
-
-## Learning loop and modules
-
-A concept note of 2026-09-17, written without knowledge of the
-project, describes an environment in which any block can be opened, its
-implementation inspected, and a learner's own abstraction reused in a
-larger program. The blocks of `03-nodes.md` are its lowest level and a
-function is its middle level; what the spec lacked was a way to keep a
-function beyond one program, the loop that makes a learner build one, and
-the run-time controls that let a program be read at more than one level of
-detail. The entries below record what was taken from the note and what
-was not.
-
-**The learner and the loop are spec facts** (S-09..S-11). U-50's
-templates, U-72's vocabulary, and U-61's drawing of the run on the chart
-all follow from "a person who has never programmed doing one loop per
-problem", so the facts belong in `01-scope.md`, where every U id and every
-later proposal can be judged against them. A table of users by role was
-dropped: the application has no roles (S-01), a trainee and a self-learner
-use the same features, and an instructor's work (challenge files, plans,
-built-in modules) is repository authoring covered by `06` and `07`, not a
-feature. "The environment is the core and the problems are a curriculum"
-was rejected as a spec sentence because it states nothing testable.
-
-**`submissions` and `starter` were removed** (C-17, C-01). The submission
-count had no consumer once instructor observation was dropped, and no
-challenge loads a starter once the neural-network plan chains through a
-module.
-
-**A module is a function that outlives its program** (08-modules). Its
-semantics are a function's; the difference is ownership and lifetime: a
-function belongs to one `Program`, a module belongs to the learner and is
-referenced by many programs. FlutterFlow's Action Blocks are the model:
-defined once per project, parameterised, called from any flow, edited in one
-place with the change reaching every use. Here a `Program` is the size of
-one FlutterFlow flow, so the project-level layer had to be added outside
-`Program`. `Module` was chosen over `Functions` (collides with the block
-menu's `Function` category and a program's own functions, excludes classes,
-cannot group a `heap`) and `Library` (a single flat collection, and already
-used in `docs/` for dependencies); it is the Python word, the learner
-encounters it again as `import`, and it groups `heap_push`, `heap_pop`, and
-`heapify` the way the note's data-structure tree does.
-
-**Plans chain through modules, not starters** (S-05, C-19, C-21). A
-starter chain (each problem starts from the previous solution) discards
-the learner's own version; a module chain keeps it, and a bug in the
-learner's `heap_pop` surfacing in `dijkstra-heap` is the note's "inspect
-the block you rely on", not a defect. A built-in module with the same
-names lets a learner who skipped a problem, or a self-learner, start
-anywhere (the note's "predefined blocks as shortcuts, still inspectable"),
-but it would let every problem after the first be passed without building
-anything; `defines` (C-21) refuses a submission whose named function
-resolves to a built-in module, so the exercise is retained while the
-shortcut remains available for later problems.
-
-**A module uses no other module** (D-05). Module-to-module imports need
-dependency order, cycle detection, and a second `from … import` layer in
-E-09; nothing in the curriculum needs them, so `micrograd` is one module
-rather than `engine` and `nn`. The rule can be lifted when a plan needs a
-module built on another; the trigger is a challenge whose `module` would
-have to call another learner module.
-
-**A learner module shadows a built-in one** (D-02, D-11). The note's
-"rebuild it from basic blocks" needs the learner's version to take
-precedence under the same name, or every later problem would have to be
-told which one to use. `Clone` is the entry to editing a built-in module
-and makes the shadowing explicit on the Modules page; the word was chosen
-over `Copy to my modules` because, like `Module`, it is one the learner
-encounters again when programming.
-
-**Modules are emitted as files, not inlined** (E-02, E-09, U-25). Inlining
-a module's functions into `main.py` would make the `Python` tab state
-something the chart does not (one program) and hide the module the learner
-built.
-`from heap import heap_push, heap_pop` plus `heap.py` in its own tab states
-exactly what the chart states, keeps every file copyable into a Python
-interpreter, and introduces the term the learner will need. Calls remain
-unqualified (`heap_push(h, x)`), because `heap.push(h, x)` would collide
-with the method syntax of G-03.
-
-**A module call is one step; its interior is reachable by one click**
-(R-16, R-11, D-18, D-06). The note's "Extract Minimum can be used as a
-single operation, and opened" is taken literally: in a program's run a
-module function is a block, narrated by its returned value, and
-`Open <name>` shows its interior. Opening it in a second browser tab keeps
-the program, even a paused run, exactly as it was, so no context is lost;
-and the Module page receives that call's arguments and runs the one
-function in isolation, which locates a bug in `heap_pop` more directly than
-stepping through hundreds of steps of `dijkstra` to reach it. While the
-learner is still building a function it belongs to the program and is
-stepped into; `Move to module` is the point at which it becomes a block.
-Showing the module's chart in place within the program page was rejected:
-it needed a second, shared-edit mode of the same page. The position bar
-counts visible steps while `Done.steps` counts every event, so
-`dijkstra-heap` still shows fewer steps than `dijkstra-grid` on the
-Accepted view. Costs: a `storage` listener so other tabs observe a module
-edit (D-22), and two tiled windows fall below the 1280 px gate (S-02), so
-the second tab is used as a tab.
-
-**Modules have cases because a module change reaches every program**
-(D-19..D-21). The absence of a challenge had been read as the absence of
-tests, but a module is where tests matter most: editing `backward_step` for
-the `tanh` problem can break every solved problem that uses it, and the
-module is where that is detected. A case is a saved run (arguments,
-returned value, arguments afterwards), the same idea as a recorded
-expectation (C-20), so no test is written from an empty starting point;
-`Test` is the established programming term, distinct from a problem's
-`Submit`. Cases recorded from an accepted submission were rejected: no rule
-selects suitable calls (the first `heap_push` of a test pushes onto an
-empty heap, and a recursion produces thousands of calls), they would fix
-the learner's own behaviour as correct, and they omit the act of judging a
-result. Instead a learner module inherits the built-in module's cases for a
-function of the same name: written by the author, with edge cases, checked
-in both engines, and able to detect what the problem's tests do not.
-`toValue` rebuilding one object per `$id` (L-06) is what lets an object
-graph be a case argument or be transferred to the Module page.
 
 **No editing while paused** (U-60). Replaying an edited program to the
 same step count arrives at a different position in a different program, and
@@ -658,71 +514,6 @@ the code; keying it by storage key and variable name in its own store
 keeps L-53 and `Export` about the program only. A challenge never names a
 view: the third commitment remains selection by value type, with the
 learner's switch as the one override.
-
-**T-09 removed, V-05 without a number, T-10 in two stages**. A frame-time
-assertion in Playwright on CI hardware is either too permissive to be
-meaningful or unreliable; `00-conventions.md` makes untested numbers
-illegal in the spec, so V-05 keeps the implementation constraint and the
-32 ms target is recorded here. Screenshot baselines require an update on
-every UI change while the UI is still gaining pages; each milestone saves
-screenshots for review and the last milestone (M-10), after which no page
-is added, enables the comparison.
-
-**Python stays the only generated language** (04-runtime). The note
-lists JavaScript and Dart; JavaScript would not preserve the third
-commitment: it has no int/float distinction, `-7 % 2` is `-1`, there is
-no `//`, and `in` on an array tests indices, so a faithful emitter would
-either produce output differing from the chart or wrap arithmetic in
-helper functions unsuitable for a learner to read. If a second language is
-required later, the block language must first be narrowed or the helpers
-accepted.
-
-**No statement-level Python import** (G-01). The beginner's loop never
-involves typing Python, and a learner able to type it does not need blocks;
-the block language is a strict subset, so most pasted Python would fail
-without a clear diagnostic. Text entry remains at expression level (U-55),
-and the `Python` tab, whose lines and nodes select each other (U-25),
-provides the transition from chart to text.
-
-**Playground holds many programs** (S-07, U-15, U-05). One `free` slot
-made starting a new program an act of destruction; the note's "use it in
-a larger program" has nowhere else to happen than Playground once a plan
-ends. `Open in Playground` converts a solved problem into the start of that
-larger program, with inputs fixed as the assignments E-03 already emits.
-
-**`heap_push` and `heap_pop`** (D-16). `push`/`pop` as module functions
-would appear beside the list method `pop` in the block menu and be confused
-with it (`pop(h)` versus `h.pop()`); the prefixed names follow
-`heapq.heappush` and keep the module's name in every call.
-
-**The module store names no service** (D-14). `localStorage` is sufficient
-for a three-day course on one machine, and export files cover
-transfer between machines; a server would justify its accounts only once
-sharing between learners or synchronisation across devices becomes a goal.
-Keeping every read and write behind one store lets that decision be taken
-later without modifying callers, and the specification does not commit to a
-vendor.
-
-**Plans `structures` and `dp`; the rest stays out of plans** (S-05). A
-plan's order must be significant. The seven `structures` problems build on
-one another through the list-as-stack, list-as-queue, and `heap` module;
-`dijkstra-grid` then `dijkstra-heap` shows a block being swapped for a
-faster one with the same answer, visible in the step count on the Accepted
-card. The three `dp` problems widen the same table technique (one
-dimension, two, strings), which is the same form of concept progression as
-the course plan. `gcd`, `is-prime`, and `fisher-yates` are not built upon
-later; `fibonacci-memo` and `hanoi` would form a two-problem recursion
-plan, which is insufficient until further recursion problems are added.
-Adding any of them to the course plan is the instructor's decision, since
-that plan mirrors a fixed three-day course.
-
-## Screen structure
-
-Every part of the page was re-examined for whether the learner's loop
-(S-10, S-11) needs it, with modules, Step over, many Playground programs,
-and the view switch in place. The screens are on the canvas "AlgoFlow
-Screens", drawn at 1280 × 800, the narrowest supported width, so that a
-two-region page is checked where it is tightest.
 
 **Two regions, on every page** (U-03, U-20). Panel and chart, nothing
 else: the `Result` tab absorbed the floating variables card and the output
@@ -850,7 +641,7 @@ made the menu branch on kind against N-01; wrapping `i` with `+` or typing
 the text achieves the same result. A boundary test was one whose localized
 name began with `edge:`, a flag concealed in a display string, and the name
 itself was displayed nowhere (cases are shown by their inputs) while still
-requiring a Japanese text in M-10; the name was dropped and the flag is
+requiring a Japanese text; the name was dropped and the flag is
 `edge: true`. The templates `is even` and `is odd` matched the same
 expression as `is divisible by`, so one condition had two sentences and
 needed a priority rule for the diamond and the narration;
@@ -932,45 +723,6 @@ the next row after the last course problem would place a trainee in the
 first data-structure problem; `Plan complete` returns the choice to the
 learner.
 
-**The driver publishes more than R-12 first listed** (R-11, R-12). These
-fields were found necessary while the driver was built without a screen.
-`taken`: U-61 colours the path of the current pass, which cannot be rebuilt
-from `lastEvent` after a Seek, so the projection keeps it beside `verdicts`
-and a `loop` event clears both. `pass`: `Pass 3` requires a count for each
-loop since its `enter`, which only a replaying projection holds. `busy`: the
-five statuses have no value for a pre-run, a Seek, or a Skip in progress,
-and a program that does not terminate pre-runs for several seconds (500
-timers, which browsers clamp to about 4 ms each); a sixth status would have
-made every test of `status` in the screens three-way. While `busy`, Step
-and Play do nothing, because taking over the runner would leave a Seek at an
-arbitrary step under a position bar that shows another; Pause still cancels
-a Skip, and Pause during the pre-run opens the run paused rather than being
-discarded. `verdict` is judged once, on the pre-run's runner, and published
-only at step `total`, so Back from the end removes it again. `Watch this
-case` is `run({ watch: true })` and not a step passed in: the runners of
-Submit record no print steps, so only the driver's own pre-run determines
-where the differing line was printed, and an outdated difference cannot be
-passed in.
-
-**A step count includes the failing step** (R-11). A step is one call of
-`next()`, and the call that fails is one; an error run therefore has
-`total = events + 1`, step `total` has no event, and the last position of
-the position bar is where the error is shown. A finished run is `done` on
-reaching `total`, not one Step later: U-81 names that step "the last step
-of the run", and the driver makes one further call of `next()` there so
-that the frames have unwound.
-
-**The `compare` event carries values, not text** (R-02, R-06). Its text was
-the operands in Python's `str()` form (`3 == 0`, `True`), which the
-narration could only quote. With the two values, the narration writes them
-as the blocks do and fills the template of the condition from them,
-whatever the blanks hold; the operator is on the node. `is divisible by` is
-the one template whose blanks are not the compared operands (`a % b == 0`
-compares `a % b` with `0`), so it reads a variable blank from the frame and
-applies only when both blanks are variables or literals; otherwise the
-comparison reads as `equals` over its operands. Every comparison matches a
-template, so the former fallback to the event's text no longer exists.
-
 **A diamond asks; a slot states** (U-33, U-50). `Is {cond}?` around a
 template sentence reads `Is x is divisible by 15?`, so each template has a
 question of its own beside its sentence (`Does a equal b?`). Template
@@ -981,12 +733,6 @@ matches the generated `Is i < n + 1?` of a `for`. The variable block is
 obtained from the parser (the block a bare name parses to), so the matcher
 and the narration name no block kind (N-01).
 
-**Showing the solution is recorded** (C-17). `solution: true` requires an
-entry, and a learner who only viewed the solution has used the problem as
-much as one who took a hint; the entry is `attempted`. The key holds the
-bare record, as C-17 writes it, through a custom storage of the persist
-middleware.
-
 **`break` and `continue` are drawn as boxes** (U-33, N-09). Both declare
 `requires: "loop"`, so only the kind distinguishes an exit from a jump to
 the next pass, and the chart may not branch on the kind (N-01); both are
@@ -995,89 +741,6 @@ identified by `requires: "function"`: its edge runs to `End` along one
 vertical line on the right, and carries the connector after it, since no
 other edge leaves it. After a branch whose regions all return there is no
 edge and no connector.
-
-## Process
-
-**The spec is tracked** (P-10). Until M-03 the whole of `docs/` was
-untracked: a working spec edited freely, with no history. Once every commit
-and test cited an id, a reviewer required the spec the code was written
-against at that commit, and a session that reverted a branch lost a file
-that had never been committed. Everything a reviewer, a contributor, or a
-later session needs is in git or on GitHub.
-
-**No handoff file** (P-14). `NEXT.md` held four kinds of text: the state of
-the repository (git and the pull requests state it), what a session built
-and how to use it (the code and its doc comments state it), open questions
-and follow-ups (issues state them, with a milestone and a history), and
-tool behaviour (`CLAUDE.md` states it, and it is loaded at every start). A
-file rewritten at the end of every session and read at the start of the
-next was a fifth copy of the same facts, diverged between sessions, and,
-being untracked, was the one file a reset could lose.
-
-**Boards are exported into the repository** (P-13). The screens were drawn
-on design canvases, reachable only by link. A link cannot be read by a
-session, reviewed in a pull request, or diffed when a board changes. A PNG
-in `docs/design/` for each board, with a README naming what each shows and
-where the spec deviates, provides every reader with the same source; the
-canvas remains the tool for drawing, and the spec remains the authority. A
-board that a later board or the spec has replaced has no PNG, because a
-PNG in the repository is read as the source of a screen.
-
-**Issues carry the questions; the spec carries the answers** (P-12). The
-spec states facts and never history, so an open question has no place in
-it. `NEXT.md`'s "Open issues" and "Follow-ups" lists lost their reasons and
-their age at every rewrite. An issue keeps both, is assigned to the
-milestone that needs the answer, and is closed by the pull request that
-writes the id, which is where the answer belongs. Four labels are
-sufficient because they answer the one question a session asks of an issue:
-whether it requires a decision, a fix, a merge of two copies, or a
-measurement first.
-
-**One pull request per few slices** (P-11). The commits were already
-vertical slices; the pull request is the unit a review can encompass and CI
-can attest to. Rebase merges retain the slices as commits on `main`, where
-their messages cite the ids; a squash would discard that.
-
-**Identifiers are stable; texts are not** (00-conventions, P-10). Commit
-messages and tests cite identifiers, and a statement's text is revised as
-the design is settled (R-06 changed what a `compare` event carries; R-12
-gained six fields). Renumbering would break every citation; retaining the
-number and revising the text breaks none, because the spec is tracked and
-the revision is committed before the code, so each citation resolves
-against the tree at its own commit. A withdrawn statement retains its
-number for the same reason: the citations that predate the withdrawal still
-name an existing statement.
-
-**One template per kind of issue; spec ids follow the facts they cite**
-(P-12). An issue is written from the template of its kind, which has
-Summary, the sections of its kind (Observed and Cause, Options, Copies,
-Cost, Steps), Spec, and Done when. Done when states the condition that
-closes the issue. The milestone is the issue's Milestone field and is not
-repeated in the body, where it would be one fact recorded in two places.
-Spec states each statement that applies as a sentence ending in its id, so
-the issue is readable without the ids and the ids lead to the spec; the
-title and Summary carry no id, so the issue list and the first paragraph
-state the problem in words. A `decision` may open with Observed, because a
-gap in the spec can show in what the code does, and a measured behaviour is
-the evidence the options are weighed against. A section that does not apply
-states `None` and the reason, because a section that does not apply and a
-section omitted in error are otherwise indistinguishable. Two forms were
-rejected. Three inline labels, Where, What, and When, repeated the Milestone
-field in When, stated no condition for closing, and mixed in one paragraph
-what the id states with what the code does. One template for all five kinds,
-with Summary, Where, `Expected and actual` for a `defect`, and Done when,
-fitted none of them: `Where` held a file, a spec id, or a board, so a body
-gave a bare `U-10` before it stated the problem, and ids became the subject
-of sentences the spec does not contain; `Expected and actual` compressed a
-reproduction into two lines and had no section for the cause; and a
-`decision` had no section for its options, a `debt` none for its copies, and
-a `perf` none for its cost.
-
-**A pull request states what it closes** (P-11). The pull request template
-has Closes, because GitHub closes an issue on merge only when the body names
-it, and Screenshots, because the pull requests from M-03 session 2 onward
-change screens and T-10 requires the images. A checklist was not added: the
-template asks for pasted command output, and a ticked box is an assertion.
 
 **Routes are parsed by hand** (U-01, U-07). Six hash routes with at most
 one parameter are a `parseRoute()` function and a `hashchange` subscription
@@ -1134,12 +797,6 @@ modifier on the click has no touch equivalent and adds a key that works only
 while running. The three actions are already specified and each is one
 click.
 
-**The driver publishes the statement to highlight** (R-12, U-39). Expression
-events carry the id of an expression, and the chart, the narration, and the
-`Python` tab all need the statement that contains it. The driver already
-holds the owner map for its marks, so it publishes `activeId` once rather
-than each screen resolving the owner again.
-
 **Run leaves the solution** (U-27). The solution band offers no Run of its
 own: the solution is to be read, and its outcome is known. Running the
 learner's program while the chart region shows the solution would put the
@@ -1190,3 +847,399 @@ bound from the viewport width given to it, both when the handle sets the
 width and when the page draws it, so a stored width above the bound is drawn
 at the bound without being rewritten.
 
+**Screenshots are compared with baselines only once no page is added**
+(U-91). A baseline changes with every change to its screen, so comparing
+while pages are still being added would turn each such pull request into a
+baseline update and catch nothing; the screenshots are saved for review
+until then.
+
+**V-05 states no number** (V-05). A frame-time assertion in Playwright on
+CI hardware is either too permissive to be meaningful or unreliable, and an
+untested number may not appear in the specification, so V-05 keeps the
+implementation constraint and the target, 32 ms per drawn step, is recorded
+here.
+
+## Challenges
+
+<!-- `06-challenges.md` -->
+
+**Input names are checked by `scripts/check.ts`, not by `validate()`**. Inputs
+have no NodeId to attach a diagnostic to and are read-only in the editor
+(U-31); challenge files are the only source, so the schema check covers L-01
+for them.
+
+**Challenges are bundled with `import.meta.glob`** (C-14). Fetching the JSON
+at run time would need a manifest, asynchronous loading, and the Pages base
+path; a generated module would add a build step. The glob is typed by
+`vite/client`, works under Vitest, and the check script keeps reading from
+disk. The types reside in a leaf module so `tsx` never evaluates the glob.
+
+**Tests are judged on disposable runners** (C-15). The driver shows one run;
+judging three tests through it would discard the learner's position. Each test
+runs in R-11 batches with `setTimeout(0)` between them so a non-terminating
+program cannot block the tab. `judge()` is shared with `scripts/check.ts` so
+the Result tab and CI agree on C-10.
+
+**Plans grow with the files** (C-18). C-16 makes `pnpm check` fail on an id
+without a file, and a plan with no members would render an inert U-12 card
+(`0 of 0 solved`, `Start` with no destination), so a plan enters
+`plans.json` with its first member and lists the members that exist. The
+plans are bundled by a static import in `src/challenges/plans.ts` rather
+than the challenge glob of `index.ts`, which lets the glob exclude
+`plans.json` with a negated pattern. Membership and order are not checked
+against the S-05 table by code: copying the table into `scripts/` would
+duplicate a spec fact, and making `plans.json` the authority would remove
+the curriculum from the spec. `pnpm check` prints `in no plan: …` after
+the plans line so an omitted entry is visible on every run.
+
+**`submissions` and `starter` were removed** (C-17, C-01). The submission
+count had no consumer once instructor observation was dropped, and no
+challenge loads a starter once the neural-network plan chains through a
+module.
+
+**Showing the solution is recorded** (C-17). `solution: true` requires an
+entry, and a learner who only viewed the solution has used the problem as
+much as one who took a hint; the entry is `attempted`. The key holds the
+bare record, as C-17 writes it, through a custom storage of the persist
+middleware.
+
+## Modules
+
+<!-- `08-modules.md` -->
+
+A concept note of 2026-09-17, written without knowledge of the
+project, describes an environment in which any block can be opened, its
+implementation inspected, and a learner's own abstraction reused in a
+larger program. The blocks of `03-nodes.md` are its lowest level and a
+function is its middle level; what the spec lacked was a way to keep a
+function beyond one program, the loop that makes a learner build one, and
+the run-time controls that let a program be read at more than one level of
+detail. The entries below record what was taken from the note and what
+was not; those on the learner and the plans are under Scope, and those on
+Step over and on editing while paused under UI.
+
+**A module is a function that outlives its program** (08-modules). Its
+semantics are a function's; the difference is ownership and lifetime: a
+function belongs to one `Program`, a module belongs to the learner and is
+referenced by many programs. FlutterFlow's Action Blocks are the model:
+defined once per project, parameterised, called from any flow, edited in one
+place with the change reaching every use. Here a `Program` is the size of
+one FlutterFlow flow, so the project-level layer had to be added outside
+`Program`. `Module` was chosen over `Functions` (collides with the block
+menu's `Function` category and a program's own functions, excludes classes,
+cannot group a `heap`) and `Library` (a single flat collection, and already
+used in `docs/` for dependencies); it is the Python word, the learner
+encounters it again as `import`, and it groups `heap_push`, `heap_pop`, and
+`heapify` the way the note's data-structure tree does.
+
+**A module uses no other module** (D-05). Module-to-module imports need
+dependency order, cycle detection, and a second `from … import` layer in
+E-09; nothing in the curriculum needs them, so `micrograd` is one module
+rather than `engine` and `nn`. The rule can be lifted when a plan needs a
+module built on another; the trigger is a challenge whose `module` would
+have to call another learner module.
+
+**A learner module shadows a built-in one** (D-02, D-11). The note's
+"rebuild it from basic blocks" needs the learner's version to take
+precedence under the same name, or every later problem would have to be
+told which one to use. `Clone` is the entry to editing a built-in module
+and makes the shadowing explicit on the Modules page; the word was chosen
+over `Copy to my modules` because, like `Module`, it is one the learner
+encounters again when programming.
+
+**Modules are emitted as files, not inlined** (E-02, E-09, U-25). Inlining
+a module's functions into `main.py` would make the `Python` tab state
+something the chart does not (one program) and hide the module the learner
+built.
+`from heap import heap_push, heap_pop` plus `heap.py` in its own tab states
+exactly what the chart states, keeps every file copyable into a Python
+interpreter, and introduces the term the learner will need. Calls remain
+unqualified (`heap_push(h, x)`), because `heap.push(h, x)` would collide
+with the method syntax of G-03.
+
+**A module call is one step; its interior is reachable by one click**
+(R-16, R-11, D-18, D-06). The note's "Extract Minimum can be used as a
+single operation, and opened" is taken literally: in a program's run a
+module function is a block, narrated by its returned value, and
+`Open <name>` shows its interior. Opening it in a second browser tab keeps
+the program, even a paused run, exactly as it was, so no context is lost;
+and the Module page receives that call's arguments and runs the one
+function in isolation, which locates a bug in `heap_pop` more directly than
+stepping through hundreds of steps of `dijkstra` to reach it. While the
+learner is still building a function it belongs to the program and is
+stepped into; `Move to module` is the point at which it becomes a block.
+Showing the module's chart in place within the program page was rejected:
+it needed a second, shared-edit mode of the same page. The position bar
+counts visible steps while `Done.steps` counts every event, so
+`dijkstra-heap` still shows fewer steps than `dijkstra-grid` on the
+Accepted view. Costs: a `storage` listener so other tabs observe a module
+edit (D-22), and two tiled windows fall below the 1280 px gate (S-02), so
+the second tab is used as a tab.
+
+**Modules have cases because a module change reaches every program**
+(D-19..D-21). The absence of a challenge had been read as the absence of
+tests, but a module is where tests matter most: editing `backward_step` for
+the `tanh` problem can break every solved problem that uses it, and the
+module is where that is detected. A case is a saved run (arguments,
+returned value, arguments afterwards), the same idea as a recorded
+expectation (C-20), so no test is written from an empty starting point;
+`Test` is the established programming term, distinct from a problem's
+`Submit`. Cases recorded from an accepted submission were rejected: no rule
+selects suitable calls (the first `heap_push` of a test pushes onto an
+empty heap, and a recursion produces thousands of calls), they would fix
+the learner's own behaviour as correct, and they omit the act of judging a
+result. Instead a learner module inherits the built-in module's cases for a
+function of the same name: written by the author, with edge cases, checked
+in both engines, and able to detect what the problem's tests do not.
+`toValue` rebuilding one object per `$id` (L-06) is what lets an object
+graph be a case argument or be transferred to the Module page.
+
+**`heap_push` and `heap_pop`** (D-16). `push`/`pop` as module functions
+would appear beside the list method `pop` in the block menu and be confused
+with it (`pop(h)` versus `h.pop()`); the prefixed names follow
+`heapq.heappush` and keep the module's name in every call.
+
+**The module store names no service** (D-14). `localStorage` is sufficient
+for a three-day course on one machine, and export files cover
+transfer between machines; a server would justify its accounts only once
+sharing between learners or synchronisation across devices becomes a goal.
+Keeping every read and write behind one store lets that decision be taken
+later without modifying callers, and the specification does not commit to a
+vendor.
+
+## Engineering
+
+<!-- the stack, tooling, and tests -->
+
+**TypeScript 7 ships the Go compiler as `tsc`**.
+`typescript@7` has a single binary, `tsc`; the `tsgo` name belonged to the
+`@typescript/native-preview` package. `oxlint-tsgolint` follows the same
+major, so `7.0.x` pairs with `7.0.x`.
+
+**Base UI package is `@base-ui/react`**. `@base-ui-components/react`
+is deprecated in favour of the renamed package; shadcn's `--base base`
+targets the new name.
+
+**shadcn preset `nova`**. shadcn 4 offers `nova`, `vega`, `maia`,
+`lyra`, `mira`, `luma`, `sera`, `rhea`; `nova` is the default appearance. The
+preset's `theme.css` imports `shadcn/tailwind.css` and `tw-animate-css`, so
+`shadcn` and `tw-animate-css` are runtime dependencies rather than
+dependencies invoked only through `dlx`.
+
+**Generated primitives live in `src/ui/primitives/`, `cn()` in
+`src/lib/utils.ts`**. shadcn defaults to
+`src/components/ui`; the spec keeps everything visual under `src/ui/`, so
+`components.json` aliases were changed before the first `shadcn add`.
+
+**pnpm `onlyBuiltDependencies: ["esbuild"]`**. pnpm 10 refuses package
+build scripts unless listed; `esbuild` (introduced transitively by `tsx`)
+needs its postinstall to place the platform binary.
+
+**Exact version pins**. `.npmrc` sets `save-exact=true` so every
+`pnpm add` records an exact version; `@types/node` is pinned to the latest
+22.x to match `.node-version`.
+
+**Rules turned off**.
+
+- `react/react-in-jsx-scope`: the automatic JSX runtime (`jsx: react-jsx`)
+  never needs `React` in scope; the rule reports every element.
+- `jsx-a11y/prefer-tag-over-role`: the resize handle is an interactive
+  `role="separator"` (a splitter); `<hr>` is a static separator.
+- `require-yield`: literal and variable runners are generators that never
+  yield, by design.
+- `unicorn/no-thenable`: 02-language names the `if` regions `then` and
+  `else`.
+- `no-redundant-type-constituents`: `Id | "main"` and `NodeId | "main"` are
+  written as in the spec to document intent.
+- `no-await-in-loop` in `e2e/`: Playwright assertions in a loop are
+  intentionally sequential; `Promise.all` would race the browser.
+
+**Warnings do not fail `pnpm lint`**. Most warnings are
+`no-unsafe-type-assertion` where something the type checker cannot follow
+establishes a value's shape, such as the registry's slot list or a check
+after `JSON.parse`; expressing each in the types is not justified.
+
+**Oxfmt does not format `docs/`**. The spec is hand-written prose
+with aligned tables; a formatter must not rewrite it.
+
+**LF line endings**. The repository is edited on Windows; without
+`.gitattributes`, git warned about CRLF on every commit and CI diffs would
+contain unrelated changes.
+
+**Custom resize handle instead of `react-resizable-panels`**. U-03
+states limits in pixels; the library works in percentages, and the handle
+is approximately sixty lines with pointer capture. It also avoids one
+dependency that nothing requires.
+
+**Generated primitives are added when first used**. Unreferenced
+generated code would still have to track theme changes.
+
+**Resize handle ignores secondary pointers**. `onPointerDown` returns unless
+`button === 0` and `isPrimary`; a right-click would otherwise begin a drag
+whose `pointerup` the context menu can suppress, and a second touch would
+overwrite the drag origin during a drag.
+
+**Stable test ids**. Each region of a page, the chart's nodes
+(`data-node-id`), the transport, the path bar, and the panel's tabs carry
+`data-testid` hooks for end-to-end tests; role and label queries are used
+for everything user-visible.
+
+**Script logic lives in `scripts/lib/`**. `scripts/i18n.ts` is a minimal
+command-line wrapper over `scripts/lib/i18n-check.ts` so Vitest can test the
+function directly against a temporary fixture directory.
+
+**`VITE_BASE`**. Project Pages serve from `/<repo>/`; a build with
+`base: "/"` would return 404 for every asset. Reading the value from the
+environment keeps local builds at `/` and lets CI derive it from
+`github.event.repository.name` without hard-coding the repository.
+
+**Chromium only, 1440 × 900**. One browser keeps CI under one minute
+and matches the desktop-only scope (S-02); the viewport exceeds the 1280 px
+gate with margin for the default panel sizes.
+
+**No React Testing Library**. Unit tests cover stores, `t()`, and script
+logic; component behaviour is exercised end to end by Playwright (U-91). Installing a DOM testing library for components that are largely
+placeholders would add a second, slower means of testing the same behaviour.
+
+**Vitest environment is `node`, jsdom per file**. Only the store tests that
+persist need `localStorage`; a file-level `// @vitest-environment jsdom`
+keeps the other suites fast (jsdom start-up accounts for most of the run
+time).
+
+**`pnpm check` is one script**. pnpm appends command-line arguments to the end
+of the script string, so `tsx scripts/check.ts && tsx scripts/i18n.ts` would
+pass `challenges/x.json` to the i18n script; `check.ts` invokes the i18n check
+itself instead.
+
+**The end-to-end tests load a solution through storage**. C-13's restore path is
+the only means of placing a finished program on the page before editing
+exists, and a development-only affordance would be untested UI.
+
+**Store actions are function properties, not methods**. oxlint's
+`unbound-method` flags a method signature whenever a selector extracts it
+(`useRun((s) => s.seek)`); the layout store already used the property form.
+
+**Hover and click on generated markup use delegated DOM listeners**.
+`jsx-a11y` forbids mouse handlers on `ol`/`li`/`tr`; one listener on the
+container reads a `data-*` attribute and satisfies the rule without
+converting code lines into buttons.
+
+## Process
+
+<!-- how work proceeds -->
+
+**The specification states no schedule** (00-conventions). A plan file in
+the specification held three kinds of statement: the schedule (`M-`), the
+engineering constraints (`P-`), and the test obligations (`T-`). Each had a
+second copy elsewhere: the schedule in every GitHub milestone's description
+and in the prompts that started each milestone, the constraints in
+`CLAUDE.md` and the configuration files, and every deferred feature in the
+specification carried a milestone tag that went stale whenever work moved.
+Each fact now has one home. A milestone's description and its issues hold
+the scope and the exit criterion. `CLAUDE.md` and the configuration hold the
+engineering choices, and the rule that `src/lang`, `src/runtime`,
+`src/python`, and `src/nodes` import only each other is a lint rule,
+because a rule a machine checks needs no reviewer. It covers `src/nodes`
+because the other three import it, so a package reaching `src/nodes` would
+reach them all. A specification file whose statements a test suite
+establishes ends with those tests, so a test obligation sits beside the
+statements it covers.
+
+**Identifiers are kept, never renumbered or reused** (00-conventions). A
+statement keeps its id when its text changes, and the id goes with it when
+it is deleted. Renumbering to close the gaps would rewrite hundreds of
+citations in tests and code without helping any reader, and giving an id to
+another statement would make an old citation name a different fact. The
+earlier rule kept a deleted statement as the text "withdrawn" under its id,
+which kept dead text in the specification only to say that it was dead. A
+file's `Deleted:` line keeps only what that text was for: the number of a
+deleted statement, so that the next id after the highest is never one
+already cited.
+
+**A milestone is split into issues when it starts** (`/milestone`). One task
+issue per part a person can see working gives the milestone its progress,
+lets the pull request close each part by number, and lets a part move to
+another milestone. Issues written months ahead would describe screens whose
+boards are not settled and would be rewritten before use, so a milestone
+holds its scope in its description until its session splits it. The split
+is marked by the description itself: once every part of its `Scope:`
+paragraph is an issue, the paragraph is replaced by a pointer to the issues, so the scope
+always has exactly one home and an unrelated issue filed under the
+milestone earlier does not count as a split.
+
+**One pull request per milestone** (`CLAUDE.md`). A milestone's exit
+criterion is a path through the running application, and a pull request
+that ends halfway shows screens that cannot be judged. Pull requests split
+by size had to be stacked, because nobody merges while a session runs:
+every base had to be retargeted, `Closes` had no effect until a merge into
+`main`, every check ran again per branch, and one `en.json` change became a
+rebase conflict. The reviews read the whole diff in any case. Granularity
+stays in the commits: each is a vertical slice that passes lint and tests,
+specification changes come first, and rebase merges keep them on `main`. A
+part that does not depend on the rest may still have its own pull request
+from `main`.
+
+**The milestone prompt is a skill** (`/milestone`). A session began with a
+pasted prompt, kept outside git, that repeated the milestone's scope, listed
+the ids to read, and restated the session's procedure. The scope is on the
+milestone and its issues, the ids are in each issue's Spec section, and the
+procedure is a tracked skill, so starting a milestone is one command and its
+procedure is reviewed and versioned like the code.
+
+**Two reviews before the pull request** (`/milestone`). `/code-review` reads
+the diff for defects; a subagent reads it against the specification and
+reports only a violated id or behaviour no id requires, each with a
+scenario. The narrow brief keeps preferences out and finds where the code
+went beyond the specification, which is where an id is missing. Each review
+finds defects the other does not.
+
+**No handoff file**. A file rewritten at the end of every session and read
+at the start of the next held the state of the repository (git and the pull
+requests state it), what a session built (the code states it), open
+questions (issues state them, with a milestone and a history), and tool
+behaviour (`CLAUDE.md` states it and is loaded at every start). It was one
+more copy of the same facts, diverged between sessions, and, being
+untracked, was the one file a reset could lose.
+
+**Boards are exported into the repository**. The screens are drawn on design
+canvases, which open only for the people they are shared with. A canvas
+cannot be reviewed in a pull request or diffed when a board changes. A PNG in
+`docs/design/` for each board, with a README naming what each shows and
+where the specification deviates, gives every reader the same source; the
+canvas remains the tool for drawing, and the specification remains the
+authority. A board that a later board or the specification has replaced has
+no PNG, because a PNG in the repository is read as the source of a screen.
+The canvas links sit in `docs/design/README.md` beside the export procedure,
+because whoever re-exports a board needs them, and a link reveals nothing
+to anyone without access.
+
+**Issues carry the questions; the specification carries the answers**. The
+specification states facts and never history, so an open question has no
+place in it. An issue keeps the question with its reasons and its age, is
+assigned to the milestone that needs the answer, and is closed by the pull
+request that writes the id, which is where the answer belongs. Four labels
+are sufficient because they answer the one question a session asks of an
+issue: whether it requires a decision, a fix, a merge of two copies, or a
+measurement first.
+
+**One template per kind of issue; spec ids follow the facts they cite**. An
+issue is written from the template of its kind: Summary, the sections of its
+kind (Observed and Cause, Options, Copies, Cost, Steps), Spec, and Done
+when. Done when states the condition that closes the issue. The milestone is
+the issue's Milestone field and is not repeated in the body. Spec states
+each statement that applies as a sentence ending in its id, so the issue is
+readable without the ids and the ids lead to the specification; the title
+and Summary carry no id, so the issue list and the first paragraph state the
+problem in words. A `decision` may open with Observed, because a gap in the
+specification can show in what the code does. A section that does not apply
+states `None` and the reason, because a section that does not apply and a
+section omitted in error are otherwise indistinguishable. One template for
+all kinds was rejected: it had no section for a decision's options, a
+debt's copies, or a cost, and its `Where` line put a bare id before the
+problem was stated.
+
+**A pull request states what it closes**. The pull request template has
+Closes, because GitHub closes an issue on merge only when the body names it,
+and Screenshots, because a pull request that changes a screen carries its
+images (U-91). A checklist was not added: the template asks for pasted
+command output, and a ticked box is an assertion.
