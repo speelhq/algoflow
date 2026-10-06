@@ -76,63 +76,57 @@ function checkTest(challenge: Challenge, test: Test, index: number): string[] {
   return problems;
 }
 
+type Checked = { problems: string[]; summary: string; notes?: string[] };
+
+/** Reads one file as JSON, checks it, and reports `ok` or `FAIL`; true when it passed. */
+function checkFile(path: string, name: string, check: (json: unknown) => Checked): boolean {
+  let checked: Checked;
+  try {
+    checked = check(JSON.parse(readFileSync(path, "utf8")));
+  } catch (error) {
+    checked = { problems: [error instanceof Error ? error.message : String(error)], summary: "" };
+  }
+  if (checked.problems.length > 0) {
+    console.log(`FAIL ${name}`);
+    for (const problem of checked.problems) console.log(`     ${problem}`);
+    return false;
+  }
+  console.log(`ok   ${name} (${checked.summary})`);
+  for (const note of checked.notes ?? []) console.log(`     ${note}`);
+  return true;
+}
+
 let failed = 0;
 for (const file of files) {
   const id = basename(file, ".json");
-  let json: unknown;
-  try {
-    json = JSON.parse(readFileSync(file, "utf8"));
-  } catch (error) {
-    console.log(`FAIL ${id}: ${error instanceof Error ? error.message : String(error)}`);
-    failed += 1;
-    continue;
-  }
-  const { challenge, problems } = checkChallengeSchema(json, id, { requireJa });
-  if (challenge)
-    challenge.tests.forEach((test, i) => problems.push(...checkTest(challenge, test, i)));
-  if (problems.length === 0) {
-    console.log(
-      `ok   ${id} (${challenge?.tests.length ?? 0} tests, interpreter and CPython agree)`,
-    );
-  } else {
-    failed += 1;
-    console.log(`FAIL ${id}`);
-    for (const problem of problems) console.log(`     ${problem}`);
-  }
+  const passed = checkFile(file, id, (json) => {
+    const { challenge, problems } = checkChallengeSchema(json, id, { requireJa });
+    if (challenge)
+      challenge.tests.forEach((test, i) => problems.push(...checkTest(challenge, test, i)));
+    return {
+      problems,
+      summary: `${challenge?.tests.length ?? 0} tests, interpreter and CPython agree`,
+    };
+  });
+  if (!passed) failed += 1;
 }
 if (files.length > 0) console.log(`challenges: ${files.length - failed}/${files.length} ok`);
 
 // The plans against every challenge file on disk, whatever files were given.
-{
-  const knownIds = new Set(allFiles.map((f) => basename(f, ".json")));
-  let plansProblems: string[];
-  let count = { plans: 0, problems: 0 };
+const knownIds = new Set(allFiles.map((f) => basename(f, ".json")));
+const plansPassed = checkFile(join(root, "challenges", PLANS_FILE), "plans", (json) => {
+  const { plans, problems } = checkPlans(json, knownIds, { requireJa });
+  const listed = plans ?? [];
+  const count = listed.reduce((n, plan) => n + plan.problems.length, 0);
   /** Challenges in no plan are legitimate, but a forgotten `plans.json` entry looks the same. */
-  let orphans: string[] = [];
-  try {
-    const json: unknown = JSON.parse(readFileSync(join(root, "challenges", PLANS_FILE), "utf8"));
-    const result = checkPlans(json, knownIds, { requireJa });
-    plansProblems = result.problems;
-    if (result.plans) {
-      const plans = result.plans;
-      count = {
-        plans: plans.length,
-        problems: plans.reduce((n, plan) => n + plan.problems.length, 0),
-      };
-      orphans = [...knownIds].filter((id) => !plans.some((plan) => plan.problems.includes(id)));
-    }
-  } catch (error) {
-    plansProblems = [error instanceof Error ? error.message : String(error)];
-  }
-  if (plansProblems.length === 0) {
-    console.log(`ok   plans (${count.plans} plan(s), ${count.problems} problems)`);
-    if (orphans.length > 0) console.log(`     in no plan: ${orphans.join(", ")}`);
-  } else {
-    failed += 1;
-    console.log("FAIL plans");
-    for (const problem of plansProblems) console.log(`     ${problem}`);
-  }
-}
+  const orphans = [...knownIds].filter((id) => !listed.some((plan) => plan.problems.includes(id)));
+  return {
+    problems,
+    summary: `${listed.length} plan(s), ${count} problems`,
+    notes: orphans.length > 0 ? [`in no plan: ${orphans.join(", ")}`] : [],
+  };
+});
+if (!plansPassed) failed += 1;
 
 const i18n = checkI18n({ root, srcDir: join(root, "src"), i18nDir: join(root, "src", "i18n") });
 for (const line of formatReport(i18n)) console.log(line);
