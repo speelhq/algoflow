@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
-import type { ChartEdge, ChartLayout, ChartNode } from "./layout";
+import { PILL, type ChartEdge, type ChartLayout, type ChartNode } from "./layout";
 import type { Paint } from "./paint";
 import { CHART_FONT } from "./measure";
 import { fitScale, zoomStep } from "./zoom";
@@ -27,8 +27,8 @@ type Props = {
   /** The statement outlined as selected, and the one outlined from a Python line. */
   selectedId?: NodeId | null;
   hoveredId?: NodeId | null;
-  /** A click on a statement's node (or a generated node of it); absent while read-only. */
-  onSelect?: (owner: NodeId) => void;
+  /** A click on a statement's node (or a generated node of it), with the slot clicked on it. */
+  onSelect?: (owner: NodeId, slot?: string) => void;
   /** The cases an Input node's menu lists, and what choosing one does; absent while read-only. */
   cases?: { labels: string[]; choose: (index: number) => void };
   /** The run drawn on the chart. */
@@ -134,16 +134,39 @@ function NodeView({ node, look }: { node: ChartNode; look: Look }) {
       )}
     >
       <NodeShape node={node} />
-      {node.text && (
+      {node.parts.map((part, i) =>
+        part.empty ? (
+          <rect
+            // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+            key={`pill${i}`}
+            x={node.x + part.dx + 2}
+            y={node.y + node.h / 2 - 11}
+            width={part.w - 4}
+            height={22}
+            rx={11}
+            className="fill-background stroke-muted-foreground [stroke-dasharray:4_3]"
+          />
+        ) : null,
+      )}
+      {node.parts.length > 0 && (
         <text
-          x={node.x + node.w / 2}
           y={node.y + node.h / 2}
-          textAnchor="middle"
           dominantBaseline="central"
           className={cn("fill-foreground", node.generated && "fill-muted-foreground")}
           style={{ font: CHART_FONT }}
         >
-          {node.text}
+          {node.parts.map((part, i) => (
+            <tspan
+              // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+              key={i}
+              x={node.x + part.dx + (part.empty ? PILL : 0)}
+              data-slot={part.slot}
+              data-empty={part.empty || undefined}
+              className={cn(part.empty && "fill-muted-foreground")}
+            >
+              {part.text}
+            </tspan>
+          ))}
         </text>
       )}
       {node.role === "input" && (
@@ -250,8 +273,16 @@ function EdgeView({ edge, taken }: { edge: ChartEdge; taken: boolean }) {
 }
 
 export function Chart(props: Props) {
-  const { chart, selectedId = null, hoveredId = null, onSelect, cases, paint, note, connector } =
-    props;
+  const {
+    chart,
+    selectedId = null,
+    hoveredId = null,
+    onSelect,
+    cases,
+    paint,
+    note,
+    connector,
+  } = props;
   const scroller = useRef<HTMLDivElement>(null);
   const region = useElementWidth(scroller);
   const [zoom, setZoom] = useState<number | null>(null);
@@ -267,7 +298,8 @@ export function Chart(props: Props) {
     const click = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target : null;
       const owner = target?.closest<SVGGElement>("[data-node-id]")?.dataset.nodeId;
-      if (owner) onSelect(owner);
+      const slot = target?.closest<SVGElement>("[data-slot]")?.dataset.slot;
+      if (owner) onSelect(owner, slot);
     };
     element.addEventListener("click", click);
     return () => element.removeEventListener("click", click);

@@ -8,7 +8,15 @@ import { t } from "@/i18n/t";
 import type { Data, Id, NodeId, Place, Program, Stmt } from "@/lang/types";
 import { regionsOf } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
-import { capitalise, conditionOf, dataText, generatedText, questionText, sentence } from "./text";
+import {
+  capitalise,
+  dataText,
+  generatedParts,
+  joinParts,
+  questionParts,
+  sentenceParts,
+  type Part,
+} from "./text";
 
 export type Point = { x: number; y: number };
 export type Shape = "terminal" | "input" | "box" | "diamond" | "junction";
@@ -22,6 +30,8 @@ export type ChartNode = {
   /** Drawn grey, not selectable on its own. */
   generated: boolean;
   text: string;
+  /** The text in runs, each at `dx` from the node's left with width `w`; a slot's run names it. */
+  parts: PlacedPart[];
   /** Top-left corner; a junction is a point (`w = h = 0`). */
   x: number;
   y: number;
@@ -45,6 +55,7 @@ export type ChartEdge = {
   /** A `Return` node's edge to `End`. */
   jump?: boolean;
 };
+export type PlacedPart = Part & { dx: number; w: number };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
 /** The width of `text` in px as the chart draws it. */
 export type Measure = (text: string, shape: Shape) => number;
@@ -69,6 +80,8 @@ const HEIGHT: Record<Shape, number> = {
 };
 
 const defaultMeasure: Measure = (text) => text.length * 7.2;
+/** Room on each side of an empty slot's text for its dashed outline. */
+export const PILL = 8;
 
 /** A flow that still needs its target: the points so far, and the place its edge will carry. */
 type Stub = { from: string; label?: "yes" | "no"; points: Point[]; place: Place | null };
@@ -175,10 +188,13 @@ class Builder {
     owner: NodeId | null,
     role: ChartNode["role"],
     shape: Shape,
-    text: string,
+    content: string | Part[],
     y: number,
   ): ChartNode {
-    const width = this.measure(text, shape);
+    const runs =
+      typeof content === "string" ? (content === "" ? [] : [{ text: content }]) : content;
+    const widths = runs.map((part) => this.measure(part.text, shape) + (part.empty ? 2 * PILL : 0));
+    const width = widths.reduce((sum, w) => sum + w, 0);
     const padded =
       shape === "diamond"
         ? Math.max(120, width * 1.4 + 56)
@@ -189,7 +205,14 @@ class Builder {
             : Math.max(96, width + 32);
     const w = 2 * Math.ceil(padded / 2);
     const generated = role === "init" || role === "check" || role === "step";
-    return { id, owner, role, shape, generated, text, x: -w / 2, y, w, h: HEIGHT[shape] };
+    let dx = (w - width) / 2;
+    const parts = runs.map((part, i) => {
+      const placed: PlacedPart = { ...part, dx, w: widths[i] ?? 0 };
+      dx += placed.w;
+      return placed;
+    });
+    const text = joinParts(runs);
+    return { id, owner, role, shape, generated, text, parts, x: -w / 2, y, w, h: HEIGHT[shape] };
   }
 
   /** Places `region` with its entry at `at` and joins `stub` to it; returns what flows out. */
@@ -250,8 +273,10 @@ class Builder {
   }
 
   private box(stmt: Stmt, leaves: boolean): Frag {
-    const text = capitalise(sentence(stmt, this.program));
-    const node = this.node(stmt.id, stmt.id, "stmt", "box", text, 0);
+    const parts = sentenceParts(stmt, this.program);
+    const [first] = parts;
+    if (first) parts[0] = { ...first, text: capitalise(first.text) };
+    const node = this.node(stmt.id, stmt.id, "stmt", "box", parts, 0);
     const half = node.w / 2;
     return {
       left: half,
@@ -267,9 +292,7 @@ class Builder {
   }
 
   private diamond(stmt: Stmt, y: number): ChartNode {
-    const condition = conditionOf(stmt);
-    const text = condition ? questionText(condition) : "";
-    return this.node(stmt.id, stmt.id, "stmt", "diamond", text, y);
+    return this.node(stmt.id, stmt.id, "stmt", "diamond", questionParts(stmt), y);
   }
 
   /** `branch`: Yes to the right, No below on the axis, both merging below. */
@@ -349,7 +372,7 @@ class Builder {
         stmt.id,
         "init",
         "box",
-        generatedText(stmt, "init"),
+        generatedParts(stmt, "init"),
         0,
       );
       frag.nodes.push(init);
@@ -367,7 +390,7 @@ class Builder {
 
     y += JOIN;
     const d = counted
-      ? this.node(`${stmt.id}:check`, stmt.id, "check", "diamond", generatedText(stmt, "check"), y)
+      ? this.node(`${stmt.id}:check`, stmt.id, "check", "diamond", generatedParts(stmt, "check"), y)
       : this.diamond(stmt, y);
     frag.nodes.push(d);
     frag.edges.push(
@@ -388,7 +411,7 @@ class Builder {
         stmt.id,
         "step",
         "box",
-        generatedText(stmt, "step"),
+        generatedParts(stmt, "step"),
         yStep,
       );
       frag.nodes.push(step);
