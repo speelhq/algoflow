@@ -47,6 +47,26 @@ describe("tests store (U-80, C-10..C-12)", () => {
     });
   });
 
+  it("U-81, U-86: selects the first failing test, and a chip selects another judged one", async () => {
+    useProgram.setState({ program: { ...fizzbuzz().solution, main: [print(str("1"))] } });
+    await useTests.getState().submit();
+    // n = 15 fails, n = 1 passes ("1"), n = 3 fails.
+    expect(useTests.getState().results.map((r) => r?.status)).toEqual(["fail", "pass", "fail"]);
+    expect(useTests.getState().selected).toBe(0);
+    useTests.getState().select(2);
+    expect(useTests.getState().selected).toBe(2);
+    useTests.getState().select(7);
+    expect(useTests.getState().selected).toBe(2);
+    useTests.getState().reset();
+    expect(useTests.getState().selected).toBe(0);
+  });
+
+  it("U-81: an accepted submission leaves the first chip selected", async () => {
+    useProgram.setState({ program: fizzbuzz().solution });
+    await useTests.getState().submit();
+    expect(useTests.getState().selected).toBe(0);
+  });
+
   it("U-80, C-17: a submission is recorded; an accepted one solves the problem for good", async () => {
     useProgress.setState({ entries: {} });
     useProgram.setState({ program: { ...fizzbuzz().solution, main: [print(str("nope"))] } });
