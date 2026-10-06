@@ -1145,16 +1145,22 @@ reach them all. A specification file whose statements a test suite
 establishes ends with those tests, so a test obligation sits beside the
 statements it covers.
 
-**Identifiers are kept, never renumbered or reused** (00-conventions). A
-statement keeps its id when its text changes, and the id goes with it when
-it is deleted. Renumbering to close the gaps would rewrite hundreds of
-citations in tests and code without helping any reader, and giving an id to
-another statement would make an old citation name a different fact. The
-earlier rule kept a deleted statement as the text "withdrawn" under its id,
-which kept dead text in the specification only to say that it was dead. A
-file's `Deleted:` line keeps only what that text was for: the number of a
-deleted statement, so that the next id after the highest is never one
-already cited.
+**Identifiers link statements to tests and to writing about them**
+(00-conventions). A test that names the ids it verifies is found by a
+search when its statement changes, and a document, an issue, a pull
+request, a review finding, or a decision can point at one exact statement;
+a check's message names the statement it enforces so that its author finds
+the rule. Ids in code
+comments added a second map from statements to code that nothing checked:
+the tests already lead from a statement to the code that meets it, and a
+comment's id went stale silently when its statement or its code changed.
+Ids in commit messages repeated the pull request's Why section. The
+numbering needs no more rule than "the next number": a deleted statement
+takes its citations in the repository with it, and an old issue or pull
+request that cites a number later given to a new statement is read as the
+record of its own time. Keeping deleted statements as "withdrawn" text, or
+listing their numbers, guarded only that rare case and cost every reader of
+the specification.
 
 **A milestone is split into issues when it starts** (`/milestone`). One task
 issue per part a person can see working gives the milestone its progress,

@@ -27,7 +27,11 @@ GitHub milestone.
 ## Requirement identifiers
 
 Every normative statement has an identifier `X-NN` and is one testable
-sentence. Tests and commit messages reference identifiers.
+sentence. An identifier links a statement to the tests that establish it
+(a test names the identifiers it verifies) and lets a document, an issue,
+a pull request, or a review point at one statement. Code comments and
+commit messages do not cite identifiers; a check's message may name the
+statement it enforces.
 
 | Prefix        | File                                              |
 | ------------- | ------------------------------------------------- |
@@ -42,14 +46,10 @@ sentence. Tests and commit messages reference identifiers.
 Statements use the present indicative ("The emitter writes 4-space
 indentation") and are mandatory. "May" marks an option.
 
-An identifier names one statement and is never given to another.
-Changing a statement keeps its identifier; deleting a statement deletes the
-identifier with it, and the file's last line, `Deleted: …`, lists it. A new
-identifier takes the number after the highest one its prefix has used,
-deleted ones included; a gap is never filled. The prefixes `P`, `T`, and `M`
-are retired. A change to the specification is committed before the
-code that implements it, so a commit message or a test that cites an
-identifier refers to the statement as it stands at that commit.
+Changing a statement keeps its identifier; deleting a statement deletes
+its identifier and every citation of it in the repository. A new statement
+takes the number after the highest one its prefix has in the file. A change to the specification is
+committed before the code that implements it.
 
 A file whose statements a test suite establishes ends with `Verification`: the tests that establish its
 statements.
