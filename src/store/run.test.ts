@@ -553,6 +553,28 @@ describe("run store (R-21: R-11, R-12, R-19)", () => {
     expect(run()).toMatchObject({ status: "done", verdict: null });
   });
 
+  // ------------------------------------------------------------ U-32 Custom…
+
+  it("U-32, C-15: a custom value runs with no verdict; the values of a test are that case", async () => {
+    useProgram.setState({ program: fizzbuzz().solution });
+    run().setInput("n", 5);
+    expect(run()).toMatchObject({ caseIndex: -1, custom: { n: 5 } });
+    await paused();
+    await run().skip();
+    expect(run()).toMatchObject({ status: "done", verdict: null });
+    expect(run().stdout).toEqual(["1", "2", "Fizz", "4", "Buzz"]);
+
+    run().setInput("n", 3);
+    expect(run()).toMatchObject({ caseIndex: 2, custom: null, status: "idle" });
+    await paused();
+    await run().skip();
+    expect(run().verdict).toMatchObject({ status: "pass" });
+
+    run().setInput("n", 7);
+    run().selectCase(0);
+    expect(run()).toMatchObject({ caseIndex: 0, custom: null });
+  });
+
   // ------------------------------------------------------------ U-81 Watch this case
 
   it("U-81: Watch this case opens paused at the print of the first differing line", async () => {

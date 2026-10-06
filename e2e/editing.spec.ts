@@ -41,12 +41,16 @@ test("Delete removes the selected node, and undo and redo walk it back (U-35, U-
   await expect(redo).toBeEnabled();
 });
 
-test("Ctrl+D duplicates the selected node, and Esc clears the selection (U-35)", async ({ page }) => {
+test("Ctrl+D duplicates the selected node, and Esc clears the selection (U-35)", async ({
+  page,
+}) => {
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await node(page, "fzb-prfz-001").click({ position: { x: 8, y: 20 } });
   await page.keyboard.press("Control+d");
-  await expect(page.getByTestId("chart").locator("text", { hasText: 'Print "Fizz"' })).toHaveCount(2);
+  await expect(page.getByTestId("chart").locator("text", { hasText: 'Print "Fizz"' })).toHaveCount(
+    2,
+  );
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("node-editor")).toHaveCount(0);
   await expect(page.locator("[data-selected]")).toHaveCount(0);
@@ -75,5 +79,9 @@ test("a drop that takes break out of its loop is refused with a tooltip (U-36)",
   await expect(page.getByTestId("drop-refused")).toHaveText("This block only works inside a loop");
   await expect(node(page, "drg-stop-001")).toHaveCount(1);
   await page.getByTestId("tab-python").click();
-  await expect(page.getByTestId("python-line")).toHaveText(["1n = 15", "2while True:", "3    break"]);
+  await expect(page.getByTestId("python-line")).toHaveText([
+    "1n = 15",
+    "2while True:",
+    "3    break",
+  ]);
 });
