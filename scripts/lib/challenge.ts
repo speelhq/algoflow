@@ -97,20 +97,16 @@ export function checkChallengeSchema(
     if (!isLocalized(hint, requireJa)) problems.push(`hints[${i}] must be { en, ja? }`);
   });
 
-  const programs: Array<["solution" | "starter", unknown]> = [["solution", json.solution]];
-  if (json.starter !== undefined) programs.push(["starter", json.starter]);
-  for (const [which, value] of programs) {
-    try {
-      const program = migrate(value);
-      if (which === "solution" && !sameData(program.inputs, inputs))
-        problems.push("solution.inputs must equal inputs (C-01)");
-      if (program.challengeId !== undefined && program.challengeId !== fileId)
-        problems.push(`${which}.challengeId must be "${fileId}"`);
-      for (const d of validate(program))
-        problems.push(`${which}: ${d.code} at ${d.nodeId} ${JSON.stringify(d.params)}`);
-    } catch (error) {
-      problems.push(`${which}: ${error instanceof Error ? error.message : String(error)}`);
-    }
+  try {
+    const program = migrate(json.solution);
+    if (!sameData(program.inputs, inputs))
+      problems.push("solution.inputs must equal inputs (C-01)");
+    if (program.challengeId !== undefined && program.challengeId !== fileId)
+      problems.push(`solution.challengeId must be "${fileId}"`);
+    for (const d of validate(program))
+      problems.push(`solution: ${d.code} at ${d.nodeId} ${JSON.stringify(d.params)}`);
+  } catch (error) {
+    problems.push(`solution: ${error instanceof Error ? error.message : String(error)}`);
   }
 
   return { challenge: problems.length === 0 ? (json as unknown as Challenge) : null, problems };

@@ -28,7 +28,7 @@ function readStored(key: string): Program | undefined {
   }
 }
 
-/** C-13: storage, else `starter`, else an empty main; `challengeId` and `inputs` follow the challenge. */
+/** C-13: storage, else an empty main; `challengeId` and `inputs` follow the challenge. */
 export function restore(id: string): Program {
   const challenge = id === FREE ? undefined : getChallenge(id);
   const key = programKey(challenge?.id);
@@ -37,7 +37,7 @@ export function restore(id: string): Program {
     const { challengeId: _ignored, ...free } = stored ?? emptyProgram();
     return { ...free, inputs: [] };
   }
-  const base = stored ?? (challenge.starter ? structuredClone(challenge.starter) : emptyProgram());
+  const base = stored ?? emptyProgram();
   return { ...base, challengeId: challenge.id, inputs: structuredClone(challenge.inputs) };
 }
 
