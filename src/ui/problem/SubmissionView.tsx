@@ -23,10 +23,27 @@ function Chips({ challenge }: { challenge: Challenge }) {
   const results = useTests((s) => s.results);
   const selected = useTests((s) => s.selected);
   const select = useTests((s) => s.select);
+  const cleared = useTests((s) => s.cleared);
   return (
     <div className="flex flex-wrap gap-1.5" role="group" data-testid="case-chips">
       {challenge.tests.map((test, index) => {
         const pass = results[index]?.status === "pass";
+        const label = t(pass ? "result.chipPass" : "result.chipFail", {
+          case: caseText(test.inputs),
+        });
+        // U-86: the chips of an accepted submission select nothing.
+        if (cleared) {
+          return (
+            <span
+              // oxlint-disable-next-line react/no-array-index-key -- a case is its index in the tests
+              key={index}
+              className="rounded-lg border border-taken/60 px-2.5 py-1 font-mono text-[0.8rem] text-taken"
+              data-chip
+            >
+              {label}
+            </span>
+          );
+        }
         return (
           <Button
             // oxlint-disable-next-line react/no-array-index-key -- a case is its index in the tests
@@ -40,8 +57,9 @@ function Chips({ challenge }: { challenge: Challenge }) {
               index === selected && (pass ? "bg-taken/10" : "bg-destructive/10"),
             )}
             onClick={() => select(index)}
+            data-chip
           >
-            {t(pass ? "result.chipPass" : "result.chipFail", { case: caseText(test.inputs) })}
+            {label}
           </Button>
         );
       })}
@@ -96,6 +114,8 @@ function Accepted({ challenge }: { challenge: Challenge }) {
   const setTab = useEditor((s) => s.setTab);
   const showSolution = useEditor((s) => s.showSolution);
   const solutionShown = useProgress((s) => s.solutionShown);
+  // U-27: the chart stays the run's while running.
+  const running = useRun((s) => s.status !== "idle");
   return (
     <>
       {first?.done.type === "done" && (
@@ -117,6 +137,7 @@ function Accepted({ challenge }: { challenge: Challenge }) {
         </Button>
         <Button
           variant="outline"
+          disabled={running}
           onClick={() => {
             showSolution(true);
             solutionShown(challenge.id);

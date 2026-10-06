@@ -91,6 +91,30 @@ test.describe("running FizzBuzz", () => {
   });
 });
 
+test("while running, the case and the solution stay put (U-27, U-32)", async ({ page }) => {
+  await seedProgress(page, {});
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  await runPaused(page);
+  await expect(page.getByTestId("case-select")).toBeDisabled();
+  await expect(page.getByTestId("input-node")).toHaveCount(0);
+  await page.getByTestId("tab-problem").click();
+  await expect(page.getByRole("button", { name: "Show solution" })).toBeDisabled();
+  await page.getByRole("button", { name: "■ Stop" }).click();
+  await expect(page.getByRole("button", { name: "Show solution" })).toBeEnabled();
+});
+
+test("reopening a problem selects its first case again (C-13)", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/fizzbuzz");
+  await page.getByTestId("input-node").click();
+  await page.getByRole("menuitem", { name: "n = 3" }).click();
+  await expect(page.getByTestId("chart")).toContainText("Input n = 3");
+  await page.getByRole("link", { name: "← Problems" }).click();
+  await page.getByTestId("problem-fizzbuzz").click();
+  await expect(page.getByTestId("chart")).toContainText("Input n = 15");
+});
+
 test("before any run, Result shows the case, its Expected, and Run to see the values", async ({
   page,
 }) => {
