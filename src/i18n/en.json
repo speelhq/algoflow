@@ -80,6 +80,10 @@
     "more": "More",
     "moreGlyph": "⋯",
     "help": "Help",
+    "undo": "Undo",
+    "redo": "Redo",
+    "undoGlyph": "↶",
+    "redoGlyph": "↷",
     "assignment": "{name} = {value}",
     "tabs": {
       "problem": "Problem",

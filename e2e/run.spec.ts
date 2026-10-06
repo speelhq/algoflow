@@ -137,7 +137,7 @@ test("Run with a diagnostic leads to its node instead of running (U-60)", async 
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "▶ Run" }).click();
-  await expect(page.getByTestId("chart-error")).toContainText("is empty");
+  await expect(page.getByTestId("node-editor").getByRole("alert")).toContainText("is empty");
   await expect(page.locator('[data-chart-node="asg-empty-01"]')).toHaveAttribute(
     "data-selected",
     "true",

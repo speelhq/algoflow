@@ -1,0 +1,79 @@
+// U-03, U-04, U-35, U-36, L-52: selecting, removing, duplicating, dragging, undo and redo.
+import { expect, test, type Page } from "@playwright/test";
+import { programWith, seedProgram, seedProgress, solutionOf } from "./seed";
+
+const node = (page: Page, id: string) => page.locator(`[data-chart-node="${id}"]`);
+
+/** Drags a chart node onto the connector of `place`. */
+async function drag(page: Page, id: string, place: string): Promise<void> {
+  const from = await node(page, id).boundingBox();
+  const to = await page.locator(`[data-testid="connector"][data-place="${place}"]`).boundingBox();
+  if (!from || !to) throw new Error("not drawn");
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(from.x + from.width / 2 + 10, from.y + from.height / 2 + 10, { steps: 4 });
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 12 });
+  await page.mouse.up();
+}
+
+test.beforeEach(async ({ page }) => {
+  await seedProgress(page, {});
+});
+
+test("Delete removes the selected node, and undo and redo walk it back (U-35, U-03, L-52)", async ({
+  page,
+}) => {
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  const undo = page.getByRole("button", { name: "Undo" });
+  const redo = page.getByRole("button", { name: "Redo" });
+  await expect(undo).toBeDisabled();
+  await node(page, "fzb-prfz-001").click({ position: { x: 8, y: 20 } });
+  await expect(page.getByTestId("node-editor")).toBeVisible();
+  await page.keyboard.press("Delete");
+  await expect(node(page, "fzb-prfz-001")).toHaveCount(0);
+  await page.keyboard.press("Control+z");
+  await expect(node(page, "fzb-prfz-001")).toHaveCount(1);
+  await page.keyboard.press("Control+Shift+z");
+  await expect(node(page, "fzb-prfz-001")).toHaveCount(0);
+  await undo.click();
+  await expect(node(page, "fzb-prfz-001")).toHaveCount(1);
+  await expect(redo).toBeEnabled();
+});
+
+test("Ctrl+D duplicates the selected node, and Esc clears the selection (U-35)", async ({ page }) => {
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  await node(page, "fzb-prfz-001").click({ position: { x: 8, y: 20 } });
+  await page.keyboard.press("Control+d");
+  await expect(page.getByTestId("chart").locator("text", { hasText: 'Print "Fizz"' })).toHaveCount(2);
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("node-editor")).toHaveCount(0);
+  await expect(page.locator("[data-selected]")).toHaveCount(0);
+});
+
+test("a node dragged onto another connector moves there (U-36)", async ({ page }) => {
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  await drag(page, "fzb-prnt-001", "main/main/0");
+  await page.getByTestId("tab-python").click();
+  await expect(page.getByTestId("python-line").nth(1)).toHaveText("2print(i)");
+});
+
+test("a drop that takes break out of its loop is refused with a tooltip (U-36)", async ({
+  page,
+}) => {
+  const loop = {
+    id: "drg-loop-001",
+    kind: "while",
+    cond: { id: "drg-cond-001", kind: "bool", value: true },
+    body: [{ id: "drg-stop-001", kind: "break" }],
+  };
+  await seedProgram(page, "fizzbuzz", programWith([loop]));
+  await page.goto("/#/p/fizzbuzz");
+  await drag(page, "drg-stop-001", "main/main/0");
+  await expect(page.getByTestId("drop-refused")).toHaveText("This block only works inside a loop");
+  await expect(node(page, "drg-stop-001")).toHaveCount(1);
+  await page.getByTestId("tab-python").click();
+  await expect(page.getByTestId("python-line")).toHaveText(["1n = 15", "2while True:", "3    break"]);
+});

@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
+import { ChartDrag, DropZone, useNodeDrag, type Moves } from "./drag";
 import { PILL, type ChartEdge, type ChartLayout, type ChartNode } from "./layout";
 import { nodeFor, type Paint } from "./paint";
 import { CHART_FONT } from "./measure";
@@ -39,6 +40,8 @@ type Props = {
   editor?: ReactNode;
   /** What sits on an edge that carries a place (the `+` connector); absent while read-only. */
   connector?: (edge: ChartEdge & { place: NonNullable<ChartEdge["place"]> }) => ReactNode;
+  /** Dragging a node onto a connector; absent while read-only. */
+  moves?: Moves;
 };
 
 export type Note = { node: string; text: string; tone: "narration" | "error" };
@@ -113,10 +116,13 @@ function BreakpointMark({ node }: { node: ChartNode }) {
   );
 }
 
-function NodeView({ node, look }: { node: ChartNode; look: Look }) {
+function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; draggable: boolean }) {
   const { outline, taken, current } = look;
+  const { setRef, listeners } = useNodeDrag(node, draggable);
   return (
     <g
+      ref={setRef}
+      {...listeners}
       data-chart-node={node.id}
       data-node-id={node.owner ?? undefined}
       data-selected={outline === "selected" || undefined}
@@ -285,6 +291,7 @@ export function Chart(props: Props) {
     note,
     connector,
     editor,
+    moves,
   } = props;
   const edited = editor && selectedId ? nodeFor(chart.nodes, selectedId) : undefined;
   const scroller = useRef<HTMLDivElement>(null);
@@ -334,125 +341,147 @@ export function Chart(props: Props) {
   const noted = note ? chart.nodes.find((node) => node.id === note.node) : undefined;
 
   return (
-    <div className="relative min-h-0 flex-1">
-      <div
-        ref={scroller}
-        className="absolute inset-0 overflow-auto [scrollbar-gutter:stable]"
-        data-testid="chart-scroll"
-      >
-        <div className="relative mx-auto" style={{ width, height }}>
-          <svg
-            ref={svg}
-            width={width}
-            height={height}
-            viewBox={`${-PAD} ${-PAD} ${chart.width + 2 * PAD} ${chart.height + 2 * PAD}`}
-            aria-label={t("chart.label")}
-            role="img"
-            data-testid="chart"
-            data-scale={scale}
+    <ChartDrag moves={moves} edges={chart.edges}>
+      {({ dragged, refusal }) => (
+        <div className="relative min-h-0 flex-1">
+          <div
+            ref={scroller}
+            className="absolute inset-0 overflow-auto [scrollbar-gutter:stable]"
+            data-testid="chart-scroll"
           >
-            <defs>
-              <marker
-                id="chart-arrow"
-                viewBox="0 0 10 10"
-                refX="10"
-                refY="5"
-                markerWidth="7"
-                markerHeight="7"
-                orient="auto-start-reverse"
+            <div className="relative mx-auto" style={{ width, height }}>
+              <svg
+                ref={svg}
+                width={width}
+                height={height}
+                viewBox={`${-PAD} ${-PAD} ${chart.width + 2 * PAD} ${chart.height + 2 * PAD}`}
+                aria-label={t("chart.label")}
+                role="img"
+                data-testid="chart"
+                data-scale={scale}
               >
-                <path d="M 0 0 L 10 5 L 0 10 z" className="fill-foreground/80" />
-              </marker>
-              <marker
-                id="chart-arrow-taken"
-                viewBox="0 0 10 10"
-                refX="10"
-                refY="5"
-                markerWidth="6"
-                markerHeight="6"
-                orient="auto-start-reverse"
-              >
-                <path d="M 0 0 L 10 5 L 0 10 z" className="fill-taken" />
-              </marker>
-            </defs>
-            {chart.edges.map((edge) => (
-              <EdgeView key={edge.id} edge={edge} taken={paint?.edges.has(edge.id) ?? false} />
-            ))}
-            {chart.nodes.map((node) => (
-              <NodeView key={node.id} node={node} look={look(node)} />
-            ))}
-          </svg>
-          {(cases || noted || connector || edited) && (
-            <div
-              className="pointer-events-none absolute top-0 left-0 origin-top-left"
-              style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
-            >
-              {note && noted && <NoteView note={note} node={noted} width={chart.width} />}
-              {edited && (
+                <defs>
+                  <marker
+                    id="chart-arrow"
+                    viewBox="0 0 10 10"
+                    refX="10"
+                    refY="5"
+                    markerWidth="7"
+                    markerHeight="7"
+                    orient="auto-start-reverse"
+                  >
+                    <path d="M 0 0 L 10 5 L 0 10 z" className="fill-foreground/80" />
+                  </marker>
+                  <marker
+                    id="chart-arrow-taken"
+                    viewBox="0 0 10 10"
+                    refX="10"
+                    refY="5"
+                    markerWidth="6"
+                    markerHeight="6"
+                    orient="auto-start-reverse"
+                  >
+                    <path d="M 0 0 L 10 5 L 0 10 z" className="fill-taken" />
+                  </marker>
+                </defs>
+                {chart.edges.map((edge) => (
+                  <EdgeView key={edge.id} edge={edge} taken={paint?.edges.has(edge.id) ?? false} />
+                ))}
+                {chart.nodes.map((node) => (
+                  <NodeView
+                    key={node.id}
+                    node={node}
+                    look={look(node)}
+                    draggable={moves !== undefined}
+                  />
+                ))}
+              </svg>
+              {(cases || noted || connector || edited) && (
                 <div
-                  className="absolute"
-                  style={{ left: edited.x, top: edited.y, width: edited.w, height: edited.h }}
-                  data-testid="editor-anchor"
+                  className="pointer-events-none absolute top-0 left-0 origin-top-left"
+                  style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
                 >
-                  {editor}
+                  {note && noted && <NoteView note={note} node={noted} width={chart.width} />}
+                  {edited && (
+                    <div
+                      className="absolute"
+                      style={{ left: edited.x, top: edited.y, width: edited.w, height: edited.h }}
+                      data-testid="editor-anchor"
+                    >
+                      {editor}
+                    </div>
+                  )}
+                  {connector &&
+                    chart.edges.map((edge) => {
+                      const { place } = edge;
+                      if (!place) return null;
+                      const closed =
+                        dragged !== null && moves !== undefined && !moves.accepts(dragged, place);
+                      return (
+                        <div
+                          key={edge.id}
+                          className="pointer-events-auto absolute"
+                          style={{ left: edge.anchor.x, top: edge.anchor.y }}
+                        >
+                          <DropZone edge={edge} disabled={closed}>
+                            {connector({ ...edge, place })}
+                          </DropZone>
+                          {refusal?.edge === edge.id && (
+                            <div
+                              role="status"
+                              data-testid="drop-refused"
+                              className="absolute top-3 left-3 w-56 rounded-md border border-destructive/60 bg-background px-2 py-1 text-sm text-destructive shadow-sm"
+                            >
+                              {refusal.text}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  {cases &&
+                    chart.nodes
+                      .filter((node) => node.role === "input")
+                      .map((node) => (
+                        <div
+                          key={node.id}
+                          className="pointer-events-auto absolute"
+                          style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
+                        >
+                          <InputMenu label={node.text} cases={cases} />
+                        </div>
+                      ))}
                 </div>
               )}
-              {connector &&
-                chart.edges.map((edge) => {
-                  const { place } = edge;
-                  if (!place) return null;
-                  return (
-                    <div
-                      key={edge.id}
-                      className="pointer-events-auto absolute"
-                      style={{ left: edge.anchor.x, top: edge.anchor.y }}
-                    >
-                      {connector({ ...edge, place })}
-                    </div>
-                  );
-                })}
-              {cases &&
-                chart.nodes
-                  .filter((node) => node.role === "input")
-                  .map((node) => (
-                    <div
-                      key={node.id}
-                      className="pointer-events-auto absolute"
-                      style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
-                    >
-                      <InputMenu label={node.text} cases={cases} />
-                    </div>
-                  ))}
             </div>
-          )}
+          </div>
+          <div className="absolute top-3 right-4 flex gap-1" data-testid="zoom">
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label={t("chart.zoomOut")}
+              onClick={() => setZoom(zoomStep(scale, -1))}
+            >
+              {t("chart.zoomOutGlyph")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={t("chart.zoomReset")}
+              onClick={() => setZoom(1)}
+            >
+              {t("chart.percent", { n: Math.round(scale * 100) })}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label={t("chart.zoomIn")}
+              onClick={() => setZoom(zoomStep(scale, 1))}
+            >
+              {t("chart.zoomInGlyph")}
+            </Button>
+          </div>
         </div>
-      </div>
-      <div className="absolute top-3 right-4 flex gap-1" data-testid="zoom">
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label={t("chart.zoomOut")}
-          onClick={() => setZoom(zoomStep(scale, -1))}
-        >
-          {t("chart.zoomOutGlyph")}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          aria-label={t("chart.zoomReset")}
-          onClick={() => setZoom(1)}
-        >
-          {t("chart.percent", { n: Math.round(scale * 100) })}
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          aria-label={t("chart.zoomIn")}
-          onClick={() => setZoom(zoomStep(scale, 1))}
-        >
-          {t("chart.zoomInGlyph")}
-        </Button>
-      </div>
-    </div>
+      )}
+    </ChartDrag>
   );
 }

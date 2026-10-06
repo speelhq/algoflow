@@ -1,13 +1,13 @@
 // The keyboard table as far as running goes: Ctrl/Cmd+Enter runs or pauses; while
 // running → steps, ← goes back, Ctrl/Cmd+→ skips, and Esc clears the breakpoint, else stops.
-// Step over (Shift+→) arrives with functions (M-06); the editing keys with M-04.
+// Step over (Shift+→) arrives with functions (M-06); the editing keys are useEditKeys.
 import { useEffect } from "react";
 import { useEditor } from "@/store/editor";
 import { useRun } from "@/store/run";
 import { startRun } from "./actions";
 
 /** Keys typed into a field or a slider belong to it. */
-function ownsKeys(target: EventTarget | null): boolean {
+export function ownsKeys(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   return target.closest("input, textarea, select, [contenteditable], [role=slider]") !== null;
 }
