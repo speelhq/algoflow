@@ -1108,6 +1108,13 @@ contain. Rendering React elements from four rules emits no HTML string, so
 nothing needs sanitising, and a construct outside the subset shows as typed
 rather than failing.
 
+**Fitting never enlarges** (U-38). A chart of three nodes fitted to a
+960 px region would be drawn at several times its size, with text larger
+than anything else on the page; fitting only shrinks a chart that is too
+wide, and a small chart sits at 100 % in the middle. The bounds keep the
+smallest text legible and the largest chart navigable; from 100 %, steps of 1.25
+reach 200 % in four clicks and 25 % in seven.
+
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
 The store held a constant maximum of 480 px from the retired shell. Half the
 viewport width is not a constant, and a store that read `window.innerWidth`
