@@ -2,28 +2,25 @@
 
 Why the facts in `docs/spec/` were chosen, and the alternatives rejected.
 One section per specification file, then the engineering choices and the
-process. An entry names the ids it explains; when a statement changes, its
-entry changes in the same commit, and an entry whose statement is deleted
-is deleted with it. An entry records a reason, never how far the work has
-got.
+process. An entry stays only while a plausible change would otherwise undo a
+deliberate choice: a rejected alternative, or a constraint the code, the
+configuration, `CLAUDE.md`, and the statement itself do not show. What they
+show, what fails at once when broken, and history have no entry. An entry
+names the ids it explains; when a statement changes, its entry changes in
+the same commit, and an entry whose statement is deleted is deleted with
+it.
 
 ## Scope
 
 <!-- `01-scope.md` -->
 
-**English first** (S-03). The product is not Japan-specific; `en` is the
-development locale and Japanese is a translation milestone.
-
-**The learner and the loop are spec facts** (S-09..S-11). U-50's
-templates, U-72's vocabulary, and U-61's drawing of the run on the chart
-all follow from "a person who has never programmed doing one loop per
-problem", so the facts belong in `01-scope.md`, where every U id and every
-later proposal can be judged against them. A table of users by role was
-dropped: the application has no roles (S-01), a trainee and a self-learner
-use the same features, and an instructor's work (challenge files, plans,
-built-in modules) is repository authoring covered by `06` and `07`, not a
-feature. "The environment is the core and the problems are a curriculum"
-was rejected as a spec sentence because it states nothing testable.
+**The application has no roles** (S-01, S-09). A table of users by role
+(trainee, self-learner, instructor) was dropped: a trainee and a
+self-learner use the same features, and an instructor's work (challenge
+files, plans, built-in modules) is authoring in the repository, not a
+feature of the application. "The environment is the core and the problems
+are a curriculum" was rejected as a statement because it states nothing
+testable.
 
 **Plans chain through modules, not starters** (S-05, C-19, C-21). A
 starter chain (each problem starts from the previous solution) discards
@@ -66,11 +63,6 @@ would distribute null checks through every block and the emitter. A dedicated
 `empty` kind keeps `Expr` a closed union, lets validation report
 `E_EMPTY_SLOT` generically, and emits `...` so the Python tab still renders.
 
-**NodeId generation without `nanoid`** (02 Program). `src/lang` may
-not import third-party code, and `edit.ts` must mint ids for duplicates and
-hoisted assignments. `crypto.getRandomValues` over the nanoid alphabet gives
-the same 12-character format; the dependency was removed.
-
 **Statements are addressed by `Place`** (L-54). Edits from the UI arrive as
 a drop at index N of region R; a `{ parent, slot, index }` triple names every
 region (main, a function body, a frame region) without exposing array
@@ -90,21 +82,10 @@ The fix must be type-consistent as the learner reads it: a counter starts at
 value is not a literal the default is `None`, which any later assignment
 replaces.
 
-**Python float text** (L-29). `str()` of a float follows `repr` in CPython
-(`2.0`, `1e-06`, `1e+16`); JavaScript's `toString` differs in the exponent
-thresholds and format, so `floatRepr` re-implements the rule. The rule
-affects the Output of the `Result` tab (U-23), the narration (U-63), and R-20
-agreement.
-
 **Repeated objects carry the same `$id` in `toData`** (L-06). A list holding
 the same object twice (micrograd `mul(a, a)`) must show identity; a second
 full copy with the same `$id` is simpler to compare than a reference node,
 and a cycle degrades to `{ $cls, $id }` so the conversion terminates.
-
-**Float `//` and `%` follow CPython's algorithms** (L-12). `Math.floor(a / b)`
-differs from `float.__floordiv__` when `a / b` rounds to an integer
-(`1 // 0.1` is `9.0`, not `10.0`), and the sign of a zero result must follow
-the divisor; `floatMod` and `floatFloorDiv` port the C code so R-20 agrees.
 
 **Variables may not shadow callables** (L-45). `count = 0` alongside
 `def count()` runs in the interpreter (calls resolve by name) but fails in
@@ -116,11 +97,6 @@ does not suit one key per challenge, and `migrate()` must validate whatever
 is returned; the raw form is also what Export writes (L-53). A rejected value
 resolves to an empty main rather than failing the load.
 
-**Validation is memoized per Program object**. The driver, the chart
-(`firstAssignments`), the run controls, and Submit all request it; a
-`WeakMap<Program, Analysis>` in `validate.ts` runs the Collector once per
-program identity, which also matches how diagnostics are published.
-
 ## Nodes
 
 <!-- `03-nodes.md` -->
@@ -131,32 +107,6 @@ order from there rather than declaring its own copy, so adding a category
 cannot leave the menu and the registry inconsistent. The file has no
 imports, so `src/nodes` remains free of store and React dependencies.
 
-**`call` and `return` exist before functions are offered** (N-01).
-Validation must resolve user-function calls (E_ARITY, E_UNKNOWN_CALL) and
-refuse `return` in main, and traversal dispatches through the registry, so
-the two blocks are registered with the language core; their category stays
-`function`, which the block menu offers once functions can be created.
-
-**Block files replace `:` with `-`** (N-01). Windows file names cannot contain
-a colon; `call-abs.ts` is the only legible alternative that keeps one file
-per key.
-
-**Slot roles `target` and `text`** (N-01). Registry-driven traversal needs to
-know which slots hold expressions (including inside an assignment target) so
-no module lists block kinds; literal fields get `text` so the node editor
-(U-41) and `E_EMPTY_SLOT` can treat them uniformly.
-
-**Variant templates use `template<Form>` keys** (N-02). `assign`, `bool`, and
-`unop` have two node texts in 03-nodes; a suffixed key keeps the three
-standard keys per block intact for the parity check.
-
-**Template hooks on `NodeDef`** (N-08). Selecting `templateCreate`,
-`templateFalse`, or `templateNot` requires facts the slots do not carry
-(`bool` has no slots; `num.raw` is not a slot), and a switch on kind in the
-UI is forbidden by N-01. `form()` and `text()` keep the choice with the
-block. The `empty` block receives i18n keys for the same reason: chips render
-every kind through its template.
-
 **A `create` template after a frame**. `if c: y = 1` followed by `y = 2`
 renders both as `create y`: L-41 makes `y` invisible after the frame, so the
 outer assignment is where the region gains the name.
@@ -165,49 +115,15 @@ outer assignment is where the region gains the name.
 
 <!-- `04-runtime.md` -->
 
-**Blocks run as generators** (R-13, R-14). Each `next()` must yield exactly
-one event and leave the program suspended for Back, Step, and Play; a
-generator per block composes with `yield*` and needs no explicit continuation
-machinery. Signals (`break`, `continue`, `return`) travel as generator
-return values, so loops and calls handle them without exceptions.
-
-**`python()` returns `PyLine[]`** (E-08). The line map (E-01) needs to know
-where a nested region starts; returning strings with pre-indented children
-would require the emitter to search for them. A `{ block }` marker allows the
-emitter to indent, insert `pass`, and map ids while flattening, and each block
-still states its exact text per N-03.
-
-**Comparisons are non-associative in E-05**. `(a < b) < c` and `a < (b < c)`
-must both keep their parentheses: dropping them on the left would produce a
-chained comparison, which G-04 refuses to parse and which Python interprets
-differently.
-
-**`in` is a comparison** (R-06). It sits at comparison precedence, yields a
-boolean, and `2 in [1, 2]` is narrated (U-63) and marked on the
-diamond (U-61) as any other test is; the per-element `read`s (R-04) precede
-the `compare`.
-
 **`bool` is not a number** (R-15). Python treats `True` as `1`, but block
 programs never rely on it and the interpreter's `E_TYPE` keeps the type model
 simple for learners; solutions avoid the construct so CPython agrees.
-
-**Reading an unbound variable is a runtime `E_UNDEFINED`** (R-09). L-43
-makes a `for` variable visible after its loop, but a loop with no iteration
-never binds it; the interpreter reports the read as a runtime error at the
-`var` node instead of crashing the runner, mirroring CPython's `NameError`.
 
 **The parser consults the registry** (G-01). Grammar-legal forms whose block
 is not registered (`[1, 2]`, `xs[i]`, `p.x`, `Cls()`) would pass the parser
 and cause `unparse`, `validate`, or `run` to fail with an unknown-node
 error; reporting `E_PARSE_SYNTAX` at the token keeps the failure a
 diagnostic, and the registry alone decides what parses.
-
-**The CPython harness runs the program in its own namespace** (R-20).
-Harness helpers (`sys`, `json`, `next`, …) previously shared the module
-globals with the learner's variables, so `next = 0` invalidated the shim.
-`exec` into a fresh dict isolates them, and a `print` hook records one entry
-per call so a printed newline compares equal to the interpreter's `stdout()`.
-The shimmed `random` functions come from the registry's aliases (G-02).
 
 **`state` is refreshed while playing, as a copy** (R-12). The `Result` tab
 must update per step at speed 50. The refresh was a shallow copy of the
@@ -217,13 +133,7 @@ states nor memoize on one, and a `compare` event narrated later showed a
 list's current contents. A published `state` is now a copy of the
 variables and of the heap entries; values are immutable records, so one
 level is sufficient. The cost per publish is proportional to the size of
-the heap and is among the costs to measure (#18). Batches publish once per
-batch.
-
-**`print` records its line before yielding**. R-03 orders the event after
-the expression events; whether the runner's `stdout()` is updated before or
-after the yield is unobservable in events, and updating first lets the
-driver read `runner.stdout()` instead of rebuilding it from `print` events.
+the heap. Batches publish once per batch.
 
 **The CPython epilogue converts values in Python** (R-20). Serialising Python
 values as `Data` on the Python side (`$float`, `$int:` keys, `$cls`/`$id`)
@@ -246,8 +156,8 @@ without a clear diagnostic. Text entry remains at expression level (U-55),
 and the `Python` tab, whose lines and nodes select each other (U-25),
 provides the transition from chart to text.
 
-**The driver publishes more than R-12 first listed** (R-11, R-12). These
-fields were found necessary while the driver was built without a screen.
+**The driver publishes its projection, not only its position** (R-11,
+R-12).
 `taken`: U-61 colours the path of the current pass, which cannot be rebuilt
 from `lastEvent` after a Seek, so the projection keeps it beside `verdicts`
 and a `loop` event clears both. `pass`: `Pass 3` requires a count for each
@@ -306,17 +216,7 @@ behind the ids in `05-ui.md` are on the design canvas "AlgoFlow Screens"
 (the flowchart and loop notation studies are on the earlier canvas "AlgoFlow
 Redesign").
 
-Every part of the page was re-examined for whether the learner's loop
-(S-10, S-11) needs it, with modules, Step over, many Playground programs,
-and the view switch in place. The screens are on the canvas "AlgoFlow
-Screens", drawn at 1280 × 800, the narrowest supported width, so that a
-two-region page is checked where it is tightest.
-
-**Layout store `src/store/layout.ts`**. One Zustand
-`persist` store owns everything under `algoflow:layout` (the panel width
-and collapsed state, U-03/U-24, and the playback speed, U-60).
-
-**Stored values are validated on both paths**. Setters clamp, and
+**The layout store validates on both paths** (U-03, U-24, U-60). Setters clamp, and
 `mergePersisted` re-validates whatever is returned from `localStorage`: a
 non-number or out-of-range size falls back to the default or the lower
 limit, and the upper limit, half the viewport, is applied by `panelWidth()`
@@ -325,16 +225,7 @@ allow a hand-edited or stale entry to render an unusable panel. Because both
 paths validate, a snapshot written under an older shape needs no `migrate`
 step: its unknown fields resolve to the defaults, so `version` remains `1`.
 
-**`t()` keys are typed** (U-73). `MessageKey` is derived from `en.json` with
-a template-literal type, so an unknown literal key is a compile error as
-well as a `scripts/i18n.ts` failure (U-71). A key built at run time is cast
-to `MessageKey` and is not scanned.
-
-**`t()` falls back to `en` and then to the key** (U-73). A `ja` text may
-be missing while a screen is new; returning the key (with a
-development-only warning) keeps the UI readable when it is.
-
-**Scan is a regex, not a parser** (U-71). The pattern matches `t("…")` and
+**The key check scans with a regex, not a parser** (U-71). The pattern matches `t("…")` and
 `t('…')` while ignoring `at(`, `obj.t(`, and template literals; it also
 matches inside comments, which is accepted. A parser would be more precise
 but adds a dependency to a script that must remain fast and simple. Test
@@ -342,21 +233,9 @@ files are skipped because they call `t()` with deliberately unknown keys.
 Keys built at run time are not scanned; the `node.*` keys are checked
 against the registry in `src/nodes/index.test.ts`.
 
-**`flatten()` is shared** (`src/i18n/flatten.ts`). `t.ts` and the check
-script must agree on the key scheme; a single dependency-free module keeps
-one definition, and the script does not import `t.ts` because doing so
-introduces `en.json` and Vite's `import.meta.env`.
-
 **`en.json` holds only keys something renders** (U-71). Keys are added
 with the code that uses them, so wording is decided when the UI exists and
 the parity check never requires translating unused strings.
-
-**`import.meta.env` is read defensively**. `t.ts` uses `import.meta.env?.DEV`
-because the module is dependency-free and scripts run with `tsx`,
-where `import.meta.env` is undefined.
-
-**`E_DUPLICATE_ID` has a message** (U-70). The text is generic because the
-condition cannot arise from editing, only from a corrupted import.
 
 **The chart highlights the owning statement** (U-39, U-61). `compare`,
 `read`, and `call` events carry expression ids while the chart has nodes
@@ -455,9 +334,6 @@ edge where the block will be placed, followed by an editor popover on the
 node, keeps the learner's attention on the chart. Conditions are offered as
 sentence templates first (`is divisible by`, `equals`, …) with the chip
 editor behind `Build my own`.
-
-**Submit, not Check**. The word matches the problem-set vocabulary learners
-encounter elsewhere, and an attempt marks the problem `attempted` (C-17).
 
 **Solution revealed on request**. A learner may view the solution; hiding
 it entirely would cause self-learners to look elsewhere.
@@ -892,11 +768,6 @@ duplicate a spec fact, and making `plans.json` the authority would remove
 the curriculum from the spec. `pnpm check` prints `in no plan: …` after
 the plans line so an omitted entry is visible on every run.
 
-**`submissions` and `starter` were removed** (C-17, C-01). The submission
-count had no consumer once instructor observation was dropped, and no
-challenge loads a starter once the neural-network plan chains through a
-module.
-
 **Showing the solution is recorded** (C-17). `solution: true` requires an
 entry, and a learner who only viewed the solution has used the problem as
 much as one who took a hint; the entry is `attempted`. The key holds the
@@ -915,8 +786,8 @@ function is its middle level; what the spec lacked was a way to keep a
 function beyond one program, the loop that makes a learner build one, and
 the run-time controls that let a program be read at more than one level of
 detail. The entries below record what was taken from the note and what
-was not; those on the learner and the plans are under Scope, and those on
-Step over and on editing while paused under UI.
+was not; those on the plans are under Scope, and those on Step over and on
+editing while paused under UI.
 
 **A module is a function that outlives its program** (08-modules). Its
 semantics are a function's; the difference is ownership and lifetime: a
@@ -1011,33 +882,9 @@ vendor.
 
 <!-- the stack, tooling, and tests -->
 
-**TypeScript 7 ships the Go compiler as `tsc`**.
-`typescript@7` has a single binary, `tsc`; the `tsgo` name belonged to the
-`@typescript/native-preview` package. `oxlint-tsgolint` follows the same
-major, so `7.0.x` pairs with `7.0.x`.
-
-**Base UI package is `@base-ui/react`**. `@base-ui-components/react`
-is deprecated in favour of the renamed package; shadcn's `--base base`
-targets the new name.
-
-**shadcn preset `nova`**. shadcn 4 offers `nova`, `vega`, `maia`,
-`lyra`, `mira`, `luma`, `sera`, `rhea`; `nova` is the default appearance. The
-preset's `theme.css` imports `shadcn/tailwind.css` and `tw-animate-css`, so
-`shadcn` and `tw-animate-css` are runtime dependencies rather than
-dependencies invoked only through `dlx`.
-
-**Generated primitives live in `src/ui/primitives/`, `cn()` in
-`src/lib/utils.ts`**. shadcn defaults to
-`src/components/ui`; the spec keeps everything visual under `src/ui/`, so
-`components.json` aliases were changed before the first `shadcn add`.
-
-**pnpm `onlyBuiltDependencies: ["esbuild"]`**. pnpm 10 refuses package
-build scripts unless listed; `esbuild` (introduced transitively by `tsx`)
-needs its postinstall to place the platform binary.
-
-**Exact version pins**. `.npmrc` sets `save-exact=true` so every
-`pnpm add` records an exact version; `@types/node` is pinned to the latest
-22.x to match `.node-version`.
+**`@types/node` stays on the major of `.node-version`**. CI runs Node 22;
+types from a later major would accept APIs that Node 22 lacks, and every
+check would still pass, so a bump of `@types/node` follows `.node-version`.
 
 **Rules turned off**.
 
@@ -1059,39 +906,10 @@ needs its postinstall to place the platform binary.
 establishes a value's shape, such as the registry's slot list or a check
 after `JSON.parse`; expressing each in the types is not justified.
 
-**Oxfmt does not format `docs/`**. The spec is hand-written prose
-with aligned tables; a formatter must not rewrite it.
-
-**LF line endings**. The repository is edited on Windows; without
-`.gitattributes`, git warned about CRLF on every commit and CI diffs would
-contain unrelated changes.
-
 **Custom resize handle instead of `react-resizable-panels`**. U-03
 states limits in pixels; the library works in percentages, and the handle
 is approximately sixty lines with pointer capture. It also avoids one
 dependency that nothing requires.
-
-**Generated primitives are added when first used**. Unreferenced
-generated code would still have to track theme changes.
-
-**Resize handle ignores secondary pointers**. `onPointerDown` returns unless
-`button === 0` and `isPrimary`; a right-click would otherwise begin a drag
-whose `pointerup` the context menu can suppress, and a second touch would
-overwrite the drag origin during a drag.
-
-**Stable test ids**. Each region of a page, the chart's nodes
-(`data-node-id`), the transport, the path bar, and the panel's tabs carry
-`data-testid` hooks for end-to-end tests; role and label queries are used
-for everything user-visible.
-
-**Script logic lives in `scripts/lib/`**. `scripts/i18n.ts` is a minimal
-command-line wrapper over `scripts/lib/i18n-check.ts` so Vitest can test the
-function directly against a temporary fixture directory.
-
-**`VITE_BASE`**. Project Pages serve from `/<repo>/`; a build with
-`base: "/"` would return 404 for every asset. Reading the value from the
-environment keeps local builds at `/` and lets CI derive it from
-`github.event.repository.name` without hard-coding the repository.
 
 **Chromium only, 1440 × 900**. One browser keeps CI under one minute
 and matches the desktop-only scope (S-02); the viewport exceeds the 1280 px
@@ -1101,11 +919,6 @@ gate with margin for the default panel sizes.
 logic; component behaviour is exercised end to end by Playwright (U-91). Installing a DOM testing library for components that are largely
 placeholders would add a second, slower means of testing the same behaviour.
 
-**Vitest environment is `node`, jsdom per file**. Only the store tests that
-persist need `localStorage`; a file-level `// @vitest-environment jsdom`
-keeps the other suites fast (jsdom start-up accounts for most of the run
-time).
-
 **`pnpm check` is one script**. pnpm appends command-line arguments to the end
 of the script string, so `tsx scripts/check.ts && tsx scripts/i18n.ts` would
 pass `challenges/x.json` to the i18n script; `check.ts` invokes the i18n check
@@ -1114,15 +927,6 @@ itself instead.
 **The end-to-end tests load a solution through storage**. C-13's restore path is
 the only means of placing a finished program on the page before editing
 exists, and a development-only affordance would be untested UI.
-
-**Store actions are function properties, not methods**. oxlint's
-`unbound-method` flags a method signature whenever a selector extracts it
-(`useRun((s) => s.seek)`); the layout store already used the property form.
-
-**Hover and click on generated markup use delegated DOM listeners**.
-`jsx-a11y` forbids mouse handlers on `ol`/`li`/`tr`; one listener on the
-container reads a `data-*` attribute and satisfies the rule without
-converting code lines into buttons.
 
 ## Process
 
