@@ -4,7 +4,7 @@
 import { useCallback, useMemo } from "react";
 import type { Challenge } from "@/challenges";
 import { errorText, t } from "@/i18n/t";
-import type { NodeId, Program } from "@/lang/types";
+import type { NodeId, Place, Program } from "@/lang/types";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useShallow } from "zustand/react/shallow";
@@ -14,6 +14,7 @@ import { layout, type ChartLayout } from "@/ui/chart/layout";
 import { measureText, useFontLoads } from "@/ui/chart/measure";
 import { nodeFor, paint, type Paint } from "@/ui/chart/paint";
 import { PathBar } from "@/ui/chart/PathBar";
+import { Connector } from "@/ui/editor/BlockMenu";
 import { Button } from "@/ui/primitives/button";
 import { narrate, narrateDifference, narrateEnd, type Narration } from "@/ui/run/narrate";
 import { caseText } from "./caseText";
@@ -138,6 +139,13 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
     [challenge, selectCase],
   );
   const { paint: painted, note } = useRunPaint(solution ? null : chart, mine);
+  const empty = mine.main.length === 0;
+  const connector = useCallback(
+    ({ place }: { place: Place }) => (
+      <Connector place={place} first={empty && place.parent === "main"} />
+    ),
+    [empty],
+  );
 
   // In build mode a click selects; while running it sets or clears the breakpoint,
   // pausing first; once the run has ended it returns to build mode with the node selected.
@@ -169,6 +177,7 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
           cases={solution || running ? undefined : cases}
           paint={painted}
           note={note}
+          connector={solution || running ? undefined : connector}
         />
       )}
       {running && !solution && <Transport />}
