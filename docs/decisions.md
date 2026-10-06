@@ -1054,18 +1054,36 @@ against the tree at its own commit. A withdrawn statement retains its
 number for the same reason: the citations that predate the withdrawal still
 name an existing statement.
 
-**An issue states when it is done; a pull request states what it closes**
-(P-11, P-12). The first issue template had three inline labels, Where, What,
-and When. When repeated the Milestone field, which is one fact recorded in
-two places; nothing stated the condition that closes an issue, although
-P-12 defines one per label; and a `defect` mixed what the id states with
-what the code does in one paragraph. The sections are now the conventional
-ones: Summary, Where, Expected and actual for a `defect`, and Done when. The
-pull request template gained Closes, because GitHub closes an issue on merge
-only when the body names it, and Screenshots, because the pull requests from
-M-03 session 2 onward change screens and T-10 requires the images. A
-checklist was not added: the template asks for pasted command output, and a
-ticked box is an assertion.
+**One template per kind of issue; spec ids follow the facts they cite**
+(P-12). An issue is written from the template of its kind, which has
+Summary, the sections of its kind (Observed and Cause, Options, Copies,
+Cost, Steps), Spec, and Done when. Done when states the condition that
+closes the issue. The milestone is the issue's Milestone field and is not
+repeated in the body, where it would be one fact recorded in two places.
+Spec states each statement that applies as a sentence ending in its id, so
+the issue is readable without the ids and the ids lead to the spec; the
+title and Summary carry no id, so the issue list and the first paragraph
+state the problem in words. A `decision` may open with Observed, because a
+gap in the spec can show in what the code does, and a measured behaviour is
+the evidence the options are weighed against. A section that does not apply
+states `None` and the reason, because a section that does not apply and a
+section omitted in error are otherwise indistinguishable. Two forms were
+rejected. Three inline labels, Where, What, and When, repeated the Milestone
+field in When, stated no condition for closing, and mixed in one paragraph
+what the id states with what the code does. One template for all five kinds,
+with Summary, Where, `Expected and actual` for a `defect`, and Done when,
+fitted none of them: `Where` held a file, a spec id, or a board, so a body
+gave a bare `U-10` before it stated the problem, and ids became the subject
+of sentences the spec does not contain; `Expected and actual` compressed a
+reproduction into two lines and had no section for the cause; and a
+`decision` had no section for its options, a `debt` none for its copies, and
+a `perf` none for its cost.
+
+**A pull request states what it closes** (P-11). The pull request template
+has Closes, because GitHub closes an issue on merge only when the body names
+it, and Screenshots, because the pull requests from M-03 session 2 onward
+change screens and T-10 requires the images. A checklist was not added: the
+template asks for pasted command output, and a ticked box is an assertion.
 
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
 The store held a constant maximum of 480 px from the retired shell. Half the
