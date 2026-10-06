@@ -1,5 +1,5 @@
-// U-02, U-10..U-14: one section per study plan in C-16 order, then `More problems`; the
-// status marks and plan counts come from progress (C-17).
+// One section per study plan in plan order, then `More problems`; the
+// status marks and plan counts come from progress.
 import { getChallenge, type Challenge } from "@/challenges";
 import { planAction, sections, type Section, type Status } from "@/challenges/next";
 import { localized, t } from "@/i18n/t";
@@ -63,7 +63,7 @@ function PlanSection({ section, status }: { section: Section; status: Status }) 
   );
 }
 
-/** U-10: status mark, title, difficulty, topic tags; the row opens the Problem page. */
+/** Status mark, title, difficulty, topic tags; the row opens the Problem page. */
 function ProblemRow({ challenge, mark }: { challenge: Challenge; mark: ReturnType<Status> }) {
   return (
     <li className="border-b">

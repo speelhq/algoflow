@@ -1,4 +1,4 @@
-// U-26: a challenge text as paragraphs of inline runs: `code`, **bold**, *italic*, and
+// A challenge text as paragraphs of inline runs: `code`, **bold**, *italic*, and
 // plain text. Anything else is plain text, shown as written.
 
 export type Run = { kind: "text" | "code" | "bold" | "italic"; text: string };

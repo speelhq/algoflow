@@ -1,6 +1,6 @@
-// U-23, U-81, U-84: `Output` beside `Expected`, aligned line by line with a blank cell where
+// `Output` beside `Expected`, aligned line by line with a blank cell where
 // a side has no line, then every expected variable beside its expected value. The first
-// row that differs is marked; nothing else about the difference is said (U-82).
+// row that differs is marked; nothing else about the difference is said.
 import type { FirstDifference, Rows } from "@/challenges/rows";
 import { t } from "@/i18n/t";
 import type { Data } from "@/lang/types";
@@ -9,9 +9,9 @@ import { dataText } from "@/ui/chart/text";
 
 type Props = {
   rows: Rows;
-  /** Shown only once a verdict exists (U-23). */
+  /** Shown only once a verdict exists. */
   marked: FirstDifference | null;
-  /** U-84: a test that ended in a runtime error shows its message in place of `Output`. */
+  /** A test that ended in a runtime error shows its message in place of `Output`. */
   error?: string;
   /** Whether the case has expectations to show beside the output. */
   expected: boolean;

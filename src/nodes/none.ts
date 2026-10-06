@@ -1,4 +1,4 @@
-// 03-nodes `none`
+// The `none` block
 import { newId } from "@/lang/id";
 import { defineExpr } from "./types";
 

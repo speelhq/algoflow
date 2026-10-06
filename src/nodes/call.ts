@@ -1,4 +1,4 @@
-// 03-nodes `call`: a user function call, positional with exact arity (L-28).
+// The `call` block: a user function call, positional with exact arity.
 import { newId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { defineExpr } from "./types";

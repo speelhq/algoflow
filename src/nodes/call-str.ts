@@ -1,4 +1,4 @@
-// 03-nodes builtin `str`: L-29 text form.
+// The builtin `str`: a value's text form.
 import { str as text } from "@/runtime/values";
 import { defineBuiltin } from "./builtin";
 

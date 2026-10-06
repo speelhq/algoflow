@@ -1,5 +1,5 @@
 # lint, test, check, build, test:e2e on every pull request and on every push
-# to main; S-04: main deploys dist/ to GitHub Pages.
+# to main; main deploys dist/ to GitHub Pages.
 name: CI
 
 on:
@@ -28,7 +28,7 @@ jobs:
         with:
           node-version-file: .node-version
           cache: pnpm
-      # R-20: scripts/check.ts runs every solution under CPython as `python3`.
+      # scripts/check.ts runs every solution under CPython as `python3`.
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

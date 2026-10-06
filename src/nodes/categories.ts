@@ -1,4 +1,4 @@
-// 03-nodes.md: `NodeDef.category`; U-40: block menu groups appear in this order.
+// `NodeDef.category`: the block menu's groups, in this order.
 export const CATEGORIES = [
   "basic",
   "list",

@@ -1,5 +1,5 @@
 // Shared shape of the builtin call blocks (03-nodes "Builtin calls"): key `call:<name>`,
-// one `args` slot, positional parameters, exact arity (L-28).
+// one `args` slot, positional parameters, exact arity.
 import { newId } from "@/lang/id";
 import type { Expr, Value } from "@/lang/types";
 import { defineExpr, type NodeDef, type RunContext } from "./types";

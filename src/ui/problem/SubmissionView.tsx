@@ -1,5 +1,5 @@
-// U-80..U-84, U-86: the submission in the `Result` tab. A wrong answer is its rows and
-// nothing else (U-82): the title, `k of n cases passed`, one chip per case, the selected
+// The submission in the `Result` tab. A wrong answer is its rows and
+// nothing else: the title, `k of n cases passed`, one chip per case, the selected
 // case's rows with the first difference marked, and `▶ Watch this case`. An accepted one
 // says what comes next.
 import { useMemo } from "react";
@@ -31,7 +31,7 @@ function Chips({ challenge }: { challenge: Challenge }) {
         const label = t(pass ? "result.chipPass" : "result.chipFail", {
           case: caseText(test.inputs),
         });
-        // U-86: the chips of an accepted submission select nothing.
+        // The chips of an accepted submission select nothing.
         if (cleared) {
           return (
             <span
@@ -67,7 +67,7 @@ function Chips({ challenge }: { challenge: Challenge }) {
   );
 }
 
-/** U-81, U-84: the selected case's rows, its first difference marked, or its error message. */
+/** The selected case's rows, its first difference marked, or its error message. */
 function SelectedRows({ challenge }: { challenge: Challenge }) {
   const selected = useTests((s) => s.selected);
   const result = useTests((s) => s.results[s.selected]);
@@ -88,7 +88,7 @@ function SelectedRows({ challenge }: { challenge: Challenge }) {
   );
 }
 
-/** U-83: `Next problem →`, or `Plan complete` with `Back to Problems` after a plan's last. */
+/** `Next problem →`, or `Plan complete` with `Back to Problems` after a plan's last. */
 function Next({ id }: { id: string }) {
   const entries = useProgress((s) => s.entries);
   const next = nextProblem(id, (other) => statusOf(entries, other));
@@ -114,7 +114,7 @@ function Accepted({ challenge }: { challenge: Challenge }) {
   const setTab = useEditor((s) => s.setTab);
   const showSolution = useEditor((s) => s.showSolution);
   const solutionShown = useProgress((s) => s.solutionShown);
-  // U-27: the chart stays the run's while running.
+  // The chart stays the run's while running.
   const running = useRun((s) => s.status !== "idle");
   return (
     <>

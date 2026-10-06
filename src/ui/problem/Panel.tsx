@@ -1,4 +1,4 @@
-// U-03, U-20, U-24: the left region: the `Problem`, `Result`, and `Python` tabs, resizable
+// The left region: the `Problem`, `Result`, and `Python` tabs, resizable
 // from 280 px to half the viewport, collapsible to a 40 px rail; width and state persist.
 import type { Challenge } from "@/challenges";
 import { t } from "@/i18n/t";

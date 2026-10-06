@@ -1,4 +1,4 @@
-// 03-nodes `return`: `return <value>` / `return`; no value → None (L-28).
+// The `return` block: `return <value>` / `return`; no value → None.
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 

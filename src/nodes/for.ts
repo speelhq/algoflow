@@ -1,4 +1,4 @@
-// 03-nodes `for`: L-25 bounds evaluated once, int only; R-07 loop event per iteration.
+// The `for` block: bounds evaluated once, ints only; a `loop` event per iteration.
 import { newId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { typeName } from "@/runtime/values";

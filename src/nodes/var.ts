@@ -1,4 +1,4 @@
-// 03-nodes `var`: R-04 variable reads emit nothing.
+// The `var` block: reading a variable emits no event.
 import { newId } from "@/lang/id";
 import { defineExpr } from "./types";
 

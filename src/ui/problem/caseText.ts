@@ -1,4 +1,4 @@
-// U-21, U-32, U-81: a case is shown by its inputs, `n = 15` or `a = 3, b = 9, c = 5`, with
+// A case is shown by its inputs, `n = 15` or `a = 3, b = 9, c = 5`, with
 // values written as the blocks write them.
 import { t } from "@/i18n/t";
 import type { Data, Id } from "@/lang/types";

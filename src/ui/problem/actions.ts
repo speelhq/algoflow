@@ -1,5 +1,5 @@
-// U-60, U-27: the page's Run. With diagnostics present it does not start: it selects the
-// first diagnostic's statement and shows its message (U-37). Run acts on the learner's
+// The page's Run. With diagnostics present it does not start: it selects the
+// first diagnostic's statement and shows its message. Run acts on the learner's
 // program, so a shown solution gives way to the learner's chart first.
 import { validate } from "@/lang/validate";
 import { ownerStmts } from "@/lang/walk";
@@ -8,7 +8,7 @@ import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { useTests } from "@/store/tests";
 
-/** U-60: true when the program has no diagnostic; otherwise leads to the first one. */
+/** True when the program has no diagnostic; otherwise leads to the first one. */
 export function readyToRun(): boolean {
   const program = useProgram.getState().program;
   const editor = useEditor.getState();
@@ -26,7 +26,7 @@ export function startRun(opts?: { watch?: boolean }): void {
   void useRun.getState().run(opts);
 }
 
-/** U-80: Submit judges every test on its own runner and selects `Result` (U-86). */
+/** Submit judges every test on its own runner and selects `Result`. */
 export function startSubmit(): void {
   if (!readyToRun()) return;
   useEditor.getState().setTab("result");

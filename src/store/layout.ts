@@ -1,4 +1,4 @@
-// U-03, U-24, U-60: the problem panel's width and collapsed state and the playback speed
+// The problem panel's width and collapsed state and the playback speed
 // persist to localStorage under `algoflow:layout`. Values are clamped on write and validated again when read
 // back, so storage never yields an out-of-range width or a non-boolean flag.
 import { create } from "zustand";
@@ -7,10 +7,10 @@ import { isRecord } from "@/i18n/flatten";
 
 export const LAYOUT_STORAGE_KEY = "algoflow:layout";
 
-/** U-03: 320 px by default, resizable from 280 px to half the viewport width. */
+/** 320 px by default, resizable from 280 px to half the viewport width. */
 export const PANEL = { default: 320, min: 280, viewportShare: 0.5 } as const;
 
-/** U-60, R-11: steps per second while playing; 3 until the learner moves the slider. */
+/** Steps per second while playing; 3 until the learner moves the slider. */
 export const SPEED = { default: 3, min: 1, max: 50 } as const;
 
 export function clamp(value: number, min: number, max: number): number {
@@ -18,7 +18,7 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 /**
- * U-03: the width at which the panel is drawn and to which it is set: `panel` bounded by
+ * The width at which the panel is drawn and to which it is set: `panel` bounded by
  * 280 px and half of `viewport`. The lower bound prevails in a viewport narrower than 560 px.
  */
 export function panelWidth(panel: number, viewport: number): number {

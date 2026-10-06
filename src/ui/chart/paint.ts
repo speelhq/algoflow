@@ -1,4 +1,4 @@
-// U-39, U-60, U-61, U-65: what the chart draws while running, derived from the driver state
+// What the chart draws while running, derived from the driver state
 // and the layout: the taken path, the ✓ / ✗ marks, the current node, and the breakpoint.
 // Chart nodes are matched to statements through `owner` and `role`, never through a kind.
 import type { NodeId } from "@/lang/types";
@@ -20,7 +20,7 @@ export type Paint = {
   edges: Set<string>;
   /** Diamond chart node id → ✓ (true) or ✗ (false). */
   marks: Map<string, boolean>;
-  /** The chart node with the accent outline (U-61) or the error outline (U-65). */
+  /** The chart node with the accent outline or the error outline. */
   current: string | null;
   breakpoint: string | null;
 };
@@ -31,7 +31,7 @@ export function nodeFor(nodes: readonly ChartNode[], owner: NodeId): ChartNode |
   return own.find((node) => node.role === "check") ?? own.find((node) => node.role === "stmt");
 }
 
-/** U-61: the current node: a counted loop's init on its `enter`, its check on its other events. */
+/** The current node: a counted loop's init on its `enter`, its check on its other events. */
 export function currentNode(chart: ChartLayout, view: RunView): string | null {
   if (view.activeId === null) return null;
   const owner = view.activeId;

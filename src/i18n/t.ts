@@ -1,5 +1,5 @@
-// U-71, U-73: every user-visible string comes from en.json (and ja.json from M-10).
-// S-03: the locale switch and browser-language default arrive in M-10; the
+// Every user-visible string comes from en.json (and ja.json from M-10).
+// The locale switch and browser-language default arrive in M-10; the
 // `ja` slot exists so that milestone only adds the catalog and the switch.
 import en from "./en.json";
 import { flatten } from "./flatten";
@@ -47,12 +47,12 @@ export function t(key: MessageKey, params?: Params): string {
   return interpolate(text, params);
 }
 
-/** U-70: the message of a diagnostic or runtime error. */
+/** The message of a diagnostic or runtime error. */
 export function errorText(error: { code: string; params: Params }): string {
   return t(`error.${error.code}` as MessageKey, error.params);
 }
 
-/** A challenge-file text (C-01 `Localized`) in the current locale, falling back to `en`. */
+/** A challenge-file text (`Localized`) in the current locale, falling back to `en`. */
 export function localized(text: { en: string; ja?: string }): string {
   return text[current] ?? text.en;
 }

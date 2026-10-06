@@ -1,5 +1,5 @@
-// U-03: the Problem page: the top bar, then two regions, the panel and the chart region.
-// C-13: opening a problem loads its program and discards any runner; U-20: it opens on
+// The Problem page: the top bar, then two regions, the panel and the chart region.
+// Opening a problem loads its program and discards any runner; it opens on
 // the first tab.
 import { useEffect } from "react";
 import { getChallenge, type Challenge } from "@/challenges";
@@ -25,7 +25,7 @@ function Problem({ challenge }: { challenge: Challenge }) {
   useRunKeys();
   useEffect(() => {
     useProgram.getState().load(challenge.id);
-    // C-13: opening a problem selects the first test's inputs, also when it was open before.
+    // Opening a problem selects the first test's inputs, also when it was open before.
     useRun.getState().selectCase(0);
     useEditor.getState().open("problem");
   }, [challenge.id]);

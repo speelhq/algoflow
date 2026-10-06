@@ -1,4 +1,4 @@
-// G-01..G-05: typed expression text → Expr. No third-party imports.
+// Typed expression text → Expr. No third-party imports.
 import { newId } from "@/lang/id";
 import type { BinOp, Expr, Id } from "@/lang/types";
 import { NODES, hasNode, keyOf } from "@/nodes";
@@ -113,7 +113,7 @@ function tokenize(text: string): Token[] {
   return tokens;
 }
 
-// ---------------------------------------------------------------- aliases (G-02)
+// ---------------------------------------------------------------- aliases
 
 function aliasTable(): Map<string, string> {
   const table = new Map<string, string>();
@@ -212,7 +212,7 @@ class Parser {
     if (op === undefined) return left;
     const pos = this.take().pos;
     const right = this.arith();
-    if (this.binopAt(PRECEDENCE.compare) !== undefined) fail("E_PARSE_CHAIN", this.peek().pos); // G-04
+    if (this.binopAt(PRECEDENCE.compare) !== undefined) fail("E_PARSE_CHAIN", this.peek().pos);
     return this.node(pos, { id: newId(), kind: "binop", op, left, right });
   }
 
@@ -289,7 +289,6 @@ class Parser {
     }
   }
 
-  /** G-02 */
   private resolveCall(name: string, position: number, args: Expr[]): Expr {
     if (this.scope.classes.includes(name)) {
       return this.node(position, { id: newId(), kind: "new", cls: name, args });
@@ -301,7 +300,7 @@ class Parser {
     return fail("E_UNKNOWN_CALL", position, { name });
   }
 
-  /** G-02 aliases and G-03 */
+  /** Builtin aliases and method calls. */
   private resolveMethod(obj: Expr, name: Token, args: Expr[]): Expr {
     if (obj.kind === "var") {
       const fn = this.aliases.get(`${obj.name}.${name.text}`);

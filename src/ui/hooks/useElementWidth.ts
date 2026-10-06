@@ -1,4 +1,4 @@
-// The content width of an element, followed through resizes (the chart fits it, U-38).
+// The content width of an element, followed through resizes (the chart fits it).
 import { useEffect, useState, type RefObject } from "react";
 
 export function useElementWidth(ref: RefObject<HTMLElement | null>): number {

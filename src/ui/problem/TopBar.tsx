@@ -1,4 +1,4 @@
-// U-03: the 52 px top bar: `← Problems`, the title, and `⋯` (U-05). `Open in Playground`
+// The 52 px top bar: `← Problems`, the title, and `⋯`. `Open in Playground`
 // and `Start over` join `⋯` with editing (M-04).
 import { useState, type ReactNode } from "react";
 import { t } from "@/i18n/t";
@@ -14,7 +14,7 @@ import {
 
 type Props = { title: string; children?: ReactNode };
 
-/** `children` sits in the middle: the run controls (U-60). */
+/** `children` sits in the middle: the run controls. */
 export function TopBar({ title, children }: Props) {
   const [help, setHelp] = useState(false);
   return (

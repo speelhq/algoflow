@@ -1,4 +1,4 @@
-// C-10, C-11: one test verdict, shared by the Tests tab and scripts/check.ts.
+// One test verdict, shared by the Tests tab and scripts/check.ts.
 import { dataEquals } from "@/lang/data";
 import type { Data, Id } from "@/lang/types";
 import type { Outcome } from "@/runtime/outcome";

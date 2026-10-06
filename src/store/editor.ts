@@ -1,6 +1,6 @@
-// Editor-side UI state of a page: the panel tab (U-20), the selected node and the node
-// outlined from a hovered Python line (U-25), whether the chart region shows the solution
-// (U-22), and the diagnostic Run or Submit led to (U-60). Editing joins in M-04.
+// Editor-side UI state of a page: the panel tab, the selected node and the node
+// outlined from a hovered Python line, whether the chart region shows the solution,
+// and the diagnostic Run or Submit led to. Editing joins in M-04.
 import { create } from "zustand";
 import type { Diagnostic, NodeId } from "@/lang/types";
 
@@ -11,15 +11,15 @@ export type EditorState = {
   selectedId: NodeId | null;
   hoveredId: NodeId | null;
   solution: boolean;
-  /** U-60: shown beside its node until the selection changes. */
+  /** Shown beside its node until the selection changes. */
   diagnostic: Diagnostic | null;
   setTab: (tab: PanelTab) => void;
   select: (id: NodeId | null) => void;
   setHovered: (id: NodeId | null) => void;
   showSolution: (shown: boolean) => void;
-  /** U-60: selects `owner`, the statement holding the diagnostic, and shows its message. */
+  /** Selects `owner`, the statement holding the diagnostic, and shows its message. */
   lead: (owner: NodeId, diagnostic: Diagnostic) => void;
-  /** U-20: a page opens on its first tab, with nothing selected and its own chart shown. */
+  /** A page opens on its first tab, with nothing selected and its own chart shown. */
   open: (tab: PanelTab) => void;
 };
 

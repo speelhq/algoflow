@@ -1,4 +1,4 @@
-// Traversal driven by each block's slots (N-01), so no module lists block kinds.
+// Traversal driven by each block's slots, so no module lists block kinds.
 import { getNode, keyOf } from "@/nodes";
 import type { Expr, FunctionDef, Node, NodeId, Program, Stmt, Target } from "./types";
 
@@ -101,7 +101,7 @@ export function* programExprs(program: Program): Generator<Expr, void, void> {
 }
 
 /**
- * U-39: the statement that contains each node. Expressions map to their statement,
+ * The statement that contains each node. Expressions map to their statement,
  * statements, functions, and classes to themselves.
  */
 export function ownerStmts(program: Program): Map<NodeId, NodeId> {
@@ -116,7 +116,7 @@ export function ownerStmts(program: Program): Map<NodeId, NodeId> {
 }
 
 /**
- * U-61: for each statement with body regions, the ids of every statement inside them,
+ * For each statement with body regions, the ids of every statement inside them,
  * at any depth. A loop's `loop` event clears the marks of these statements.
  */
 export function bodyStmts(program: Program): Map<NodeId, NodeId[]> {

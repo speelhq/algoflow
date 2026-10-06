@@ -1,8 +1,8 @@
-// R-11, R-12, R-19: the driver. Run first executes the whole program on a throwaway runner
+// The driver. Run first executes the whole program on a throwaway runner
 // (the pre-run), so the length of the run, how it ends, and the step of every print are known
 // before playback. The shown Runner, the play timer, and the cancel token live in module
-// scope; the store holds what the UI renders. A backward Seek replays a fresh runner (R-11)
-// that reaches the same position (R-10), so a step number fully identifies a position.
+// scope; the store holds what the UI renders. A backward Seek replays a fresh runner
+// that reaches the same position, so a step number fully identifies a position.
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";
@@ -20,41 +20,40 @@ import { useProgram } from "./program";
 
 export type Status = "idle" | "paused" | "playing" | "done" | "error";
 
-export const BATCH = 2000; // R-11
+export const BATCH = 2000;
 
 export type RunState = {
   status: Status;
   /** A pre-run, a Seek, or a Skip is working through its batches. */
   busy: boolean;
   step: number;
-  /** R-11: the visible steps of the whole run; after an error the failing step is step `total`. */
+  /** The visible steps of the whole run; after an error the failing step is step `total`. */
   total: number;
-  /** R-11: how the pre-run ended. */
+  /** How the pre-run ended. */
   outcome: Done | null;
-  /** R-11: the visible step of each `print`; `prints[i]` produced line `i` of the output. */
+  /** The visible step of each `print`; `prints[i]` produced line `i` of the output. */
   prints: number[];
   lastEvent: Event | null;
-  /** U-63: which pass a `loop` event starts, counted since its loop was entered; else null. */
+  /** Which pass a `loop` event starts, counted since its loop was entered; else null. */
   pass: number | null;
-  /** U-39: the statement to highlight (owner of `lastEvent`, or of the error). */
+  /** The statement to highlight (owner of `lastEvent`, or of the error). */
   activeId: NodeId | null;
   state: State | null;
-  /** U-68: the index of the frame shown; it follows the running frame. */
+  /** The index of the frame shown; it follows the running frame. */
   frame: number;
   stdout: string[];
-  /** U-61: the last check result per diamond, by statement id (✓ / ✗). */
+  /** The last check result per diamond, by statement id (✓ / ✗). */
   verdicts: Record<NodeId, boolean>;
-  /** U-61: the statements entered in the current pass (the taken path). */
+  /** The statements entered in the current pass (the taken path). */
   taken: Record<NodeId, true>;
-  /** R-19 */
   breakpoint: NodeId | null;
-  /** U-32: the chosen case, an index into the challenge's tests. */
+  /** The chosen case, an index into the challenge's tests. */
   caseIndex: number;
-  /** C-15: the chosen case's verdict, once the shown run is at its end. */
+  /** The chosen case's verdict, once the shown run is at its end. */
   verdict: TestResult | null;
-  /** U-81: where a run started by `Watch this case` opened, for the narration at that step. */
+  /** Where a run started by `Watch this case` opened, for the narration at that step. */
   difference: Difference | null;
-  /** U-60: pre-runs, then plays; with `watch`, opens paused at the first difference (U-81). */
+  /** Pre-runs, then plays; with `watch`, opens paused at the first difference. */
   run: (opts?: { watch?: boolean }) => Promise<void>;
   stepOnce: () => void;
   play: () => void;
@@ -69,7 +68,7 @@ export type RunState = {
 
 export type Difference = WatchStep;
 
-/** R-01: a run starts only when validation is clean. */
+/** A run starts only when validation is clean. */
 export function canRun(program: Program): boolean {
   return validate(program).length === 0;
 }
@@ -77,7 +76,7 @@ export function canRun(program: Program): boolean {
 // ---------------------------------------------------------------- module state
 
 type Origin = { program: Program; inputs: Record<Id, Data>; seed: number; test: Test | undefined };
-/** What the pre-run found (R-11), with the chosen case's verdict (C-15). */
+/** What the pre-run found, with the chosen case's verdict. */
 type Plan = {
   total: number;
   outcome: Done;
@@ -101,7 +100,7 @@ let origin: Origin | null = null;
 let plan: Plan | null = null;
 let owners = new Map<NodeId, NodeId>();
 let bodies = new Map<NodeId, NodeId[]>();
-/** U-61: each loop with the statements inside it; leaving the loop clears its own mark. */
+/** Each loop with the statements inside it; leaving the loop clears its own mark. */
 let loops = new Map<NodeId, Set<NodeId>>();
 let projection: Projection = freshProjection();
 let breakpoint: NodeId | null = null;
@@ -110,7 +109,7 @@ let timer: ReturnType<typeof setInterval> | null = null;
 let generation = 0;
 /** The step a Seek in flight is heading for, so that Back stacks while it is held. */
 let target: number | null = null;
-/** The run was started by `Watch this case` (U-81). */
+/** The run was started by `Watch this case`. */
 let watching = false;
 /** A pre-run, Seek, or Skip is working through its batches; Step and Play wait for it. */
 let working = false;
@@ -147,7 +146,7 @@ function cancel(): void {
   clearTimer();
 }
 
-/** R-12: a published state is a copy; values are immutable records, so one level suffices. */
+/** A published state is a copy; values are immutable records, so one level suffices. */
 function copyEntry(entry: HeapEntry): HeapEntry {
   switch (entry.kind) {
     case "list":
@@ -194,7 +193,7 @@ function apply(event: Event): void {
       p.dirty.verdicts = true;
     }
   } else if (event.type === "loop") {
-    // U-61: a new pass clears every mark in the loop's body; the loop's own check passed.
+    // A new pass clears every mark in the loop's body; the loop's own check passed.
     for (const id of bodies.get(event.nodeId) ?? []) {
       delete p.verdicts[id];
       delete p.taken[id];
@@ -206,7 +205,7 @@ function apply(event: Event): void {
   } else if (event.type === "print") p.dirty.stdout = true;
 }
 
-/** The loops among the statements with bodies, read from the registry (N-01 `loop`). */
+/** The loops among the statements with bodies, found by the registry's `loop` flag. */
 function loopBodies(program: Program, all: Map<NodeId, NodeId[]>): Map<NodeId, Set<NodeId>> {
   const nodes = nodesById(program);
   const found = new Map<NodeId, Set<NodeId>>();
@@ -222,8 +221,8 @@ function atEnd(): boolean {
 }
 
 /**
- * One visible step (R-11); call only before the end. Every event is visible until module
- * frames exist (R-16): this is where the driver will pass over the steps inside one.
+ * One visible step; call only before the end. Every event is visible until module
+ * frames exist: this is where the driver will pass over the steps inside one.
  */
 function advance(): void {
   if (!runner || !plan) return;
@@ -239,7 +238,7 @@ function advance(): void {
   if (projection.step === plan.total) runner.next();
 }
 
-/** R-19: the step just taken arrived at the breakpoint (its `enter`, or a pass of that loop). */
+/** The step just taken arrived at the breakpoint (its `enter`, or a pass of that loop). */
 function atBreakpoint(): boolean {
   const event = projection.lastEvent;
   return (
@@ -250,7 +249,7 @@ function atBreakpoint(): boolean {
   );
 }
 
-/** U-81: the print of the first differing line, or the last step of the run. */
+/** The print of the first differing line, or the last step of the run. */
 function differenceOf(
   test: Test | undefined,
   outcome: Outcome,
@@ -278,7 +277,7 @@ function reset(from: Origin): void {
   projection = freshProjection();
 }
 
-/** R-11: the whole run on a throwaway runner, in batches; undefined when another action took over. */
+/** The whole run on a throwaway runner, in batches; undefined when another action took over. */
 async function prerun(from: Origin, mine: number): Promise<Plan | undefined> {
   const probe = startRunner(from.program, from.inputs, from.seed);
   const prints: number[] = [];
@@ -340,7 +339,7 @@ export const useRun = create<RunState>()((set, get) => {
   const running = () => runner !== null && !atEnd();
 
   /**
-   * Steps up to `until` in R-11 batches, publishing `status` once per batch; with `breaks`
+   * Steps up to `until` in batches, publishing `status` once per batch; with `breaks`
    * it also stops on arriving at the breakpoint. False when another action took over.
    */
   const batched = async (until: number, breaks: boolean, status: Status): Promise<boolean> => {
@@ -451,7 +450,7 @@ export const useRun = create<RunState>()((set, get) => {
       const to = clamp(Math.round(step), 0, plan.total);
       cancel();
       target = to;
-      // Forward: the current runner goes on; backward: a fresh runner from step 0 (R-11).
+      // Forward: the current runner goes on; backward: a fresh runner from step 0.
       if (to < projection.step) reset(origin);
       if (!(await batched(to, false, "paused"))) return;
       target = null;
@@ -493,12 +492,12 @@ export const useRun = create<RunState>()((set, get) => {
   };
 });
 
-// U-60: a new speed takes effect on the running play timer.
+// A new speed takes effect on the running play timer.
 useLayout.subscribe((current, previous) => {
   if (current.speed !== previous.speed && timer !== null) armTimer();
 });
 
-// C-13: a new program discards the runner; another problem also resets the chosen case.
+// A new program discards the runner; another problem also resets the chosen case.
 useProgram.subscribe((current, previous) => {
   if (current.program === previous.program) return;
   useRun.getState().stop();

@@ -1,5 +1,5 @@
-// U-25: the Python tab colours keywords, strings, numbers, and comments, and nothing else.
-// One emitted line at a time: the emitter writes no string that spans lines (E-06).
+// The Python tab colours keywords, strings, numbers, and comments, and nothing else.
+// One emitted line at a time: the emitter writes no string that spans lines.
 
 export type Token = { kind: "keyword" | "string" | "number" | "comment" | "text"; text: string };
 

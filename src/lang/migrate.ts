@@ -1,4 +1,4 @@
-// L-53: import validates and migrates by `version`. Only version 1 exists; the
+// Import validates and migrates by `version`. Only version 1 exists; the
 // check is structural (shape, known kinds, ids); semantics are validate()'s job.
 import { getNode, hasNode, keyOf } from "@/nodes";
 import { isNodeId } from "./id";

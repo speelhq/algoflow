@@ -1,4 +1,5 @@
-// 03-nodes builtin `random_int`: L-32 inclusive int draw from mulberry32; N-05 imports random.
+// The builtin `random_int`: an int drawn from mulberry32, both bounds included; the
+// emitted file imports `random`.
 import { typeName } from "@/runtime/values";
 import { defineBuiltin } from "./builtin";
 

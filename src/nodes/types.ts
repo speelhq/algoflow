@@ -1,4 +1,4 @@
-// N-01 NodeDef plus the runner (R-13/R-14) and emitter (E-08) contracts blocks implement.
+// NodeDef plus the runner and emitter contracts blocks implement.
 import type {
   Expr,
   ExprKind,
@@ -28,7 +28,7 @@ export type Slot = {
   required?: boolean;
 };
 
-// ---------------------------------------------------------------- runner (R-13)
+// ---------------------------------------------------------------- runner
 
 export type Signal =
   | undefined
@@ -52,32 +52,32 @@ export type RunContext = {
 export type StmtRunner = (node: Stmt, ctx: RunContext) => Generator<Event, Signal, void>;
 export type ExprRunner = (node: Expr, ctx: RunContext) => Generator<Event, Value, void>;
 
-// ---------------------------------------------------------------- emitter (E-08)
+// ---------------------------------------------------------------- emitter
 
 export type PyLine = string | { block: Stmt[] };
 export type Side = "left" | "right";
 export type EmitContext = {
   expr(expr: Expr): string;
-  /** `expr` wrapped in parentheses when E-05 requires it under a parent of `precedence`. */
+  /** `expr` wrapped in parentheses when the operator table requires it under a parent of `precedence`. */
   operand(expr: Expr, precedence: number, side: Side): string;
   target(target: Target): string;
   block(stmts: Stmt[]): PyLine;
 };
 
-// ---------------------------------------------------------------- canvas text (N-08)
+// ---------------------------------------------------------------- canvas text
 
-/** `creates`: the statement is the first assignment of its variable (N-02 `templateCreate`). */
+/** `creates`: the statement is the first assignment of its variable (`templateCreate`). */
 export type FormContext = { creates: boolean };
 
-// ---------------------------------------------------------------- chart shape (N-09)
+// ---------------------------------------------------------------- chart shape
 
-/** The body regions a block draws, by slot name: a branch, a checked loop, or a counted loop (U-33). */
+/** The body regions a block draws, by slot name: a branch, a checked loop, or a counted loop. */
 export type ChartShape =
   | { branch: { yes: string; no: string } }
   | { check: string }
   | { counted: string };
 
-// ---------------------------------------------------------------- NodeDef (N-01)
+// ---------------------------------------------------------------- NodeDef
 
 export type NodeDef = {
   key: string;
@@ -86,15 +86,14 @@ export type NodeDef = {
   slots: Slot[];
   /** Builtin parameter names in order (arity = length); template placeholders use them. */
   params?: string[];
-  /** Emitter aliases accepted by the parser (G-02), e.g. "random.randint". */
+  /** Emitter aliases accepted by the parser, e.g. "random.randint". */
   aliases?: string[];
-  /** N-05 */
   imports?: "math" | "random";
-  /** E-05 precedence of this expression; undefined = atom. */
+  /** Precedence of this expression; undefined = atom. */
   precedence?: (node: Expr) => number;
   /** Not offered in the palette (the `empty` placeholder). */
   hidden?: boolean;
-  /** For literal blocks: the zero-like literal of the same type (L-44). */
+  /** For literal blocks: the zero-like literal of the same type. */
   zeroLike?(node: Expr): Expr;
   /** For call-like expressions without `params`: what is called and with how many arguments. */
   callee?(node: Expr): Callee;
@@ -105,11 +104,11 @@ export type NodeDef = {
   create(): Stmt | Expr;
   run: StmtRunner | ExprRunner;
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string;
-  /** N-08: template variant suffix (`node.<key>.template<Form>`); `""` or absent = the base template. */
+  /** Template variant suffix (`node.<key>.template<Form>`); `""` or absent = the base template. */
   form?(node: Stmt | Expr, ctx: FormContext): string;
-  /** N-08: canvas text of a `text` slot; default `String(node[slot])`. */
+  /** Canvas text of a `text` slot; default `String(node[slot])`. */
   text?(node: Stmt | Expr, slot: string): string;
-  /** N-09: how the chart draws the block's regions; absent = a box with the sentence. */
+  /** How the chart draws the block's regions; absent = a box with the sentence. */
   chart?: ChartShape;
 };
 

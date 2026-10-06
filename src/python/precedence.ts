@@ -1,4 +1,4 @@
-// E-05: the one operator table the parser and the emitter share. No third-party imports.
+// The one operator table the parser and the emitter share. No third-party imports.
 import type { BinOp } from "@/lang/types";
 
 export const PRECEDENCE = {
@@ -64,7 +64,7 @@ export function levelAssociativity(level: number): Associativity {
 }
 
 /**
- * E-05: parentheses when the child binds looser than the parent, or equally on
+ * Parentheses when the child binds looser than the parent, or equally on
  * the right of a left-associative operator (or the left of a right-associative
  * one). Comparisons are non-associative: equal precedence needs them on either side.
  */

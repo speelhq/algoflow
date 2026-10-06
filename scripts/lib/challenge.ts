@@ -1,5 +1,5 @@
-// C-01, C-03: structural checks of a challenge file (used by scripts/check.ts).
-// The schema types live in src/challenges/types.ts (C-14).
+// Structural checks of a challenge file (used by scripts/check.ts).
+// The schema types live in src/challenges/types.ts.
 import { DIFFICULTIES, TOPICS, type Challenge, type Localized } from "@/challenges/types";
 import { migrate } from "@/lang/migrate";
 import { isValidName, validate } from "@/lang/validate";
@@ -18,7 +18,7 @@ function sameData(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-/** C-01: the keys a challenge file may hold. */
+/** The keys a challenge file may hold. */
 const KEYS: ReadonlySet<string> = new Set([
   "id",
   "title",

@@ -1,4 +1,4 @@
-// 03-nodes builtin `max`: two values ordered per L-15.
+// The builtin `max`: the larger of two numbers or texts.
 import { typeError } from "@/runtime/access";
 import { compare } from "@/runtime/values";
 import { defineBuiltin } from "./builtin";

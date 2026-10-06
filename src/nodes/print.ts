@@ -1,4 +1,5 @@
-// 03-nodes `print`: L-29 joins `str()` forms with one space; R-03 print event then the effect.
+// The `print` block: joins the `str()` forms with one space; its `print` event follows
+// the events of its expressions.
 import { newId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { str } from "@/runtime/values";

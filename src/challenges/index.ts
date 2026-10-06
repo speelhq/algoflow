@@ -1,4 +1,4 @@
-// C-14: the browser bundles `challenges/*.json` at build time. U-12: the list is ordered by
+// The browser bundles `challenges/*.json` at build time. The list is ordered by
 // plan order, then title.
 import { planRank } from "./plans";
 import type { Challenge } from "./types";

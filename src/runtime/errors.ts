@@ -1,4 +1,4 @@
-// R-09: runtime errors are thrown by node runners and caught by the Runner.
+// Runtime errors are thrown by node runners and caught by the Runner.
 import type { NodeId } from "@/lang/types";
 import type { RuntimeCode, RuntimeError } from "./types";
 

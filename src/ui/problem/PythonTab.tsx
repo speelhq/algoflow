@@ -1,4 +1,4 @@
-// U-25: the emitted code with line numbers; keywords, strings, numbers, and comments are
+// The emitted code with line numbers; keywords, strings, numbers, and comments are
 // coloured. Hovering a line outlines its node, clicking it selects the node, the selected
 // node's lines are highlighted, and while running the current statement's line is too.
 import { useEffect, useMemo, useRef } from "react";
@@ -20,7 +20,7 @@ const COLOUR: Record<Token["kind"], string> = {
   text: "",
 };
 
-/** U-25: the shown file is `main.py` (E-09 adds one file per module). */
+/** The shown file is `main.py` (a program that uses modules adds one file per module). */
 const FILE = "main.py";
 
 function download(code: string): void {

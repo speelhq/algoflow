@@ -5,7 +5,7 @@ import { ProblemsPage } from "@/ui/problems/ProblemsPage";
 import { StubPage } from "@/ui/stubs/StubPage";
 import { useRoute, type Route } from "./route";
 
-// S-02: desktop browsers at 1280 px or more; narrower viewports show app.desktopOnly and no editor.
+// Desktop browsers at 1280 px or more; narrower viewports show app.desktopOnly and no editor.
 export function App() {
   const desktop = useMediaQuery("(min-width: 1280px)");
   const route = useRoute();
@@ -26,7 +26,7 @@ export function App() {
   );
 }
 
-/** U-01: one page per route; Playground and Modules are stubs until M-04 and M-07. */
+/** One page per route; Playground and Modules are stubs until M-04 and M-07. */
 function Page({ route }: { route: Route }) {
   switch (route.page) {
     case "problems":

@@ -1,4 +1,4 @@
-// 03-nodes `unop`: `-x` and `not x`.
+// The `unop` block: `-x` and `not x`.
 import { newId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { PRECEDENCE } from "@/python/precedence";
@@ -31,5 +31,5 @@ export const unop = defineExpr<"unop">({
     const operand = ctx.operand(node.operand, precedenceOf(node), "right");
     return node.op === "neg" ? `-${operand}` : `not ${operand}`;
   },
-  form: (node) => (node.op === "not" ? "Not" : ""), // N-02 `templateNot`
+  form: (node) => (node.op === "not" ? "Not" : ""), // `templateNot`
 });

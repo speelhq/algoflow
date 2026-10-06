@@ -1,4 +1,4 @@
-// 03-nodes `if`: `if <cond>:` … `else:` (else omitted when empty; empty region → pass).
+// The `if` block: `if <cond>:` … `else:` (else omitted when empty; empty region → pass).
 import { newId } from "@/lang/id";
 import { truthy } from "@/runtime/values";
 import { defineStmt } from "./types";

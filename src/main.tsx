@@ -9,10 +9,10 @@ import "@/ui/theme.css";
 const root = document.getElementById("root");
 if (!root) throw new Error("#root is missing from index.html");
 
-// U-71: index.html carries the same text statically for the pre-render tab title.
+// index.html carries the same text statically for the pre-render tab title.
 document.title = t("app.name");
 
-// U-90: checked once per load, before any store can write.
+// Checked once per load, before any store can write.
 const first = firstLaunchTarget(window.location.hash, storedKeys(), PLANS);
 if (first !== null) window.history.replaceState(null, "", first);
 

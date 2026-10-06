@@ -1,4 +1,4 @@
-// U-03: the panel's upper bound follows the viewport width, so a resized window redraws it.
+// The panel's upper bound follows the viewport width, so a resized window redraws it.
 import { useSyncExternalStore } from "react";
 
 function subscribe(onChange: () => void): () => void {

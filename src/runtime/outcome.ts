@@ -1,5 +1,5 @@
-// The C-10 view of a run: final main-level variables as Data, stdout, and draws.
-// Shared by the Tests tab, the driver's run-to-end batches (R-11), and scripts/check.ts.
+// What the judge sees of a run: final main-level variables as Data, stdout, and draws.
+// Shared by the Tests tab, the driver's run-to-end batches, and scripts/check.ts.
 import { toData } from "@/lang/data";
 import type { Data, Id } from "@/lang/types";
 import type { Done, Runner, State } from "./types";
@@ -20,7 +20,7 @@ export function advance(runner: Runner, limit: number): Done | undefined {
   return undefined;
 }
 
-/** R-11: batches of `batch` events with `setTimeout(0)` between them, until the run finishes. */
+/** Batches of `batch` events with `setTimeout(0)` between them, until the run finishes. */
 export async function advanceAsync(runner: Runner, batch: number): Promise<Done> {
   for (;;) {
     const done = advance(runner, batch);
@@ -29,7 +29,7 @@ export async function advanceAsync(runner: Runner, batch: number): Promise<Done>
   }
 }
 
-/** The main-level variables as Data: what C-10 compares and the `Result` rows show (U-23). */
+/** The main-level variables as Data: what the judge compares and the `Result` rows show. */
 export function mainVars(state: State): Record<Id, Data> {
   const vars: Record<Id, Data> = {};
   for (const [name, value] of state.frames[0]?.vars ?? []) vars[name] = toData(value, state.heap);

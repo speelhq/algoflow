@@ -1,4 +1,4 @@
-// U-01: the six pages and their hash routes; U-07: a hash that names nothing, or a problem
+// The six pages and their hash routes; a hash that names nothing, or a problem
 // id with no challenge, shows the Problems page.
 import { useMemo, useSyncExternalStore } from "react";
 import { getChallenge } from "@/challenges";
@@ -38,7 +38,7 @@ export function parseRoute(hash: string): Route {
   return PROBLEMS;
 }
 
-/** U-07: as `parseRoute`, with a problem id that names no challenge sent to Problems. */
+/** As `parseRoute`, with a problem id that names no challenge sent to Problems. */
 export function resolveRoute(hash: string): Route {
   const route = parseRoute(hash);
   return route.page === "problem" && !getChallenge(route.id) ? PROBLEMS : route;

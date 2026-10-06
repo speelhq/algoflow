@@ -1,4 +1,4 @@
-// U-02: the 52 px header of the Problems, Playground, and Modules pages: the app name, the
+// The 52 px header of the Problems, Playground, and Modules pages: the app name, the
 // three page tabs, and Help. The JA/EN switch arrives with Japanese (M-10).
 import { useState } from "react";
 import { t } from "@/i18n/t";

@@ -1,4 +1,4 @@
-// 03-nodes builtin `int`: truncates floats, parses integer text, `True` → 1.
+// The builtin `int`: truncates floats, parses integer text, `True` → 1.
 import { makeNumber, typeName } from "@/runtime/values";
 import { defineBuiltin } from "./builtin";
 

@@ -1,4 +1,4 @@
-// U-30: text widths for `layout()`, measured with the font the chart draws in. Widths depend
+// Text widths for `layout()`, measured with the font the chart draws in. Widths depend
 // on the loaded font, so the cache is cleared each time fonts finish loading.
 import { useSyncExternalStore } from "react";
 import type { Measure } from "./layout";
