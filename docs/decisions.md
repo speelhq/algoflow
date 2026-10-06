@@ -1152,8 +1152,9 @@ and `No` edges on the path whenever the diamond was entered. The diamond's
 mark says which way the check went, so a `Yes` edge is drawn as taken when
 the mark is `✓`, a `No` edge when it is `✗`, and an unlabelled edge when
 both its ends are on the path. A loop that has ended has lost its mark
-(U-61), so its `No` edge is drawn as taken when the statement it leads to
-is on the path.
+(U-61), so once control is elsewhere its `No` edge is drawn as taken when
+what it leads to is on the path, whether a statement, the next loop's
+junction, or a branch's merge.
 
 **A submission is shown until the next run** (U-86, C-15). Submit judges
 every test without touching the driver, so a run may be on the chart when
