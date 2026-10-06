@@ -135,6 +135,13 @@ variables and of the heap entries; values are immutable records, so one
 level is sufficient. The cost per publish is proportional to the size of
 the heap. Batches publish once per batch.
 
+**A finished runner keeps its outcome** (R-22). A runner that is called
+again after its end returns the same `Done` rather than an error or an
+undefined value, so a caller that drains it in batches (Submit, the
+pre-run, `scripts/check.ts`) needs no guard around its last batch.
+Forbidding the call instead would move that guard into every caller with
+nothing to detect a caller that forgot it.
+
 **The CPython epilogue converts values in Python** (R-20). Serialising Python
 values as `Data` on the Python side (`$float`, `$int:` keys, `$cls`/`$id`)
 lets the TypeScript side compare with the same `dataEquals` used for

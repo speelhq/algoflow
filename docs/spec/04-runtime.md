@@ -108,6 +108,9 @@ emits `call`, executes the body, emits `return`, and pops. `E_STEP_LIMIT` is
 returned by the `next()` after the 1,000,000th event; `E_RECURSION` when a
 call would make the stack deeper than 200 frames.
 
+R-22 Once `next()` has returned a `Done`, every later call returns that
+same `Done` and emits no event, after `done` and after an error alike.
+
 R-15 `E_TYPE` params `left` and `right` are the type names of the operands
 (`int`, `float`, `str`, `bool`, `none`, `list`, `dict`, or the class name);
 a `bool` is not a number for arithmetic and ordering.
