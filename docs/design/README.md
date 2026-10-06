@@ -8,7 +8,7 @@ issue labelled `decision`.
 
 ## Canvas "AlgoFlow Screens"
 
-Twelve boards of 1280 × 800. Each file has the name of its board on the
+Thirteen boards of 1280 × 800. Each file has the name of its board on the
 canvas.
 
 | File              | Board title on the canvas                              | Spec                     |
@@ -25,6 +25,7 @@ canvas.
 | `Module.png`      | 10 Module page: run one function, keep cases, Test     | D-06, D-08, D-19, D-20   |
 | `PythonChart.png` | 11 Python tab: a line and its block                    | U-25                     |
 | `PythonFiles.png` | 12 Python tab: a program that uses a module            | U-25, E-09               |
+| `Playground.png`  | 13 Playground: many programs, the last edited first    | U-15                     |
 
 ## Where the spec deviates from the boards
 
@@ -51,7 +52,7 @@ exported again in the pull request that changes the spec it affects.
 
 | Canvas             | Holds                                         |
 | ------------------ | --------------------------------------------- |
-| [AlgoFlow Screens](https://claude.ai/artifact/SD2jKu4HfkPTh4CoeS7Tpe) | the twelve boards above |
+| [AlgoFlow Screens](https://claude.ai/artifact/SD2jKu4HfkPTh4CoeS7Tpe) | the thirteen boards above |
 | [AlgoFlow Redesign](https://claude.ai/artifact/D91141RiyMCW4XLsyJk8E5) | the flowchart and loop-notation studies; no exported board |
 
 The canvases open only for their owner and the people it is shared with.
