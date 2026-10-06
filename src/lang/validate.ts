@@ -15,6 +15,7 @@ import {
   type Program,
   type Stmt,
 } from "./types";
+import { declaredBy } from "./scope";
 import { childSlots, programIds, regionsOf, stmtExprs } from "./walk";
 
 type Bag = Record<string, unknown>;
@@ -125,7 +126,7 @@ class Collector {
       this.reads(stmt, visible, inner);
       this.control(stmt, def, scope);
 
-      for (const { name, role } of this.declaredBy(stmt, def)) {
+      for (const { name, role } of declaredBy(stmt)) {
         if (!isValidName(name)) this.report(stmt.id, "E_BAD_NAME", { name });
         else if (this.callables.has(name) || isBuiltinName(name)) {
           this.report(stmt.id, "E_DUPLICATE_NAME", { name });
@@ -153,23 +154,6 @@ class Collector {
       }
     }
     return declared;
-  }
-
-  /** Names a statement assigns in its own region: var targets and loop variables (id slots). */
-  private declaredBy(stmt: Stmt, def: NodeDef): Array<{ name: Id; role: "id" | "target" }> {
-    const bag = stmt as unknown as Bag;
-    const names: Array<{ name: Id; role: "id" | "target" }> = [];
-    for (const slot of def.slots) {
-      const value = bag[slot.name];
-      if (slot.role === "id" && typeof value === "string" && value !== "") {
-        names.push({ name: value, role: "id" });
-      }
-      if (slot.role === "target" && value && typeof value === "object") {
-        const target = value as { kind: string; name?: string };
-        if (target.kind === "var" && target.name) names.push({ name: target.name, role: "target" });
-      }
-    }
-    return names;
   }
 
   private reads(stmt: Stmt, visible: Set<Id>, inner: Map<Id, NodeId>): void {
