@@ -7,6 +7,7 @@ import { localized } from "@/i18n/t";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useTitle } from "@/ui/hooks/useTitle";
+import { ChartRegion } from "./ChartRegion";
 import { Panel } from "./Panel";
 import { TopBar } from "./TopBar";
 
@@ -28,7 +29,7 @@ function Problem({ challenge }: { challenge: Challenge }) {
       <TopBar title={title} />
       <div className="flex min-h-0 flex-1">
         <Panel challenge={challenge} />
-        <section className="min-w-0 flex-1 bg-muted/30" data-testid="chart-region" />
+        <ChartRegion challenge={challenge} />
       </div>
     </div>
   );
