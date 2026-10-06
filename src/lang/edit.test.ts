@@ -11,10 +11,13 @@ import {
   moveStmt,
   removeClass,
   removeFunction,
+  removeItem,
   removeStmt,
   renameName,
+  resetProgram,
   setExpr,
   setFields,
+  setParams,
   setSlot,
 } from "./edit";
 import { unparse } from "@/python/emit";
@@ -117,6 +120,44 @@ describe("edit (L-50)", () => {
     const reused = setExpr(p, a.id, "value", (inner as Extract<Stmt, { kind: "assign" }>).value);
     expect(idsUnique(reused)).toBe(true);
     expect(unparse((reused.main[0] as Extract<Stmt, { kind: "assign" }>).value)).toBe("x + i");
+  });
+
+  it("setExpr keeps the ids of the expression it wraps (L-51)", () => {
+    const { p, a } = sample();
+    const value = (a as Extract<Stmt, { kind: "assign" }>).value;
+    const wrapped = bin("+", value, ast.empty());
+    const next = setExpr(p, a.id, "value", wrapped);
+    const placed = (next.main[0] as Extract<Stmt, { kind: "assign" }>).value;
+    expect(placed.id).toBe(wrapped.id);
+    expect(placed.kind === "binop" && placed.left.id).toBe(value.id);
+    expect(idsUnique(next)).toBe(true);
+  });
+
+  it("removeItem removes one item of an exprs slot; other slots are refused", () => {
+    const b = print(num(1), num(2), num(3));
+    const p = program([b]);
+    expect(lines(removeItem(p, b.id, "args", 1))).toEqual(["print(1, 3)"]);
+    expect(() => removeItem(p, b.id, "args", 3)).toThrow(/no item/);
+    const { p: q, a } = sample();
+    expect(() => removeItem(q, a.id, "value", 0)).toThrow(/no item/);
+  });
+
+  it("resetProgram empties main, functions, and classes, keeping title, challenge, and inputs", () => {
+    const p = {
+      ...program([print(v("n"))], { inputs: [{ name: "n", value: 3 }] }),
+      title: "Mine",
+      challengeId: "fizzbuzz",
+    };
+    const withFn = addFunction(p, "f", ["x"]);
+    expect(resetProgram(withFn)).toEqual({ ...p, main: [], functions: [], classes: [] });
+  });
+
+  it("setParams replaces a function's parameters", () => {
+    const p = addFunction(program([]), "f", ["a"]);
+    const fn = p.functions[0];
+    if (!fn) throw new Error("no function");
+    expect(setParams(p, fn.id, ["a", "b"]).functions[0]?.params).toEqual(["a", "b"]);
+    expect(() => setParams(p, "nope00000000", [])).toThrow(/no function/);
   });
 
   it("setExpr addresses a target's expression as target.<field>", () => {

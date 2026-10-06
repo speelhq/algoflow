@@ -16,6 +16,7 @@ import type {
 } from "./types";
 import {
   allExprs,
+  isExpr,
   allStmts,
   childSlots,
   idsUnder,
@@ -54,9 +55,11 @@ function fresh(stmt: Stmt, program: Program): Stmt {
   return copy;
 }
 
-function freshExpr(expr: Expr, program: Program): Expr {
+/** An expression entering the program; ids of `replaced`, which it takes the place of, may stay. */
+function freshExpr(expr: Expr, program: Program, replaced?: Expr): Expr {
   const copy = clone(expr);
   const existing = new Set(programIds(program));
+  if (replaced) for (const e of allExprs(replaced)) existing.delete(e.id);
   if ([...allExprs(copy)].some((e) => existing.has(e.id))) reIdExpr(copy);
   return copy;
 }
@@ -182,23 +185,37 @@ export function setExpr(
   const [slotName = "", field] = slot.split(".");
   const spec = getNode(keyOf(node)).slots.find((s) => s.name === slotName);
   const bag = node as unknown as Bag;
-  const value = freshExpr(expr, next);
+  const old = (value: unknown) => (isExpr(value) ? value : undefined);
   if (spec?.role === "expr" && field === undefined) {
-    bag[slotName] = value;
+    bag[slotName] = freshExpr(expr, next, old(bag[slotName]));
   } else if (spec?.role === "exprs" && field === undefined) {
     const items = (bag[slotName] as Expr[] | undefined) ?? [];
     const at = index === undefined ? items.length : Math.max(0, Math.min(index, items.length));
-    items.splice(at, at < items.length ? 1 : 0, value);
+    items.splice(at, at < items.length ? 1 : 0, freshExpr(expr, next, old(items[at])));
     bag[slotName] = items;
   } else if (spec?.role === "target" && field !== undefined) {
     const target = bag[slotName] as Bag | undefined;
     if (!target || target.kind === "var" || !(field in target)) {
       throw new EditError(`target of ${id} has no expression field ${field}`);
     }
-    target[field] = value;
+    target[field] = freshExpr(expr, next, old(target[field]));
   } else {
     throw new EditError(`node ${id} has no expression slot ${slot}`);
   }
+  return next;
+}
+
+/** Removes item `index` of an `exprs` slot. */
+export function removeItem(program: Program, id: NodeId, slot: string, index: number): Program {
+  const next = clone(program);
+  const node = locateNode(next, id);
+  if (!node) throw new EditError(`no node ${id}`);
+  const spec = getNode(keyOf(node)).slots.find((s) => s.name === slot);
+  const items = (node as unknown as Bag)[slot];
+  if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index >= items.length) {
+    throw new EditError(`node ${id} has no item ${index} in ${slot}`);
+  }
+  items.splice(index, 1);
   return next;
 }
 
@@ -263,6 +280,20 @@ export function removeClass(program: Program, id: NodeId): Program {
   if (index < 0) throw new EditError(`no class ${id}`);
   next.classes.splice(index, 1);
   return next;
+}
+
+/** Replaces the ordered parameters of a function. */
+export function setParams(program: Program, id: NodeId, params: Id[]): Program {
+  const next = clone(program);
+  const fn = next.functions.find((f) => f.id === id);
+  if (!fn) throw new EditError(`no function ${id}`);
+  fn.params = [...params];
+  return next;
+}
+
+/** An empty main with no functions or classes, keeping the title, the challenge, and the inputs. */
+export function resetProgram(program: Program): Program {
+  return { ...clone(program), classes: [], functions: [], main: [] };
 }
 
 /** Replaces the ordered field table of a class. */
