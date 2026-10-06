@@ -1,7 +1,7 @@
-// N-08: a node's sentence as plain text, from `node.<key>.template<form>` and the block's
-// slots; U-50: a statement's slot holding an expression that matches a condition template
+// A node's sentence as plain text, from `node.<key>.template<form>` and the block's
+// slots; a statement's slot holding an expression that matches a condition template
 // reads as that template's sentence, while the chips nested inside an expression keep symbols.
-// Reads slot roles, `params`, `form`, `text`, and `precedence` only, never a kind (N-01).
+// Reads slot roles, `params`, `form`, `text`, and `precedence` only, never a kind.
 import { t, type MessageKey } from "@/i18n/t";
 import { keyValue, toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Node, Program, Target, Value } from "@/lang/types";
@@ -15,7 +15,7 @@ import { matchTemplate, type TemplateMatch } from "@/ui/expression/templates";
 
 type Bag = Record<string, unknown>;
 
-/** The one place a registry key becomes an i18n key (dynamic keys are not scanned by U-71). */
+/** The one place a registry key becomes an i18n key (the key check does not scan dynamic keys). */
 export function nodeText(key: string, part: string, params?: Record<string, string>): string {
   return t(`node.${key}.${part}` as MessageKey, params);
 }
@@ -32,7 +32,7 @@ function render(template: string, fill: (name: string) => string): string {
     .trim();
 }
 
-/** A child is parenthesised where the emitter would parenthesise it (E-05). */
+/** A child is parenthesised where the emitter would parenthesise it. */
 function operand(child: Expr, parent: number | undefined, side: Side): string {
   const text = exprText(child);
   const own = getNode(keyOf(child)).precedence?.(child);
@@ -101,13 +101,13 @@ function blanks(matched: TemplateMatch): { a: string; b: string } {
   };
 }
 
-/** U-50: what a slot shows: the template's sentence when the expression matches one, else its chips. */
+/** What a slot shows: the template's sentence when the expression matches one, else its chips. */
 export function slotSentence(expr: Expr): string {
   const matched = matchTemplate(expr);
   return matched ? t(matched.template.key, blanks(matched)) : exprText(expr);
 }
 
-/** U-33: what a diamond asks: the template's question, else `Is <chips>?`. */
+/** What a diamond asks: the template's question, else `Is <chips>?`. */
 export function questionText(expr: Expr): string {
   const matched = matchTemplate(expr);
   return matched
@@ -115,14 +115,14 @@ export function questionText(expr: Expr): string {
     : t("chart.condition", { cond: exprText(expr) });
 }
 
-/** N-08 text of an expression as chips: each block's template, with symbols for operators. */
+/** The text of an expression as chips: each block's template, with symbols for operators. */
 export function exprText(expr: Expr): string {
   const def = getNode(keyOf(expr));
   const form = def.form?.(expr, { creates: false }) ?? "";
   return render(nodeText(def.key, `template${form}`), (name) => slotText(expr, def, name));
 }
 
-/** N-08: the sentence of a statement or expression, as written in the catalog (not capitalised). */
+/** The sentence of a statement or expression, as written in the catalog (not capitalised). */
 export function sentence(node: Node, program: Program): string {
   const def = getNode(keyOf(node));
   if (def.shape === "expr") return exprText(node as Expr);
@@ -130,13 +130,13 @@ export function sentence(node: Node, program: Program): string {
   return render(nodeText(def.key, `template${form}`), (name) => slotText(node, def, name));
 }
 
-/** N-09: the text of a generated node (`init`, `check`, `step`), with the loop's own slots. */
+/** The text of a generated node (`init`, `check`, `step`), with the loop's own slots. */
 export function generatedText(node: Node, part: "init" | "check" | "step"): string {
   const def = getNode(keyOf(node));
   return render(nodeText(def.key, part), (name) => slotText(node, def, name));
 }
 
-/** The expression a diamond asks about: the block's first `expr` slot (N-09 `branch`, `check`). */
+/** The expression a diamond asks about: the block's first `expr` slot (`branch`, `check`). */
 export function conditionOf(node: Node): Expr | undefined {
   const def = getNode(keyOf(node));
   const slot = def.slots.find((s) => s.role === "expr");
@@ -176,7 +176,7 @@ export function valueText(value: Value, heap: Heap): string {
   }
 }
 
-/** A case's input value (U-32, U-31 `Input n = 15`), written like any other value. */
+/** A case's input value (`Input n = 15`), written like any other value. */
 export function dataText(data: Data): string {
   const heap: Heap = new Map();
   return valueText(toValue(data, heap), heap);

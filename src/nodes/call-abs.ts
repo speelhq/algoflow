@@ -1,4 +1,4 @@
-// 03-nodes builtin `abs`
+// The builtin `abs`
 import { isNumber, makeNumber, typeName } from "@/runtime/values";
 import { defineBuiltin } from "./builtin";
 

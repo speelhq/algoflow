@@ -1,4 +1,4 @@
-// 03-nodes `break`
+// The `break` block
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 

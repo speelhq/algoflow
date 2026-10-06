@@ -1,4 +1,4 @@
-// L-50, L-51, L-54: pure edit functions. Each returns a new Program and keeps
+// Pure edit functions. Each returns a new Program and keeps
 // every NodeId unique. Statements are addressed by id or by Place.
 import { getNode, keyOf } from "@/nodes";
 import { newId } from "./id";
@@ -32,7 +32,7 @@ function clone<T>(value: T): T {
   return structuredClone(value);
 }
 
-// ---------------------------------------------------------------- ids (L-51)
+// ---------------------------------------------------------------- ids
 
 /** Gives every node under `stmt` a fresh id (in place). */
 function reIdStmt(stmt: Stmt): void {
@@ -126,7 +126,7 @@ export function removeStmt(program: Program, id: NodeId): Program {
   return next;
 }
 
-/** Moves a statement; `place.index` counts positions in the target region after the removal (L-54). */
+/** Moves a statement; `place.index` counts positions in the target region after the removal. */
 export function moveStmt(program: Program, id: NodeId, place: Place): Program {
   const next = clone(program);
   const { stmt, region, index } = mustLocate(next, id);
@@ -265,7 +265,7 @@ export function removeClass(program: Program, id: NodeId): Program {
   return next;
 }
 
-/** N-06: replaces the ordered field table of a class. */
+/** Replaces the ordered field table of a class. */
 export function setFields(program: Program, id: NodeId, fields: Field[]): Program {
   const next = clone(program);
   const cls = next.classes.find((c) => c.id === id);
@@ -274,7 +274,7 @@ export function setFields(program: Program, id: NodeId, fields: Field[]): Progra
   return next;
 }
 
-// ---------------------------------------------------------------- L-41 fix (L-44)
+// ---------------------------------------------------------------- the E_DECLARE_FIRST fix
 
 /** The zero-like literal of the first value assigned to `name` inside `stmts`, else None. */
 function defaultFor(stmts: Stmt[], name: Id): Expr {

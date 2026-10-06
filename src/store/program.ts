@@ -1,4 +1,4 @@
-// C-13, L-53, L-55: the current program and challenge loading. Editing, history,
+// The current program and challenge loading. Editing, history,
 // and the 500 ms persistence writes arrive in M-04; this store only reads storage.
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
@@ -8,7 +8,7 @@ import type { Program } from "@/lang/types";
 export const FREE = "free";
 export const PROGRAM_KEY_PREFIX = "algoflow:program:";
 
-/** L-53: `algoflow:program:<challengeId | "free">`. */
+/** `algoflow:program:<challengeId | "free">`. */
 export function programKey(challengeId: string | undefined): string {
   return `${PROGRAM_KEY_PREFIX}${challengeId ?? FREE}`;
 }
@@ -17,7 +17,7 @@ export function emptyProgram(title = ""): Program {
   return { version: 1, title, inputs: [], classes: [], functions: [], main: [] };
 }
 
-/** L-55: the stored value is the raw Program JSON; anything migrate() rejects is ignored. */
+/** The stored value is the raw Program JSON; anything migrate() rejects is ignored. */
 function readStored(key: string): Program | undefined {
   try {
     if (typeof localStorage === "undefined") return undefined;
@@ -28,7 +28,7 @@ function readStored(key: string): Program | undefined {
   }
 }
 
-/** C-13: storage, else an empty main; `challengeId` and `inputs` follow the challenge. */
+/** Storage, else an empty main; `challengeId` and `inputs` follow the challenge. */
 export function restore(id: string): Program {
   const challenge = id === FREE ? undefined : getChallenge(id);
   const key = programKey(challenge?.id);
@@ -43,7 +43,7 @@ export function restore(id: string): Program {
 
 export type ProgramState = {
   program: Program;
-  /** Selects a challenge by id, or `"free"` for Playground (U-01 routes, S-07). */
+  /** Selects a challenge by id, or `"free"` for Playground (the Problem and Playground routes). */
   load: (id: string) => void;
 };
 

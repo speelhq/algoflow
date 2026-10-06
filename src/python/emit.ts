@@ -1,4 +1,4 @@
-// E-01..E-08: Program → Python text plus the NodeId → line map. No third-party imports.
+// Program → Python text plus the NodeId → line map. No third-party imports.
 import type {
   ClassDef,
   Data,
@@ -18,9 +18,9 @@ import { PRECEDENCE, needsParens } from "./precedence";
 export type LineMap = Record<NodeId, { start: number; end: number }>;
 export type Emitted = { code: string; map: LineMap };
 
-const INDENT = "    "; // E-04
+const INDENT = "    ";
 
-/** E-06: double quotes; `\\ \" \n \t \r` escaped, other control characters as `\xNN`. */
+/** Double quotes; `\\ \" \n \t \r` escaped, other control characters as `\xNN`. */
 export function pyString(text: string): string {
   let out = '"';
   for (const ch of text) {
@@ -36,7 +36,7 @@ export function pyString(text: string): string {
   return `${out}"`;
 }
 
-/** E-03: a Data value as a Python literal. */
+/** A Data value as a Python literal. */
 export function dataToPython(data: Data): string {
   if (typeof data === "number") {
     if (!Number.isInteger(data)) return floatRepr(data);
@@ -55,7 +55,7 @@ export function dataToPython(data: Data): string {
   return `{${entries.join(", ")}}`;
 }
 
-// ---------------------------------------------------------------- expression context (E-08)
+// ---------------------------------------------------------------- expression context
 
 const ctx: EmitContext = {
   expr(expr: Expr) {
@@ -83,7 +83,7 @@ const ctx: EmitContext = {
   },
 };
 
-/** G-05: the emitter's expression function. */
+/** The emitter's expression function. */
 export function unparse(expr: Expr): string {
   return ctx.expr(expr);
 }
@@ -113,7 +113,7 @@ class Writer {
     for (const pyLine of pyLines) {
       if (typeof pyLine === "string") {
         if (first) {
-          this.mark(stmt.id); // E-01: a frame maps to its header; `else:` is unmapped
+          this.mark(stmt.id); // A frame maps to its header; `else:` is unmapped
           first = false;
         }
         this.line(pyLine, indent);
@@ -131,7 +131,6 @@ class Writer {
     for (const stmt of stmts) this.stmt(stmt, indent);
   }
 
-  /** N-07 */
   classDef(cls: ClassDef): void {
     this.mark(cls.id);
     this.line(`class ${cls.name}:`, 0);
@@ -165,7 +164,7 @@ function isEmptyContainer(data: Data): boolean {
   return typeof data === "object" && data !== null && Object.keys(data).length === 0;
 }
 
-/** N-05: modules required by the blocks a program uses. */
+/** Modules required by the blocks a program uses. */
 function importsOf(program: Program): string[] {
   const modules = new Set<string>();
   for (const expr of programExprs(program)) {
@@ -177,7 +176,7 @@ function importsOf(program: Program): string[] {
 
 type Section = { kind: "imports" | "class" | "function" | "main"; write: (w: Writer) => void };
 
-/** E-02: one blank line between sections, two around classes and functions. */
+/** One blank line between sections, two around classes and functions. */
 export function emit(program: Program): Emitted {
   const writer = new Writer();
   const sections: Section[] = [];

@@ -1,4 +1,4 @@
-// 03-nodes `bool`
+// The `bool` block
 import { newId } from "@/lang/id";
 import { defineExpr } from "./types";
 
@@ -12,5 +12,5 @@ export const bool = defineExpr<"bool">({
     return { t: "bool", v: node.value };
   },
   python: (node) => (node.value ? "True" : "False"),
-  form: (node) => (node.value ? "" : "False"), // N-02 `templateFalse`
+  form: (node) => (node.value ? "" : "False"), // `templateFalse`
 });

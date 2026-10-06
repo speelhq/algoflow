@@ -1,6 +1,6 @@
-// U-23: the `Result` tab for one case: the case selector (the same choice as the Input
-// nodes, U-32), the variables of the shown frame, and `Output` beside `Expected`; the
-// chosen case's verdict (C-15) and its first differing row once the run has ended there.
+// The `Result` tab for one case: the case selector (the same choice as the Input
+// nodes), the variables of the shown frame, and `Output` beside `Expected`; the
+// chosen case's verdict and its first differing row once the run has ended there.
 // Before any run: the selector, the chosen case's `Expected`, and `result.empty`.
 import { useMemo } from "react";
 import type { Challenge } from "@/challenges";
@@ -25,7 +25,7 @@ import { SubmissionView } from "./SubmissionView";
 function CaseSelect({ challenge }: { challenge: Challenge }) {
   const caseIndex = useRun((s) => s.caseIndex);
   const selectCase = useRun((s) => s.selectCase);
-  // U-32: the case stays the run's while running.
+  // The case stays the run's while running.
   const running = useRun((s) => s.status !== "idle");
   const items = challenge.tests.map((test, index) => ({
     value: index,
@@ -78,7 +78,7 @@ function Variables() {
   );
 }
 
-/** U-86: the submission, while one is shown, else the run of the chosen case. */
+/** The submission, while one is shown, else the run of the chosen case. */
 export function ResultTab({ challenge }: { challenge: Challenge }) {
   const submitted = useTests((s) => s.running || s.results.length > 0);
   return submitted ? <SubmissionView challenge={challenge} /> : <RunResult challenge={challenge} />;

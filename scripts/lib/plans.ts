@@ -1,4 +1,4 @@
-// C-16, C-18: structural checks of `challenges/plans.json` (used by scripts/check.ts).
+// Structural checks of `challenges/plans.json` (used by scripts/check.ts).
 import type { Plan } from "@/challenges/types";
 import { isLocalized, isRecord } from "./challenge";
 

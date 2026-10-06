@@ -1,4 +1,4 @@
-// U-63: one sentence per event, as a message key with its params (`run.narrate.*`). Values
+// One sentence per event, as a message key with its params (`run.narrate.*`). Values
 // are written the way blocks write them (`true`, `none`, `"text"`), never in Python notation.
 import { keyValue } from "@/lang/data";
 import { t, type MessageKey, type Params } from "@/i18n/t";
@@ -20,11 +20,11 @@ export type Narration = { key: MessageKey; params: Params };
 
 export type NarrateContext = {
   program: Program;
-  /** The state after the event (R-12 `state`). */
+  /** The state after the event (the driver's `state`). */
   state: State;
-  /** R-12 `frame`: the frame whose variables name the values. */
+  /** The driver's `frame`: the frame whose variables name the values. */
   frame: number;
-  /** R-12 `pass`, for a `loop` event. */
+  /** The driver's `pass`, for a `loop` event. */
   pass: number | null;
 };
 
@@ -56,7 +56,7 @@ function valueAt(ref: Ref, frame: Frame | undefined, heap: Heap): Value | undefi
   return entry?.kind === "obj" ? entry.fields.get(ref.field) : undefined;
 }
 
-/** A template blank that is a variable or a literal (U-63): its value now, or as written. */
+/** A template blank that is a variable or a literal: its value now, or as written. */
 function blankText(blank: Expr, frame: Frame | undefined, heap: Heap): string | undefined {
   if (childExprs(blank).length > 0) return undefined;
   const name = variableName(blank);
@@ -66,7 +66,7 @@ function blankText(blank: Expr, frame: Frame | undefined, heap: Heap): string | 
 }
 
 /**
- * U-63: the condition as its template sentence with the values of the moment. A template
+ * The condition as its template sentence with the values of the moment. A template
  * over the compared operands takes them from the event; one whose blanks sit deeper
  * (`a % b == 0`) applies only when both blanks are variables or literals.
  */
@@ -191,14 +191,14 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
   }
 }
 
-/** U-63: the end of the run: `Finished in N steps`, or the error's message (U-70). */
+/** The end of the run: `Finished in N steps`, or the error's message. */
 export function narrateEnd(outcome: Done, total: number): Narration {
   return outcome.type === "error"
     ? { key: `error.${outcome.error.code}`, params: outcome.error.params }
     : { key: "run.narrate.done", params: { steps: total } };
 }
 
-/** U-81: what happened at the step `Watch this case` opened at. */
+/** What happened at the step `Watch this case` opened at. */
 export function narrateDifference(difference: { line?: number }): Narration {
   return difference.line === undefined
     ? { key: "run.narrate.difference.end", params: {} }

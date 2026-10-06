@@ -1,5 +1,5 @@
-// U-21: the statement, `Example`, `Cases used by Submit`, the hints revealed one per click
-// (recorded, C-17), and `Show solution` (U-22, recorded).
+// The statement, `Example`, `Cases used by Submit`, the hints revealed one per click
+// (recorded), and `Show solution` (recorded).
 import type { ReactNode } from "react";
 import type { Challenge } from "@/challenges";
 import { localized, t } from "@/i18n/t";
@@ -66,7 +66,7 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
   const solutionShown = useProgress((s) => s.solutionShown);
   const solution = useEditor((s) => s.solution);
   const showSolution = useEditor((s) => s.showSolution);
-  // U-27: the chart stays the run's while running.
+  // The chart stays the run's while running.
   const running = useRun((s) => s.status !== "idle");
   const revealed = Math.min(entry?.hints ?? 0, challenge.hints.length);
 

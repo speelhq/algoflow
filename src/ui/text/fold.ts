@@ -1,4 +1,4 @@
-// U-21: an `Example` output of more than eight lines folds to its first five and `… n more`.
+// An `Example` output of more than eight lines folds to its first five and `… n more`.
 export const FOLD = { over: 8, keep: 5 } as const;
 
 export function foldLines<T>(lines: readonly T[]): { shown: T[]; more: number } {

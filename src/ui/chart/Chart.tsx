@@ -1,7 +1,7 @@
-// U-30..U-33, U-38: the flowchart as SVG from `layout()`. Shapes come from `ChartNode.shape`
-// and never from a block kind (N-01); generated nodes are grey. An HTML layer over the SVG,
+// The flowchart as SVG from `layout()`. Shapes come from `ChartNode.shape`
+// and never from a block kind; generated nodes are grey. An HTML layer over the SVG,
 // under the same scale, holds the parts a learner interacts with (the Input nodes' menus)
-// and the note beside a node (the narration, U-63; an error or a diagnostic, U-60, U-65).
+// and the note beside a node (the narration, or the message of an error or a diagnostic).
 import { useEffect, useRef, useState } from "react";
 import { t } from "@/i18n/t";
 import type { NodeId } from "@/lang/types";
@@ -24,14 +24,14 @@ const PAD = 24;
 
 type Props = {
   chart: ChartLayout;
-  /** U-25, U-35: the statement outlined as selected, and the one outlined from a Python line. */
+  /** The statement outlined as selected, and the one outlined from a Python line. */
   selectedId?: NodeId | null;
   hoveredId?: NodeId | null;
-  /** A click on a statement's node (or a generated node of it, U-33); absent while read-only. */
+  /** A click on a statement's node (or a generated node of it); absent while read-only. */
   onSelect?: (owner: NodeId) => void;
-  /** U-32: the cases an Input node's menu lists, and what choosing one does; absent while read-only. */
+  /** The cases an Input node's menu lists, and what choosing one does; absent while read-only. */
   cases?: { labels: string[]; choose: (index: number) => void };
-  /** U-61: the run drawn on the chart. */
+  /** The run drawn on the chart. */
   paint?: Paint;
   /** A sentence beside a chart node: the narration, or an error's or a diagnostic's message. */
   note?: Note | null;
@@ -71,7 +71,7 @@ type Look = {
   breakpoint: boolean;
 };
 
-/** U-61: ✓ or ✗ at a diamond's upper right. */
+/** ✓ or ✗ at a diamond's upper right. */
 function Mark({ node, mark }: { node: ChartNode; mark: boolean }) {
   const cx = node.x + node.w * 0.75 + 14;
   const cy = node.y + 4;
@@ -91,7 +91,7 @@ function Mark({ node, mark }: { node: ChartNode; mark: boolean }) {
   );
 }
 
-/** U-60: the breakpoint mark: a dot at the node's left, its word above the node's corner. */
+/** The breakpoint mark: a dot at the node's left, its word above the node's corner. */
 function BreakpointMark({ node }: { node: ChartNode }) {
   return (
     <g data-testid="breakpoint">
@@ -161,7 +161,7 @@ function NodeView({ node, look }: { node: ChartNode; look: Look }) {
   );
 }
 
-/** U-32: clicking an Input node lists the problem's cases; choosing one sets every Input node. */
+/** Clicking an Input node lists the problem's cases; choosing one sets every Input node. */
 function InputMenu({ label, cases }: { label: string; cases: NonNullable<Props["cases"]> }) {
   return (
     <DropdownMenu>
@@ -187,7 +187,7 @@ function InputMenu({ label, cases }: { label: string; cases: NonNullable<Props["
   );
 }
 
-/** U-63, U-65: a sentence beside its node, to the left where there is room, else the right. */
+/** A sentence beside its node, to the left where there is room, else the right. */
 function NoteView({ note, node, width }: { note: Note; node: ChartNode; width: number }) {
   // Left of the node when it fits inside the chart's margin, else right when that fits.
   const leftAt = node.x - NOTE - 24;
@@ -270,7 +270,7 @@ export function Chart(props: Props) {
     return () => element.removeEventListener("click", click);
   }, [onSelect]);
 
-  // U-61: the current node is scrolled into view.
+  // The current node is scrolled into view.
   const current = paint?.current ?? null;
   useEffect(() => {
     if (current === null) return;

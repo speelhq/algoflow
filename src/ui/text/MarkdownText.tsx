@@ -1,4 +1,4 @@
-// U-26: a challenge text as paragraphs with `code`, **bold**, and *italic*.
+// A challenge text as paragraphs with `code`, **bold**, and *italic*.
 import { cn } from "@/lib/utils";
 import { markdown, type Run } from "./markdown";
 

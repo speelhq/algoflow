@@ -1,4 +1,4 @@
-// U-01, U-02: the Playground and Modules pages share the header; each is a stub until its
+// The Playground and Modules pages share the header; each is a stub until its
 // milestone (Playground M-04, Modules M-07).
 import { t } from "@/i18n/t";
 import { Header } from "@/ui/app/Header";

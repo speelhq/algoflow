@@ -1,6 +1,6 @@
-// 02-language "Validation": every code, run after every edit and before every run.
-// Scope rules L-40..L-44; names L-01..L-05; slots L-09; defaults L-30.
-// Dispatch is registry-driven (N-01): slots, `requires`, `loop`, `params`, `callee`.
+// Every validation code, run after every edit and before every run: scope rules,
+// names, empty slots, and field defaults.
+// Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
 import { getNode, hasNode, keyOf } from "@/nodes";
 import type { NodeDef, Slot } from "@/nodes/types";
 import {
@@ -32,7 +32,6 @@ export function isBuiltinName(name: string): boolean {
   return hasNode(`call:${name}`);
 }
 
-/** L-30 */
 export function isValidDefault(data: Data): boolean {
   if (data === null || typeof data !== "object") return true;
   if (Array.isArray(data)) return data.length === 0;
@@ -43,7 +42,7 @@ type Scope = { loop: number; inFunction: boolean };
 
 class Collector {
   readonly diagnostics: Diagnostic[] = [];
-  /** Statements whose var target is the first assignment of that name in its region (N-02 `templateCreate`). */
+  /** Statements whose var target is the first assignment of that name in its region (`templateCreate`). */
   readonly firstAssigns = new Set<NodeId>();
   /** Functions and classes: names a variable may not shadow (they would call a different thing in CPython). */
   private readonly callables = new Set<Id>();
@@ -59,7 +58,7 @@ class Collector {
     this.diagnostics.push(fix ? { nodeId, code, params, fix } : { nodeId, code, params });
   }
 
-  // ------------------------------------------------------------ ids (L-04)
+  // ------------------------------------------------------------ ids
 
   ids(): void {
     const seen = new Set<NodeId>();
@@ -69,7 +68,7 @@ class Collector {
     }
   }
 
-  // ------------------------------------------------------------ declarations (L-01..L-05, L-30)
+  // ------------------------------------------------------------ declarations
 
   declarations(): void {
     const taken = new Set<Id>(this.program.inputs.map((input) => input.name));
@@ -101,7 +100,7 @@ class Collector {
     }
   }
 
-  // ------------------------------------------------------------ regions (L-40..L-43)
+  // ------------------------------------------------------------ regions
 
   scopes(): void {
     for (const fn of this.program.functions) {
@@ -114,7 +113,7 @@ class Collector {
   /**
    * Walks one region. `visible` gains the names assigned directly in it; `inner`
    * maps names first assigned inside an earlier nested frame of this region to
-   * that frame's id (L-41). Returns every name first assigned anywhere inside
+   * that frame's id. Returns every name first assigned anywhere inside
    * the region, so an enclosing region can attribute it to this frame.
    */
   private region(stmts: Stmt[], visible: Set<Id>, inner: Map<Id, NodeId>, scope: Scope): Set<Id> {
@@ -187,7 +186,7 @@ class Collector {
     if (def.requires === "function" && !scope.inFunction) this.report(stmt.id, "E_RETURN_OUTSIDE");
   }
 
-  // ------------------------------------------------------------ slots (L-09)
+  // ------------------------------------------------------------ slots
 
   private slots(stmt: Stmt, def: NodeDef): void {
     this.requiredSlots(stmt, def, stmt.id);
@@ -284,7 +283,7 @@ function isEmptySlot(slot: Slot, value: unknown): boolean {
 type Analysis = { diagnostics: Diagnostic[]; firstAssigns: Set<NodeId> };
 
 // One Collector pass per Program object: the driver, the canvas, and the panels all ask.
-// Edits are pure (L-50), so a mutated Program is never re-validated; build a new object.
+// Edits are pure, so a mutated Program is never re-validated; build a new object.
 const analyses = new WeakMap<Program, Analysis>();
 
 function analyze(program: Program): Analysis {
@@ -306,7 +305,7 @@ export function validate(program: Program): Diagnostic[] {
 
 /**
  * Ids of the `assign` statements that create their variable (first assignment in the
- * region, L-40): the canvas renders them with `templateCreate` (N-02). Inputs, parameters,
+ * region): the canvas renders them with `templateCreate`. Inputs, parameters,
  * and loop variables are created elsewhere and never count.
  */
 export function firstAssignments(program: Program): Set<NodeId> {

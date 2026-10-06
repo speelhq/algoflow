@@ -1,4 +1,4 @@
-// U-38: the chart fits its width on open, never above 100 %; `−` and `+` step by 1.25
+// The chart fits its width on open, never above 100 %; `−` and `+` step by 1.25
 // between 25 % and 200 %.
 import { clamp } from "@/store/layout";
 

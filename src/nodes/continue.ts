@@ -1,4 +1,4 @@
-// 03-nodes `continue`
+// The `continue` block
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 

@@ -1,4 +1,4 @@
-// 03-nodes `num`: L-08 raw is the source text; float when raw has `.`, `e`, or `E`.
+// The `num` block: `raw` is the source text; float when raw has `.`, `e`, or `E`.
 import { newId } from "@/lang/id";
 import { defineExpr } from "./types";
 
@@ -18,5 +18,5 @@ export const num = defineExpr<"num">({
     return node.float ? { t: "float", v: node.value } : { t: "int", v: node.value };
   },
   python: (node) => node.raw,
-  text: (node) => node.raw, // the canvas shows the literal as typed (L-08)
+  text: (node) => node.raw, // the canvas shows the literal as typed
 });

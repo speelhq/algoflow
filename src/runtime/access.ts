@@ -1,11 +1,11 @@
-// L-20, L-21, L-23: element access shared by the blocks that read or write
+// Element access shared by the blocks that read or write
 // list items, dict entries, and object fields.
 import { dictKey } from "@/lang/data";
 import type { HeapId, NodeId, Value } from "@/lang/types";
 import type { RunContext } from "@/nodes/types";
 import { entryOf, typeName } from "./values";
 
-/** R-15: `E_TYPE` with the operand type names. */
+/** `E_TYPE` with the operand type names. */
 export function typeError(nodeId: NodeId, left: Value, right: Value, ctx: RunContext): never {
   return ctx.fail(nodeId, "E_TYPE", {
     left: typeName(left, ctx.heap),
@@ -30,7 +30,7 @@ export function asList(
   return { ref: list.ref, items: entry.items };
 }
 
-/** L-20: an int index, negative from the end; out of range → E_INDEX. */
+/** An int index, negative from the end; out of range → E_INDEX. */
 export function listIndex(items: Value[], index: Value, nodeId: NodeId, ctx: RunContext): number {
   if (index.t !== "int") {
     return ctx.fail(nodeId, "E_TYPE", { left: "list", right: typeName(index, ctx.heap) });
@@ -59,7 +59,7 @@ export function asDict(
   return { ref: dict.ref, entries: entry.entries };
 }
 
-/** L-21: keys are int or str. */
+/** Keys are int or str. */
 export function dictKeyOf(key: Value, nodeId: NodeId, ctx: RunContext): string {
   const encoded = dictKey(key);
   if (encoded === undefined) {

@@ -1,4 +1,4 @@
-// 03-nodes `comment`: `# <text>`; runs as a no-op (one `enter`, R-03).
+// The `comment` block: `# <text>`; runs as a no-op (one `enter`).
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 

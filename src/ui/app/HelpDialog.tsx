@@ -1,4 +1,4 @@
-// U-04: the keyboard table and three lines describing the loop; no external links.
+// The keyboard table and three lines describing the loop; no external links.
 import { t } from "@/i18n/t";
 import { Button } from "@/ui/primitives/button";
 import {

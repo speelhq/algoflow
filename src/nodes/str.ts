@@ -1,4 +1,4 @@
-// 03-nodes `str`: E-06 double-quoted with escapes.
+// The `str` block: emitted double-quoted, with escapes.
 import { newId } from "@/lang/id";
 import { pyString } from "@/python/emit";
 import { defineExpr } from "./types";

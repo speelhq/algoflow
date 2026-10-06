@@ -1,4 +1,4 @@
-// R-01..R-10: the interpreter. Blocks own their semantics (N-01); this file
+// The interpreter. Blocks own their semantics; this file
 // owns frames, dispatch, counting, limits, and the Runner contract.
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Id, NodeId, Program, Stmt, Value } from "@/lang/types";
@@ -8,8 +8,8 @@ import { RuntimeFailure } from "./errors";
 import { createRandom } from "./random";
 import type { Done, Event, Frame, Runner, RuntimeCode } from "./types";
 
-export const STEP_LIMIT = 1_000_000; // L-31
-export const CALL_DEPTH_LIMIT = 200; // L-28
+export const STEP_LIMIT = 1_000_000;
+export const CALL_DEPTH_LIMIT = 200;
 
 export function run(program: Program, inputs: Record<Id, Data>, seed: number): Runner {
   const heap: Heap = new Map();
@@ -33,7 +33,7 @@ export function run(program: Program, inputs: Record<Id, Data>, seed: number): R
     },
     *exec(body: Stmt[]) {
       for (const stmt of body) {
-        yield { type: "enter", nodeId: stmt.id }; // R-03
+        yield { type: "enter", nodeId: stmt.id };
         const def = getNode(keyOf(stmt));
         const signal: Signal = yield* (def.run as StmtRunner)(stmt, ctx);
         if (signal) return signal;
@@ -41,7 +41,7 @@ export function run(program: Program, inputs: Record<Id, Data>, seed: number): R
       return undefined;
     },
     get(name, nodeId) {
-      // A loop variable is visible after its loop (L-43) yet unbound when the loop ran no iteration.
+      // A loop variable is visible after its loop yet unbound when the loop ran no iteration.
       const value = top().vars.get(name);
       if (value === undefined) return ctx.fail(nodeId, "E_UNDEFINED", { name });
       return value;
@@ -78,7 +78,7 @@ export function run(program: Program, inputs: Record<Id, Data>, seed: number): R
     },
   };
 
-  // E-03 / R-01: inputs are the first main-level variables, in declaration order.
+  // Inputs are the first main-level variables, in declaration order.
   for (const input of program.inputs) {
     const data = Object.hasOwn(inputs, input.name) ? (inputs[input.name] ?? null) : input.value;
     top().vars.set(input.name, toValue(data, heap));

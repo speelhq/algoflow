@@ -1,4 +1,4 @@
-// U-90: with no work stored, a load at the Problems route opens the first problem of the
+// With no work stored, a load at the Problems route opens the first problem of the
 // first study plan. Only progress and programs count as work; the layout key does not.
 import type { Plan } from "@/challenges";
 import { PROGRAM_KEY_PREFIX } from "@/store/program";

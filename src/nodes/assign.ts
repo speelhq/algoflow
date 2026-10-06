@@ -1,4 +1,5 @@
-// 03-nodes `assign`: `<target> = <value>`; R-05 write; L-20/21/23 for element targets.
+// The `assign` block: `<target> = <value>` and its `write` event; a target may be an
+// item, an entry, or a field.
 import { newId } from "@/lang/id";
 import { asDict, asList, asObject, dictKeyOf, listIndex } from "@/runtime/access";
 import { defineStmt } from "./types";
@@ -60,6 +61,6 @@ export const assign = defineStmt<"assign">({
     }
   },
   python: (node, ctx) => [`${ctx.target(node.target)} = ${ctx.expr(node.value)}`],
-  // N-02: `create {target} and set it to {value}` when this statement creates the variable.
+  // `create {target} and set it to {value}` when this statement creates the variable.
   form: (_node, ctx) => (ctx.creates ? "Create" : ""),
 });

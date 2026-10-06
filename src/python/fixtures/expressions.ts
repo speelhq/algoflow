@@ -1,4 +1,4 @@
-// E-10: expression text → expected emitted text (E-05, E-06). A single string
+// Expression text → expected emitted text. A single string
 // is its own expectation (canonical form); a pair maps a non-canonical input.
 type Case = string | [input: string, expected: string];
 

@@ -1,5 +1,5 @@
-// U-60: the transport docked under the chart while running: Back, Pause / Play, Step, Skip
-// (R-19), the position bar `step k of N`, which seeks to any step (R-11), and the speed
+// The transport docked under the chart while running: Back, Pause / Play, Step, Skip,
+// the position bar `step k of N`, which seeks to any step, and the speed
 // slider 1–50 (persisted). A pre-run that hit the step limit is reported first.
 import { t } from "@/i18n/t";
 import { SPEED, useLayout } from "@/store/layout";

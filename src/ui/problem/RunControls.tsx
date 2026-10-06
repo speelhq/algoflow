@@ -1,4 +1,4 @@
-// U-03, U-60: the top bar's middle: `▶ Run` in build mode; `Running with n = 15` and
+// The top bar's middle: `▶ Run` in build mode; `Running with n = 15` and
 // `■ Stop` while running.
 import type { Challenge } from "@/challenges";
 import { t } from "@/i18n/t";
@@ -14,7 +14,7 @@ export function RunControls({ challenge }: { challenge: Challenge }) {
   const caseIndex = useRun((s) => s.caseIndex);
   const stop = useRun((s) => s.stop);
   const submitting = useTests((s) => s.running);
-  // U-86: Submit does not depend on the run, so it is offered in both modes.
+  // Submit does not depend on the run, so it is offered in both modes.
   const submit = (
     <Button
       variant="outline"

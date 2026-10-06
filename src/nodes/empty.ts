@@ -1,4 +1,4 @@
-// L-09: the placeholder in an unfilled required slot. Never in the palette;
+// The placeholder in an unfilled required slot. Never in the palette;
 // validate reports E_EMPTY_SLOT before anything runs.
 import { newId } from "@/lang/id";
 import type { Value } from "@/lang/types";

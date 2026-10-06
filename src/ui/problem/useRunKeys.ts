@@ -1,6 +1,6 @@
-// The keyboard table (U-04) as far as running goes: Ctrl/Cmd+Enter runs or pauses; while
-// running → steps, ← goes back, Ctrl/Cmd+→ skips, and Esc clears the breakpoint, else stops
-// (U-60). Step over (Shift+→) arrives with functions (M-06); the editing keys with M-04.
+// The keyboard table as far as running goes: Ctrl/Cmd+Enter runs or pauses; while
+// running → steps, ← goes back, Ctrl/Cmd+→ skips, and Esc clears the breakpoint, else stops.
+// Step over (Shift+→) arrives with functions (M-06); the editing keys with M-04.
 import { useEffect } from "react";
 import { useEditor } from "@/store/editor";
 import { useRun } from "@/store/run";
@@ -21,7 +21,7 @@ export function useRunKeys(): void {
       const running = run.status !== "idle";
       let handled = true;
       if (mod && event.key === "Enter") {
-        // A pause during the pre-run opens the run paused (R-11).
+        // A pause during the pre-run opens the run paused.
         if (run.status === "playing" || (run.status === "idle" && run.busy)) run.pause();
         else if (run.status === "paused") run.play();
         else startRun();

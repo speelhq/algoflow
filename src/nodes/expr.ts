@@ -1,4 +1,4 @@
-// 03-nodes `expr`: an expression evaluated for its effect (N-04 method statements wrap one).
+// The `expr` block: an expression evaluated for its effect (method statements wrap one).
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 

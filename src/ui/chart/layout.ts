@@ -1,9 +1,9 @@
-// U-30..U-33: the chart's layout, computed and never placed by hand. Every statement
+// The chart's layout, computed and never placed by hand. Every statement
 // becomes a fragment around a vertical axis with a left and a right extent; a region stacks
 // its fragments on one axis, a branch puts its Yes column to the right of its whole No
 // column, and a loop keeps a lane on its left for the back edge and one on its right for the
 // No edge. A fragment's lanes lie inside its own extents, so nested lanes never collide.
-// Reads `def.chart`, `def.requires`, and the regions of a statement, never a kind (N-01).
+// Reads `def.chart`, `def.requires`, and the regions of a statement, never a kind.
 import { t } from "@/i18n/t";
 import type { Data, Id, NodeId, Place, Program, Stmt } from "@/lang/types";
 import { regionsOf } from "@/lang/walk";
@@ -15,11 +15,11 @@ export type Shape = "terminal" | "input" | "box" | "diamond" | "junction";
 export type ChartNode = {
   /** A statement's id, `<id>:init|check|step|junction|merge`, `start`, `end`, or `input:<name>`. */
   id: string;
-  /** U-33, U-39: the statement a click selects and a step highlights; null for terminals and inputs. */
+  /** The statement a click selects and a step highlights; null for terminals and inputs. */
   owner: NodeId | null;
   role: "start" | "end" | "input" | "stmt" | "init" | "check" | "step" | "junction" | "merge";
   shape: Shape;
-  /** U-33: drawn grey, not selectable on its own. */
+  /** Drawn grey, not selectable on its own. */
   generated: boolean;
   text: string;
   /** Top-left corner; a junction is a point (`w = h = 0`). */
@@ -36,22 +36,22 @@ export type ChartEdge = {
   label?: "yes" | "no";
   /** An orthogonal polyline from the border of `from` to the border of `to`. */
   points: Point[];
-  /** U-34: where a block inserted on this edge goes (L-54); null where none can. */
+  /** Where a block inserted on this edge goes; null where none can. */
   place: Place | null;
   /** Where the `+` connector and the label sit: the middle of a vertical run of the edge. */
   anchor: Point;
-  /** U-33: a loop's return to its junction. */
+  /** A loop's return to its junction. */
   back?: boolean;
-  /** U-31: a `Return` node's edge to `End`. */
+  /** A `Return` node's edge to `End`. */
   jump?: boolean;
 };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
 /** The width of `text` in px as the chart draws it. */
 export type Measure = (text: string, shape: Shape) => number;
 export type LayoutOptions = {
-  /** `main` (default) or a function's id (U-30). */
+  /** `main` (default) or a function's id. */
   chart?: "main" | NodeId;
-  /** U-32: the values the Input nodes show; defaults to the program's own. */
+  /** The values the Input nodes show; defaults to the program's own. */
   inputs?: Record<Id, Data>;
   measure?: Measure;
 };
@@ -216,7 +216,7 @@ class Builder {
       frag.entry ??= child.entry;
       frag.nodes.push(...child.nodes);
       frag.edges.push(...child.edges);
-      // U-34: nothing falls out of a Return, so its edge to End carries the place after it.
+      // Nothing falls out of a Return, so its edge to End carries the place after it.
       if (child.out === null && child.escapes.length === 1 && child.nodes.length === 1) {
         const [escape] = child.escapes;
         if (escape) escape.place = { parent, slot, index: index + 1 };
@@ -261,7 +261,7 @@ class Builder {
       edges: [],
       entry: node.id,
       out: leaves ? null : { from: node.id, points: [{ x: 0, y: node.h }], place: null },
-      // U-31: a Return's edge leads to End, leaving by the node's right side.
+      // A Return's edge leads to End, leaving by the node's right side.
       escapes: leaves ? [{ from: node.id, points: [{ x: half, y: node.h / 2 }], place: null }] : [],
     };
   }
@@ -272,7 +272,7 @@ class Builder {
     return this.node(stmt.id, stmt.id, "stmt", "diamond", text, y);
   }
 
-  /** U-33 `branch`: Yes to the right, No below on the axis, both merging below. */
+  /** `branch`: Yes to the right, No below on the axis, both merging below. */
   private branch(stmt: Stmt, slots: { yes: string; no: string }): Frag {
     const d = this.diamond(stmt, 0);
     const no = this.regionOf(stmt, slots.no);
@@ -335,7 +335,7 @@ class Builder {
   }
 
   /**
-   * U-33 `check` and `counted`: a junction above the diamond, Yes down into the body, a back
+   * `check` and `counted`: a junction above the diamond, Yes down into the body, a back
    * edge up the left lane, No down the right lane and on past the loop. A counted loop adds
    * its generated init before the junction and its step after the body.
    */
@@ -431,7 +431,7 @@ class Builder {
   }
 }
 
-/** U-30, U-31: the chart of `main` or of one function, every node and edge placed. */
+/** The chart of `main` or of one function, every node and edge placed. */
 export function layout(program: Program, opts: LayoutOptions = {}): ChartLayout {
   const builder = new Builder(program, opts.measure ?? defaultMeasure);
   const fn = program.functions.find((candidate) => candidate.id === opts.chart);
@@ -477,7 +477,7 @@ export function layout(program: Program, opts: LayoutOptions = {}): ChartLayout 
   if (tail) frag.edges.push(edge(tail, end.id, [{ x: 0, y }]));
   half = Math.max(half, end.w / 2);
 
-  // U-31: every Return leads to End, down one trunk to the right of the whole chart.
+  // Every Return leads to End, down one trunk to the right of the whole chart.
   const left = Math.max(half, body.left);
   let right = Math.max(half, body.right);
   if (body.escapes.length > 0) {

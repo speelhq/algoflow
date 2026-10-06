@@ -1,4 +1,4 @@
-// L-07, L-15, L-16, L-18, L-29: value helpers shared by node runners. No third-party imports.
+// Value helpers shared by node runners. No third-party imports.
 import type { Heap, HeapEntry, Value } from "@/lang/types";
 
 export type NumberValue = { t: "int"; v: number } | { t: "float"; v: number };
@@ -9,7 +9,7 @@ export function isNumber(value: Value): value is NumberValue {
 
 const INT_LIMIT = 2 ** 53;
 
-/** L-07: an int result outside ±2^53 becomes a float; ints have no negative zero. */
+/** An int result outside ±2^53 becomes a float; ints have no negative zero. */
 export function makeNumber(n: number, float: boolean): NumberValue {
   if (float || !Number.isInteger(n) || Math.abs(n) > INT_LIMIT) return { t: "float", v: n };
   return { t: "int", v: n === 0 ? 0 : n };
@@ -52,7 +52,6 @@ export function typeName(value: Value, heap: Heap): string {
   return entry.kind === "obj" ? entry.cls : "obj";
 }
 
-/** L-18 */
 export function truthy(value: Value, heap: Heap): boolean {
   switch (value.t) {
     case "int":
@@ -77,7 +76,7 @@ export function truthy(value: Value, heap: Heap): boolean {
   }
 }
 
-/** L-15: numbers order with numbers, strings with strings; anything else is not orderable. */
+/** Numbers order with numbers, strings with strings; anything else is not orderable. */
 export function compare(a: Value, b: Value): -1 | 0 | 1 | undefined {
   let x: number | string;
   let y: number | string;
@@ -95,7 +94,6 @@ export function compare(a: Value, b: Value): -1 | 0 | 1 | undefined {
   return 0;
 }
 
-/** L-16 */
 export function equals(a: Value, b: Value, heap: Heap): boolean {
   if (isNumber(a) && isNumber(b)) return a.v === b.v;
   if (a.t !== b.t) return false;
@@ -168,7 +166,7 @@ export function strRepr(text: string): string {
   return out + quote;
 }
 
-/** L-29: Python `str()`. Strings inside containers use `repr()`. */
+/** Python `str()`. Strings inside containers use `repr()`. */
 export function str(value: Value, heap: Heap): string {
   return value.t === "str" ? value.v : repr(value, heap);
 }

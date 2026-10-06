@@ -1,4 +1,4 @@
-// R-20: run emitted Python under CPython with the random shim and a JSON epilogue.
+// Run emitted Python under CPython with the random shim and a JSON epilogue.
 // The program executes in its own namespace so harness names never collide with
 // the learner's variables; `print` is captured per call to match `stdout()`.
 import { spawnSync } from "node:child_process";
@@ -10,7 +10,7 @@ import { NODES } from "@/nodes";
 
 export const PYTHON = process.env.PYTHON ?? "python3";
 
-/** Python functions of the random module that replay `draws()`: derived from the registry (N-05). */
+/** Python functions of the random module that replay `draws()`: derived from the registry. */
 export function randomShims(): string[] {
   const names: string[] = [];
   for (const def of NODES.values()) {

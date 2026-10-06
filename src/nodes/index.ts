@@ -1,4 +1,4 @@
-// N-01: the only registry. Interpreter, emitter, parser, validator, palette,
+// The only registry. Interpreter, emitter, parser, validator, palette,
 // and properties all dispatch through `getNode(keyOf(node))`.
 import type { Node } from "@/lang/types";
 import { assign } from "./assign";
@@ -81,7 +81,7 @@ export function keyOf(node: Node): string {
   return node.kind;
 }
 
-/** U-40: block menu entries of one category, in registration order. */
+/** Block menu entries of one category, in registration order. */
 export function paletteNodes(category: Category): NodeDef[] {
   return ALL.filter((def) => def.category === category && !def.hidden);
 }

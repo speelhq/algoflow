@@ -1,4 +1,4 @@
-// L-32: mulberry32 seeded per run; every result is recorded for R-20 replay.
+// Mulberry32 seeded per run; every result is recorded so that CPython can replay it.
 
 export function mulberry32(seed: number): () => number {
   let a = seed >>> 0;

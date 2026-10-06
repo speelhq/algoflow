@@ -1,4 +1,4 @@
-// U-80, C-10..C-12, C-15: Submit judges every test on its own runner in R-11 batches,
+// Submit judges every test on its own runner in batches,
 // without touching the driver; the driver judges the chosen case of a Run itself.
 import { create } from "zustand";
 import { getChallenge } from "@/challenges";
@@ -14,12 +14,12 @@ import { BATCH, canRun } from "./run";
 export type TestsState = {
   /** One entry per challenge test; null until judged. */
   results: Array<TestResult | null>;
-  /** U-81: what each judged test printed and left in its variables, for the rows of its case. */
+  /** What each judged test printed and left in its variables, for the rows of its case. */
   outcomes: Array<Outcome | null>;
   running: boolean;
-  /** C-12: every test judged and passing. */
+  /** Every test judged and passing. */
   cleared: boolean;
-  /** U-81, U-86: the chip whose rows are shown: the first failing test once judged, else 0. */
+  /** The chip whose rows are shown: the first failing test once judged, else 0. */
   selected: number;
   submit: () => Promise<void>;
   select: (index: number) => void;
@@ -85,7 +85,7 @@ export const useTests = create<TestsState>()((set, get) => {
           record(index, test, outcome, target.tests.length);
           if (get().results[index]?.status === "pass") passed += 1;
         }
-        // U-80, C-12, C-17: accepted only when every test of this submission passed.
+        // Accepted only when every test of this submission passed.
         useProgress.getState().submitted(target.id, passed > 0 && passed === target.tests.length);
         const failing = get().results.findIndex((result) => result?.status !== "pass");
         set({ selected: Math.max(failing, 0) });

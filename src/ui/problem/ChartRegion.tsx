@@ -1,4 +1,4 @@
-// U-03, U-22, U-30..U-32, U-60..U-65: the chart region: the solution band when the solution
+// The chart region: the solution band when the solution
 // is shown, the path bar, the chart, and, while running, the transport. The Input nodes show
 // the chosen case and list every case.
 import { useCallback, useMemo } from "react";
@@ -37,7 +37,6 @@ function SolutionBand() {
 
 const say = (sentence: Narration) => t(sentence.key, sentence.params);
 
-/** U-63, U-81, U-65: the sentence for the run's position, or none before the first step. */
 /** The driver fields the chart draws and narrates from. */
 type Shown = Pick<
   RunState,
@@ -56,6 +55,7 @@ type Shown = Pick<
   | "breakpoint"
 >;
 
+/** The sentence for the run's position, or none before the first step. */
 function narration(run: Shown, program: Program): string | null {
   const { step, total, outcome, lastEvent, state, difference } = run;
   const end = outcome && step === total ? narrateEnd(outcome, total) : null;
@@ -139,7 +139,7 @@ export function ChartRegion({ challenge }: { challenge: Challenge }) {
   );
   const { paint: painted, note } = useRunPaint(solution ? null : chart, mine);
 
-  // U-60: in build mode a click selects; while running it sets or clears the breakpoint,
+  // In build mode a click selects; while running it sets or clears the breakpoint,
   // pausing first; once the run has ended it returns to build mode with the node selected.
   const onSelect = useCallback(
     (owner: NodeId) => {

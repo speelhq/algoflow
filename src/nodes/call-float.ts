@@ -1,4 +1,4 @@
-// 03-nodes builtin `float`: numbers, numeric text, `True` → 1.0.
+// The builtin `float`: numbers, numeric text, `True` → 1.0.
 import { typeName } from "@/runtime/values";
 import { defineBuiltin } from "./builtin";
 

@@ -1,6 +1,6 @@
-// U-50: the condition templates as data. Each is a sentence key and the expression it stands
+// The condition templates as data. Each is a sentence key and the expression it stands
 // for, written as Python with the blanks `a` and `b`; matching is structural over each
-// block's slots (N-01). What a variable is comes from the parser: the block a bare name
+// block's slots. What a variable is comes from the parser: the block a bare name
 // parses to, with the name in its `id` slot.
 import type { MessageKey } from "@/i18n/t";
 import type { Expr } from "@/lang/types";
@@ -9,7 +9,7 @@ import { getNode, keyOf } from "@/nodes";
 import { isParseError, parse } from "@/python/parse";
 
 export type Blank = "a" | "b";
-/** `key` is the sentence (U-50); `question` is how a diamond asks it (U-33). */
+/** `key` is the sentence; `question` is how a diamond asks it. */
 export type ConditionTemplate = {
   name: string;
   key: MessageKey;
@@ -24,7 +24,7 @@ export type TemplateMatch = {
   within: Record<Blank, Expr>;
 };
 
-/** In the order of the U-50 table: the first match names the expression (U-50, U-63). */
+/** In the order of the template table: the first match names the expression. */
 export const CONDITION_TEMPLATES: readonly ConditionTemplate[] = [
   {
     name: "divisible",
@@ -142,7 +142,7 @@ export function matchTemplates(expr: Expr): TemplateMatch[] {
   return matches;
 }
 
-/** U-50: the template whose sentence a slot shows for this expression, if any. */
+/** The template whose sentence a slot shows for this expression, if any. */
 export function matchTemplate(expr: Expr): TemplateMatch | undefined {
   return matchTemplates(expr)[0];
 }

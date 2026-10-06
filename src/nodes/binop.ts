@@ -1,4 +1,5 @@
-// 03-nodes `binop`: L-10..L-19 semantics, R-04 membership reads, R-06 compare events, E-05 text.
+// The `binop` block: arithmetic, comparison, logic, and `in`, with the reads of `in`, the
+// `compare` events, and the operator precedence of the emitted text.
 import { dictKey } from "@/lang/data";
 import { newId } from "@/lang/id";
 import type { Expr, Value } from "@/lang/types";
@@ -19,7 +20,6 @@ import { defineExpr, type RunContext } from "./types";
 
 type Binop = Extract<Expr, { kind: "binop" }>;
 
-/** L-10..L-14 */
 function arithmetic(node: Binop, l: Value, r: Value, ctx: RunContext): Value {
   if (node.op === "+" && l.t === "str" && r.t === "str") return { t: "str", v: l.v + r.v };
   if (!isNumber(l) || !isNumber(r)) return typeError(node.id, l, r, ctx);
@@ -53,7 +53,6 @@ function arithmetic(node: Binop, l: Value, r: Value, ctx: RunContext): Value {
   }
 }
 
-/** L-15, L-16 */
 function ordered(node: Binop, l: Value, r: Value, ctx: RunContext): boolean {
   if (node.op === "==") return equals(l, r, ctx.heap);
   if (node.op === "!=") return !equals(l, r, ctx.heap);
@@ -73,7 +72,7 @@ function ordered(node: Binop, l: Value, r: Value, ctx: RunContext): boolean {
   }
 }
 
-/** L-19 and R-04: one ref per compared list element. */
+/** One ref per compared list element. */
 function* membership(
   node: Binop,
   l: Value,
@@ -120,7 +119,7 @@ export const binop = defineExpr<"binop">({
   create: () => ({ id: newId(), kind: "binop", op: "+", left: emptyExpr(), right: emptyExpr() }),
   *run(node, ctx) {
     if (node.op === "and" || node.op === "or") {
-      // L-17: short-circuit, returning the deciding operand
+      // Short-circuit, returning the deciding operand
       const left = yield* ctx.eval(node.left);
       const decided = node.op === "and" ? !truthy(left, ctx.heap) : truthy(left, ctx.heap);
       if (decided) return left;
@@ -142,7 +141,7 @@ export const binop = defineExpr<"binop">({
     const precedence = binopPrecedence(node.op);
     return `${ctx.operand(node.left, precedence, "left")} ${node.op} ${ctx.operand(node.right, precedence, "right")}`;
   },
-  // 03-nodes: the canvas shows `×` and `÷` for `*` and `/`.
+  // The canvas shows `×` and `÷` for `*` and `/`.
   text: (node, slot) => (slot === "op" ? (CANVAS_OPS[node.op] ?? node.op) : ""),
 });
 

@@ -1,4 +1,4 @@
-// L-06: Data (JSON form) ⇄ Value/heap; C-10: expectation equality.
+// Data (JSON form) ⇄ Value/heap; expectation equality.
 import type { Data, Heap, HeapEntry, HeapId, Value } from "./types";
 
 const INT_KEY = "$int:";
@@ -18,7 +18,7 @@ export function alloc(heap: Heap, entry: HeapEntry): HeapId {
   return id;
 }
 
-/** Dict keys are `int` or `str` (L-21); the heap encodes them as "i:3" / "s:ab". */
+/** Dict keys are `int` or `str`; the heap encodes them as "i:3" / "s:ab". */
 export function dictKey(value: Value): string | undefined {
   if (value.t === "int") return `i:${value.v}`;
   if (value.t === "str") return `s:${value.v}`;
@@ -122,7 +122,7 @@ function floatOf(data: number | { $float: number }): number {
   return typeof data === "number" ? data : data.$float;
 }
 
-/** C-10 equality: ints exactly, floats within 1e-6, containers structurally, objects ignoring identity. */
+/** Test equality: ints exactly, floats within 1e-6, containers structurally, objects ignoring identity. */
 export function dataEquals(expected: Data, actual: Data): boolean {
   if (isFloatData(expected) || isFloatData(actual)) {
     const e = typeof expected === "number" || isFloatData(expected) ? floatOf(expected) : NaN;

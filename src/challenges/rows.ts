@@ -1,4 +1,4 @@
-// U-23, U-81: the rows of the `Result` tab for one case, and the first one that differs.
+// The rows of the `Result` tab for one case, and the first one that differs.
 // Pure, beside the judge: `firstDifference` is null exactly when `judge` passes a finished run.
 import { dataEquals } from "@/lang/data";
 import type { Data, Id } from "@/lang/types";
@@ -10,13 +10,13 @@ export type OutputRow = { line: number; actual?: string; expected?: string; diff
 export type VariableRow = { name: Id; actual?: Data; expected: Data; differs: boolean };
 export type Rows = { output: OutputRow[]; variables: VariableRow[] };
 export type FirstDifference = { kind: "output"; line: number } | { kind: "variable"; name: Id };
-/** U-81: `line` (1-based) when a `print` produced the differing line; absent at the end of the run. */
+/** `line` (1-based) when a `print` produced the differing line; absent at the end of the run. */
 export type WatchStep = { step: number; line?: number };
 
 /**
  * `expect` is absent for a `Custom…` case and a Playground program: the output rows then
  * carry no `expected`. `differs` compares the values as they are now, so the tab marks a
- * row only once the run has ended (U-23). Lines are 1-based.
+ * row only once the run has ended. Lines are 1-based.
  */
 export function resultRows(
   expect: Test["expect"] | undefined,
@@ -42,7 +42,7 @@ export function resultRows(
   return { output, variables };
 }
 
-/** U-23: the first output row that differs, or else the first variable row that differs. */
+/** The first output row that differs, or else the first variable row that differs. */
 export function firstDifference(rows: Rows): FirstDifference | null {
   const line = rows.output.find((row) => row.differs);
   if (line) return { kind: "output", line: line.line };
@@ -51,9 +51,9 @@ export function firstDifference(rows: Rows): FirstDifference | null {
 }
 
 /**
- * U-81: the step `Watch this case` opens at: the `print` that produced the first differing
+ * The step `Watch this case` opens at: the `print` that produced the first differing
  * line, or the last step of the run when no `print` produced it or a variable differs.
- * `prints[i]` is the visible step of output line `i + 1` (R-11).
+ * `prints[i]` is the visible step of output line `i + 1`.
  */
 export function watchStep(
   difference: FirstDifference | null,

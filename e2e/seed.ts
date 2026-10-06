@@ -1,4 +1,4 @@
-// Storage the app reads on load: progress (C-17) and a problem's program (L-53, C-13). Until
+// Storage the app reads on load: progress and a problem's program. Until
 // editing exists (M-04), the stored program is how a test puts a chart on the page.
 import { readFileSync } from "node:fs";
 import type { Page } from "@playwright/test";
@@ -25,7 +25,7 @@ export async function seedProgram(page: Page, id: string, program: unknown): Pro
   );
 }
 
-/** A stored program for problem id with main as given (C-13 restores challengeId and inputs). */
+/** A stored program for problem id with main as given (opening the problem restores challengeId and inputs). */
 export function programWith(main: unknown[]): Record<string, unknown> {
   return { version: 1, title: "", inputs: [], classes: [], functions: [], main };
 }

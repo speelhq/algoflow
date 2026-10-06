@@ -1,4 +1,4 @@
-// U-12: the sections of the Problems page and a plan's button; U-83: where `Next problem →`
+// The sections of the Problems page and a plan's button; where `Next problem →`
 // leads. Status comes in as a function so this module stays below the stores.
 import { CHALLENGES, PLANS, planOf } from "./index";
 import type { Plan } from "./types";
@@ -6,7 +6,7 @@ import type { Plan } from "./types";
 export type Status = (id: string) => "attempted" | "solved" | undefined;
 export type Section = { plan?: Plan; problems: string[] };
 
-/** U-12: one section per plan, then `More problems` (in no plan, by title) when it has any. */
+/** One section per plan, then `More problems` (in no plan, by title) when it has any. */
 export function sections(): Section[] {
   const more = CHALLENGES.filter((challenge) => !planOf(challenge.id)).map((c) => c.id);
   const planned: Section[] = PLANS.map((plan) => ({ plan, problems: plan.problems }));
@@ -20,7 +20,7 @@ export function sectionOf(id: string): Section | undefined {
 
 export type PlanAction = { kind: "start" | "continue"; id: string } | null;
 
-/** U-12: `Start` before any entry, `Continue` to the first unsolved problem, else nothing. */
+/** `Start` before any entry, `Continue` to the first unsolved problem, else nothing. */
 export function planAction(problems: readonly string[], status: Status): PlanAction {
   const first = problems[0];
   if (first === undefined) return null;
@@ -32,7 +32,7 @@ export function planAction(problems: readonly string[], status: Status): PlanAct
 export type NextProblem = { kind: "next"; id: string } | { kind: "complete" };
 
 /**
- * U-83: in a plan, the next unsolved problem after `id` (wrapping round); once every other
+ * In a plan, the next unsolved problem after `id` (wrapping round); once every other
  * one is solved, the next row; after the last row, `Plan complete`. In `More problems`, the
  * next row.
  */

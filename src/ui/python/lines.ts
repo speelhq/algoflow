@@ -1,8 +1,8 @@
-// U-25: which statement each emitted line belongs to, and which lines a statement covers.
+// Which statement each emitted line belongs to, and which lines a statement covers.
 import type { NodeId } from "@/lang/types";
 import type { LineMap } from "@/python/emit";
 
-/** Line → the innermost statement whose range holds it (E-01 ranges nest). */
+/** Line → the innermost statement whose range holds it (the emitter's ranges nest). */
 export function lineOwners(map: LineMap): Map<number, NodeId> {
   const owners = new Map<number, { id: NodeId; span: number }>();
   for (const [id, { start, end }] of Object.entries(map)) {

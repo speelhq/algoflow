@@ -1,4 +1,4 @@
-// 03-nodes `while`: R-07 loop event after the compare of each iteration.
+// The `while` block: a `loop` event after the compare of each iteration.
 import { newId } from "@/lang/id";
 import { truthy } from "@/runtime/values";
 import { defineStmt } from "./types";

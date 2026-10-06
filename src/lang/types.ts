@@ -17,7 +17,7 @@ export type Program = {
 };
 export type Input = { name: Id; value: Data };
 export type ClassDef = { id: NodeId; name: Id; fields: Field[] };
-export type Field = { name: Id; default: Data }; // L-30
+export type Field = { name: Id; default: Data };
 export type FunctionDef = { id: NodeId; name: Id; params: Id[]; body: Stmt[] };
 
 // ---------------------------------------------------------------- Data (JSON form)
@@ -78,7 +78,7 @@ export type FieldTarget = { kind: "field"; obj: Expr; field: Id };
 
 type E = { id: NodeId; source?: "text" };
 export type Expr =
-  | (E & { kind: "empty" }) // L-09: an unfilled required slot
+  | (E & { kind: "empty" }) // An unfilled required slot
   | (E & { kind: "num"; value: number; float: boolean; raw: string })
   | (E & { kind: "str"; value: string })
   | (E & { kind: "bool"; value: boolean })
@@ -115,7 +115,7 @@ export type BinOp =
 
 export type Node = Stmt | Expr;
 
-// ---------------------------------------------------------------- Names (L-01..L-03)
+// ---------------------------------------------------------------- Names
 
 export const NAME_PATTERN = /^[a-z_][a-z0-9_]*$/;
 export const CLASS_NAME_PATTERN = /^[A-Z][A-Za-z0-9]*$/;
@@ -149,7 +149,7 @@ export type Diagnostic = {
   fix?: EditName;
 };
 
-// ---------------------------------------------------------------- Edits (L-50, L-54)
+// ---------------------------------------------------------------- Edits
 
 export type EditName =
   | "insertStmt"
@@ -166,7 +166,7 @@ export type EditName =
   | "setFields"
   | "hoistAssign";
 
-/** L-54: a statement position. `parent` is a frame or function id, or "main". */
+/** A statement position. `parent` is a frame or function id, or "main". */
 export type Place = {
   parent: NodeId | "main";
   slot: "main" | "body" | "then" | "else";

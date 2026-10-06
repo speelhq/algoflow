@@ -1,6 +1,6 @@
-// C-17: per-problem progress under `algoflow:progress`. An entry appears on the first
+// Per-problem progress under `algoflow:progress`. An entry appears on the first
 // submission, hint, or shown solution; `solved` is never cleared. The stored value is the
-// bare record of C-17, validated when read back, so storage never yields a malformed entry.
+// bare record, validated when read back, so storage never yields a malformed entry.
 import { create } from "zustand";
 import { persist, type PersistStorage } from "zustand/middleware";
 import { isRecord } from "@/i18n/flatten";
@@ -8,7 +8,7 @@ import { clamp } from "./layout";
 
 export const PROGRESS_STORAGE_KEY = "algoflow:progress";
 
-/** C-22: a challenge has exactly three hints. */
+/** A challenge has exactly three hints. */
 export const HINTS = 3;
 
 export type ProgressStatus = "attempted" | "solved";
@@ -17,22 +17,21 @@ export type Progress = Record<string, ProgressEntry>;
 
 export type ProgressState = {
   entries: Progress;
-  /** U-80: records a submission; an accepted one makes the problem solved. */
+  /** Records a submission; an accepted one makes the problem solved. */
   submitted: (id: string, accepted: boolean) => void;
-  /** U-21: records that `count` hints are revealed; the number never goes down. */
+  /** Records that `count` hints are revealed; the number never goes down. */
   hintShown: (id: string, count: number) => void;
-  /** U-22 */
   solutionShown: (id: string) => void;
 };
 
 const FRESH: ProgressEntry = { status: "attempted", hints: 0, solution: false };
 
-/** U-10: the status mark of a problem row; undefined while untouched. */
+/** The status mark of a problem row; undefined while untouched. */
 export function statusOf(entries: Progress, id: string): ProgressStatus | undefined {
   return Object.hasOwn(entries, id) ? entries[id]?.status : undefined;
 }
 
-/** U-12: `n of m solved`. */
+/** `n of m solved`. */
 export function solvedCount(entries: Progress, ids: readonly string[]): number {
   return ids.filter((id) => statusOf(entries, id) === "solved").length;
 }
@@ -61,7 +60,7 @@ export function readProgress(stored: unknown): Progress {
 
 type Persisted = { entries: Progress };
 
-/** C-17: the key holds `Record<id, entry>` itself, with no wrapper around it. */
+/** The key holds `Record<id, entry>` itself, with no wrapper around it. */
 const storage: PersistStorage<Persisted> = {
   getItem(name) {
     if (typeof localStorage === "undefined") return null;

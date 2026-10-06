@@ -1,5 +1,5 @@
-// C-02, R-20, C-23: schema, validation, interpreter, and CPython agreement for
-// every challenge (or the files given as arguments), then the i18n check (U-71).
+// Schema, validation, interpreter, and CPython agreement for
+// every challenge (or the files given as arguments), then the i18n check.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,9 +17,9 @@ import { checkPlans } from "./lib/plans";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const PLANS_FILE = "plans.json";
 const args = process.argv.slice(2);
-/** C-24: `ja` texts are checked in every file once the Japanese catalog exists. */
+/** `ja` texts are checked in every file once the Japanese catalog exists. */
 const requireJa = existsSync(join(root, "src", "i18n", "ja.json"));
-/** Every challenge file on disk; `plans.json` sits beside them and is checked separately (C-16). */
+/** Every challenge file on disk; `plans.json` sits beside them and is checked separately. */
 const allFiles = readdirSync(join(root, "challenges"))
   .filter((f) => f.endsWith(".json") && f !== PLANS_FILE)
   .toSorted()
@@ -33,7 +33,7 @@ function describeMismatch(kind: string, expected: unknown, actual: unknown): str
   return `${kind}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`;
 }
 
-/** C-10 for one test: interpreter result against `expect`, then CPython against the interpreter (E-07). */
+/** One test: interpreter result against `expect`, then CPython against the interpreter. */
 function checkTest(challenge: Challenge, test: Test, index: number): string[] {
   const label = `test[${index}] ${JSON.stringify(test.inputs)}`;
   const problems: string[] = [];
@@ -102,12 +102,12 @@ for (const file of files) {
 }
 if (files.length > 0) console.log(`challenges: ${files.length - failed}/${files.length} ok`);
 
-// C-16, C-18: the plans against every challenge file on disk, whatever files were given.
+// The plans against every challenge file on disk, whatever files were given.
 {
   const knownIds = new Set(allFiles.map((f) => basename(f, ".json")));
   let plansProblems: string[];
   let count = { plans: 0, problems: 0 };
-  /** S-05: challenges in no plan are legitimate, but a forgotten `plans.json` entry looks the same. */
+  /** Challenges in no plan are legitimate, but a forgotten `plans.json` entry looks the same. */
   let orphans: string[] = [];
   try {
     const json: unknown = JSON.parse(readFileSync(join(root, "challenges", PLANS_FILE), "utf8"));
