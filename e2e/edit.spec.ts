@@ -110,3 +110,28 @@ test("Type as text parses on Enter and keeps the expression on an error; chips U
   await page.getByRole("menuitem", { name: "Delete" }).click();
   await expect(page.getByTestId("chart")).toContainText("Create x and set it to choose a value");
 });
+
+test("U-53: after a value, the menu moves to the next empty value of the same list", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/tutorial");
+  await insert(page, "main/main/0", "print");
+  await editor(page).getByRole("button", { name: "+ value" }).click();
+  await editor(page).locator("[data-chip]", { hasText: "choose a value" }).first().click();
+  await type(page, '"Hello,');
+  await expect(menu(page)).toBeVisible();
+  await menu(page).getByRole("button", { name: "name", exact: true }).click();
+  await expect(menu(page)).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "✓ Submit" }).click();
+  await expect(page.getByTestId("verdict")).toHaveText("Accepted");
+});
+
+test("U-51: a print with no value draws no placeholder", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/tutorial");
+  await insert(page, "main/main/0", "print");
+  await editor(page).getByRole("button", { name: "Remove this value" }).click();
+  await expect(page.getByTestId("chart")).not.toContainText("choose a value");
+});

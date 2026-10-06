@@ -43,7 +43,7 @@ function CaseSelect({ challenge }: { challenge: Challenge }) {
         items={items}
         value={caseIndex}
         disabled={running}
-        onValueChange={(value) => typeof value === "number" && selectCase(value)}
+        onValueChange={(value) => typeof value === "number" && value >= 0 && selectCase(value)}
       >
         <SelectTrigger className="font-mono text-xs" data-testid="case-select">
           <SelectValue />

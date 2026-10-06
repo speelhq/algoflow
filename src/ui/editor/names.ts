@@ -44,7 +44,7 @@ export function nameSuggestions(program: Program, asked: readonly Id[]): Suggest
   return out;
 }
 
-/** What a name input keeps of typed text: the characters of L-01. */
+/** What a name input keeps of typed text: the characters a name may have, no digit first. */
 export function nameChars(text: string): string {
-  return text.replace(/[^a-z0-9_]/g, "");
+  return text.replace(/[^a-z0-9_]/g, "").replace(/^[0-9]+/, "");
 }

@@ -46,6 +46,15 @@ export function nodeDiagnostics(program: Program, id: NodeId): Diagnostic[] {
   return flaggedStatements(program).get(id) ?? [];
 }
 
+/** The same diagnostic in another validation of the program: same node, code, and params. */
+function sameDiagnostic(a: Diagnostic, b: Diagnostic): boolean {
+  return (
+    a.nodeId === b.nodeId &&
+    a.code === b.code &&
+    JSON.stringify(a.params) === JSON.stringify(b.params)
+  );
+}
+
 /** Applies a diagnostic's fix; only the fixes validation names exist. */
 export function applyFix(diagnostic: Diagnostic): void {
   if (diagnostic.fix !== "hoistAssign") return;
@@ -129,13 +138,11 @@ function Body({
       (slot.role === "id" || slot.role === "target") && nameOf(stmt, slot.name) !== undefined,
   );
   const suggestFor = nameSlot ?? nameSlots[0]?.name;
+  // The diagnostic Run led to is shown while the program still has it, once.
   const diagnostics = nodeDiagnostics(program, stmt.id);
-  if (
-    led &&
-    (ownerStmts(program).get(led.nodeId) ?? led.nodeId) === stmt.id &&
-    !diagnostics.includes(led)
-  ) {
-    diagnostics.unshift(led);
+  const still = led ? validate(program).find((d) => sameDiagnostic(d, led)) : undefined;
+  if (still && (ownerStmts(program).get(still.nodeId) ?? still.nodeId) === stmt.id) {
+    if (!diagnostics.includes(still)) diagnostics.unshift(still);
   }
 
   const actions = (slot: string, root: Expr): ChipActions => ({
@@ -295,10 +302,22 @@ function Body({
     const at = open;
     if (!apply((p) => replaceChip(p, at.chip, expr))) return;
     const rootId = at.root === at.chip ? expr.id : at.root;
-    // With the chip complete, the menu moves to the next empty slot of the same statement slot.
-    const root = nodesById(useProgram.getState().program).get(rootId);
-    const next = focus ?? (root && isExpr(root) ? firstEmpty(root) : undefined);
-    setOpen(next ? { chip: next.id, root: rootId, slot: at.slot } : null);
+    if (focus) return setOpen({ chip: focus.id, root: rootId, slot: at.slot });
+    // With the chip complete, the menu moves to the next empty slot of the same statement
+    // slot: inside this expression, else in a later item of the slot's list.
+    const placed = useProgram.getState().program;
+    const nodes = nodesById(placed);
+    const root = nodes.get(rootId);
+    const inside = root && isExpr(root) ? firstEmpty(root) : undefined;
+    if (inside) return setOpen({ chip: inside.id, root: rootId, slot: at.slot });
+    const owner = nodes.get(stmt.id) as unknown as Bag | undefined;
+    const items: unknown[] = Array.isArray(owner?.[at.slot]) ? (owner?.[at.slot] as unknown[]) : [];
+    const later = items.slice(items.findIndex((item) => isExpr(item) && item.id === rootId) + 1);
+    for (const item of later) {
+      const empty = isExpr(item) ? firstEmpty(item) : undefined;
+      if (empty && isExpr(item)) return setOpen({ chip: empty.id, root: item.id, slot: at.slot });
+    }
+    setOpen(null);
   };
 
   return (

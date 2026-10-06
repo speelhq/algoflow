@@ -122,6 +122,12 @@ describe("program store", () => {
     expect(useProgram.getState().future).toEqual([]);
   });
 
+  it("L-52: an edit that changes nothing is no history entry", () => {
+    useProgram.getState().load("bare");
+    useProgram.getState().edit(structuredClone(useProgram.getState().program));
+    expect(useProgram.getState().past).toEqual([]);
+  });
+
   it("L-52: history keeps the last 100 programs", () => {
     useProgram.getState().load("bare");
     for (let i = 0; i <= HISTORY; i += 1) {

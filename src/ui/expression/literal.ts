@@ -4,7 +4,7 @@
 import { getNode, keyOf } from "@/nodes";
 import { newId } from "@/lang/id";
 import type { Data, Expr, Program } from "@/lang/types";
-import { childSlots } from "@/lang/walk";
+import { childSlots, isEmptyExpr } from "@/lang/walk";
 import { unparse } from "@/python/emit";
 import { isParseError, parse } from "@/python/parse";
 import { advance, outcomeOf } from "@/runtime/outcome";
@@ -31,7 +31,7 @@ export function isLiteral(expr: Expr): boolean {
   const key = keyOf(expr);
   if (values.has(key)) return true;
   if (containers.has(key)) return childSlots(expr).every((child) => isLiteral(child.expr));
-  if (expr.kind === "empty") return false;
+  if (isEmptyExpr(expr)) return false;
   return typedItem(unparse(expr)) !== undefined;
 }
 

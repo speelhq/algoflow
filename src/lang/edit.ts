@@ -84,15 +84,19 @@ export function locateStmt(program: Program, id: NodeId): Located | undefined {
   return undefined;
 }
 
-function regionAt(program: Program, place: Place): Stmt[] {
+/** The region a place names, or undefined when the program has none there. */
+export function findRegion(program: Program, place: Place): Stmt[] | undefined {
   if (place.parent === "main") return program.main;
   const fn = program.functions.find((f) => f.id === place.parent);
   if (fn) return fn.body;
   const located = locateStmt(program, place.parent);
-  if (!located) throw new EditError(`no statement ${place.parent}`);
-  const region = regionsOf(located.stmt).find((r) => r.slot === place.slot);
-  if (!region) throw new EditError(`statement ${place.parent} has no region ${place.slot}`);
-  return region.stmts;
+  return located && regionsOf(located.stmt).find((r) => r.slot === place.slot)?.stmts;
+}
+
+function regionAt(program: Program, place: Place): Stmt[] {
+  const region = findRegion(program, place);
+  if (!region) throw new EditError(`no region ${place.slot} of ${place.parent}`);
+  return region;
 }
 
 /** Finds a statement or expression node by id. */

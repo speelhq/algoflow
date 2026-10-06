@@ -5,6 +5,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  pointerWithin,
   useDraggable,
   useDroppable,
   useSensor,
@@ -40,7 +41,10 @@ export function useNodeDrag(node: ChartNode, enabled: boolean) {
   };
 }
 
-/** A connector as a drop target; it accepts nothing while `disabled`. */
+/**
+ * A connector as a drop target: a circle centred on the edge's anchor, where the `+` is drawn
+ * (the box of the `+` and its label is not), accepting nothing while `disabled`.
+ */
 export function DropZone(props: { edge: ChartEdge; disabled: boolean; children: ReactNode }) {
   const { edge, disabled, children } = props;
   const { setNodeRef, isOver } = useDroppable({
@@ -49,9 +53,17 @@ export function DropZone(props: { edge: ChartEdge; disabled: boolean; children: 
     disabled,
   });
   return (
-    <div ref={setNodeRef} className={cn("rounded-full", isOver && "ring-2 ring-selection")}>
+    <>
+      <div
+        ref={setNodeRef}
+        aria-hidden
+        className={cn(
+          "pointer-events-none absolute -top-3 -left-3 size-6 rounded-full",
+          isOver && "ring-2 ring-selection",
+        )}
+      />
       {children}
-    </div>
+    </>
   );
 }
 
@@ -91,6 +103,8 @@ export function ChartDrag(props: {
   return (
     <DndContext
       sensors={sensors}
+      // The connector under the pointer takes the drop, not the one the ghost covers most.
+      collisionDetection={pointerWithin}
       onDragStart={start}
       onDragEnd={end}
       onDragCancel={() => setDragged(null)}

@@ -1,4 +1,5 @@
 // Value helpers shared by node runners. No third-party imports.
+import { keyValue } from "@/lang/data";
 import type { Heap, HeapEntry, Value } from "@/lang/types";
 
 export type NumberValue = { t: "int"; v: number } | { t: "float"; v: number };
@@ -190,13 +191,6 @@ function scalarRepr(value: Value): string {
   }
 }
 
-/** A dict entry key (`i:3`, `s:ab`) as the value it stands for. */
-function keyOf(key: string): Value {
-  return key.startsWith("i:")
-    ? { t: "int", v: Number(key.slice(2)) }
-    : { t: "str", v: key.slice(2) };
-}
-
 /**
  * A value as Python's `repr()` lays it out, `[a, b]`, `{k: v}`, `Cls(f=v)`, with every
  * scalar, dict keys included, written by `scalar`: `repr()` and the blocks' text differ only there.
@@ -212,7 +206,7 @@ export function writeValue(value: Value, heap: Heap, scalar: (value: Value) => s
       const entry = entryOf(heap, value.ref);
       if (entry.kind !== "dict") return "{}";
       const parts = [...entry.entries].map(
-        ([key, item]) => `${scalar(keyOf(key))}: ${write(item)}`,
+        ([key, item]) => `${scalar(keyValue(key))}: ${write(item)}`,
       );
       return `{${parts.join(", ")}}`;
     }

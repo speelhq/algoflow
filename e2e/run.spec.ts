@@ -138,6 +138,14 @@ test("Run with a diagnostic leads to its node instead of running (U-60)", async 
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "▶ Run" }).click();
   await expect(page.getByTestId("node-editor").getByRole("alert")).toContainText("is empty");
+  // Once the slot is filled the message is gone.
+  await page
+    .getByTestId("node-editor")
+    .locator("[data-chip]", { hasText: "choose a value" })
+    .click();
+  await page.getByTestId("value-field").fill("1");
+  await page.getByTestId("value-field").press("Enter");
+  await expect(page.getByTestId("node-editor").getByRole("alert")).toHaveCount(0);
   await expect(page.locator('[data-chart-node="asg-empty-01"]')).toHaveAttribute(
     "data-selected",
     "true",

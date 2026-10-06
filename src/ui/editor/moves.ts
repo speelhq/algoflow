@@ -1,25 +1,17 @@
 // A drag of a statement onto a connector: where it lands, which connectors accept it, and
 // why a drop is refused (a `break`, `continue`, or `return` taken out of where it may stand).
 import { errorText } from "@/i18n/t";
-import { locateStmt, moveStmt } from "@/lang/edit";
-import type { NodeId, Place, Program, Stmt } from "@/lang/types";
+import { findRegion, locateStmt, moveStmt } from "@/lang/edit";
+import type { NodeId, Place, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
-import { idsUnder, regionsOf } from "@/lang/walk";
+import { idsUnder } from "@/lang/walk";
 
 const PLACEMENT = new Set(["E_BREAK_OUTSIDE", "E_RETURN_OUTSIDE"]);
-
-function regionOf(program: Program, place: Place): Stmt[] | undefined {
-  if (place.parent === "main") return program.main;
-  const fn = program.functions.find((f) => f.id === place.parent);
-  if (fn) return fn.body;
-  const located = locateStmt(program, place.parent);
-  return located && regionsOf(located.stmt).find((r) => r.slot === place.slot)?.stmts;
-}
 
 /** `place` counted as `moveStmt` counts it: after the moved statement has left its region. */
 export function moveTarget(program: Program, id: NodeId, place: Place): Place {
   const from = locateStmt(program, id);
-  const same = from !== undefined && from.region === regionOf(program, place);
+  const same = from !== undefined && from.region === findRegion(program, place);
   return same && from.index < place.index ? { ...place, index: place.index - 1 } : place;
 }
 

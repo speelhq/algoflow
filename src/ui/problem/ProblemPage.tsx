@@ -22,11 +22,13 @@ export function ProblemPage({ id }: { id: string }) {
   return challenge ? <Problem challenge={challenge} /> : null;
 }
 
-/** `⋯`'s `Start over`, which nothing does while the program runs. */
+/** `⋯`'s `Start over`, an edit: not while running, nor while the solution is shown. */
 export function StartOverItem() {
   const running = useRun((s) => s.status !== "idle");
+  const solution = useEditor((s) => s.solution);
+  const locked = running || solution;
   return (
-    <DropdownMenuItem disabled={running} onClick={startOver}>
+    <DropdownMenuItem disabled={locked} onClick={startOver}>
       {t("problem.startOver")}
     </DropdownMenuItem>
   );

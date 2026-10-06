@@ -6,6 +6,7 @@ import {
   createPlaygroundProgram,
   deletePlaygroundProgram,
   emptyProgram,
+  flushSave,
   storedTitle,
 } from "@/store/program";
 import { playgroundRows, type PlaygroundRow } from "@/store/playground";
@@ -23,7 +24,11 @@ import {
   DialogTitle,
 } from "@/ui/primitives/dialog";
 
-const rows = () => playgroundRows(storedTitle);
+/** The rows as stored, after any save still waiting for its delay. */
+const rows = () => {
+  flushSave();
+  return playgroundRows(storedTitle);
+};
 
 function edited(time: number): string {
   return new Intl.DateTimeFormat(getLocale(), { dateStyle: "medium", timeStyle: "short" }).format(

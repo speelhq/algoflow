@@ -72,7 +72,7 @@ function callStatement(name: string, argc: number): Stmt {
   return { ...statement, expr: { ...call, fn: name, args } };
 }
 
-/** The groups with only the entries whose label, help, or text contains `query`. */
+/** The groups with only the entries whose label or help contains `query`. */
 export function searchMenu(groups: MenuGroup[], query: string): MenuGroup[] {
   const q = query.trim().toLowerCase();
   if (q === "") return groups;
@@ -80,7 +80,7 @@ export function searchMenu(groups: MenuGroup[], query: string): MenuGroup[] {
     .map((group) => ({
       ...group,
       entries: group.entries.filter((entry) =>
-        [entry.label, entry.help, entry.text].some((text) => text.toLowerCase().includes(q)),
+        [entry.label, entry.help].some((text) => text.toLowerCase().includes(q)),
       ),
     }))
     .filter((group) => group.entries.length > 0);

@@ -383,7 +383,8 @@ function onBorder(point: { x: number; y: number }, node: ChartNode): boolean {
 }
 
 describe("layout of jumps (U-33, N-09)", () => {
-  const jumpsOf = (chart: ChartLayout, id: string) => chart.edges.filter((edge) => edge.from === id);
+  const jumpsOf = (chart: ChartLayout, id: string) =>
+    chart.edges.filter((edge) => edge.from === id);
 
   it("U-33: in a for, break leads past the loop and continue to its step", () => {
     const stop = brk();

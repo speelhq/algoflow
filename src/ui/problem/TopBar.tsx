@@ -1,6 +1,7 @@
 // The 52 px top bar: the back link, the title, the run controls, undo, redo, and `⋯`.
 import { useState, type ReactNode } from "react";
 import { t } from "@/i18n/t";
+import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { HelpDialog } from "@/ui/app/HelpDialog";
@@ -23,20 +24,23 @@ type Props = {
   menu?: ReactNode;
 };
 
-/** Undo and redo, disabled when there is nothing to take back or bring back, and while running. */
+/** Undo and redo, disabled when there is nothing to take back or bring back. */
 function UndoRedo() {
   const canUndo = useProgram((s) => s.past.length > 0);
   const canRedo = useProgram((s) => s.future.length > 0);
   const undo = useProgram((s) => s.undo);
   const redo = useProgram((s) => s.redo);
+  // Undo is an edit: not while running, nor while the solution is shown.
   const running = useRun((s) => s.status !== "idle");
+  const solution = useEditor((s) => s.solution);
+  const locked = running || solution;
   return (
     <>
       <Button
         variant="outline"
         size="icon"
         aria-label={t("problem.undo")}
-        disabled={!canUndo || running}
+        disabled={!canUndo || locked}
         onClick={undo}
       >
         {t("problem.undoGlyph")}
@@ -45,7 +49,7 @@ function UndoRedo() {
         variant="outline"
         size="icon"
         aria-label={t("problem.redo")}
-        disabled={!canRedo || running}
+        disabled={!canRedo || locked}
         onClick={redo}
       >
         {t("problem.redoGlyph")}
