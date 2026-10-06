@@ -18,7 +18,7 @@ import { useProgram } from "@/store/program";
 import { nodeText, templateOf } from "@/ui/chart/text";
 import { ChipView, type ChipActions } from "@/ui/expression/ChipView";
 import { emptyChip, replaceChip, unwrapChip } from "@/ui/expression/chips";
-import { placeItem, type Item } from "@/ui/expression/items";
+import { firstEmpty, placeItem, type Item } from "@/ui/expression/items";
 import { matchTemplate } from "@/ui/expression/templates";
 import { ValueMenu } from "@/ui/expression/ValueMenu";
 import { Button } from "@/ui/primitives/button";
@@ -285,7 +285,10 @@ function Body({
     const at = open;
     if (!apply((p) => replaceChip(p, at.chip, expr))) return;
     const rootId = at.root === at.chip ? expr.id : at.root;
-    setOpen(focus ? { chip: focus.id, root: rootId, slot: at.slot } : null);
+    // With the chip complete, the menu moves to the next empty slot of the same statement slot.
+    const root = nodesById(useProgram.getState().program).get(rootId);
+    const next = focus ?? (root && isExpr(root) ? firstEmpty(root) : undefined);
+    setOpen(next ? { chip: next.id, root: rootId, slot: at.slot } : null);
   };
 
   return (
@@ -371,10 +374,18 @@ export function NodeEditor({ id }: { id: NodeId }) {
   const program = useProgram((s) => s.program);
   const slot = useEditor((s) => s.slot);
   const select = useEditor((s) => s.select);
+  const closeEditor = useEditor((s) => s.closeEditor);
   const node = nodesById(program).get(id);
   if (!node || !("kind" in node) || getNode(keyOf(node)).shape !== "stmt") return null;
   return (
-    <Popover open onOpenChange={(open) => !open && select(null)}>
+    <Popover
+      open
+      onOpenChange={(open, details) => {
+        if (open) return;
+        if (details.reason === "escape-key") select(null);
+        else closeEditor();
+      }}
+    >
       <PopoverTrigger render={<div className="pointer-events-none size-full" aria-hidden />} />
       <PopoverContent
         side="right"

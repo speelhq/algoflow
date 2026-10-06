@@ -1,6 +1,6 @@
-// Editor-side UI state of a page: the panel tab, the selected node (whose editor is open)
-// and the slot a click on it chose, the node outlined from a hovered Python line, whether
-// the chart region shows the solution, and the diagnostic Run or Submit led to.
+// Editor-side UI state of a page: the panel tab, the selected node, whether its editor is
+// open and the slot a click on it chose, the node outlined from a hovered Python line,
+// whether the chart region shows the solution, and the diagnostic Run or Submit led to.
 import { create } from "zustand";
 import type { Diagnostic, NodeId } from "@/lang/types";
 
@@ -11,12 +11,16 @@ export type EditorState = {
   selectedId: NodeId | null;
   /** The slot whose menu the editor opens with: the one clicked on the node. */
   slot: string | null;
+  /** The selected node's editor is open; a press outside it closes it and keeps the selection. */
+  editing: boolean;
   hoveredId: NodeId | null;
   solution: boolean;
   /** Shown beside its node until the selection changes. */
   diagnostic: Diagnostic | null;
   setTab: (tab: PanelTab) => void;
+  /** Selects a node and opens its editor, on `slot` when one was clicked. */
   select: (id: NodeId | null, slot?: string) => void;
+  closeEditor: () => void;
   setHovered: (id: NodeId | null) => void;
   showSolution: (shown: boolean) => void;
   /** Selects `owner`, the statement holding the diagnostic, and shows its message. */
@@ -29,14 +33,26 @@ export const useEditor = create<EditorState>()((set) => ({
   tab: "problem",
   selectedId: null,
   slot: null,
+  editing: false,
   hoveredId: null,
   solution: false,
   diagnostic: null,
   setTab: (tab) => set({ tab }),
-  select: (id, slot) => set({ selectedId: id, slot: slot ?? null, diagnostic: null }),
+  select: (id, slot) =>
+    set({ selectedId: id, slot: slot ?? null, editing: id !== null, diagnostic: null }),
+  closeEditor: () => set({ editing: false }),
   setHovered: (id) => set({ hoveredId: id }),
   showSolution: (shown) => set({ solution: shown }),
-  lead: (owner, diagnostic) => set({ selectedId: owner, slot: null, diagnostic, solution: false }),
+  lead: (owner, diagnostic) =>
+    set({ selectedId: owner, slot: null, editing: true, diagnostic, solution: false }),
   open: (tab) =>
-    set({ tab, selectedId: null, slot: null, hoveredId: null, solution: false, diagnostic: null }),
+    set({
+      tab,
+      selectedId: null,
+      slot: null,
+      editing: false,
+      hoveredId: null,
+      solution: false,
+      diagnostic: null,
+    }),
 }));
