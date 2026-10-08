@@ -469,6 +469,10 @@ describe("layout (U-31, U-33 texts)", () => {
     expect(layout(program([unfilled])).nodes.find((n) => n.id === unfilled.id)).toMatchObject({
       text: "choose a value",
     });
+    // A loop whose start is empty keeps its sentences: the name waits for every slot.
+    const counting = { ...for_("i", ast.empty(), num(3), []), name: "count" };
+    const loopChart = layout(program([counting])).nodes;
+    expect(loopChart.find((n) => n.id === `${counting.id}:check`)?.text).toBe("i < 3?");
     // U-51: an input still to fill inside an operation is a dashed placeholder too.
     const half = { ...if_(bin("==", bin("%", v("x"), ast.empty()), num(0)), []), name: "Even?" };
     const node = layout(program([assign("x", num(4)), half])).nodes.find((n) => n.id === half.id);

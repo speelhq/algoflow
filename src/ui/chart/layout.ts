@@ -329,10 +329,13 @@ class Builder {
     return this.named(stmt, this.node(stmt.id, stmt.id, "stmt", "diamond", parts, y), parts);
   }
 
-  /** A named statement's node shows its name alone, with its own text as the hint. */
-  private named(stmt: Stmt, node: ChartNode, parts: Part[]): ChartNode {
+  /**
+   * A named statement's node shows its name alone, with its own text as the hint; `all` are the
+   * parts of every node the statement draws (a loop's init and check).
+   */
+  private named(stmt: Stmt, node: ChartNode, parts: Part[], all: Part[] = parts): ChartNode {
     // An empty slot keeps its placeholder on the node: it is that slot's only mark.
-    if (!stmt.name || parts.some((part) => part.empty)) return node;
+    if (!stmt.name || all.some((part) => part.empty)) return node;
     const own = this.node(
       node.id,
       node.owner,
@@ -444,6 +447,7 @@ class Builder {
           stmt,
           this.node(`${stmt.id}:check`, stmt.id, "check", "diamond", check, y),
           check,
+          [...generatedParts(stmt, "init"), ...check],
         )
       : this.diamond(stmt, y);
     frag.nodes.push(d);
