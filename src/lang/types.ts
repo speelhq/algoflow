@@ -64,8 +64,7 @@ export type Stmt =
   | { id: NodeId; kind: "print"; args: Expr[] }
   | { id: NodeId; kind: "return"; value?: Expr }
   | { id: NodeId; kind: "expr"; expr: Expr }
-  | { id: NodeId; kind: "swap"; list: Expr; i: Expr; j: Expr }
-  | { id: NodeId; kind: "comment"; text: string };
+  | { id: NodeId; kind: "swap"; list: Expr; i: Expr; j: Expr };
 export type StmtKind = Stmt["kind"];
 
 export type Target = VarTarget | IndexTarget | KeyTarget | FieldTarget;

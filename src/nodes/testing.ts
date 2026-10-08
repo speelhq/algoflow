@@ -67,7 +67,6 @@ export const ast = {
   assignTo: (target: Target, value: Expr): Stmt => ({ id: tid(), kind: "assign", target, value }),
   print: (...args: Expr[]): Stmt => ({ id: tid(), kind: "print", args }),
   exprStmt: (expr: Expr): Stmt => ({ id: tid(), kind: "expr", expr }),
-  comment: (text: string): Stmt => ({ id: tid(), kind: "comment", text }),
   if_: (cond: Expr, then: Stmt[], else_: Stmt[] = []): Stmt => ({
     id: tid(),
     kind: "if",

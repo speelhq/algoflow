@@ -16,7 +16,7 @@ function regionsIn(chart: ChartShape): string[] {
 
 describe("registry (N-02, N-09)", () => {
   it("N-01: the categories are in menu order", () => {
-    expect(CATEGORIES).toEqual(["basic", "control", "list", "function", "dict", "class", "math"]);
+    expect(CATEGORIES).toEqual(["basic", "control", "list", "function", "dict", "class"]);
   });
 
   it("N-09: break jumps out of the innermost loop and continue into its next pass", () => {

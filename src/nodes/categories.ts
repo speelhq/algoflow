@@ -6,7 +6,6 @@ export const CATEGORIES = [
   "function",
   "dict",
   "class",
-  "math",
 ] as const;
 
 export type Category = (typeof CATEGORIES)[number];

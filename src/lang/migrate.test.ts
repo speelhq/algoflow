@@ -21,6 +21,17 @@ describe("migrate (L-53)", () => {
     expect(migrate(json(p))).toEqual(p);
   });
 
+  it("L-55: drops the statements of the retired comment block, at any depth", () => {
+    const kept = print(v("x"));
+    const loop = for_("i", num(0), num(3), [kept]);
+    const comment = (text: string) => ({ id: "c0000000000c", kind: "comment", text });
+    const stored = json(program([loop]));
+    const main = (stored as { main: Array<{ body: unknown[] }> }).main;
+    main[0]?.body.push(comment("inside"));
+    main.unshift(comment("top") as never);
+    expect(migrate(stored)).toEqual(program([loop]));
+  });
+
   it("rejects an unsupported version with the path", () => {
     expect(() => migrate({ ...program([]), version: 2 })).toThrow(MigrateError);
     expect(() => migrate({ ...program([]), version: 2 })).toThrow(

@@ -84,6 +84,21 @@ function checkStmts(value: unknown, path: string): void {
   });
 }
 
+/** `stmts` without the statements of the retired `comment` block, at any depth. */
+function dropComments(stmts: unknown): unknown {
+  if (!Array.isArray(stmts)) return stmts;
+  return stmts
+    .filter((stmt) => !(isRecord(stmt) && stmt.kind === "comment"))
+    .map((stmt) => {
+      if (!isRecord(stmt) || typeof stmt.kind !== "string" || !hasNode(stmt.kind)) return stmt;
+      const copy: Record<string, unknown> = { ...stmt };
+      for (const slot of getNode(stmt.kind).slots) {
+        if (slot.role === "body") copy[slot.name] = dropComments(copy[slot.name]);
+      }
+      return copy;
+    });
+}
+
 function checkV1(json: Record<string, unknown>): Program {
   expectString(json.title, "title");
   expectArray(json.inputs, "inputs").forEach((input, i) => {
@@ -120,5 +135,8 @@ export function migrate(json: unknown): Program {
   if (version !== CURRENT_VERSION) {
     throw new MigrateError("version", `unsupported version ${String(version)}`);
   }
-  return checkV1(json);
+  const functions = Array.isArray(json.functions)
+    ? json.functions.map((fn) => (isRecord(fn) ? { ...fn, body: dropComments(fn.body) } : fn))
+    : json.functions;
+  return checkV1({ ...json, functions, main: dropComments(json.main) });
 }

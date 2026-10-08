@@ -100,12 +100,10 @@ describe("edit (L-50)", () => {
     expect(idsUnique(next)).toBe(true);
   });
 
-  it("setSlot sets id, text, and target slots; expression slots are refused", () => {
+  it("setSlot sets id and target slots; expression slots are refused", () => {
     const { p, loop, a } = sample();
     expect(lines(setSlot(p, loop.id, "var", "k"))[1]).toBe("for k in range(3):");
     expect(lines(setSlot(p, a.id, "target", { kind: "var", name: "y" }))[0]).toBe("y = 1");
-    const c = ast.comment("old");
-    expect(lines(setSlot(program([c]), c.id, "text", "new"))).toEqual(["# new"]);
     expect(() => setSlot(p, a.id, "value", "x")).toThrow(/no settable slot/);
   });
 
