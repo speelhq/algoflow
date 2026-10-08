@@ -8,7 +8,6 @@ import { getChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";
 import { firstDifference, resultRows, watchStep, type WatchStep } from "@/challenges/rows";
 import type { Test } from "@/challenges/types";
-import { dataEquals } from "@/lang/data";
 import type { Data, HeapEntry, Id, NodeId, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
 import { bodyStmts, nodesById, ownerStmts } from "@/lang/walk";
@@ -48,10 +47,8 @@ export type RunState = {
   /** The statements entered in the current pass (the taken path). */
   taken: Record<NodeId, true>;
   breakpoint: NodeId | null;
-  /** The chosen case, an index into the challenge's tests; -1 while the inputs are custom. */
+  /** The chosen case, an index into the challenge's tests. */
   caseIndex: number;
-  /** The Input nodes' values while they are those of no test (`Custom…`); else null. */
-  custom: Record<Id, Data> | null;
   /** The chosen case's verdict, once the shown run is at its end. */
   verdict: TestResult | null;
   /** Where a run started by `Watch this case` opened, for the narration at that step. */
@@ -67,8 +64,6 @@ export type RunState = {
   stop: () => void;
   setBreakpoint: (id: NodeId | null) => void;
   selectCase: (index: number) => void;
-  /** Sets one Input node's value; the case is the test with those inputs, else `Custom…`. */
-  setInput: (name: Id, value: Data) => void;
 };
 
 export type Difference = WatchStep;
@@ -270,34 +265,19 @@ function sleep(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
-/** The values the Input nodes show: the custom ones, else the chosen test's. */
+/** The values the Input nodes show: the chosen test's. */
 export function shownInputs(
   tests: readonly Test[] | undefined,
   caseIndex: number,
-  custom: Record<Id, Data> | null,
 ): Record<Id, Data> | undefined {
-  return custom ?? tests?.[caseIndex]?.inputs;
+  return tests?.[caseIndex]?.inputs;
 }
 
-/** The test whose inputs are exactly `inputs`, or -1. */
-export function caseOf(tests: readonly Test[], inputs: Record<Id, Data>): number {
-  const names = Object.keys(inputs);
-  return tests.findIndex(
-    (test) =>
-      Object.keys(test.inputs).length === names.length &&
-      names.every(
-        (name) =>
-          Object.hasOwn(test.inputs, name) &&
-          dataEquals(test.inputs[name] ?? null, inputs[name] ?? null),
-      ),
-  );
-}
-
-function originFor(caseIndex: number, custom: Record<Id, Data> | null): Origin | null {
+function originFor(caseIndex: number): Origin | null {
   const program = useProgram.getState().program;
   if (!canRun(program)) return null;
-  const test = custom ? undefined : getChallenge(program.challengeId)?.tests[caseIndex];
-  return { program, inputs: custom ?? test?.inputs ?? {}, seed: test?.seed ?? 1, test };
+  const test = getChallenge(program.challengeId)?.tests[caseIndex];
+  return { program, inputs: test?.inputs ?? {}, seed: test?.seed ?? 1, test };
 }
 
 function reset(from: Origin): void {
@@ -418,12 +398,11 @@ export const useRun = create<RunState>()((set, get) => {
     taken: {},
     breakpoint: null,
     caseIndex: 0,
-    custom: null,
     verdict: null,
     difference: null,
 
     async run(opts) {
-      const from = originFor(get().caseIndex, get().custom);
+      const from = originFor(get().caseIndex);
       if (!from) return;
       get().stop();
       const mine = generation;
@@ -516,15 +495,7 @@ export const useRun = create<RunState>()((set, get) => {
 
     selectCase(index) {
       get().stop();
-      set({ caseIndex: index, custom: null });
-    },
-
-    setInput(name, value) {
-      const tests = getChallenge(useProgram.getState().program.challengeId)?.tests ?? [];
-      const inputs = { ...shownInputs(tests, get().caseIndex, get().custom), [name]: value };
-      const index = caseOf(tests, inputs);
-      get().stop();
-      set(index >= 0 ? { caseIndex: index, custom: null } : { caseIndex: -1, custom: inputs });
+      set({ caseIndex: index });
     },
   };
 });
@@ -539,6 +510,6 @@ useProgram.subscribe((current, previous) => {
   if (current.program === previous.program) return;
   useRun.getState().stop();
   if (current.program.challengeId !== previous.program.challengeId) {
-    useRun.setState({ caseIndex: 0, custom: null });
+    useRun.setState({ caseIndex: 0 });
   }
 });

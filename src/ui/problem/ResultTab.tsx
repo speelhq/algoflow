@@ -27,13 +27,10 @@ function CaseSelect({ challenge }: { challenge: Challenge }) {
   const selectCase = useRun((s) => s.selectCase);
   // The case stays the run's while running.
   const running = useRun((s) => s.status !== "idle");
-  const custom = useRun((s) => s.custom !== null);
   const items = challenge.tests.map((test, index) => ({
     value: index,
     label: caseText(test.inputs),
   }));
-  // The Input nodes' values are those of no test.
-  if (custom) items.push({ value: -1, label: t("chart.custom") });
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs tracking-wide text-muted-foreground uppercase">

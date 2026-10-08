@@ -19,7 +19,6 @@ import { Connector } from "@/ui/editor/BlockMenu";
 import { apply } from "@/ui/editor/edits";
 import { accepts, tryMove } from "@/ui/editor/moves";
 import { DiagnosticMessage, flaggedStatements, NodeEditor } from "@/ui/editor/NodeEditor";
-import { LiteralEditor } from "@/ui/expression/LiteralEditor";
 import { Button } from "@/ui/primitives/button";
 import { narrate, narrateDifference, narrateEnd, type Narration } from "@/ui/run/narrate";
 import { caseText } from "./caseText";
@@ -136,8 +135,7 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
   const fonts = useFontLoads();
   const shown = solution && challenge !== undefined;
   const program: Program = shown ? challenge.solution : mine;
-  const custom = useRun((s) => s.custom);
-  const inputs = shownInputs(challenge?.tests, caseIndex, custom);
+  const inputs = shownInputs(challenge?.tests, caseIndex);
   const chart = useMemo(
     () => (fonts ? layout(program, { inputs, measure: measureText }) : null),
     [program, inputs, fonts],
@@ -147,15 +145,6 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
       challenge && {
         labels: challenge.tests.map((test) => caseText(test.inputs)),
         choose: selectCase,
-        custom: (name: string, done: () => void) => (
-          <LiteralEditor
-            name={name}
-            choose={(value) => {
-              useRun.getState().setInput(name, value);
-              done();
-            }}
-          />
-        ),
       },
     [challenge, selectCase],
   );

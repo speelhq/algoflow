@@ -12,7 +12,6 @@ export function RunControls({ challenge }: { challenge?: Challenge }) {
   const status = useRun((s) => s.status);
   const busy = useRun((s) => s.busy);
   const caseIndex = useRun((s) => s.caseIndex);
-  const custom = useRun((s) => s.custom);
   const stop = useRun((s) => s.stop);
   const submitting = useTests((s) => s.running);
   // Submit does not depend on the run, so it is offered in both modes.
@@ -36,7 +35,7 @@ export function RunControls({ challenge }: { challenge?: Challenge }) {
       </>
     );
   }
-  const inputs = shownInputs(challenge?.tests, caseIndex, custom);
+  const inputs = shownInputs(challenge?.tests, caseIndex);
   return (
     <>
       <span

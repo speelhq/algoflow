@@ -14,7 +14,7 @@ export type FirstDifference = { kind: "output"; line: number } | { kind: "variab
 export type WatchStep = { step: number; line?: number };
 
 /**
- * `expect` is absent for a `Custom…` case and a Playground program: the output rows then
+ * `expect` is absent for a Playground program: the output rows then
  * carry no `expected`. `differs` compares the values as they are now, so the tab marks a
  * row only once the run has ended. Lines are 1-based.
  */

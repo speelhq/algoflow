@@ -327,8 +327,6 @@
     "backToMine": "Back to my chart",
     "load": "Load into my chart",
     "blank": "…",
-    "custom": "Custom…",
-    "customFor": "A value of your own for {name}",
     "addFirst": "Add your first block",
     "connector": "Add a block here",
     "connectorGlyph": "+",
@@ -384,9 +382,6 @@
       "logic": "Logic",
       "call": "Call"
     },
-    "literal": "a number, \"text\", true, false, or none",
-    "notLiteral": "Only a number, a text, true, false, none, a list, or a dict can be an input.",
-    "useValue": "Use this value",
     "blank": "□",
     "listSeparator": ",",
     "addValue": "+ value",
