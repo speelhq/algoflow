@@ -13,9 +13,9 @@ export type BuiltinDef = {
   python?: string;
   aliases?: string[];
   imports?: "math" | "random";
-  /** The kind of the result, from the kinds of the arguments (L-59). */
+  /** The kind of the result, from the kinds of the arguments. */
   kind?(args: Array<Kind | undefined>): Kind | undefined;
-  /** The builtin's entry of the value list (N-11). */
+  /** The builtin's entry of the value list. */
   menu?: MenuEntry[];
   evaluate(args: Value[], node: Extract<Expr, { kind: "call" }>, ctx: RunContext): Value;
 };

@@ -28,7 +28,7 @@ export function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** Parts with the first letter capitalised when they begin with a word of the template (N-08). */
+/** Parts with the first letter capitalised when they begin with a word of the template. */
 export function capitaliseParts(parts: readonly Part[]): Part[] {
   const [first, ...rest] = parts;
   if (!first || first.slot !== undefined) return [...parts];
@@ -38,7 +38,7 @@ export function capitaliseParts(parts: readonly Part[]): Part[] {
 /** The text a variable is written as in place of its name, or undefined to keep the name. */
 export type Values = (name: string) => string | undefined;
 
-/** A run of text; `variable` marks a variable's name, drawn bold in the variable colour (N-08). */
+/** A run of text; `variable` marks a variable's name, drawn bold in the variable colour. */
 export type Run = { text: string; variable?: boolean };
 
 /** A run of a node's text: a slot's text with the slot's name, or the template's own words. */
@@ -139,21 +139,21 @@ export function templateOfExpr(expr: Expr): string {
   return nodeText(def.key, `template${form}`);
 }
 
-/** An expression with inputs whose template has words outside its placeholders (N-08). */
+/** An expression with inputs whose template has words outside its placeholders. */
 export function isWordOperation(expr: Expr): boolean {
   const def = getNode(keyOf(expr));
   const inputs = def.slots.some((slot) => slot.role === "expr" || slot.role === "exprs");
   return inputs && /\p{L}/u.test(templateOfExpr(expr).replace(/\{\w+\}/g, ""));
 }
 
-/** An expression with a precedence written with symbols only (N-08). */
+/** An expression with a precedence written with symbols only. */
 export function isOperator(expr: Expr): boolean {
   return getNode(keyOf(expr)).precedence !== undefined && !isWordOperation(expr);
 }
 
 /**
  * Whether a child of `parent` is bracketed as the chart writes it: a word operation next to an
- * operator, and an operation inside a word operation; operators among themselves follow E-05.
+ * operator, and an operation inside a word operation; operators among themselves follow Python's precedence.
  */
 export function needsBrackets(child: Expr, parent: Expr, side: Side): boolean {
   if (isWordOperation(parent)) return isOperator(child) || isWordOperation(child);
@@ -230,7 +230,7 @@ function slotRuns(node: Node, def: NodeDef, name: string, values?: Values): Run[
   return isExpr(arg) ? operandRuns(arg, node as Expr, "left", values) : [];
 }
 
-/** A piece of an expression as a value line shows it (U-50): words, or an input. */
+/** A piece of an expression as a value line shows it: words, or an input. */
 export type Piece = (Run & { slot?: string }) | { child: Expr; bracketed: boolean };
 
 /**
@@ -297,7 +297,7 @@ export function questionText(expr: Expr): string {
 }
 
 /**
- * An expression as runs: each block's template in its form, its inputs filled (N-08); a
+ * An expression as runs: each block's template in its form, its inputs filled; a
  * variable for which `values` has a text is written as that text.
  */
 export function exprRuns(expr: Expr, values?: Values): Run[] {
@@ -306,7 +306,7 @@ export function exprRuns(expr: Expr, values?: Values): Run[] {
   return fillRuns(templateOfExpr(expr), (name) => slotRuns(expr, def, name, values));
 }
 
-/** The text of an expression: each block's template in its form, its inputs filled (N-08). */
+/** The text of an expression: each block's template in its form, its inputs filled. */
 export function exprText(expr: Expr, values?: Values): string {
   return joinRuns(exprRuns(expr, values));
 }

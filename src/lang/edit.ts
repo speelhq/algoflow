@@ -172,7 +172,7 @@ export function setSlot(
   return next;
 }
 
-/** Sets a statement's name (L-58): one line, trimmed; an empty name removes it. */
+/** Sets a statement's name: one line, trimmed; an empty name removes it. */
 export function setStmtName(program: Program, id: NodeId, name: string): Program {
   const next = clone(program);
   const stmt = locateStmt(next, id)?.stmt;

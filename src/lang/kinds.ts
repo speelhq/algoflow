@@ -1,4 +1,4 @@
-// What is known of a value before the program runs (L-59): an expression's kind comes from
+// What is known of a value before the program runs: an expression's kind comes from
 // its block's `kind`, a variable's from its input's value or its first assignment.
 // Registry-driven: slot roles and `kind`, never a block's key.
 import { getNode, keyOf } from "@/nodes";
@@ -61,7 +61,7 @@ function assignKinds(stmts: Stmt[], kinds: Map<Id, Kind>): void {
 
 const memo = new WeakMap<Program, Map<NodeId | "main", Map<Id, Kind>>>();
 
-/** The kinds of the variables of `main` (with the inputs) or of one function (L-59). */
+/** The kinds of the variables of `main` (with the inputs) or of one function. */
 export function variableKinds(program: Program, chart: NodeId | "main" = "main"): Map<Id, Kind> {
   let charts = memo.get(program);
   if (!charts) {

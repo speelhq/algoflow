@@ -1,4 +1,4 @@
-// What a key does in a value line (U-50, U-53, U-54, U-93), as a pure function of the line,
+// What a key does in a value line, as a pure function of the line,
 // the word being typed, and a pending `=` or `!`. Keys that name an entry (`*`, `%`, `==`)
 // insert it as the chart writes it; a key typed again extends it (`*` then `*` is `**`).
 import type { MessageKey } from "@/i18n/t";
@@ -26,7 +26,7 @@ import { entryRows, kindsOf, type Row } from "./list";
 
 export type LineState = {
   line: Line;
-  /** Letters typed and not yet chosen (U-50). */
+  /** Letters typed and not yet chosen. */
   draft: string;
   /** A `=` or `!` waiting for the `=` that makes `==` or `!=`. */
   pending: "" | "=" | "!";
@@ -53,13 +53,13 @@ export function atInput(state: LineState): boolean {
   return isEmptyExpr(at(state));
 }
 
-/** The kind of the value before the caret (L-59), from the variables' kinds. */
+/** The kind of the value before the caret, from the variables' kinds. */
 export function kindBefore(state: LineState, kinds: ReadonlyMap<string, Kind>): Kind | undefined {
   const before = valueBefore(state.line);
   return before ? kindOf(before, kinds) : undefined;
 }
 
-/** Chooses a row of the list (U-53): it fills the input, or follows the value before the caret. */
+/** Chooses a row of the list: it fills the input, or follows the value before the caret. */
 export function choose(state: LineState, row: Row): LineState {
   const base = { ...state, draft: "", pending: "" as const };
   delete base.message;

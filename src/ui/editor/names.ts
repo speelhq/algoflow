@@ -1,4 +1,4 @@
-// The list of a name slot (U-94): the names the problem asks for, then the program's other
+// The list of a name slot: the names the problem asks for, then the program's other
 // variables, each with its kind, filtered by what is typed, and a typed name that neither
 // holds offered as a new variable.
 import { variableKinds } from "@/lang/kinds";

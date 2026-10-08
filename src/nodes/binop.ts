@@ -177,7 +177,7 @@ const CHART_OPS: Partial<Record<Binop["op"], string>> = {
   ">=": "≥",
 };
 
-/** The value list's entries of the operators (N-11), each presetting `op`. */
+/** The value list's entries of the operators, each presetting `op`. */
 function entries(): MenuEntry[] {
   const number = ["number"] as const;
   const ordered = ["number", "text"] as const;

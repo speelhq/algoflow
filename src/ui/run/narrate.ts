@@ -55,7 +55,7 @@ function valueAt(ref: Ref, frame: Frame | undefined, heap: Heap): Value | undefi
   return entry?.kind === "obj" ? entry.fields.get(ref.field) : undefined;
 }
 
-/** A variable's value as the narration writes it in a condition: scalars only (U-63). */
+/** A variable's value as the narration writes it in a condition: scalars only. */
 function scalars(frame: Frame | undefined, heap: Heap): (name: string) => string | undefined {
   return (name) => {
     const value = frame?.vars.get(name);

@@ -1,6 +1,6 @@
-// The edits of a value line (U-50..U-54, U-93) as pure functions of one slot's expression
+// The edits of a value line as pure functions of one slot's expression
 // and its caret. The caret is at an input still to fill (an empty expression) or after a
-// value. An entry whose block has a precedence binds by it, as E-05 states, within the
+// value. An entry whose block has a precedence binds by it, as Python's operators do, within the
 // innermost brackets; any other entry takes the last value. Reads slots and `precedence`.
 import { newId } from "@/lang/id";
 import type { Expr, NodeId } from "@/lang/types";
@@ -123,7 +123,7 @@ function caretAt(line: Line, root: Expr, node: Expr): Line {
   return { root, caret: { ...line.caret, at: (firstEmpty(node) ?? node).id } };
 }
 
-/** Fills the input the caret is at with `value` (U-53). */
+/** Fills the input the caret is at with `value`. */
 export function fill(line: Line, value: Expr): Line {
   const root = replace(line.root, line.caret.at, value);
   return caretAt(line, root, value);
@@ -135,7 +135,7 @@ function inGroup(line: Line, found: Found): boolean {
 }
 
 /**
- * Attaches `made` after the value at the caret (U-53): a block with a precedence takes as
+ * Attaches `made` after the value at the caret: a block with a precedence takes as
  * its first input the largest value ending at the caret that binds at least as tightly,
  * within the innermost brackets; any other block takes the value at the caret.
  */
@@ -194,7 +194,7 @@ export function rebind(line: Line, id: NodeId): Line {
   return { ...line, root: replace(line.root, operation.id, outer) };
 }
 
-/** Replaces an operation's `op` (U-54); other slots stay. */
+/** Replaces an operation's `op`; other slots stay. */
 export function retag(line: Line, id: NodeId, preset: Record<string, unknown>): Line {
   const found = find(line.root, id);
   if (!found) return line;
@@ -203,7 +203,7 @@ export function retag(line: Line, id: NodeId, preset: Record<string, unknown>): 
 }
 
 /**
- * Backspace (U-54): an empty input removes the operator before it, keeping the operation's
+ * Backspace: an empty input removes the operator before it, keeping the operation's
  * first input; a number loses its last character; any other value leaves an empty input;
  * the words of an operation remove it and keep its first input.
  */
@@ -267,7 +267,7 @@ function typeNumber(line: Line, raw: string, at: Expr): Line | undefined {
   return { ...line, root, caret: { ...line.caret, at: number.id } };
 }
 
-/** A digit or `.` typed (U-50): it starts a number at an empty input or extends the one there. */
+/** A digit or `.` typed: it starts a number at an empty input or extends the one there. */
 export function digit(line: Line, ch: string): Line {
   const at = find(line.root, line.caret.at)?.node;
   if (!at) return line;
@@ -277,7 +277,7 @@ export function digit(line: Line, ch: string): Line {
   return typeNumber(line, raw + ch, at) ?? line;
 }
 
-/** `-` at an empty input: the sign of what follows, the block the parser makes of `-x` (U-93). */
+/** `-` at an empty input: the sign of what follows, the block the parser makes of `-x`. */
 export function sign(line: Line): Line {
   const at = find(line.root, line.caret.at)?.node;
   const parsed = parse("-x");
@@ -287,7 +287,7 @@ export function sign(line: Line): Line {
   return fill(line, replace(parsed, operand.id, empty()));
 }
 
-/** `(` at an empty input opens brackets there (U-93). */
+/** `(` at an empty input opens brackets there. */
 export function open(line: Line): Line {
   const found = find(line.root, line.caret.at);
   if (!found || !isEmptyExpr(found.node)) return line;
@@ -317,7 +317,7 @@ export function move(line: Line, step: 1 | -1, fields = false): Line {
   return line;
 }
 
-/** The largest value ending at the caret, within the innermost brackets (what U-52 lists for). */
+/** The largest value ending at the caret, within the innermost brackets (what the list is for). */
 export function valueBefore(line: Line): Expr | undefined {
   let found = find(line.root, line.caret.at);
   if (!found || isEmptyExpr(found.node)) return undefined;

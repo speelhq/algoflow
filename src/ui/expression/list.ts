@@ -1,6 +1,6 @@
-// The list of a value line (U-52) as data: where a value is expected, the variables, the
+// The list of a value line as data: where a value is expected, the variables, the
 // values, brackets, Not, and the functions; after a value, the entries that apply to its
-// kind, grouped by purpose. Built from the blocks' `menu` entries (N-11) and the program's
+// kind, grouped by purpose. Built from the blocks' `menu` entries and the program's
 // variables and functions; names no block.
 import { t, type MessageKey } from "@/i18n/t";
 import { variableName } from "@/lang/kinds";
@@ -24,9 +24,9 @@ export type Row =
       label: string;
       help: string;
       symbol?: string;
-      /** It takes the value before the caret as its first input (N-11 `on`). */
+      /** It takes the value before the caret as its first input (its entry's `on`). */
       after: boolean;
-      /** The entry's preset slots, when it switches an operator (U-54). */
+      /** The entry's preset slots, when it switches an operator. */
       preset?: Record<string, unknown>;
       keys?: string;
       group: MenuGroup;
@@ -65,7 +65,7 @@ for (const def of NODES.values()) {
   for (const entry of def.menu ?? []) ON.set(`${def.key}:${entry.name}`, entry.on);
 }
 
-/** The kinds an entry row applies after (N-11). */
+/** The kinds an entry row applies after. */
 export function kindsOf(row: Extract<Row, { type: "entry" }>): readonly Kind[] {
   return ON.get(row.id) ?? [];
 }
@@ -111,7 +111,7 @@ function* allNames(expr: Expr): Generator<Expr, void, void> {
   }
 }
 
-/** The groups where a value is expected (U-52). */
+/** The groups where a value is expected. */
 export function valueGroups(
   program: Program,
   variables: ReadonlyArray<{ name: Id; of?: Kind }>,
@@ -148,7 +148,7 @@ export function valueGroups(
   return groups.filter((group) => group.rows.length > 0);
 }
 
-/** The order of the groups after a value (U-52). */
+/** The order of the groups after a value. */
 const AFTER_ORDER: readonly MenuGroup[] = [
   "calculate",
   "compare",
@@ -159,7 +159,7 @@ const AFTER_ORDER: readonly MenuGroup[] = [
   "other",
 ];
 
-/** The groups after a value of `kind` (U-52); a value of no known kind lists every such entry. */
+/** The groups after a value of `kind`; a value of no known kind lists every such entry. */
 export function afterGroups(kind: Kind | undefined): Group[] {
   const entries = entryRows().filter(
     (row) => row.after && (kind === undefined || kindsOf(row).includes(kind)),
@@ -198,7 +198,7 @@ export function matches(groups: Group[], query: string): Row[] {
   return [...hit.filter(exact), ...hit.filter((row) => !exact(row))];
 }
 
-/** The edit distance between two words, for `Did you mean` (U-50). */
+/** The edit distance between two words, for `Did you mean`. */
 function distance(a: string, b: string): number {
   const row = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i += 1) {

@@ -84,7 +84,7 @@ export type ChartShape =
 
 // ---------------------------------------------------------------- value list
 
-/** The groups of the value list (U-52), in the order the list shows them. */
+/** The groups of the value list, in the order the list shows them. */
 export const MENU_GROUPS = [
   "values",
   "combine",
@@ -109,7 +109,7 @@ export const ANY_KIND: readonly Kind[] = [
   "object",
 ];
 
-/** One entry of the value list (N-11). */
+/** One entry of the value list. */
 export type MenuEntry = {
   /** `""` for the block's own label and help, else `node.<key>.<name>.label` / `.help`. */
   name: string;
@@ -120,7 +120,7 @@ export type MenuEntry = {
   preset?: Record<string, unknown>;
   /** Shown before the name in the list (`×`). */
   symbol?: string;
-  /** What typed in a value line inserts the entry (U-93). */
+  /** What typed in a value line inserts the entry. */
   keys?: string;
 };
 
@@ -157,11 +157,11 @@ export type NodeDef = {
   text?(node: Stmt | Expr, slot: string): string;
   /** How the chart draws the block's regions; absent = a box with the sentence. */
   chart?: ChartShape;
-  /** The kind of the value an expression gives, from the kinds of its inputs (L-59). */
+  /** The kind of the value an expression gives, from the kinds of its inputs. */
   kind?(node: Expr, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
   /** The kind of the variable its `id` slot names (a counted loop's is a number). */
   declares?: Kind;
-  /** The block's entries of the value list (U-52, N-11). */
+  /** The block's entries of the value list. */
   menu?: MenuEntry[];
 };
 

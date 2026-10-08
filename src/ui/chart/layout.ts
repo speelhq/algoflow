@@ -43,7 +43,7 @@ export type ChartNode = {
   /** Drawn grey, not selectable on its own. */
   generated: boolean;
   text: string;
-  /** A named node's sentence or question, shown on hover in place of its text (U-95). */
+  /** A named node's sentence or question, shown on hover in place of its text. */
   hint?: string;
   /** The text in runs, each at `dx` from the node's left with width `w`; a slot's run names it. */
   parts: PlacedPart[];
@@ -73,7 +73,7 @@ export type ChartEdge = {
 export type PlacedPart = Part & { dx: number; w: number };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
 /** The width of `text` in px as the chart draws it. */
-/** The width of `text` in a node of `shape`; `bold` for a variable's name (N-08). */
+/** The width of `text` in a node of `shape`; `bold` for a variable's name. */
 export type Measure = (text: string, shape: Shape, bold?: boolean) => number;
 export type LayoutOptions = {
   /** `main` (default) or a function's id. */
@@ -328,7 +328,7 @@ class Builder {
     return this.named(stmt, this.node(stmt.id, stmt.id, "stmt", "diamond", parts, y), parts);
   }
 
-  /** A named statement's node shows its name alone, with its own text as the hint (U-95). */
+  /** A named statement's node shows its name alone, with its own text as the hint. */
   private named(stmt: Stmt, node: ChartNode, parts: Part[]): ChartNode {
     // An empty slot keeps its placeholder on the node: it is that slot's only mark.
     if (!stmt.name || parts.some((part) => part.empty)) return node;

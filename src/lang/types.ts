@@ -52,7 +52,7 @@ export type Heap = Map<HeapId, HeapEntry>;
 
 // ---------------------------------------------------------------- Statements
 
-/** Every statement may carry the learner's name for its node (L-58). */
+/** Every statement may carry the learner's name for its node. */
 type S = { id: NodeId; name?: string };
 export type Stmt =
   | (S & { kind: "assign"; target: Target; value: Expr })
@@ -69,7 +69,7 @@ export type Stmt =
   | (S & { kind: "swap"; list: Expr; i: Expr; j: Expr });
 export type StmtKind = Stmt["kind"];
 
-/** What is known of a value before the program runs (L-59). */
+/** What is known of a value before the program runs. */
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object";
 
 export type Target = VarTarget | IndexTarget | KeyTarget | FieldTarget;

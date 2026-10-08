@@ -1,7 +1,7 @@
 // The node editor: a popover anchored to the selected node with the node's name field and
-// its Duplicate and Delete icons (U-95), the block's sentence with its slots editable in place
+// its Duplicate and Delete icons, the block's sentence with its slots editable in place
 // (names as fields, expressions as value lines, lists of values, texts as inputs), the list of
-// the focused slot, and the explanation line (U-41, U-50..U-54, U-94, U-96). Reads slot roles
+// the focused slot, and the explanation line. Reads slot roles
 // and the blocks' menu entries, never a kind.
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { getChallenge } from "@/challenges";
@@ -133,10 +133,10 @@ function setName(program: Program, stmt: Stmt, slot: string, name: string): Prog
   return setSlot(program, stmt.id, slot, role === "target" ? { kind: "var", name } : name);
 }
 
-/** The node's name field (U-95) with `Duplicate` and `Delete` as icon buttons beside it. */
+/** The node's name field with `Duplicate` and `Delete` as icon buttons beside it. */
 function NameRow({ stmt }: { stmt: Stmt }) {
   const select = useEditor((s) => s.select);
-  // The field keeps what is typed; the program keeps it as one trimmed line (L-58).
+  // The field keeps what is typed; the program keeps it as one trimmed line.
   const [draft, setDraft] = useState(stmt.name ?? "");
   return (
     <div className="flex items-center gap-2">
@@ -209,13 +209,13 @@ function rootAt(stmt: Stmt, focus: Focus | null): Expr | undefined {
   return isExpr(item) ? item : undefined;
 }
 
-/** Whether `node` is a text value, typed into a field (U-50): its one slot is a `text` slot. */
+/** Whether `node` is a text value, typed into a field: its one slot is a `text` slot. */
 function isTextValue(node: Expr): boolean {
   const slots = getNode(keyOf(node)).slots;
   return numberText(node) === undefined && slots.length === 1 && slots[0]?.role === "text";
 }
 
-/** The explanation line (U-96): a bold head and its text. */
+/** The explanation line: a bold head and its text. */
 function Explain({ head, children }: { head?: ReactNode; children: ReactNode }) {
   return (
     <div
@@ -273,7 +273,7 @@ function Body({
 
   // The slot clicked on the node, or a first slot still to fill (a block just inserted), has
   // the keyboard when the editor opens; otherwise it stays with the chart, so Delete and
-  // Backspace still remove the node (U-35).
+  // Backspace still remove the node.
   useEffect(() => {
     if (!focus) return;
     const held = rootAt(stmt, focus);
@@ -339,7 +339,7 @@ function Body({
       ...(next.message ? { message: next.message } : {}),
     });
     setHighlight(next.draft !== "" ? null : highlight);
-    // A text value opens its field (U-50).
+    // A text value opens its field.
     const at = find(next.line.root, next.line.caret.at)?.node;
     if (at && at !== find(root, next.line.caret.at)?.node && isTextValue(at)) {
       const slot = getNode(keyOf(at)).slots[0]?.name ?? "";
@@ -658,7 +658,7 @@ function Body({
   const tail = template.slice(at).trim();
   if (tail !== "") sentence.push(<span key="tail">{tail}</span>);
 
-  // ------------------------------------------------------------ the name list (U-94)
+  // ------------------------------------------------------------ the name list
 
   const nameSlot = focus && nameOf(stmt, focus.slot) !== undefined ? focus.slot : undefined;
   const nameLists = nameSlot ? nameList(program, asked, typedName, chart, stmt.id) : undefined;
@@ -743,7 +743,7 @@ function Body({
                 ]),
           ];
 
-  // ------------------------------------------------------------ the explanation line (U-96)
+  // ------------------------------------------------------------ the explanation line
 
   const rowById = (id: string | null) => (id ? rows.find((row) => row.id === id) : undefined);
   const explanation = ((): { head?: ReactNode; text: ReactNode } => {
@@ -832,7 +832,7 @@ function itemOf(row: Row): Item {
   return { id: row.id, label: row.label, ...(row.symbol ? { symbol: row.symbol } : {}) };
 }
 
-/** The entries an operator can be switched to: those of its block in its own group (U-54). */
+/** The entries an operator can be switched to: those of its block in its own group. */
 function switchRowsFor(root: Expr, id: NodeId): Row[] {
   const node = find(root, id)?.node;
   if (!node) return [];
@@ -857,7 +857,7 @@ function labelOf(operation: Expr): string {
   return entry?.label ?? nodeText(key, "label");
 }
 
-/** An operation's text with the input the caret is in underlined (U-96). */
+/** An operation's text with the input the caret is in underlined. */
 function Underlined({ operation, input }: { operation: Expr; input: Expr }) {
   return (
     <span>
@@ -883,7 +883,7 @@ function Underlined({ operation, input }: { operation: Expr; input: Expr }) {
   );
 }
 
-/** What the explanation line says of a variable: its kind and where it is first set (U-96). */
+/** What the explanation line says of a variable: its kind and where it is first set. */
 function aboutVariable(program: Program, name: string, kinds: ReadonlyMap<string, Kind>): string {
   const of = kinds.get(name);
   const kind = of ? t(`editor.kind.${of}` as MessageKey) : "";

@@ -1,4 +1,4 @@
-// The list under the sentence (U-52, U-94): titled groups of rows, each with an optional
+// The list under the sentence: titled groups of rows, each with an optional
 // symbol, a label (a variable's in bold and the variable colour), and a note on the right;
 // one row is highlighted. One delegated listener reads the row from `data-row`.
 import type { SyntheticEvent } from "react";

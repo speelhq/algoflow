@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import type { Measure } from "./layout";
 
 export const CHART_FONT = '13px "Geist Variable", sans-serif';
-/** A variable's name on the chart (N-08). */
+/** A variable's name on the chart. */
 export const CHART_BOLD_FONT = `700 ${CHART_FONT}`;
 
 let context: CanvasRenderingContext2D | null | undefined;

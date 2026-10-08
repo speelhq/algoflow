@@ -1,7 +1,7 @@
-// A value line (U-50): one expression written as the chart writes it, variables as bold
+// A value line: one expression written as the chart writes it, variables as bold
 // words in the variable colour, a word operation on a light underlay, an input to fill as an
 // empty field, and the caret. Keys go to the editor; a click on a value puts the caret after
-// it, and a click on an operator asks to switch it (U-54). Reads pieces, never a kind.
+// it, and a click on an operator asks to switch it. Reads pieces, never a kind.
 import type { KeyboardEvent, ReactNode } from "react";
 import { t } from "@/i18n/t";
 import type { Expr, NodeId } from "@/lang/types";
@@ -18,7 +18,7 @@ type Props = {
   active: boolean;
   /** The whole value is selected: typing replaces it. */
   selected?: boolean;
-  /** The text being typed into a text value, when one is open (U-50). */
+  /** The text being typed into a text value, when one is open. */
   text: { at: NodeId; value: string } | null;
   onText: (value: string) => void;
   onTextDone: () => void;
