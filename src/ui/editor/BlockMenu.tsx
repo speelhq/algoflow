@@ -71,7 +71,8 @@ export function Connector({ place, first }: { place: Place; first: boolean }) {
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <div className="flex -translate-x-1/2 -translate-y-1/2 items-center gap-2">
+      {/* The `+` sits on the edge; the first block's label stands beside it, clear of the edge. */}
+      <div className="relative flex -translate-x-1/2 -translate-y-1/2 items-center">
         <PopoverTrigger
           render={
             <button
@@ -88,7 +89,7 @@ export function Connector({ place, first }: { place: Place; first: boolean }) {
         {first && (
           <button
             type="button"
-            className="cursor-pointer rounded-md border border-selection/60 bg-selection/10 px-2 py-1 text-sm whitespace-nowrap"
+            className="absolute left-[calc(100%+0.75rem)] cursor-pointer rounded-md border border-selection/60 bg-selection/10 px-2 py-1 text-sm whitespace-nowrap"
             onClick={() => setOpen(true)}
           >
             {t("chart.addFirst")}
