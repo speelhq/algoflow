@@ -25,6 +25,7 @@ export type NodeDef = {
   form?(node: Stmt | Expr, ctx: { creates: boolean }): string; // N-08
   text?(node: Stmt | Expr, slot: string): string; // N-08
   kind?(node: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // L-59
+  declares?: Kind; // the kind of the variable its `id` slot names (L-59)
   menu?: MenuEntry[]; // the entries of the value list (U-52, N-11)
   chart?:
     | { branch: { yes: string; no: string } }

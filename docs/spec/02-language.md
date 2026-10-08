@@ -291,8 +291,9 @@ of a value before the program runs: `number`, `text`, `truefalse`,
 `none`, `list`, `dict`, or `object`. An expression's kind comes from its
 block's `kind` (N-01), given the kinds of the expressions inside it; a
 variable's kind is that of its input's value, else of the value of its
-first assignment in program order, else `number` for a `for` variable; a
-parameter and a `foreach` variable have none, and an expression whose kind
+first assignment in program order, else the kind its loop block declares
+(N-01 `declares`: `number` for a `for` variable); a parameter and a
+`foreach` variable have none, and an expression whose kind
 cannot be told has none.
 
 ## Verification
