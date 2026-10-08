@@ -23,7 +23,10 @@
       "keysColumn": "Keys",
       "actionColumn": "Action",
       "keys": {
-        "delete": { "keys": "Delete, Backspace", "action": "Remove the selected block" },
+        "delete": {
+          "keys": "Delete, Backspace",
+          "action": "Remove the selected block, unless typing in the editor"
+        },
         "undo": { "keys": "Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z", "action": "Undo, redo" },
         "duplicate": { "keys": "Ctrl/Cmd+D", "action": "Duplicate the selected block" },
         "run": { "keys": "Ctrl/Cmd+Enter", "action": "Run / Pause" },
@@ -32,6 +35,11 @@
         "escape": {
           "keys": "Esc",
           "action": "Close a menu or editor and clear the selection; while running, clear the breakpoint, else Stop"
+        },
+        "tab": { "keys": "Tab, Shift+Tab", "action": "Next, previous field of a value" },
+        "enter": {
+          "keys": "Enter",
+          "action": "Choose the highlighted entry; else close the editor"
         }
       }
     }
