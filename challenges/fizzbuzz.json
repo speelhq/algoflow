@@ -34,11 +34,13 @@
     { "inputs": { "n": 3 }, "expect": { "stdout": ["1", "2", "Fizz"] } }
   ],
   "hints": [
-    { "en": "`i % 3 == 0` is true exactly when `i` is a multiple of 3." },
-    { "en": "Check the multiple-of-15 case first, otherwise `Fizz` or `Buzz` would win." },
     {
-      "en": "Put an **if** inside the **else** region of another **if** to test the remaining cases in order."
-    }
+      "en": "Use a **for** block from 1 up to `n + 1`, and inside it an **if** whose condition is `i is divisible by 15`."
+    },
+    {
+      "en": "Test 15 first, then 3, then 5, each **if** on the **No** side of the one before; testing 3 first would print `Fizz` for 15."
+    },
+    { "en": "Print the word on each **Yes** side, and `i` itself on the last **No** side." }
   ],
   "takeaway": { "en": "Nested **if** blocks tested the divisible-by-15 case before 3 and 5." },
   "solution": {
