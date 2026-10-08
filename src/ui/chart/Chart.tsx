@@ -14,7 +14,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/ui/primitives/popover";
 import { ChartDrag, DropZone, useNodeDrag, type Moves } from "./drag";
 import { PILL, type ChartEdge, type ChartLayout, type ChartNode } from "./layout";
 import { nodeFor, type Paint } from "./paint";
@@ -35,8 +34,6 @@ type Props = {
   cases?: {
     labels: string[];
     choose: (index: number) => void;
-    /** `Custom…`'s value editor for input `name`; `done` closes it. */
-    custom: (name: string, done: () => void) => ReactNode;
   };
   /** The run drawn on the chart. */
   paint?: Paint;
@@ -213,9 +210,8 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
 }
 
 /** Clicking an Input node lists the problem's cases; choosing one sets every Input node. */
-function InputMenu(props: { label: string; name: string; cases: NonNullable<Props["cases"]> }) {
-  const { label, name, cases } = props;
-  const [editing, setEditing] = useState(false);
+function InputMenu(props: { label: string; cases: NonNullable<Props["cases"]> }) {
+  const { label, cases } = props;
   return (
     <div className="relative size-full">
       <DropdownMenu>
@@ -236,17 +232,8 @@ function InputMenu(props: { label: string; name: string; cases: NonNullable<Prop
               {text}
             </DropdownMenuItem>
           ))}
-          <DropdownMenuItem onClick={() => setEditing(true)}>{t("chart.custom")}</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Popover open={editing} onOpenChange={setEditing}>
-        <PopoverTrigger
-          render={<div className="pointer-events-none absolute inset-0" aria-hidden />}
-        />
-        <PopoverContent side="right" align="start" className="w-72">
-          {cases.custom(name, () => setEditing(false))}
-        </PopoverContent>
-      </Popover>
     </div>
   );
 }
@@ -528,11 +515,7 @@ export function Chart(props: Props) {
                           className="pointer-events-auto absolute"
                           style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
                         >
-                          <InputMenu
-                            label={node.text}
-                            name={node.id.slice("input:".length)}
-                            cases={cases}
-                          />
+                          <InputMenu label={node.text} cases={cases} />
                         </div>
                       ))}
                 </div>
