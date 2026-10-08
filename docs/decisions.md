@@ -690,15 +690,18 @@ applies.
 **Kinds choose the list** (L-59, U-52, N-11, U-50). After a value the list
 offers what applies to that kind of value, so a list does not offer
 `Multiply`; the kind comes from inputs and first assignments, which is known
-without running. A kind that cannot be told shows every entry, and `Show
-all` ends every list, so nothing is hidden by a wrong guess. It lists only
-what can be chosen at the caret, so every row it shows acts; an operation
-chosen where a value is expected is placed with its inputs empty. A typed
-word searches every entry for the same reason. It matches the start of a
-word only, since a match inside a word (`i` in `first`) is never the name
-meant, and Enter takes the first match, so the kind's entries come before
-the rest (`an` after a comparison is `And`). `Or` is explained as one side
-or both, because in everyday English or often means only one.
+without running. The groups a kind uses most come first: `Items` and
+`Totals` for a list, `Calculate` for a number, `Combine` for a true/false
+value, and the comparisons and conversions every kind shares after them. A
+kind that cannot be told shows every entry, and `Show all` ends every list,
+so nothing is hidden by a wrong guess. It lists only what can be chosen at
+the caret, so every row it shows acts; an operation chosen where a value is
+expected is placed with its inputs empty. A typed word searches every entry
+for the same reason. It matches the start of a word only, since a match
+inside a word (`i` in `first`) is never the name meant, and Enter takes the
+first match, so the kind's entries come before the rest (`an` after a
+comparison is `And`). `Or` is explained as one side or both, because in
+everyday English or often means only one.
 
 **A diamond's narration asks and answers** (U-63). The diamond already
 shows its verdict as `✓` or `✗` and colours the edge taken, so `is false,
