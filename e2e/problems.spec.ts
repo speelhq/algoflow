@@ -39,10 +39,9 @@ test.describe("Problems page (U-10..U-14)", () => {
     const plan = page.getByTestId("plan-course");
     await expect(plan.getByRole("heading", { name: "3-Day Course" })).toBeVisible();
     await expect(plan).toContainText("2 of 5 solved");
-    await expect(plan.getByRole("link", { name: "Continue", exact: true })).toHaveAttribute(
-      "href",
-      "#/p/fizzbuzz",
-    );
+    await expect(
+      plan.getByRole("link", { name: "Continue: FizzBuzz ▶", exact: true }),
+    ).toHaveAttribute("href", "#/p/fizzbuzz");
     await expect(page.getByTestId("problem-tutorial").getByRole("img")).toHaveAccessibleName(
       "Solved",
     );

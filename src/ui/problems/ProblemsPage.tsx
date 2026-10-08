@@ -31,6 +31,7 @@ function PlanSection({ section, status }: { section: Section; status: Status }) 
   const challenges = problems.flatMap((id) => getChallenge(id) ?? []);
   const action = plan ? planAction(problems, status) : null;
   const solved = problems.filter((id) => status(id) === "solved").length;
+  const next = action && getChallenge(action.id);
   return (
     <section className="mb-6" data-testid={`plan-${plan?.id ?? "more"}`}>
       <div className="flex items-center gap-4 rounded-xl border bg-muted/40 px-4 py-3">
@@ -50,7 +51,9 @@ function PlanSection({ section, status }: { section: Section; status: Status }) 
               variant: action.kind === "continue" ? "default" : "outline",
             })}
           >
-            {t(action.kind === "continue" ? "problems.continue" : "problems.start")}
+            {action.kind === "continue" && next
+              ? t("problems.continue", { title: localized(next.title) })
+              : t("problems.start")}
           </a>
         )}
       </div>
