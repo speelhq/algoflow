@@ -49,6 +49,9 @@ canvas.
 - A node's text, a diamond's text, and the narration are those of N-08,
   U-33, and U-63 (`(remainder of i divided by 15) = 0?`), regardless of the
   text on a board.
+- A value list holds the N-11 entries of the blocks that exist (U-52):
+  `EditValue.png` leaves out `None` and draws `Empty list` and
+  `More functions ▸`, which arrive with their blocks and modules.
 - The boards use a hand-drawn typeface to mark them as drafts; the
   application uses the typeface of `src/ui/theme.css`.
 
