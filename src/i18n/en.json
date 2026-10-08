@@ -28,7 +28,6 @@
         "duplicate": { "keys": "Ctrl/Cmd+D", "action": "Duplicate the selected block" },
         "run": { "keys": "Ctrl/Cmd+Enter", "action": "Run / Pause" },
         "step": { "keys": "→, ←", "action": "Step, Back (while running)" },
-        "stepOver": { "keys": "Shift+→", "action": "Step over (while running)" },
         "skip": { "keys": "Ctrl/Cmd+→", "action": "Skip (while running)" },
         "escape": {
           "keys": "Esc",
@@ -171,7 +170,7 @@
       "label": "Set variable",
       "template": "set {target} to {value}",
       "templateCreate": "create {target} and set it to {value}",
-      "help": "Stores a value in a variable, a list item, a dict entry, or an object field."
+      "help": "Creates a variable, or changes the value of one that exists."
     },
     "if": {
       "label": "If",

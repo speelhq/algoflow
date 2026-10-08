@@ -11,7 +11,8 @@ import {
 } from "@/ui/primitives/dialog";
 
 const LOOP = ["build", "run", "submit"] as const;
-const KEYS = ["delete", "undo", "duplicate", "run", "step", "stepOver", "skip", "escape"] as const;
+// Step over (Shift+→) joins the table with the action itself.
+const KEYS = ["delete", "undo", "duplicate", "run", "step", "skip", "escape"] as const;
 
 type Props = { open: boolean; onOpenChange: (open: boolean) => void };
 
