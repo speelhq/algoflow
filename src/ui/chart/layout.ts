@@ -11,7 +11,7 @@ import type { Data, Id, NodeId, Place, Program, Stmt } from "@/lang/types";
 import { regionsOf } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
 import {
-  capitalise,
+  capitaliseParts,
   dataText,
   generatedParts,
   joinParts,
@@ -300,9 +300,7 @@ class Builder {
 
   /** A box; `leaves` names where its edge goes when it is not to the next node. */
   private box(stmt: Stmt, leaves: Leave | null): Frag {
-    const parts = sentenceParts(stmt, this.program);
-    const [first] = parts;
-    if (first) parts[0] = { ...first, text: capitalise(first.text) };
+    const parts = capitaliseParts(sentenceParts(stmt, this.program));
     const node = this.node(stmt.id, stmt.id, "stmt", "box", parts, 0);
     const half = node.w / 2;
     return {

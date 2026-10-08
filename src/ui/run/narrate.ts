@@ -7,11 +7,11 @@ import { childExprs, nodesById } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
 import {
-  capitalise,
+  capitaliseParts,
   conditionOf,
   exprText,
-  sentence,
-  slotSentence,
+  joinParts,
+  sentenceParts,
   valueText,
 } from "@/ui/chart/text";
 import { matchTemplates, variableName } from "@/ui/expression/templates";
@@ -121,10 +121,10 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
       const diamond = chart !== undefined && ("branch" in chart || "check" in chart);
       const condition = diamond ? conditionOf(node) : undefined;
       return condition
-        ? { key: "run.narrate.check", params: { condition: slotSentence(condition) } }
+        ? { key: "run.narrate.check", params: { condition: exprText(condition) } }
         : {
             key: "run.narrate.enter",
-            params: { sentence: capitalise(sentence(node, ctx.program)) },
+            params: { sentence: joinParts(capitaliseParts(sentenceParts(node, ctx.program))) },
           };
     }
     case "read": {

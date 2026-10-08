@@ -431,7 +431,7 @@ describe("layout (U-31, U-33 texts)", () => {
     expect(layout(sum.solution).nodes[1]?.text).toBe("Input n = 10");
     expect(chart.nodes.at(-1)?.text).toBe("End");
     const texts = chart.nodes.filter((node) => node.generated).map((node) => node.text);
-    expect(texts).toEqual(["Set i to 1", "Is i < n + 1?", "Set i to i + 1"]);
+    expect(texts).toEqual(["Set i to 1", "i < n + 1?", "Set i to i + 1"]);
   });
 
   it("a diamond asks its condition; a function chart starts with its signature and has no inputs", () => {
@@ -442,7 +442,7 @@ describe("layout (U-31, U-33 texts)", () => {
     });
     expect(chart.nodes[0]?.text).toBe("Start f(x)");
     expect(chart.nodes.some((node) => node.role === "input")).toBe(false);
-    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe("Is x divisible by 15?");
+    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe("(remainder of x divided by 15) = 0?");
     const jumps = chart.edges.filter((edge) => edge.jump);
     expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // U-31: a Return leads to End
   });

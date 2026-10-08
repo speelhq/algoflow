@@ -24,7 +24,7 @@ test("FizzBuzz draws its loop's generated nodes, diamonds as questions, and Yes/
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   const chart = page.getByTestId("chart");
-  for (const text of ["Set i to 1", "Is i < n + 1?", "Set i to i + 1", "Is i divisible by 15?"]) {
+  for (const text of ["Set i to 1", "i < n + 1?", "Set i to i + 1", "(remainder of i divided by 15) = 0?"]) {
     await expect(chart.locator("text", { hasText: text }).first()).toBeVisible();
   }
   await expect(chart.locator("text", { hasText: /^Yes$/ })).toHaveCount(4);
@@ -73,7 +73,7 @@ test("Show solution draws the solution read-only; Back to my chart returns (U-22
   await page.getByRole("button", { name: "Show solution" }).click();
   await expect(page.getByTestId("solution-band")).toContainText("Solution");
   await expect(page.getByTestId("connector")).toHaveCount(0);
-  await expect(page.getByTestId("chart")).toContainText("Is i divisible by 15?");
+  await expect(page.getByTestId("chart")).toContainText("(remainder of i divided by 15) = 0?");
   await expect(page.getByTestId("input-node")).toHaveCount(0);
   await page.getByRole("button", { name: "Back to my chart" }).click();
   await expect(page.getByTestId("solution-band")).toHaveCount(0);
@@ -87,7 +87,7 @@ test("Load into my chart replaces the program with the solution as one undoable 
   await page.getByRole("button", { name: "Show solution" }).click();
   await page.getByRole("button", { name: "Load into my chart" }).click();
   await expect(page.getByTestId("solution-band")).toHaveCount(0);
-  await expect(page.getByTestId("chart")).toContainText("Is i divisible by 15?");
+  await expect(page.getByTestId("chart")).toContainText("(remainder of i divided by 15) = 0?");
   await expect(page.getByTestId("connector").first()).toBeVisible();
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByTestId("chart").locator("[data-chart-node]")).toHaveCount(3);

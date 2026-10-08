@@ -26,7 +26,7 @@ test.describe("FizzBuzz", () => {
 
   test("Build", async ({ page }) => {
     await page.goto("/#/p/fizzbuzz");
-    await expect(page.getByTestId("chart")).toContainText("Is i divisible by 15?");
+    await expect(page.getByTestId("chart")).toContainText("(remainder of i divided by 15) = 0?");
     await page.screenshot({ path: `${DIR}/build.png`, animations: "disabled" });
   });
 
@@ -46,7 +46,7 @@ test.describe("FizzBuzz", () => {
       await page.getByRole("button", { name: "Skip ▶▶" }).click();
       await expect(page.getByTestId("variables")).toContainText(`i = ${pass + 1}`);
     }
-    await expect(page.getByTestId("narration")).toHaveText("Checking i is divisible by 3");
+    await expect(page.getByTestId("narration")).toHaveText("Checking (remainder of i divided by 3) = 0");
     await page.screenshot({ path: `${DIR}/run.png`, animations: "disabled" });
   });
 

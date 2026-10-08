@@ -40,8 +40,8 @@ describe("expression menu items", () => {
       operatorItems()
         .filter((item) => item.group === group)
         .map((item) => item.label);
-    expect(by("math")).toEqual(["+", "-", "×", "÷", "//", "%", "**"]);
-    expect(by("compare")).toEqual(["==", "!=", "<", "<=", ">", ">=", "in"]);
+    expect(by("math")).toEqual(["+", "−", "×", "÷", "//", "%", "**"]);
+    expect(by("compare")).toEqual(["=", "≠", "<", "≤", ">", "≥", "in"]);
     expect(by("logic")).toEqual(["and", "or", "not"]);
   });
 

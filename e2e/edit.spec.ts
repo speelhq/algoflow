@@ -58,11 +58,11 @@ test("M-04 exit: FizzBuzz is built from an empty chart and accepted", async ({ p
   await menu(page).locator('[data-group="math"]').click();
   await page.getByRole("menuitem", { name: "+", exact: true }).click();
   await type(page, "1");
-  await expect(page.getByTestId("chart")).toContainText("Is i < n + 1?");
+  await expect(page.getByTestId("chart")).toContainText("i < n + 1?");
 
   const fifteen = await insert(page, `${loop}/body/0`, "if");
   await divisible(page, "15");
-  await expect(page.getByTestId("chart")).toContainText("Is i divisible by 15?");
+  await expect(page.getByTestId("chart")).toContainText("(remainder of i divided by 15) = 0?");
   await printed(page, `${fifteen}/then/0`, '"FizzBuzz');
 
   const three = await insert(page, `${fifteen}/else/0`, "if");

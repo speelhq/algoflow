@@ -34,8 +34,8 @@ describe("narrate (U-63)", () => {
     const check = if_(bin("==", bin("%", v("i"), num(3)), num(0)), []);
     const p = program([assign("i", num(6)), check, while_(bin(">", v("i"), num(9)), [])]);
     expect(told(p, "enter", 1)).toBe("Create i and set it to 6");
-    expect(told(p, "enter", 2)).toBe("Checking i is divisible by 3");
-    expect(told(p, "enter", 3)).toBe("Checking i is greater than 9");
+    expect(told(p, "enter", 2)).toBe("Checking (remainder of i divided by 3) = 0");
+    expect(told(p, "enter", 3)).toBe("Checking i > 9");
     expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("For i from 1 up to 3");
   });
 

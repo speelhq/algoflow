@@ -1,6 +1,6 @@
 // A node's sentence as plain text, from `node.<key>.template<form>` and the block's
-// slots; a statement's slot holding an expression that matches a condition template
-// reads as that template's sentence, while the chips nested inside an expression keep symbols.
+// slots, in the block language: school symbols for operators, words for every other
+// operation, and brackets around a word operation where it meets another operation.
 // Reads slot roles, `params`, `form`, `text`, and `precedence` only, never a kind.
 import { fillPlaceholders, t, type MessageKey } from "@/i18n/t";
 import { toValue } from "@/lang/data";
@@ -11,7 +11,6 @@ import { getNode, hasNode, keyOf } from "@/nodes";
 import type { NodeDef, Side } from "@/nodes/types";
 import { parenthesise, writeTarget } from "@/python/emit";
 import { str, writeValue } from "@/runtime/values";
-import { matchTemplate, type TemplateMatch } from "@/ui/expression/templates";
 
 type Bag = Record<string, unknown>;
 
@@ -27,6 +26,13 @@ export function blankTemplate(template: string): string {
 
 export function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** Parts with the first letter capitalised when they begin with a word of the template (N-08). */
+export function capitaliseParts(parts: readonly Part[]): Part[] {
+  const [first, ...rest] = parts;
+  if (!first || first.slot !== undefined) return [...parts];
+  return [{ ...first, text: capitalise(first.text) }, ...rest];
 }
 
 /** A template with its slots filled; a sentence drops the space an empty slot leaves. */
@@ -102,10 +108,39 @@ function renderParts(template: string, node: Node, def: NodeDef): Part[] {
   return out.filter((part) => part.text !== "");
 }
 
-/** A child is parenthesised where the emitter would parenthesise it; one with no parent never is. */
-function operand(child: Expr, parent: number | undefined, side: Side): string {
+/** An expression's template in its form. */
+function templateOfExpr(expr: Expr): string {
+  const def = getNode(keyOf(expr));
+  const form = def.form?.(expr, { creates: false }) ?? "";
+  return nodeText(def.key, `template${form}`);
+}
+
+/** An expression with inputs whose template has words outside its placeholders (N-08). */
+export function isWordOperation(expr: Expr): boolean {
+  const def = getNode(keyOf(expr));
+  const inputs = def.slots.some((slot) => slot.role === "expr" || slot.role === "exprs");
+  return inputs && /\p{L}/u.test(templateOfExpr(expr).replace(/\{\w+\}/g, ""));
+}
+
+/** An expression with a precedence written with symbols only (N-08). */
+export function isOperator(expr: Expr): boolean {
+  return getNode(keyOf(expr)).precedence !== undefined && !isWordOperation(expr);
+}
+
+/**
+ * A child of `parent` as the chart writes it: a word operation next to an operator, and an
+ * operation inside a word operation, are bracketed; operators among themselves follow E-05.
+ */
+function operand(child: Expr, parent: Expr, side: Side): string {
   const text = exprText(child);
-  return parent === undefined ? text : parenthesise(child, text, parent, side);
+  const bracketed = `(${text})`;
+  if (isWordOperation(parent)) {
+    return isOperator(child) || isWordOperation(child) ? bracketed : text;
+  }
+  if (!isOperator(parent)) return text;
+  if (isWordOperation(child)) return bracketed;
+  const precedence = getNode(keyOf(parent)).precedence?.(parent);
+  return precedence === undefined ? text : parenthesise(child, text, precedence, side);
 }
 
 /** A target reads as the expression of the same shape once that block exists (`index`, `key`, `field`). */
@@ -118,7 +153,6 @@ function targetText(target: Target): string {
 /** The text of one `{name}` placeholder of `node`'s template. */
 export function slotText(node: Node, def: NodeDef, name: string): string {
   const bag = node as unknown as Bag;
-  const precedence = def.shape === "expr" ? def.precedence?.(node as Expr) : undefined;
   const slot = def.slots.find((s) => s.name === name);
   if (slot) {
     const value = bag[slot.name];
@@ -127,15 +161,10 @@ export function slotText(node: Node, def: NodeDef, name: string): string {
       case "expr":
         if (!isExpr(value)) return "";
         return def.shape === "stmt"
-          ? slotSentence(value)
-          : operand(value, precedence, first ? "left" : "right");
+          ? exprText(value)
+          : operand(value, node as Expr, first ? "left" : "right");
       case "exprs":
-        return Array.isArray(value)
-          ? value
-              .filter(isExpr)
-              .map(def.shape === "stmt" ? slotSentence : exprText)
-              .join(", ")
-          : "";
+        return Array.isArray(value) ? value.filter(isExpr).map(exprText).join(", ") : "";
       case "id":
         return typeof value === "string" && value !== "" ? value : placeholder();
       case "text":
@@ -153,37 +182,18 @@ export function slotText(node: Node, def: NodeDef, name: string): string {
   // Builtin templates name their parameters (`{a}`, `{b}`): the i-th argument.
   const index = def.params?.indexOf(name) ?? -1;
   const arg = index >= 0 && Array.isArray(bag.args) ? (bag.args[index] as unknown) : undefined;
-  return isExpr(arg) ? exprText(arg) : "";
+  return isExpr(arg) ? operand(arg, node as Expr, "left") : "";
 }
 
-/** The blanks of a matched template, each parenthesised as an operand of the expression holding it. */
-function blanks(matched: TemplateMatch): { a: string; b: string } {
-  const under = (within: Expr) => getNode(keyOf(within)).precedence?.(within);
-  return {
-    a: operand(matched.a, under(matched.within.a), "left"),
-    b: operand(matched.b, under(matched.within.b), "right"),
-  };
-}
-
-/** What a slot shows: the template's sentence when the expression matches one, else its chips. */
-export function slotSentence(expr: Expr): string {
-  const matched = matchTemplate(expr);
-  return matched ? t(matched.template.key, blanks(matched)) : exprText(expr);
-}
-
-/** What a diamond asks: the template's question, else `Is <chips>?`. */
+/** What a diamond asks: its condition as the chart writes it, then `?`. */
 export function questionText(expr: Expr): string {
-  const matched = matchTemplate(expr);
-  return matched
-    ? t(matched.template.question, blanks(matched))
-    : t("chart.condition", { cond: exprText(expr) });
+  return t("chart.condition", { cond: exprText(expr) });
 }
 
-/** The text of an expression as chips: each block's template, with symbols for operators. */
+/** The text of an expression: each block's template in its form, its inputs filled (N-08). */
 export function exprText(expr: Expr): string {
   const def = getNode(keyOf(expr));
-  const form = def.form?.(expr, { creates: false }) ?? "";
-  return render(nodeText(def.key, `template${form}`), (name) => slotText(expr, def, name));
+  return render(templateOfExpr(expr), (name) => slotText(expr, def, name));
 }
 
 /** The sentence of a statement or expression, as written in the catalog (not capitalised). */
