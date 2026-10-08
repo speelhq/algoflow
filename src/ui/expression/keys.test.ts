@@ -5,7 +5,7 @@ import { program } from "@/nodes/testing";
 import { unparse } from "@/python/emit";
 import { atInput, choose, press, stateOf, type LineState } from "./keys";
 import { empty, lineOf } from "./line";
-import { afterGroups, allGroups, closest, matches, valueGroups, type Row } from "./list";
+import { afterGroups, allGroups, closest, kindsOf, matches, valueGroups, type Row } from "./list";
 
 const KINDS = new Map<string, Kind>([
   ["i", "number"],
@@ -131,6 +131,11 @@ describe("the list (U-52)", () => {
     ]);
     expect(closest(valueGroups(p, variables), "totl")).toBe("total");
     expect(closest(valueGroups(p, variables), "zzzzzz")).toBeUndefined();
+    // A word's start ranks before its inside, and the entries for the kind before the caret
+    // before the rest: `an` after a comparison is And, not Less than.
+    const after = (kind: string) => (row: Row) =>
+      row.type === "entry" && (kindsOf(row) as string[]).includes(kind);
+    expect(matches(groups, "an", after("truefalse"))[0]).toMatchObject({ label: "And" });
     // A short word is not taken for another two letters away (`totl` is not `Not`).
     expect(closest(valueGroups(p, []), "totl")).toBeUndefined();
   });

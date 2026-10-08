@@ -188,14 +188,30 @@ function words(row: Row): string[] {
   return [row.label, ...(row.keys ? [row.keys] : [])];
 }
 
-/** The rows of `groups` whose words contain `query`, ignoring case, exact matches first. */
-export function matches(groups: Group[], query: string): Row[] {
+/** How well a row's words meet `q`: whole, at the start of a word, inside one, or not at all. */
+function score(row: Row, q: string): number {
+  const all = words(row).map((word) => word.toLowerCase());
+  if (all.includes(q)) return 0;
+  if (all.some((word) => word.split(" ").some((part) => part.startsWith(q)))) return 1;
+  return all.some((word) => word.includes(q)) ? 2 : 3;
+}
+
+/**
+ * The rows of `groups` whose words contain `query`, ignoring case: whole words first, then
+ * words that start with it, then the rest; within each, the rows `preferred` holds first.
+ */
+export function matches(
+  groups: Group[],
+  query: string,
+  preferred: (row: Row) => boolean = () => true,
+): Row[] {
   const q = query.trim().toLowerCase();
   if (q === "") return [];
-  const rows = groups.flatMap((group) => group.rows);
-  const hit = rows.filter((row) => words(row).some((word) => word.toLowerCase().includes(q)));
-  const exact = (row: Row) => words(row).some((word) => word.toLowerCase() === q);
-  return [...hit.filter(exact), ...hit.filter((row) => !exact(row))];
+  const rank = (row: Row) => score(row, q) * 2 + (preferred(row) ? 0 : 1);
+  return groups
+    .flatMap((group) => group.rows)
+    .filter((row) => score(row, q) < 3)
+    .toSorted((a, b) => rank(a) - rank(b));
 }
 
 /** The edit distance between two words, for `Did you mean`. */

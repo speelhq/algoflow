@@ -49,6 +49,7 @@ import {
   allGroups,
   closest,
   entryRows,
+  kindsOf,
   matches,
   valueGroups,
   type Group,
@@ -318,7 +319,17 @@ function Body({
   const searched = state && state.draft !== "";
   const searchGroups =
     state && atInput(state) ? valueGroups(program, variables) : afterGroups(undefined);
-  const found = searched ? matches(searchGroups, state.draft) : [];
+  // After a value, the entries for its kind come first among equally good matches.
+  const kindBeforeCaret = state && !atInput(state) ? kindBefore(state, kinds) : undefined;
+  const found = searched
+    ? matches(
+        searchGroups,
+        state.draft,
+        (row) =>
+          kindBeforeCaret === undefined ||
+          (row.type === "entry" && kindsOf(row).includes(kindBeforeCaret)),
+      )
+    : [];
   const switchRows = switching && root ? switchRowsFor(root, switching) : [];
   const rows: Row[] = switching ? switchRows : searched ? found : groups.flatMap((g) => g.rows);
 
