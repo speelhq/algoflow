@@ -38,6 +38,22 @@ test.describe("running FizzBuzz", () => {
     await expect(page.getByRole("button", { name: "▶ Run" })).toBeVisible();
   });
 
+  test("Expected lines beyond the printed output are muted until the end (U-23)", async ({
+    page,
+  }) => {
+    await runPaused(page);
+    const rows = page.getByTestId("output-row");
+    const printed = await rows.evaluateAll(
+      (all) => all.filter((row) => (row.firstElementChild?.textContent ?? "") !== "").length,
+    );
+    const muted = page.getByTestId("output-rows").locator("[data-muted]");
+    expect(await muted.count()).toBe((await rows.count()) - printed);
+    expect(await muted.count()).toBeGreaterThan(0);
+    await page.getByRole("button", { name: "Skip ▶▶" }).click();
+    await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
+    await expect(muted).toHaveCount(0);
+  });
+
   test("Step and Back move one step; the keys do the same", async ({ page }) => {
     await runPaused(page);
     const { k } = await position(page);

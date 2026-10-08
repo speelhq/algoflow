@@ -122,7 +122,12 @@ function RunResult({ challenge }: { challenge: Challenge | undefined }) {
           {t(verdict.status === "pass" ? "result.casePassed" : "result.caseFailed")}
         </p>
       )}
-      <ResultRows rows={rows} marked={marked} expected={test?.expect.stdout !== undefined} />
+      <ResultRows
+        rows={rows}
+        marked={marked}
+        expected={test?.expect.stdout !== undefined}
+        printed={idle || verdict ? undefined : stdout.length}
+      />
     </div>
   );
 }

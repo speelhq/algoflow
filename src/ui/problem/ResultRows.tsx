@@ -15,6 +15,8 @@ type Props = {
   error?: string;
   /** Whether the case has expectations to show beside the output. */
   expected: boolean;
+  /** While a run is on the chart, the lines printed so far: later expected lines are muted. */
+  printed?: number;
 };
 
 const cell = "min-w-0 px-2 py-0.5 font-mono text-xs whitespace-pre-wrap break-words";
@@ -24,7 +26,7 @@ function assignment(name: string, value: Data | undefined): string {
   return value === undefined ? "" : t("problem.assignment", { name, value: dataText(value) });
 }
 
-export function ResultRows({ rows, marked, error, expected }: Props) {
+export function ResultRows({ rows, marked, error, expected, printed }: Props) {
   return (
     <div className="space-y-3" data-testid="result-rows">
       <div className={cn("grid gap-x-2 text-xs", expected ? "grid-cols-2" : "grid-cols-1")}>
@@ -72,7 +74,17 @@ export function ResultRows({ rows, marked, error, expected }: Props) {
                 data-differs={first || undefined}
               >
                 <span className={cell}>{row.actual ?? ""}</span>
-                {expected && <span className={cell}>{row.expected ?? ""}</span>}
+                {expected && (
+                  <span
+                    className={cn(
+                      cell,
+                      printed !== undefined && row.line > printed && "text-muted-foreground",
+                    )}
+                    data-muted={(printed !== undefined && row.line > printed) || undefined}
+                  >
+                    {row.expected ?? ""}
+                  </span>
+                )}
               </div>
             );
           })}
