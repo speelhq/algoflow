@@ -30,6 +30,11 @@ script block.
    `docs/design/` (README first).
 5. Read the descriptions of the later open milestones: statements in their
    scope are not yet due and are left alone.
+6. The canvas is drawn before a milestone starts: every screen, and every
+   state of one (an open menu, a card, a dialog), that the milestone builds
+   has its board in `docs/design/`. When one has none, or an open issue says
+   a board is missing, stop and report it to the user before building
+   anything.
 
 ## 2. Build
 
@@ -41,15 +46,11 @@ script block.
 3. Work through the task issues. A choice the spec does not cover is a new
    id with its reason, committed before the code. Commit each vertical
    slice when `pnpm lint && pnpm test` passes.
-4. A screen, or a state of one (an open menu, a card, a dialog), that no
-   board in `docs/design/` draws is drawn on the canvas before it is built;
-   when it cannot be drawn in this session, file a `decision` issue for it
-   and build nothing of it.
-5. A screen's states are saved by `e2e/screenshots.spec.ts` (U-91); look at
-   each image beside its board before committing it. Every difference is
-   resolved in the pull request: the code follows the board, or the board
-   is drawn again and exported, with the spec changed first when it states
-   the difference.
+4. A screen's states are saved by `e2e/screenshots.spec.ts` (U-91); look at
+   each image beside its board before committing it. The code follows the
+   board; a difference the code cannot follow, or a state the board does
+   not draw, is reported to the user and not built. A session never draws
+   or changes a board.
 
 ## 3. Review
 
