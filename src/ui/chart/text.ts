@@ -123,7 +123,8 @@ function renderParts(template: string, node: Node, def: NodeDef): Part[] {
     if (isSlot && isEmptySlot(node, def, name)) {
       parts.push({ text: placeholder(), slot: name, empty: true });
     } else {
-      for (const run of slotRuns(node, def, name)) parts.push(isSlot ? { ...run, slot: name } : run);
+      for (const run of slotRuns(node, def, name))
+        parts.push(isSlot ? { ...run, slot: name } : run);
     }
     at = found.index + found[0].length;
   }
@@ -132,7 +133,7 @@ function renderParts(template: string, node: Node, def: NodeDef): Part[] {
 }
 
 /** An expression's template in its form. */
-function templateOfExpr(expr: Expr): string {
+export function templateOfExpr(expr: Expr): string {
   const def = getNode(keyOf(expr));
   const form = def.form?.(expr, { creates: false }) ?? "";
   return nodeText(def.key, `template${form}`);
@@ -151,20 +152,20 @@ export function isOperator(expr: Expr): boolean {
 }
 
 /**
- * A child of `parent` as the chart writes it: a word operation next to an operator, and an
- * operation inside a word operation, are bracketed; operators among themselves follow E-05.
+ * Whether a child of `parent` is bracketed as the chart writes it: a word operation next to an
+ * operator, and an operation inside a word operation; operators among themselves follow E-05.
  */
+export function needsBrackets(child: Expr, parent: Expr, side: Side): boolean {
+  if (isWordOperation(parent)) return isOperator(child) || isWordOperation(child);
+  if (!isOperator(parent)) return false;
+  if (isWordOperation(child)) return true;
+  const precedence = getNode(keyOf(parent)).precedence?.(parent);
+  return precedence !== undefined && parenthesise(child, "x", precedence, side) !== "x";
+}
+
 function operandRuns(child: Expr, parent: Expr, side: Side, values?: Values): Run[] {
   const runs = exprRuns(child, values);
-  const bracketed = [{ text: "(" }, ...runs, { text: ")" }];
-  if (isWordOperation(parent)) {
-    return isOperator(child) || isWordOperation(child) ? bracketed : runs;
-  }
-  if (!isOperator(parent)) return runs;
-  if (isWordOperation(child)) return bracketed;
-  const precedence = getNode(keyOf(parent)).precedence?.(parent);
-  if (precedence === undefined) return runs;
-  return parenthesise(child, "x", precedence, side) === "x" ? runs : bracketed;
+  return needsBrackets(child, parent, side) ? [{ text: "(" }, ...runs, { text: ")" }] : runs;
 }
 
 /** An expression block that is a bare name: its one slot is an `id` slot. */
@@ -227,6 +228,57 @@ function slotRuns(node: Node, def: NodeDef, name: string, values?: Values): Run[
   const index = def.params?.indexOf(name) ?? -1;
   const arg = index >= 0 && Array.isArray(bag.args) ? (bag.args[index] as unknown) : undefined;
   return isExpr(arg) ? operandRuns(arg, node as Expr, "left", values) : [];
+}
+
+/** A piece of an expression as a value line shows it (U-50): words, or an input. */
+export type Piece = (Run & { slot?: string }) | { child: Expr; bracketed: boolean };
+
+/**
+ * An expression's pieces in the order of its template: its words, its `text` and `id` slots
+ * as runs naming the slot, and each input as a child, bracketed as the chart brackets it.
+ */
+export function exprPieces(expr: Expr): Piece[] {
+  const def = getNode(keyOf(expr));
+  if (isVariable(def)) return slotRuns(expr, def, def.slots[0]?.name ?? "");
+  const bag = expr as unknown as Bag;
+  const template = templateOfExpr(expr).trim();
+  const pieces: Piece[] = [];
+  const child = (item: unknown, side: Side) => {
+    if (isExpr(item)) pieces.push({ child: item, bracketed: needsBrackets(item, expr, side) });
+  };
+  let at = 0;
+  let firstInput = true;
+  for (const found of template.matchAll(/\{(\w+)\}/g)) {
+    const name = found[1] ?? "";
+    if (found.index > at) pieces.push({ text: template.slice(at, found.index) });
+    const slot = def.slots.find((s) => s.name === name);
+    const side: Side = firstInput ? "left" : "right";
+    if (slot?.role === "expr") {
+      child(bag[name], side);
+      firstInput = false;
+    } else if (slot?.role === "exprs") {
+      const items = Array.isArray(bag[name]) ? (bag[name] as unknown[]) : [];
+      items.forEach((item, i) => {
+        if (i > 0) pieces.push({ text: ", " });
+        child(item, "left");
+      });
+      firstInput = false;
+    } else if (slot) {
+      for (const run of slotRuns(expr, def, name)) pieces.push({ ...run, slot: name });
+    } else {
+      const index = def.params?.indexOf(name) ?? -1;
+      child(index >= 0 && Array.isArray(bag.args) ? bag.args[index] : undefined, "left");
+      firstInput = false;
+    }
+    at = found.index + found[0].length;
+  }
+  if (at < template.length) pieces.push({ text: template.slice(at) });
+  return pieces;
+}
+
+/** An expression's inputs in the order its template shows them. */
+export function inputOrder(expr: Expr): Expr[] {
+  return exprPieces(expr).flatMap((piece) => ("child" in piece ? [piece.child] : []));
 }
 
 /** The text of one `{name}` placeholder of `node`'s template. */

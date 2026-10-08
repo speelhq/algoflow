@@ -331,7 +331,14 @@ class Builder {
   /** A named statement's node shows its name alone, with its own text as the hint (U-95). */
   private named(stmt: Stmt, node: ChartNode, parts: Part[]): ChartNode {
     if (!stmt.name) return node;
-    const own = this.node(node.id, node.owner, node.role, node.shape, [{ text: stmt.name }], node.y);
+    const own = this.node(
+      node.id,
+      node.owner,
+      node.role,
+      node.shape,
+      [{ text: stmt.name }],
+      node.y,
+    );
     return { ...own, hint: joinParts(parts) };
   }
 
@@ -431,7 +438,11 @@ class Builder {
     y += JOIN;
     const check = counted ? generatedParts(stmt, "check") : [];
     const d = counted
-      ? this.named(stmt, this.node(`${stmt.id}:check`, stmt.id, "check", "diamond", check, y), check)
+      ? this.named(
+          stmt,
+          this.node(`${stmt.id}:check`, stmt.id, "check", "diamond", check, y),
+          check,
+        )
       : this.diamond(stmt, y);
     frag.nodes.push(d);
     frag.edges.push(

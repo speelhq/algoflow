@@ -28,9 +28,7 @@ describe("emit (04-runtime)", () => {
     const inner = { ...assign("x", num(1)), name: "start over" };
     const frame = { ...if_(bin("<", v("a"), v("b")), [inner]), name: "Is a smaller?" };
     const { code, map } = emit(program([frame, print(v("x"))]));
-    expect(code).toBe(
-      "# Is a smaller?\nif a < b:\n    # start over\n    x = 1\nprint(x)\n",
-    );
+    expect(code).toBe("# Is a smaller?\nif a < b:\n    # start over\n    x = 1\nprint(x)\n");
     expect(map[frame.id]).toEqual({ start: 1, end: 2 });
     expect(map[inner.id]).toEqual({ start: 3, end: 4 });
   });

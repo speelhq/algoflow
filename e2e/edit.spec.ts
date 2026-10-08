@@ -1,5 +1,5 @@
-// M-04 exit: build FizzBuzz from an empty chart through the + menu and the node editors, and
-// submit it to Accepted. U-34, U-40, U-41, U-50..U-53.
+// M-04 exit: build FizzBuzz from an empty chart through the + menu and the node editors, by
+// typing in value lines, and submit it to Accepted. U-34, U-40, U-41, U-50..U-54, U-93..U-95.
 import { expect, test, type Page } from "@playwright/test";
 import { seedProgress } from "./seed";
 
@@ -14,65 +14,52 @@ async function insert(page: Page, place: string, entry: string): Promise<string>
 }
 
 const editor = (page: Page) => page.getByTestId("node-editor");
-const menu = (page: Page) => page.getByTestId("value-menu");
+const chart = (page: Page) => page.getByTestId("chart");
 
-/** Opens the editor's first empty chip. */
-async function openEmpty(page: Page): Promise<void> {
-  await editor(page).locator("[data-chip]", { hasText: "choose a value" }).first().click();
+/** Types a text through the list's Text (U-50): no quotes are typed. */
+async function text(page: Page, value: string): Promise<void> {
+  await page.keyboard.type("text");
+  await page.keyboard.press("Enter");
+  await expect(editor(page).getByTestId("text-field")).toBeFocused();
+  await page.keyboard.type(value);
+  await page.keyboard.press("Enter");
 }
 
-/** Types into the open menu's field and takes what it makes. */
-async function type(page: Page, text: string): Promise<void> {
-  await menu(page).getByTestId("value-field").fill(text);
-  await menu(page).getByTestId("value-field").press("Enter");
-}
-
-/** Fills the condition slot with `i is divisible by <n>`. */
-async function divisible(page: Page, by: string): Promise<void> {
-  await openEmpty(page);
-  await menu(page).locator('[data-template="divisible"]').click();
-  await menu(page).getByRole("button", { name: "i", exact: true }).click();
-  await type(page, by);
-}
-
-/** A print of one value: typed text, or a variable from the value row. */
-async function printed(page: Page, place: string, value: string): Promise<void> {
-  await insert(page, place, "print");
-  await openEmpty(page);
-  if (value.startsWith('"')) await type(page, value);
-  else await menu(page).getByRole("button", { name: value, exact: true }).click();
-}
-
-test("M-04 exit: FizzBuzz is built from an empty chart and accepted", async ({ page }) => {
+test("M-04 exit: FizzBuzz is built from an empty chart by typing, and accepted", async ({
+  page,
+}) => {
   await seedProgress(page, {});
   await page.goto("/#/p/fizzbuzz");
   await expect(page.getByRole("button", { name: "Add your first block" })).toBeVisible();
 
+  // The name list offers a new name; Enter takes it and the start value is next.
   const loop = await insert(page, "main/main/0", "for");
-  await editor(page).locator('[data-name-slot="var"]').fill("i");
-  await editor(page).locator("[data-chip]", { hasText: /^0$/ }).click();
-  await type(page, "1");
-  await openEmpty(page);
-  await menu(page).getByRole("button", { name: "n", exact: true }).click();
-  await editor(page).locator("[data-chip]", { hasText: /^n$/ }).click();
-  await menu(page).locator('[data-group="math"]').click();
-  await page.getByRole("menuitem", { name: "+", exact: true }).click();
-  await type(page, "1");
-  await expect(page.getByTestId("chart")).toContainText("i < n + 1?");
+  await page.keyboard.type("i");
+  await expect(editor(page).getByTestId("value-list")).toContainText("New variable");
+  await page.keyboard.press("Enter");
+  // The start value is selected: typing replaces it; Tab goes on to the stop value.
+  await page.keyboard.type("1");
+  await page.keyboard.press("Tab");
+  await page.keyboard.type("n+1");
+  await expect(chart(page)).toContainText("i < n + 1?");
 
   const fifteen = await insert(page, `${loop}/body/0`, "if");
-  await divisible(page, "15");
-  await expect(page.getByTestId("chart")).toContainText("(remainder of i divided by 15) = 0?");
-  await printed(page, `${fifteen}/then/0`, '"FizzBuzz');
+  await page.keyboard.type("i%15==0");
+  await expect(chart(page)).toContainText("(remainder of i divided by 15) = 0?");
+  await insert(page, `${fifteen}/then/0`, "print");
+  await text(page, "FizzBuzz");
 
   const three = await insert(page, `${fifteen}/else/0`, "if");
-  await divisible(page, "3");
-  await printed(page, `${three}/then/0`, '"Fizz');
+  await page.keyboard.type("i%3==0");
+  await insert(page, `${three}/then/0`, "print");
+  await text(page, "Fizz");
 
   const five = await insert(page, `${three}/else/0`, "if");
-  await divisible(page, "5");
-  await printed(page, `${five}/then/0`, '"Buzz');
-  await printed(page, `${five}/else/0`, "i");
+  await page.keyboard.type("i%5==0");
+  await insert(page, `${five}/then/0`, "print");
+  await text(page, "Buzz");
+  await insert(page, `${five}/else/0`, "print");
+  await page.keyboard.type("i ");
   await page.keyboard.press("Escape");
 
   await page.getByRole("button", { name: "✓ Submit" }).click();
@@ -81,42 +68,90 @@ test("M-04 exit: FizzBuzz is built from an empty chart and accepted", async ({ p
   await expect(page.getByTestId("python-code")).toContainText("for i in range(1, n + 1):");
 });
 
-test("a chip's menu Unwraps an operator and Deletes a chip (U-54)", async ({ page }) => {
-  await seedProgress(page, {});
-  await page.goto("/#/p/fizzbuzz");
-  await insert(page, "main/main/0", "assign");
-  await editor(page).locator('[data-name-slot="target"]').fill("x");
-  await openEmpty(page);
-  await menu(page).getByRole("button", { name: "n", exact: true }).click();
-  await editor(page).locator("[data-chip]", { hasText: /^n$/ }).click();
-  await menu(page).locator('[data-group="math"]').click();
-  await page.getByRole("menuitem", { name: "+", exact: true }).click();
-  await type(page, "2");
-  await expect(page.getByTestId("chart")).toContainText("Create x and set it to n + 2");
-
-  await editor(page).locator("[data-chip]", { hasText: "+" }).click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Unwrap" }).click();
-  await expect(page.getByTestId("chart")).toContainText("Create x and set it to n");
-  await editor(page).locator("[data-chip]", { hasText: /^n$/ }).click({ button: "right" });
-  await page.getByRole("menuitem", { name: "Delete" }).click();
-  await expect(page.getByTestId("chart")).toContainText("Create x and set it to choose a value");
-});
-
-test("U-53: after a value, the menu moves to the next empty value of the same list", async ({
+test("U-52: the list follows the value before the caret, and Show all lists every entry", async ({
   page,
 }) => {
   await seedProgress(page, {});
+  await page.goto("/#/p/fizzbuzz");
+  await insert(page, "main/main/0", "assign");
+  await page.keyboard.type("x");
+  await page.keyboard.press("Enter");
+  const list = editor(page).getByTestId("value-list");
+  await expect(list.locator('[data-group="variables"]')).toContainText("n");
+  await expect(list.locator('[data-group="values"]')).toContainText("Text");
+  await page.keyboard.type("n ");
+  await expect(list.locator('[data-group="calculate"]')).toContainText("Multiply");
+  await expect(list.locator('[data-group="values"]')).toHaveCount(0);
+  await list.getByText("Show all").click();
+  await expect(list.locator('[data-group="combine"]')).toContainText("Or");
+  // An entry chosen after a value takes it as its first input (U-53).
+  // The explanation line explains the highlighted entry (U-96).
+  await list.getByText("Absolute value").hover();
+  await expect(editor(page).getByTestId("explanation")).toContainText(
+    "The number without its sign",
+  );
+  await list.getByText("Absolute value").click();
+  await expect(chart(page)).toContainText("Create x and set it to absolute value of n");
+});
+
+test("U-54: Backspace removes an operator and an operation's words; an operator is switched", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/fizzbuzz");
+  await insert(page, "main/main/0", "assign");
+  await page.keyboard.type("x");
+  await page.keyboard.press("Enter");
+  await page.keyboard.type("n<2");
+  await expect(chart(page)).toContainText("Create x and set it to n < 2");
+  await editor(page).locator("[data-operator]").click();
+  await editor(page).getByTestId("value-list").getByText("At most").click();
+  await expect(chart(page)).toContainText("Create x and set it to n ≤ 2");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Backspace");
+  await expect(chart(page)).toContainText("Create x and set it to n");
+  await expect(chart(page)).not.toContainText("≤");
+});
+
+test("U-93: a comparison after a comparison is refused with its message", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/fizzbuzz");
+  await insert(page, "main/main/0", "if");
+  await page.keyboard.type("n<3<");
+  await expect(editor(page).getByTestId("explanation")).toContainText(
+    "Write a < b < c as a < b and b < c",
+  );
+  await expect(chart(page)).toContainText("n < 3?");
+});
+
+test("U-53: , opens the next value of a list of values", async ({ page }) => {
+  await seedProgress(page, {});
   await page.goto("/#/p/tutorial");
   await insert(page, "main/main/0", "print");
-  await editor(page).getByRole("button", { name: "+ value" }).click();
-  await editor(page).locator("[data-chip]", { hasText: "choose a value" }).first().click();
-  await type(page, '"Hello,');
-  await expect(menu(page)).toBeVisible();
-  await menu(page).getByRole("button", { name: "name", exact: true }).click();
-  await expect(menu(page)).toHaveCount(0);
+  await text(page, "Hello,");
+  await page.keyboard.type(",");
+  await page.keyboard.type("name ");
   await page.keyboard.press("Escape");
+  await expect(chart(page)).toContainText('Print "Hello,", name');
   await page.getByRole("button", { name: "✓ Submit" }).click();
   await expect(page.getByTestId("verdict")).toHaveText("Accepted");
+});
+
+test("U-95: a named node shows its name, and the Python tab writes it as a comment", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/fizzbuzz");
+  await insert(page, "main/main/0", "if");
+  await page.keyboard.type("n%3==0");
+  await editor(page).getByTestId("node-name").fill("Is n a multiple of 3?");
+  await expect(
+    chart(page).locator("text").filter({ hasText: "Is n a multiple of 3?" }),
+  ).toHaveCount(1);
+  await expect(chart(page).locator("text").filter({ hasText: "remainder of" })).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await page.getByTestId("tab-python").click();
+  await expect(page.getByTestId("python-code")).toContainText("# Is n a multiple of 3?");
 });
 
 test("U-51: a print with no value draws no placeholder", async ({ page }) => {
@@ -124,5 +159,5 @@ test("U-51: a print with no value draws no placeholder", async ({ page }) => {
   await page.goto("/#/p/tutorial");
   await insert(page, "main/main/0", "print");
   await editor(page).getByRole("button", { name: "Remove this value" }).click();
-  await expect(page.getByTestId("chart")).not.toContainText("choose a value");
+  await expect(chart(page)).not.toContainText("choose a value");
 });

@@ -442,7 +442,9 @@ describe("layout (U-31, U-33 texts)", () => {
     });
     expect(chart.nodes[0]?.text).toBe("Start f(x)");
     expect(chart.nodes.some((node) => node.role === "input")).toBe(false);
-    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe("(remainder of x divided by 15) = 0?");
+    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe(
+      "(remainder of x divided by 15) = 0?",
+    );
     const jumps = chart.edges.filter((edge) => edge.jump);
     expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // U-31: a Return leads to End
   });
@@ -453,7 +455,10 @@ describe("layout (U-31, U-33 texts)", () => {
     const loop = { ...for_("i", num(0), num(3), []), name: "each i" };
     const chart = layout(program([set, check, loop]));
     const at = (id: string) => chart.nodes.find((n) => n.id === id);
-    expect(at(set.id)).toMatchObject({ text: "start the sum", hint: "Create total and set it to 0" });
+    expect(at(set.id)).toMatchObject({
+      text: "start the sum",
+      hint: "Create total and set it to 0",
+    });
     expect(at(check.id)).toMatchObject({ text: "Small?", hint: "total < 3?" });
     expect(at(`${loop.id}:check`)).toMatchObject({ text: "each i", hint: "i < 3?" });
     expect(at(`${loop.id}:init`)).toMatchObject({ text: "Set i to 0" });

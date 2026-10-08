@@ -78,7 +78,9 @@ describe("the block language (N-08)", () => {
   it("brackets a word operation next to an operator, and an operation inside words", () => {
     expect(exprText(expr("i % 15 == 0"))).toBe("(remainder of i divided by 15) = 0");
     expect(exprText(expr("(i + 1) % 3"))).toBe("remainder of (i + 1) divided by 3");
-    expect(exprText(expr("i % (n % 3)"))).toBe("remainder of i divided by (remainder of n divided by 3)");
+    expect(exprText(expr("i % (n % 3)"))).toBe(
+      "remainder of i divided by (remainder of n divided by 3)",
+    );
     expect(exprText(expr("not (a < b)"))).toBe("not (a < b)");
     expect(exprText(expr("not a and b"))).toBe("(not a) and b");
     expect(exprText(expr("x in s or ok"))).toBe("(x is in s) or ok");
@@ -99,7 +101,9 @@ describe("the block language (N-08)", () => {
     const first = assign("total", num(0));
     const bare = exprStmt(call("f", num(1)));
     const p = program([first, bare]);
-    expect(joinParts(capitaliseParts(sentenceParts(first, p)))).toBe("Create total and set it to 0");
+    expect(joinParts(capitaliseParts(sentenceParts(first, p)))).toBe(
+      "Create total and set it to 0",
+    );
     expect(joinParts(capitaliseParts(sentenceParts(bare, p)))).toBe("f(1)");
   });
 });

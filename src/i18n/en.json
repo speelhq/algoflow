@@ -400,17 +400,7 @@
     "blank": "…",
     "addFirst": "Add your first block",
     "connector": "Add a block here",
-    "connectorGlyph": "+",
-    "question": {
-      "divisible": "Is {a} divisible by {b}?",
-      "equals": "Does {a} equal {b}?",
-      "notEquals": "Does {a} not equal {b}?",
-      "greater": "Is {a} greater than {b}?",
-      "less": "Is {a} less than {b}?",
-      "atLeast": "Is {a} at least {b}?",
-      "atMost": "Is {a} at most {b}?",
-      "in": "Is {a} in {b}?"
-    }
+    "connectorGlyph": "+"
   },
   "menu": {
     "label": "Blocks",
@@ -434,46 +424,54 @@
     "label": "Edit block",
     "name": "Name",
     "nameHint": "optional",
-    "names": "Names",
-    "asked": "asked for by this problem",
-    "field": "a number, \"text\", or a name",
-    "number": "number",
-    "text": "text",
-    "buildOwn": "Build my own…",
     "noItems": "Nothing matches",
-    "groupMenu": "{group} ▸",
-    "group": {
-      "variables": "Variables",
-      "values": "Values",
-      "list": "List",
-      "math": "Math",
-      "compare": "Compare",
-      "logic": "Logic",
-      "call": "Call"
-    },
-    "blank": "□",
-    "listSeparator": ",",
     "addValue": "+ value",
     "removeValue": "Remove this value",
     "removeGlyph": "×",
     "duplicate": "Duplicate",
     "delete": "Delete",
-    "chip": {
-      "delete": "Delete",
-      "unwrap": "Unwrap"
+    "typeHint": "type or choose",
+    "showAll": "Show all",
+    "newVariable": "New variable",
+    "brackets": "Brackets: work this out first",
+    "bracketsHelp": "What is inside is worked out first. Type ( to open them and ) to close them.",
+    "ownFunction": "Calls your function {name}.",
+    "didYouMean": "Did you mean {name}?",
+    "nothingLike": "Nothing is called {name}.",
+    "group": {
+      "problem": "This problem",
+      "variables": "Variables",
+      "values": "Values",
+      "order": "Order",
+      "combine": "Combine",
+      "functions": "Functions",
+      "calculate": "Calculate",
+      "compare": "Compare",
+      "convert": "Convert",
+      "items": "Items",
+      "totals": "Totals",
+      "other": "Other"
+    },
+    "kind": {
+      "number": "number",
+      "text": "text",
+      "truefalse": "true/false",
+      "none": "none",
+      "list": "list",
+      "dict": "dict",
+      "object": "object"
+    },
+    "explain": {
+      "variable": "A {kind} variable. It is first set in: {sentence}.",
+      "variablePlain": "A variable. It is first set in: {sentence}.",
+      "input": "A {kind} input of this problem.",
+      "parameter": "A parameter of this function.",
+      "loop": "The variable of a loop: {sentence}.",
+      "newVariable": "Creates the variable {name} here.",
+      "name": "Choose a variable, or type the name of a new one."
     },
     "fix": {
       "hoistAssign": "Create {name} before it"
-    },
-    "template": {
-      "divisible": "{a} is divisible by {b}",
-      "equals": "{a} equals {b}",
-      "notEquals": "{a} does not equal {b}",
-      "greater": "{a} is greater than {b}",
-      "less": "{a} is less than {b}",
-      "atLeast": "{a} is at least {b}",
-      "atMost": "{a} is at most {b}",
-      "in": "{a} is in {b}"
     }
   },
   "run": {
