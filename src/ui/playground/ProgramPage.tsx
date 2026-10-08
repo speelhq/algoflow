@@ -14,7 +14,6 @@ import { Button } from "@/ui/primitives/button";
 import { Input } from "@/ui/primitives/input";
 import { ChartRegion } from "@/ui/problem/ChartRegion";
 import { Panel } from "@/ui/problem/Panel";
-import { StartOverItem } from "@/ui/problem/ProblemPage";
 import { RunControls } from "@/ui/problem/RunControls";
 import { TopBar } from "@/ui/problem/TopBar";
 import { useRunKeys } from "@/ui/problem/useRunKeys";
@@ -57,7 +56,7 @@ export function ProgramPage({ id }: { id: string }) {
 
   return (
     <div className="flex h-full flex-col" data-testid="program-page">
-      <TopBar back="playground" title={<TitleField />} menu={<StartOverItem />}>
+      <TopBar back="playground" title={<TitleField />}>
         <RunControls />
         <Button variant="outline" onClick={exportProgram}>
           {t("playground.export")}

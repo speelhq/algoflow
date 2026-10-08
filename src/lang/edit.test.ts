@@ -14,7 +14,6 @@ import {
   removeItem,
   removeStmt,
   renameName,
-  resetProgram,
   setExpr,
   setFields,
   setParams,
@@ -140,16 +139,6 @@ describe("edit (L-50)", () => {
     expect(() => removeItem(p, b.id, "args", 3)).toThrow(/no item/);
     const { p: q, a } = sample();
     expect(() => removeItem(q, a.id, "value", 0)).toThrow(/no item/);
-  });
-
-  it("resetProgram empties main, functions, and classes, keeping title, challenge, and inputs", () => {
-    const p = {
-      ...program([print(v("n"))], { inputs: [{ name: "n", value: 3 }] }),
-      title: "Mine",
-      challengeId: "fizzbuzz",
-    };
-    const withFn = addFunction(p, "f", ["x"]);
-    expect(resetProgram(withFn)).toEqual({ ...p, main: [], functions: [], classes: [] });
   });
 
   it("setParams replaces a function's parameters", () => {

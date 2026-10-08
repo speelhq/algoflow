@@ -295,11 +295,6 @@ export function setParams(program: Program, id: NodeId, params: Id[]): Program {
   return next;
 }
 
-/** An empty main with no functions or classes, keeping the title, the challenge, and the inputs. */
-export function resetProgram(program: Program): Program {
-  return { ...clone(program), classes: [], functions: [], main: [] };
-}
-
 /** Replaces the ordered field table of a class. */
 export function setFields(program: Program, id: NodeId, fields: Field[]): Program {
   const next = clone(program);

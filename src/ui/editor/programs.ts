@@ -1,7 +1,5 @@
-// What `⋯`, the Accepted view, and the Playground do to a whole program: `Start over`,
-// `Open in Playground` (each input becoming an assignment at the top of `main`), Export,
-// and Import.
-import { resetProgram } from "@/lang/edit";
+// What `⋯`, the Accepted view, and the Playground do to a whole program: `Open in
+// Playground` (each input becoming an assignment at the top of `main`), Export, and Import.
 import { migrate } from "@/lang/migrate";
 import type { Expr, Input, Program, Stmt } from "@/lang/types";
 import { getNode } from "@/nodes";
@@ -9,12 +7,6 @@ import { dataToPython } from "@/python/emit";
 import { isParseError, parse } from "@/python/parse";
 import { createPlaygroundProgram } from "@/store/program";
 import { navigate } from "@/ui/app/route";
-import { apply } from "./edits";
-
-/** `Start over`: an empty main, as one undoable edit. */
-export function startOver(): void {
-  apply(resetProgram);
-}
 
 /** An input as the emitter writes it: `name = <value>`. */
 function inputAssignment(input: Input): Stmt | undefined {
