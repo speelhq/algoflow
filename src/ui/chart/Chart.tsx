@@ -176,7 +176,11 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
               x={node.x + part.dx + (part.empty ? PILL : 0)}
               data-slot={part.slot}
               data-empty={part.empty || undefined}
-              className={cn(part.empty && "fill-muted-foreground")}
+              data-variable={part.variable || undefined}
+              className={cn(
+                part.empty && "fill-muted-foreground",
+                part.variable && "fill-variable font-bold",
+              )}
             >
               {part.text}
             </tspan>

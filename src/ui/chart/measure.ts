@@ -4,6 +4,8 @@ import { useSyncExternalStore } from "react";
 import type { Measure } from "./layout";
 
 export const CHART_FONT = '13px "Geist Variable", sans-serif';
+/** A variable's name on the chart (N-08). */
+export const CHART_BOLD_FONT = `700 ${CHART_FONT}`;
 
 let context: CanvasRenderingContext2D | null | undefined;
 const widths = new Map<string, number>();
@@ -22,14 +24,15 @@ if (typeof document !== "undefined") {
   void document.fonts.ready.then(fontsLoaded);
 }
 
-export const measureText: Measure = (text) => {
-  const known = widths.get(text);
+export const measureText: Measure = (text, _shape, bold) => {
+  const key = bold ? `b:${text}` : `n:${text}`;
+  const known = widths.get(key);
   if (known !== undefined) return known;
   context ??= document.createElement("canvas").getContext("2d");
-  if (!context) return text.length * 7.2;
-  context.font = CHART_FONT;
+  if (!context) return text.length * (bold ? 7.8 : 7.2);
+  context.font = bold ? CHART_BOLD_FONT : CHART_FONT;
   const width = context.measureText(text).width;
-  widths.set(text, width);
+  widths.set(key, width);
   return width;
 };
 

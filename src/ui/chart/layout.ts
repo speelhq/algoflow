@@ -71,7 +71,8 @@ export type ChartEdge = {
 export type PlacedPart = Part & { dx: number; w: number };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
 /** The width of `text` in px as the chart draws it. */
-export type Measure = (text: string, shape: Shape) => number;
+/** The width of `text` in a node of `shape`; `bold` for a variable's name (N-08). */
+export type Measure = (text: string, shape: Shape, bold?: boolean) => number;
 export type LayoutOptions = {
   /** `main` (default) or a function's id. */
   chart?: "main" | NodeId;
@@ -92,7 +93,7 @@ const HEIGHT: Record<Shape, number> = {
   junction: 0,
 };
 
-const defaultMeasure: Measure = (text) => text.length * 7.2;
+const defaultMeasure: Measure = (text, _shape, bold) => text.length * (bold ? 7.8 : 7.2);
 /** Room on each side of an empty slot's text for its dashed outline. */
 export const PILL = 8;
 
@@ -218,7 +219,9 @@ class Builder {
   ): ChartNode {
     const runs =
       typeof content === "string" ? (content === "" ? [] : [{ text: content }]) : content;
-    const widths = runs.map((part) => this.measure(part.text, shape) + (part.empty ? 2 * PILL : 0));
+    const widths = runs.map(
+      (part) => this.measure(part.text, shape, part.variable) + (part.empty ? 2 * PILL : 0),
+    );
     const width = widths.reduce((sum, w) => sum + w, 0);
     const padded =
       shape === "diamond"

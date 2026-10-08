@@ -447,6 +447,20 @@ describe("layout (U-31, U-33 texts)", () => {
     expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // U-31: a Return leads to End
   });
 
+  it("N-08: a variable's name is measured bold, and the node is sized by it", () => {
+    const set = assign("total", num(0));
+    const seen: Array<[string, boolean]> = [];
+    const measure: Measure = (text, _shape, bold) => {
+      seen.push([text, bold === true]);
+      return text.length * (bold ? 10 : 7);
+    };
+    const chart = layout(program([set]), { measure });
+    expect(seen).toContainEqual(["total", true]);
+    expect(seen).toContainEqual(["Create ", false]);
+    const node = chart.nodes.find((n) => n.id === set.id);
+    expect(node?.parts.find((part) => part.variable)).toMatchObject({ text: "total", w: 50 });
+  });
+
   it("an empty main offers its one connector between Start and End (U-34)", () => {
     const chart = layout(program([]));
     expect(chart.edges).toHaveLength(1);

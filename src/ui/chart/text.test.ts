@@ -104,6 +104,26 @@ describe("the block language (N-08)", () => {
   });
 });
 
+describe("variables as bold words (N-08)", () => {
+  it("marks a variable's name in a node's parts, and nothing else", () => {
+    const set = assign("total", bin("+", v("total"), call("f", v("i"))));
+    const p = program([assign("total", num(0)), set]);
+    const marked = sentenceParts(set, p)
+      .filter((part) => part.variable)
+      .map((part) => part.text);
+    expect(marked).toEqual(["total", "total", "i"]);
+    const loop = for_("i", num(0), v("n"), []);
+    expect(
+      sentenceParts(loop, program([loop]))
+        .filter((part) => part.variable)
+        .map((part) => [part.text, part.slot]),
+    ).toEqual([
+      ["i", "var"],
+      ["n", "stop"],
+    ]);
+  });
+});
+
 describe("a diamond's question (U-33)", () => {
   it("is its condition as the chart writes it, then ?", () => {
     expect(questionText(expr("i % 15 == 0"))).toBe("(remainder of i divided by 15) = 0?");

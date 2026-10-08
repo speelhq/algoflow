@@ -2,7 +2,7 @@
 // slots, in the block language: school symbols for operators, words for every other
 // operation, and brackets around a word operation where it meets another operation.
 // Reads slot roles, `params`, `form`, `text`, and `precedence` only, never a kind.
-import { fillPlaceholders, t, type MessageKey } from "@/i18n/t";
+import { t, type MessageKey } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Node, Program, Target, Value } from "@/lang/types";
 import { firstAssignments } from "@/lang/validate";
@@ -35,13 +35,42 @@ export function capitaliseParts(parts: readonly Part[]): Part[] {
   return [{ ...first, text: capitalise(first.text) }, ...rest];
 }
 
-/** A template with its slots filled; a sentence drops the space an empty slot leaves. */
-function render(template: string, fill: (name: string) => string): string {
-  return fillPlaceholders(template, fill).replace(/\s+/g, " ").trim();
-}
+/** A run of text; `variable` marks a variable's name, drawn bold in the variable colour (N-08). */
+export type Run = { text: string; variable?: boolean };
 
 /** A run of a node's text: a slot's text with the slot's name, or the template's own words. */
-export type Part = { text: string; slot?: string; empty?: boolean };
+export type Part = Run & { slot?: string; empty?: boolean };
+
+/** Spaces collapsed across runs as one sentence, the ends trimmed, and empty runs dropped. */
+function tidy<R extends Run>(runs: readonly R[]): R[] {
+  const out: R[] = [];
+  for (const run of runs) {
+    const before = out[out.length - 1]?.text ?? "";
+    let text = run.text.replace(/\s+/g, " ");
+    if (before === "" || before.endsWith(" ")) text = text.replace(/^ /, "");
+    if (text !== "") out.push({ ...run, text });
+  }
+  const last = out[out.length - 1];
+  if (last) last.text = last.text.replace(/ $/, "");
+  return out.filter((run) => run.text !== "");
+}
+
+/** A template with each `{name}` replaced by the runs `fill` gives for it. */
+function fillRuns(template: string, fill: (name: string) => Run[]): Run[] {
+  const runs: Run[] = [];
+  let at = 0;
+  for (const found of template.matchAll(/\{(\w+)\}/g)) {
+    runs.push({ text: template.slice(at, found.index) }, ...fill(found[1] ?? ""));
+    at = found.index + found[0].length;
+  }
+  runs.push({ text: template.slice(at) });
+  return tidy(runs);
+}
+
+/** The text runs spell. */
+export function joinRuns(runs: readonly Run[]): string {
+  return runs.map((run) => run.text).join("");
+}
 
 /** The text the parts spell. */
 export function joinParts(parts: readonly Part[]): string {
@@ -78,8 +107,8 @@ function isEmptySlot(node: Node, def: NodeDef, name: string): boolean {
 }
 
 /**
- * A template as parts, each placeholder of a slot of `node` a part naming its slot. Spaces
- * are collapsed across parts, as `render` does, and a part with no text is dropped.
+ * A template as parts, each placeholder of a slot of `node` one part per run naming its slot.
+ * Spaces are collapsed across parts, and a part with no text is dropped.
  */
 function renderParts(template: string, node: Node, def: NodeDef): Part[] {
   const parts: Part[] = [];
@@ -87,25 +116,16 @@ function renderParts(template: string, node: Node, def: NodeDef): Part[] {
   for (const found of template.matchAll(/\{(\w+)\}/g)) {
     const name = found[1] ?? "";
     parts.push({ text: template.slice(at, found.index) });
-    const text = slotText(node, def, name);
     const isSlot = def.slots.some((slot) => slot.name === name);
-    if (!isSlot) parts.push({ text });
-    else if (isEmptySlot(node, def, name))
+    if (isSlot && isEmptySlot(node, def, name)) {
       parts.push({ text: placeholder(), slot: name, empty: true });
-    else parts.push({ text, slot: name });
+    } else {
+      for (const run of slotRuns(node, def, name)) parts.push(isSlot ? { ...run, slot: name } : run);
+    }
     at = found.index + found[0].length;
   }
   parts.push({ text: template.slice(at) });
-  const out: Part[] = [];
-  for (const part of parts) {
-    const before = out[out.length - 1]?.text ?? "";
-    let text = part.text.replace(/\s+/g, " ");
-    if (before === "" || before.endsWith(" ")) text = text.replace(/^ /, "");
-    if (text !== "") out.push({ ...part, text });
-  }
-  const last = out[out.length - 1];
-  if (last) last.text = last.text.replace(/ $/, "");
-  return out.filter((part) => part.text !== "");
+  return tidy(parts);
 }
 
 /** An expression's template in its form. */
@@ -131,27 +151,34 @@ export function isOperator(expr: Expr): boolean {
  * A child of `parent` as the chart writes it: a word operation next to an operator, and an
  * operation inside a word operation, are bracketed; operators among themselves follow E-05.
  */
-function operand(child: Expr, parent: Expr, side: Side): string {
-  const text = exprText(child);
-  const bracketed = `(${text})`;
+function operandRuns(child: Expr, parent: Expr, side: Side): Run[] {
+  const runs = exprRuns(child);
+  const bracketed = [{ text: "(" }, ...runs, { text: ")" }];
   if (isWordOperation(parent)) {
-    return isOperator(child) || isWordOperation(child) ? bracketed : text;
+    return isOperator(child) || isWordOperation(child) ? bracketed : runs;
   }
-  if (!isOperator(parent)) return text;
+  if (!isOperator(parent)) return runs;
   if (isWordOperation(child)) return bracketed;
   const precedence = getNode(keyOf(parent)).precedence?.(parent);
-  return precedence === undefined ? text : parenthesise(child, text, precedence, side);
+  if (precedence === undefined) return runs;
+  return parenthesise(child, "x", precedence, side) === "x" ? runs : bracketed;
+}
+
+/** An expression block that is a bare name: its one slot is an `id` slot. */
+function isVariable(def: NodeDef): boolean {
+  return def.slots.length === 1 && def.slots[0]?.role === "id";
 }
 
 /** A target reads as the expression of the same shape once that block exists (`index`, `key`, `field`). */
-function targetText(target: Target): string {
+function targetRuns(target: Target): Run[] {
   const { kind, ...rest } = target;
-  if (kind !== "var" && hasNode(kind)) return exprText({ id: "", kind, ...rest } as Expr);
-  return writeTarget(target, exprText);
+  if (kind === "var") return [{ text: target.name, variable: true }];
+  if (hasNode(kind)) return exprRuns({ id: "", kind, ...rest } as Expr);
+  return [{ text: writeTarget(target, exprText) }];
 }
 
-/** The text of one `{name}` placeholder of `node`'s template. */
-export function slotText(node: Node, def: NodeDef, name: string): string {
+/** The runs of one `{name}` placeholder of `node`'s template. */
+function slotRuns(node: Node, def: NodeDef, name: string): Run[] {
   const bag = node as unknown as Bag;
   const slot = def.slots.find((s) => s.name === name);
   if (slot) {
@@ -159,41 +186,67 @@ export function slotText(node: Node, def: NodeDef, name: string): string {
     const first = def.slots.find((s) => s.role === "expr") === slot;
     switch (slot.role) {
       case "expr":
-        if (!isExpr(value)) return "";
+        if (!isExpr(value)) return [];
         return def.shape === "stmt"
-          ? exprText(value)
-          : operand(value, node as Expr, first ? "left" : "right");
+          ? exprRuns(value)
+          : operandRuns(value, node as Expr, first ? "left" : "right");
       case "exprs":
-        return Array.isArray(value) ? value.filter(isExpr).map(exprText).join(", ") : "";
+        return Array.isArray(value)
+          ? value
+              .filter(isExpr)
+              .flatMap((item, i) => [...(i > 0 ? [{ text: ", " }] : []), ...exprRuns(item)])
+          : [];
       case "id":
-        return typeof value === "string" && value !== "" ? value : placeholder();
+        if (typeof value !== "string" || value === "") return [{ text: placeholder() }];
+        return [{ text: value, variable: def.shape === "stmt" || isVariable(def) }];
       case "text":
-        return (
-          def.text?.(node, slot.name) ||
-          (typeof value === "string" || typeof value === "number" ? String(value) : "")
-        );
+        return [
+          {
+            text:
+              def.text?.(node, slot.name) ||
+              (typeof value === "string" || typeof value === "number" ? String(value) : ""),
+          },
+        ];
       case "target":
-        if (!value || typeof value !== "object") return "";
-        return isEmptySlot(node, def, name) ? placeholder() : targetText(value as Target);
+        if (!value || typeof value !== "object") return [];
+        return isEmptySlot(node, def, name)
+          ? [{ text: placeholder() }]
+          : targetRuns(value as Target);
       default:
-        return "";
+        return [];
     }
   }
   // Builtin templates name their parameters (`{a}`, `{b}`): the i-th argument.
   const index = def.params?.indexOf(name) ?? -1;
   const arg = index >= 0 && Array.isArray(bag.args) ? (bag.args[index] as unknown) : undefined;
-  return isExpr(arg) ? operand(arg, node as Expr, "left") : "";
+  return isExpr(arg) ? operandRuns(arg, node as Expr, "left") : [];
+}
+
+/** The text of one `{name}` placeholder of `node`'s template. */
+export function slotText(node: Node, def: NodeDef, name: string): string {
+  return joinRuns(slotRuns(node, def, name));
+}
+
+/** What a diamond asks: its condition as the chart writes it, then `?`, as runs. */
+function questionRuns(expr: Expr): Run[] {
+  return fillRuns(t("chart.condition"), (name) => (name === "cond" ? exprRuns(expr) : []));
 }
 
 /** What a diamond asks: its condition as the chart writes it, then `?`. */
 export function questionText(expr: Expr): string {
-  return t("chart.condition", { cond: exprText(expr) });
+  return joinRuns(questionRuns(expr));
+}
+
+/** An expression as runs: each block's template in its form, its inputs filled (N-08). */
+export function exprRuns(expr: Expr): Run[] {
+  const def = getNode(keyOf(expr));
+  if (isVariable(def)) return slotRuns(expr, def, def.slots[0]?.name ?? "");
+  return fillRuns(templateOfExpr(expr), (name) => slotRuns(expr, def, name));
 }
 
 /** The text of an expression: each block's template in its form, its inputs filled (N-08). */
 export function exprText(expr: Expr): string {
-  const def = getNode(keyOf(expr));
-  return render(templateOfExpr(expr), (name) => slotText(expr, def, name));
+  return joinRuns(exprRuns(expr));
 }
 
 /** The sentence of a statement or expression, as written in the catalog (not capitalised). */
@@ -233,7 +286,7 @@ export function questionParts(node: Node): Part[] {
   const condition = conditionOf(node);
   if (!slot || !condition) return [];
   if (isEmptyExpr(condition)) return [{ text: placeholder(), slot, empty: true }];
-  return [{ text: questionText(condition), slot }];
+  return questionRuns(condition).map((run) => ({ ...run, slot }));
 }
 
 /** The expression a diamond asks about: the block's first `expr` slot (`branch`, `check`). */
