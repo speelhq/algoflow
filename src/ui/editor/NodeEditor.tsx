@@ -338,7 +338,7 @@ function Body({
   const groups: Group[] = !state
     ? []
     : showAll
-      ? allGroups(program)
+      ? allGroups(program, !atInput(state))
       : atInput(state)
         ? valueGroups(program, variables)
         : afterGroups(kindBefore(state, kinds));

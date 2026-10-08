@@ -171,9 +171,14 @@ export function afterGroups(kind: Kind | undefined): Group[] {
   })).filter((group) => group.rows.length > 0);
 }
 
-/** `Show all`: every entry in group order. */
-export function allGroups(program: Program): Group[] {
-  const entries = [...entryRows(), ...functionRows(program)];
+/**
+ * `Show all`: in group order, every entry that can be chosen at the caret: every one where a
+ * value is expected (`after` false), and after a value those that take it.
+ */
+export function allGroups(program: Program, after = false): Group[] {
+  const entries = [...entryRows(), ...functionRows(program)].filter(
+    (row) => !after || (row.type === "entry" && row.after),
+  );
   return MENU_GROUPS.map((group) => ({
     id: group,
     title: title(group),

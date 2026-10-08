@@ -64,10 +64,8 @@ export function choose(state: LineState, row: Row): LineState {
   const base = { ...state, draft: "", pending: "" as const };
   delete base.message;
   if (row.type === "brackets") return { ...base, line: open(state.line) };
-  if (atInput(state)) {
-    if (row.type === "entry" && row.after) return state;
-    return { ...base, line: fill(state.line, row.make()) };
-  }
+  // Where a value is expected any row fills the input: an operation with its inputs empty.
+  if (atInput(state)) return { ...base, line: fill(state.line, row.make()) };
   if (row.type !== "entry" || !row.after) return state;
   const edit = attach(state.line, row.make());
   if ("refused" in edit) return { ...state, message: `error.${edit.refused}` };

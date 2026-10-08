@@ -140,6 +140,17 @@ describe("the list (U-52)", () => {
     expect(closest(valueGroups(p, []), "totl")).toBeUndefined();
   });
 
+  it("Show all lists what can be chosen at the caret, and every row of it acts", () => {
+    const at = stateOf(lineOf(empty()));
+    const multiply = allGroups(p)
+      .flatMap((group) => group.rows)
+      .find((row) => row.type === "entry" && row.label === "Multiply");
+    expect(multiply && unparse(choose(at, multiply).line.root)).toBe("... * ...");
+    const after = allGroups(p, true).flatMap((group) => group.rows);
+    expect(after.length).toBeGreaterThan(0);
+    expect(after.every((row) => row.type === "entry" && row.after)).toBe(true);
+  });
+
   it("a chosen entry after a value takes it; where a value is expected it fills the input", () => {
     const state = type(["n", " "]);
     const abs = matches(afterGroups("number"), "absolute")[0];
