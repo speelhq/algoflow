@@ -675,7 +675,9 @@ them** (U-93). `<=` already shows `≤`, so `==` shows `=` and `!=` shows
 `≠` by the same rule; a single `=` is Python's assignment and inserts
 nothing, so it is never read as a comparison. A word operation has a key
 where Python has one (`%`, `//`, `**`), so a learner who later reads the
-`Python` tab meets the keys already typed.
+`Python` tab meets the keys already typed. `(` opens a pair of brackets
+and `)` closes it, and brackets are not stored, so they cannot mismatch:
+a mismatched bracket is the error beginners make most often.
 
 **A node may be named, and the name is a comment** (U-95, L-58, E-11,
 L-55). A
