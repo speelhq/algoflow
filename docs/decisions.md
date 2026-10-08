@@ -125,6 +125,13 @@ order from there rather than declaring its own copy, so adding a category
 cannot leave the menu and the registry inconsistent. The file has no
 imports, so `src/nodes` remains free of store and React dependencies.
 
+**Blocks declare their menu entries** (N-11). The value list groups by
+purpose, and one block can serve several groups (`binop` is `Add`,
+`Equals`, and `And`), so a block lists its entries, each with its group,
+the kinds it applies to, its symbol, and its keys; the editor reads them
+and names no block, as N-01 requires, and a block added later brings its
+entries with it.
+
 **A `create` template after a frame**. `if c: y = 1` followed by `y = 2`
 renders both as `create y`: L-41 makes `y` invisible after the frame, so the
 outer assignment is where the region gains the name.
@@ -178,7 +185,10 @@ accepted.
 involves typing Python, and a learner able to type it does not need blocks;
 the block language is a strict subset, so most pasted Python would fail
 without a clear diagnostic. The `Python` tab, whose lines and nodes
-select each other (U-25), provides the transition from chart to text.
+select each other (U-25), provides the transition from chart to text. The
+keys of a value line (U-93) spell operators as Python does (`==`, `*`),
+but the line never shows Python text: each key is replaced at once by what
+the chart writes.
 
 **The driver publishes its projection, not only its position** (R-11,
 R-12).
@@ -208,16 +218,13 @@ reaching `total`, not one Step later: U-81 names that step "the last step
 of the run", and the driver makes one further call of `next()` there so
 that the frames have unwound.
 
-**The `compare` event carries values, not text** (R-02, R-06). Its text was
-the operands in Python's `str()` form (`3 == 0`, `True`), which the
-narration could only quote. With the two values, the narration writes them
-as the blocks do and fills the template of the condition from them,
-whatever the blanks hold; the operator is on the node. `is divisible by` is
-the one template whose blanks are not the compared operands (`a % b == 0`
-compares `a % b` with `0`), so it reads a variable blank from the frame and
-applies only when both blanks are variables or literals; otherwise the
-comparison reads as `equals` over its operands. Every comparison matches a
-template, so the former fallback to the event's text no longer exists.
+**A comparison is narrated from the frame** (R-06, U-63). The `compare`
+event carried the two operand values so that a template sentence could be
+filled with them; the operands alone (`3` and `0` of `i % 15 == 0`) hide
+where the 3 came from. The narration writes the comparison as the chart
+does with each variable replaced by its value in the shown frame, which
+shows the origin, so the event carries its result only. A list keeps its
+name: its items were narrated by the `read` events before the comparison.
 
 **The driver publishes the statement to highlight** (R-12, U-39). Expression
 events carry the id of an expression, and the chart, the narration, and the
@@ -287,7 +294,7 @@ shape, so one form serves every loop and matches the execution order. The
 form adds three nodes to every counted loop; they are generated, grey, and
 owned by the loop block, so the learner does not edit them, the program
 retains one `for`, and the emitter is unchanged. The check reads
-`Is i < stop?` with the bound as written, not an inclusive
+`i < stop?` with the bound as written, not an inclusive
 `Repeat i from 1 to n` (emitting `range(1, n + 1)`) and not a display-only
 `Is i ≤ n?` for `x + 1` bounds: the check reads as the emitted `range`
 does, so the chart and the `Python` tab agree (the third commitment of
@@ -309,7 +316,7 @@ U-61..U-63). Data, Trace, and Output tabs under the program drew the
 learner's attention away from it, so the current step stays on the chart:
 the current node, the taken path, the `✓`/`✗` marks, and the narration beside
 the node, which carries the values relevant at that step (`Pass 3: i is
-3`, `"3 is divisible by 15" is false`). A badge with the loop variable
+3`, `(remainder of 3 divided by 15) = 0? No`). A badge with the loop variable
 beside the loop's check was rejected: it is state, it sat beside a diamond
 that is outside the viewport while a long body runs, which is when the pass
 number is required, and extending it to `while` required an assumption about
@@ -355,10 +362,10 @@ statement that holds it. Its connectors accept no drop rather than refusing
 it with a message, because nothing a learner could change makes that drop
 valid.
 
-**A target is a name with forms** (U-41). An assignment's target is a
+**A target is a name with forms** (U-94). An assignment's target is a
 variable far more often than an item or a field, so the slot is the name
-input of an `id` slot with its suggestions; the item, key, and field forms
-are offered from its menu once their blocks exist, and their parts are
+input of an `id` slot with its list; the item, key, and field forms
+are offered from that list once their blocks exist, and their parts are
 ordinary expression slots.
 
 **A leading minus makes a number** (U-50). `found = -1` is the commonest
@@ -367,17 +374,16 @@ it the one number not typed. The text is read by the parser, so `-1` is
 the negation of `1`, as Python reads it, and `-3 ** 2` keeps Python's
 meaning in the chart and the emitted code.
 
-**Everything with slots wraps the chip** (U-53). Operators wrapped the
-current chip and list operations wrapped it as the list; a call that
-replaced the chip would make `abs` of a value the learner has already built
-into two steps of rebuilding it. One rule for every block with an
-expression slot, the chip becoming its first slot, covers operators, list
-operations, builtins, and calls alike, and needs no list of which blocks
-wrap. A call of a function with no parameter has no first argument to take
-the chip, so it replaces the chip as a literal does. Filling a blank moves
-the menu to the next one, so a template such as
-`□ is divisible by □` is completed by two choices without a click on the
-second blank between them.
+**An entry chosen after a value takes it as its first input** (U-53).
+Building a value left to right is how it is typed and read, so whatever
+follows a value applies to it: an operator, a word operation, a builtin.
+Making the learner choose `abs` first and rebuild the value inside it
+would cost two steps for what is one thought. An operator binds by the
+precedence Python gives it, so `total + i × 2` reads and runs as it is
+written; a word operation is a phrase around its inputs, so it takes the
+last value only, and the brackets the chart draws around it (N-08) show
+what it took. Inputs left to fill are fields in the line, reached with
+Tab, as Excel's argument hint is.
 
 **The Playground page reuses the Problems page** (U-15). Both pages list
 rows under one header, so the Playground page takes the Problems page's
@@ -400,9 +406,7 @@ narration.
 **Blocks are added from the edge, edited in place** (U-34, U-41). A palette
 requires a beginner to survey a vocabulary before writing; the `+` on the
 edge where the block will be placed, followed by an editor popover on the
-node, keeps the learner's attention on the chart. Conditions are offered as
-sentence templates first (`is divisible by`, `equals`, …) with the chip
-editor behind `Build my own`.
+node, keeps the learner's attention on the chart.
 
 **Solution revealed on request**. A learner may view the solution; hiding
 it entirely would cause self-learners to look elsewhere.
@@ -558,14 +562,12 @@ stop nor a message explaining one. The refusal of a built-in function in a
 disk it moves, since `src` and `dst` are lists with no name to print; the
 final lists verify the moves. Proposals dropped as special cases: filling a
 `for` variable with the first unused of `i j k` (an inference, and
-`create()` receives no context), narrating the operations inside a
-comparison that matches no template (a new mechanism for a rare case;
-`"5 > 3" is true` is not incorrect), and comparing step counts across the
+`create()` receives no context), and comparing step counts across the
 three sorts (an inferred relation between problems, and one more stored
 field).
 
 **Four rules removed or corrected on a pass for special cases** (U-53,
-C-03, U-50, L-26). The Variables group offered `v + 1` and `v - 1` when
+C-03, L-26). The Variables group offered `v + 1` and `v - 1` when
 the slot was an `index` or a `for` bound and a `for` variable was visible:
 an inference about the learner's intent, tied to two block kinds, which
 made the menu branch on kind against N-01; wrapping `i` with `+` or typing
@@ -573,10 +575,7 @@ the text achieves the same result. A boundary test was one whose localized
 name began with `edge:`, a flag concealed in a display string, and the name
 itself was displayed nowhere (cases are shown by their inputs) while still
 requiring a Japanese text; the name was dropped and the flag is
-`edge: true`. The templates `is even` and `is odd` matched the same
-expression as `is divisible by`, so one condition had two sentences and
-needed a priority rule for the diamond and the narration;
-`is divisible by 2` is sufficient. `foreach` iterated over a snapshot, so a
+`edge: true`. `foreach` iterated over a snapshot, so a
 body that changes its list ran differently here and in the emitted Python,
 without any indication, unlike the other differences from Python (a `bool`
 is not a number, recursion stops at 200, `E_DECLARE_FIRST`), which are all
@@ -602,12 +601,8 @@ events into one step per statement was considered; arrival followed by a
 decision and arrival followed by a value change are two distinct
 occurrences, consistent with the machine performing one operation at a
 time, so event stepping is retained, with sentences added for `enter`,
-`read`, `swap`, and the end. A comparison is narrated
-with its template sentence and the values (`"3 is divisible by 15" is
-false`), because the compared operands alone (`3` and `0`) conceal the
-origin of the 3, and because the diamond itself is written as that
-sentence. Python
-notation is excluded from the narration.
+`read`, `swap`, and the end. Python notation is excluded from the
+narration.
 
 **The `+` menu offers statements, in a beginner's order** (U-40). Listing
 every registered block placed expression blocks at positions where they
@@ -620,24 +615,86 @@ language and adds authoring work. Observed while drawing the board:
 built-in module groups would overfill a trainee's menu, so modules are
 placed behind one `Modules ▸` row.
 
-**Names come from the problem** (U-41). A verdict compares
+**Names come from the problem** (U-94). A verdict compares
 `expect.variables` by name, so a learner who names `total` differently
 fails without a visible reason; offering the expected names first removes
 that failure mode. This is the problem's own contract, not a challenge
 determining the appearance of the UI, so it does not affect the views
-commitment. The row stops at six names, one line as the board draws it: a
-longer list of common names (`tmp`, `low`, `high`, `mid`) has a beginner
-read names the problem does not need before typing one.
+commitment. The names are a list under the field, as the values are, so
+the row's limit of six goes with the row; no fixed list of common names
+(`i`, `count`, `found`) follows, because a beginner then reads names the
+problem does not need before typing one.
 
 **The popover stays; in-node editing was rejected** (U-41, U-50). The
-chart is shown fitted to its width, a diamond has little room, and nested
-chips need space at full size; the popover is always at 100 %. What
-changed is the cost of reaching it: a click on a slot drawn on the node
-opens the editor with that slot's menu open, and the menu starts with one
-field that takes a number, a quoted text, or letters to filter. The popover
+chart is shown fitted to its width, a diamond has little room, and a
+value being built needs space at full size; the popover is always at
+100 %. What changed is the cost of reaching it: a click on a slot drawn on
+the node opens the editor focused on that slot, ready for typing. The popover
 stays inside the chart region: one placed against the viewport flips over
 the panel whenever the node's right side lacks room, and hides the
 statement the learner is building from.
+
+**A statement is a named action; a value is one line** (U-41, U-50,
+U-52). Bubble and FlutterFlow present an action as a name with named
+fields, and Excel, Notion, and Stride build a value as one typed line with
+completion; the node editor follows both, because a statement has few,
+fixed parts and a value has any shape. The chip editor nested a box per
+operation, so a value of three operations was three levels of boxes, and
+editing one part meant finding its box; a typed line needs no structure
+to be learnt before it is read. A keypad of symbols was drawn and dropped:
+no tool the learner will use later has one, and the keyboard already holds
+every key the line takes. The list holds every entry, symbols included,
+so nothing has to be known to be found, and its groups follow purpose
+(`Calculate`, `Compare`, `Items`) rather than block categories, because a
+learner looks for what to do with a value, not for where a block is
+filed. A text is entered through `Text` alone: typing quotes is the first
+syntax a beginner gets wrong.
+
+**The chart writes the block language** (N-08, U-33). Python stays in its
+tab (U-25); the chart uses the symbols a learner knows from school (`+ − ×
+÷ ( ) = ≠ < ≤ > ≥`) and words for everything else (`remainder of i
+divided by 15`, `count of nums`), as Bubble and FlutterFlow name their
+operations. `=` only compares: setting a variable is always `Set … to`,
+so the two meanings Python separates as `=` and `==` never meet on the
+chart. A word operation next to a symbol or inside another operation is
+ambiguous without brackets (`remainder of i + 1 divided by 3`), so it is
+bracketed; operators among themselves follow Python's precedence, so the
+chart and the emitted code group alike. A variable is a coloured bold
+word: boxes around every variable made a node's sentence hard to read.
+
+**Keys are typed as Python spells them and shown as the chart writes
+them** (U-93). `<=` already shows `≤`, so `==` shows `=` and `!=` shows
+`≠` by the same rule; a single `=` is Python's assignment and inserts
+nothing, so it is never read as a comparison. A word operation has a key
+where Python has one (`%`, `//`, `**`), so a learner who later reads the
+`Python` tab meets the keys already typed.
+
+**A node may be named, and the name is a comment** (U-95, L-58, E-11,
+L-55). A
+sentence generated for any expression was tried as narration and as a
+diamond's text and could not be written in general; FlutterFlow lets the
+author name an action instead. A name is optional, in the learner's own
+words, and never asked for; the named node shows the name alone, and the
+statement stays one hover away and in the `Python` tab, where the name is
+the comment above it. The `comment` block is removed with it: it drew
+Python's `#` on the chart, and a named node says what it said where it
+applies.
+
+**Kinds choose the list** (L-59, U-52, N-11). After a value the list
+offers what applies to that kind of value, so a list does not offer
+`Multiply`; the kind comes from inputs and first assignments, which is
+known without running. A kind that cannot be told shows every entry, and
+`Show all` ends every list, so nothing is hidden by a wrong guess. `Or` is
+explained as one side or both, because beginners read it as one or the
+other.
+
+**A diamond's narration asks and answers** (U-63). The diamond already
+shows its verdict as `✓` or `✗` and colours the edge taken, so `is false,
+so No` said a third time what the chart shows, with a word, `false`, found
+nowhere else on it. The narration writes the diamond's question with the
+values and the edge's label (`(remainder of 3 divided by 15) = 0? No`);
+`true` and `false` remain for a comparison that is a value, such as one
+side of `and`.
 
 **The top bar holds only the loop's actions** (U-03, U-05). The title
 is retained because it is the only indication of the learner's location
@@ -657,15 +714,15 @@ the next row after the last course problem would place a trainee in the
 first data-structure problem; `Plan complete` returns the choice to the
 learner.
 
-**A diamond asks; a slot states** (U-33, U-50). `Is {cond}?` around a
-template sentence reads `Is x is divisible by 15?`, so each template has a
-question of its own beside its sentence (`Does a equal b?`). Template
-sentences apply to the whole expression of a statement's slot only: inside
-an expression the chips keep their symbols, because `x is less than 2 and x
-is less than 9` under `Is …?` is not legible, and `Is x < 2 and x < 9?`
-matches the generated `Is i < n + 1?` of a `for`. The variable block is
-obtained from the parser (the block a bare name parses to), so the matcher
-and the narration name no block kind (N-01).
+**A diamond is its condition and a question mark** (U-33). The
+condition templates (`is divisible by`, `equals`, eight in all) named only
+the conditions they listed: any other expression fell back to symbols, the
+diamond then needed a second sentence per template (`Is x is divisible by
+15?`), and a template was a third notation beside the chart's and
+Python's. Without templates the diamond writes its condition in the
+chart's own notation and adds `?`, which reads the same in every language;
+`Is` in front of it was dropped for the same reason. Where a condition is
+long or its purpose is not evident, the learner names the node (U-95).
 
 **`break` and `continue` draw where they jump** (U-33, U-34, N-09). An edge to
 the next node, the earlier drawing, is a path the run never takes, and a
@@ -837,8 +894,8 @@ the curriculum from the spec. `pnpm check` prints `in no plan: …` after
 the plans line so an omitted entry is visible on every run.
 
 **The tutorial prints two values** (S-05, C-22, L-29). `"Hello, " + name`
-made the first action combine a text, an operator wrapping a chip, and a
-variable, and its second hint explained wrapping before any problem had
+made the first action combine a text, an operator applied to a value,
+and a variable, and its second hint explained wrapping before any problem had
 introduced an operator. `print("Hello,", name)` prints the same line for
 every test, because `print` joins its values with one space, and its first
 action adds a second value to a slot that already holds one; `+` on text is
