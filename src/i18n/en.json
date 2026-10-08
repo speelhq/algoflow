@@ -40,7 +40,7 @@
     "title": "Problems",
     "solved": "{n} of {m} solved",
     "start": "Start",
-    "continue": "Continue",
+    "continue": "Continue: {title} ▶",
     "more": "More problems",
     "mark": {
       "solved": "✓",
