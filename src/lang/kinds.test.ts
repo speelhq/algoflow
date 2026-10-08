@@ -66,6 +66,20 @@ describe("kinds (L-59)", () => {
     });
   });
 
+  it("a first assignment whose kind cannot be told leaves none; a later one does not decide", () => {
+    const p = program([
+      assign("x", call("g")),
+      assign("x", str("s")),
+      for_("i", num(0), num(3), []),
+      assign("i", str("a")),
+      for_("k", num(0), num(3), []),
+      assign("k", call("g")),
+    ]);
+    // The first assignment decides before the kind a loop declares; a loop's stands when the
+    // first assignment's kind cannot be told.
+    expect(Object.fromEntries(variableKinds(p))).toEqual({ i: "text", k: "number" });
+  });
+
   it("a for variable is a number whatever its bounds; a list repeated stays a list", () => {
     const fn = {
       id: tid(),

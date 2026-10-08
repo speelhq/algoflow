@@ -33,11 +33,11 @@ export function kindOf(expr: Expr, vars: ReadonlyMap<Id, Kind>): Kind | undefine
 }
 
 /**
- * Records the kinds of the names `stmts` assign, in program order, the first assignment of
- * each name winning: a target takes its value's kind, a loop variable the kind its block
- * declares (a counted `for`'s is a number), else none.
+ * Records the kinds of the names `stmts` assign, in program order: a name takes the kind of
+ * the value of its first assignment, which no later one changes, else the kind its loop block
+ * declares (a counted `for`'s is a number). `assigned` holds the names already settled.
  */
-function assignKinds(stmts: Stmt[], kinds: Map<Id, Kind>): void {
+function assignKinds(stmts: Stmt[], kinds: Map<Id, Kind>, assigned: Set<Id>): void {
   for (const stmt of stmts) {
     const targets = new Set(
       getNode(keyOf(stmt))
@@ -46,16 +46,17 @@ function assignKinds(stmts: Stmt[], kinds: Map<Id, Kind>): void {
     );
     const first = childSlots(stmt).find((slot) => !targets.has(slot.slot));
     for (const { name, role } of declaredBy(stmt)) {
-      if (kinds.has(name)) continue;
-      const kind =
-        role === "target"
-          ? isExpr(first?.expr)
-            ? kindOf(first.expr, kinds)
-            : undefined
-          : getNode(keyOf(stmt)).declares;
-      if (kind) kinds.set(name, kind);
+      if (role === "target") {
+        if (assigned.has(name)) continue;
+        assigned.add(name);
+        const kind = isExpr(first?.expr) ? kindOf(first.expr, kinds) : undefined;
+        if (kind) kinds.set(name, kind);
+      } else {
+        const kind = getNode(keyOf(stmt)).declares;
+        if (kind && !kinds.has(name)) kinds.set(name, kind);
+      }
     }
-    for (const region of regionsOf(stmt)) assignKinds(region.stmts, kinds);
+    for (const region of regionsOf(stmt)) assignKinds(region.stmts, kinds, assigned);
   }
 }
 
@@ -73,10 +74,10 @@ export function variableKinds(program: Program, chart: NodeId | "main" = "main")
   const kinds = new Map<Id, Kind>();
   if (chart === "main") {
     for (const input of program.inputs) kinds.set(input.name, dataKind(input.value));
-    assignKinds(program.main, kinds);
+    assignKinds(program.main, kinds, new Set(program.inputs.map((input) => input.name)));
   } else {
     const fn = program.functions.find((f) => f.id === chart);
-    if (fn) assignKinds(fn.body, kinds);
+    if (fn) assignKinds(fn.body, kinds, new Set());
   }
   charts.set(chart, kinds);
   return kinds;
