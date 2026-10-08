@@ -380,9 +380,11 @@ follows a value applies to it: an operator, a word operation, a builtin.
 Making the learner choose `abs` first and rebuild the value inside it
 would cost two steps for what is one thought. An operator binds by the
 precedence Python gives it, so `total + i × 2` reads and runs as it is
-written; a word operation is a phrase around its inputs, so it takes the
-last value only, and the brackets the chart draws around it (N-08) show
-what it took. Inputs left to fill are fields in the line, reached with
+written, and the operations Python spells with keys (`%`, `//`, `**`,
+`in`) bind the same way, so typed keys group as Python groups them; any
+other word operation is a phrase around its inputs, so it takes the last
+value only, and the brackets the chart draws around it (N-08) show what it
+took. Inputs left to fill are fields in the line, reached with
 Tab, as Excel's argument hint is.
 
 **The Playground page reuses the Problems page** (U-15). Both pages list
