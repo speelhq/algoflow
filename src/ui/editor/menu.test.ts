@@ -53,6 +53,7 @@ describe("block menu (U-40)", () => {
     expect(blankTemplate("for {var} from {start} up to {stop}")).toBe("for … from … up to …");
     const entries = menuGroups(program([]), MAIN).flatMap((group) => group.entries);
     expect(entries.find((e) => e.id === "assign")?.text).toBe("set … to …");
+    expect(entries.find((e) => e.id === "comment")?.text).toBe("# comment");
   });
 
   it("U-40: the search keeps the entries whose label or help contains the text", () => {
