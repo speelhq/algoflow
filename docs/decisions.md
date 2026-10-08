@@ -277,11 +277,11 @@ containing it starts a new pass, so a loop shows the current iteration;
 `not (a < b)` shows the inner compare, which is accepted.
 
 **A flowchart, not sentence blocks or a node graph** (U-30). Three
-directions were drawn. Scratch-style sentence blocks keep branches as
-indented text and never show two paths. A free node graph (n8n, Blueprint)
-requires the learner to manage edge drawing and loops manually and does not
-suit a structured `Program`. The auto-laid-out flowchart shows Yes/No paths
-and loop-backs graphically and keeps the AST as the source of truth.
+directions were drawn. Sentence blocks keep branches as indented text and
+never show two paths. A free node graph requires the learner to manage edge
+drawing and loops manually and does not suit a structured `Program`. The
+auto-laid-out flowchart shows Yes/No paths and loop-backs graphically and
+keeps the AST as the source of truth.
 
 **Loops are drawn as init, check, and step** (U-33, N-09). Three notations
 were compared on the study "Loop notation: three options" of the canvas
@@ -305,8 +305,8 @@ and `≤` across loops.
 "micrograd" tab grouped problems by course logistics; ordered study plans
 state which problem to attempt next instead. With 38 problems the page is one
 section per plan plus `More problems`: a flat list under a filter row
-(topics, difficulty, status, search) is LeetCode's response to thousands of
-problems, and here its order would be the plans' order in any case. Topics
+(topics, difficulty, status, search) suits thousands of problems, and here
+its order would be the plans' order in any case. Topics
 remain as tags so a problem outside the plans states what it practises. No
 global progress meter and no "blocks used" column: neither assists a
 beginner in choosing.
@@ -384,8 +384,7 @@ written, and the operations Python spells with keys (`%`, `//`, `**`,
 `in`) bind the same way, so typed keys group as Python groups them; any
 other word operation is a phrase around its inputs, so it takes the last
 value only, and the brackets the chart draws around it (N-08) show what it
-took. Inputs left to fill are fields in the line, reached with
-Tab, as Excel's argument hint is.
+took. Inputs left to fill are fields in the line, reached with Tab.
 
 **The Playground page reuses the Problems page** (U-15). Both pages list
 rows under one header, so the Playground page takes the Problems page's
@@ -622,10 +621,9 @@ placed behind one `Modules ▸` row.
 fails without a visible reason; offering the expected names first removes
 that failure mode. This is the problem's own contract, not a challenge
 determining the appearance of the UI, so it does not affect the views
-commitment. The names are a list under the field, as the values are, so
-the row's limit of six goes with the row; no fixed list of common names
-(`i`, `count`, `found`) follows, because a beginner then reads names the
-problem does not need before typing one.
+commitment. The names are a list under the field, as the values are, with
+no limit and no fixed common names (`i`, `count`, `found`), which a
+learner would read before the names the problem needs.
 
 **The popover stays; in-node editing was rejected** (U-41, U-50). The
 chart is shown fitted to its width, a diamond has little room, and a
@@ -636,19 +634,17 @@ stays inside the chart region: one placed against the viewport flips over
 the panel whenever the node's right side lacks room, and hides the
 statement the learner is building from.
 
-**A statement is a named action; a value is one line** (U-41, U-50,
-U-52). Bubble and FlutterFlow present an action as a name with named
-fields, and Excel, Notion, and Stride build a value as one typed line with
-completion; the node editor follows both, because a statement has few,
-fixed parts and a value has any shape. The chip editor nested a box per
-operation, so a value of three operations was three levels of boxes, and
-editing one part meant finding its box; a typed line needs no structure
-to be learnt before it is read. The list holds every entry, symbols included,
-so nothing has to be known to be found, and its groups follow purpose
-(`Calculate`, `Compare`, `Items`) rather than block categories, because a
-learner looks for what to do with a value, not for where a block is
-filed. A text is entered through `Text` alone: typing quotes is the first
-syntax a beginner gets wrong.
+**A statement is a named action; a value is one line** (U-41, U-50, U-52). A
+statement has few, fixed parts, so its sentence shows each as a field; a
+value has any shape, so it is one line, typed or built from a list. The chip
+editor nested a box per operation, so a value of three operations was three
+levels of boxes, and editing one part meant finding its box; a line reads
+left to right as the chart writes it. The list holds every entry, symbols
+included, so nothing has to be known to be found, and its groups follow
+purpose (`Calculate`, `Compare`, `Items`) rather than block categories,
+because a learner looks for what to do with a value, not for where a block
+is filed. A text is entered through `Text` alone, so no quote is typed and
+none can be left out.
 
 **Typing replaces a value the editor opens on** (U-53, U-41). A slot
 reached by Tab holds a value already, `0` in a new `for`: a caret after it
@@ -662,16 +658,15 @@ finished node leaves it with the chart, where Delete and the arrow keys
 act on the node.
 
 **The chart writes the block language** (N-08, U-33). Python stays in its
-tab (U-25); the chart uses the symbols a learner knows from school (`+ − ×
-÷ ( ) = ≠ < ≤ > ≥`) and words for everything else (`remainder of i
-divided by 15`, `count of nums`), as Bubble and FlutterFlow name their
-operations. `=` only compares: setting a variable is always `Set … to`,
-so the two meanings Python separates as `=` and `==` never meet on the
-chart. A word operation next to a symbol or inside another operation is
+tab (U-25); the chart uses the symbols a learner knows from school (`+ − × ÷
+( ) = ≠ < ≤ > ≥`) and words for everything else (`remainder of i divided by
+15`, `count of nums`). `=` only compares: setting a variable is always `Set
+… to`, so the two meanings Python separates as `=` and `==` never meet on
+the chart. A word operation next to a symbol or inside another operation is
 ambiguous without brackets (`remainder of i + 1 divided by 3`), so it is
 bracketed; operators among themselves follow Python's precedence, so the
-chart and the emitted code group alike. A variable is a coloured bold
-word: boxes around every variable made a node's sentence hard to read.
+chart and the emitted code group alike. A variable is a bold word in its own
+colour, not a box, which would cut the sentence into pieces.
 
 **Keys are typed as Python spells them and shown as the chart writes
 them** (U-93). `<=` already shows `≤`, so `==` shows `=` and `!=` shows
@@ -679,14 +674,13 @@ them** (U-93). `<=` already shows `≤`, so `==` shows `=` and `!=` shows
 nothing, so it is never read as a comparison. A word operation has a key
 where Python has one (`%`, `//`, `**`), so a learner who later reads the
 `Python` tab meets the keys already typed. `(` opens a pair of brackets
-and `)` closes it, and brackets are not stored, so they cannot mismatch:
-a mismatched bracket is the error beginners make most often.
+and `)` closes it, and brackets are not stored, so a bracket can never be
+left unclosed.
 
 **A node may be named, and the name is a comment** (U-95, L-58, E-11,
-L-55). A
-sentence generated for any expression was tried as narration and as a
-diamond's text and could not be written in general; FlutterFlow lets the
-author name an action instead. A name is optional, in the learner's own
+L-55). No generated sentence fits every expression, and a condition
+written in symbols does not say what it is for; a name in the learner's
+own words does, for any statement. A name is optional, in the learner's own
 words, and never asked for; the named node shows the name alone, and the
 statement stays one hover away and in the `Python` tab, where the name is
 the comment above it. The `comment` block is removed with it: it drew
@@ -697,16 +691,14 @@ applies.
 offers what applies to that kind of value, so a list does not offer
 `Multiply`; the kind comes from inputs and first assignments, which is
 known without running. A kind that cannot be told shows every entry, and
-`Show all` ends every list, so nothing is hidden by a wrong guess; it
-lists what can be chosen at the caret, since a row that does nothing when
-chosen reads as broken. An operation chosen where a value is expected is
-placed with its inputs empty, as building it from its first input would. A typed
-word searches every entry for the same reason, and Enter takes the first
-match, so the match a learner means comes first: a name starting with
-the word before one containing it, and the kind's entries before the
-rest (`an` after a comparison is `And`, not `Less than`). `Or` is
-explained as one side or both, because beginners read it as one or the
-other.
+`Show all` ends every list, so nothing is hidden by a wrong guess. It
+lists only what can be chosen at the caret, so every row it shows acts; an
+operation chosen where a value is expected is placed with its inputs
+empty. A typed word searches every entry for the same reason, and Enter
+takes the first match, so a name starting with the word comes before one
+containing it, and the kind's entries before the rest (`an` after a
+comparison is `And`, not `Less than`). `Or` is explained as one side or
+both, because in everyday English or often means only one.
 
 **A diamond's narration asks and answers** (U-63). The diamond already
 shows its verdict as `✓` or `✗` and colours the edge taken, so `is false,
@@ -946,10 +938,9 @@ editing while paused under UI.
 **A module is a function that outlives its program** (08-modules). Its
 semantics are a function's; the difference is ownership and lifetime: a
 function belongs to one `Program`, a module belongs to the learner and is
-referenced by many programs. FlutterFlow's Action Blocks are the model:
-defined once per project, parameterised, called from any flow, edited in one
-place with the change reaching every use. Here a `Program` is the size of
-one FlutterFlow flow, so the project-level layer had to be added outside
+referenced by many programs: defined once, parameterised, called from any
+program, and edited in one place with the change reaching every use. A
+`Program` holds one program only, so that layer is added outside
 `Program`. `Module` was chosen over `Functions` (collides with the block
 menu's `Function` category and a program's own functions, excludes classes,
 cannot group a `heap`) and `Library` (a single flat collection, and already
