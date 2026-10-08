@@ -656,9 +656,10 @@ would make every digit typed extend it (`01`), so the value is selected,
 as a text field selects what it holds, and the first value typed replaces
 it. An operator's key applies to the selection instead: an operator alone
 is no value, so `*` on a selected `n` can only mean `n × …`. The editor
-takes the keyboard only for a slot clicked or still to fill: one
-opened by a click on a finished node leaves it with the chart, where
-Delete and the arrow keys act on the node.
+takes the keyboard only for a slot clicked or still to fill, the first such
+slot when the node's words are clicked: one opened by a click on a
+finished node leaves it with the chart, where Delete and the arrow keys
+act on the node.
 
 **The chart writes the block language** (N-08, U-33). Python stays in its
 tab (U-25); the chart uses the symbols a learner knows from school (`+ − ×
