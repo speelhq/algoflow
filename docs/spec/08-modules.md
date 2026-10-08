@@ -46,7 +46,8 @@ program or of another module is `E_UNKNOWN_CALL` inside a module.
 
 D-06 A module has no `main`. Its page runs one function at a time (R-18):
 the shown function's parameters are Input nodes in the form of U-32, their
-menu listing that function's cases (D-19) and `Custom…`, and after a run
+menu listing that function's cases (D-19), and holding the arguments of
+D-18 when the page was opened with them; after a run
 `End` shows the returned value.
 
 ## Pages
@@ -96,7 +97,7 @@ of that call as they stood at its `call` event (R-11 Seek); in build mode,
 the arguments that are literals; otherwise none. They are transferred with
 the module and function names under `localStorage` key `algoflow:handoff`,
 which the Module page reads once and removes, and they become the Input
-nodes' `Custom…` values (D-06).
+nodes' values (D-06).
 
 ## Cases
 

@@ -247,9 +247,7 @@ run after every edit and before every run.
 L-50 `edit.ts` exports pure functions returning a new `Program`:
 `insertStmt`, `moveStmt`, `removeStmt`, `duplicateStmt`, `setSlot`,
 `setExpr`, `removeItem` (an item of an `exprs` slot), `renameName`, `addFunction`, `removeFunction`, `addClass`,
-`removeClass`, `setFields`, `setParams`, `hoistAssign`, and `resetProgram`
-(an empty `main` with no functions or classes, keeping `title`,
-`challengeId`, and `inputs`; U-05).
+`removeClass`, `setFields`, `setParams`, and `hoistAssign`.
 
 L-51 Every edit preserves L-04.
 

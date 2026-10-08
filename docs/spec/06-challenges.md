@@ -102,9 +102,8 @@ time (`import.meta.glob` in `src/challenges/index.ts`); `scripts/check.ts`
 reads the files from disk. The schema types live in
 `src/challenges/types.ts`.
 
-C-15 Run (U-60) drives one runner with the Input nodes' values and, when
-those are the inputs of one of the tests, judges that test at the end of
-the run (U-23); Submit (U-80) judges every test on its own runner in R-11
+C-15 Run (U-60) drives one runner with the inputs of the chosen case
+(U-32) and judges that case at the end of the run (U-23); Submit (U-80) judges every test on its own runner in R-11
 batches without affecting the driver; both use the modules the program uses
 (D-04), and every verdict comes from `src/challenges/judge.ts`, the rule
 `scripts/check.ts` applies (C-10, C-11).

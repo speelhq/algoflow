@@ -177,9 +177,8 @@ accepted.
 **No statement-level Python import** (G-01). The beginner's loop never
 involves typing Python, and a learner able to type it does not need blocks;
 the block language is a strict subset, so most pasted Python would fail
-without a clear diagnostic. Text entry remains at expression level (U-55),
-and the `Python` tab, whose lines and nodes select each other (U-25),
-provides the transition from chart to text.
+without a clear diagnostic. The `Python` tab, whose lines and nodes
+select each other (U-25), provides the transition from chart to text.
 
 **The driver publishes its projection, not only its position** (R-11,
 R-12).
@@ -350,12 +349,6 @@ it under the same title, which `⋯` has no reason to offer; the title of a
 program opened from a problem is the problem's, because the program of a
 problem has no title the learner ever sees.
 
-**The case is read from the values** (U-32, C-15). Run judges the test
-whose inputs the Input nodes hold, whichever way they were set, so the
-selector names that test too: `Custom…` set back to `n = 15` is the case
-`n = 15`, with its `Expected` and its verdict, and a learner never sees a
-run judged under a selector that reads `Custom…`.
-
 **A drop cannot land inside the dragged node** (U-36). Moving a loop into
 its own body has no result: the region would be removed with the
 statement that holds it. Its connectors accept no drop rather than refusing
@@ -446,17 +439,15 @@ function needs parameter and return inference and a multi-select UI;
 body the learner builds, and choosing the parameters manually is where a
 beginner learns what a parameter is.
 
-**Cards before bars** (V-01, V-03). Bars show the pattern of a list
-immediately and are the conventional sorting representation, but course
-inputs have five items, and every non-sorting problem needs the number
-itself (`9 > 7`, evenness, `dp` values); converting a height back into a
-number is a cost a beginner incurs at every step. Cards with the value
-shown are the default up to the card limit, bars beyond it, and bars remain
-a switch (V-06) for anyone who prefers the graphical representation. A
-write changes a bar or card immediately: the orange highlight indicates the
-change and the narration states the previous value, so a height transition
-adds nothing. The swap slide is retained because it is the only feature
-that distinguishes an exchange from two writes.
+**Cards, and no bars** (V-01, V-03, V-06). Bars show the pattern of a
+list immediately and are the conventional sorting representation, but every
+problem needs the number itself (`9 > 7`, evenness, `dp` values), and
+converting a height back into a number is a cost a beginner incurs at every
+step. No problem of the curriculum has a list of numbers longer than the
+card limit, so bars would appear only as a switch no screen needs. A write
+changes a card immediately: the orange highlight indicates the change and
+the narration states the previous value. The swap slide is retained because
+it is the only feature that distinguishes an exchange from two writes.
 
 **The view switch lives outside the AST** (V-06, `algoflow:views`). A
 view preference in `Program` would be exported, imported, and diffed with
@@ -552,18 +543,6 @@ level of detail the design is built on. `Breakpoint` is the term used by
 every debugger the learner will encounter later, as with `Module`,
 `Clone`, and `Test`.
 
-**One way to enter a value** (U-32, U-50). A custom input was a Python
-literal box, which requires a first-day learner to supply quotes and
-brackets and responds with `Syntax error at character 3`. Fields chosen by
-the input's type (a number field, a text field, a toggle, a literal box for
-lists) were rejected as four special cases that still left the most
-difficult one, a list, to raw syntax, and as a second means of entering
-values beside the one blocks use. `Custom…` opens the value editor of a
-slot limited to literals, so anyone able to fill a block can change an
-input and conversely, lists are built as chips, and `Type as text` remains
-for those who prefer to type. A value of the wrong type for an input is not
-validated: the runtime error explains it.
-
 **Small rules settled with the boards** (U-33, U-40, D-22, U-85). A slot
 drawn on a generated loop node is the loop's slot, so the rule for slots
 (U-41) already makes `Set i to 0` the route to the start value, the most
@@ -644,23 +623,26 @@ placed behind one `Modules ▸` row.
 fails without a visible reason; offering the expected names first removes
 that failure mode. This is the problem's own contract, not a challenge
 determining the appearance of the UI, so it does not affect the views
-commitment.
+commitment. The row stops at six names, one line as the board draws it: a
+longer list of common names (`tmp`, `low`, `high`, `mid`) has a beginner
+read names the problem does not need before typing one.
 
 **The popover stays; in-node editing was rejected** (U-41, U-50). The
 chart is shown fitted to its width, a diamond has little room, and nested
 chips need space at full size; the popover is always at 100 %. What
 changed is the cost of reaching it: a click on a slot drawn on the node
 opens the editor with that slot's menu open, and the menu starts with one
-field that takes a number, a quoted text, or letters to filter.
+field that takes a number, a quoted text, or letters to filter. The popover
+stays inside the chart region: one placed against the viewport flips over
+the panel whenever the node's right side lacks room, and hides the
+statement the learner is building from.
 
 **The top bar holds only the loop's actions** (U-03, U-05). The title
 is retained because it is the only indication of the learner's location
 when the panel shows `Result` or is collapsed, and because Playground's
 editable title and a module's name need the same slot. The difficulty badge
 was removed: it assists in choosing a problem, not in solving one.
-`Open in Playground`, Help, and the new `Start over` (no means of returning
-to an empty chart existed other than deleting every node) are placed under
-`⋯`.
+`Open in Playground` and Help are placed under `⋯`.
 
 **The solution is shown where a chart fits** (U-22). A flowchart with
 branches does not fit a 320 px panel, so the solution occupies the chart
@@ -773,16 +755,16 @@ both its ends are on the path. A loop that has ended has lost its mark
 what it leads to is on the path, whether a statement, the next loop's
 junction, or a branch's merge.
 
-**A submission is shown until the next run** (U-86, C-15). Submit judges
-every test without touching the driver, so a run may be on the chart when
-the verdict arrives; the tab cannot show both sets of rows in 320 px. The
-submission is the newer result and replaces the run's rows; the next Run,
-including `Watch this case`, is the newer result again and replaces it. A
-chip only chooses which test's rows are read: setting the Input nodes from
-it would stop the run on the chart, which C-15 keeps untouched, and
-`Watch this case` already sets them. Submit stays in the top bar while
-running for the same reason: Submit does not depend on the run, and making
-the learner press `Stop` first would add a step to the loop of S-10.
+**A submission is shown until the next run** (U-86, U-60, C-15). Submit
+judges every test on runners of its own, and the tab cannot show a run's
+rows and a submission's in 320 px, so the submission replaces the run's
+rows; the next Run, including `Watch this case`, replaces it again. A chip
+only chooses which test's rows are read: setting the Input nodes from it
+would change the case under the chart, and `Watch this case` already sets
+them. While running, the top bar holds only the run's own controls, as the
+boards draw it: a verdict arriving during playback would replace the rows
+of the run being watched, and a learner who has watched a run reaches
+Submit with one `Stop`.
 
 **While running, the case and the chart stay the run's** (U-27, U-32).
 Choosing another case discards the runner (C-13), and showing the solution
