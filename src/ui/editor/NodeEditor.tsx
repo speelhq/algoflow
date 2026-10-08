@@ -595,7 +595,20 @@ function Body({
           />
         );
       case "expr":
-        return isExpr(value) ? valueLine(name, value) : null;
+        return isExpr(value) ? (
+          valueLine(name, value)
+        ) : (
+          <button
+            key={name}
+            type="button"
+            className="h-7 cursor-pointer rounded-md border border-dashed px-2.5 text-sm text-muted-foreground hover:bg-muted"
+            onClick={() => {
+              if (apply((p) => setExpr(p, stmt.id, name, empty()))) enter({ slot: name });
+            }}
+          >
+            {t("editor.addValue")}
+          </button>
+        );
       case "exprs": {
         const items = Array.isArray(value) ? value.filter(isExpr) : [];
         return (
