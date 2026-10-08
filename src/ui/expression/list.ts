@@ -214,7 +214,7 @@ function distance(a: string, b: string): number {
   return row[b.length] ?? 0;
 }
 
-/** The closest word of the rows to `query`, when one is near enough to be meant. */
+/** The closest word of the rows to `query`, when it differs by about one letter in three. */
 export function closest(groups: Group[], query: string): string | undefined {
   const q = query.trim().toLowerCase();
   let best: { word: string; d: number } | undefined;
@@ -224,5 +224,5 @@ export function closest(groups: Group[], query: string): string | undefined {
     const d = distance(q, word.toLowerCase());
     if (!best || d < best.d) best = { word, d };
   }
-  return best && best.d <= Math.max(2, Math.floor(q.length / 3)) ? best.word : undefined;
+  return best && best.d <= Math.max(1, Math.floor(q.length / 3)) ? best.word : undefined;
 }

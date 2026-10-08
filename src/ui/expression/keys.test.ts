@@ -131,6 +131,8 @@ describe("the list (U-52)", () => {
     ]);
     expect(closest(valueGroups(p, variables), "totl")).toBe("total");
     expect(closest(valueGroups(p, variables), "zzzzzz")).toBeUndefined();
+    // A short word is not taken for another two letters away (`totl` is not `Not`).
+    expect(closest(valueGroups(p, []), "totl")).toBeUndefined();
   });
 
   it("a chosen entry after a value takes it; where a value is expected it fills the input", () => {
