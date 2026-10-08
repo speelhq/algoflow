@@ -652,6 +652,14 @@ learner looks for what to do with a value, not for where a block is
 filed. A text is entered through `Text` alone: typing quotes is the first
 syntax a beginner gets wrong.
 
+**Typing replaces a value the editor opens on** (U-53, U-41). A slot
+reached by Tab holds a value already, `0` in a new `for`: a caret after it
+would make every digit typed extend it (`01`), so the value is selected,
+as a text field selects what it holds, and the first key replaces it. The
+editor takes the keyboard only for a slot clicked or still to fill: one
+opened by a click on a finished node leaves it with the chart, where
+Delete and the arrow keys act on the node.
+
 **The chart writes the block language** (N-08, U-33). Python stays in its
 tab (U-25); the chart uses the symbols a learner knows from school (`+ − ×
 ÷ ( ) = ≠ < ≤ > ≥`) and words for everything else (`remainder of i
