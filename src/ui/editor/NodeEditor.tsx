@@ -23,7 +23,8 @@ import { matchTemplate } from "@/ui/expression/templates";
 import { ValueMenu } from "@/ui/expression/ValueMenu";
 import { Button } from "@/ui/primitives/button";
 import { Input } from "@/ui/primitives/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/ui/primitives/popover";
+import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import { Popover, PopoverTrigger } from "@/ui/primitives/popover";
 import { apply } from "./edits";
 import { nameChars, nameSuggestions } from "./names";
 
@@ -399,6 +400,7 @@ export function NodeEditor({ id }: { id: NodeId }) {
   const slot = useEditor((s) => s.slot);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
+  const [boundary, setBoundary] = useState<Element | null>(null);
   const node = nodesById(program).get(id);
   if (!node || !("kind" in node) || getNode(keyOf(node)).shape !== "stmt") return null;
   return (
@@ -410,18 +412,41 @@ export function NodeEditor({ id }: { id: NodeId }) {
         else closeEditor();
       }}
     >
-      <PopoverTrigger render={<div className="pointer-events-none size-full" aria-hidden />} />
-      <PopoverContent
-        side="right"
-        align="start"
-        className="w-104"
-        aria-label={t("editor.label")}
-        // Focus stays on the chart, so the editing keys act on the selected node.
-        initialFocus={false}
-        finalFocus={false}
-      >
-        <Body key={`${id}:${slot ?? ""}`} stmt={node as Stmt} program={program} initial={slot} />
-      </PopoverContent>
+      <PopoverTrigger
+        render={
+          <div
+            ref={(element) => setBoundary(element?.closest("[data-chart-region]") ?? null)}
+            className="pointer-events-none size-full"
+            aria-hidden
+          />
+        }
+      />
+      {/* Beside the node and inside the chart region, so the panel's statement stays readable. */}
+      <PopoverPrimitive.Portal>
+        <PopoverPrimitive.Positioner
+          side="right"
+          align="start"
+          sideOffset={8}
+          collisionBoundary={boundary ?? "clipping-ancestors"}
+          collisionPadding={8}
+          className="isolate z-50"
+        >
+          <PopoverPrimitive.Popup
+            className="z-50 flex w-104 flex-col gap-2.5 rounded-lg bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden"
+            aria-label={t("editor.label")}
+            // Focus stays on the chart, so the editing keys act on the selected node.
+            initialFocus={false}
+            finalFocus={false}
+          >
+            <Body
+              key={`${id}:${slot ?? ""}`}
+              stmt={node as Stmt}
+              program={program}
+              initial={slot}
+            />
+          </PopoverPrimitive.Popup>
+        </PopoverPrimitive.Positioner>
+      </PopoverPrimitive.Portal>
     </Popover>
   );
 }

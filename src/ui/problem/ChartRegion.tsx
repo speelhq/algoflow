@@ -200,7 +200,7 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
   );
 
   return (
-    <section className="flex min-w-0 flex-1 flex-col" data-testid="chart-region">
+    <section className="flex min-w-0 flex-1 flex-col" data-testid="chart-region" data-chart-region>
       {shown && <SolutionBand challenge={challenge} />}
       <PathBar />
       {chart && (
