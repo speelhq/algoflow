@@ -14,6 +14,7 @@ import {
   capitaliseParts,
   dataText,
   generatedParts,
+  inputRuns,
   joinParts,
   questionParts,
   sentenceParts,
@@ -592,7 +593,7 @@ export function layout(program: Program, opts: LayoutOptions = {}): ChartLayout 
   for (const input of fn ? [] : program.inputs) {
     const value =
       opts.inputs && Object.hasOwn(opts.inputs, input.name) ? opts.inputs[input.name] : input.value;
-    const text = t("chart.input", { name: input.name, value: dataText(value ?? null) });
+    const text = inputRuns(input.name, dataText(value ?? null));
     const node = builder.node(`input:${input.name}`, null, "input", "input", text, y);
     frag.nodes.push(node);
     frag.edges.push(edge(flow, node.id, [{ x: 0, y }]));

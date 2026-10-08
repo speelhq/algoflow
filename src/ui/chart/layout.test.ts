@@ -429,6 +429,8 @@ describe("layout (U-31, U-33 texts)", () => {
     const chart = layout(sum.solution, { inputs: { n: 0 } });
     expect(chart.nodes.slice(0, 2).map((node) => node.text)).toEqual(["Start", "Input n = 0"]);
     expect(layout(sum.solution).nodes[1]?.text).toBe("Input n = 10");
+    // N-08: the input's name is a variable, bold in the variable colour.
+    expect(chart.nodes[1]?.parts.find((part) => part.variable)?.text).toBe("n");
     expect(chart.nodes.at(-1)?.text).toBe("End");
     const texts = chart.nodes.filter((node) => node.generated).map((node) => node.text);
     expect(texts).toEqual(["Set i to 1", "i < n + 1?", "Set i to i + 1"]);

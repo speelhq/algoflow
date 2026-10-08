@@ -73,6 +73,21 @@ function fillRuns(template: string, fill: (name: string) => Run[]): Run[] {
   return tidy(runs);
 }
 
+/** An Input node's text (`Input n = 15`) as runs, the input's name as a variable; the value as written. */
+export function inputRuns(name: string, value: string): Run[] {
+  const runs: Run[] = [];
+  let at = 0;
+  const template = t("chart.input");
+  for (const found of template.matchAll(/\{(\w+)\}/g)) {
+    runs.push({ text: template.slice(at, found.index) });
+    if (found[1] === "name") runs.push({ text: name, variable: true });
+    if (found[1] === "value") runs.push({ text: value });
+    at = found.index + found[0].length;
+  }
+  runs.push({ text: template.slice(at) });
+  return runs.filter((run) => run.text !== "");
+}
+
 /** The text runs spell. */
 export function joinRuns(runs: readonly Run[]): string {
   return runs.map((run) => run.text).join("");
