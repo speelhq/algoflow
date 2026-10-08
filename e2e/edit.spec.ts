@@ -113,6 +113,18 @@ test("U-54: Backspace removes an operator and an operation's words; an operator 
   await expect(chart(page)).not.toContainText("≤");
 });
 
+test("U-41: a click on a node's words opens its first slot still to fill", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/fizzbuzz");
+  const id = await insert(page, "main/main/0", "assign");
+  await page.keyboard.type("x");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Escape");
+  await chart(page).locator(`[data-node-id="${id}"] tspan:not([data-slot])`).first().click();
+  await page.keyboard.type("5");
+  await expect(chart(page)).toContainText("Create x and set it to 5");
+});
+
 test("U-93: a comparison after a comparison is refused with its message", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/fizzbuzz");

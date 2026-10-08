@@ -37,6 +37,7 @@ import { atInput, choose, kindBefore, press, type LineState } from "@/ui/express
 import {
   empty,
   find,
+  firstEmpty,
   inputAt,
   lineOf,
   numberText,
@@ -210,6 +211,29 @@ function rootAt(stmt: Stmt, focus: Focus | null): Expr | undefined {
   return isExpr(item) ? item : undefined;
 }
 
+/** The slots of the sentence that take the keyboard, in the order it shows them. */
+function slotOrder(stmt: Stmt, program: Program): Focus[] {
+  const def = getNode(keyOf(stmt));
+  const out: Focus[] = [];
+  for (const found of templateOf(stmt, program).matchAll(/\{(\w+)\}/g)) {
+    const slot = def.slots.find((s) => s.name === found[1]);
+    if (!slot) continue;
+    const value = (stmt as unknown as Bag)[slot.name];
+    if (slot.role === "exprs" && Array.isArray(value)) {
+      value.forEach((_, index) => out.push({ slot: slot.name, index }));
+    } else if (slot.role === "expr" || nameOf(stmt, slot.name) !== undefined) {
+      out.push({ slot: slot.name });
+    }
+  }
+  return out;
+}
+
+/** Whether the slot at `focus` is still to fill: an empty name, or a value with an empty input. */
+function unfilled(stmt: Stmt, focus: Focus): boolean {
+  const held = rootAt(stmt, focus);
+  return held ? firstEmpty(held) !== undefined : nameOf(stmt, focus.slot) === "";
+}
+
 /** Whether `node` is a text value, typed into a field: its one slot is a `text` slot. */
 function isTextValue(node: Expr): boolean {
   const slots = getNode(keyOf(node)).slots;
@@ -247,15 +271,19 @@ function Body({
 
   const firstSlot = def.slots.find((slot) => slot.role !== "body" && slot.role !== "text");
   const [focus, setFocus] = useState<Focus | null>(() => {
+    // Opened from the node's words, the editor starts at the first slot still to fill.
+    const toFill =
+      initial === null ? slotOrder(stmt, program).find((f) => unfilled(stmt, f)) : null;
+    if (toFill) return toFill;
     const name = initial ?? firstSlot?.name;
     if (!name) return null;
     const value = bag[name];
     return Array.isArray(value) ? { slot: name, index: 0 } : { slot: name };
   });
-  // A value the editor opens on is selected, so typing replaces it.
+  // A finished value the editor opens on is selected, so typing replaces it.
   const [typing, setTyping] = useState<Typing | null>(() => {
     const opened = rootAt(stmt, focus);
-    return opened && !isEmptyExpr(opened)
+    return opened && !firstEmpty(opened)
       ? { caret: { at: opened.id, groups: [] }, draft: "", pending: "", select: true }
       : null;
   });
@@ -277,9 +305,7 @@ function Body({
   // Backspace still remove the node.
   useEffect(() => {
     if (!focus) return;
-    const held = rootAt(stmt, focus);
-    const unfilled = held ? isEmptyExpr(held) : nameOf(stmt, focus.slot) === "";
-    if (initial === null && !unfilled) return;
+    if (initial === null && !unfilled(stmt, focus)) return;
     const key = `${focus.slot}:${focus.index ?? ""}`;
     (lines.current[key] ?? names.current[focus.slot])?.focus();
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- only when the editor opens
@@ -420,21 +446,7 @@ function Body({
     } else commit(outcome.state);
   };
 
-  /** The slots of the sentence that take the keyboard, in the order it shows them. */
-  const order = (): Focus[] => {
-    const out: Focus[] = [];
-    for (const found of templateOf(stmt, program).matchAll(/\{(\w+)\}/g)) {
-      const slot = def.slots.find((s) => s.name === found[1]);
-      if (!slot) continue;
-      const value = bag[slot.name];
-      if (slot.role === "exprs" && Array.isArray(value)) {
-        value.forEach((_, index) => out.push({ slot: slot.name, index }));
-      } else if (slot.role === "expr" || nameOf(stmt, slot.name) !== undefined) {
-        out.push({ slot: slot.name });
-      }
-    }
-    return out;
-  };
+  const order = () => slotOrder(stmt, program);
 
   /** Gives the keyboard to `next`, selecting the value it holds. */
   const enter = (next: Focus) => {
@@ -443,8 +455,9 @@ function Body({
     setShowAll(false);
     setHighlight(null);
     const held = rootAt(stmt, next);
+    // A value with an input still to fill opens at that input instead (null: the line's start).
     setTyping(
-      held && !isEmptyExpr(held)
+      held && !firstEmpty(held)
         ? { caret: { at: held.id, groups: [] }, draft: "", pending: "", select: true }
         : null,
     );
