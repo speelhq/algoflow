@@ -643,9 +643,7 @@ completion; the node editor follows both, because a statement has few,
 fixed parts and a value has any shape. The chip editor nested a box per
 operation, so a value of three operations was three levels of boxes, and
 editing one part meant finding its box; a typed line needs no structure
-to be learnt before it is read. A keypad of symbols was drawn and dropped:
-no tool the learner will use later has one, and the keyboard already holds
-every key the line takes. The list holds every entry, symbols included,
+to be learnt before it is read. The list holds every entry, symbols included,
 so nothing has to be known to be found, and its groups follow purpose
 (`Calculate`, `Compare`, `Items`) rather than block categories, because a
 learner looks for what to do with a value, not for where a block is
