@@ -136,6 +136,8 @@ describe("the list (U-52)", () => {
     const after = (kind: string) => (row: Row) =>
       row.type === "entry" && (kindsOf(row) as string[]).includes(kind);
     expect(matches(groups, "an", after("truefalse"))[0]).toMatchObject({ label: "And" });
+    // Only a word's start matches: `i` is not found inside `first`.
+    expect(matches(valueGroups(p, []), "i").map((row) => row.type)).toEqual([]);
     // A short word is not taken for another two letters away (`totl` is not `Not`).
     expect(closest(valueGroups(p, []), "totl")).toBeUndefined();
   });

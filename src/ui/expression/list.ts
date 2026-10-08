@@ -193,17 +193,16 @@ function words(row: Row): string[] {
   return [row.label, ...(row.keys ? [row.keys] : [])];
 }
 
-/** How well a row's words meet `q`: whole, at the start of a word, inside one, or not at all. */
+/** How a row's names meet `q`: whole (0), a word starting with it (1), or not at all (2). */
 function score(row: Row, q: string): number {
   const all = words(row).map((word) => word.toLowerCase());
   if (all.includes(q)) return 0;
-  if (all.some((word) => word.split(" ").some((part) => part.startsWith(q)))) return 1;
-  return all.some((word) => word.includes(q)) ? 2 : 3;
+  return all.some((word) => word.split(" ").some((part) => part.startsWith(q))) ? 1 : 2;
 }
 
 /**
- * The rows of `groups` whose words contain `query`, ignoring case: whole words first, then
- * words that start with it, then the rest; within each, the rows `preferred` holds first.
+ * The rows of `groups` with a word starting with `query`, ignoring case: whole names first;
+ * within each, the rows `preferred` holds first.
  */
 export function matches(
   groups: Group[],
@@ -215,7 +214,7 @@ export function matches(
   const rank = (row: Row) => score(row, q) * 2 + (preferred(row) ? 0 : 1);
   return groups
     .flatMap((group) => group.rows)
-    .filter((row) => score(row, q) < 3)
+    .filter((row) => score(row, q) < 2)
     .toSorted((a, b) => rank(a) - rank(b));
 }
 
