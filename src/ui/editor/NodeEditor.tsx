@@ -363,7 +363,6 @@ function Body({
         <ValueMenu
           key={open.chip}
           program={program}
-          root={root as Expr}
           visible={visible}
           condition={open.slot === conditionSlot && open.chip === open.root}
           choose={(item: Item) => {
@@ -373,10 +372,6 @@ function Body({
           template={(make) => {
             const made = make();
             place(made, matchTemplate(made)?.a ?? null);
-          }}
-          typed={(expr) => {
-            const at = open;
-            if (apply((p) => replaceChip(p, at.root, expr))) setOpen(null);
           }}
         />
       )}

@@ -7,7 +7,7 @@ import type { BinOp, Expr, Id, Node, Program } from "@/lang/types";
 import { allExprs, childSlots, isEmptyExpr, isExpr } from "@/lang/walk";
 import { getNode, keyOf, NODES } from "@/nodes";
 import { pyString } from "@/python/emit";
-import { isParseError, parse, type ParseError, type ParseScope } from "@/python/parse";
+import { isParseError, parse, type ParseScope } from "@/python/parse";
 import { isComparison } from "@/python/precedence";
 import { blankTemplate, exprText, nodeText } from "@/ui/chart/text";
 import { CONDITION_TEMPLATES, variableName, type ConditionTemplate } from "./templates";
@@ -293,9 +293,4 @@ export function menuItems(program: Program, visible: readonly Id[]): Item[] {
 export function filterItems(items: readonly Item[], query: string): Item[] {
   const q = query.trim().toLowerCase();
   return q === "" ? [...items] : items.filter((item) => item.label.toLowerCase().includes(q));
-}
-
-/** Parses typed text for `Type as text`, in the program's scope. */
-export function parseText(text: string, program: Program): Expr | ParseError {
-  return parse(text, scopeOf(program));
 }
