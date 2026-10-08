@@ -66,6 +66,20 @@ describe("kinds (L-59)", () => {
     });
   });
 
+  it("a for variable is a number whatever its bounds; a list repeated stays a list", () => {
+    const fn = {
+      id: tid(),
+      name: "f",
+      params: ["lo", "hi"],
+      body: [for_("i", v("lo"), v("hi"), []), assign("row", bin("*", v("cells"), v("hi")))],
+    };
+    const p = program([], { functions: [fn] });
+    expect(variableKinds(p, fn.id).get("i")).toBe("number");
+    const vars = new Map([["cells", "list"]] as const);
+    expect(kindOf(bin("*", v("cells"), num(3)), vars)).toBe("list");
+    expect(kindOf(bin("*", num(3), str("ab")), vars)).toBe("text");
+  });
+
   it("a function's variables are its own; its parameters have none", () => {
     const fn = {
       id: tid(),

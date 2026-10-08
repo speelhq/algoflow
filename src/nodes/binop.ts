@@ -149,6 +149,11 @@ export const binop = defineExpr<"binop">({
     const right = kindOf(node.right);
     if (node.op === "and" || node.op === "or") return left === right ? left : undefined;
     if (node.op === "+") return left === right && left !== "truefalse" ? left : undefined;
+    // A list or a text repeated a number of times stays a list or a text.
+    if (node.op === "*") {
+      const repeated = [left, right].find((kind) => kind === "list" || kind === "text");
+      if (repeated) return repeated;
+    }
     return "number";
   },
   menu: entries(),

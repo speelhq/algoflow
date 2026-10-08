@@ -159,6 +159,8 @@ export type NodeDef = {
   chart?: ChartShape;
   /** The kind of the value an expression gives, from the kinds of its inputs (L-59). */
   kind?(node: Expr, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
+  /** The kind of the variable its `id` slot names (a counted loop's is a number). */
+  declares?: Kind;
   /** The block's entries of the value list (U-52, N-11). */
   menu?: MenuEntry[];
 };

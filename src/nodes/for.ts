@@ -9,6 +9,7 @@ const isZero = (expr: Expr) => expr.kind === "num" && !expr.float && expr.value 
 export const forStmt = defineStmt<"for">({
   key: "for",
   category: "control",
+  declares: "number",
   loop: true,
   chart: { counted: "body" },
   slots: [

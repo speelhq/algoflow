@@ -34,8 +34,8 @@ export function kindOf(expr: Expr, vars: ReadonlyMap<Id, Kind>): Kind | undefine
 
 /**
  * Records the kinds of the names `stmts` assign, in program order, the first assignment of
- * each name winning: a target takes its value's kind, a loop variable that of the loop's
- * first expression when that is a number (a counted `for`), else none.
+ * each name winning: a target takes its value's kind, a loop variable the kind its block
+ * declares (a counted `for`'s is a number), else none.
  */
 function assignKinds(stmts: Stmt[], kinds: Map<Id, Kind>): void {
   for (const stmt of stmts) {
@@ -47,8 +47,12 @@ function assignKinds(stmts: Stmt[], kinds: Map<Id, Kind>): void {
     const first = childSlots(stmt).find((slot) => !targets.has(slot.slot));
     for (const { name, role } of declaredBy(stmt)) {
       if (kinds.has(name)) continue;
-      const value = isExpr(first?.expr) ? kindOf(first.expr, kinds) : undefined;
-      const kind = role === "target" ? value : value === "number" ? "number" : undefined;
+      const kind =
+        role === "target"
+          ? isExpr(first?.expr)
+            ? kindOf(first.expr, kinds)
+            : undefined
+          : getNode(keyOf(stmt)).declares;
       if (kind) kinds.set(name, kind);
     }
     for (const region of regionsOf(stmt)) assignKinds(region.stmts, kinds);
