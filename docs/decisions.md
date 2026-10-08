@@ -373,7 +373,9 @@ replaced the chip would make `abs` of a value the learner has already built
 into two steps of rebuilding it. One rule for every block with an
 expression slot, the chip becoming its first slot, covers operators, list
 operations, builtins, and calls alike, and needs no list of which blocks
-wrap. Filling a blank moves the menu to the next one, so a template such as
+wrap. A call of a function with no parameter has no first argument to take
+the chip, so it replaces the chip as a literal does. Filling a blank moves
+the menu to the next one, so a template such as
 `□ is divisible by □` is completed by two choices without a click on the
 second blank between them.
 
