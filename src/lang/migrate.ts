@@ -87,7 +87,10 @@ function checkStmts(value: unknown, path: string): void {
   });
 }
 
-/** `stmts` without the statements of the retired `comment` block, at any depth. */
+/**
+ * `stmts` without the statements of the retired `comment` block, and with each name trimmed and
+ * an empty one removed, at any depth.
+ */
 function dropComments(stmts: unknown): unknown {
   if (!Array.isArray(stmts)) return stmts;
   return stmts
@@ -95,6 +98,11 @@ function dropComments(stmts: unknown): unknown {
     .map((stmt) => {
       if (!isRecord(stmt) || typeof stmt.kind !== "string" || !hasNode(stmt.kind)) return stmt;
       const copy: Record<string, unknown> = { ...stmt };
+      if (typeof copy.name === "string") {
+        const name = copy.name.trim();
+        if (name === "") delete copy.name;
+        else copy.name = name;
+      }
       for (const slot of getNode(stmt.kind).slots) {
         if (slot.role === "body") copy[slot.name] = dropComments(copy[slot.name]);
       }

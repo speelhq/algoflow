@@ -35,6 +35,11 @@ describe("migrate (L-53)", () => {
   it("L-58: keeps a statement's name and rejects one that is not a text", () => {
     const named = { ...print(v("x")), name: "show it" };
     expect(migrate(json(program([named])))).toEqual(program([named]));
+    // A name is stored trimmed, and absent when empty.
+    const padded = { ...print(v("x")), name: "  show it  " };
+    expect(migrate(json(program([padded]))).main[0]).toMatchObject({ name: "show it" });
+    const blank = { ...print(v("x")), name: " " };
+    expect(migrate(json(program([blank]))).main[0]).not.toHaveProperty("name");
     expect(() => migrate(json(program([{ ...print(v("x")), name: 3 } as never])))).toThrow(
       /^main\[0\]\.name: expected a string/,
     );
