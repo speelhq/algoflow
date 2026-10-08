@@ -107,6 +107,15 @@ describe("Backspace and switching (U-54)", () => {
     expect(at(line)).toMatchObject({ name: "i" });
   });
 
+  it("at an empty first input with a filled one after it, removes nothing and moves left", () => {
+    let line = fill(lineOf(empty()), v("x"));
+    line = digits(ok(attach(line, op("+"))), "3");
+    const first = line.root as Expr & { left: Expr };
+    const emptied = backspace({ ...line, caret: { at: first.left.id, groups: [] } });
+    expect(text(emptied)).toBe("... + 3");
+    expect(text(backspace(emptied))).toBe("... + 3");
+  });
+
   it("shortens a number, empties a value, and unwraps an operation on its words", () => {
     expect(text(backspace(digits(lineOf(empty()), "15")))).toBe("1");
     expect(text(backspace(digits(lineOf(empty()), "7")))).toBe("...");

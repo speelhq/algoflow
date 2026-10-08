@@ -215,6 +215,11 @@ export function backspace(line: Line): Line {
     if (found.position.parent === null) return line;
     const parent = find(line.root, found.position.parent);
     if (!parent) return line;
+    // Before an operation's first input nothing of the operation stands: the caret moves left.
+    const inputs = inputsOf(parent.node);
+    if (inputs[0]?.id === node.id && inputs.some((input) => !isEmptyExpr(input))) {
+      return move(line, -1);
+    }
     return unwrap(line, parent.node);
   }
   const raw = numberText(node);
