@@ -17,8 +17,8 @@
   ],
   "hints": [
     { "en": "Copy `n` into a variable you can change, such as `k`." },
-    { "en": "Loop **while** `k >= 0`; inside, print `k`." },
-    { "en": "After printing, set `k` to `k - 1`, or the loop never ends." }
+    { "en": "Loop **while** `k ≥ 0`, typed as `k >= 0`; inside, print `k`." },
+    { "en": "After printing, set `k` to `k − 1`, or the loop never ends." }
   ],
   "takeaway": { "en": "A **while** loop kept going until its condition became false." },
   "solution": {
