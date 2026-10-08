@@ -350,17 +350,16 @@ function Body({
 
   const chooseRow = (row: Row) => {
     if (!state) return;
-    if (switching && row.type === "entry" && row.preset) {
-      commit({ ...state, line: retag(state.line, switching, row.preset) });
-      setSwitching(null);
-    } else {
-      commit(choose(state, row));
-    }
+    const next =
+      switching && row.type === "entry" && row.preset
+        ? { ...state, line: retag(state.line, switching, row.preset) }
+        : choose(state, row);
+    commit(next);
+    setSwitching(null);
     setShowAll(false);
     setHighlight(null);
     // A text value chosen keeps the keyboard in its field; anything else returns it to the line.
-    const made = choose(state, row);
-    const at = find(made.line.root, made.line.caret.at)?.node;
+    const at = find(next.line.root, next.line.caret.at)?.node;
     if (!(at && isTextValue(at))) lines.current[focusKey]?.focus();
   };
 
