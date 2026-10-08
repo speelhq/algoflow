@@ -690,11 +690,15 @@ the comment above it. The `comment` block is removed with it: it drew
 Python's `#` on the chart, and a named node says what it said where it
 applies.
 
-**Kinds choose the list** (L-59, U-52, N-11). After a value the list
+**Kinds choose the list** (L-59, U-52, N-11, U-50). After a value the list
 offers what applies to that kind of value, so a list does not offer
 `Multiply`; the kind comes from inputs and first assignments, which is
 known without running. A kind that cannot be told shows every entry, and
-`Show all` ends every list, so nothing is hidden by a wrong guess. `Or` is
+`Show all` ends every list, so nothing is hidden by a wrong guess. A typed
+word searches every entry for the same reason, and Enter takes the first
+match, so the match a learner means comes first: a name starting with
+the word before one containing it, and the kind's entries before the
+rest (`an` after a comparison is `And`, not `Less than`). `Or` is
 explained as one side or both, because beginners read it as one or the
 other.
 
