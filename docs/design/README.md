@@ -8,24 +8,29 @@ issue labelled `decision`.
 
 ## Canvas "AlgoFlow Screens"
 
-Thirteen boards of 1280 × 800. Each file has the name of its board on the
+Eighteen boards of 1280 × 800. Each file has the name of its board on the
 canvas.
 
-| File              | Board title on the canvas                              | Spec                     |
-| ----------------- | ------------------------------------------------------ | ------------------------ |
-| `Main.png`        | 1 Problems: one section per plan                       | U-02, U-10..U-14         |
-| `BuildEmpty.png`  | 2 Build: first launch, an empty chart                  | U-03, U-21, U-34, U-90   |
-| `BuildMenu.png`   | 3 Build: the + menu lists statements only              | U-40, U-33               |
-| `BuildEdit.png`   | 4 Build: editing a block, names and values             | U-41, U-50..U-52         |
-| `Run.png`         | 5 Run: the moment on the chart, the state in Result    | U-60..U-63, U-23, R-19   |
-| `Wrong.png`       | 6 Submit: Wrong Answer, and a way to the cause         | U-81, U-82               |
-| `Accepted.png`    | 7 Submit: Accepted, with what comes next               | U-83                     |
-| `Solution.png`    | 8 Solution: read-only in the chart area                | U-22                     |
-| `FunctionRun.png` | 9 Run inside functions: the path bar is the call stack | U-68                     |
-| `Module.png`      | 10 Module page: run one function, keep cases, Test     | D-06, D-08, D-19, D-20   |
-| `PythonChart.png` | 11 Python tab: a line and its block                    | U-25                     |
-| `PythonFiles.png` | 12 Python tab: a program that uses a module            | U-25, E-09               |
-| `Playground.png`  | 13 Playground: many programs, the last edited first    | U-15                     |
+| File                    | Board title on the canvas                              | Spec                   |
+| ----------------------- | ------------------------------------------------------ | ---------------------- |
+| `Main.png`              | 1 Problems: one section per plan                       | U-02, U-10..U-14       |
+| `BuildEmpty.png`        | 2 Build: first launch, an empty chart                  | U-03, U-21, U-34, U-90 |
+| `BuildMenu.png`         | 3 Build: the + menu lists statements only              | U-40, U-33             |
+| `BuildEdit.png`         | 4 Build: editing a block, names and values             | U-41, U-50..U-52       |
+| `Run.png`               | 5 Run: the moment on the chart, the state in Result    | U-60..U-63, U-23, R-19 |
+| `Wrong.png`             | 6 Submit: Wrong Answer, and a way to the cause         | U-81, U-82             |
+| `Accepted.png`          | 7 Submit: Accepted, with what comes next               | U-83                   |
+| `Solution.png`          | 8 Solution: read-only in the chart area                | U-22                   |
+| `FunctionRun.png`       | 9 Run inside functions: the path bar is the call stack | U-68                   |
+| `Module.png`            | 10 Module page: run one function, keep cases, Test     | D-06, D-08, D-19, D-20 |
+| `PythonChart.png`       | 11 Python tab: a line and its block                    | U-25                   |
+| `PythonFiles.png`       | 12 Python tab: a program that uses a module            | U-25, E-09             |
+| `Playground.png`        | 13 Playground: many programs, the last edited first    | U-15                   |
+| `InputMenu.png`         | 14 Build: the Input node lists the problem's cases     | U-32                   |
+| `Diagnostics.png`       | 15 Build: a red dot, its message, and its fix          | U-37                   |
+| `ChipMenu.png`          | 16 Build: a chip's menu, Unwrap and Delete             | U-54                   |
+| `PlaygroundProgram.png` | 17 Playground program: a title, Run, and Export        | U-01                   |
+| `MenuProgram.png`       | 18 Build: the + menu lists the program's own functions | U-40                   |
 
 ## Where the spec deviates from the boards
 
@@ -36,8 +41,6 @@ canvas.
   drafts derived from D-16, not emitted code.
 - `Main.png` names the first problem `Hello`; its challenge file is
   `tutorial`, and the title is the one in that file.
-- `BuildEmpty.png` shows an earlier statement of `tutorial`, joining a text
-  to `name` with `+`; the statement is the one in its challenge file.
 - A diamond's text is the question of U-33 (`Is i divisible by 15?`),
   regardless of the text on a board.
 - The boards use a hand-drawn typeface to mark them as drafts; the
@@ -52,7 +55,7 @@ exported again in the pull request that changes the spec it affects.
 
 | Canvas             | Holds                                         |
 | ------------------ | --------------------------------------------- |
-| [AlgoFlow Screens](https://claude.ai/artifact/SD2jKu4HfkPTh4CoeS7Tpe) | the thirteen boards above |
+| [AlgoFlow Screens](https://claude.ai/artifact/SD2jKu4HfkPTh4CoeS7Tpe) | the eighteen boards above |
 | [AlgoFlow Redesign](https://claude.ai/artifact/D91141RiyMCW4XLsyJk8E5) | the flowchart and loop-notation studies; no exported board |
 
 The canvases open only for their owner and the people it is shared with.
