@@ -260,7 +260,9 @@ export function functionItems(program: Program): Item[] {
       return withBlanks(call);
     };
     const label = blankTemplate(nodeText("call", "template").replace("{fn}", fn.name));
-    return blockItem(`fn:${fn.name}`, "call", label, make);
+    const item = blockItem(`fn:${fn.name}`, "call", label, make);
+    // A function with no parameter has no first argument to take the chip: it replaces it.
+    return fn.params.length > 0 ? item : { ...item, wraps: false };
   });
 }
 

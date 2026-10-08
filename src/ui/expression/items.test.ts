@@ -76,6 +76,16 @@ describe("expression menu items", () => {
     expect(focus).toBeNull();
   });
 
+  it("U-53: a call of a function with no parameter replaces the chip", () => {
+    const p = program([], {
+      functions: [{ id: "fn0000000001", name: "roll", params: [], body: [] }],
+    });
+    const roll = functionItems(p)[0];
+    if (!roll) throw new Error("no roll");
+    expect(unparse(placeItem(roll, num(5)).expr)).toBe("roll()");
+    expect(unparse(placeItem(roll, ast.empty()).expr)).toBe("roll()");
+  });
+
   it("U-53: a variable or a literal replaces the chip", () => {
     const [n] = variableItems(["n"]);
     if (!n) throw new Error("no n");
