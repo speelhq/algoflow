@@ -12,7 +12,6 @@ import { navigate } from "@/ui/app/route";
 function inputAssignment(input: Input): Stmt | undefined {
   const value = parse(dataToPython(input.value));
   if (isParseError(value)) return undefined;
-  delete (value as { source?: string }).source;
   const assign = getNode("assign").create() as Extract<Stmt, { kind: "assign" }>;
   return { ...assign, target: { kind: "var", name: input.name }, value: value as Expr };
 }

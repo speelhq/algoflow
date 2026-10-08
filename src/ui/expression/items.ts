@@ -39,12 +39,11 @@ export function scopeOf(program: Program): ParseScope {
   };
 }
 
-/** `expr` with fresh ids throughout and no `source`, as a block the menu inserts. */
+/** `expr` with fresh ids throughout, as a block the menu inserts. */
 function fresh(expr: Expr): Expr {
   const copy = structuredClone(expr);
   const visit = (node: Expr) => {
     node.id = newId();
-    delete node.source;
     for (const { expr: child } of childSlots(node)) visit(child);
   };
   visit(copy);
