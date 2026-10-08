@@ -653,8 +653,10 @@ syntax a beginner gets wrong.
 **Typing replaces a value the editor opens on** (U-53, U-41). A slot
 reached by Tab holds a value already, `0` in a new `for`: a caret after it
 would make every digit typed extend it (`01`), so the value is selected,
-as a text field selects what it holds, and the first key replaces it. The
-editor takes the keyboard only for a slot clicked or still to fill: one
+as a text field selects what it holds, and the first value typed replaces
+it. An operator's key applies to the selection instead: an operator alone
+is no value, so `*` on a selected `n` can only mean `n × …`. The editor
+takes the keyboard only for a slot clicked or still to fill: one
 opened by a click on a finished node leaves it with the chart, where
 Delete and the arrow keys act on the node.
 
