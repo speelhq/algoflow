@@ -38,6 +38,9 @@ describe("migrate (L-53)", () => {
     expect(() => migrate(json(program([{ ...print(v("x")), name: 3 } as never])))).toThrow(
       /^main\[0\]\.name: expected a string/,
     );
+    expect(() => migrate(json(program([{ ...print(v("x")), name: "a\nx = 1" }])))).toThrow(
+      /^main\[0\]\.name: expected one line of text/,
+    );
   });
 
   it("rejects an unsupported version with the path", () => {
