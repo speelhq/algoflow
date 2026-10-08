@@ -559,9 +559,15 @@ function Body({
             setHighlight(ids[next] ?? null);
           } else if (event.key === "Enter") {
             event.preventDefault();
-            const id = highlight ?? ids[0];
+            // The highlighted row, else the name typed (new or not); an untouched field keeps
+            // its name and the next slot takes the keyboard.
+            const typed = typedName ?? "";
+            const id =
+              highlight ??
+              ids.find((row) => row === `new:${typed}` || row === `name:${typed}`) ??
+              (typed === "" ? undefined : ids[0]);
             if (id) chooseName(slot, id);
-            else closeEditor();
+            else if (!step(1)) closeEditor();
           }
         }}
       />
