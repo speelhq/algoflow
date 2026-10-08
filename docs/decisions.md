@@ -697,7 +697,10 @@ applies.
 offers what applies to that kind of value, so a list does not offer
 `Multiply`; the kind comes from inputs and first assignments, which is
 known without running. A kind that cannot be told shows every entry, and
-`Show all` ends every list, so nothing is hidden by a wrong guess. A typed
+`Show all` ends every list, so nothing is hidden by a wrong guess; it
+lists what can be chosen at the caret, since a row that does nothing when
+chosen reads as broken. An operation chosen where a value is expected is
+placed with its inputs empty, as building it from its first input would. A typed
 word searches every entry for the same reason, and Enter takes the first
 match, so the match a learner means comes first: a name starting with
 the word before one containing it, and the kind's entries before the
