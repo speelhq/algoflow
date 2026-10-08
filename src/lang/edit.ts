@@ -172,6 +172,17 @@ export function setSlot(
   return next;
 }
 
+/** Sets a statement's name (L-58): one line, trimmed; an empty name removes it. */
+export function setStmtName(program: Program, id: NodeId, name: string): Program {
+  const next = clone(program);
+  const stmt = locateStmt(next, id)?.stmt;
+  if (!stmt) throw new EditError(`no statement ${id}`);
+  const line = name.replace(/\s+/g, " ").trim();
+  if (line === "") delete stmt.name;
+  else stmt.name = line;
+  return next;
+}
+
 /**
  * Sets an expression slot. For `exprs` slots `index` selects the item (appending
  * past the end); a target's expression is addressed as `target.<field>`, e.g. `target.index`.

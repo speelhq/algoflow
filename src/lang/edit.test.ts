@@ -5,6 +5,7 @@ import {
   addClass,
   addFunction,
   duplicateStmt,
+  EditError,
   hoistAssign,
   insertStmt,
   locateStmt,
@@ -18,6 +19,7 @@ import {
   setFields,
   setParams,
   setSlot,
+  setStmtName,
 } from "./edit";
 import { unparse } from "@/python/emit";
 import { emit } from "@/python/emit";
@@ -83,6 +85,14 @@ describe("edit (L-50)", () => {
     expect(lines(next)).toEqual(["x = 1", "print(x)"]);
     expect(locateStmt(next, inner.id)).toBeUndefined();
     expect(() => removeStmt(p, "nope00000000")).toThrow(/no statement/);
+  });
+
+  it("L-58: setStmtName stores one trimmed line, and an empty name removes it", () => {
+    const a = ast.assign("x", ast.num(1));
+    const named = setStmtName(program([a]), a.id, "  first\n value ");
+    expect(named.main[0]).toMatchObject({ name: "first value" });
+    expect(setStmtName(named, a.id, "  ").main[0]).not.toHaveProperty("name");
+    expect(() => setStmtName(named, "missing", "x")).toThrow(EditError);
   });
 
   it("duplicateStmt inserts a deep copy with fresh ids right after the original", () => {

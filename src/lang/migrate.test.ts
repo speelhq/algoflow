@@ -32,6 +32,14 @@ describe("migrate (L-53)", () => {
     expect(migrate(stored)).toEqual(program([loop]));
   });
 
+  it("L-58: keeps a statement's name and rejects one that is not a text", () => {
+    const named = { ...print(v("x")), name: "show it" };
+    expect(migrate(json(program([named])))).toEqual(program([named]));
+    expect(() => migrate(json(program([{ ...print(v("x")), name: 3 } as never])))).toThrow(
+      /^main\[0\]\.name: expected a string/,
+    );
+  });
+
   it("rejects an unsupported version with the path", () => {
     expect(() => migrate({ ...program([]), version: 2 })).toThrow(MigrateError);
     expect(() => migrate({ ...program([]), version: 2 })).toThrow(

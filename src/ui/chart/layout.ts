@@ -43,6 +43,8 @@ export type ChartNode = {
   /** Drawn grey, not selectable on its own. */
   generated: boolean;
   text: string;
+  /** A named node's sentence or question, shown on hover in place of its text (U-95). */
+  hint?: string;
   /** The text in runs, each at `dx` from the node's left with width `w`; a slot's run names it. */
   parts: PlacedPart[];
   /** Top-left corner; a junction is a point (`w = h = 0`). */
@@ -304,7 +306,7 @@ class Builder {
   /** A box; `leaves` names where its edge goes when it is not to the next node. */
   private box(stmt: Stmt, leaves: Leave | null): Frag {
     const parts = capitaliseParts(sentenceParts(stmt, this.program));
-    const node = this.node(stmt.id, stmt.id, "stmt", "box", parts, 0);
+    const node = this.named(stmt, this.node(stmt.id, stmt.id, "stmt", "box", parts, 0), parts);
     const half = node.w / 2;
     return {
       left: half,
@@ -322,7 +324,15 @@ class Builder {
   }
 
   private diamond(stmt: Stmt, y: number): ChartNode {
-    return this.node(stmt.id, stmt.id, "stmt", "diamond", questionParts(stmt), y);
+    const parts = questionParts(stmt);
+    return this.named(stmt, this.node(stmt.id, stmt.id, "stmt", "diamond", parts, y), parts);
+  }
+
+  /** A named statement's node shows its name alone, with its own text as the hint (U-95). */
+  private named(stmt: Stmt, node: ChartNode, parts: Part[]): ChartNode {
+    if (!stmt.name) return node;
+    const own = this.node(node.id, node.owner, node.role, node.shape, [{ text: stmt.name }], node.y);
+    return { ...own, hint: joinParts(parts) };
   }
 
   /** `branch`: Yes to the right, No below on the axis, both merging below. */
@@ -419,8 +429,9 @@ class Builder {
     } else frag.entry = junction.id;
 
     y += JOIN;
+    const check = counted ? generatedParts(stmt, "check") : [];
     const d = counted
-      ? this.node(`${stmt.id}:check`, stmt.id, "check", "diamond", generatedParts(stmt, "check"), y)
+      ? this.named(stmt, this.node(`${stmt.id}:check`, stmt.id, "check", "diamond", check, y), check)
       : this.diamond(stmt, y);
     frag.nodes.push(d);
     frag.edges.push(

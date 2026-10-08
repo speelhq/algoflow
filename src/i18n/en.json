@@ -358,6 +358,8 @@
   },
   "editor": {
     "label": "Edit block",
+    "name": "Name",
+    "nameHint": "optional",
     "names": "Names",
     "asked": "asked for by this problem",
     "field": "a number, \"text\", or a name",

@@ -5,7 +5,15 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { getChallenge } from "@/challenges";
 import { errorText, t } from "@/i18n/t";
-import { duplicateStmt, hoistAssign, removeItem, removeStmt, setExpr, setSlot } from "@/lang/edit";
+import {
+  duplicateStmt,
+  hoistAssign,
+  removeItem,
+  removeStmt,
+  setExpr,
+  setSlot,
+  setStmtName,
+} from "@/lang/edit";
 import { newId } from "@/lang/id";
 import { visibleAt } from "@/lang/scope";
 import type { Diagnostic, Expr, NodeId, Program, Stmt, Target } from "@/lang/types";
@@ -24,6 +32,7 @@ import { ValueMenu } from "@/ui/expression/ValueMenu";
 import { Button } from "@/ui/primitives/button";
 import { Input } from "@/ui/primitives/input";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
+import { CopyIcon, Trash2Icon } from "lucide-react";
 import { Popover, PopoverTrigger } from "@/ui/primitives/popover";
 import { apply } from "./edits";
 import { nameChars, nameSuggestions } from "./names";
@@ -97,6 +106,52 @@ function setName(program: Program, stmt: Stmt, slot: string, name: string): Prog
 
 type Open = { chip: NodeId; root: NodeId; slot: string } | null;
 
+/** The node's name field (U-95) with `Duplicate` and `Delete` as icon buttons beside it. */
+function NameRow({ stmt }: { stmt: Stmt }) {
+  const select = useEditor((s) => s.select);
+  // The field keeps what is typed; the program keeps it as one trimmed line (L-58).
+  const [draft, setDraft] = useState(stmt.name ?? "");
+  return (
+    <div className="flex items-center gap-2">
+      <label className="flex h-8 min-w-0 flex-1 items-center gap-2 rounded-md border px-2.5">
+        <span className="text-xs tracking-wide text-muted-foreground uppercase">
+          {t("editor.name")}
+        </span>
+        <input
+          value={draft}
+          placeholder={t("editor.nameHint")}
+          data-testid="node-name"
+          className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+          onChange={(event) => {
+            setDraft(event.target.value);
+            apply((p) => setStmtName(p, stmt.id, event.target.value), `${stmt.id}:name`);
+          }}
+        />
+      </label>
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label={t("editor.duplicate")}
+        title={t("editor.duplicate")}
+        onClick={() => apply((p) => duplicateStmt(p, stmt.id))}
+      >
+        <CopyIcon />
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label={t("editor.delete")}
+        title={t("editor.delete")}
+        onClick={() => {
+          if (apply((p) => removeStmt(p, stmt.id))) select(null);
+        }}
+      >
+        <Trash2Icon />
+      </Button>
+    </div>
+  );
+}
+
 function Body({
   stmt,
   program,
@@ -109,7 +164,6 @@ function Body({
   const def = getNode(keyOf(stmt));
   const bag = stmt as unknown as Bag;
   const led = useEditor((s) => s.diagnostic);
-  const select = useEditor((s) => s.select);
   const names = useRef<Record<string, HTMLInputElement | null>>({});
 
   // The slot clicked on the node opens with its menu: an expression's chip, or a name's input.
@@ -327,6 +381,7 @@ function Body({
         // oxlint-disable-next-line react/no-array-index-key -- diagnostics have no id of their own
         <DiagnosticMessage key={i} diagnostic={d} />
       ))}
+      <NameRow stmt={stmt} />
       <div
         className="flex flex-wrap items-center gap-1.5 text-[0.95rem]"
         data-testid="editor-sentence"
@@ -377,19 +432,6 @@ function Body({
         />
       )}
       <p className="text-muted-foreground">{nodeText(def.key, "help")}</p>
-      <div className="flex gap-2 border-t pt-3">
-        <Button variant="outline" onClick={() => apply((p) => duplicateStmt(p, stmt.id))}>
-          {t("editor.duplicate")}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => {
-            if (apply((p) => removeStmt(p, stmt.id))) select(null);
-          }}
-        >
-          {t("editor.delete")}
-        </Button>
-      </div>
     </div>
   );
 }

@@ -74,6 +74,7 @@ function checkStmts(value: unknown, path: string): void {
     if (!isRecord(stmt)) throw new MigrateError(at, "expected a statement");
     expectNodeId(stmt.id, `${at}.id`);
     const kind = expectString(stmt.kind, `${at}.kind`);
+    if ("name" in stmt) expectString(stmt.name, `${at}.name`);
     if (!hasNode(kind) || getNode(kind).shape !== "stmt") {
       throw new MigrateError(`${at}.kind`, `unknown kind "${kind}"`);
     }

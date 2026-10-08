@@ -147,6 +147,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
         current === "error" && "[&_[data-shape]]:stroke-destructive [&_[data-shape]]:stroke-[3]",
       )}
     >
+      {node.hint !== undefined && <title>{node.hint}</title>}
       <NodeShape node={node} />
       {node.parts.map((part, i) =>
         part.empty ? (

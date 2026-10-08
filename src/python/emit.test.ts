@@ -24,6 +24,17 @@ describe("emit (04-runtime)", () => {
     expect(Object.values(map).some((m) => m.start === 3)).toBe(false);
   });
 
+  it("E-11: a named statement is preceded by its name as a comment, where its entry starts", () => {
+    const inner = { ...assign("x", num(1)), name: "start over" };
+    const frame = { ...if_(bin("<", v("a"), v("b")), [inner]), name: "Is a smaller?" };
+    const { code, map } = emit(program([frame, print(v("x"))]));
+    expect(code).toBe(
+      "# Is a smaller?\nif a < b:\n    # start over\n    x = 1\nprint(x)\n",
+    );
+    expect(map[frame.id]).toEqual({ start: 1, end: 2 });
+    expect(map[inner.id]).toEqual({ start: 3, end: 4 });
+  });
+
   it("E-02: sections separated by one blank line, two around classes and functions", () => {
     const prog = program([assign("d", call("random_int", num(1), num(6)))], {
       inputs: [{ name: "n", value: 3 }],

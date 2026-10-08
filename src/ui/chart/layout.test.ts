@@ -447,6 +447,18 @@ describe("layout (U-31, U-33 texts)", () => {
     expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // U-31: a Return leads to End
   });
 
+  it("U-95: a named node shows its name alone, its sentence or question as the hint", () => {
+    const set = { ...assign("total", num(0)), name: "start the sum" };
+    const check = { ...if_(bin("<", v("total"), num(3)), []), name: "Small?" };
+    const loop = { ...for_("i", num(0), num(3), []), name: "each i" };
+    const chart = layout(program([set, check, loop]));
+    const at = (id: string) => chart.nodes.find((n) => n.id === id);
+    expect(at(set.id)).toMatchObject({ text: "start the sum", hint: "Create total and set it to 0" });
+    expect(at(check.id)).toMatchObject({ text: "Small?", hint: "total < 3?" });
+    expect(at(`${loop.id}:check`)).toMatchObject({ text: "each i", hint: "i < 3?" });
+    expect(at(`${loop.id}:init`)).toMatchObject({ text: "Set i to 0" });
+  });
+
   it("N-08: a variable's name is measured bold, and the node is sized by it", () => {
     const set = assign("total", num(0));
     const seen: Array<[string, boolean]> = [];

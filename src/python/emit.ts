@@ -119,11 +119,16 @@ class Writer {
 
   stmt(stmt: Stmt, indent: number): void {
     const pyLines = getNode(keyOf(stmt)).python(stmt, ctx) as PyLine[];
+    // A named statement is preceded by its name as a comment, which its map entry starts at.
+    const named = stmt.name ? this.lines.length + 1 : undefined;
+    if (stmt.name) this.line(`# ${stmt.name}`, indent);
     let first = true;
     for (const pyLine of pyLines) {
       if (typeof pyLine === "string") {
         if (first) {
           this.mark(stmt.id); // A frame maps to its header; `else:` is unmapped
+          const entry = this.map[stmt.id];
+          if (named !== undefined && entry) entry.start = named;
           first = false;
         }
         this.line(pyLine, indent);
