@@ -168,8 +168,7 @@ export type EditName =
   | "removeClass"
   | "setFields"
   | "setParams"
-  | "hoistAssign"
-  | "resetProgram";
+  | "hoistAssign";
 
 /** A statement position. `parent` is a frame or function id, or "main". */
 export type Place = {

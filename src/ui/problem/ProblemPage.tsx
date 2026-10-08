@@ -7,7 +7,7 @@ import { localized, t } from "@/i18n/t";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
-import { openInPlayground, startOver } from "@/ui/editor/programs";
+import { openInPlayground } from "@/ui/editor/programs";
 import { useEditKeys } from "@/ui/editor/useEditKeys";
 import { useTitle } from "@/ui/hooks/useTitle";
 import { DropdownMenuItem } from "@/ui/primitives/dropdown-menu";
@@ -20,18 +20,6 @@ import { useRunKeys } from "./useRunKeys";
 export function ProblemPage({ id }: { id: string }) {
   const challenge = getChallenge(id);
   return challenge ? <Problem challenge={challenge} /> : null;
-}
-
-/** `⋯`'s `Start over`, an edit: not while running, nor while the solution is shown. */
-export function StartOverItem() {
-  const running = useRun((s) => s.status !== "idle");
-  const solution = useEditor((s) => s.solution);
-  const locked = running || solution;
-  return (
-    <DropdownMenuItem disabled={locked} onClick={startOver}>
-      {t("problem.startOver")}
-    </DropdownMenuItem>
-  );
 }
 
 function Problem({ challenge }: { challenge: Challenge }) {
@@ -58,7 +46,6 @@ function Problem({ challenge }: { challenge: Challenge }) {
             >
               {t("problem.openInPlayground")}
             </DropdownMenuItem>
-            <StartOverItem />
           </>
         }
       >

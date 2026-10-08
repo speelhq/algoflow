@@ -77,7 +77,7 @@ test("a Playground route the Playground does not list shows Problems (U-07)", as
   await expect(page.getByTestId("problems")).toBeVisible();
 });
 
-test("Open in Playground carries the inputs as assignments; Start over empties the chart (U-05)", async ({
+test("Open in Playground carries the inputs as assignments, and its ⋯ holds Help alone (U-05, U-01)", async ({
   page,
 }) => {
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
@@ -89,11 +89,7 @@ test("Open in Playground carries the inputs as assignments; Start over empties t
   await expect(page.getByTestId("chart")).toContainText("Create n and set it to 15");
 
   await page.getByRole("button", { name: "More" }).click();
-  await expect(page.getByRole("menuitem", { name: "Open in Playground" })).toHaveCount(0);
-  await page.getByRole("menuitem", { name: "Start over" }).click();
-  await expect(page.getByTestId("chart").locator("[data-chart-node]")).toHaveCount(2);
-  await page.getByRole("button", { name: "Undo" }).click();
-  await expect(page.getByTestId("chart")).toContainText("Create n and set it to 15");
+  await expect(page.getByRole("menuitem")).toHaveText(["Help"]);
 });
 
 test("an edit on a problem is saved and restored on reload (L-53)", async ({ page }) => {
