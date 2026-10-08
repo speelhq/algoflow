@@ -330,7 +330,8 @@ class Builder {
 
   /** A named statement's node shows its name alone, with its own text as the hint (U-95). */
   private named(stmt: Stmt, node: ChartNode, parts: Part[]): ChartNode {
-    if (!stmt.name) return node;
+    // An empty slot keeps its placeholder on the node: it is that slot's only mark.
+    if (!stmt.name || parts.some((part) => part.empty)) return node;
     const own = this.node(
       node.id,
       node.owner,

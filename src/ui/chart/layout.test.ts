@@ -462,6 +462,11 @@ describe("layout (U-31, U-33 texts)", () => {
     expect(at(check.id)).toMatchObject({ text: "Small?", hint: "total < 3?" });
     expect(at(`${loop.id}:check`)).toMatchObject({ text: "each i", hint: "i < 3?" });
     expect(at(`${loop.id}:init`)).toMatchObject({ text: "Set i to 0" });
+    // An empty slot keeps its placeholder: the name waits until the slot is filled.
+    const unfilled = { ...if_(ast.empty(), []), name: "Small?" };
+    expect(layout(program([unfilled])).nodes.find((n) => n.id === unfilled.id)).toMatchObject({
+      text: "choose a value",
+    });
   });
 
   it("N-08: a variable's name is measured bold, and the node is sized by it", () => {
