@@ -174,10 +174,12 @@ block has the three N-02 keys and its template is the U-51 placeholder
 text. Only `+ − × ÷ ( ) = ≠ < ≤ > ≥` are written as symbols; every other
 operation is written in words. An expression whose template for its form
 has words outside its placeholders is a word operation: as an operand of
-an operator it is put in brackets, and any expression with expression
-slots inside a word operation's input is put in brackets
-(`(remainder of i divided by 15) = 0`, `item (i + 1) of nums`); operators
-among themselves are parenthesised as E-05 states. A variable is written
+an operator it is put in brackets, and an operator or a word operation
+inside a word operation's input is put in brackets
+(`(remainder of i divided by 15) = 0`, `item (i + 1) of nums`); an
+operator is an expression with a precedence whose template has no words
+outside its placeholders, and operators among themselves are
+parenthesised as E-05 states. A variable is written
 as a bold word in the variable colour, on the chart and in the editor,
 never in a box. A node's sentence is drawn with its first letter
 capitalised when it begins with a word of its template (`Set total to 0`)
