@@ -4,7 +4,7 @@ import { t } from "@/i18n/t";
 import type { Data, Input, Program } from "@/lang/types";
 import { ast, program, tid } from "@/nodes/testing";
 import { run } from "@/runtime/run";
-import type { Event } from "@/runtime/types";
+import type { Event, Frame } from "@/runtime/types";
 import { valueText } from "@/ui/chart/text";
 import { narrate, narrateDifference, narrateEnd, type Narration } from "./narrate";
 
@@ -132,6 +132,23 @@ describe("narrate (U-63)", () => {
       value: { t: "none" },
     };
     expect(say(narrate(item, ctx))).toBe("item 0 of nums is now none");
+    // A field is written in words, as the chart writes it, never with Python's dot.
+    const node: Frame = { fn: "main", vars: new Map([["node", { t: "obj", ref: 9 }]]) };
+    const objects = {
+      ...ctx,
+      state: {
+        ...state,
+        heap: new Map(state.heap).set(9, { kind: "obj", cls: "Node", fields: new Map() }),
+        frames: [node],
+      },
+    };
+    const field: Event = {
+      type: "write",
+      nodeId: "none",
+      ref: { heap: 9, field: "next" },
+      value: { t: "none" },
+    };
+    expect(say(narrate(field, objects))).toBe("next of node is now none");
   });
 
   it("the end of the run, an error, and the step Watch this case opens at", () => {
