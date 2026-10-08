@@ -467,6 +467,13 @@ describe("layout (U-31, U-33 texts)", () => {
     expect(layout(program([unfilled])).nodes.find((n) => n.id === unfilled.id)).toMatchObject({
       text: "choose a value",
     });
+    // U-51: an input still to fill inside an operation is a dashed placeholder too.
+    const half = { ...if_(bin("==", bin("%", v("x"), ast.empty()), num(0)), []), name: "Even?" };
+    const node = layout(program([assign("x", num(4)), half])).nodes.find((n) => n.id === half.id);
+    expect(node?.text).toBe("(remainder of x divided by choose a value) = 0?");
+    expect(node?.parts.filter((part) => part.empty).map((part) => part.text)).toEqual([
+      "choose a value",
+    ]);
   });
 
   it("N-08: a variable's name is measured bold, and the node is sized by it", () => {

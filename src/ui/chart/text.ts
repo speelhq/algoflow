@@ -38,11 +38,14 @@ export function capitaliseParts(parts: readonly Part[]): Part[] {
 /** The text a variable is written as in place of its name, or undefined to keep the name. */
 export type Values = (name: string) => string | undefined;
 
-/** A run of text; `variable` marks a variable's name, drawn bold in the variable colour. */
-export type Run = { text: string; variable?: boolean };
+/**
+ * A run of text; `variable` marks a variable's name, drawn bold in the variable colour, and
+ * `empty` an input still to fill, drawn as its dashed placeholder.
+ */
+export type Run = { text: string; variable?: boolean; empty?: boolean };
 
 /** A run of a node's text: a slot's text with the slot's name, or the template's own words. */
-export type Part = Run & { slot?: string; empty?: boolean };
+export type Part = Run & { slot?: string };
 
 /** Spaces collapsed across runs as one sentence, the ends trimmed, and empty runs dropped. */
 function tidy<R extends Run>(runs: readonly R[]): R[] {
@@ -301,6 +304,7 @@ export function questionText(expr: Expr): string {
  * variable for which `values` has a text is written as that text.
  */
 export function exprRuns(expr: Expr, values?: Values): Run[] {
+  if (isEmptyExpr(expr)) return [{ text: placeholder(), empty: true }];
   const def = getNode(keyOf(expr));
   if (isVariable(def)) return slotRuns(expr, def, def.slots[0]?.name ?? "", values);
   return fillRuns(templateOfExpr(expr), (name) => slotRuns(expr, def, name, values));
