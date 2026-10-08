@@ -44,7 +44,10 @@ test("M-03 exit: FizzBuzz from the list to Accepted, Python, and the next proble
   const total = /of (\d+)/.exec(text)?.[1];
   await expect(page.getByTestId("position-text")).toHaveText(`step ${total} of ${total}`);
   await expect(page.getByTestId("narration")).toHaveText(`Finished in ${total} steps`);
+  // While running the top bar holds the run's controls only (U-60).
+  await expect(page.getByRole("button", { name: "✓ Submit" })).toHaveCount(0);
 
+  await page.getByRole("button", { name: "■ Stop" }).click();
   await page.getByRole("button", { name: "✓ Submit" }).click();
   await expect(page.getByTestId("verdict")).toHaveText("Accepted");
   await expect(page.getByTestId("case-chips").locator("[data-chip]")).toHaveText([

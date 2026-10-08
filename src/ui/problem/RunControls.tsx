@@ -1,5 +1,5 @@
-// The top bar's middle: `▶ Run` in build mode; `Running with n = 15` and
-// `■ Stop` while running; `✓ Submit` in both, on a problem.
+// The top bar's middle: `▶ Run` and, on a problem, `✓ Submit` in build mode;
+// `Running with n = 15` and `■ Stop` while running.
 import type { Challenge } from "@/challenges";
 import { t } from "@/i18n/t";
 import { shownInputs, useRun } from "@/store/run";
@@ -14,7 +14,6 @@ export function RunControls({ challenge }: { challenge?: Challenge }) {
   const caseIndex = useRun((s) => s.caseIndex);
   const stop = useRun((s) => s.stop);
   const submitting = useTests((s) => s.running);
-  // Submit does not depend on the run, so it is offered in both modes.
   const submit = challenge && (
     <Button
       variant="outline"
@@ -47,7 +46,6 @@ export function RunControls({ challenge }: { challenge?: Challenge }) {
       <Button variant="outline" onClick={stop}>
         {t("problem.stop")}
       </Button>
-      {submit}
     </>
   );
 }
