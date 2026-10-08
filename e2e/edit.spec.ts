@@ -125,6 +125,20 @@ test("U-41: a click on a node's words opens its first slot still to fill", async
   await expect(chart(page)).toContainText("Create x and set it to 5");
 });
 
+test("U-94, U-96: a problem's name set nowhere yet is explained as created here", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/sum-to-n");
+  await insert(page, "main/main/0", "assign");
+  const list = editor(page).getByTestId("value-list");
+  await expect(list.locator('[data-group="problem"]')).toContainText("total");
+  await list.getByText("total").hover();
+  await expect(editor(page).getByTestId("explanation")).toContainText(
+    "Creates the variable total here.",
+  );
+});
+
 test("U-93: a comparison after a comparison is refused with its message", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/fizzbuzz");

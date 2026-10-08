@@ -915,7 +915,10 @@ function aboutVariable(program: Program, name: string, kinds: ReadonlyMap<string
     return t("editor.explain.input", { kind });
   }
   const first = firstSetIn(program, name);
-  if (!first) return t("editor.explain.parameter");
+  if (!first) {
+    const parameter = program.functions.some((fn) => fn.params.includes(name));
+    return parameter ? t("editor.explain.parameter") : t("editor.explain.newVariable", { name });
+  }
   const where = joinParts(capitaliseParts(sentenceParts(first, program)));
   return of
     ? t("editor.explain.variable", { kind, sentence: where })
