@@ -3,7 +3,7 @@
 import { keyValue } from "@/lang/data";
 import { t, type MessageKey, type Params } from "@/i18n/t";
 import type { Expr, Heap, Program, Value } from "@/lang/types";
-import { childExprs, nodesById } from "@/lang/walk";
+import { nodesById } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
 import {
@@ -14,7 +14,6 @@ import {
   sentenceParts,
   valueText,
 } from "@/ui/chart/text";
-import { matchTemplates, variableName } from "@/ui/expression/templates";
 
 export type Narration = { key: MessageKey; params: Params };
 
@@ -56,40 +55,13 @@ function valueAt(ref: Ref, frame: Frame | undefined, heap: Heap): Value | undefi
   return entry?.kind === "obj" ? entry.fields.get(ref.field) : undefined;
 }
 
-/** A template blank that is a variable or a literal: its value now, or as written. */
-function blankText(blank: Expr, frame: Frame | undefined, heap: Heap): string | undefined {
-  if (childExprs(blank).length > 0) return undefined;
-  const name = variableName(blank);
-  if (name === undefined) return exprText(blank);
-  const value = frame?.vars.get(name);
-  return value ? valueText(value, heap) : name;
-}
-
-/**
- * The condition as its template sentence with the values of the moment. A template
- * over the compared operands takes them from the event; one whose blanks sit deeper
- * (`a % b == 0`) applies only when both blanks are variables or literals.
- */
-function comparedText(
-  event: Extract<Event, { type: "compare" }>,
-  frame: Frame | undefined,
-  ctx: NarrateContext,
-): string {
-  const node = nodesById(ctx.program).get(event.nodeId);
-  const { heap } = ctx.state;
-  if (!node || getNode(keyOf(node)).shape !== "expr") return "";
-  const expr = node as Expr;
-  const [left, right] = childExprs(expr);
-  for (const { template, a, b } of matchTemplates(expr)) {
-    if (a === left && b === right) {
-      return t(template.key, { a: valueText(event.left, heap), b: valueText(event.right, heap) });
-    }
-    const blanks = [blankText(a, frame, heap), blankText(b, frame, heap)];
-    if (blanks[0] !== undefined && blanks[1] !== undefined) {
-      return t(template.key, { a: blanks[0], b: blanks[1] });
-    }
-  }
-  return exprText(expr);
+/** A variable's value as the narration writes it in a condition: scalars only (U-63). */
+function scalars(frame: Frame | undefined, heap: Heap): (name: string) => string | undefined {
+  return (name) => {
+    const value = frame?.vars.get(name);
+    if (!value || "ref" in value) return undefined;
+    return valueText(value, heap);
+  };
 }
 
 const decided = new WeakMap<Program, Set<string>>();
@@ -153,7 +125,9 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
         : event.result
           ? "run.narrate.compareTrue"
           : "run.narrate.compareFalse";
-      return { key, params: { condition: comparedText(event, frame, ctx) } };
+      const compared = node && getNode(keyOf(node)).shape === "expr" ? (node as Expr) : undefined;
+      const condition = compared ? exprText(compared, scalars(frame, heap)) : "";
+      return { key, params: { condition } };
     }
     case "write":
       return {

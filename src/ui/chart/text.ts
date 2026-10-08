@@ -35,6 +35,9 @@ export function capitaliseParts(parts: readonly Part[]): Part[] {
   return [{ ...first, text: capitalise(first.text) }, ...rest];
 }
 
+/** The text a variable is written as in place of its name, or undefined to keep the name. */
+export type Values = (name: string) => string | undefined;
+
 /** A run of text; `variable` marks a variable's name, drawn bold in the variable colour (N-08). */
 export type Run = { text: string; variable?: boolean };
 
@@ -151,8 +154,8 @@ export function isOperator(expr: Expr): boolean {
  * A child of `parent` as the chart writes it: a word operation next to an operator, and an
  * operation inside a word operation, are bracketed; operators among themselves follow E-05.
  */
-function operandRuns(child: Expr, parent: Expr, side: Side): Run[] {
-  const runs = exprRuns(child);
+function operandRuns(child: Expr, parent: Expr, side: Side, values?: Values): Run[] {
+  const runs = exprRuns(child, values);
   const bracketed = [{ text: "(" }, ...runs, { text: ")" }];
   if (isWordOperation(parent)) {
     return isOperator(child) || isWordOperation(child) ? bracketed : runs;
@@ -170,15 +173,15 @@ function isVariable(def: NodeDef): boolean {
 }
 
 /** A target reads as the expression of the same shape once that block exists (`index`, `key`, `field`). */
-function targetRuns(target: Target): Run[] {
+function targetRuns(target: Target, values?: Values): Run[] {
   const { kind, ...rest } = target;
   if (kind === "var") return [{ text: target.name, variable: true }];
-  if (hasNode(kind)) return exprRuns({ id: "", kind, ...rest } as Expr);
+  if (hasNode(kind)) return exprRuns({ id: "", kind, ...rest } as Expr, values);
   return [{ text: writeTarget(target, exprText) }];
 }
 
 /** The runs of one `{name}` placeholder of `node`'s template. */
-function slotRuns(node: Node, def: NodeDef, name: string): Run[] {
+function slotRuns(node: Node, def: NodeDef, name: string, values?: Values): Run[] {
   const bag = node as unknown as Bag;
   const slot = def.slots.find((s) => s.name === name);
   if (slot) {
@@ -188,17 +191,21 @@ function slotRuns(node: Node, def: NodeDef, name: string): Run[] {
       case "expr":
         if (!isExpr(value)) return [];
         return def.shape === "stmt"
-          ? exprRuns(value)
-          : operandRuns(value, node as Expr, first ? "left" : "right");
+          ? exprRuns(value, values)
+          : operandRuns(value, node as Expr, first ? "left" : "right", values);
       case "exprs":
         return Array.isArray(value)
           ? value
               .filter(isExpr)
-              .flatMap((item, i) => [...(i > 0 ? [{ text: ", " }] : []), ...exprRuns(item)])
+              .flatMap((item, i) => [...(i > 0 ? [{ text: ", " }] : []), ...exprRuns(item, values)])
           : [];
       case "id":
         if (typeof value !== "string" || value === "") return [{ text: placeholder() }];
-        return [{ text: value, variable: def.shape === "stmt" || isVariable(def) }];
+        if (isVariable(def)) {
+          const known = values?.(value);
+          return [known === undefined ? { text: value, variable: true } : { text: known }];
+        }
+        return [{ text: value, variable: def.shape === "stmt" }];
       case "text":
         return [
           {
@@ -211,7 +218,7 @@ function slotRuns(node: Node, def: NodeDef, name: string): Run[] {
         if (!value || typeof value !== "object") return [];
         return isEmptySlot(node, def, name)
           ? [{ text: placeholder() }]
-          : targetRuns(value as Target);
+          : targetRuns(value as Target, values);
       default:
         return [];
     }
@@ -219,7 +226,7 @@ function slotRuns(node: Node, def: NodeDef, name: string): Run[] {
   // Builtin templates name their parameters (`{a}`, `{b}`): the i-th argument.
   const index = def.params?.indexOf(name) ?? -1;
   const arg = index >= 0 && Array.isArray(bag.args) ? (bag.args[index] as unknown) : undefined;
-  return isExpr(arg) ? operandRuns(arg, node as Expr, "left") : [];
+  return isExpr(arg) ? operandRuns(arg, node as Expr, "left", values) : [];
 }
 
 /** The text of one `{name}` placeholder of `node`'s template. */
@@ -237,16 +244,19 @@ export function questionText(expr: Expr): string {
   return joinRuns(questionRuns(expr));
 }
 
-/** An expression as runs: each block's template in its form, its inputs filled (N-08). */
-export function exprRuns(expr: Expr): Run[] {
+/**
+ * An expression as runs: each block's template in its form, its inputs filled (N-08); a
+ * variable for which `values` has a text is written as that text.
+ */
+export function exprRuns(expr: Expr, values?: Values): Run[] {
   const def = getNode(keyOf(expr));
-  if (isVariable(def)) return slotRuns(expr, def, def.slots[0]?.name ?? "");
-  return fillRuns(templateOfExpr(expr), (name) => slotRuns(expr, def, name));
+  if (isVariable(def)) return slotRuns(expr, def, def.slots[0]?.name ?? "", values);
+  return fillRuns(templateOfExpr(expr), (name) => slotRuns(expr, def, name, values));
 }
 
 /** The text of an expression: each block's template in its form, its inputs filled (N-08). */
-export function exprText(expr: Expr): string {
-  return joinRuns(exprRuns(expr));
+export function exprText(expr: Expr, values?: Values): string {
+  return joinRuns(exprRuns(expr, values));
 }
 
 /** The sentence of a statement or expression, as written in the catalog (not capitalised). */
