@@ -170,6 +170,30 @@ export function attach(line: Line, made: Expr): Edit {
   return caretAt(line, root, placed);
 }
 
+/**
+ * An operation whose operator was just made to bind more tightly (`*` typed again is `**`):
+ * its first input shrinks to the part of it that binds at least as tightly, as `attach` would
+ * have chosen for the new operator, and the rest goes back around the operation.
+ */
+export function rebind(line: Line, id: NodeId): Line {
+  const operation = find(line.root, id)?.node;
+  const own = operation ? precedenceOf(operation) : undefined;
+  const [first] = operation ? inputsOf(operation) : [];
+  if (!operation || own === undefined || !first) return line;
+  let left = first;
+  for (;;) {
+    const level = precedenceOf(left);
+    const inputs = inputsOf(left);
+    const last = inputs[inputs.length - 1];
+    if (level === undefined || !last || !needsParens(level, own, "left")) break;
+    left = last;
+  }
+  if (left.id === first.id) return line;
+  const tighter = replace(operation, first.id, left);
+  const outer = replace(first, left.id, tighter);
+  return { ...line, root: replace(line.root, operation.id, outer) };
+}
+
 /** Replaces an operation's `op` (U-54); other slots stay. */
 export function retag(line: Line, id: NodeId, preset: Record<string, unknown>): Line {
   const found = find(line.root, id);

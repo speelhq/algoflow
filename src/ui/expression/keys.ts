@@ -16,6 +16,7 @@ import {
   inputsOf,
   move,
   open,
+  rebind,
   retag,
   sign,
   valueBefore,
@@ -108,7 +109,8 @@ function extend(
   const operation = justTyped(state, was?.preset);
   const next = keyed(second, kind);
   if (!operation || !next?.preset) return undefined;
-  return { ...state, pending: "", line: retag(state.line, operation.id, next.preset) };
+  const retagged = retag(state.line, operation.id, next.preset);
+  return { ...state, pending: "", line: rebind(retagged, operation.id) };
 }
 
 /** An entry named by its keys, inserted after the value before the caret. */

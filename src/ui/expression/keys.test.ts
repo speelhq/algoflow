@@ -45,6 +45,11 @@ describe("keys (U-93)", () => {
     expect(typed("n<=3")).toBe("n <= 3");
     expect(typed("n>=3")).toBe("n >= 3");
     expect(typed("n**2")).toBe("n ** 2");
+    // `**` binds by its own precedence, though `*` was typed first.
+    expect(typed("2*3**2")).toBe("2 * 3 ** 2");
+    expect(type(chars("2*3**2")).line.root).toMatchObject({ op: "*", right: { op: "**" } });
+    expect(typed("-n**2")).toBe("-n ** 2");
+    expect(type(chars("-n**2")).line.root).toMatchObject({ op: "neg", operand: { op: "**" } });
     expect(typed("n//2")).toBe("n // 2");
     expect(typed("-3")).toBe("-3");
     expect(typed("(n+1)*2")).toBe("(n + 1) * 2");
