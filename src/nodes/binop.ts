@@ -16,7 +16,7 @@ import {
   makeNumber,
   truthy,
 } from "@/runtime/values";
-import { defineExpr, type RunContext } from "./types";
+import { ANY_KIND, defineExpr, type MenuEntry, type RunContext } from "./types";
 
 type Binop = Extract<Expr, { kind: "binop" }>;
 
@@ -143,6 +143,15 @@ export const binop = defineExpr<"binop">({
   },
   // `%`, `//`, `**`, and `in` read in words; the others are symbols the chart writes.
   form: (node) => WORD_FORMS[node.op] ?? "",
+  kind: (node, kindOf) => {
+    if (isComparison(node.op)) return "truefalse";
+    const left = kindOf(node.left);
+    const right = kindOf(node.right);
+    if (node.op === "and" || node.op === "or") return left === right ? left : undefined;
+    if (node.op === "+") return left === right && left !== "truefalse" ? left : undefined;
+    return "number";
+  },
+  menu: entries(),
   text: (node, slot) => (slot === "op" ? (CHART_OPS[node.op] ?? node.op) : ""),
 });
 
@@ -162,6 +171,39 @@ const CHART_OPS: Partial<Record<Binop["op"], string>> = {
   "<=": "≤",
   ">=": "≥",
 };
+
+/** The value list's entries of the operators (N-11), each presetting `op`. */
+function entries(): MenuEntry[] {
+  const number = ["number"] as const;
+  const ordered = ["number", "text"] as const;
+  const entry = (
+    name: string,
+    op: Binop["op"],
+    group: MenuEntry["group"],
+    on: MenuEntry["on"],
+    keys: string,
+    symbol?: string,
+  ): MenuEntry => ({ name, group, on, preset: { op }, keys, ...(symbol ? { symbol } : {}) });
+  return [
+    entry("add", "+", "calculate", ordered, "+", "+"),
+    entry("sub", "-", "calculate", number, "-", "−"),
+    entry("mul", "*", "calculate", number, "*", "×"),
+    entry("div", "/", "calculate", number, "/", "÷"),
+    entry("mod", "%", "calculate", number, "%"),
+    entry("floorDiv", "//", "calculate", number, "//"),
+    entry("pow", "**", "calculate", number, "**"),
+    entry("eq", "==", "compare", ANY_KIND, "==", "="),
+    entry("ne", "!=", "compare", ANY_KIND, "!=", "≠"),
+    entry("lt", "<", "compare", ordered, "<", "<"),
+    entry("le", "<=", "compare", ordered, "<=", "≤"),
+    entry("gt", ">", "compare", ordered, ">", ">"),
+    entry("ge", ">=", "compare", ordered, ">=", "≥"),
+    entry("in", "in", "compare", ANY_KIND, "in"),
+    entry("and", "and", "combine", ["truefalse"], "and"),
+    entry("or", "or", "combine", ["truefalse"], "or"),
+    entry("join", "+", "other", ["list"], "+", "+"),
+  ];
+}
 
 function emptyExpr(): Expr {
   return { id: newId(), kind: "empty" };

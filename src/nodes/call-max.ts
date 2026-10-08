@@ -7,6 +7,8 @@ export const max = defineBuiltin({
   name: "max",
   category: "basic",
   params: ["a", "b"],
+  menu: [{ name: "", group: "functions" }],
+  kind: ([a]) => a,
   evaluate([a = { t: "none" }, b = { t: "none" }], node, ctx) {
     const c = compare(a, b);
     if (c === undefined) return typeError(node.id, a, b, ctx);

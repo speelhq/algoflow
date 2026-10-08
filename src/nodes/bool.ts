@@ -11,6 +11,11 @@ export const bool = defineExpr<"bool">({
   *run(node) {
     return { t: "bool", v: node.value };
   },
+  kind: () => "truefalse",
+  menu: [
+    { name: "true", group: "values", preset: { value: true } },
+    { name: "false", group: "values", preset: { value: false } },
+  ],
   python: (node) => (node.value ? "True" : "False"),
   form: (node) => (node.value ? "" : "False"), // `templateFalse`
 });

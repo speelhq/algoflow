@@ -4,6 +4,7 @@ import type {
   ExprKind,
   Heap,
   Id,
+  Kind,
   NodeId,
   Program,
   Stmt,
@@ -81,6 +82,48 @@ export type ChartShape =
   | { counted: string }
   | { jump: "exit" | "next" };
 
+// ---------------------------------------------------------------- value list
+
+/** The groups of the value list (U-52), in the order the list shows them. */
+export const MENU_GROUPS = [
+  "values",
+  "combine",
+  "functions",
+  "calculate",
+  "compare",
+  "convert",
+  "items",
+  "totals",
+  "other",
+] as const;
+export type MenuGroup = (typeof MENU_GROUPS)[number];
+
+/** Every kind: an entry that applies after any value. */
+export const ANY_KIND: readonly Kind[] = [
+  "number",
+  "text",
+  "truefalse",
+  "none",
+  "list",
+  "dict",
+  "object",
+];
+
+/** One entry of the value list (N-11). */
+export type MenuEntry = {
+  /** `""` for the block's own label and help, else `node.<key>.<name>.label` / `.help`. */
+  name: string;
+  group: MenuGroup;
+  /** Offered after a value of these kinds, which it takes as its first input; absent: where a value is expected. */
+  on?: readonly Kind[];
+  /** Slot values set on the block's `create()` (`binop`'s `op`). */
+  preset?: Record<string, unknown>;
+  /** Shown before the name in the list (`×`). */
+  symbol?: string;
+  /** What typed in a value line inserts the entry (U-93). */
+  keys?: string;
+};
+
 // ---------------------------------------------------------------- NodeDef
 
 export type NodeDef = {
@@ -114,12 +157,16 @@ export type NodeDef = {
   text?(node: Stmt | Expr, slot: string): string;
   /** How the chart draws the block's regions; absent = a box with the sentence. */
   chart?: ChartShape;
+  /** The kind of the value an expression gives, from the kinds of its inputs (L-59). */
+  kind?(node: Expr, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
+  /** The block's entries of the value list (U-52, N-11). */
+  menu?: MenuEntry[];
 };
 
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
 type ExprOf<K extends ExprKind> = Extract<Expr, { kind: K }>;
 
-type Generic = "shape" | "create" | "run" | "python" | "form" | "text";
+type Generic = "shape" | "create" | "run" | "python" | "form" | "text" | "kind";
 
 type StmtDef<K extends StmtKind> = Omit<NodeDef, Generic> & {
   create(): StmtOf<K>;
@@ -131,6 +178,7 @@ type StmtDef<K extends StmtKind> = Omit<NodeDef, Generic> & {
 
 type ExprDef<K extends ExprKind> = Omit<NodeDef, Generic> & {
   create(): ExprOf<K>;
+  kind?(node: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
   run(node: ExprOf<K>, ctx: RunContext): Generator<Event, Value, void>;
   python(node: ExprOf<K>, ctx: EmitContext): string;
   form?(node: ExprOf<K>, ctx: FormContext): string;

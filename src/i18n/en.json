@@ -223,13 +223,15 @@
     "str": {
       "label": "Text",
       "template": "\"{value}\"",
-      "help": "A piece of text."
+      "help": "A piece of text, typed without quotes. The chart shows it in quotes: \"Fizz\"."
     },
     "bool": {
       "label": "True / false",
       "template": "true",
       "templateFalse": "false",
-      "help": "A truth value."
+      "help": "A truth value.",
+      "true": { "label": "True", "help": "The value of a check that holds." },
+      "false": { "label": "False", "help": "The value of a check that does not hold." }
     },
     "none": {
       "label": "None",
@@ -248,13 +250,85 @@
       "templateFloorDiv": "whole-number quotient of {left} divided by {right}",
       "templatePow": "{left} to the power of {right}",
       "templateIn": "{left} is in {right}",
-      "help": "Combines two values with arithmetic, a comparison, and/or, or in."
+      "help": "Combines two values with arithmetic, a comparison, and/or, or in.",
+      "add": {
+        "label": "Add",
+        "help": "Adds two numbers, or joins two texts. Example: 4 + 3 is 7. Type +."
+      },
+      "sub": {
+        "label": "Subtract",
+        "help": "Takes the right number from the left one. Example: 7 − 3 is 4. Type -."
+      },
+      "mul": {
+        "label": "Multiply",
+        "help": "Multiplies two numbers. Example: 4 × 3 is 12. Type *."
+      },
+      "div": {
+        "label": "Divide",
+        "help": "Divides the left number by the right one, giving a decimal. Example: 7 ÷ 2 is 3.5. Type /."
+      },
+      "mod": {
+        "label": "Remainder",
+        "help": "What is left when the left number is divided by the right one. Example: the remainder of 7 divided by 3 is 1. Type %."
+      },
+      "floorDiv": {
+        "label": "Whole-number quotient",
+        "help": "How many whole times the right number fits in the left one. Example: the whole-number quotient of 7 divided by 2 is 3. Type //."
+      },
+      "pow": {
+        "label": "Power",
+        "help": "The left number multiplied by itself as many times as the right one says. Example: 2 to the power of 3 is 8. Type **."
+      },
+      "eq": {
+        "label": "Equals",
+        "help": "True when both sides are the same value. Example: 3 = 3 is true. Type ==."
+      },
+      "ne": {
+        "label": "Does not equal",
+        "help": "True when the two sides are different values. Example: 3 ≠ 4 is true. Type !=."
+      },
+      "lt": {
+        "label": "Less than",
+        "help": "True when the left side is smaller. Example: 3 < 4 is true. Type <."
+      },
+      "le": {
+        "label": "At most",
+        "help": "True when the left side is smaller or the same. Example: 4 ≤ 4 is true. Type <=."
+      },
+      "gt": {
+        "label": "Greater than",
+        "help": "True when the left side is larger. Example: 4 > 3 is true. Type >."
+      },
+      "ge": {
+        "label": "At least",
+        "help": "True when the left side is larger or the same. Example: 4 ≥ 4 is true. Type >=."
+      },
+      "in": {
+        "label": "Is in a list",
+        "help": "True when the value is one of the list's items. Example: 5 is in [4, 9, 5] is true. Type in."
+      },
+      "and": {
+        "label": "And",
+        "help": "True when both sides are true. Example: i > 0 and i < 10 is true when i is 5. Type and."
+      },
+      "or": {
+        "label": "Or",
+        "help": "True when one side or both sides are true. Example: i = 3 or i = 5 is true when i is 3 and when i is 5. Type or."
+      },
+      "join": {
+        "label": "Join with another list",
+        "help": "A new list with the items of the left list, then those of the right one. Example: [1, 2] + [3] is [1, 2, 3]. Type +."
+      }
     },
     "unop": {
       "label": "Negate",
       "template": "−{operand}",
       "templateNot": "not {operand}",
-      "help": "Flips the sign of a number or the truth of a value."
+      "help": "Flips the sign of a number or the truth of a value.",
+      "not": {
+        "label": "Not",
+        "help": "True when the value after it is false. Example: not (3 > 4) is true. Type not."
+      }
     },
     "call": {
       "label": "Call function",
@@ -264,17 +338,17 @@
     "call:abs": {
       "label": "Absolute value",
       "template": "absolute value of {x}",
-      "help": "Drops the sign of a number."
+      "help": "The number without its sign. Example: the absolute value of −4 is 4."
     },
     "call:min": {
       "label": "Smaller of two",
       "template": "smaller of {a} and {b}",
-      "help": "Picks the smaller of two numbers or texts."
+      "help": "The smaller of two numbers or texts. Example: the smaller of 4 and 9 is 4."
     },
     "call:max": {
       "label": "Larger of two",
       "template": "larger of {a} and {b}",
-      "help": "Picks the larger of two numbers or texts."
+      "help": "The larger of two numbers or texts. Example: the larger of 4 and 9 is 9."
     },
     "call:str": {
       "label": "As text",

@@ -10,5 +10,7 @@ export const none = defineExpr<"none">({
   *run() {
     return { t: "none" };
   },
+  kind: () => "none",
+  menu: [{ name: "", group: "values" }],
   python: () => "None",
 });

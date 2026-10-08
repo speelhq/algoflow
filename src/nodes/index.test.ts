@@ -32,6 +32,48 @@ describe("registry (N-02, N-09)", () => {
     }
   });
 
+  it("N-02, N-11: every menu entry has its label and help, and its preset slots exist", () => {
+    for (const def of NODES.values()) {
+      for (const entry of def.menu ?? []) {
+        const base = entry.name === "" ? `node.${def.key}` : `node.${def.key}.${entry.name}`;
+        for (const part of ["label", "help"]) {
+          expect(keys.has(`${base}.${part}`), `${base}.${part}`).toBe(true);
+        }
+        for (const slot of Object.keys(entry.preset ?? {})) {
+          const known = def.slots.some((s) => s.name === slot) || slot === "value";
+          expect(known, `${def.key}.${slot}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("N-11: the operators' entries and their keys", () => {
+    const binop = NODES.get("binop")?.menu ?? [];
+    expect(binop.map((entry) => entry.keys)).toEqual([
+      "+",
+      "-",
+      "*",
+      "/",
+      "%",
+      "//",
+      "**",
+      "==",
+      "!=",
+      "<",
+      "<=",
+      ">",
+      ">=",
+      "in",
+      "and",
+      "or",
+      "+",
+    ]);
+    expect(binop.find((entry) => entry.name === "or")).toMatchObject({
+      group: "combine",
+      on: ["truefalse"],
+    });
+  });
+
   it("N-09: a chart names body slots of its block; a counted loop has init, check, and step", () => {
     const shaped = [...NODES.values()].filter((def) => def.chart);
     expect(new Set(shaped.map((def) => def.key))).toEqual(

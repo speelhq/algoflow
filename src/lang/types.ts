@@ -69,6 +69,9 @@ export type Stmt =
   | (S & { kind: "swap"; list: Expr; i: Expr; j: Expr });
 export type StmtKind = Stmt["kind"];
 
+/** What is known of a value before the program runs (L-59). */
+export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object";
+
 export type Target = VarTarget | IndexTarget | KeyTarget | FieldTarget;
 export type VarTarget = { kind: "var"; name: Id };
 export type IndexTarget = { kind: "index"; list: Expr; index: Expr };

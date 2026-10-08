@@ -12,5 +12,7 @@ export const str = defineExpr<"str">({
   *run(node) {
     return { t: "str", v: node.value };
   },
+  kind: () => "text",
+  menu: [{ name: "", group: "values" }],
   python: (node) => pyString(node.value),
 });
