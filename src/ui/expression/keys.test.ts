@@ -117,7 +117,7 @@ describe("the list (U-52)", () => {
       "Power",
       "Absolute value",
     ]);
-    expect(ids(afterGroups("truefalse"))).toEqual(["compare", "convert", "combine"]);
+    expect(ids(afterGroups("truefalse"))).toEqual(["combine", "compare", "convert"]);
     expect(ids(afterGroups("list"))).toEqual(["compare", "convert", "other"]);
   });
 

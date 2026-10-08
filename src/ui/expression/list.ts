@@ -150,12 +150,12 @@ export function valueGroups(
 
 /** The order of the groups after a value. */
 const AFTER_ORDER: readonly MenuGroup[] = [
-  "calculate",
-  "compare",
-  "convert",
   "items",
   "totals",
+  "calculate",
   "combine",
+  "compare",
+  "convert",
   "other",
 ];
 
