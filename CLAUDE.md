@@ -111,7 +111,7 @@ commands, decisions not yet in `docs/spec/`.
   milestone, its issues, and the open pull requests determine what is next. There
   is no handoff file. `docs/decisions.md` holds the reasons, in one section
   per spec file; the spec states facts, never history.
-- `docs/design/` holds the design boards; read the board before
+- `docs/design/` holds the design artboards; read the artboard before
   building its screen. `docs/design/README.md` names them and lists where
   the spec deviates; the spec takes precedence.
 - `gh issue create --body` applies no template: copy the sections of

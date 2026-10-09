@@ -59,11 +59,12 @@ modules first in name order; `New module…` (prompts for the name, L-01),
 rows have the form of U-15.
 
 D-08 Module page (`#/m/<name>`, and `#/m/<name>/<fn>` showing that
-function): the top bar with `← Modules`, the name, `▶ Run` (D-06), `Test`
-(D-20), undo, redo, and `⋯` with Help; the panel with the tabs `Result`
-and `Python` (U-20); the chart region with the path bar (U-30), whose `▾`
-lists the module's functions and classes, `Add function`, and `Add class`.
-A learner module's chart region carries the band
+function): the top bar with `← Modules`, the name, undo, redo, and `⋯` with
+Help; the panel with the tabs `Result`, which holds `Test` (D-20) beside
+its case selector, and `Python` (U-20); the canvas with the path bar
+(U-30), whose `▾` lists the module's functions and classes, `Add
+function`, and `Add class`, and the run bar with `▶ Run` (D-06, U-60).
+A learner module's canvas carries the band
 `Your module. Changes reach every program that uses it.` A built-in
 module's charts are read-only, its editors offer neither editing nor
 `Duplicate` and `Delete`, `▾` offers no
