@@ -1,4 +1,4 @@
-// U-63: one sentence per event; U-50: a condition reads as its template with the values of the moment.
+// U-63: one sentence per event; a comparison as the chart writes it, with the values of the moment.
 import { describe, expect, it } from "vitest";
 import { t } from "@/i18n/t";
 import type { Data, Input, Program } from "@/lang/types";
@@ -39,38 +39,37 @@ describe("narrate (U-63)", () => {
     expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("For i from 1 up to 3");
   });
 
-  it("compare: a template over the operands takes their values, whatever the blanks hold", () => {
+  it("compare: a diamond's whole condition is its question with the values, and its answer", () => {
     const p = program([
       assign("n", num(4)),
       if_(bin(">", bin("+", v("n"), num(1)), num(3)), []),
       if_(bin("==", v("n"), num(5)), []),
     ]);
-    expect(told(p, "compare", 1)).toBe('"5 is greater than 3" is true, so Yes');
-    expect(told(p, "compare", 2)).toBe('"4 equals 5" is false, so No');
+    expect(told(p, "compare", 1)).toBe("4 + 1 > 3? Yes");
+    expect(told(p, "compare", 2)).toBe("4 = 5? No");
   });
 
-  it("compare: `is divisible by` shows its blanks when they are variables or literals", () => {
+  it("compare: FizzBuzz at i = 3 writes its operations as the chart does", () => {
     const p = program([
       assign("i", num(3)),
       if_(bin("==", bin("%", v("i"), num(15)), num(0)), []),
       if_(bin("==", bin("%", bin("+", v("i"), num(1)), num(2)), num(0)), []),
     ]);
-    expect(told(p, "compare", 1)).toBe('"3 is divisible by 15" is false, so No');
-    // A blank that is not a variable or a literal: the next template over the operands.
-    expect(told(p, "compare", 2)).toBe('"0 equals 0" is true, so Yes');
+    expect(told(p, "compare", 1)).toBe("(remainder of 3 divided by 15) = 0? No");
+    expect(told(p, "compare", 2)).toBe("(remainder of (3 + 1) divided by 2) = 0? Yes");
   });
 
-  it("compare: only a diamond's whole condition says Yes or No", () => {
+  it("compare: any other comparison, such as a side of and, says its value", () => {
     const both = bin("and", bin("<", v("a"), num(2)), bin("<", v("a"), num(9)));
     const p = program([
       assign("a", num(1)),
       if_(both, []),
       assign("ok", bin("!=", v("a"), num(1))),
     ]);
-    expect(told(p, "compare", 1)).toBe('"1 is less than 2" is true');
-    expect(told(p, "compare", 3)).toBe('"1 does not equal 1" is false');
+    expect(told(p, "compare", 1)).toBe("1 < 2 is true");
+    expect(told(p, "compare", 3)).toBe("1 ≠ 1 is false");
     const negated = program([assign("a", num(1)), while_(not(bin(">=", v("a"), num(1))), [])]);
-    expect(told(negated, "compare")).toBe('"1 is at least 1" is true');
+    expect(told(negated, "compare")).toBe("1 ≥ 1 is true");
   });
 
   it("compare: values are written with the block words, never Python's", () => {
@@ -80,8 +79,8 @@ describe("narrate (U-63)", () => {
       if_(bin("==", v("done"), bool(false)), []),
       if_(bin("!=", v("name"), none()), []),
     ]);
-    expect(told(p, "compare", 1)).toBe('"true equals false" is false, so No');
-    expect(told(p, "compare", 2)).toBe('""Fizz" does not equal none" is true, so Yes');
+    expect(told(p, "compare", 1)).toBe("true = false? No");
+    expect(told(p, "compare", 2)).toBe('"Fizz" ≠ none? Yes');
   });
 
   it("write, loop, print, call, and return", () => {
@@ -111,7 +110,8 @@ describe("narrate (U-63)", () => {
       ],
     );
     expect(told(p, "read")).toBe("Read 3 items of nums");
-    expect(told(p, "compare")).toBe('"5 is in [4, 9, 5]" is true, so Yes');
+    // A list keeps its name: its items were narrated by the read before the comparison.
+    expect(told(p, "compare")).toBe("5 is in nums? Yes");
 
     const runner = run(p, {}, 1);
     const state = runner.state();
