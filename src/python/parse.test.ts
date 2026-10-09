@@ -73,11 +73,10 @@ describe("parse (G-01)", () => {
     expect(ok('"a\\x41\\x01"')).toMatchObject({ kind: "str", value: "aA" });
   });
 
-  it("marks only the root with source: text and gives every node an id", () => {
+  it("gives every node an id and no mark of how it was made (G-01)", () => {
     const expr = ok("a + b");
-    expect(expr.source).toBe("text");
     expect(expr.id).toHaveLength(12);
-    expect((expr as Extract<Expr, { kind: "binop" }>).left.source).toBeUndefined();
+    expect(Object.keys(expr).toSorted()).toEqual(["id", "kind", "left", "op", "right"]);
   });
 });
 
