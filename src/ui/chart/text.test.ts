@@ -14,7 +14,7 @@ import {
   slotSentence,
 } from "./text";
 
-const { assign, num, str, bool, bin, neg, not, v, print, for_, if_, call, comment, ret } = ast;
+const { assign, num, str, bool, bin, neg, not, v, print, for_, if_, call, ret } = ast;
 
 function expr(python: string): Expr {
   const parsed = parse(python, { classes: [], functions: ["f"] });
@@ -26,12 +26,11 @@ describe("sentence (N-08)", () => {
   it("renders statements from their template, with the create form of a first assignment", () => {
     const first = assign("total", num(0));
     const again = assign("total", bin("+", v("total"), v("i")));
-    const p = program([first, again, print(str("a"), v("total")), comment("note"), ret()]);
+    const p = program([first, again, print(str("a"), v("total")), ret()]);
     expect(sentence(first, p)).toBe("create total and set it to 0");
     expect(sentence(again, p)).toBe("set total to total + i");
     expect(p.main.slice(2).map((stmt) => sentence(stmt, p))).toEqual([
       'print "a", total',
-      "# note",
       "return",
     ]);
     expect(capitalise(sentence(again, p))).toBe("Set total to total + i");
