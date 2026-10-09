@@ -52,19 +52,21 @@ export type Heap = Map<HeapId, HeapEntry>;
 
 // ---------------------------------------------------------------- Statements
 
+/** `name`: the learner's name for the node, one trimmed line, absent when empty. */
+type S = { id: NodeId; name?: string };
 export type Stmt =
-  | { id: NodeId; kind: "assign"; target: Target; value: Expr }
-  | { id: NodeId; kind: "delete"; target: IndexTarget | KeyTarget }
-  | { id: NodeId; kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] }
-  | { id: NodeId; kind: "for"; var: Id; start: Expr; stop: Expr; body: Stmt[] }
-  | { id: NodeId; kind: "foreach"; var: Id; list: Expr; body: Stmt[] }
-  | { id: NodeId; kind: "while"; cond: Expr; body: Stmt[] }
-  | { id: NodeId; kind: "break" }
-  | { id: NodeId; kind: "continue" }
-  | { id: NodeId; kind: "print"; args: Expr[] }
-  | { id: NodeId; kind: "return"; value?: Expr }
-  | { id: NodeId; kind: "expr"; expr: Expr }
-  | { id: NodeId; kind: "swap"; list: Expr; i: Expr; j: Expr };
+  | (S & { kind: "assign"; target: Target; value: Expr })
+  | (S & { kind: "delete"; target: IndexTarget | KeyTarget })
+  | (S & { kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
+  | (S & { kind: "for"; var: Id; start: Expr; stop: Expr; body: Stmt[] })
+  | (S & { kind: "foreach"; var: Id; list: Expr; body: Stmt[] })
+  | (S & { kind: "while"; cond: Expr; body: Stmt[] })
+  | (S & { kind: "break" })
+  | (S & { kind: "continue" })
+  | (S & { kind: "print"; args: Expr[] })
+  | (S & { kind: "return"; value?: Expr })
+  | (S & { kind: "expr"; expr: Expr })
+  | (S & { kind: "swap"; list: Expr; i: Expr; j: Expr });
 export type StmtKind = Stmt["kind"];
 
 export type Target = VarTarget | IndexTarget | KeyTarget | FieldTarget;
@@ -161,6 +163,7 @@ export type EditName =
   | "setExpr"
   | "removeItem"
   | "renameName"
+  | "setStmtName"
   | "addFunction"
   | "removeFunction"
   | "addClass"
