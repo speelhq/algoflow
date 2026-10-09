@@ -72,6 +72,8 @@ statements.
 | ref             | a location in the state: variable, list index, dict key, object field           |
 | view            | rendering of one variable in the `Result` tab (`05-ui.md`)                      |
 | panel           | the left region of a page, holding the `Problem`, `Result`, and `Python` tabs   |
+| canvas          | the right region of a page: the path bar, the chart, the narration line, and the run bar (U-03) |
+| run bar         | the bar at the foot of the canvas holding `Run` and, while running, the run's controls (U-60) |
 | path bar        | the line above the chart naming the chart shown and, while running, the call stack |
 | case            | one set of inputs with its expectation: a challenge test, or a module function's saved run (D-19) |
 | challenge       | a JSON file in `challenges/` (`06-challenges.md`); shown to learners as a problem |
@@ -79,8 +81,7 @@ statements.
 | module          | a named set of functions and classes stored outside any program (`08-modules.md`); a program uses it by name |
 | built-in module | a module shipped as `modules/<name>.json`                                       |
 | learner module  | a module the learner created or copied, stored under D-14                       |
-| canvas          | a design document on which screens are drawn                                     |
-| board           | one screen drawing on a canvas, exported to `docs/design/`                       |
+| artboard        | one screen drawn in Claude Design, exported to `docs/design/`                     |
 
 ## Rationale (informative)
 

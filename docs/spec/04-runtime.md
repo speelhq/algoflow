@@ -135,7 +135,8 @@ visible steps it produced irrespective of how it ended (after an error the
 failing step is step `total`), `outcome`, the manner in which it ended, and `prints`, the
 visible step of each `print`; then it creates the shown runner at step 0.
 Step: `next()` until the next visible step. Play: one Step every
-`1000 / speed` ms, speed in `[1, 50]`. Seek(k): a new runner advanced to
+`1000 / speed` ms, speed one of 1, 4, and 15 (`Slow`, `Normal`, `Fast`,
+U-60). Seek(k): a new runner advanced to
 visible step `k`, in the same batches, rebuilding `state`, `stdout`, and
 `verdicts` from every event it passes. When `k` is at or after the current
 step, the driver continues the current runner in place of a new one; the

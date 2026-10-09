@@ -1,17 +1,17 @@
-# Design boards
+# Design artboards
 
-One PNG for each current board, exported at the size of the board.
-The spec (`docs/spec/05-ui.md`) was written from these boards and takes
-precedence over them: a board shows the appearance of a screen, the spec
-states its behaviour. A screen the spec describes and no board shows is an
-issue labelled `decision`.
+One PNG for each current artboard, exported at the size of the artboard.
+The spec (`docs/spec/05-ui.md`) was written from these artboards and takes
+precedence over them: an artboard shows the appearance of a screen, the
+spec states its behaviour. A screen the spec describes and no artboard
+shows is an issue labelled `decision`.
 
-## Canvas "AlgoFlow Screens"
+## Claude Design file "AlgoFlow Screens"
 
-Twenty-three boards of 1280 × 800. Each file has the name of its board on the
-canvas.
+Twenty-three artboards of 1280 × 800. Each PNG has the name of its artboard
+in the file.
 
-| File                    | Board title on the canvas                              | Spec                   |
+| File                    | Artboard title                                         | Spec                   |
 | ----------------------- | ------------------------------------------------------ | ---------------------- |
 | `Main.png`              | 1 Problems: one section per plan                       | U-02, U-10..U-14       |
 | `BuildEmpty.png`        | 2 Build: first launch, an empty chart                  | U-03, U-21, U-34, U-90 |
@@ -37,28 +37,34 @@ canvas.
 | `PlaygroundProgram.png` | 17 Playground program: a title, Run, and Export        | U-01                   |
 | `MenuProgram.png`       | 18 Build: the + menu lists the program's own functions | U-40                   |
 
-## Where the spec deviates from the boards
+## Where the spec deviates from the artboards
 
 - `Accepted.png` shows placeholders for the counts of steps and loops, because
-  `heap-pop` has no challenge file; the same holds for any board of a problem
+  `heap-pop` has no challenge file; the same holds for any artboard of a problem
   that does not exist yet.
 - `heap.py` on `PythonFiles.png` and the `heap_pop` chart on `Module.png` are
   drafts derived from D-16, not emitted code.
 - `Main.png` names the first problem `Hello`; its challenge file is
   `tutorial`, and the title is the one in that file.
-- The boards use a hand-drawn typeface to mark them as drafts; the
+- Until they are drawn again, the artboards show `▶ Run` and `✓ Submit` in
+  the top bar, the run's controls without the narration line under the
+  chart, a speed slider, and the narration beside the current node; U-03,
+  U-60, U-63, and U-80 place them in the run bar, the narration line, and the
+  `Result` tab.
+- The artboards use a hand-drawn typeface to mark them as drafts; the
   application uses the typeface of `src/ui/theme.css`.
 
 ## Exporting
 
-A board is one file of its canvas. It is rendered alone in a browser at the
-size the canvas declares for it and captured as a PNG under the name of the
-board. The canvases remain the working copies, and a changed board is
-exported again in the pull request that changes the spec it affects.
+An artboard is one file of its Claude Design file. It is rendered alone in a
+browser at the size the file declares for it and captured as a PNG under the
+name of the artboard. The Claude Design files remain the working copies, and
+a changed artboard is exported again in the pull request that changes the
+spec it affects.
 
-| Canvas             | Holds                                         |
+| Claude Design file | Holds                                         |
 | ------------------ | --------------------------------------------- |
-| [AlgoFlow Screens](https://claude.ai/artifact/SD2jKu4HfkPTh4CoeS7Tpe) | the twenty-three boards above |
-| [AlgoFlow Redesign](https://claude.ai/artifact/D91141RiyMCW4XLsyJk8E5) | the flowchart and loop-notation studies; no exported board |
+| [AlgoFlow Screens](https://claude.ai/artifact/SD2jKu4HfkPTh4CoeS7Tpe) | the twenty-three artboards above |
+| [AlgoFlow Redesign](https://claude.ai/artifact/D91141RiyMCW4XLsyJk8E5) | the flowchart and loop-notation studies; no exported artboard |
 
-The canvases open only for their owner and the people it is shared with.
+The files open only for their owner and the people they are shared with.

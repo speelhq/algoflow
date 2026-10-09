@@ -158,7 +158,7 @@ error; reporting `E_PARSE_SYNTAX` at the token keeps the failure a
 diagnostic, and the registry alone decides what parses.
 
 **`state` is refreshed while playing, as a copy** (R-12). The `Result` tab
-must update per step at speed 50. The refresh was a shallow copy of the
+must update per step at the fastest speed. The refresh was a shallow copy of the
 frame list, which shared the runner's variable maps and heap: a published
 `state` changed at the next step, so a screen could neither compare two
 states nor memoize on one, and a `compare` event narrated later showed a
@@ -250,9 +250,9 @@ submit, proceed. The rejected alternative, cards that read as code lines
 with a blocks palette, a properties panel, and tabbed run panels, kept
 control flow invisible, placed values in a table separated from the program,
 and placed instructor tools at the same level as the core loop. The screens
-behind the ids in `05-ui.md` are on the design canvas "AlgoFlow Screens"
-(the flowchart and loop notation studies are on the earlier canvas "AlgoFlow
-Redesign").
+behind the ids in `05-ui.md` are artboards of the Claude Design file
+"AlgoFlow Screens" (the flowchart and loop notation studies are in the
+earlier file "AlgoFlow Redesign").
 
 **The layout store validates on both paths** (U-03, U-24, U-60). Setters clamp, and
 `mergePersisted` re-validates whatever is returned from `localStorage`: a
@@ -291,7 +291,7 @@ auto-laid-out flowchart shows Yes/No paths and loop-backs graphically and
 keeps the AST as the source of truth.
 
 **Loops are drawn as init, check, and step** (U-33, N-09). Three notations
-were compared on the study "Loop notation: three options" of the canvas
+were compared on the study "Loop notation: three options" of the Claude Design file
 "AlgoFlow Redesign". The JIS X 0121 / ISO 5807 loop-limit pair is the
 standard form for counted loops and the one Japanese textbooks and the FE
 exam use, and a dashed container is legible, but both conceal the check.
@@ -320,9 +320,9 @@ beginner in choosing.
 
 **The moment is on the chart, the state is in the panel** (U-23,
 U-61..U-63). Data, Trace, and Output tabs under the program drew the
-learner's attention away from it, so the current step stays on the chart:
-the current node, the taken path, the `✓`/`✗` marks, and the narration beside
-the node, which carries the values relevant at that step (`Pass 3: i is
+learner's attention away from it, so the current step stays in the canvas:
+the current node, the taken path, and the `✓`/`✗` marks on the chart, and the
+narration in one line under it (U-63), which carries the values relevant at that step (`Pass 3: i is
 3`, `(remainder of 3 divided by 15) = 0? No`). A badge with the loop variable
 beside the loop's check was rejected: it is state, it sat beside a diamond
 that is outside the viewport while a long body runs, which is when the pass
@@ -472,8 +472,8 @@ learner's switch as the one override.
 
 **Two regions, on every page** (U-03, U-20). Panel and chart, nothing
 else: the `Result` tab absorbed the floating variables card and the output
-strip, the `Python` tab absorbed the right-hand pane, and the transport is
-docked under the chart. The panel may expand to half the viewport because a
+strip, the `Python` tab absorbed the right-hand pane, and the run's controls
+are the run bar at the canvas's foot. The panel may expand to half the viewport because a
 grid, an object graph, or code needs the width, and with no third region
 nothing competes for it. Playground and Module pages have the same panel
 without the `Problem` tab, so the three editing pages share one skeleton.
@@ -490,7 +490,7 @@ from the page, would make a new component appear at the moment functions are
 introduced, and would need a display condition; shown, it introduces the
 term `main` that the `Python` tab's `main.py` repeats. All charts side by
 side on one canvas was rejected: three charts do not fit 960 px legibly.
-Observed while drawing the board: full argument text does not fit a
+Observed while drawing the artboard: full argument text does not fit a
 segment, so only numbers, texts, and booleans are shown.
 
 **A function's own operations sit on its `Start` node** (U-31). With tabs
@@ -502,13 +502,14 @@ parameters an editing location, which the tabbed design never stated.
 **Run knows the end before it plays** (R-11, U-60, U-81). Execution is
 deterministic and inexpensive, so Run executes everything first and then
 replays. That informs the learner immediately that a loop never ends (at
-playback speed `E_STEP_LIMIT` is five and a half hours away at speed 50),
+playback speed `E_STEP_LIMIT` is eighteen hours away at the fastest speed),
 gives the position bar its length, and lets a Wrong Answer move directly to
 the step that printed the first wrong line instead of stepping there. Only
 the count, the outcome, and the steps of the prints are kept, so a backward
 Seek replays from the start, as Back has always done. Observed while drawing
-the board: with the position bar the transport is too long to float over the
-chart's corner without covering the loop's back edge, so it is docked.
+the artboard: with the position bar the run's controls are too long to float
+over the chart's corner without covering the loop's back edge, so they form a
+bar docked at the canvas's foot.
 
 **A wrong answer marks no node** (U-81, U-82). A runtime error has a
 location, so its node is outlined. A wrong answer has a differing line and
@@ -557,7 +558,7 @@ level of detail the design is built on. `Breakpoint` is the term used by
 every debugger the learner will encounter later, as with `Module`,
 `Clone`, and `Test`.
 
-**Small rules settled with the boards** (U-33, U-40, D-22, U-85). A slot
+**Small rules settled with the artboards** (U-33, U-40, D-22, U-85). A slot
 drawn on a generated loop node is the loop's slot, so the rule for slots
 (U-41) already makes `Set i to 0` the route to the start value, the most
 common beginner error, with no rule of its own. The menu's categories are
@@ -619,7 +620,7 @@ are shown disabled with the reason rather than hidden, which conveys that
 they exist and where they apply. The bare `expr` statement block is
 meaningless to a beginner and is hidden; it appears as method statements
 and calls. Restricting the menu per challenge was rejected: it conceals the
-language and adds authoring work. Observed while drawing the board:
+language and adds authoring work. Observed while drawing the artboard:
 built-in module groups would overfill a trainee's menu, so modules are
 placed behind one `Modules ▸` row.
 
@@ -741,12 +742,48 @@ values and the edge's label (`(remainder of 3 divided by 15) = 0? No`);
 `true` and `false` remain for a comparison that is a value, such as one
 side of `and`.
 
-**The top bar holds only the loop's actions** (U-03, U-05). The title
-is retained because it is the only indication of the learner's location
-when the panel shows `Result` or is collapsed, and because Playground's
-editable title and a module's name need the same slot. The difficulty badge
-was removed: it assists in choosing a problem, not in solving one.
-`Open in Playground` and Help are placed under `⋯`.
+**The top bar holds no run action** (U-03, U-05, U-60, U-80). The top bar
+held `Run` and `Submit` while the run's other controls sat in a bar under
+the chart, so starting a run and pausing it were at opposite edges of the
+page, and `Submit`, which judges every case and records the attempt, sat
+beside `Run`, which tries one case: the two read as one weight and one
+was pressed for the other. The top bar now holds only where the learner
+is and what applies to the whole page: the title, which is the only
+indication of the learner's location when the panel shows `Result` or is
+collapsed and the slot Playground's editable title and a module's name
+need, undo and redo, and `⋯` with `Open in Playground` and Help. The
+difficulty badge was removed: it assists in choosing a problem, not in
+solving one.
+
+**The run is one bar** (U-60, U-03). Every control of a run sits in the run
+bar at the canvas's foot, under the chart it drives, in build mode as in
+run mode. `Run` and `Play` were two buttons for one intention, to make the
+run go on: the first pre-ran and started, the second resumed. One play
+button now takes `Run`'s place and reads `Pause`, `Play`, or, at the last
+step, `Replay`, which seeks to step 0 and plays, so the button a learner
+pressed to start is the one that pauses. The pre-run (R-11) is unchanged;
+it happens behind `Run`.
+
+**The narration is a line under the chart** (U-63, U-65). A tooltip beside
+the current node moved with every step, covered the node it described
+whenever the chart was narrower than the tooltip, and left the viewport
+with a node near its edge. One line between the chart and the run bar is
+always in the same place, so the eye learns where the sentence is, it
+never covers the chart, and it reads the same at every zoom. The chart
+keeps what belongs to a place: the current node, the taken path, and the
+`✓`/`✗` marks. A runtime error's message takes the same line in the error
+colour.
+
+**`Submit` sits with the cases it checks** (U-80, U-23, D-20). `Submit` is
+beside the case selector of the `Result` tab, the list it judges and the
+place its verdict and chips appear, so the button and its answer are in one
+place and away from `Run`. A module's `Test` sits there for the same reason.
+
+**Three speeds** (R-11, U-60). A slider of 1 to 50 steps a second asked for a
+number a beginner has no use for. Three choices cover the uses: `Slow` (1)
+to follow each step, `Normal` (4) to watch a loop go round, and `Fast` (15)
+to reach a later point while still seeing the chart move; further jumps
+are `Skip` and the position bar.
 
 **The solution is shown where a chart fits** (U-22). A flowchart with
 branches does not fit a 320 px panel, so the solution occupies the chart
@@ -865,15 +902,14 @@ rows and a submission's in 320 px, so the submission replaces the run's
 rows; the next Run, including `Watch this case`, replaces it again. A chip
 only chooses which test's rows are read: setting the Input nodes from it
 would change the case under the chart, and `Watch this case` already sets
-them. While running, the top bar holds only the run's own controls, as the
-boards draw it: a verdict arriving during playback would replace the rows
+them. While running, `Submit` is disabled: a verdict arriving during playback would replace the rows
 of the run being watched, and a learner who has watched a run reaches
 Submit with one `Stop`.
 
 **While running, the case and the chart stay the run's** (U-27, U-32).
 Choosing another case discards the runner (C-13), and showing the solution
 would replace the running chart with one the run is not on, leaving the
-transport without the chart it drives. Both are therefore unavailable until
+run bar without the chart it drives. Both are therefore unavailable until
 `Stop`, as editing is (U-60): a learner who wants another case or the
 solution stops first, which is one click and says what happens to the run.
 
@@ -1150,7 +1186,7 @@ the specification.
 issue per part a person can see working gives the milestone its progress,
 lets the pull request close each part by number, and lets a part move to
 another milestone. Issues written months ahead would describe screens whose
-boards are not settled and would be rewritten before use, so a milestone
+artboards are not settled and would be rewritten before use, so a milestone
 holds its scope in its description until its session splits it. The split
 is marked by the description itself: once every part of its `Scope:`
 paragraph is an issue, the paragraph is replaced by a pointer to the issues, so the scope
@@ -1191,17 +1227,19 @@ behaviour (`CLAUDE.md` states it and is loaded at every start). It was one
 more copy of the same facts, diverged between sessions, and, being
 untracked, was the one file a reset could lose.
 
-**Boards are exported into the repository**. The screens are drawn on design
-canvases, which open only for the people they are shared with. A canvas
-cannot be reviewed in a pull request or diffed when a board changes. A PNG in
-`docs/design/` for each board, with a README naming what each shows and
-where the specification deviates, gives every reader the same source; the
-canvas remains the tool for drawing, and the specification remains the
-authority. A board that a later board or the specification has replaced has
-no PNG, because a PNG in the repository is read as the source of a screen.
-The canvas links sit in `docs/design/README.md` beside the export procedure,
-because whoever re-exports a board needs them, and a link reveals nothing
-to anyone without access.
+**Artboards are exported into the repository**. The screens are drawn as
+artboards in Claude Design files, which open only for the people they are
+shared with. A Claude Design file cannot be reviewed in a pull request or
+diffed when an artboard changes. A PNG in `docs/design/` for each artboard,
+with a README naming what each shows and where the specification deviates,
+gives every reader the same source; the Claude Design file remains the tool
+for drawing, and the specification remains the authority. An artboard that
+a later artboard or the specification has replaced has no PNG, because a PNG
+in the repository is read as the source of a screen. The links to the files
+sit in `docs/design/README.md` beside the export procedure, because whoever
+re-exports an artboard needs them, and a link reveals nothing to anyone
+without access. The words are Claude Design's own, artboard and its file,
+so `canvas` names the page's region that holds the chart.
 
 **Issues carry the questions; the specification carries the answers**. The
 specification states facts and never history, so an open question has no

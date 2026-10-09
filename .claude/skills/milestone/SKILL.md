@@ -26,15 +26,15 @@ script block.
    paragraph with `Split into the task issues of this milestone.`
    (`gh api -X PATCH "repos/{owner}/{repo}/milestones/<number>" -f description=…`).
 4. Read every spec statement the open issues cite, the `docs/decisions.md`
-   entries that name those ids, and, for a screen, its board in
+   entries that name those ids, and, for a screen, its artboard in
    `docs/design/` (README first).
 5. Read the descriptions of the later open milestones: statements in their
    scope are not yet due and are left alone.
-6. The canvas is drawn before a milestone starts: every screen, and every
+6. The artboards are drawn before a milestone starts: every screen, and every
    state of one (an open menu, a card, a dialog), that the milestone builds
-   has its board in `docs/design/`. When one has none, or an open issue says
-   a board is missing, stop and report it to the user before building
-   anything.
+   has its artboard in `docs/design/`. When one has none, or an open issue
+   says an artboard is missing, stop and report it to the user before
+   building anything.
 
 ## 2. Build
 
@@ -47,10 +47,10 @@ script block.
    id with its reason, committed before the code. Commit each vertical
    slice when `pnpm lint && pnpm test` passes.
 4. A screen's states are saved by `e2e/screenshots.spec.ts` (U-91); look at
-   each image beside its board before committing it. The code follows the
-   board; a difference the code cannot follow, or a state the board does
-   not draw, is reported to the user and not built. A session never draws
-   or changes a board.
+   each image beside its artboard before committing it. The code follows the
+   artboard; a difference the code cannot follow, or a state the artboard
+   does not draw, is reported to the user and not built. A session never
+   draws or changes an artboard.
 
 ## 3. Review
 
