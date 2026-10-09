@@ -191,9 +191,12 @@ describe("choosing (U-53)", () => {
     const more = choose(keys("i"), entry("call:max"), ctx).line;
     expect(py(more)).toBe("max(i, ...)");
     expect("at" in more.caret).toBe(true);
-    // A word operation takes the last value only; an operator binds by precedence.
-    expect(py(choose(keys("total+i"), entry("call:str"), ctx).line)).toBe("total + str(i)");
+    // A word operation takes what the list is about; an operator binds by precedence.
+    expect(py(choose(keys("total+i"), entry("call:str"), ctx).line)).toBe("str(total + i)");
+    expect(py(choose(keys("i<n"), entry("call:str"), ctx).line)).toBe("str(i < n)");
     expect(py(choose(keys("total+i"), entry("binop.mul"), ctx).line)).toBe("total + i * ...");
+    // Brackets typed first limit it to a part.
+    expect(py(choose(keys("total+(i"), entry("call:str"), ctx).line)).toBe("total + str(i)");
   });
 
   it("where a value is expected, an entry fills the input and the caret moves to its first input", () => {

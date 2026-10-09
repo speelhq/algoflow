@@ -289,7 +289,12 @@ function takeValue(line: Line, entry: Entry): Outcome {
   if (!last) return refused(line);
   const made = makeEntry(entry);
   const level = precedenceOf(made);
-  const target = line.selected || level === undefined ? last : bindAt(line, last, level);
+  // An operator binds by its precedence; any other entry takes what the list was about.
+  const target = line.selected
+    ? last
+    : level === undefined
+      ? (valueBefore(line) ?? last)
+      : bindAt(line, last, level);
   if (target === "chain") {
     return refused({ ...line, refused: errorText({ code: "E_PARSE_CHAIN", params: {} }) });
   }
