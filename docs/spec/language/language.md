@@ -1,4 +1,4 @@
-# 02 — Language
+# Language
 
 Types: `src/lang/types.ts`. Validation: `src/lang/validate.ts`. Edits:
 `src/lang/edit.ts`. Data conversion: `src/lang/data.ts`.
@@ -219,7 +219,7 @@ the parameters of one function are distinct.
 
 L-46 A `call` or `new` resolves its name in this order: a function or class
 of the program, a learner module, a built-in module, a builtin of
-`03-nodes.md`; a program definition shadows every module, and a learner
+`nodes.md`; a program definition shadows every module, and a learner
 module shadows a built-in module of the same name (D-02); a name defined by
 two modules the program both uses is `E_DUPLICATE_NAME` on the call.
 

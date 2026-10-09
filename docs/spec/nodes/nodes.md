@@ -1,4 +1,4 @@
-# 03 — Nodes
+# Nodes
 
 N-01 Every block is one file `src/nodes/<key>.ts` (a `:` in the key becomes
 `-` in the file name: `call-abs.ts`, `method-append.ts`) exporting a `NodeDef`,

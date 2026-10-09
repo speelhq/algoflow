@@ -1,7 +1,7 @@
 # Design artboards
 
 One PNG for each current artboard, exported at the size of the artboard.
-The spec (`docs/spec/05-ui.md`) was written from these artboards and takes
+The spec (`docs/spec/ui/`) was written from these artboards and takes
 precedence over them: an artboard shows the appearance of a screen, the
 spec states its behaviour. A screen the spec describes and no artboard
 shows is an issue labelled `decision`.

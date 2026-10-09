@@ -1,13 +1,13 @@
 ---
 name: add-node
-description: Add a block to src/nodes with interpreter, Python emission, i18n keys, and tests per docs/spec/03-nodes.md. Use when asked to add, implement, or support a block, builtin, or method.
+description: Add a block to src/nodes with interpreter, Python emission, i18n keys, and tests per docs/spec/nodes/nodes.md. Use when asked to add, implement, or support a block, builtin, or method.
 argument-hint: [block key or description]
 allowed-tools: Bash(pnpm test *) Bash(pnpm lint) PowerShell(pnpm test *) PowerShell(pnpm lint)
 ---
 
 Add the block described in $ARGUMENTS.
 
-1. Read `docs/spec/03-nodes.md` and find the block's row. If there is no row,
+1. Read `docs/spec/nodes/nodes.md` and find the block's row. If there is no row,
    add one first and state so in the recap.
 2. Read `src/nodes/index.ts` and one existing block of the same shape.
 3. Create `src/nodes/<key>.ts` with `key`, `shape`, `category`, `slots`, `create`,

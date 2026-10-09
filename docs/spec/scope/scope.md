@@ -1,4 +1,4 @@
-# 01 — Scope
+# Scope
 
 ## Product
 
@@ -44,7 +44,7 @@ are reached from the list by topic.
 | `micrograd` Build a Tiny Neural Network | slope, value, expression, manual-grad, local-backward, topo-backward, tanh, neuron, mlp, train                                     |
 | (no plan)                               | gcd, is-prime, fibonacci-memo, fisher-yates, hanoi                                                                                 |
 
-S-06 Every challenge is solvable with the blocks in `03-nodes.md` and the
+S-06 Every challenge is solvable with the blocks in `nodes.md` and the
 built-in modules (D-15), and with no other means.
 
 S-07 A Playground program has no `challengeId`, no inputs, no tests, and

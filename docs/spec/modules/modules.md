@@ -1,4 +1,4 @@
-# 08 — Modules
+# Modules
 
 Types: `src/modules/types.ts`. Resolution: `src/modules/resolve.ts`.
 Store: `src/store/modules.ts`. Built-in modules: `modules/<name>.json`.
@@ -23,7 +23,7 @@ export type Case = {
 };
 ```
 
-`validate()` (02) applies to a module as to a program with no `main`;
+`validate()` (`language.md`) applies to a module as to a program with no `main`;
 L-04 and L-05 hold within the module.
 
 D-02 Module names are unique among learner modules and unique among
@@ -150,7 +150,7 @@ D-17 The built-in module `micrograd` (title `Tiny Neural Network`) defines
 `Value`, `add`, `mul`, `tanh_v`, `backward_step` (with its `"tanh"` case),
 `build_topo`, `backward`, `Neuron`, `make_neuron`, `forward_neuron`,
 `Layer`, `MLP`, `make_mlp`, `forward_mlp`, `parameters`, and `zero_grad`,
-as the micrograd rows of `06-challenges.md` define them.
+as the micrograd rows of `challenges.md` define them.
 
 ## Verification
 

@@ -1,13 +1,13 @@
 ---
 name: add-challenge
-description: Create a challenge JSON with tests, hints, and solution per docs/spec/06-challenges.md and verify it with pnpm check. Use when asked to add a challenge, exercise, task, or problem for learners.
+description: Create a challenge JSON with tests, hints, and solution per docs/spec/challenges/challenges.md and verify it with pnpm check. Use when asked to add a challenge, exercise, task, or problem for learners.
 argument-hint: [challenge id]
 allowed-tools: Bash(pnpm check *) PowerShell(pnpm check *)
 ---
 
 Create the challenge described in $ARGUMENTS.
 
-1. Read `docs/spec/06-challenges.md` (schema and the challenge's row) and
+1. Read `docs/spec/challenges/challenges.md` (schema and the challenge's row) and
    `challenges/fizzbuzz.json` as the reference file.
 2. Write `challenges/<id>.json` with: English title and description (add Japanese
    texts only if `src/i18n/ja.json` exists), difficulty, topics, inputs, at least

@@ -6,12 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Block-based algorithm learning tool (browser only; English UI, Japanese added last)
 whose blocks are a fixed Python subset; functions and classes can be moved into
-modules and reused across programs (`docs/spec/08-modules.md`). Specs in
+modules and reused across programs (`docs/spec/modules/`). Specs in
 `docs/spec/` are normative; every statement has an id like `L-20`, never
-renumbered (00-conventions). Read
-`docs/spec/00-conventions.md`
-first, then the file for the
-area you change. Tests name the ids they verify; code comments and commit
+renumbered. Read `docs/spec/README.md` first, then the folder of the area
+you change. Tests name the ids they verify; code comments and commit
 messages cite none. If a task conflicts with a spec, stop and report the conflict.
 
 ## Commands
@@ -179,15 +177,6 @@ issue of every review finding not resolved here).
 
 ## Spec index
 
-| File                          | Ids              |
-| ----------------------------- | ---------------- |
-| `docs/spec/00-conventions.md` | terms, id scheme |
-| `docs/spec/01-scope.md`       | S                |
-| `docs/spec/02-language.md`    | L                |
-| `docs/spec/03-nodes.md`       | N                |
-| `docs/spec/04-runtime.md`     | R, E, G          |
-| `docs/spec/05-ui.md`          | U, V             |
-| `docs/spec/06-challenges.md`  | C                |
-| `docs/spec/08-modules.md`     | D                |
+`docs/spec/README.md` lists the folders, their files, and their id prefixes.
 
 Skills: `/milestone`, `/add-node`, `/add-challenge`.

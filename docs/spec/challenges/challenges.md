@@ -1,4 +1,4 @@
-# 06 — Challenges
+# Challenges
 
 ## Schema
 
@@ -11,7 +11,7 @@ export type Challenge = {
   difficulty: "easy" | "medium" | "hard";
   topics: Topic[]; // ≥ 1, from the U-14 list
   description: Localized; // markdown
-  inputs: Input[]; // 02
+  inputs: Input[]; // language.md
   tests: Test[]; // ≥ 3
   hints: Localized[]; // exactly 3 (C-22)
   takeaway?: Localized; // one sentence shown as `What you used` (U-83)
@@ -30,7 +30,7 @@ export type Topic = "output" | "variables" | "loops" | "conditions" | "lists" | 
   | "sorting" | "recursion" | "dictionaries" | "classes" | "gradients";
 ```
 
-C-02 `scripts/check.ts` validates the schema, validates (02) `solution`
+C-02 `scripts/check.ts` validates the schema, validates (`language.md`) `solution`
 with the built-in modules (D-15), checks C-03, C-16, C-21, and C-22, runs
 `solution` through the interpreter and CPython (R-20) for every test, and
 checks every built-in module with its cases (D-15).

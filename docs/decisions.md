@@ -12,7 +12,7 @@ it.
 
 ## Scope
 
-<!-- `01-scope.md` -->
+<!-- `scope.md` -->
 
 **The application has no roles** (S-01, S-09). A table of users by role
 (trainee, self-learner, instructor) was dropped: a trainee and a
@@ -55,7 +55,7 @@ that plan mirrors a fixed three-day course.
 
 ## Language
 
-<!-- `02-language.md` -->
+<!-- `language.md` -->
 
 **An empty slot is an expression kind** (L-09). `create()` must return a
 statement whose required slots exist; making the slot type `Expr | null`
@@ -117,10 +117,10 @@ resolves to an empty main rather than failing the load.
 
 ## Nodes
 
-<!-- `03-nodes.md` -->
+<!-- `nodes.md` -->
 
 **Categories live in `src/nodes/categories.ts`**. `NodeDef.category`
-(03-nodes) is owned by the node registry; the block menu (U-40) takes the
+(N-01) is owned by the node registry; the block menu (U-40) takes the
 order from there rather than declaring its own copy, so adding a category
 cannot leave the menu and the registry inconsistent. The file has no
 imports, so `src/nodes` remains free of store and React dependencies.
@@ -147,7 +147,7 @@ outer assignment is where the region gains the name.
 
 ## Runtime
 
-<!-- `04-runtime.md` -->
+<!-- `interpreter.md`, `emitter.md`, `parser.md` -->
 
 **`bool` is not a number** (R-15). Python treats `True` as `1`, but block
 programs never rely on it and the interpreter's `E_TYPE` keeps the type model
@@ -181,7 +181,7 @@ values as `Data` on the Python side (`$float`, `$int:` keys, `$cls`/`$id`)
 lets the TypeScript side compare with the same `dataEquals` used for
 expectations, so one equality rule (C-10) serves both engines.
 
-**Python stays the only generated language** (04-runtime). The note
+**Python stays the only generated language** (`emitter.md`). The note
 lists JavaScript and Dart; JavaScript would not preserve the third
 commitment: it has no int/float distinction, `-7 % 2` is `-1`, there is
 no `//`, and `in` on an array tests indices, so a faithful emitter would
@@ -243,7 +243,7 @@ than each screen resolving the owner again.
 
 ## UI
 
-<!-- `05-ui.md` -->
+<!-- `ui/` -->
 
 The UI is designed for a person who has never programmed (S-09), around
 one task, building a program as a flowchart and observing it run, and one
@@ -252,7 +252,7 @@ submit, proceed. The rejected alternative, cards that read as code lines
 with a blocks palette, a properties panel, and tabbed run panels, kept
 control flow invisible, placed values in a table separated from the program,
 and placed instructor tools at the same level as the core loop. The screens
-behind the ids in `05-ui.md` are artboards of the Claude Design file
+behind the ids in `ui/` are artboards of the Claude Design file
 "AlgoFlow Screens" (the flowchart and loop notation studies are in the
 earlier file "AlgoFlow Redesign").
 
@@ -307,7 +307,7 @@ retains one `for`, and the emitter is unchanged. The check reads
 `Repeat i from 1 to n` (emitting `range(1, n + 1)`) and not a display-only
 `Is i ≤ n?` for `x + 1` bounds: the check reads as the emitted `range`
 does, so the chart and the `Python` tab agree (the third commitment of
-`00-conventions.md`), and a display rule for one bound form would mix `<`
+`docs/spec/README.md`), and a display rule for one bound form would mix `<`
 and `≤` across loops.
 
 **The catalog is its plans** (U-10..U-14, C-16). "Day 1/2/3" tabs and a
@@ -971,7 +971,7 @@ here.
 
 ## Challenges
 
-<!-- `06-challenges.md` -->
+<!-- `challenges.md` -->
 
 **Input names are checked by `scripts/check.ts`, not by `validate()`**. Inputs
 have no NodeId to attach a diagnostic to and are read-only in the editor
@@ -1019,12 +1019,12 @@ middleware.
 
 ## Modules
 
-<!-- `08-modules.md` -->
+<!-- `modules.md` -->
 
 A concept note of 2026-09-17, written without knowledge of the
 project, describes an environment in which any block can be opened, its
 implementation inspected, and a learner's own abstraction reused in a
-larger program. The blocks of `03-nodes.md` are its lowest level and a
+larger program. The blocks of `nodes.md` are its lowest level and a
 function is its middle level; what the spec lacked was a way to keep a
 function beyond one program, the loop that makes a learner build one, and
 the run-time controls that let a program be read at more than one level of
@@ -1032,7 +1032,7 @@ detail. The entries below record what was taken from the note and what
 was not; those on the plans are under Scope, and those on Step over and on
 editing while paused under UI.
 
-**A module is a function that outlives its program** (08-modules). Its
+**A module is a function that outlives its program** (`modules.md`). Its
 semantics are a function's; the difference is ownership and lifetime: a
 function belongs to one `Program`, a module belongs to the learner and is
 referenced by many programs: defined once, parameterised, called from any
@@ -1136,7 +1136,7 @@ check would still pass, so a bump of `@types/node` follows `.node-version`.
   `role="separator"` (a splitter); `<hr>` is a static separator.
 - `require-yield`: literal and variable runners are generators that never
   yield, by design.
-- `unicorn/no-thenable`: 02-language names the `if` regions `then` and
+- `unicorn/no-thenable`: `language.md` names the `if` regions `then` and
   `else`.
 - `no-redundant-type-constituents`: `Id | "main"` and `NodeId | "main"` are
   written as in the spec to document intent.
@@ -1176,7 +1176,7 @@ development-only affordance would be untested UI.
 
 <!-- how work proceeds -->
 
-**The specification states no schedule** (00-conventions). A plan file in
+**The specification states no schedule** (`docs/spec/README.md`). A plan file in
 the specification held three kinds of statement: the schedule (`M-`), the
 engineering constraints (`P-`), and the test obligations (`T-`). Each had a
 second copy elsewhere: the schedule in every GitHub milestone's description
@@ -1194,7 +1194,7 @@ establishes ends with those tests, so a test obligation sits beside the
 statements it covers.
 
 **Identifiers link statements to tests and to writing about them**
-(00-conventions). A test that names the ids it verifies is found by a
+(`docs/spec/README.md`). A test that names the ids it verifies is found by a
 search when its statement changes, and a document, an issue, a pull
 request, a review finding, or a decision can point at one exact statement;
 a check's message names the statement it enforces so that its author finds
