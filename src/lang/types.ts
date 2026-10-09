@@ -76,7 +76,7 @@ export type FieldTarget = { kind: "field"; obj: Expr; field: Id };
 
 // ---------------------------------------------------------------- Expressions
 
-type E = { id: NodeId; source?: "text" };
+type E = { id: NodeId };
 export type Expr =
   | (E & { kind: "empty" }) // An unfilled required slot
   | (E & { kind: "num"; value: number; float: boolean; raw: string })

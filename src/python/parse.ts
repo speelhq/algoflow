@@ -178,7 +178,7 @@ class Parser {
   parseAll(): Expr {
     const expr = this.or();
     if (this.peek().type !== "end") fail("E_PARSE_SYNTAX", this.peek().pos);
-    return { ...expr, source: "text" };
+    return expr;
   }
 
   private binary(next: () => Expr, level: number): Expr {
