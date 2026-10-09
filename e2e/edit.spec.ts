@@ -74,6 +74,8 @@ test("M-04 exit: FizzBuzz is built from an empty chart by typing and choosing, a
   await page.keyboard.press("Enter");
   await page.keyboard.press("Escape");
 
+  await page.getByTestId("tab-result").click();
+
   await page.getByRole("button", { name: "✓ Submit" }).click();
   await expect(page.getByTestId("verdict")).toHaveText("Accepted");
   await page.getByTestId("tab-python").click();

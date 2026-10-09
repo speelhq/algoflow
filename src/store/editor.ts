@@ -1,6 +1,6 @@
 // Editor-side UI state of a page: the panel tab, the selected node, whether its editor is
 // open and the slot a click on it chose, the node outlined from a hovered Python line,
-// whether the chart region shows the solution, and the diagnostic Run or Submit led to.
+// whether the canvas shows the solution, and the diagnostic Run or Submit led to.
 import { create } from "zustand";
 import type { Diagnostic, NodeId } from "@/lang/types";
 

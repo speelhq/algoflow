@@ -1,5 +1,6 @@
 // The `Result` tab for one case: the case selector (the same choice as the Input
-// nodes), the variables of the shown frame, and `Output` beside `Expected`; the
+// nodes) with `Submit` beside it, the variables of the shown frame, and `Output` beside
+// `Expected`; the
 // chosen case's verdict and its first differing row once the run has ended there.
 // Before any run: the selector, the chosen case's `Expected`, and `result.empty`.
 import { useMemo } from "react";
@@ -18,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/ui/primitives/select";
+import { Button } from "@/ui/primitives/button";
+import { startSubmit } from "./actions";
 import { caseText } from "./caseText";
 import { ResultRows } from "./ResultRows";
 import { SubmissionView } from "./SubmissionView";
@@ -57,6 +60,25 @@ function CaseSelect({ challenge }: { challenge: Challenge }) {
   );
 }
 
+/** The case selector and `Submit`, which judges every case it lists. */
+function CaseBar({ challenge }: { challenge: Challenge }) {
+  const running = useRun((s) => s.status !== "idle");
+  const submitting = useTests((s) => s.running);
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <CaseSelect challenge={challenge} />
+      <Button
+        variant="outline"
+        className="border-selection/60 bg-selection/10"
+        disabled={running || submitting}
+        onClick={startSubmit}
+      >
+        {t("problem.submit")}
+      </Button>
+    </div>
+  );
+}
+
 function Variables() {
   const state = useRun((s) => s.state);
   const frame = useRun((s) => s.frame);
@@ -81,10 +103,15 @@ function Variables() {
 /** The submission, while one is shown, else the run of the chosen case. */
 export function ResultTab({ challenge }: { challenge?: Challenge }) {
   const submitted = useTests((s) => s.running || s.results.length > 0);
-  return submitted && challenge ? (
-    <SubmissionView challenge={challenge} />
-  ) : (
-    <RunResult challenge={challenge} />
+  return (
+    <div className="space-y-4">
+      {challenge && <CaseBar challenge={challenge} />}
+      {submitted && challenge ? (
+        <SubmissionView challenge={challenge} />
+      ) : (
+        <RunResult challenge={challenge} />
+      )}
+    </div>
   );
 }
 
@@ -109,7 +136,6 @@ function RunResult({ challenge }: { challenge: Challenge | undefined }) {
 
   return (
     <div className="space-y-4" data-testid="result-tab">
-      {challenge && <CaseSelect challenge={challenge} />}
       {idle ? <p className="text-muted-foreground">{t("result.empty")}</p> : <Variables />}
       {verdict && (
         <p

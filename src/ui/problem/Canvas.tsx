@@ -1,6 +1,6 @@
-// The chart region: the solution band when the solution
-// is shown, the path bar, the chart, and, while running, the transport. The Input nodes show
-// the chosen case and list every case.
+// The canvas: the solution band when the solution is shown, the path bar, the chart, while
+// running the narration line, and the run bar. The Input nodes show the chosen case and list
+// every case.
 import { useCallback, useMemo } from "react";
 import type { Challenge } from "@/challenges";
 import { t } from "@/i18n/t";
@@ -9,7 +9,7 @@ import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { useShallow } from "zustand/react/shallow";
 import { shownInputs, useRun, type RunState } from "@/store/run";
-import { Chart, type Note } from "@/ui/chart/Chart";
+import { Chart } from "@/ui/chart/Chart";
 import type { Moves } from "@/ui/chart/drag";
 import { layout, type ChartLayout } from "@/ui/chart/layout";
 import { measureText, useFontLoads } from "@/ui/chart/measure";
@@ -19,10 +19,11 @@ import { Connector } from "@/ui/editor/BlockMenu";
 import { apply } from "@/ui/editor/edits";
 import { accepts, tryMove } from "@/ui/editor/moves";
 import { DiagnosticMessage, flaggedStatements, NodeEditor } from "@/ui/editor/NodeEditor";
+import { cn } from "@/lib/utils";
 import { Button } from "@/ui/primitives/button";
 import { narrate, narrateDifference, narrateEnd, type Narration } from "@/ui/run/narrate";
 import { caseText } from "./caseText";
-import { Transport } from "./Transport";
+import { RunBar } from "./RunBar";
 
 /** Replaces the learner's program with the solution, as one undoable edit. */
 function loadSolution(challenge: Challenge): void {
@@ -85,7 +86,7 @@ function narration(run: Shown, program: Program): string | null {
 function useRunPaint(
   chart: ChartLayout | null,
   program: Program,
-): { paint?: Paint; note: Note | null } {
+): { paint?: Paint; narration: Narrated | null } {
   const run: Shown = useRun(
     useShallow((s) => ({
       status: s.status,
@@ -104,7 +105,7 @@ function useRunPaint(
     })),
   );
   return useMemo(() => {
-    if (!chart || run.status === "idle") return { note: null };
+    if (!chart || run.status === "idle") return { narration: null };
     const painted = paint(chart, {
       ended: run.status === "done",
       activeId: run.activeId,
@@ -114,15 +115,32 @@ function useRunPaint(
       breakpoint: run.breakpoint,
     });
     const text = narration(run, program);
-    const tone: Note["tone"] =
-      run.status === "error" && run.step === run.total ? "error" : "narration";
-    const note: Note | null =
-      painted.current && text ? { node: painted.current, text, tone } : null;
-    return { paint: painted, note };
+    const error = run.status === "error" && run.step === run.total;
+    return { paint: painted, narration: text === null ? null : { text, error } };
   }, [chart, run, program]);
 }
 
-export function ChartRegion({ challenge }: { challenge?: Challenge }) {
+/** The sentence of the run's position, and whether it is an error's message. */
+type Narrated = { text: string; error: boolean };
+
+/** The narration line between the chart and the run bar: one sentence, in one place. */
+function NarrationLine({ narration }: { narration: Narrated | null }) {
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      data-testid={narration?.error ? "run-error" : "narration"}
+      className={cn(
+        "min-h-10 shrink-0 border-t bg-muted/30 px-4 py-2.5 text-[0.95rem]",
+        narration?.error && "text-destructive",
+      )}
+    >
+      {narration?.text}
+    </p>
+  );
+}
+
+export function Canvas({ challenge }: { challenge?: Challenge }) {
   const mine = useProgram((s) => s.program);
   const solution = useEditor((s) => s.solution);
   const selectedId = useEditor((s) => s.selectedId);
@@ -148,7 +166,7 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
       },
     [challenge, selectCase],
   );
-  const { paint: painted, note } = useRunPaint(solution ? null : chart, mine);
+  const { paint: painted, narration: narrated } = useRunPaint(solution ? null : chart, mine);
   const empty = mine.main.length === 0;
   const flags = useMemo(() => {
     const flagged = flaggedStatements(mine);
@@ -200,7 +218,7 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
   );
 
   return (
-    <section className="flex min-w-0 flex-1 flex-col" data-testid="chart-region" data-chart-region>
+    <section className="flex min-w-0 flex-1 flex-col" data-testid="canvas" data-canvas>
       {shown && <SolutionBand challenge={challenge} />}
       <PathBar />
       {chart && (
@@ -212,7 +230,7 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
           onSelect={solution ? undefined : onSelect}
           cases={solution || running ? undefined : cases}
           paint={painted}
-          note={note}
+          failed={narrated?.error ?? false}
           connector={solution || running ? undefined : connector}
           moves={solution || running ? undefined : moves}
           flags={solution || running ? undefined : flags}
@@ -223,7 +241,8 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
           }
         />
       )}
-      {running && !solution && <Transport />}
+      {running && !solution && <NarrationLine narration={narrated} />}
+      <RunBar />
     </section>
   );
 }

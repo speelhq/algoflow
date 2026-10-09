@@ -1,5 +1,5 @@
 // A Playground program: the Problem page without the `Problem` tab, the Input nodes, and
-// Submit; its top bar has `← Playground`, an editable title, and `Export`.
+// Submit; its top bar has `← Playground`, an editable title, and `Export` before undo.
 import { useEffect } from "react";
 import { t } from "@/i18n/t";
 import { useEditor } from "@/store/editor";
@@ -12,9 +12,8 @@ import { useEditKeys } from "@/ui/editor/useEditKeys";
 import { useTitle } from "@/ui/hooks/useTitle";
 import { Button } from "@/ui/primitives/button";
 import { Input } from "@/ui/primitives/input";
-import { ChartRegion } from "@/ui/problem/ChartRegion";
+import { Canvas } from "@/ui/problem/Canvas";
 import { Panel } from "@/ui/problem/Panel";
-import { RunControls } from "@/ui/problem/RunControls";
 import { TopBar } from "@/ui/problem/TopBar";
 import { useRunKeys } from "@/ui/problem/useRunKeys";
 
@@ -56,15 +55,18 @@ export function ProgramPage({ id }: { id: string }) {
 
   return (
     <div className="flex h-full flex-col" data-testid="program-page">
-      <TopBar back="playground" title={<TitleField />}>
-        <RunControls />
-        <Button variant="outline" onClick={exportProgram}>
-          {t("playground.export")}
-        </Button>
-      </TopBar>
+      <TopBar
+        back="playground"
+        title={<TitleField />}
+        actions={
+          <Button variant="outline" onClick={exportProgram}>
+            {t("playground.export")}
+          </Button>
+        }
+      />
       <div className="flex min-h-0 flex-1">
         <Panel />
-        <ChartRegion />
+        <Canvas />
       </div>
     </div>
   );

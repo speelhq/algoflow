@@ -26,6 +26,14 @@ export function startRun(opts?: { watch?: boolean }): void {
   void useRun.getState().run(opts);
 }
 
+/** `Replay` at the run's last step: back to step 0, playing. */
+export function replay(): void {
+  void useRun
+    .getState()
+    .seek(0)
+    .then(() => useRun.getState().play());
+}
+
 /** Submit judges every test on its own runner and selects `Result`. */
 export function startSubmit(): void {
   if (!readyToRun()) return;

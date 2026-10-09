@@ -12,7 +12,7 @@ async function position(page: Page): Promise<{ k: number; n: number }> {
 /** Runs and pauses at once, so a test starts from a known, early position. */
 async function runPaused(page: Page): Promise<void> {
   await page.getByRole("button", { name: "▶ Run" }).click();
-  await expect(page.getByTestId("transport")).toBeVisible();
+  await expect(page.getByTestId("position")).toBeVisible();
   await page.getByRole("button", { name: "❚❚ Pause" }).click();
 }
 
@@ -23,18 +23,23 @@ test.describe("running FizzBuzz", () => {
     await page.goto("/#/p/fizzbuzz");
   });
 
-  test("Run plays with the case in the top bar, selects Result, and Stop returns", async ({
+  test("Run in the run bar plays, selects Result, and Stop returns (U-60, U-63)", async ({
     page,
   }) => {
     await page.getByRole("button", { name: "▶ Run" }).click();
-    await expect(page.getByTestId("running")).toHaveText("Running with n = 15");
+    await expect(page.getByTestId("case-select")).toContainText("n = 15");
     await expect(page.getByTestId("tab-result")).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("button", { name: "❚❚ Pause" })).toBeVisible();
     await expect.poll(async () => (await position(page)).k).toBeGreaterThan(0);
     expect((await position(page)).n).toBeGreaterThan(100);
     await expect(page.getByTestId("narration")).toBeVisible();
+    // The play button takes Run's place: Pause, then Play.
+    await page.getByRole("button", { name: "❚❚ Pause" }).click();
+    await expect(page.getByRole("button", { name: "▶ Play" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "▶ Run" })).toHaveCount(0);
     await page.getByRole("button", { name: "■ Stop" }).click();
-    await expect(page.getByTestId("transport")).toHaveCount(0);
+    await expect(page.getByTestId("position")).toHaveCount(0);
+    await expect(page.getByTestId("narration")).toHaveCount(0);
     await expect(page.getByRole("button", { name: "▶ Run" })).toBeVisible();
   });
 
@@ -94,7 +99,33 @@ test.describe("running FizzBuzz", () => {
     await expect(page.getByTestId("narration")).toHaveText(`Finished in ${n} steps`);
     await expect(page.getByTestId("case-verdict")).toHaveText("✓ This case passes");
     await expect(page.getByTestId("output-row")).toHaveCount(15);
-    await expect(page.getByRole("button", { name: "▶ Play" })).toBeDisabled();
+    // At the last step the play button replays from step 0.
+    await page.getByRole("button", { name: "↺ Replay" }).click();
+    await expect(page.getByRole("button", { name: "❚❚ Pause" })).toBeVisible();
+    expect((await position(page)).k).toBeLessThan(n);
+  });
+
+  test("the speed is one of three, Normal at first, and the narration is a line under the chart", async ({
+    page,
+  }) => {
+    await runPaused(page);
+    const speed = page.getByRole("group", { name: "Speed" });
+    await expect(speed.getByRole("button", { name: "Normal" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await speed.getByRole("button", { name: "Fast" }).click();
+    await expect(speed.getByRole("button", { name: "Fast" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    // The narration sits between the chart and the run bar, over no node.
+    const line = await page.getByTestId("narration").boundingBox();
+    const chart = await page.getByTestId("chart-scroll").boundingBox();
+    const bar = await page.getByTestId("run-bar").boundingBox();
+    if (!line || !chart || !bar) throw new Error("not drawn");
+    expect(line.y).toBeGreaterThanOrEqual(chart.y + chart.height - 1);
+    expect(line.y + line.height).toBeLessThanOrEqual(bar.y + 1);
   });
 
   test("Esc clears the breakpoint first, then stops", async ({ page }) => {
@@ -103,7 +134,7 @@ test.describe("running FizzBuzz", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("breakpoint")).toHaveCount(0);
     await page.keyboard.press("Escape");
-    await expect(page.getByTestId("transport")).toHaveCount(0);
+    await expect(page.getByTestId("position")).toHaveCount(0);
   });
 });
 
@@ -162,7 +193,7 @@ test("Run with a diagnostic leads to its node instead of running (U-60)", async 
     "data-selected",
     "true",
   );
-  await expect(page.getByTestId("transport")).toHaveCount(0);
+  await expect(page.getByTestId("position")).toHaveCount(0);
 });
 
 test("a run that never ends reports it before playback (U-60)", async ({ page }) => {
