@@ -283,6 +283,26 @@ describe("Backspace and moving (U-54, U-53)", () => {
     });
   });
 
+  it("at a later input still to fill, it moves left while another later input holds a value", () => {
+    const three = { name: "three", params: ["a", "b", "c"] };
+    const wide: LineContext = {
+      ...ctx,
+      scope: { classes: [], functions: ["twice", "three"] },
+      functions: [...ctx.functions, three],
+    };
+    const placed = choose(empty(), { kind: "function", fn: three }, wide).line;
+    const second = tab(keys("1", placed), 1, wide).line;
+    const third = tab(keys("2", second), 1, wide).line;
+    expect(py(third)).toBe("three(1, 2, ...)");
+    const left = backspace(third).line;
+    expect(py(left)).toBe("three(1, 2, ...)");
+    expect("after" in left.caret).toBe(true);
+    // With nothing after the first input, the call goes and its first input stays.
+    const bare = tab(tab(keys("1", placed), 1, wide).line, 1, wide).line;
+    expect(py(bare)).toBe("three(1, ..., ...)");
+    expect(py(backspace(bare).line)).toBe("1");
+  });
+
   it("Tab moves between inputs still to fill, then to the next slot", () => {
     const placed = choose(empty(), entry("call:random_int"), ctx).line;
     const second = tab(placed, 1, ctx);
