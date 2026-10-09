@@ -132,7 +132,7 @@ export const binop = defineExpr<"binop">({
         node.op === "in"
           ? yield* membership(node, left, right, ctx)
           : ordered(node, left, right, ctx);
-      yield { type: "compare", nodeId: node.id, left, right, result };
+      yield { type: "compare", nodeId: node.id, result };
       return { t: "bool", v: result };
     }
     return arithmetic(node, left, right, ctx);
