@@ -2,10 +2,19 @@
 // and never from a block kind; generated nodes are grey. An HTML layer over the SVG,
 // under the same scale, holds the parts a learner interacts with (the Input nodes' menus,
 // the connectors, the editor) and a diagnostic's card beside its node.
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { t } from "@/i18n/t";
 import type { NodeId } from "@/lang/types";
 import { cn } from "@/lib/utils";
+import { EDITOR_GAP, EDITOR_WIDTH } from "@/ui/editor/size";
 import { useElementWidth } from "@/ui/hooks/useElementWidth";
 import { Button } from "@/ui/primitives/button";
 import {
@@ -294,6 +303,19 @@ export function Chart(props: Props) {
   const scale = zoom ?? fitScale(region, chart.width + 2 * PAD);
   const width = (chart.width + 2 * PAD) * scale;
   const height = (chart.height + 2 * PAD) * scale;
+  // The chart is centred; while an editor is open, room for it is added on the node's right
+  // where the canvas has none, and the canvas scrolls to show it.
+  const offset = Math.max(0, (region - width) / 2);
+  const editorEnd = edited
+    ? offset + (PAD + edited.x + edited.w) * scale + EDITOR_WIDTH + 2 * EDITOR_GAP
+    : 0;
+  const extra = Math.max(0, editorEnd - (offset + width));
+  useLayoutEffect(() => {
+    const element = scroller.current;
+    if (!element || editorEnd === 0) return;
+    const short = editorEnd - (element.scrollLeft + region);
+    if (short > 0) element.scrollLeft += short;
+  }, [editorEnd, region]);
 
   // One delegated listener: a click on any part of a node selects the statement it belongs to.
   const svg = useRef<SVGSVGElement>(null);
@@ -380,119 +402,125 @@ export function Chart(props: Props) {
             className="absolute inset-0 overflow-auto [scrollbar-gutter:stable]"
             data-testid="chart-scroll"
           >
-            <div className="relative mx-auto" style={{ width, height }}>
-              <svg
-                ref={svg}
-                width={width}
-                height={height}
-                viewBox={`${-PAD} ${-PAD} ${chart.width + 2 * PAD} ${chart.height + 2 * PAD}`}
-                aria-label={t("chart.label")}
-                role="img"
-                data-testid="chart"
-                data-scale={scale}
-              >
-                <defs>
-                  <marker
-                    id="chart-arrow"
-                    viewBox="0 0 10 10"
-                    refX="10"
-                    refY="5"
-                    markerWidth="7"
-                    markerHeight="7"
-                    orient="auto-start-reverse"
-                  >
-                    <path d="M 0 0 L 10 5 L 0 10 z" className="fill-foreground/80" />
-                  </marker>
-                  <marker
-                    id="chart-arrow-taken"
-                    viewBox="0 0 10 10"
-                    refX="10"
-                    refY="5"
-                    markerWidth="6"
-                    markerHeight="6"
-                    orient="auto-start-reverse"
-                  >
-                    <path d="M 0 0 L 10 5 L 0 10 z" className="fill-taken" />
-                  </marker>
-                </defs>
-                {chart.edges.map((edge) => (
-                  <EdgeView key={edge.id} edge={edge} taken={paint?.edges.has(edge.id) ?? false} />
-                ))}
-                {chart.nodes.map((node) => (
-                  <NodeView
-                    key={node.id}
-                    node={node}
-                    look={look(node)}
-                    draggable={moves !== undefined}
-                  />
-                ))}
-              </svg>
-              {(cases || connector || edited || flagNode) && (
-                <div
-                  className="pointer-events-none absolute top-0 left-0 origin-top-left"
-                  style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
+            <div style={{ width: offset + width + extra, height }}>
+              <div className="relative" style={{ marginLeft: offset, width, height }}>
+                <svg
+                  ref={svg}
+                  width={width}
+                  height={height}
+                  viewBox={`${-PAD} ${-PAD} ${chart.width + 2 * PAD} ${chart.height + 2 * PAD}`}
+                  aria-label={t("chart.label")}
+                  role="img"
+                  data-testid="chart"
+                  data-scale={scale}
                 >
-                  {flagNode && flags && flagHover !== null && (
-                    <div
-                      className="pointer-events-auto absolute w-72 rounded-lg border bg-background p-2 shadow-md"
-                      style={{ left: flagNode.x + flagNode.w + 12, top: flagNode.y }}
-                      data-testid="diagnostic-card"
-                      onMouseEnter={() => hold(flagHover)}
-                      onMouseLeave={() => hold(null)}
+                  <defs>
+                    <marker
+                      id="chart-arrow"
+                      viewBox="0 0 10 10"
+                      refX="10"
+                      refY="5"
+                      markerWidth="7"
+                      markerHeight="7"
+                      orient="auto-start-reverse"
                     >
-                      {flags.card(flagHover)}
-                    </div>
-                  )}
-                  {edited && (
-                    <div
-                      className="absolute"
-                      style={{ left: edited.x, top: edited.y, width: edited.w, height: edited.h }}
-                      data-testid="editor-anchor"
+                      <path d="M 0 0 L 10 5 L 0 10 z" className="fill-foreground/80" />
+                    </marker>
+                    <marker
+                      id="chart-arrow-taken"
+                      viewBox="0 0 10 10"
+                      refX="10"
+                      refY="5"
+                      markerWidth="6"
+                      markerHeight="6"
+                      orient="auto-start-reverse"
                     >
-                      {editor}
-                    </div>
-                  )}
-                  {connector &&
-                    chart.edges.map((edge) => {
-                      const { place } = edge;
-                      if (!place) return null;
-                      const closed =
-                        dragged !== null && moves !== undefined && !moves.accepts(dragged, place);
-                      return (
-                        <div
-                          key={edge.id}
-                          className="pointer-events-auto absolute"
-                          style={{ left: edge.anchor.x, top: edge.anchor.y }}
-                        >
-                          <DropZone edge={edge} disabled={closed}>
-                            {connector({ ...edge, place })}
-                          </DropZone>
-                          {refusal?.edge === edge.id && (
-                            <div
-                              role="status"
-                              data-testid="drop-refused"
-                              className="absolute top-3 left-3 w-56 rounded-md border border-destructive/60 bg-background px-2 py-1 text-sm text-destructive shadow-sm"
-                            >
-                              {refusal.text}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  {cases &&
-                    chart.nodes
-                      .filter((node) => node.role === "input")
-                      .map((node) => (
-                        <div
-                          key={node.id}
-                          className="pointer-events-auto absolute"
-                          style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
-                        >
-                          <InputMenu label={node.text} cases={cases} />
-                        </div>
-                      ))}
-                </div>
-              )}
+                      <path d="M 0 0 L 10 5 L 0 10 z" className="fill-taken" />
+                    </marker>
+                  </defs>
+                  {chart.edges.map((edge) => (
+                    <EdgeView
+                      key={edge.id}
+                      edge={edge}
+                      taken={paint?.edges.has(edge.id) ?? false}
+                    />
+                  ))}
+                  {chart.nodes.map((node) => (
+                    <NodeView
+                      key={node.id}
+                      node={node}
+                      look={look(node)}
+                      draggable={moves !== undefined}
+                    />
+                  ))}
+                </svg>
+                {(cases || connector || edited || flagNode) && (
+                  <div
+                    className="pointer-events-none absolute top-0 left-0 origin-top-left"
+                    style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
+                  >
+                    {flagNode && flags && flagHover !== null && (
+                      <div
+                        className="pointer-events-auto absolute w-72 rounded-lg border bg-background p-2 shadow-md"
+                        style={{ left: flagNode.x + flagNode.w + 12, top: flagNode.y }}
+                        data-testid="diagnostic-card"
+                        onMouseEnter={() => hold(flagHover)}
+                        onMouseLeave={() => hold(null)}
+                      >
+                        {flags.card(flagHover)}
+                      </div>
+                    )}
+                    {edited && (
+                      <div
+                        className="absolute"
+                        style={{ left: edited.x, top: edited.y, width: edited.w, height: edited.h }}
+                        data-testid="editor-anchor"
+                      >
+                        {editor}
+                      </div>
+                    )}
+                    {connector &&
+                      chart.edges.map((edge) => {
+                        const { place } = edge;
+                        if (!place) return null;
+                        const closed =
+                          dragged !== null && moves !== undefined && !moves.accepts(dragged, place);
+                        return (
+                          <div
+                            key={edge.id}
+                            className="pointer-events-auto absolute"
+                            style={{ left: edge.anchor.x, top: edge.anchor.y }}
+                          >
+                            <DropZone edge={edge} disabled={closed}>
+                              {connector({ ...edge, place })}
+                            </DropZone>
+                            {refusal?.edge === edge.id && (
+                              <div
+                                role="status"
+                                data-testid="drop-refused"
+                                className="absolute top-3 left-3 w-56 rounded-md border border-destructive/60 bg-background px-2 py-1 text-sm text-destructive shadow-sm"
+                              >
+                                {refusal.text}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    {cases &&
+                      chart.nodes
+                        .filter((node) => node.role === "input")
+                        .map((node) => (
+                          <div
+                            key={node.id}
+                            className="pointer-events-auto absolute"
+                            style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
+                          >
+                            <InputMenu label={node.text} cases={cases} />
+                          </div>
+                        ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <div className="absolute top-3 right-4 flex gap-1" data-testid="zoom">

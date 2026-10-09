@@ -62,6 +62,7 @@ import {
 import { listRows, listSections } from "./list";
 import { nameChars, nameSections, type NameRow } from "./names";
 import { ValueLine } from "./ValueLine";
+import { EDITOR_GAP, EDITOR_WIDTH } from "./size";
 
 type Bag = Record<string, unknown>;
 
@@ -864,18 +865,21 @@ export function NodeEditor({ id }: { id: NodeId }) {
           />
         }
       />
-      {/* Beside the node and inside the canvas, so the panel's statement stays readable. */}
+      {/* On the node's right, where the chart makes room, and inside the canvas, so the
+          panel's statement stays readable; it moves only down or up to fit. */}
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Positioner
           side="right"
           align="start"
-          sideOffset={8}
+          sideOffset={EDITOR_GAP}
           collisionBoundary={boundary ?? "clipping-ancestors"}
-          collisionPadding={8}
+          collisionPadding={EDITOR_GAP}
+          collisionAvoidance={{ side: "none", align: "shift", fallbackAxisSide: "none" }}
           className="isolate z-50"
         >
           <PopoverPrimitive.Popup
-            className="z-50 flex w-90 flex-col rounded-lg bg-popover text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden"
+            style={{ width: EDITOR_WIDTH }}
+            className="z-50 flex flex-col rounded-lg bg-popover text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden"
             aria-label={t("editor.label")}
             // The keyboard stays with the chart unless a slot takes it.
             initialFocus={false}
