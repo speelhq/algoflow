@@ -8,7 +8,7 @@ import { getNode, keyOf } from "@/nodes";
 import { ast, program, tid } from "@/nodes/testing";
 import { layout, type ChartEdge, type ChartLayout, type ChartNode, type Measure } from "./layout";
 
-const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont, comment } = ast;
+const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont } = ast;
 
 const wide: Measure = (text) => text.length * 14.4;
 
@@ -68,12 +68,12 @@ const SYNTHETIC: Array<[string, Program]> = [
     ]),
   ],
   [
-    "break and continue in a for, with a comment",
+    "break and continue in a for, with a print after them",
     program([
       for_("i", num(0), num(9), [
         if_(lt("i", 2), [cont()]),
         if_(lt("i", 5), [], [brk()]),
-        comment("go on"),
+        print(str("go on")),
       ]),
       print(str("after")),
     ]),

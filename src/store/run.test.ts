@@ -7,7 +7,7 @@ import { useLayout } from "./layout";
 import { useProgram } from "./program";
 import { BATCH, canRun, useRun, type RunState } from "./run";
 
-const { assign, num, bin, v, print, for_, if_, while_, str, comment, exprStmt, call, ret } = ast;
+const { assign, num, bin, v, print, for_, if_, while_, str, exprStmt, call, ret } = ast;
 
 const counting = () => program([for_("i", num(0), num(3), [print(v("i"))])]);
 const long = () => program([for_("i", num(0), num(1500), [print(v("i"))])]);
@@ -444,7 +444,7 @@ describe("run store (R-21: R-11, R-12, R-19)", () => {
   });
 
   it("R-19: a breakpoint on the last statement ends the run as done", async () => {
-    const last = comment("the end");
+    const last = if_(ast.bool(false), []);
     useProgram.setState({ program: program([print(str("a")), last]) });
     await paused();
     run().setBreakpoint(last.id);

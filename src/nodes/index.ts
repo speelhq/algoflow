@@ -14,7 +14,6 @@ import { min } from "./call-min";
 import { randomInt } from "./call-random_int";
 import { strCall } from "./call-str";
 import type { Category } from "./categories";
-import { comment } from "./comment";
 import { continueStmt } from "./continue";
 import { empty } from "./empty";
 import { exprStmt } from "./expr";
@@ -40,7 +39,6 @@ const ALL: NodeDef[] = [
   continueStmt,
   print,
   exprStmt,
-  comment,
   returnStmt,
   // expressions
   empty,

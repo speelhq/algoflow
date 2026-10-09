@@ -215,11 +215,6 @@
       "template": "{expr}",
       "help": "Evaluates an expression for its effect, such as a method call."
     },
-    "comment": {
-      "label": "Comment",
-      "template": "# {text}",
-      "help": "A note for readers; it does nothing when run."
-    },
     "num": {
       "label": "Number",
       "template": "{value}",

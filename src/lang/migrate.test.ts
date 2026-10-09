@@ -54,6 +54,15 @@ describe("migrate (L-53)", () => {
     expect(() => migrate(noId)).toThrow(/^main\[0\]\.args\[0\]\.id/);
   });
 
+  it("L-55: drops a comment statement at any depth", () => {
+    const p = program([assign("x", num(1)), for_("i", num(0), num(3), [print(v("i"))])]);
+    const stored = json(p) as { main: Array<Record<string, unknown>> };
+    const note = { id: "c0000000000c", kind: "comment", text: "note" };
+    stored.main.splice(1, 0, note);
+    (stored.main[2]!.body as unknown[]).unshift({ ...note, id: "c0000000001c" });
+    expect(migrate(stored)).toEqual(p);
+  });
+
   it("checks id shape, field and parameter elements, and target shape", () => {
     const shortId = json(program([assign("x", num(1))])) as {
       main: Array<Record<string, unknown>>;

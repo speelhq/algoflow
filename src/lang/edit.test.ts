@@ -104,8 +104,8 @@ describe("edit (L-50)", () => {
     const { p, loop, a } = sample();
     expect(lines(setSlot(p, loop.id, "var", "k"))[1]).toBe("for k in range(3):");
     expect(lines(setSlot(p, a.id, "target", { kind: "var", name: "y" }))[0]).toBe("y = 1");
-    const c = ast.comment("old");
-    expect(lines(setSlot(program([c]), c.id, "text", "new"))).toEqual(["# new"]);
+    const sum = bin("+", num(1), num(2));
+    expect(lines(setSlot(program([print(sum)]), sum.id, "op", "-"))).toEqual(["print(1 - 2)"]);
     expect(() => setSlot(p, a.id, "value", "x")).toThrow(/no settable slot/);
   });
 
