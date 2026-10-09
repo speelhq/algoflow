@@ -26,7 +26,7 @@ in the file.
 | `Run.png`               | 5 Run: the moment on the chart, the state in Result    | U-60..U-63, U-23, R-19 |
 | `Wrong.png`             | 6 Submit: Wrong Answer, and a way to the cause         | U-81, U-82             |
 | `Accepted.png`          | 7 Submit: Accepted, with what comes next               | U-83                   |
-| `Solution.png`          | 8 Solution: read-only in the chart area                | U-22                   |
+| `Solution.png`          | 8 Solution: read-only in the canvas                    | U-22                   |
 | `FunctionRun.png`       | 9 Run inside functions: the path bar is the call stack | U-68                   |
 | `Module.png`            | 10 Module page: run one function, keep cases, Test     | D-06, D-08, D-19, D-20 |
 | `PythonChart.png`       | 11 Python tab: a line and its block                    | U-25                   |
@@ -46,11 +46,6 @@ in the file.
   drafts derived from D-16, not emitted code.
 - `Main.png` names the first problem `Hello`; its challenge file is
   `tutorial`, and the title is the one in that file.
-- Until they are drawn again, the artboards show `▶ Run` and `✓ Submit` in
-  the top bar, the run's controls without the narration line under the
-  chart, a speed slider, and the narration beside the current node; U-03,
-  U-60, U-63, and U-80 place them in the run bar, the narration line, and the
-  `Result` tab.
 - The artboards use a hand-drawn typeface to mark them as drafts; the
   application uses the typeface of `src/ui/theme.css`.
 
