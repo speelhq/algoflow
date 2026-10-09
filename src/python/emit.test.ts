@@ -78,6 +78,15 @@ describe("emit (04-runtime)", () => {
     expect(map["f0000000000f"]).toEqual({ start: 15, end: 15 });
   });
 
+  it("E-11: a named statement is preceded by its name as a comment, where its map entry starts", () => {
+    const inner = { ...print(v("i")), name: "Show it" };
+    const loop = { ...for_("i", num(0), num(3), [inner]), name: "Count to three" };
+    const { code, map } = emit(program([loop]));
+    expect(code).toBe("# Count to three\nfor i in range(3):\n    # Show it\n    print(i)\n");
+    expect(map[loop.id]).toEqual({ start: 1, end: 2 });
+    expect(map[inner.id]).toEqual({ start: 3, end: 4 });
+  });
+
   it("E-03: inputs are emitted as assignments of their Data in declaration order", () => {
     const { code } = emit(
       program([], {
