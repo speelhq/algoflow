@@ -144,6 +144,29 @@ test("naming a node shows the name on it and as a comment in Python (U-95, E-11)
   await expect(page.getByTestId("python-code")).toContainText("    # Is i a multiple of 15?");
 });
 
+test("the editor opens on the node's right inside the canvas, the chart scrolled to make room (U-41)", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  // The rightmost node: the centred chart leaves no room for the editor beside it.
+  const node = page.locator('[data-chart-node="fzb-prfb-001"]');
+  await node.click({ position: { x: 8, y: 8 } });
+  await expect(editor(page)).toBeVisible();
+  await expect
+    .poll(async () => {
+      const box = await node.boundingBox();
+      const popup = await editor(page).boundingBox();
+      const canvas = await page.getByTestId("canvas").boundingBox();
+      if (!box || !popup || !canvas) return "not drawn";
+      if (popup.x < box.x + box.width) return "not on the right";
+      if (popup.x + popup.width > canvas.x + canvas.width) return "outside the canvas";
+      return "ok";
+    })
+    .toBe("ok");
+});
+
 test("`,` in a list of values opens the next value after this one (U-93)", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/tutorial");
