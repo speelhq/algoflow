@@ -33,7 +33,11 @@ type Props = {
 export function EditorList(props: Props) {
   const { sections, highlight, enter } = props;
   const highlighted = useRef<HTMLButtonElement>(null);
-  useEffect(() => highlighted.current?.scrollIntoView({ block: "nearest" }), [highlight]);
+  // A block body: browsers that return a promise from scrollIntoView would hand it to React
+  // as the effect's cleanup.
+  useEffect(() => {
+    highlighted.current?.scrollIntoView({ block: "nearest" });
+  }, [highlight]);
   // Where each section's rows start in the count across sections.
   const starts = sections.map((_, i) =>
     sections.slice(0, i).reduce((count, section) => count + section.items.length, 0),
