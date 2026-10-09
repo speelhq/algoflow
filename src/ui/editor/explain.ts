@@ -1,4 +1,4 @@
-// The explanation line at the foot of the editor (U-96): what the list highlights or the caret
+// The explanation line at the foot of the editor: what the list highlights or the caret
 // is in, as a name and runs of text; undefined leaves the block's help.
 import { t, type MessageKey } from "@/i18n/t";
 import { chartOf, firstSetters, variableKinds } from "@/lang/kinds";
@@ -35,7 +35,7 @@ export function helpParts(text: string): Part[] {
 
 const kindName = (kind: Kind) => t(`editor.kind.${kind}` as MessageKey);
 
-/** A variable of the chart that holds statement `at`: its kind and where it is first set (U-96). */
+/** A variable of the chart that holds statement `at`: its kind and where it is first set. */
 export function explainVariable(program: Program, at: NodeId, name: Id): string {
   const chart = chartOf(program, at);
   const fn = program.functions.find((candidate) => candidate.id === chart);

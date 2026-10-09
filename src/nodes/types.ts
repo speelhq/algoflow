@@ -29,10 +29,10 @@ export type Slot = {
   required?: boolean;
 };
 
-/** The groups of the value list, in its order (U-52). */
+/** The groups of the value list, in its order. */
 export type MenuGroup = "values" | "conditions" | "calculate" | "items" | "compare" | "convert";
 
-/** One entry of the value list (N-11). */
+/** One entry of the value list. */
 export type MenuEntry = {
   /** `""` for the block's own label and help, else `node.<key>.<name>.label` / `.help`. */
   name: string;
@@ -43,7 +43,7 @@ export type MenuEntry = {
   preset?: Record<string, unknown>;
   /** Shown before the name in the list (`×`). */
   symbol?: string;
-  /** What typed in a value line inserts it (U-93). */
+  /** What typed in a value line inserts it. */
   keys?: string;
 };
 
@@ -133,11 +133,11 @@ export type NodeDef = {
   text?(node: Stmt | Expr, slot: string): string;
   /** How the chart draws the block's regions; absent = a box with the sentence. */
   chart?: ChartShape;
-  /** The kind of the expression, given the kinds of the expressions inside it (L-59). */
+  /** The kind of the expression, given the kinds of the expressions inside it. */
   kind?: (node: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
-  /** The kind of the variable its `id` slot names (L-59). */
+  /** The kind of the variable its `id` slot names. */
   declares?: Kind;
-  /** The entries of the value list (U-52). */
+  /** The entries of the value list. */
   menu?: readonly MenuEntry[];
 };
 

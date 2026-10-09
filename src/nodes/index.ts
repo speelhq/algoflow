@@ -40,7 +40,7 @@ const ALL: NodeDef[] = [
   print,
   exprStmt,
   returnStmt,
-  // expressions, in the order of the value list's entries (N-11)
+  // expressions, in the order of the value list's entries
   empty,
   num,
   variable,

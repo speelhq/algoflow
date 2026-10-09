@@ -43,7 +43,7 @@ export type ChartNode = {
   /** Drawn grey, not selectable on its own. */
   generated: boolean;
   text: string;
-  /** The statement's sentence, shown on hover where the node shows its name instead (U-95). */
+  /** The statement's sentence, shown on hover where the node shows its name instead. */
   title?: string;
   /** The text in runs, each at `dx` from the node's left with width `w`; a slot's run names it. */
   parts: PlacedPart[];
@@ -283,7 +283,7 @@ class Builder {
 
   /**
    * A statement's node: its name alone when it has one and no slot is still empty, with its
-   * sentence as the title (U-95); otherwise `parts`.
+   * sentence as the title; otherwise `parts`.
    */
   private named(
     stmt: Stmt,

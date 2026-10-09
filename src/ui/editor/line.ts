@@ -1,4 +1,4 @@
-// The value line (U-50, U-53, U-54, U-93): one expression edited as a line, with a caret at
+// The value line: one expression edited as a line, with a caret at
 // an input still to fill or after a value, the brackets opened and not yet closed, the word
 // being typed, and the first key of a two-key operator. Every change is a new `Line`.
 // Blocks are made by the parser (a variable, a number, a sign, a call) or by an entry's
@@ -117,7 +117,7 @@ function replace(line: Line, id: NodeId, by: Expr): Line {
 
 const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
 
-/** The caret stops of an expression in reading order (U-53). */
+/** The caret stops of an expression in reading order. */
 export function stops(expr: Expr): Caret[] {
   if (isEmptyExpr(expr)) return [{ at: expr.id }];
   const own = inputs(expr);
@@ -170,7 +170,7 @@ function lastValue(line: Line): Expr | undefined {
 }
 
 /**
- * Where an operator of `level` inserted after `value` binds (E-05): it takes the largest
+ * Where an operator of `level` inserted after `value` binds: it takes the largest
  * operation ending at the caret that binds tighter, within the innermost open brackets.
  * `chain` when it would chain a comparison.
  */
@@ -283,7 +283,7 @@ function withFirst(made: Expr, value: Expr): Expr {
   return mapInputs(made, (input, index) => (index === 0 ? value : input));
 }
 
-/** An entry chosen after a value takes it as its first input (U-53). */
+/** An entry chosen after a value takes it as its first input. */
 function takeValue(line: Line, entry: Entry): Outcome {
   const last = lastValue(line);
   if (!last) return refused(line);
@@ -311,7 +311,7 @@ function typedText(made: Expr): boolean {
   return inputs(made).length === 0 && getNode(keyOf(made)).slots.some((s) => s.role === "text");
 }
 
-/** Chooses a row of the list at the caret (U-53). */
+/** Chooses a row of the list at the caret. */
 export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
   let base: Line = { ...line, word: "", refused: undefined, pending: undefined };
   if (row.kind === "entry" && takesValue(row.entry) && !atInput(base)) {
@@ -420,7 +420,7 @@ export function settle(line: Line, ctx: LineContext): Line {
 
 // ---------------------------------------------------------------- typing
 
-/** The keys of U-93 that end a word. */
+/** The keys that end a word. */
 const ENDS_WORD = /^[-+*/%<>=!(),[\]]$/;
 
 const entryByKeys = (keys: string) => allEntries().find((entry) => entry.menu.keys === keys);
@@ -442,7 +442,7 @@ function typeDigit(line: Line, ch: string): Outcome {
   return done(replace(base, last.id, { ...made, id: last.id }));
 }
 
-/** One key typed in the line (U-50, U-93). */
+/** One key typed in the line. */
 export function type(line: Line, key: string, ctx: LineContext): Outcome {
   if (key.length !== 1) return refused(line);
   let current: Line = { ...line, refused: undefined };
@@ -522,7 +522,7 @@ function leave(line: Line): Outcome | undefined {
 /** Whether an operation's template ends with its own words (`{x} as text`). */
 const endsInWords = (expr: Expr) => !/\}\s*$/.test(exprTemplate(expr));
 
-/** Backspace removes what is before the caret (U-54). */
+/** Backspace removes what is before the caret. */
 export function backspace(line: Line): Outcome {
   const current: Line = { ...line, refused: undefined, pending: undefined };
   if (current.word !== "") return done({ ...current, word: current.word.slice(0, -1) });
@@ -565,7 +565,7 @@ export function backspace(line: Line): Outcome {
   return done({ ...next, caret: endOf(first) });
 }
 
-/** ← and →: the previous or next value or input (U-53). */
+/** ← and →: the previous or next value or input. */
 export function move(line: Line, step: -1 | 1): Outcome {
   const all = stops(line.root);
   if (line.selected) {
@@ -596,7 +596,7 @@ export function tab(line: Line, step: -1 | 1, ctx: LineContext): Outcome {
   return done(closeBehind({ ...current, caret: field.stop, selected: false }));
 }
 
-/** A click on a value puts the caret after it, and on an input at it (U-53). */
+/** A click on a value puts the caret after it, and on an input at it. */
 export function clickAt(line: Line, id: NodeId): Line {
   const clicked = find(line.root, id);
   if (!clicked) return line;
@@ -617,7 +617,7 @@ export function endText(line: Line): Line {
   return line.text === undefined ? line : { ...line, text: undefined, caret: { after: line.text } };
 }
 
-/** The operator clicked is replaced by another entry of its block in its group (U-54). */
+/** The operator clicked is replaced by another entry of its block in its group. */
 export function switchTo(line: Line, id: NodeId, entry: Entry): Line {
   const held = find(line.root, id);
   if (!held) return line;

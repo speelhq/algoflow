@@ -1,4 +1,4 @@
-// The list of the editor's focused slot (U-52, U-94): headed sections of rows, one highlighted,
+// The list of the editor's focused slot: headed sections of rows, one highlighted,
 // each with an optional symbol before its name and a note after it; `Show all` at its end.
 import { useEffect, useRef } from "react";
 import { t } from "@/i18n/t";

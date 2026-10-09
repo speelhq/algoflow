@@ -42,7 +42,7 @@ export type Part = {
   empty?: boolean;
   hole?: NodeId;
   variable?: boolean;
-  /** The input the editor's caret is in (U-96). */
+  /** The input the editor's caret is in. */
   underline?: boolean;
 };
 
@@ -116,7 +116,7 @@ export function isOperator(expr: Expr): boolean {
 
 const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
 
-/** Whether `child`, an input of `parent` on `side`, is put in brackets (N-08). */
+/** Whether `child`, an input of `parent` on `side`, is put in brackets. */
 export function bracketed(child: Expr, parent: Expr, side: Side): boolean {
   if (isWordOperation(parent)) return isWordOperation(child) || isOperator(child);
   if (!isOperator(parent)) return false;
@@ -138,7 +138,7 @@ function operandParts(child: Expr, parent: Expr, side: Side, writing: Writing): 
   return bracketed(child, parent, side) ? inBrackets(parts) : parts;
 }
 
-/** An expression as the chart writes it (N-08). */
+/** An expression as the chart writes it. */
 export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
   if (isEmptyExpr(expr)) return [{ text: placeholder(), empty: true, hole: expr.id }];
   const name = variableOf(expr);
