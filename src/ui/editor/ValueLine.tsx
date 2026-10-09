@@ -2,7 +2,7 @@
 // their colour, an operator as its symbol, a word operation on a light underlay, an input still
 // to fill as an empty field, the brackets the chart draws and those opened and not closed, the
 // caret, and the word being typed. Keys go to `onKey`; clicks name the expression clicked.
-import { forwardRef, type KeyboardEvent, type ReactNode } from "react";
+import { forwardRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { t } from "@/i18n/t";
 import type { Expr, NodeId } from "@/lang/types";
 import { isEmptyExpr, variableOf } from "@/lang/walk";
@@ -36,7 +36,10 @@ function Caret() {
 }
 
 export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(props, ref) {
-  const { root, line, label, unmatched } = props;
+  const { root, label, unmatched } = props;
+  // The editing state shows only while the line has the keyboard (U-51).
+  const [keys, setKeys] = useState(false);
+  const line = keys ? props.line : null;
   const focused = line !== null;
   const caret = line?.caret;
   const word = (
@@ -208,7 +211,13 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
         line?.selected && "[&>span]:rounded-sm [&>span]:bg-selection/20",
       )}
       onKeyDown={props.onKey}
-      onFocus={props.onFocus}
+      onFocus={() => {
+        setKeys(true);
+        props.onFocus();
+      }}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setKeys(false);
+      }}
     >
       {empty ? (
         <span className="text-muted-foreground">{t("editor.typeHint")}</span>

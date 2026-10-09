@@ -7,7 +7,7 @@ const node = (page: Page, id: string) => page.locator(`[data-chart-node="${id}"]
 /** Drags a chart node onto the connector of `place`. */
 async function drag(page: Page, id: string, place: string): Promise<void> {
   // The chart is laid out again once its font has loaded; drag from where it settles.
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready.then(() => true));
   await expect
     .poll(async () => JSON.stringify(await node(page, id).boundingBox()), { intervals: [100] })
     .toBe(JSON.stringify(await node(page, id).boundingBox()));
