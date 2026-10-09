@@ -72,7 +72,8 @@ export type ChartEdge = {
   /** A `Return` node's edge to `End`. */
   jump?: boolean;
 };
-export type PlacedPart = Part & { dx: number; w: number };
+/** A run at `dx` from the node's left with width `w`, `dy` from its middle (a second line). */
+export type PlacedPart = Part & { dx: number; dy: number; w: number };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
 /** The width of `text` in px as the chart draws it; a variable is drawn bold. */
 export type Measure = (text: string, shape: Shape, bold?: boolean) => number;
@@ -99,6 +100,35 @@ const HEIGHT: Record<Shape, number> = {
 const defaultMeasure: Measure = (text) => text.length * 7.2;
 /** Room on each side of an empty slot's text for its dashed outline. */
 export const PILL = 8;
+/** A diamond's text wider than this is drawn on two lines, as the boards draw it. */
+export const WRAP = 150;
+/** The distance between the two lines of a diamond's text. */
+export const LINE = 16;
+
+const BREAK: Part = { text: " " };
+
+/**
+ * Runs split into two lines at the space that makes the longer line shortest; a space inside
+ * a variable or a placeholder is never one. One line when there is no space to split at.
+ */
+function inTwo(runs: Part[], width: (part: Part) => number): Part[][] {
+  let best: { lines: Part[][]; longest: number } | undefined;
+  runs.forEach((run, r) => {
+    if (run.variable || run.empty) return;
+    for (let k = run.text.indexOf(" "); k >= 0; k = run.text.indexOf(" ", k + 1)) {
+      const head = run.text.slice(0, k).trimEnd();
+      const rest = run.text.slice(k + 1).trimStart();
+      // The space stays at the end of the first line, drawn with no width, so the text reads on.
+      const first = [...runs.slice(0, r), ...(head ? [{ ...run, text: head }] : []), BREAK];
+      const second = [...(rest ? [{ ...run, text: rest }] : []), ...runs.slice(r + 1)];
+      if (first.length === 1 || second.length === 0) continue;
+      const sum = (line: Part[]) => line.reduce((total, part) => total + width(part), 0);
+      const longest = Math.max(sum(first), sum(second));
+      if (!best || longest < best.longest) best = { lines: [first, second], longest };
+    }
+  });
+  return best?.lines ?? [runs];
+}
 
 /** Where a flow that leaves its region goes: `End`, past its loop, or into the loop's next pass. */
 type Leave = "end" | "exit" | "next";
@@ -222,10 +252,14 @@ class Builder {
   ): ChartNode {
     const runs =
       typeof content === "string" ? (content === "" ? [] : [{ text: content }]) : content;
-    const widths = runs.map(
-      (part) => this.measure(part.text, shape, part.variable) + (part.empty ? 2 * PILL : 0),
-    );
-    const width = widths.reduce((sum, w) => sum + w, 0);
+    const measured = (part: Part) =>
+      part === BREAK
+        ? 0
+        : this.measure(part.text, shape, part.variable) + (part.empty ? 2 * PILL : 0);
+    const whole = runs.reduce((sum, part) => sum + measured(part), 0);
+    const lines = shape === "diamond" && whole > WRAP ? inTwo(runs, measured) : [runs];
+    const lineWidths = lines.map((line) => line.reduce((sum, part) => sum + measured(part), 0));
+    const width = Math.max(0, ...lineWidths);
     const padded =
       shape === "diamond"
         ? Math.max(120, width * 1.4 + 56)
@@ -236,11 +270,14 @@ class Builder {
             : Math.max(96, width + 32);
     const w = 2 * Math.ceil(padded / 2);
     const generated = role === "init" || role === "check" || role === "step";
-    let dx = (w - width) / 2;
-    const parts = runs.map((part, i) => {
-      const placed: PlacedPart = { ...part, dx, w: widths[i] ?? 0 };
-      dx += placed.w;
-      return placed;
+    const parts = lines.flatMap((line, index) => {
+      let dx = (w - (lineWidths[index] ?? 0)) / 2;
+      const dy = (index - (lines.length - 1) / 2) * LINE;
+      return line.map((part) => {
+        const placed: PlacedPart = { ...part, dx, dy, w: measured(part) };
+        dx += placed.w;
+        return placed;
+      });
     });
     const text = joinParts(runs);
     return { id, owner, role, shape, generated, text, parts, x: -w / 2, y, w, h: HEIGHT[shape] };
