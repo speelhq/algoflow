@@ -8,7 +8,7 @@ import type { Expr, NodeId } from "@/lang/types";
 import { isEmptyExpr, isExpr } from "@/lang/walk";
 import { cn } from "@/lib/utils";
 import { getNode, keyOf } from "@/nodes";
-import { exprText, nodeText, placeholder, slotText } from "@/ui/chart/text";
+import { exprText, nodeText, placeholder } from "@/ui/chart/text";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -46,7 +46,10 @@ function pieces(expr: Expr): Array<{ text: string } | { child: Expr } | { list: 
     else if (slot?.role === "exprs" && Array.isArray(value))
       out.push({ list: value.filter(isExpr) });
     else if (isExpr(arg)) out.push({ child: arg });
-    else out.push({ text: slotText(expr, def, name) });
+    else {
+      const raw = bag[name];
+      out.push({ text: def.text?.(expr, name) || (typeof raw === "string" ? raw : "") });
+    }
     at = found.index + found[0].length;
   }
   out.push({ text: template.slice(at) });

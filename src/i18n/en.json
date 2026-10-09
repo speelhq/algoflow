@@ -181,7 +181,7 @@
       "label": "For loop",
       "template": "for {var} from {start} up to {stop}",
       "init": "Set {var} to {start}",
-      "check": "Is {var} < {stop}?",
+      "check": "{var} < {stop}?",
       "step": "Set {var} to {var} + 1",
       "help": "Counts the variable from start up to, but not including, stop."
     },
@@ -244,6 +244,10 @@
     "binop": {
       "label": "Operator",
       "template": "{left} {op} {right}",
+      "templateMod": "remainder of {left} divided by {right}",
+      "templateFloorDiv": "whole-number quotient of {left} divided by {right}",
+      "templatePow": "{left} to the power of {right}",
+      "templateIn": "{left} is in {right}",
       "help": "Combines two values with arithmetic, a comparison, and/or, or in."
     },
     "unop": {
@@ -278,8 +282,8 @@
       "help": "Turns any value into its text form."
     },
     "call:int": {
-      "label": "As integer",
-      "template": "{x} as integer",
+      "label": "As whole number",
+      "template": "{x} as whole number",
       "help": "Turns a decimal or numeric text into a whole number."
     },
     "call:float": {
@@ -288,8 +292,8 @@
       "help": "Turns a whole number or numeric text into a decimal."
     },
     "call:random_int": {
-      "label": "Random integer",
-      "template": "random integer from {a} to {b}",
+      "label": "Random whole number",
+      "template": "random whole number from {a} to {b}",
       "help": "A random whole number between the two bounds, both included."
     }
   },
@@ -298,7 +302,7 @@
     "startFn": "Start {name}({params})",
     "end": "End",
     "input": "Input {name} = {value}",
-    "condition": "Is {cond}?",
+    "condition": "{cond}?",
     "label": "Flowchart",
     "yes": "Yes",
     "no": "No",

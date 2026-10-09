@@ -147,6 +147,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
         current === "error" && "[&_[data-shape]]:stroke-destructive [&_[data-shape]]:stroke-[3]",
       )}
     >
+      {node.title !== undefined && <title>{node.title}</title>}
       <NodeShape node={node} />
       {node.parts.map((part, i) =>
         part.empty ? (
@@ -175,8 +176,13 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
               key={i}
               x={node.x + part.dx + (part.empty ? PILL : 0)}
               data-slot={part.slot}
+              data-hole={part.hole}
               data-empty={part.empty || undefined}
-              className={cn(part.empty && "fill-muted-foreground")}
+              data-variable={part.variable || undefined}
+              className={cn(
+                part.empty && "fill-muted-foreground",
+                part.variable && "fill-variable font-semibold",
+              )}
             >
               {part.text}
             </tspan>

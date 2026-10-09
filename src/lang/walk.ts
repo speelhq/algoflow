@@ -26,6 +26,18 @@ export function isEmptyExpr(value: unknown): boolean {
   return isExpr(value) && value.kind === "empty";
 }
 
+/**
+ * The name an expression reads, when it is a variable: the block whose one slot is a name.
+ * Read from the block's slots, so no module names the variable block.
+ */
+export function variableOf(expr: Expr): string | undefined {
+  const { slots } = getNode(keyOf(expr));
+  const [slot] = slots;
+  if (slots.length !== 1 || slot?.role !== "id") return undefined;
+  const name = (expr as unknown as Bag)[slot.name];
+  return typeof name === "string" ? name : undefined;
+}
+
 export type SlotExpr = { slot: string; expr: Expr; index?: number };
 
 /** Direct expression children with the slot each sits in (target children under the target slot). */

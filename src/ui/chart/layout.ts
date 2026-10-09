@@ -12,10 +12,12 @@ import { regionsOf } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
 import {
   capitalise,
-  dataText,
+  drawn,
   generatedParts,
+  inputParts,
   joinParts,
   questionParts,
+  sentence,
   sentenceParts,
   type Part,
 } from "./text";
@@ -43,6 +45,8 @@ export type ChartNode = {
   /** Drawn grey, not selectable on its own. */
   generated: boolean;
   text: string;
+  /** The statement's sentence, shown on hover where the node shows its name instead (U-95). */
+  title?: string;
   /** The text in runs, each at `dx` from the node's left with width `w`; a slot's run names it. */
   parts: PlacedPart[];
   /** Top-left corner; a junction is a point (`w = h = 0`). */
@@ -70,8 +74,8 @@ export type ChartEdge = {
 };
 export type PlacedPart = Part & { dx: number; w: number };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
-/** The width of `text` in px as the chart draws it. */
-export type Measure = (text: string, shape: Shape) => number;
+/** The width of `text` in px as the chart draws it; a variable is drawn bold. */
+export type Measure = (text: string, shape: Shape, bold?: boolean) => number;
 export type LayoutOptions = {
   /** `main` (default) or a function's id. */
   chart?: "main" | NodeId;
@@ -218,7 +222,9 @@ class Builder {
   ): ChartNode {
     const runs =
       typeof content === "string" ? (content === "" ? [] : [{ text: content }]) : content;
-    const widths = runs.map((part) => this.measure(part.text, shape) + (part.empty ? 2 * PILL : 0));
+    const widths = runs.map(
+      (part) => this.measure(part.text, shape, part.variable) + (part.empty ? 2 * PILL : 0),
+    );
     const width = widths.reduce((sum, w) => sum + w, 0);
     const padded =
       shape === "diamond"
@@ -238,6 +244,25 @@ class Builder {
     });
     const text = joinParts(runs);
     return { id, owner, role, shape, generated, text, parts, x: -w / 2, y, w, h: HEIGHT[shape] };
+  }
+
+  /**
+   * A statement's node: its name alone when it has one and no slot is still empty, with its
+   * sentence as the title (U-95); otherwise `parts`.
+   */
+  private named(
+    stmt: Stmt,
+    id: string,
+    role: ChartNode["role"],
+    shape: Shape,
+    parts: Part[],
+    y: number,
+  ): ChartNode {
+    if (stmt.name === undefined || parts.some((part) => part.empty)) {
+      return this.node(id, stmt.id, role, shape, parts, y);
+    }
+    const node = this.node(id, stmt.id, role, shape, [{ text: stmt.name }], y);
+    return { ...node, title: capitalise(sentence(stmt, this.program)) };
   }
 
   /** Places `region` with its entry at `at` and joins `stub` to it; returns what flows out. */
@@ -300,10 +325,8 @@ class Builder {
 
   /** A box; `leaves` names where its edge goes when it is not to the next node. */
   private box(stmt: Stmt, leaves: Leave | null): Frag {
-    const parts = sentenceParts(stmt, this.program);
-    const [first] = parts;
-    if (first) parts[0] = { ...first, text: capitalise(first.text) };
-    const node = this.node(stmt.id, stmt.id, "stmt", "box", parts, 0);
+    const parts = drawn(sentenceParts(stmt, this.program));
+    const node = this.named(stmt, stmt.id, "stmt", "box", parts, 0);
     const half = node.w / 2;
     return {
       left: half,
@@ -321,7 +344,7 @@ class Builder {
   }
 
   private diamond(stmt: Stmt, y: number): ChartNode {
-    return this.node(stmt.id, stmt.id, "stmt", "diamond", questionParts(stmt), y);
+    return this.named(stmt, stmt.id, "stmt", "diamond", drawn(questionParts(stmt)), y);
   }
 
   /** `branch`: Yes to the right, No below on the axis, both merging below. */
@@ -419,7 +442,7 @@ class Builder {
 
     y += JOIN;
     const d = counted
-      ? this.node(`${stmt.id}:check`, stmt.id, "check", "diamond", generatedParts(stmt, "check"), y)
+      ? this.named(stmt, `${stmt.id}:check`, "check", "diamond", generatedParts(stmt, "check"), y)
       : this.diamond(stmt, y);
     frag.nodes.push(d);
     frag.edges.push(
@@ -568,8 +591,8 @@ export function layout(program: Program, opts: LayoutOptions = {}): ChartLayout 
   for (const input of fn ? [] : program.inputs) {
     const value =
       opts.inputs && Object.hasOwn(opts.inputs, input.name) ? opts.inputs[input.name] : input.value;
-    const text = t("chart.input", { name: input.name, value: dataText(value ?? null) });
-    const node = builder.node(`input:${input.name}`, null, "input", "input", text, y);
+    const parts = inputParts(input.name, value ?? null);
+    const node = builder.node(`input:${input.name}`, null, "input", "input", parts, y);
     frag.nodes.push(node);
     frag.edges.push(edge(flow, node.id, [{ x: 0, y }]));
     flow = { from: node.id, points: [{ x: 0, y: y + node.h }], place: null };
