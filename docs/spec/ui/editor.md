@@ -203,3 +203,10 @@ one as `…`, and the input the caret is in underlined (`item … of dp`, its
 closest name for a word that matches nothing (U-50), or `editor.nothingLike`
 when none is close; in a name field with nothing highlighted,
 `editor.explain.name`; or else the block's help (`node.<key>.help`).
+
+## Verification
+
+U-97 The tests of `src/ui/editor` cover the block menu's entries, order,
+disabled entries, and search (U-40); a value line's typing, keys,
+choosing, Backspace, moving, and list (U-50, U-52, U-53, U-54, U-93); the
+name list (U-94); and the explanation line (U-96).
