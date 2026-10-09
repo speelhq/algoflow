@@ -132,6 +132,20 @@ describe("typing (U-50, U-93)", () => {
     expect(py(keys("2*(i+1"))).toBe("2 * (i + 1)");
   });
 
+  it("a click inside an open bracket keeps it open; a call's ( is its own and ) leaves it", () => {
+    const opened = raw("i*(5");
+    const clicked = clickAt(opened, (opened.root as Extract<Expr, { kind: "binop" }>).right.id);
+    expect(clicked.open).toHaveLength(1);
+    expect(py(keys("+1", clicked))).toBe("i * (5 + 1)");
+    expect(py(keys("twice(i)+1"))).toBe("twice(i) + 1");
+  });
+
+  it("Tab forgets the first key of a two-key operator", () => {
+    const moved = tab(raw("i*"), 1, ctx).line;
+    expect(moved.pending).toBeUndefined();
+    expect(type(moved, "*", ctx).taken).toBe(false);
+  });
+
   it("a comparison typed after a comparison is refused with E_PARSE_CHAIN's message", () => {
     const line = keys("i<n");
     const refused = type(line, "<", ctx);

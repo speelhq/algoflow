@@ -468,6 +468,9 @@ describe("layout (U-31, U-33 texts)", () => {
     expect(node(unfinished.id)?.title).toBeUndefined();
     expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times" });
     expect(node(`${loop.id}:init`)?.text).toBe("Set i to 0");
+    const startless = { ...for_("k", ast.empty(), num(3), []), name: "Counting" };
+    const unfinishedLoop = layout(program([startless]));
+    expect(unfinishedLoop.nodes.find((n) => n.id === `${startless.id}:check`)?.text).toBe("k < 3?");
     expect(node(check.id)).toMatchObject({ text: "Small?", title: "If x < 2" });
   });
 

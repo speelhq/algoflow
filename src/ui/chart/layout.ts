@@ -295,7 +295,8 @@ class Builder {
     parts: Part[],
     y: number,
   ): ChartNode {
-    if (stmt.name === undefined || parts.some((part) => part.empty)) {
+    const unfinished = sentenceParts(stmt, this.program).some((part) => part.empty);
+    if (stmt.name === undefined || unfinished || parts.some((part) => part.empty)) {
       return this.node(id, stmt.id, role, shape, parts, y);
     }
     const node = this.node(id, stmt.id, role, shape, [{ text: stmt.name }], y);
