@@ -508,11 +508,12 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
   return refused(line);
 }
 
-/** `)` with no bracket open: the caret leaves the innermost operation without a precedence. */
+/** `)` with no bracket open closes the brackets of the innermost call around the caret. */
 function leave(line: Line): Outcome | undefined {
   const { caret, root } = line;
+  const bracketed = (expr: Expr) => /\)\s*$/.test(exprTemplate(expr));
   let up = parentOf(root, "at" in caret ? caret.at : caret.after);
-  while (up && precedenceOf(up.parent) !== undefined) up = parentOf(root, up.parent.id);
+  while (up && !bracketed(up.parent)) up = parentOf(root, up.parent.id);
   return up ? done({ ...line, caret: { after: up.parent.id }, pending: undefined }) : undefined;
 }
 
@@ -537,7 +538,11 @@ export function backspace(line: Line): Outcome {
     const own = inputs(last);
     const [first] = own;
     if (first) {
-      if (!endsInWords(last)) return done({ ...current, caret: endOf(last) });
+      // An operation that ends in an input: what is before the caret is that input's end.
+      if (!endsInWords(last)) {
+        const end = own.at(-1);
+        return end ? backspace({ ...current, caret: endOf(end) }) : refused(line);
+      }
       const next = replace(current, last.id, first);
       return done({ ...next, caret: endOf(first) });
     }

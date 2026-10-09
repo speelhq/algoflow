@@ -11,13 +11,11 @@ import type { Data, Id, NodeId, Place, Program, Stmt } from "@/lang/types";
 import { regionsOf } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
 import {
-  capitalise,
   drawn,
   generatedParts,
   inputParts,
   joinParts,
   questionParts,
-  sentence,
   sentenceParts,
   type Part,
 } from "./text";
@@ -300,7 +298,7 @@ class Builder {
       return this.node(id, stmt.id, role, shape, parts, y);
     }
     const node = this.node(id, stmt.id, role, shape, [{ text: stmt.name }], y);
-    return { ...node, title: capitalise(sentence(stmt, this.program)) };
+    return { ...node, title: joinParts(drawn(sentenceParts(stmt, this.program))) };
   }
 
   /** Places `region` with its entry at `at` and joins `stub` to it; returns what flows out. */

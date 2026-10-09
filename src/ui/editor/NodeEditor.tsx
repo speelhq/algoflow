@@ -279,7 +279,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   // ------------------------------------------------------------ moving between fields
 
-  const enter = (field: Field | null) => {
+  /** Moves the keyboard to `field`; `clicked`, an expression clicked in its line, places the caret. */
+  const enter = (field: Field | null, clicked?: { id: NodeId; op: boolean }) => {
     // A word that names one exactly is chosen as the line is left.
     if (line && line.word !== "") commit(settle(line, ctx));
     setFocus(field);
@@ -290,7 +291,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     const placed = useProgram.getState().program;
     const now = nodesById(placed).get(stmt.id) as Stmt | undefined;
     const root = field && now ? valueOf(now, field) : undefined;
-    setLine(root ? openLine(root) : null);
+    const opened = root ? openLine(root) : null;
+    setLine(opened && clicked && !clicked.op ? clickAt(opened, clicked.id) : opened);
+    if (clicked?.op) setSwitching(clicked.id);
   };
 
   /** Leaves the focused field for the next or previous one. */
@@ -487,6 +490,13 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     return { rows, sections, field };
   };
 
+  /** The row highlighted while a name is typed: the whole name, else the first. */
+  const typedRow = (rows: readonly NameRow[]): number | null => {
+    if (!typed) return null;
+    const whole = rows.findIndex((row) => row.kind === "name" && row.name === typed);
+    return whole >= 0 ? whole : rows.length > 0 ? 0 : null;
+  };
+
   const chooseName = (field: Field, name: Id) => {
     apply((p) => setName(p, stmt, field.slot, name));
     setTyped(null);
@@ -494,7 +504,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   };
 
   const onNameKey = (event: KeyboardEvent<HTMLInputElement>, field: Field, rows: NameRow[]) => {
-    const shown = highlight !== null && highlight < rows.length ? highlight : typed ? 0 : null;
+    const shown = highlight !== null && highlight < rows.length ? highlight : typedRow(rows);
     switch (event.key) {
       case "ArrowDown":
       case "ArrowUp": {
@@ -610,6 +620,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
                 <button
                   type="button"
                   aria-label={t("editor.removeValue")}
+                  // Pressing it leaves the keyboard where it is, and the line as it is drawn.
+                  onMouseDown={(event) => event.preventDefault()}
                   className="size-5 cursor-pointer rounded-full text-muted-foreground hover:bg-muted"
                   onClick={() => {
                     if (apply((p) => removeItem(p, stmt.id, name, index))) enter(null);
@@ -654,7 +666,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         }}
         onClickAt={(id, op) => {
           if (!sameField(focus, field)) {
-            enter(field);
+            enter(field, { id, op });
             return;
           }
           if (!line) return;
@@ -702,7 +714,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   if (focus && (focus.role === "id" || focus.role === "target")) {
     const names = nameList(focus);
     const shown =
-      highlight !== null && highlight < names.rows.length ? highlight : typed ? 0 : null;
+      highlight !== null && highlight < names.rows.length ? highlight : typedRow(names.rows);
     const row = shown === null ? undefined : names.rows[shown];
     list = (
       <EditorList

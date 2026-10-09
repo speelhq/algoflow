@@ -27,14 +27,23 @@ export function keepsName(name: string, typed: string): boolean {
 export function nameSections(program: Program, asked: readonly Id[], typed: string): NameSection[] {
   const problem = [...new Set(asked)];
   const others = programNames(program).filter((name) => !problem.includes(name));
+  // A whole name comes first (U-50).
+  const whole = (names: Id[]) =>
+    names.toSorted((a, b) => Number(b === typed) - Number(a === typed));
   const sections: NameSection[] = [
     {
       group: "problem",
-      rows: problem.filter((n) => keepsName(n, typed)).map((name) => ({ kind: "name", name })),
+      rows: whole(problem.filter((n) => keepsName(n, typed))).map((name) => ({
+        kind: "name",
+        name,
+      })),
     },
     {
       group: "variables",
-      rows: others.filter((n) => keepsName(n, typed)).map((name) => ({ kind: "name", name })),
+      rows: whole(others.filter((n) => keepsName(n, typed))).map((name) => ({
+        kind: "name",
+        name,
+      })),
     },
   ];
   const known = problem.includes(typed) || others.includes(typed);

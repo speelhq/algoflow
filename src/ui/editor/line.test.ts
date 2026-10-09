@@ -138,6 +138,9 @@ describe("typing (U-50, U-93)", () => {
     expect(clicked.open).toHaveLength(1);
     expect(py(keys("+1", clicked))).toBe("i * (5 + 1)");
     expect(py(keys("twice(i)+1"))).toBe("twice(i) + 1");
+    // A word operation has no brackets for ) to close.
+    const abs = keys("i", choose(empty(), entry("call:abs"), ctx).line);
+    expect(type(abs, ")", ctx).taken).toBe(false);
   });
 
   it("Tab forgets the first key of a two-key operator", () => {
@@ -250,6 +253,13 @@ describe("Backspace and moving (U-54, U-53)", () => {
     expect(py(back(keys("i+12"), 3))).toBe("i");
     expect(py(back(keys("i")))).toBe("...");
     expect(py(back(openLine(ast.v("n"))))).toBe("...");
+  });
+
+  it("after an operation that ends in an input, it removes what ends that input", () => {
+    const inside = keys("12", choose(empty(), entry("call:abs"), ctx).line);
+    const after = move(inside, 1).line;
+    expect(py(back(after))).toBe("abs(1)");
+    expect(py(back(after, 3))).toBe("...");
   });
 
   it("on an operation's words it removes the operation and keeps its first input", () => {

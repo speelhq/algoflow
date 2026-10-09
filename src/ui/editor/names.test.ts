@@ -42,6 +42,9 @@ describe("name list (U-94)", () => {
       ["new", ["le"]],
     ]);
     expect(shown(nameSections(p, [], "lens"))).toEqual([["variables", ["lens"]]]);
+    // A whole name comes first.
+    const both = program([assign("idx", num(0)), assign("i", num(0))]);
+    expect(shown(nameSections(both, [], "i"))).toEqual([["variables", ["i", "idx"]]]);
     expect(shown(nameSections(p, [], "for"))).toEqual([]); // a keyword: no new name
     expect(shown(nameSections(p, [], "len"))).toEqual([["variables", ["max_len", "lens"]]]);
   });
