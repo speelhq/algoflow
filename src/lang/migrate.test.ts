@@ -68,6 +68,16 @@ describe("migrate (L-53)", () => {
     expect(migrate(json(program([named])))).toEqual(program([named]));
     const broken = json(program([{ ...named, name: "two\nlines" }]));
     expect(() => migrate(broken)).toThrow(/^main\[0\]\.name: expected one line of text/);
+    const loose = migrate(
+      json(
+        program([
+          { ...named, name: "  Start  " },
+          { ...named, name: " " },
+        ]),
+      ),
+    );
+    expect(loose.main.map((stmt) => stmt.name)).toEqual(["Start", undefined]);
+    expect(loose.main[1]).not.toHaveProperty("name");
     expect(() => migrate(json(program([{ ...named, name: 3 } as never])))).toThrow(
       /^main\[0\]\.name/,
     );

@@ -149,13 +149,11 @@ function within(root: Expr, group: NodeId, id: NodeId): boolean {
   return held !== undefined && find(held, id) !== undefined;
 }
 
-/** Brackets the caret has left behind close. */
+/** Brackets the caret has left behind close; after the value they hold, it is still inside them. */
 function closeBehind(line: Line): Line {
   const { caret } = line;
   const open = line.open.filter((group) =>
-    "at" in caret
-      ? within(line.root, group, caret.at)
-      : caret.after !== group && within(line.root, group, caret.after),
+    within(line.root, group, "at" in caret ? caret.at : caret.after),
   );
   return { ...line, open };
 }
@@ -458,7 +456,8 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
     const exact = exactRow(current, ctx);
     if (!exact) return refused(line);
     const chosen = choose(current, exact, ctx);
-    if (!chosen.taken || key === " ") return chosen;
+    // A call's `(` is the bracket the call already has.
+    if (!chosen.taken || key === " " || (key === "(" && exact.kind === "function")) return chosen;
     current = chosen.line;
   }
   if (key === " ") return done(current);
@@ -479,7 +478,7 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
     }
     case ")": {
       const group = current.open.at(-1);
-      if (group === undefined) return refused(line);
+      if (group === undefined) return leave(current) ?? refused(line);
       const held = find(current.root, group);
       return done({
         ...current,
@@ -507,6 +506,14 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
   }
   if (value && startsKeys(key)) return done({ ...current, pending: { key } });
   return refused(line);
+}
+
+/** `)` with no bracket open: the caret leaves the innermost operation without a precedence. */
+function leave(line: Line): Outcome | undefined {
+  const { caret, root } = line;
+  let up = parentOf(root, "at" in caret ? caret.at : caret.after);
+  while (up && precedenceOf(up.parent) !== undefined) up = parentOf(root, up.parent.id);
+  return up ? done({ ...line, caret: { after: up.parent.id }, pending: undefined }) : undefined;
 }
 
 // ---------------------------------------------------------------- removing and moving
@@ -569,7 +576,7 @@ export function move(line: Line, step: -1 | 1): Outcome {
 
 /** Tab and Shift+Tab: the next or previous input still to fill, else the next or previous slot. */
 export function tab(line: Line, step: -1 | 1, ctx: LineContext): Outcome {
-  let current = line;
+  let current: Line = { ...line, pending: undefined, refused: undefined };
   if (current.word !== "") {
     const exact = exactRow(current, ctx);
     current = exact ? choose(current, exact, ctx).line : { ...current, word: "" };

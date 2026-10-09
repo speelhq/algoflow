@@ -79,8 +79,14 @@ function checkStmts(value: unknown, path: string): void {
     expectNodeId(stmt.id, `${at}.id`);
     const kind = expectString(stmt.kind, `${at}.kind`);
     if (kind === DROPPED) return;
-    if ("name" in stmt && (typeof stmt.name !== "string" || /[\n\r]/.test(stmt.name))) {
-      throw new MigrateError(`${at}.name`, "expected one line of text");
+    if ("name" in stmt) {
+      if (typeof stmt.name !== "string" || /[\n\r]/.test(stmt.name)) {
+        throw new MigrateError(`${at}.name`, "expected one line of text");
+      }
+      // A name is stored trimmed, and absent when empty.
+      const name = stmt.name.trim();
+      if (name === "") delete stmt.name;
+      else stmt.name = name;
     }
     if (!hasNode(kind) || getNode(kind).shape !== "stmt") {
       throw new MigrateError(`${at}.kind`, `unknown kind "${kind}"`);

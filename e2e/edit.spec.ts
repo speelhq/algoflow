@@ -131,6 +131,17 @@ test("naming a node shows the name on it and as a comment in Python (U-95, E-11)
   await expect(page.getByTestId("python-code")).toContainText("    # Is i a multiple of 15?");
 });
 
+test("`,` in a list of values opens the next value after this one (U-93)", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/tutorial");
+  await insert(page, "main/main/0", "print");
+  await keys(page, "1,2");
+  await expect(chart(page)).toContainText("Print 1, 2");
+  await editor(page).locator("[data-value-line]").first().click();
+  await keys(page, ",");
+  await expect(chart(page)).toContainText("Print 1, choose a value, 2");
+});
+
 test("U-51: a print with no value draws no placeholder", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/tutorial");

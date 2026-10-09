@@ -280,6 +280,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   // ------------------------------------------------------------ moving between fields
 
   const enter = (field: Field | null) => {
+    // A word that names one exactly is chosen as the line is left.
+    if (line && line.word !== "") commit(settle(line, ctx));
     setFocus(field);
     setTyped(null);
     setHighlight(null);
@@ -291,9 +293,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     setLine(root ? openLine(root) : null);
   };
 
-  /** Leaves the focused field for the next or previous one, settling a word typed. */
+  /** Leaves the focused field for the next or previous one. */
   const go = (step: 1 | -1, from: Field | null = focus) => {
-    if (line) commit(settle(line, ctx));
     const at = from ? fields.findIndex((field) => sameField(field, from)) : -1;
     const next = fields[at + step];
     if (next) enter(next);
@@ -375,9 +376,22 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     commit(choose(line, row, ctx).line);
   };
 
+  /** Adds a value to a slot: an optional value, or an item at `at` of a list (the end by default). */
   const addItem = (slot: string, at?: number) => {
     const empty: Expr = { id: newId(), kind: "empty" };
-    if (!apply((p) => setExpr(p, stmt.id, slot, empty, at))) return;
+    const added = (p: Program): Program => {
+      const items = (nodesById(p).get(stmt.id) as unknown as Bag | undefined)?.[slot];
+      if (at === undefined || !Array.isArray(items) || at >= items.length) {
+        return setExpr(p, stmt.id, slot, empty, at);
+      }
+      // The items from `at` on move one place on, and the new one takes `at`.
+      let next = p;
+      for (let j = items.length - 1; j >= at; j -= 1) {
+        next = setExpr(next, stmt.id, slot, items[j] as Expr, j + 1);
+      }
+      return setExpr(next, stmt.id, slot, empty, at);
+    };
+    if (!apply(added)) return;
     const placed = nodesById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
     const items = placed ? (placed as unknown as Bag)[slot] : undefined;
     const index = Array.isArray(items)
@@ -588,7 +602,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         return (
           <span key={name} className="inline-flex flex-wrap items-center gap-1">
             {items.map((item, index) => (
-              <span key={item.id} className="inline-flex items-center gap-0.5">
+              // An item keeps its field while the value in it changes.
+              // oxlint-disable-next-line react/no-array-index-key -- the field is the position
+              <span key={index} className="inline-flex items-center gap-0.5">
                 {index > 0 && <span>{t("editor.listSeparator")}</span>}
                 {lineWidget({ slot: name, role: "expr", index }, item)}
                 <button
@@ -653,6 +669,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         onText={(id, text) => commit(setText(line ?? openLine(root), id, text))}
         onTextEnd={(key) => {
           if (!line) return;
+          // The line takes the keyboard back first: the text field's blur ends it once more.
+          if (key !== "blur") elements.current.get(fieldKey(field))?.focus();
           const ended = endText(line);
           commit(ended);
           if (key === "Tab" || key === "ShiftTab") {
@@ -660,7 +678,6 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
             commit(moved.line);
             if (moved.move) go(key === "Tab" ? 1 : -1);
           }
-          if (key !== "blur") elements.current.get(fieldKey(field))?.focus();
         }}
       />
     );
