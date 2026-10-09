@@ -1,7 +1,7 @@
 // The flowchart as SVG from `layout()`. Shapes come from `ChartNode.shape`
 // and never from a block kind; generated nodes are grey. An HTML layer over the SVG,
-// under the same scale, holds the parts a learner interacts with (the Input nodes' menus)
-// and the note beside a node (the narration, or the message of an error or a diagnostic).
+// under the same scale, holds the parts a learner interacts with (the Input nodes' menus,
+// the connectors, the editor) and a diagnostic's card beside its node.
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { t } from "@/i18n/t";
 import type { NodeId } from "@/lang/types";
@@ -37,8 +37,8 @@ type Props = {
   };
   /** The run drawn on the chart. */
   paint?: Paint;
-  /** A sentence beside a chart node: the narration, or an error's or a diagnostic's message. */
-  note?: Note | null;
+  /** The current node is where the run failed: it is outlined in the error colour. */
+  failed?: boolean;
   /** The editor anchored to the selected node; absent while nothing is edited. */
   editor?: ReactNode;
   /** What sits on an edge that carries a place (the `+` connector); absent while read-only. */
@@ -48,11 +48,6 @@ type Props = {
   /** Statements with a diagnostic to mark with a red dot, and what hovering one shows. */
   flags?: { owners: ReadonlySet<NodeId>; card: (owner: NodeId) => ReactNode };
 };
-
-export type Note = { node: string; text: string; tone: "narration" | "error" };
-
-/** Width of the note beside a node, in chart units. */
-const NOTE = 220;
 
 function NodeShape({ node }: { node: ChartNode }) {
   const { x, y, w, h } = node;
@@ -245,33 +240,6 @@ function InputMenu(props: { label: string; cases: NonNullable<Props["cases"]> })
   );
 }
 
-/** A sentence beside its node, to the left where there is room, else the right. */
-function NoteView({ note, node, width }: { note: Note; node: ChartNode; width: number }) {
-  // Left of the node when it fits inside the chart's margin, else right when that fits.
-  const leftAt = node.x - NOTE - 24;
-  const rightAt = node.x + node.w + 24;
-  const left = leftAt >= -PAD || rightAt + NOTE > width + PAD;
-  return (
-    <div
-      role="status"
-      data-testid={note.tone === "error" ? "chart-error" : "narration"}
-      className={cn(
-        "absolute -translate-y-1/2 rounded-lg border px-3 py-2 text-sm shadow-sm",
-        note.tone === "error"
-          ? "border-destructive/60 bg-background text-destructive"
-          : "border-selection/60 bg-background",
-      )}
-      style={{
-        width: NOTE,
-        top: node.y + node.h / 2,
-        left: left ? Math.max(leftAt, -PAD) : rightAt,
-      }}
-    >
-      {note.text}
-    </div>
-  );
-}
-
 /** A `Yes` / `No` label beside the first segment of its edge. */
 function EdgeLabel({ edge }: { edge: ChartEdge }) {
   const [a, b] = edge.points;
@@ -313,7 +281,7 @@ export function Chart(props: Props) {
     onSelect,
     cases,
     paint,
-    note,
+    failed = false,
     connector,
     editor,
     moves,
@@ -398,11 +366,10 @@ export function Chart(props: Props) {
             ? "hovered"
             : null,
     taken: paint?.nodes.has(node.id) ?? false,
-    current: node.id === current ? (note?.tone === "error" ? "error" : "running") : null,
+    current: node.id === current ? (failed ? "error" : "running") : null,
     mark: paint?.marks.get(node.id),
     breakpoint: paint?.breakpoint === node.id,
   });
-  const noted = note ? chart.nodes.find((node) => node.id === note.node) : undefined;
 
   return (
     <ChartDrag moves={moves} edges={chart.edges}>
@@ -460,12 +427,11 @@ export function Chart(props: Props) {
                   />
                 ))}
               </svg>
-              {(cases || noted || connector || edited || flagNode) && (
+              {(cases || connector || edited || flagNode) && (
                 <div
                   className="pointer-events-none absolute top-0 left-0 origin-top-left"
                   style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
                 >
-                  {note && noted && <NoteView note={note} node={noted} width={chart.width} />}
                   {flagNode && flags && flagHover !== null && (
                     <div
                       className="pointer-events-auto absolute w-72 rounded-lg border bg-background p-2 shadow-md"

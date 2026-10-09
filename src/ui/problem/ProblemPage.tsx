@@ -1,4 +1,4 @@
-// The Problem page: the top bar, then two regions, the panel and the chart region.
+// The Problem page: the top bar, then two regions, the panel and the canvas.
 // Opening a problem loads its program and discards any runner; it opens on
 // the first tab.
 import { useEffect } from "react";
@@ -11,9 +11,8 @@ import { openInPlayground } from "@/ui/editor/programs";
 import { useEditKeys } from "@/ui/editor/useEditKeys";
 import { useTitle } from "@/ui/hooks/useTitle";
 import { DropdownMenuItem } from "@/ui/primitives/dropdown-menu";
-import { ChartRegion } from "./ChartRegion";
+import { Canvas } from "./Canvas";
 import { Panel } from "./Panel";
-import { RunControls } from "./RunControls";
 import { TopBar } from "./TopBar";
 import { useRunKeys } from "./useRunKeys";
 
@@ -48,12 +47,10 @@ function Problem({ challenge }: { challenge: Challenge }) {
             </DropdownMenuItem>
           </>
         }
-      >
-        <RunControls challenge={challenge} />
-      </TopBar>
+      />
       <div className="flex min-h-0 flex-1">
         <Panel challenge={challenge} />
-        <ChartRegion challenge={challenge} />
+        <Canvas challenge={challenge} />
       </div>
     </div>
   );

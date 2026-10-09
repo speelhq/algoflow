@@ -85,15 +85,11 @@
   },
   "problem": {
     "back": "← Problems",
-    "run": "▶ Run",
-    "stop": "■ Stop",
     "submit": "✓ Submit",
-    "running": "Running with {inputs}",
     "more": "More",
     "moreGlyph": "⋯",
     "help": "Help",
     "openInPlayground": "Open in Playground",
-    "runningAlone": "Running",
     "undo": "Undo",
     "redo": "Redo",
     "undoGlyph": "↶",
@@ -489,6 +485,14 @@
     }
   },
   "run": {
+    "run": "▶ Run",
+    "replay": "↺ Replay",
+    "stop": "■ Stop",
+    "speeds": {
+      "slow": "Slow",
+      "normal": "Normal",
+      "fast": "Fast"
+    },
     "back": "|◀ Back",
     "play": "▶ Play",
     "pause": "❚❚ Pause",

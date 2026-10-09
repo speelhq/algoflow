@@ -858,13 +858,13 @@ export function NodeEditor({ id }: { id: NodeId }) {
       <PopoverTrigger
         render={
           <div
-            ref={(element) => setBoundary(element?.closest("[data-chart-region]") ?? null)}
+            ref={(element) => setBoundary(element?.closest("[data-canvas]") ?? null)}
             className="pointer-events-none size-full"
             aria-hidden
           />
         }
       />
-      {/* Beside the node and inside the chart region, so the panel's statement stays readable. */}
+      {/* Beside the node and inside the canvas, so the panel's statement stays readable. */}
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Positioner
           side="right"

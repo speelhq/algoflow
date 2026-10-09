@@ -38,16 +38,17 @@ test("M-03 exit: FizzBuzz from the list to Accepted, Python, and the next proble
   await expect(page.getByTestId("chart")).toContainText("(remainder of i divided by 15) = 0?");
 
   await page.getByRole("button", { name: "▶ Run" }).click();
-  await expect(page.getByTestId("transport")).toBeVisible();
+  await expect(page.getByTestId("position")).toBeVisible();
   await dragToEnd(page);
   const text = (await page.getByTestId("position-text").textContent()) ?? "";
   const total = /of (\d+)/.exec(text)?.[1];
   await expect(page.getByTestId("position-text")).toHaveText(`step ${total} of ${total}`);
   await expect(page.getByTestId("narration")).toHaveText(`Finished in ${total} steps`);
-  // While running the top bar holds the run's controls only (U-60).
-  await expect(page.getByRole("button", { name: "✓ Submit" })).toHaveCount(0);
+  // While running Submit is disabled (U-27).
+  await expect(page.getByRole("button", { name: "✓ Submit" })).toBeDisabled();
 
   await page.getByRole("button", { name: "■ Stop" }).click();
+  await page.getByTestId("tab-result").click();
   await page.getByRole("button", { name: "✓ Submit" }).click();
   await expect(page.getByTestId("verdict")).toHaveText("Accepted");
   await expect(page.getByTestId("case-chips").locator("[data-chip]")).toHaveText([
@@ -77,6 +78,7 @@ test("Wrong Answer shows the rows only, and Watch opens at the first difference 
   await seedProgress(page, {});
   await seedProgram(page, "fizzbuzz", fromZero());
   await page.goto("/#/p/fizzbuzz");
+  await page.getByTestId("tab-result").click();
   await page.getByRole("button", { name: "✓ Submit" }).click();
   await expect(page.getByTestId("verdict")).toHaveText("Wrong Answer");
   await expect(page.getByTestId("submission")).toContainText("0 of 3 cases passed");
@@ -96,7 +98,7 @@ test("Wrong Answer shows the rows only, and Watch opens at the first difference 
   await expect(page.getByTestId("output-row")).toHaveText(["FizzBuzz1", "1"]);
 
   await page.getByRole("button", { name: "▶ Watch this case" }).click();
-  await expect(page.getByTestId("running")).toHaveText("Running with n = 1");
+  await expect(page.getByTestId("case-select")).toContainText("n = 1");
   await expect(page.getByTestId("narration")).toHaveText("This printed line 1");
   await expect(page.getByRole("button", { name: "▶ Play" })).toBeVisible();
   await expect(page.getByTestId("submission")).toHaveCount(0);
@@ -109,6 +111,7 @@ test("a submission is recorded as attempted, and solved only when accepted (C-17
   await seedProgress(page, {});
   await seedProgram(page, "fizzbuzz", fromZero());
   await page.goto("/#/p/fizzbuzz");
+  await page.getByTestId("tab-result").click();
   await page.getByRole("button", { name: "✓ Submit" }).click();
   await expect(page.getByTestId("verdict")).toHaveText("Wrong Answer");
   const progress = await page.evaluate(() => localStorage.getItem("algoflow:progress"));
@@ -127,6 +130,7 @@ test("after a plan's last problem, Accepted says Plan complete (U-83)", async ({
   });
   await seedProgram(page, "countdown", solutionOf("countdown"));
   await page.goto("/#/p/countdown");
+  await page.getByTestId("tab-result").click();
   await page.getByRole("button", { name: "✓ Submit" }).click();
   await expect(page.getByTestId("verdict")).toHaveText("Accepted");
   await expect(page.getByTestId("submission")).toContainText("Plan complete");

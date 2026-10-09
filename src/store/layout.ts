@@ -1,4 +1,4 @@
-// The problem panel's width and collapsed state and the playback speed
+// The problem panel's width and collapsed state and the playback speed (one of three)
 // persist to localStorage under `algoflow:layout`. Values are clamped on write and validated again when read
 // back, so storage never yields an out-of-range width or a non-boolean flag.
 import { create } from "zustand";
@@ -11,8 +11,19 @@ export const LAYOUT_STORAGE_KEY = "algoflow:layout";
 /** 320 px by default, resizable from 280 px to half the viewport width. */
 export const PANEL = { default: 320, min: 280, viewportShare: 0.5 } as const;
 
-/** Steps per second while playing; 3 until the learner moves the slider. */
-export const SPEED = { default: 3, min: 1, max: 50 } as const;
+/** The three speeds, in steps per second while playing; `Normal` until the learner chooses. */
+export const SPEEDS = { slow: 1, normal: 4, fast: 15 } as const;
+export type SpeedName = keyof typeof SPEEDS;
+export const SPEED_NAMES = Object.keys(SPEEDS) as SpeedName[];
+
+/** A stored or requested speed as one of the three: the nearest, else `Normal`. */
+function speedOf(value: unknown, fallback: number): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
+  const speeds = Object.values(SPEEDS) as number[];
+  return speeds.reduce((best, speed) =>
+    Math.abs(speed - value) < Math.abs(best - value) ? speed : best,
+  );
+}
 
 export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -53,7 +64,7 @@ function readLayout(persisted: unknown): Persisted {
   return {
     panel: size(stored.panel, PANEL.default, PANEL.min, Number.MAX_SAFE_INTEGER),
     collapsed: typeof stored.collapsed === "boolean" ? stored.collapsed : false,
-    speed: size(stored.speed, SPEED.default, SPEED.min, SPEED.max),
+    speed: speedOf(stored.speed, SPEEDS.normal),
   };
 }
 
@@ -73,7 +84,7 @@ export const useLayout = create<LayoutState>()(
     (set) => ({
       panel: PANEL.default,
       collapsed: false,
-      speed: SPEED.default,
+      speed: SPEEDS.normal,
       setPanel: (px, viewport) =>
         set((s) =>
           Number.isFinite(px) && Number.isFinite(viewport)
@@ -81,7 +92,7 @@ export const useLayout = create<LayoutState>()(
             : { panel: s.panel },
         ),
       setCollapsed: (collapsed) => set({ collapsed }),
-      setSpeed: (speed) => set((s) => ({ speed: size(speed, s.speed, SPEED.min, SPEED.max) })),
+      setSpeed: (speed) => set((s) => ({ speed: speedOf(speed, s.speed) })),
     }),
     {
       name: LAYOUT_STORAGE_KEY,

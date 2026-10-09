@@ -1,4 +1,5 @@
-// The 52 px top bar: the back link, the title, the run controls, undo, redo, and `⋯`.
+// The 52 px top bar: the back link, the title, the page's own actions, undo, redo, and `⋯`;
+// nothing that runs the program.
 import { useState, type ReactNode } from "react";
 import { t } from "@/i18n/t";
 import { useEditor } from "@/store/editor";
@@ -18,8 +19,8 @@ type Props = {
   /** The page the back link leads to: Problems from a problem, Playground from its programs. */
   back: "problems" | "playground";
   title: ReactNode;
-  /** The middle: the run controls. */
-  children?: ReactNode;
+  /** Actions of the page before undo (a Playground program's `Export`). */
+  actions?: ReactNode;
   /** The items of `⋯` before `Help`. */
   menu?: ReactNode;
 };
@@ -58,11 +59,11 @@ function UndoRedo() {
   );
 }
 
-export function TopBar({ back, title, children, menu }: Props) {
+export function TopBar({ back, title, actions, menu }: Props) {
   const [help, setHelp] = useState(false);
   return (
     <header
-      className="grid h-13 shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b px-4"
+      className="flex h-13 shrink-0 items-center justify-between gap-3 border-b px-4"
       data-testid="top-bar"
     >
       <div className="flex min-w-0 items-center gap-3">
@@ -71,8 +72,8 @@ export function TopBar({ back, title, children, menu }: Props) {
         </a>
         {title}
       </div>
-      <div className="flex items-center gap-2">{children}</div>
       <div className="flex items-center justify-end gap-2">
+        {actions}
         <UndoRedo />
         <DropdownMenu>
           <DropdownMenuTrigger

@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getChallenge } from "@/challenges";
 import { ast, program, runAll, tid } from "@/nodes/testing";
-import { useLayout } from "./layout";
+import { SPEEDS, useLayout } from "./layout";
 import { useProgram } from "./program";
 import { BATCH, canRun, useRun, type RunState } from "./run";
 
@@ -60,7 +60,7 @@ describe("run store (R-21: R-11, R-12, R-19)", () => {
     useProgram.setState({ program: counting() });
     run().stop();
     useRun.setState({ caseIndex: 0 });
-    useLayout.setState({ speed: 3 });
+    useLayout.setState({ speed: SPEEDS.normal });
   });
   afterEach(() => {
     run().stop();
@@ -193,25 +193,25 @@ describe("run store (R-21: R-11, R-12, R-19)", () => {
 
   it("Play: one Step every 1000/speed ms at the layout's speed; a new speed re-arms the timer", async () => {
     await settle(run().run());
-    vi.advanceTimersByTime(330);
+    vi.advanceTimersByTime(245);
     expect(run().step).toBe(0);
-    vi.advanceTimersByTime(5);
+    vi.advanceTimersByTime(10);
     expect(run().step).toBe(1);
-    useLayout.setState({ speed: 50 });
-    vi.advanceTimersByTime(20);
+    useLayout.setState({ speed: SPEEDS.fast });
+    vi.advanceTimersByTime(70);
     expect(run().step).toBe(2);
     run().pause();
     expect(run().status).toBe("paused");
     vi.advanceTimersByTime(1000);
     expect(run().step).toBe(2);
     run().play();
-    vi.advanceTimersByTime(20);
+    vi.advanceTimersByTime(70);
     expect(run()).toMatchObject({ status: "playing", step: 3 });
   });
 
   it("the run is done on reaching step total; a finished run ignores Step and Play", async () => {
     await settle(run().run());
-    vi.advanceTimersByTime(334 * 10);
+    vi.advanceTimersByTime(250 * 10);
     expect(run()).toMatchObject({ status: "done", step: 10, stdout: ["0", "1", "2"] });
     expect(vi.getTimerCount()).toBe(0);
     run().stepOnce();
@@ -307,7 +307,7 @@ describe("run store (R-21: R-11, R-12, R-19)", () => {
     const second = run().run();
     await settle(Promise.all([first, second]).then(() => {}));
     expect(run()).toMatchObject({ status: "playing", busy: false, total: 4501 });
-    vi.advanceTimersByTime(334);
+    vi.advanceTimersByTime(250);
     expect(run().step).toBe(1);
   });
 
