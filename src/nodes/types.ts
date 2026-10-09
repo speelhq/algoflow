@@ -4,6 +4,7 @@ import type {
   ExprKind,
   Heap,
   Id,
+  Kind,
   NodeId,
   Program,
   Stmt,
@@ -26,6 +27,24 @@ export type Slot = {
   name: string;
   role: SlotRole;
   required?: boolean;
+};
+
+/** The groups of the value list, in its order (U-52). */
+export type MenuGroup = "values" | "conditions" | "calculate" | "items" | "compare" | "convert";
+
+/** One entry of the value list (N-11). */
+export type MenuEntry = {
+  /** `""` for the block's own label and help, else `node.<key>.<name>.label` / `.help`. */
+  name: string;
+  group: MenuGroup;
+  /** Offered after a value of these kinds, which it takes as its first input. */
+  on?: readonly Kind[];
+  /** Slot values set on the block's `create()` (binop `op`). */
+  preset?: Record<string, unknown>;
+  /** Shown before the name in the list (`×`). */
+  symbol?: string;
+  /** What typed in a value line inserts it (U-93). */
+  keys?: string;
 };
 
 // ---------------------------------------------------------------- runner
@@ -114,12 +133,18 @@ export type NodeDef = {
   text?(node: Stmt | Expr, slot: string): string;
   /** How the chart draws the block's regions; absent = a box with the sentence. */
   chart?: ChartShape;
+  /** The kind of the expression, given the kinds of the expressions inside it (L-59). */
+  kind?: (node: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
+  /** The kind of the variable its `id` slot names (L-59). */
+  declares?: Kind;
+  /** The entries of the value list (U-52). */
+  menu?: readonly MenuEntry[];
 };
 
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
 type ExprOf<K extends ExprKind> = Extract<Expr, { kind: K }>;
 
-type Generic = "shape" | "create" | "run" | "python" | "form" | "text";
+type Generic = "shape" | "create" | "run" | "python" | "form" | "text" | "kind";
 
 type StmtDef<K extends StmtKind> = Omit<NodeDef, Generic> & {
   create(): StmtOf<K>;
@@ -135,6 +160,7 @@ type ExprDef<K extends ExprKind> = Omit<NodeDef, Generic> & {
   python(node: ExprOf<K>, ctx: EmitContext): string;
   form?(node: ExprOf<K>, ctx: FormContext): string;
   text?(node: ExprOf<K>, slot: string): string;
+  kind?(node: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
 };
 
 export function defineStmt<K extends StmtKind>(def: StmtDef<K>): NodeDef {

@@ -116,6 +116,10 @@ export type BinOp =
 
 export type Node = Stmt | Expr;
 
+/** What is known of a value before the program runs (L-59). */
+export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object";
+export const KINDS: readonly Kind[] = ["number", "text", "truefalse", "none", "list", "dict", "object"];
+
 // ---------------------------------------------------------------- Names
 
 export const NAME_PATTERN = /^[a-z_][a-z0-9_]*$/;

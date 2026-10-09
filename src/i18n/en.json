@@ -223,13 +223,15 @@
     "str": {
       "label": "Text",
       "template": "\"{value}\"",
-      "help": "A piece of text."
+      "help": "A piece of text, typed without quotes."
     },
     "bool": {
       "label": "True / false",
       "template": "true",
       "templateFalse": "false",
-      "help": "A truth value."
+      "help": "A truth value.",
+      "true": { "label": "True", "help": "The value of a condition that holds." },
+      "false": { "label": "False", "help": "The value of a condition that does not hold." }
     },
     "none": {
       "label": "None",
@@ -248,13 +250,85 @@
       "templateFloorDiv": "whole-number quotient of {left} divided by {right}",
       "templatePow": "{left} to the power of {right}",
       "templateIn": "{left} is in {right}",
-      "help": "Combines two values with arithmetic, a comparison, and/or, or in."
+      "help": "Combines two values with arithmetic, a comparison, and/or, or in.",
+      "and": {
+        "label": "And",
+        "help": "True when both sides are true. Example: i > 0 and i < 10 is true when i is 5. Type `and`."
+      },
+      "or": {
+        "label": "Or",
+        "help": "True when one side or both sides are true. Example: i = 3 or i = 5 is true when i is 3 and when i is 5. Type `or`."
+      },
+      "add": {
+        "label": "Add",
+        "help": "Adds two numbers, or joins two texts. Example: 2 + 3 is 5. Type `+`."
+      },
+      "sub": {
+        "label": "Subtract",
+        "help": "Takes the right number away from the left one. Example: 7 − 2 is 5. Type `-`."
+      },
+      "mul": {
+        "label": "Multiply",
+        "help": "Multiplies two numbers. Example: 4 × 3 is 12. Type `*`."
+      },
+      "div": {
+        "label": "Divide",
+        "help": "Divides the left number by the right one; the result is a decimal. Example: 7 ÷ 2 is 3.5. Type `/`."
+      },
+      "mod": {
+        "label": "Remainder",
+        "help": "What is left when the left number is divided by the right one. Example: the remainder of 7 divided by 3 is 1. Type `%`."
+      },
+      "floorDiv": {
+        "label": "Whole-number quotient",
+        "help": "How many whole times the right number fits into the left one. Example: the whole-number quotient of 7 divided by 3 is 2. Type `//`."
+      },
+      "pow": {
+        "label": "Power",
+        "help": "The left number multiplied by itself as many times as the right one says. Example: 2 to the power of 3 is 8. Type `**`."
+      },
+      "join": {
+        "label": "Join with another list",
+        "help": "A new list with the items of the left list followed by those of the right one. Example: [1, 2] + [3] is [1, 2, 3]."
+      },
+      "eq": {
+        "label": "Equals",
+        "help": "True when both sides are the same value. Example: 2 + 2 = 4 is true. Type `==`."
+      },
+      "ne": {
+        "label": "Does not equal",
+        "help": "True when the two sides are different values. Example: 3 ≠ 4 is true. Type `!=`."
+      },
+      "lt": {
+        "label": "Less than",
+        "help": "True when the left value is smaller than the right one. Example: 3 < 4 is true. Type `<`."
+      },
+      "le": {
+        "label": "At most",
+        "help": "True when the left value is smaller than the right one or equal to it. Example: 4 ≤ 4 is true. Type `<=`."
+      },
+      "gt": {
+        "label": "Greater than",
+        "help": "True when the left value is larger than the right one. Example: 5 > 4 is true. Type `>`."
+      },
+      "ge": {
+        "label": "At least",
+        "help": "True when the left value is larger than the right one or equal to it. Example: 4 ≥ 4 is true. Type `>=`."
+      },
+      "in": {
+        "label": "Is in a list",
+        "help": "True when the left value is an item of the list on the right, a key of the dict, or part of the text. Example: 2 is in [1, 2, 3] is true. Type `in`."
+      }
     },
     "unop": {
       "label": "Negate",
       "template": "−{operand}",
       "templateNot": "not {operand}",
-      "help": "Flips the sign of a number or the truth of a value."
+      "help": "Flips the sign of a number or the truth of a value.",
+      "not": {
+        "label": "Not",
+        "help": "True when the value after it is false. Example: not (3 > 4) is true. Type `not`."
+      }
     },
     "call": {
       "label": "Call function",
