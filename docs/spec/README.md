@@ -33,7 +33,8 @@ holds the same keys with Japanese texts (U-71).
 The specification states what the application must be, not when it is
 built: a statement the code does not yet meet belongs to the scope of a
 GitHub milestone. Why: a schedule written here had a second copy in every
-milestone and went stale whenever work moved.
+milestone and went stale whenever work moved. The specification records
+facts, never history.
 
 ## Requirement identifiers
 
@@ -42,7 +43,7 @@ rule. An identifier links a statement to the tests that establish it
 (a test names the identifiers it verifies) and lets a document, an issue,
 a pull request, or a review point at one statement. Code comments and
 commit messages do not cite identifiers; a check's message may name the
-statement it enforces. Why: an id in a code comment was a second map from
+statement it enforces, so whoever meets the check finds the rule. Why: an id in a code comment was a second map from
 statements to code that nothing checked and went stale silently, and an id
 in a commit message repeated the pull request's Why.
 
@@ -78,9 +79,11 @@ history, and progress have no entry.
 
 - A choice the specification does not cover becomes a new statement in the
   area's file and an entry in its `decisions.md`, committed before the code.
-- When a statement changes, every entry that names its id is updated in the
-  same commit; an entry whose statements are all deleted is deleted with
-  them.
+- When a statement changes, every entry that names its id, in any folder's
+  `decisions.md` (`grep -rn "<id>" docs/spec/*/decisions.md`), is updated in
+  the same commit; an entry whose statements are all deleted is deleted
+  with them. An entry sits in the folder of the statements it chiefly
+  explains and may name ids of other folders.
 
 The reasons for the code's structure are in `ARCHITECTURE.md`, those for
 the process in `CONTRIBUTING.md`, and those for a tool setting beside the

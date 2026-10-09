@@ -125,3 +125,8 @@ U-85 A submission in which a name listed in `defines` (C-21) resolves to
 a built-in module shows, in place of a verdict, `{name} comes from the
 built-in module {module}. Build it in this program, or Clone the module
 and build it there.` (`result.builtin`), and records nothing.
+
+## Verification
+
+U-91 (`pages.md`) saves the screenshots of Run, Wrong Answer, Accepted, and
+Run inside a function.

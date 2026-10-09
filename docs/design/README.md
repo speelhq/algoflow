@@ -66,3 +66,5 @@ screen. The words are Claude Design's own, artboard and its file, so
 | [AlgoFlow Redesign](https://claude.ai/artifact/D91141RiyMCW4XLsyJk8E5) | the flowchart and loop-notation studies; no exported artboard |
 
 The files open only for their owner and the people they are shared with.
+The links sit here, beside the export procedure, because whoever exports
+again needs them, and a link reveals nothing to anyone without access.

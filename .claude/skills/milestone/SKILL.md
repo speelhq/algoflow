@@ -25,9 +25,9 @@ script block.
    that every item of `Scope` is in exactly one issue, then replace the
    paragraph with `Split into the task issues of this milestone.`
    (`gh api -X PATCH "repos/{owner}/{repo}/milestones/<number>" -f description=…`).
-4. Read every spec statement the open issues cite, the entries of its
-   folder's `decisions.md` that name those ids, and, for a screen, its artboard in
-   `docs/design/` (README first).
+4. Read every spec statement the open issues cite, every entry of
+   `docs/spec/*/decisions.md` that names those ids, and, for a screen, its
+   artboard in `docs/design/` (README first).
 5. Read the descriptions of the later open milestones: statements in their
    scope are not yet due and are left alone.
 6. The artboards are drawn before a milestone starts: every screen, and every

@@ -3,7 +3,8 @@
 Why the statements of this folder were chosen, and the alternatives
 rejected (`docs/spec/README.md`, Reasons).
 
-**Input names are checked by `scripts/check.ts`, not by `validate()`**. Inputs
+**Input names are checked by `scripts/check.ts`, not by `validate()`**
+(C-02, L-01). Inputs
 have no NodeId to attach a diagnostic to and are read-only in the editor
 (U-31); challenge files are the only source, so the schema check covers L-01
 for them.
@@ -40,3 +41,16 @@ entry, and a learner who only viewed the solution has used the problem as
 much as one who took a hint; the entry is `attempted`. The key holds the
 bare record, as C-17 writes it, through a custom storage of the persist
 middleware.
+
+**hanoi prints the disk it moves** (S-05). `src` and `dst` are lists with
+no name to print; the final lists verify the moves.
+
+**Step counts are not compared across problems** (C-17). Comparing step
+counts across the three sorts was dropped as a special case: an inferred
+relation between problems, and one more stored field.
+
+**A boundary test is flagged, not named** (C-03). A boundary test was one
+whose localized name began with `edge:`, a flag concealed in a display
+string, and the name itself was displayed nowhere (cases are shown by their
+inputs) while still requiring a Japanese text; the name was dropped and the
+flag is `edge: true`.

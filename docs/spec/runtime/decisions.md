@@ -75,7 +75,7 @@ than each screen resolving the owner again.
 
 ## Emitter
 
-**Python stays the only generated language** (`emitter.md`). The note
+**Python stays the only generated language** (E-01). The note
 lists JavaScript and Dart; JavaScript would not preserve the third
 commitment: it has no int/float distinction, `-7 % 2` is `-1`, there is
 no `//`, and `in` on an array tests indices, so a faithful emitter would
@@ -83,6 +83,16 @@ either produce output differing from the chart or wrap arithmetic in
 helper functions unsuitable for a learner to read. If a second language is
 required later, the block language must first be narrowed or the helpers
 accepted.
+
+**Modules are emitted as files, not inlined** (E-02, E-09, U-25). Inlining
+a module's functions into `main.py` would make the `Python` tab state
+something the chart does not (one program) and hide the module the learner
+built.
+`from heap import heap_push, heap_pop` plus `heap.py` in its own tab states
+exactly what the chart states, keeps every file copyable into a Python
+interpreter, and introduces the term the learner will need. Calls remain
+unqualified (`heap_push(h, x)`), because `heap.push(h, x)` would collide
+with the method syntax of G-03.
 
 ## Parser
 

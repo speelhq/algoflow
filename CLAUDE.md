@@ -9,7 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Before changing an area
 
 Read `docs/spec/README.md`, then the area's folder under `docs/spec/`: the
-spec files and their `decisions.md`. Before building a screen, read
+spec files and their `decisions.md`, and every entry of another folder's
+`decisions.md` that names an id you change. Before building a screen, read
 `docs/design/README.md` and the screen's artboard.
 
 ## Working style

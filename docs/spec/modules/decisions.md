@@ -14,7 +14,7 @@ detail. The entries below record what was taken from the note and what
 was not; those on the plans are under Scope, and those on Step over and on
 editing while paused under UI.
 
-**A module is a function that outlives its program** (`modules.md`). Its
+**A module is a function that outlives its program** (D-01, D-03). Its
 semantics are a function's; the difference is ownership and lifetime: a
 function belongs to one `Program`, a module belongs to the learner and is
 referenced by many programs: defined once, parameterised, called from any
@@ -41,16 +41,6 @@ told which one to use. `Clone` is the entry to editing a built-in module
 and makes the shadowing explicit on the Modules page; the word was chosen
 over `Copy to my modules` because, like `Module`, it is one the learner
 encounters again when programming.
-
-**Modules are emitted as files, not inlined** (E-02, E-09, U-25). Inlining
-a module's functions into `main.py` would make the `Python` tab state
-something the chart does not (one program) and hide the module the learner
-built.
-`from heap import heap_push, heap_pop` plus `heap.py` in its own tab states
-exactly what the chart states, keeps every file copyable into a Python
-interpreter, and introduces the term the learner will need. Calls remain
-unqualified (`heap_push(h, x)`), because `heap.push(h, x)` would collide
-with the method syntax of G-03.
 
 **A module call is one step; its interior is reachable by one click**
 (R-16, R-11, D-18, D-06). The note's "Extract Minimum can be used as a
@@ -101,3 +91,8 @@ sharing between learners or synchronisation across devices becomes a goal.
 Keeping every read and write behind one store lets that decision be taken
 later without modifying callers, and the specification does not commit to a
 vendor.
+
+**A module edited in another tab does not stop a run** (D-22). The run
+keeps the modules it started with, nothing fails because replay is
+deterministic, and the next Run adopts the change, which needs neither a
+stop nor a message explaining one.

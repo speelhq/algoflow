@@ -23,7 +23,7 @@ named by the `PYTHON` variable.
 - `docs/spec/README.md` states how the spec is changed: its ids, where a
   statement's reason is recorded, and the spec committed before the code.
   If a task conflicts with the spec, stop and report the conflict.
-- `docs/design/` holds one PNG per artboard; read the artboard before
+- `docs/design/` holds one PNG per current artboard; read the artboard before
   building its screen. Its `README.md` names them and lists where the spec
   deviates; the spec takes precedence. Why: the Claude Design files open
   only for the people they are shared with and cannot be reviewed or diffed
@@ -38,13 +38,16 @@ pointer to the issues. Why: one task issue per part a person can see
 working gives the milestone its progress and lets a pull request close each
 part by number, while issues written months ahead would describe screens
 whose artboards are not settled; replacing the paragraph keeps the scope in
-one place.
+one place and marks the split, which an unrelated issue filed under the
+milestone earlier does not.
 
 Milestone work runs through `/milestone`, which holds its start, its two
 reviews, and its pull request. Why: the procedure is tracked and reviewed
 like the code instead of a prompt pasted at each start, and the two
 reviews, `/code-review` for defects and a subagent reading the diff against
-the spec, each find what the other does not.
+the spec, each find what the other does not; the spec review reports only a
+violated id or behaviour no id requires, a brief that keeps preferences out
+and finds where an id is missing.
 
 `gh issue create --body` applies no template: copy the sections of
 `.github/ISSUE_TEMPLATE/<kind>.md` into the body, and set its label with
@@ -58,7 +61,8 @@ request that writes the id closes it. The four labels, `decision`,
 a merge of two copies, or a measurement first. Each kind has its template:
 Summary, its own sections, Spec (sentences ending in their ids), and Done
 when; the title and Summary carry no id, and a section that does not apply
-says `None` and why. Why: one template had no place for a decision's
+says `None` and why. The milestone is the issue's Milestone field and is
+not repeated in the body. Why: one template had no place for a decision's
 options, a debt's copies, or a cost; an issue list without ids states its
 problems in words; and an omitted section reads like a forgotten one.
 

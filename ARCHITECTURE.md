@@ -3,7 +3,6 @@
 AlgoFlow is a block-based algorithm learning tool that runs entirely in the
 browser (S-01). Its blocks are a fixed Python subset; functions and classes
 can be moved into modules and reused across programs (`docs/spec/modules/`).
-The UI is in English and Japanese (S-03).
 
 ## Fixed choices
 

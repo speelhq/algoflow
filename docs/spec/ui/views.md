@@ -32,3 +32,7 @@ V-06 The learner may switch a list variable's view among `cards`, `grid`
 and the variable name. `tree` draws item `i` as a node whose children are
 items `2i + 1` and `2i + 2`, laid out top-down by level, each node showing
 its index and the item as inline text.
+
+## Verification
+
+U-91 (`pages.md`) saves one screenshot per view (V-01, V-02, V-06).

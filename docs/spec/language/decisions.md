@@ -60,3 +60,11 @@ Playground id from ever reading as a challenge id.
 does not suit one key per challenge, and `migrate()` must validate whatever
 is returned; the raw form is also what Export writes (L-53). A rejected value
 resolves to an empty main rather than failing the load.
+
+**`foreach` visits the live list** (L-26). `foreach` iterated over a
+snapshot, so a body that changes its list ran differently here and in the
+emitted Python, without any indication, unlike the other differences from
+Python (a `bool` is not a number, recursion stops at 200,
+`E_DECLARE_FIRST`), which are all stricter and terminate in an error; it
+now visits the live list by index as Python does, keeping the third
+commitment for learners' programs, which are not checked against CPython.

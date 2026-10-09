@@ -78,8 +78,8 @@ width; the cost, not seeing variables and code simultaneously, falls on a
 reader who has chosen to view code and who still has the chart and its
 narration.
 
-**Solution revealed on request**. A learner may view the solution; hiding
-it entirely would cause self-learners to look elsewhere.
+**Solution revealed on request** (U-21, U-22). A learner may view the
+solution; hiding it entirely would cause self-learners to look elsewhere.
 
 **Load the solution, then change it** (U-22). A read-only solution stops
 the note's loop at "inspect"; loading it into the learner's chart as one
@@ -225,8 +225,8 @@ requires a beginner to survey a vocabulary before writing; the `+` on the
 edge where the block will be placed, followed by an editor popover on the
 node, keeps the learner's attention on the chart.
 
-**No `Make a function` from a selection**. Extracting statements into a
-function needs parameter and return inference and a multi-select UI;
+**No `Make a function` from a selection** (U-30). Extracting statements
+into a function needs parameter and return inference and a multi-select UI;
 `Add function` in the path bar's `▾` (U-30) gives an empty function whose
 body the learner builds, and choosing the parameters manually is where a
 beginner learns what a parameter is.
@@ -252,22 +252,10 @@ terminal is the function's signature, so its editor holds the name, the
 parameters, `Delete function`, and `Move to module…`. This also gives
 parameters an editing location, which the tabbed design never stated.
 
-**Small rules settled with the artboards** (U-33, U-40, D-22, U-85). A slot
+**A slot drawn on a generated node is the loop's** (U-33, U-41). A slot
 drawn on a generated loop node is the loop's slot, so the rule for slots
 (U-41) already makes `Set i to 0` the route to the start value, the most
-common beginner error, with no rule of its own. The menu's categories are
-ordered Basic, Control, List, because a beginner needs `if` and `for`
-before list blocks. A module edited in another tab does not stop a run: the
-run keeps the modules it started with, nothing fails because replay is
-deterministic, and the next Run adopts the change, which needs neither a
-stop nor a message explaining one. The refusal of a built-in function in a
-`defines` problem names the module and both remedies. hanoi prints the
-disk it moves, since `src` and `dst` are lists with no name to print; the
-final lists verify the moves. Proposals dropped as special cases: filling a
-`for` variable with the first unused of `i j k` (an inference, and
-`create()` receives no context), and comparing step counts across the
-three sorts (an inferred relation between problems, and one more stored
-field).
+common beginner error, with no rule of its own.
 
 **The chart writes the block language** (N-08, U-33). Python stays in its
 tab (U-25); the chart uses the symbols a learner knows from school (`+ − × ÷
@@ -349,22 +337,11 @@ fail when run. The brackets the chart draws around a word operation (N-08)
 show what it took, and brackets typed first limit it to a part. Inputs
 left to fill are fields in the line, reached with Tab.
 
-**Four rules removed or corrected on a pass for special cases** (U-53,
-C-03, L-26). The Variables group offered `v + 1` and `v - 1` when
-the slot was an `index` or a `for` bound and a `for` variable was visible:
-an inference about the learner's intent, tied to two block kinds, which
-made the menu branch on kind against N-01; wrapping `i` with `+` or typing
-the text achieves the same result. A boundary test was one whose localized
-name began with `edge:`, a flag concealed in a display string, and the name
-itself was displayed nowhere (cases are shown by their inputs) while still
-requiring a Japanese text; the name was dropped and the flag is
-`edge: true`. `foreach` iterated over a snapshot, so a
-body that changes its list ran differently here and in the emitted Python,
-without any indication, unlike the other differences from Python (a `bool`
-is not a number, recursion stops at 200, `E_DECLARE_FIRST`), which are all
-stricter and terminate in an error; it now visits the live list by index as
-Python does, keeping the third commitment for learners' programs, which are
-not checked against CPython.
+**The Variables group offers no `v + 1`** (U-52). The Variables group
+offered `v + 1` and `v - 1` when the slot was an `index` or a `for` bound
+and a `for` variable was visible: an inference about the learner's intent,
+tied to two block kinds, which made the menu branch on kind against N-01;
+wrapping `i` with `+` or typing the text achieves the same result.
 
 **The `+` menu offers statements, in a beginner's order** (U-40). Listing
 every registered block placed expression blocks at positions where they
@@ -375,7 +352,9 @@ meaningless to a beginner and is hidden; it appears as method statements
 and calls. Restricting the menu per challenge was rejected: it conceals the
 language and adds authoring work. Observed while drawing the artboard:
 built-in module groups would overfill a trainee's menu, so modules are
-placed behind one `Modules ▸` row.
+placed behind one `Modules ▸` row. The menu's categories are ordered
+Basic, Control, List, because a beginner needs `if` and `for` before list
+blocks.
 
 **Names come from the problem** (U-94). A verdict compares
 `expect.variables` by name, so a learner who names `total` differently
@@ -529,8 +508,8 @@ build/run boundary is retained, and the fix cycle is Stop, edit, Run.
 `Run to this node` (a deterministic means of returning to a position of
 interest) was recorded and not scheduled.
 
-**Step over and `Open <name>`** (R-17, U-41). Reading a program at more
-than one level of detail (the note's high, mid, and low levels) is a
+**Step over and `Open <name>`** (R-17, U-41, U-60). Reading a program at
+more than one level of detail (the note's high, mid, and low levels) is a
 run-time operation: Step over keeps the learner at the caller's level, and
 `Open <name>` descends one level. Step (into) and Play still descend into
 the program's own functions. Inline expansion of a call inside the caller's
@@ -698,6 +677,10 @@ would change the case under the chart, and `Watch this case` already sets
 them. While running, `Submit` is disabled: a verdict arriving during playback would replace the rows
 of the run being watched, and a learner who has watched a run reaches
 Submit with one `Stop`.
+
+**A refused built-in function names its module** (U-85). The refusal of a
+built-in function in a `defines` problem names the module and both
+remedies.
 
 **`Next problem` wraps round the plan** (U-83). After the plan's last row,
 a learner who skipped an earlier problem has not completed the plan, so
