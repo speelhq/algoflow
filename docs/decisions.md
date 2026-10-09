@@ -657,6 +657,19 @@ slot when the node's words are clicked: one opened by a click on a
 finished node leaves it with the chart, where Delete and the arrow keys
 act on the node.
 
+**Small rules of the value line** (U-50, U-53, U-54, U-93, U-94). A word
+that names nothing holds the key typed after it, so `totl+` does not turn
+into a `+` with nothing before it; the underline and the explanation line
+show what to correct. `Did you mean` allows one letter in three, since two
+letters on a short word reach unrelated names (`totl` and `Not`). A number
+Python rejects (`07`) is not taken, so the line holds only what the
+`Python` tab can print. An operator's key at an input still to fill does
+nothing, because an operator needs the value before it; `-` there is the
+sign. Backspace at an operation's empty first input moves left: removing
+the operation would take the value typed after it too. Enter in a name
+field not typed in keeps the name and moves on, since the learner has read
+it and accepts it.
+
 **The chart writes the block language** (N-08, U-33). Python stays in its
 tab (U-25); the chart uses the symbols a learner knows from school (`+ − × ÷
 ( ) = ≠ < ≤ > ≥`) and words for everything else (`remainder of i divided by
