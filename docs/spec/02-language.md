@@ -281,9 +281,10 @@ each Playground program's last save in milliseconds since the epoch, and
 lists exactly the Playground programs in storage.
 
 L-58 A statement's `name` is the learner's name for its node (U-95): one
-line of text, stored trimmed, and absent when empty; `setStmtName` sets
-it, and `migrate()` rejects a name that is not one line of text. A name
-changes neither validation nor execution.
+line of text, stored trimmed, and absent when empty; `setStmtName` sets it,
+making each run of spaces and line breaks one space, and `migrate()` rejects
+a name that is not one line of text. A name changes neither validation nor
+execution.
 
 ## Kinds
 

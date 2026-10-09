@@ -132,6 +132,13 @@ the kinds it applies to, its symbol, and its keys; the editor reads them
 and names no block, as N-01 requires, and a block added later brings its
 entries with it.
 
+**A kind is given only where the inputs settle it** (N-12). `and` and
+`or` return the deciding operand (L-17), so their kind is known only when
+both inputs have the same one; `+` on two true/false values fails (R-15),
+and `+` on a number and a text fails (L-14), so neither has a kind; `*`
+repeats a list or a text as Python does. A wrong kind would hide the
+entries that apply, while no kind lists every entry (U-52).
+
 **A `create` template after a frame**. `if c: y = 1` followed by `y = 2`
 renders both as `create y`: L-41 makes `y` invisible after the frame, so the
 outer assignment is where the region gains the name.
