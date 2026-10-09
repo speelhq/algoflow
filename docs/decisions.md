@@ -710,10 +710,19 @@ applies.
 **Kinds choose the list** (L-59, U-52, N-11, U-50). After a value the list
 offers what applies to that kind of value, so a list does not offer
 `Multiply`; the kind comes from inputs and first assignments, which is known
-without running. The groups a kind uses most come first: `Items` and
-`Totals` for a list, `Calculate` for a number, `Combine` for a true/false
-value, and the comparisons and conversions every kind shares after them. A
-kind that cannot be told shows every entry, and `Show all` ends every list,
+without running. A group names what is done with a kind of value:
+`Calculate` with a number, `Conditions` with a true/false value, `Items`
+with a list, a dict, or an object, and `Compare` and `Convert` with any, so
+after a value the learner reads its kind's group first and the two shared
+ones after it. `Combine` was dropped because `Not` combines nothing and the
+word suggests joining texts or lists, which sat elsewhere; `Other` because
+a group named for nothing is where an entry is never looked for; `Totals`
+and `Order` because a group of one or two rows is a heading to read for
+nothing; `Functions` because its rows (`Larger of two`, `Random whole
+number`) are calculations, and the word is one a beginner meets only when
+building a function, so the group is `Your functions` and holds those
+alone. One order holds everywhere, so `Show all` reads as the list does
+with more rows. A kind that cannot be told shows every entry, and `Show all` ends every list,
 so nothing is hidden by a wrong guess. It lists only what can be chosen at
 the caret, so every row it shows acts; an operation chosen where a value is
 expected is placed with its inputs empty. A typed word searches every entry

@@ -41,8 +41,7 @@ export type Slot = {
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // L-59
 export type MenuEntry = {
   name: string; // "" for the block's own label and help, else node.<key>.<name>.label / .help
-  group: "values" | "functions" | "calculate" | "compare" | "convert" | "items" | "totals"
-    | "combine" | "other";
+  group: "values" | "conditions" | "calculate" | "items" | "compare" | "convert"; // U-52
   on?: Kind[]; // offered after a value of these kinds, which it takes as its first input
   preset?: Record<string, unknown>; // slot values set on the block's create() (binop `op`)
   symbol?: string; // shown before the name in the list (`×`)
@@ -224,10 +223,10 @@ those of L-59; `any` below means every kind.
 | `none`            |            | None                    | values     |                      |        |       |
 | `list`            |            | Empty list              | values     |                      |        | `[`   |
 | `dict`            |            | Empty dict              | values     |                      |        |       |
-| `unop`            | `not`      | Not                     | combine    |                      |        | `not` |
-| `call:max`        |            | Larger of two           | functions  |                      |        |       |
-| `call:min`        |            | Smaller of two          | functions  |                      |        |       |
-| `call:random_int` |            | Random whole number     | functions  |                      |        |       |
+| `unop`            | `not`      | Not                     | conditions |                      |        | `not` |
+| `binop`           | `and`      | And                     | conditions | truefalse            |        | `and` |
+| `binop`           | `or`       | Or                      | conditions | truefalse            |        | `or`  |
+| `call:random_int` |            | Random whole number     | calculate  |                      |        |       |
 | `binop`           | `add`      | Add                     | calculate  | number, text         | `+`    | `+`   |
 | `binop`           | `sub`      | Subtract                | calculate  | number               | `−`    | `-`   |
 | `binop`           | `mul`      | Multiply                | calculate  | number               | `×`    | `*`   |
@@ -237,6 +236,16 @@ those of L-59; `any` below means every kind.
 | `binop`           | `pow`      | Power                   | calculate  | number               |        | `**`  |
 | `call:abs`        |            | Absolute value          | calculate  | number               |        |       |
 | `call:round`      |            | Round                   | calculate  | number               |        |       |
+| `call:max`        |            | Larger of two           | calculate  | number, text         |        |       |
+| `call:min`        |            | Smaller of two          | calculate  | number, text         |        |       |
+| `index`           |            | Item at a position      | items      | list                 |        |       |
+| `method:pop`      |            | Take the last item      | items      | list                 |        |       |
+| `call:len`        |            | Count                   | items      | list, text, dict     |        |       |
+| `call:sum`        |            | Sum                     | items      | list                 |        |       |
+| `method:copy`     |            | Copy                    | items      | list                 |        |       |
+| `binop`           | `join`     | Join with another list  | items      | list                 | `+`    |       |
+| `key`             |            | Value at a key          | items      | dict                 |        |       |
+| `field`           |            | Field                   | items      | object               |        |       |
 | `binop`           | `eq`       | Equals                  | compare    | any                  | `=`    | `==`  |
 | `binop`           | `ne`       | Does not equal          | compare    | any                  | `≠`    | `!=`  |
 | `binop`           | `lt`       | Less than               | compare    | number, text         | `<`    | `<`   |
@@ -247,16 +256,6 @@ those of L-59; `any` below means every kind.
 | `call:str`        |            | As text                 | convert    | any                  |        |       |
 | `call:int`        |            | As whole number         | convert    | number, text         |        |       |
 | `call:float`      |            | As decimal              | convert    | number, text         |        |       |
-| `index`           |            | Item at a position      | items      | list                 |        |       |
-| `method:pop`      |            | Take the last item      | items      | list                 |        |       |
-| `call:len`        |            | Count                   | totals     | list, text, dict     |        |       |
-| `call:sum`        |            | Sum                     | totals     | list                 |        |       |
-| `binop`           | `and`      | And                     | combine    | truefalse            |        | `and` |
-| `binop`           | `or`       | Or                      | combine    | truefalse            |        | `or`  |
-| `method:copy`     |            | Copy                    | other      | list                 |        |       |
-| `binop`           | `join`     | Join with another list  | other      | list                 | `+`    |       |
-| `key`             |            | Value at a key          | items      | dict                 |        |       |
-| `field`           |            | Field                   | items      | object               |        |       |
 
 `binop` entries preset `op`; `bool` entries preset `value`. The help of
 `and` reads that it is true when both sides are, and the help of `or` that
