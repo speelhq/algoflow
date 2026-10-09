@@ -122,7 +122,8 @@ solution` are disabled.
 U-23 Tab `Result` shows, for one case: the case selector, which holds the
 same choice as the Input nodes (U-32), with `✓ Submit` (U-80) beside it on
 a Problem page; the variables of the shown frame
-(U-68) with one view each (V-01..V-06); `Output`, the lines printed so far;
+(U-68) with one view each (V-01, V-02, V-03, V-05, V-06); `Output`, the
+lines printed so far;
 beside it `Expected`, when the case is one of the challenge's tests and
 expects `stdout`, the two aligned line by line with a blank cell where one
 side has no line; every expected variable as a row with its value, or a
@@ -131,7 +132,8 @@ when the run ends on such a case, that case's verdict (C-15) with the first
 output row that differs, or else the first variable row that differs,
 marked. While a run is on the chart, an `Expected` line beyond the lines
 printed so far is drawn muted. After a submission the tab adds what
-U-81..U-85 state. A Playground program has no case selector and no
+U-81, U-82, U-83, U-84, U-85 state. A Playground program has no case
+selector and no
 `Expected`. Before any run the tab shows the case selector with `Submit`,
 the chosen case's `Expected`, and `result.empty` (`Run to see the values`).
 

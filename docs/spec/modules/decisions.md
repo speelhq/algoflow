@@ -62,7 +62,8 @@ edit (D-22), and two tiled windows fall below the 1280 px gate (S-02), so
 the second tab is used as a tab.
 
 **Modules have cases because a module change reaches every program**
-(D-19..D-21). The absence of a challenge had been read as the absence of
+(D-19, D-20, D-21). The absence of a challenge had been read as the absence
+of
 tests, but a module is where tests matter most: editing `backward_step` for
 the `tanh` problem can break every solved problem that uses it, and the
 module is where that is detected. A case is a saved run (arguments,

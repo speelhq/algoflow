@@ -80,7 +80,7 @@ frame. While playing, the click pauses first.
 ## Submission
 
 U-80 `Submit`, beside the case selector of the `Result` tab (U-23), judges
-every test on its own runner (C-10..C-12, C-15), records the attempt
+every test on its own runner (C-10, C-11, C-12, C-15), records the attempt
 (C-17), and selects the `Result` tab.
 
 U-81 A failed submission shows `Wrong Answer`, `k of n cases passed`, one

@@ -37,7 +37,8 @@ against the registry in `src/nodes/index.test.ts`.
 with the code that uses them, so wording is decided when the UI exists and
 the parity check never requires translating unused strings.
 
-**The catalog is its plans** (U-10..U-14, C-16). "Day 1/2/3" tabs and a
+**The catalog is its plans** (U-10, U-12, U-13, U-14, C-16). "Day 1/2/3"
+tabs and a
 "micrograd" tab grouped problems by course logistics; ordered study plans
 state which problem to attempt next instead. With 38 problems the page is one
 section per plan plus `More problems`: a flat list under a filter row
@@ -477,7 +478,7 @@ only one.
 ## Run
 
 **The moment is on the chart, the state is in the panel** (U-23,
-U-61..U-63). Data, Trace, and Output tabs under the program drew the
+U-61, U-62, U-63). Data, Trace, and Output tabs under the program drew the
 learner's attention away from it, so the current step stays in the canvas:
 the current node, the taken path, and the `✓`/`✗` marks on the chart, and the
 narration in one line under it (U-63), which carries the values relevant at that step (`Pass 3: i is

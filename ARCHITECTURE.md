@@ -43,11 +43,10 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   (interpreter behaviour), `python()` (exact emitted text), and `chart`
   (N-09). `index.ts` is the only registry; the interpreter, the emitter, the
   chart, the block menu, and the node editor dispatch through it (N-01).
-- `src/runtime` — `run(program, inputs, seed)` returns a `Runner`; each
-  `next()` yields one `Event` (`enter`, `read`, `write`, `swap`, `compare`,
-  `loop`, `call`, `return`, `print`). Events are the contract the UI
-  consumes for highlights and step counts. Randomness is mulberry32 seeded
-  per run, so the same program, inputs, and seed replay identically (R-10).
+- `src/runtime` — `run()` returns a `Runner` whose `next()` yields one
+  event, or `Done` at the end (R-01, R-02). Events are the contract the UI
+  consumes for highlights and step counts, and a run is deterministic
+  (R-10).
 - `src/python` — `emit()` produces the Python file plus a NodeId → line map;
   `parse()` turns typed expression text back into `Expr`; `unparse(parse(s))`
   is a fixed point (G-05). Emitted Python is the behavioural reference, not
@@ -59,12 +58,13 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   are bundled with `import.meta.glob`. Why: fetching them at run time would
   need a manifest, asynchronous loading, and the deployment's base path, and
   a generated module would add a build step; the glob is typed by
-  `vite/client` and works under Vitest. The types sit in a leaf module so
-  `tsx`, which runs `scripts/check.ts` and reads the files from disk, never
-  evaluates the glob.
+  `vite/client` and works under Vitest. Only Vite resolves the glob, and
+  `scripts/check.ts` runs under `tsx` without Vite and reads the files from
+  disk (C-14), so no module it imports (`types.ts`, `judge.ts`) imports
+  `index.ts`.
 - `src/store` — Zustand stores: `program` (the open program, its undo
-  history, and its persistence, L-50..L-55), `playground` (the Playground
-  programs' index, L-57), `editor` (the hovered and the selected node, U-25,
+  history, and its persistence, L-50, L-51, L-52, L-53, L-54, L-55),
+  `playground` (the Playground programs' index, L-57), `editor` (the hovered and the selected node, U-25,
   U-35), `run` (the pre-running, timer-driven driver, R-11), `tests`
   (submission verdicts), `progress` (per-problem status under
   `algoflow:progress`), and `layout` (panel width, collapse, and playback
@@ -88,8 +88,6 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   (`src/ui/chart/layout.ts`, U-30, N-09); node text and narration are plain
   strings from `src/ui/chart/text.ts` and `src/ui/run/narrate.ts`; variable
   views are chosen by value type only (V-01), never by block or challenge.
-- `challenges/<id>.json` — inputs, ≥3 tests (one with `edge: true`), 3
-  hints, solution. `scripts/check.ts` runs every solution in the interpreter
-  and in CPython (with a shim replaying `draws()`) and compares both (R-20).
-  "Recorded" expectations are captured once from the solution and inserted
-  into the file (C-20).
+- `challenges/<id>.json` — one file per challenge (C-01), checked by
+  `scripts/check.ts` (C-02), which runs every solution in the interpreter
+  and in CPython and compares both (R-20).

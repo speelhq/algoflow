@@ -32,8 +32,8 @@ holds the same keys with Japanese texts (U-71).
 
 The specification states what the application must be, not when it is
 built: a statement the code does not yet meet belongs to the scope of a
-GitHub milestone. Why: a schedule written here had a second copy in every
-milestone and went stale whenever work moved. The specification records
+GitHub milestone. Why: a schedule here would be a second copy of the
+milestones and go stale whenever work moves. The specification records
 facts, never history.
 
 ## Requirement identifiers
@@ -43,9 +43,10 @@ rule. An identifier links a statement to the tests that establish it
 (a test names the identifiers it verifies) and lets a document, an issue,
 a pull request, or a review point at one statement. Code comments and
 commit messages do not cite identifiers; a check's message may name the
-statement it enforces, so whoever meets the check finds the rule. Why: an id in a code comment was a second map from
-statements to code that nothing checked and went stale silently, and an id
-in a commit message repeated the pull request's Why.
+statement it enforces, so whoever meets the check finds the rule. Why: an
+id in a code comment is a second map from statements to code that nothing
+checks, so it goes stale silently, and an id in a commit message repeats
+the pull request's Why.
 
 Statements use the present indicative ("The emitter writes 4-space
 indentation") and are mandatory. "May" marks an option.
@@ -55,6 +56,9 @@ indentation") and are mandatory. "May" marks an option.
   or a finding then points at exactly the rule it concerns.
 - Changing a statement keeps its identifier; deleting a statement deletes
   its identifier and every citation of it in the repository.
+- A citation writes each identifier out, never a range (`U-10, U-12`, not
+  `U-10..U-12`). Why: a search for one identifier then finds every
+  citation of it.
 - A new statement takes the number after the highest one its prefix has in
   the specification, whichever file holds it. Identifiers are never
   renumbered. Why: a deleted statement takes its citations with it, so no
@@ -80,7 +84,7 @@ history, and progress have no entry.
 - A choice the specification does not cover becomes a new statement in the
   area's file and an entry in its `decisions.md`, committed before the code.
 - When a statement changes, every entry that names its id, in any folder's
-  `decisions.md` (`grep -rn "<id>" docs/spec/*/decisions.md`), is updated in
+  `decisions.md` (`grep -rnw "<id>" docs/spec/*/decisions.md`), is updated in
   the same commit; an entry whose statements are all deleted is deleted
   with them. An entry sits in the folder of the statements it chiefly
   explains and may name ids of other folders.

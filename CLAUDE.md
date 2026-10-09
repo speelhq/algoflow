@@ -1,7 +1,5 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 @ARCHITECTURE.md
 
 @CONTRIBUTING.md
@@ -13,19 +11,28 @@ spec files and their `decisions.md`, and every entry of another folder's
 `decisions.md` that names an id you change. Before building a screen, read
 `docs/design/README.md` and the screen's artboard.
 
+## Judgement
+
+A plan and every judgement are made from files the session reads itself.
+An agent may locate code, run a reproduction, or report review candidates
+(CONTRIBUTING, Reviews); nothing it returns is used before the session
+checks it against the files. Why: an agent reads excerpts, and its summary
+looks like a reading of the whole code.
+
 ## Working style
 
-Targeted edits over rewrites. Stay within the task; list unrelated findings
-as follow-ups. Batch independent reads. One line before starting; a
+Targeted edits over rewrites. Stay within the task; settle each finding as
+CONTRIBUTING states. Batch independent reads. One line before starting; a
 standalone recap at the end (changed files, evidence, remaining work).
 A turn does not end on a plan, a question, or a status report while the
-session's next step is an edit, a test run, a commit, or an issue; it ends
-on a conflict with the spec, or on a step that needs the user's permission
-(`git push`, `rm`), and then names what is ready and what waits.
-When compacting keep: changed files, current milestone exit criteria, test
-commands, decisions not yet in `docs/spec/`.
+session's next step is an edit, a test run, or a commit; it ends
+on a proposal, a conflict with the spec, or a step that needs the user's
+permission (`git push`, `rm`, a GitHub write), and then names what is ready
+and what waits. When compacting keep: changed files, the current issue and
+its Done when, open findings and proposals, test commands, decisions not
+yet in `docs/spec/`.
 
-Skills: `/milestone`, `/add-node`, `/add-challenge`.
+Skills: `/issue`, `/milestone`, `/add-node`, `/add-challenge`.
 
 ## Tooling notes
 
