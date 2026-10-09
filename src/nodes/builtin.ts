@@ -1,8 +1,8 @@
 // Shared shape of the builtin call blocks (03-nodes "Builtin calls"): key `call:<name>`,
 // one `args` slot, positional parameters, exact arity.
 import { newId } from "@/lang/id";
-import type { Expr, Value } from "@/lang/types";
-import { defineExpr, type NodeDef, type RunContext } from "./types";
+import type { Expr, Kind, Value } from "@/lang/types";
+import { defineExpr, type MenuEntry, type NodeDef, type RunContext } from "./types";
 import type { Category } from "./categories";
 
 export type BuiltinDef = {
@@ -13,6 +13,9 @@ export type BuiltinDef = {
   python?: string;
   aliases?: string[];
   imports?: "math" | "random";
+  /** The call's kind, given its arguments (L-59, N-12). */
+  kind?: (args: Expr[], kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
+  menu?: readonly MenuEntry[];
   evaluate(args: Value[], node: Extract<Expr, { kind: "call" }>, ctx: RunContext): Value;
 };
 
@@ -30,6 +33,8 @@ export function defineBuiltin(def: BuiltinDef): NodeDef {
     }),
     ...(def.aliases ? { aliases: def.aliases } : {}),
     ...(def.imports ? { imports: def.imports } : {}),
+    ...(def.menu ? { menu: def.menu } : {}),
+    ...(def.kind ? { kind: (node, kindOf) => def.kind?.(node.args, kindOf) } : {}),
     create: () => ({
       id: newId(),
       kind: "call",

@@ -6,6 +6,8 @@ export const abs = defineBuiltin({
   name: "abs",
   category: "basic",
   params: ["x"],
+  kind: () => "number",
+  menu: [{ name: "", group: "calculate", on: ["number"] }],
   evaluate([x = { t: "none" }], node, ctx) {
     if (!isNumber(x))
       return ctx.fail(node.id, "E_TYPE", { left: "abs", right: typeName(x, ctx.heap) });

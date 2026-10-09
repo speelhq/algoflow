@@ -8,6 +8,8 @@ export const floatCall = defineBuiltin({
   name: "float",
   category: "basic",
   params: ["x"],
+  kind: () => "number",
+  menu: [{ name: "", group: "convert", on: ["number", "text"] }],
   evaluate([x = { t: "none" }], node, ctx) {
     switch (x.t) {
       case "int":

@@ -2,7 +2,7 @@
 // `compare` events, and the operator precedence of the emitted text.
 import { dictKey } from "@/lang/data";
 import { newId } from "@/lang/id";
-import type { Expr, Value } from "@/lang/types";
+import { KINDS, type Expr, type Value } from "@/lang/types";
 import { binopPrecedence, isComparison } from "@/python/precedence";
 import { typeError } from "@/runtime/access";
 import type { Event, Ref } from "@/runtime/types";
@@ -19,6 +19,9 @@ import {
 import { defineExpr, type RunContext } from "./types";
 
 type Binop = Extract<Expr, { kind: "binop" }>;
+
+/** The kinds `<`, `≤`, `>`, and `≥` order. */
+const ORDERED = ["number", "text"] as const;
 
 function arithmetic(node: Binop, l: Value, r: Value, ctx: RunContext): Value {
   if (node.op === "+" && l.t === "str" && r.t === "str") return { t: "str", v: l.v + r.v };
@@ -145,7 +148,68 @@ export const binop = defineExpr<"binop">({
   form: (node) => WORD_FORMS[node.op] ?? "",
   // The other operators are written with the symbols taught at school.
   text: (node, slot) => (slot === "op" ? (CANVAS_OPS[node.op] ?? node.op) : ""),
+  kind: (node, kindOf) => {
+    if (isComparison(node.op)) return "truefalse";
+    const left = kindOf(node.left);
+    const right = kindOf(node.right);
+    const same = left !== undefined && left === right ? left : undefined;
+    if (node.op === "and" || node.op === "or") return same;
+    if (node.op === "+") return same === "truefalse" ? undefined : same;
+    if (node.op === "*") {
+      const repeated = [left, right].find((kind) => kind === "list" || kind === "text");
+      if (repeated) return repeated;
+    }
+    return "number";
+  },
+  menu: [
+    { name: "and", group: "conditions", on: ["truefalse"], preset: { op: "and" }, keys: "and" },
+    { name: "or", group: "conditions", on: ["truefalse"], preset: { op: "or" }, keys: "or" },
+    {
+      name: "add",
+      group: "calculate",
+      on: ["number", "text"],
+      preset: { op: "+" },
+      symbol: "+",
+      keys: "+",
+    },
+    {
+      name: "sub",
+      group: "calculate",
+      on: ["number"],
+      preset: { op: "-" },
+      symbol: "−",
+      keys: "-",
+    },
+    {
+      name: "mul",
+      group: "calculate",
+      on: ["number"],
+      preset: { op: "*" },
+      symbol: "×",
+      keys: "*",
+    },
+    {
+      name: "div",
+      group: "calculate",
+      on: ["number"],
+      preset: { op: "/" },
+      symbol: "÷",
+      keys: "/",
+    },
+    { name: "mod", group: "calculate", on: ["number"], preset: { op: "%" }, keys: "%" },
+    { name: "floorDiv", group: "calculate", on: ["number"], preset: { op: "//" }, keys: "//" },
+    { name: "pow", group: "calculate", on: ["number"], preset: { op: "**" }, keys: "**" },
+    { name: "join", group: "items", on: ["list"], preset: { op: "+" }, symbol: "+" },
+    { name: "eq", group: "compare", on: KINDS, preset: { op: "==" }, symbol: "=", keys: "==" },
+    { name: "ne", group: "compare", on: KINDS, preset: { op: "!=" }, symbol: "≠", keys: "!=" },
+    { name: "lt", group: "compare", on: ORDERED, preset: { op: "<" }, symbol: "<", keys: "<" },
+    { name: "le", group: "compare", on: ORDERED, preset: { op: "<=" }, symbol: "≤", keys: "<=" },
+    { name: "gt", group: "compare", on: ORDERED, preset: { op: ">" }, symbol: ">", keys: ">" },
+    { name: "ge", group: "compare", on: ORDERED, preset: { op: ">=" }, symbol: "≥", keys: ">=" },
+    { name: "in", group: "compare", on: KINDS, preset: { op: "in" }, keys: "in" },
+  ],
 });
+
 
 const WORD_FORMS: Partial<Record<Binop["op"], string>> = {
   "%": "Mod",

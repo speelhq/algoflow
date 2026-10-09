@@ -40,24 +40,23 @@ const ALL: NodeDef[] = [
   print,
   exprStmt,
   returnStmt,
-  // expressions
+  // expressions, in the order of the value list's entries (N-11)
   empty,
   num,
+  variable,
   str,
   bool,
   none,
-  variable,
-  binop,
   unop,
-  call,
-  // builtins
+  randomInt,
+  binop,
   abs,
-  min,
   max,
+  min,
   strCall,
   intCall,
   floatCall,
-  randomInt,
+  call,
 ];
 
 export const NODES: ReadonlyMap<string, NodeDef> = new Map(ALL.map((def) => [def.key, def]));

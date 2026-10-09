@@ -48,6 +48,64 @@ describe("registry (N-02, N-09)", () => {
     }
   });
 
+  it("N-11: expression blocks declare the value list's entries in the table's order", () => {
+    const any = "number,text,truefalse,none,list,dict,object";
+    const rows = [...NODES.values()].flatMap((def) =>
+      (def.menu ?? []).map((entry) =>
+        [
+          def.key,
+          entry.name,
+          entry.group,
+          entry.on?.join(",") ?? "",
+          entry.symbol ?? "",
+          entry.keys ?? "",
+        ].join(" | "),
+      ),
+    );
+    expect(rows).toEqual([
+      "str |  | values |  |  | ",
+      "bool | true | values |  |  | ",
+      "bool | false | values |  |  | ",
+      "none |  | values |  |  | ",
+      "unop | not | conditions |  |  | not",
+      "call:random_int |  | calculate |  |  | ",
+      "binop | and | conditions | truefalse |  | and",
+      "binop | or | conditions | truefalse |  | or",
+      "binop | add | calculate | number,text | + | +",
+      "binop | sub | calculate | number | − | -",
+      "binop | mul | calculate | number | × | *",
+      "binop | div | calculate | number | ÷ | /",
+      "binop | mod | calculate | number |  | %",
+      "binop | floorDiv | calculate | number |  | //",
+      "binop | pow | calculate | number |  | **",
+      "binop | join | items | list | + | ",
+      `binop | eq | compare | ${any} | = | ==`,
+      `binop | ne | compare | ${any} | ≠ | !=`,
+      "binop | lt | compare | number,text | < | <",
+      "binop | le | compare | number,text | ≤ | <=",
+      "binop | gt | compare | number,text | > | >",
+      "binop | ge | compare | number,text | ≥ | >=",
+      `binop | in | compare | ${any} |  | in`,
+      "call:abs |  | calculate | number |  | ",
+      "call:max |  | calculate | number,text |  | ",
+      "call:min |  | calculate | number,text |  | ",
+      `call:str |  | convert | ${any} |  | `,
+      "call:int |  | convert | number,text |  | ",
+      "call:float |  | convert | number,text |  | ",
+    ]);
+  });
+
+  it("N-02: a named entry has its label and help, and a help names the entry's keys", () => {
+    for (const def of NODES.values()) {
+      for (const entry of def.menu ?? []) {
+        const base = entry.name === "" ? `node.${def.key}` : `node.${def.key}.${entry.name}`;
+        expect(keys.has(`${base}.label`), `${base}.label`).toBe(true);
+        const help = flatten(en)[`${base}.help`] ?? "";
+        if (entry.keys) expect(help.endsWith(`Type \`${entry.keys}\`.`), base).toBe(true);
+      }
+    }
+  });
+
   it("N-09: a chart names body slots of its block; a counted loop has init, check, and step", () => {
     const shaped = [...NODES.values()].filter((def) => def.chart);
     expect(new Set(shaped.map((def) => def.key))).toEqual(
