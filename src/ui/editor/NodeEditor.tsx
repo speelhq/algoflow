@@ -44,6 +44,7 @@ import {
 import {
   backspace,
   choose,
+  clickAt,
   endText,
   find,
   matches,
@@ -646,14 +647,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
             setHighlight(null);
             return;
           }
-          const clicked = find(line.root, id);
-          if (!clicked) return;
-          setLine({
-            ...line,
-            caret: isEmptyExpr(clicked) ? { at: id } : { after: id },
-            selected: false,
-            word: "",
-          });
+          setLine(clickAt(line, id));
           setSwitching(null);
         }}
         onText={(id, text) => commit(setText(line ?? openLine(root), id, text))}
