@@ -715,22 +715,23 @@ without running. A group names what is done with a kind of value:
 with a list, a dict, or an object, and `Compare` and `Convert` with any, so
 after a value the learner reads its kind's group first and the two shared
 ones after it. `Combine` was dropped because `Not` combines nothing and the
-word suggests joining texts or lists, which sat elsewhere; `Other` because
-a group named for nothing is where an entry is never looked for; `Totals`
-and `Order` because a group of one or two rows is a heading to read for
-nothing; `Functions` because its rows (`Larger of two`, `Random whole
-number`) are calculations, and the word is one a beginner meets only when
-building a function, so the group is `Your functions` and holds those
-alone. One order holds everywhere, so `Show all` reads as the list does
-with more rows. A kind that cannot be told shows every entry, and `Show all` ends every list,
+word suggests joining texts or lists, which sat elsewhere; `Other` because a
+group named for nothing is where an entry is never looked for; `Totals` and
+`Order` because a group of one or two rows is a heading to read for nothing;
+`Functions` because its rows (`Larger of two`, `Random whole number`) are
+calculations, and the word is one a beginner meets only when building a
+function, so the group is `Your functions` and holds those alone. One order
+holds everywhere, so `Show all` reads as the list does with more rows. A
+kind that cannot be told shows every entry, and `Show all` ends every list,
 so nothing is hidden by a wrong guess. It lists only what can be chosen at
 the caret, so every row it shows acts; an operation chosen where a value is
 expected is placed with its inputs empty. A typed word searches every entry
 for the same reason. It matches the start of a word only, since a match
-inside a word (`i` in `first`) is never the name meant, and Enter takes the
-first match, so the kind's entries come before the rest (`an` after a
-comparison is `And`). `Or` is explained as one side or both, because in
-everyday English or often means only one.
+inside a word (`i` in `first`) is never the name meant, and a name field's
+list (U-94) filters by the same rule. Enter takes the first match, so the
+kind's entries come before the rest (`an` after a comparison is `And`). `Or`
+is explained as one side or both, because in everyday English or often means
+only one.
 
 **A diamond's narration asks and answers** (U-63). The diamond already
 shows its verdict as `✓` or `✗` and colours the edge taken, so `is false,
