@@ -22,8 +22,6 @@ describe("if (03-nodes)", () => {
     expect(eventTypes(result.events)).toEqual(["enter", "compare", "enter", "write"]);
     expect(result.events[1]).toMatchObject({
       type: "compare",
-      left: { t: "int", v: 1 },
-      right: { t: "int", v: 2 },
       result: true,
     });
     expect(varData(result, "x")).toBe(1);

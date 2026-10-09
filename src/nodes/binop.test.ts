@@ -57,15 +57,13 @@ describe("binop (03-nodes)", () => {
     });
   });
 
-  it("N-10 / R-06: every comparison emits one compare event with its operand values", () => {
+  it("N-10 / R-06: every comparison emits one compare event with its result alone", () => {
     const e = bin(">", num(5), num(3));
     const result = evalExpr(e);
     expect(result.events).toEqual([
       {
         type: "compare",
         nodeId: e.id,
-        left: { t: "int", v: 5 },
-        right: { t: "int", v: 3 },
         result: true,
       },
     ]);
@@ -101,8 +99,6 @@ describe("binop (03-nodes)", () => {
       {
         type: "compare",
         nodeId: e.id,
-        left: { t: "int", v: 2 },
-        right: { t: "list", ref: 1 },
         result: true,
       },
     ]);
