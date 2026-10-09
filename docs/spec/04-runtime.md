@@ -33,7 +33,7 @@ export type Event =
   | { type: "read"; nodeId: NodeId; refs: Ref[] }
   | { type: "write"; nodeId: NodeId; ref: Ref; value: Value }
   | { type: "swap"; nodeId: NodeId; a: Ref; b: Ref }
-  | { type: "compare"; nodeId: NodeId; left: Value; right: Value; result: boolean }
+  | { type: "compare"; nodeId: NodeId; result: boolean }
   | { type: "loop"; nodeId: NodeId; var?: Id; value?: Value }
   | { type: "call"; nodeId: NodeId; fn: Id; args: Value[] }
   | { type: "return"; nodeId: NodeId; fn: Id; value: Value }
@@ -56,8 +56,7 @@ R-05 `write` is emitted for `assign`, `append` (new index), `insert`,
 `pop` (removed index and value), `delete`, and each field set by `new`.
 
 R-06 `compare` is emitted for every comparison `binop` (`== != < <= > >=`
-and `in`), with `left` and `right` holding the two operand values; the
-operator is the node's.
+and `in`), with its result; the operator and the operands are the node's.
 
 R-07 `loop` is emitted at the start of each iteration of `for`, `foreach`,
 and `while` (after the `while` compare).
@@ -235,6 +234,9 @@ and records the line map while flattening. Blocks receive
 `<list>[<index>]`, `<dict>[<key>]`, `<obj>.<field>`. An `empty` expression
 emits `...`.
 
+E-11 A statement with a name (L-58) is preceded by the comment line
+`# <name>` at its indentation, and its map entry starts at that line.
+
 E-09 `emit(program, modules?)` also returns
 `modules: Array<{ name: Id; code: string; map: Record<NodeId, { start: number; end: number }> }>`,
 one entry per module the program uses (D-04), each laid out per E-02
@@ -261,7 +263,7 @@ atom     := NUMBER | STRING | "True" | "False" | "None" | NAME
 args     := (expr ("," expr)*)?
 ```
 
-The root of the result has `source: "text"`. Number text CPython rejects
+Number text CPython rejects
 (`0777`) is `E_PARSE_SYNTAX`; `\xNN` escapes are decoded. A construct whose
 block is not in the registry is `E_PARSE_SYNTAX` at its token, so the
 registry alone determines what the language accepts.

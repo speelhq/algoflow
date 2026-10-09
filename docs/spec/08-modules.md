@@ -65,7 +65,8 @@ and `Python` (U-20); the chart region with the path bar (U-30), whose `▾`
 lists the module's functions and classes, `Add function`, and `Add class`.
 A learner module's chart region carries the band
 `Your module. Changes reach every program that uses it.` A built-in
-module's charts are read-only, its editors show no footer, `▾` offers no
+module's charts are read-only, its editors offer neither editing nor
+`Duplicate` and `Delete`, `▾` offers no
 `Add`, and the top bar has `Clone` (D-11). Edits persist under D-14 with
 the timing of L-53.
 
