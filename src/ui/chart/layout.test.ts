@@ -6,7 +6,14 @@ import type { Program, Stmt } from "@/lang/types";
 import { allStmts, regionsOf } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
 import { ast, program, tid } from "@/nodes/testing";
-import { layout, type ChartEdge, type ChartLayout, type ChartNode, type Measure } from "./layout";
+import {
+  layout,
+  LINE,
+  type ChartEdge,
+  type ChartLayout,
+  type ChartNode,
+  type Measure,
+} from "./layout";
 
 const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont } = ast;
 
@@ -462,6 +469,29 @@ describe("layout (U-31, U-33 texts)", () => {
     expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times" });
     expect(node(`${loop.id}:init`)?.text).toBe("Set i to 0");
     expect(node(check.id)).toMatchObject({ text: "Small?", title: "If x < 2" });
+  });
+
+  it("U-33: a long diamond's text is drawn on two lines, split at a space between words", () => {
+    const measure: Measure = (text) => text.length * 7;
+    const check = if_(bin("==", bin("%", v("i"), num(15)), num(0)), []);
+    const short = if_(bin("<", v("i"), num(2)), []);
+    const chart = layout(program([assign("i", num(1)), check, short]), { measure });
+    const lines = (id: string) => {
+      const parts = chart.nodes.find((n) => n.id === id)?.parts ?? [];
+      return [-LINE / 2, LINE / 2].map((dy) =>
+        parts
+          .filter((part) => part.dy === dy)
+          .map((part) => part.text)
+          .join("")
+          .trimEnd(),
+      );
+    };
+    expect(chart.nodes.find((n) => n.id === check.id)?.text).toBe(
+      "(remainder of i divided by 15) = 0?",
+    );
+    expect(lines(check.id)).toEqual(["(remainder of i", "divided by 15) = 0?"]);
+    const one = chart.nodes.find((n) => n.id === short.id)?.parts ?? [];
+    expect(new Set(one.map((part) => part.dy))).toEqual(new Set([0]));
   });
 
   it("N-08: a variable's run is measured bold", () => {

@@ -155,7 +155,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
             // oxlint-disable-next-line react/no-array-index-key -- parts are positional
             key={`pill${i}`}
             x={node.x + part.dx + 2}
-            y={node.y + node.h / 2 - 11}
+            y={node.y + node.h / 2 + part.dy - 11}
             width={part.w - 4}
             height={22}
             rx={11}
@@ -175,6 +175,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
               // oxlint-disable-next-line react/no-array-index-key -- parts are positional
               key={i}
               x={node.x + part.dx + (part.empty ? PILL : 0)}
+              y={node.y + node.h / 2 + part.dy}
               data-slot={part.slot}
               data-hole={part.hole}
               data-empty={part.empty || undefined}
