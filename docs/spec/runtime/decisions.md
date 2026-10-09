@@ -1,0 +1,102 @@
+# Runtime decisions
+
+Why the statements of this folder were chosen, and the alternatives
+rejected (`docs/spec/README.md`, Reasons).
+
+## Interpreter
+
+**`bool` is not a number** (R-15). Python treats `True` as `1`, but block
+programs never rely on it and the interpreter's `E_TYPE` keeps the type model
+simple for learners; solutions avoid the construct so CPython agrees.
+
+**`state` is refreshed while playing, as a copy** (R-12). The `Result` tab
+must update per step at the fastest speed. The refresh was a shallow copy of the
+frame list, which shared the runner's variable maps and heap: a published
+`state` changed at the next step, so a screen could neither compare two
+states nor memoize on one, and a `compare` event narrated later showed a
+list's current contents. A published `state` is now a copy of the
+variables and of the heap entries; values are immutable records, so one
+level is sufficient. The cost per publish is proportional to the size of
+the heap. Batches publish once per batch.
+
+**A finished runner keeps its outcome** (R-22). A runner that is called
+again after its end returns the same `Done` rather than an error or an
+undefined value, so a caller that drains it in batches (Submit, the
+pre-run, `scripts/check.ts`) needs no guard around its last batch.
+Forbidding the call instead would move that guard into every caller with
+nothing to detect a caller that forgot it.
+
+**The CPython epilogue converts values in Python** (R-20). Serialising Python
+values as `Data` on the Python side (`$float`, `$int:` keys, `$cls`/`$id`)
+lets the TypeScript side compare with the same `dataEquals` used for
+expectations, so one equality rule (C-10) serves both engines.
+
+**The driver publishes its projection, not only its position** (R-11,
+R-12).
+`taken`: U-61 colours the path of the current pass, which cannot be rebuilt
+from `lastEvent` after a Seek, so the projection keeps it beside `verdicts`
+and a `loop` event clears both. `pass`: `Pass 3` requires a count for each
+loop since its `enter`, which only a replaying projection holds. `busy`: the
+five statuses have no value for a pre-run, a Seek, or a Skip in progress,
+and a program that does not terminate pre-runs for several seconds (500
+timers, which browsers clamp to about 4 ms each); a sixth status would have
+made every test of `status` in the screens three-way. While `busy`, Step
+and Play do nothing, because taking over the runner would leave a Seek at an
+arbitrary step under a position bar that shows another; Pause still cancels
+a Skip, and Pause during the pre-run opens the run paused rather than being
+discarded. `verdict` is judged once, on the pre-run's runner, and published
+only at step `total`, so Back from the end removes it again. `Watch this
+case` is `run({ watch: true })` and not a step passed in: the runners of
+Submit record no print steps, so only the driver's own pre-run determines
+where the differing line was printed, and an outdated difference cannot be
+passed in.
+
+**A step count includes the failing step** (R-11). A step is one call of
+`next()`, and the call that fails is one; an error run therefore has
+`total = events + 1`, step `total` has no event, and the last position of
+the position bar is where the error is shown. A finished run is `done` on
+reaching `total`, not one Step later: U-81 names that step "the last step
+of the run", and the driver makes one further call of `next()` there so
+that the frames have unwound.
+
+**A comparison is narrated from the frame** (R-06, U-63). The `compare`
+event carried the two operand values so that a template sentence could be
+filled with them; the operands alone (`3` and `0` of `i % 15 == 0`) hide
+where the 3 came from. The narration writes the comparison as the chart
+does with each variable replaced by its value in the shown frame, which
+shows the origin, so the event carries its result only. A list keeps its
+name: its items were narrated by the `read` events before the comparison.
+
+**The driver publishes the statement to highlight** (R-12, U-39). Expression
+events carry the id of an expression, and the chart, the narration, and the
+`Python` tab all need the statement that contains it. The driver already
+holds the owner map for its marks, so it publishes `activeId` once rather
+than each screen resolving the owner again.
+
+## Emitter
+
+**Python stays the only generated language** (`emitter.md`). The note
+lists JavaScript and Dart; JavaScript would not preserve the third
+commitment: it has no int/float distinction, `-7 % 2` is `-1`, there is
+no `//`, and `in` on an array tests indices, so a faithful emitter would
+either produce output differing from the chart or wrap arithmetic in
+helper functions unsuitable for a learner to read. If a second language is
+required later, the block language must first be narrowed or the helpers
+accepted.
+
+## Parser
+
+**The parser consults the registry** (G-01). Grammar-legal forms whose block
+is not registered (`[1, 2]`, `xs[i]`, `p.x`, `Cls()`) would pass the parser
+and cause `unparse`, `validate`, or `run` to fail with an unknown-node
+error; reporting `E_PARSE_SYNTAX` at the token keeps the failure a
+diagnostic, and the registry alone decides what parses.
+
+**No statement-level Python import** (G-01). The beginner's loop never
+involves typing Python, and a learner able to type it does not need blocks;
+the block language is a strict subset, so most pasted Python would fail
+without a clear diagnostic. The `Python` tab, whose lines and nodes
+select each other (U-25), provides the transition from chart to text. The
+keys of a value line (U-93) spell operators as Python does (`==`, `*`),
+but the line never shows Python text: each key is replaced at once by what
+the chart writes.

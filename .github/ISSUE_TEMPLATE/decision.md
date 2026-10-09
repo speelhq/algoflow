@@ -12,7 +12,7 @@ labels: decision
 ## Options
 
 <!-- Each option, numbered: what it does, and what it would require of the spec
-     and of the code. A decision already recorded in docs/decisions.md or shown
+     and of the code. A decision already recorded in a docs/spec decisions.md or shown
      on a board is cited here. When the code shows the gap, an Observed
      section before Options gives the inputs, the actions, and what
      appeared. -->
@@ -24,6 +24,6 @@ labels: decision
 
 ## Done when
 
-<!-- docs/decisions.md records the choice and its reason; the spec states the
+<!-- The area's decisions.md records the choice and its reason; the spec states the
      fact under the ids that change. For a screen no board shows, the board
      is also exported to docs/design/ and listed in its README. -->

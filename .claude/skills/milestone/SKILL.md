@@ -25,8 +25,8 @@ script block.
    that every item of `Scope` is in exactly one issue, then replace the
    paragraph with `Split into the task issues of this milestone.`
    (`gh api -X PATCH "repos/{owner}/{repo}/milestones/<number>" -f description=…`).
-4. Read every spec statement the open issues cite, the `docs/decisions.md`
-   entries that name those ids, and, for a screen, its artboard in
+4. Read every spec statement the open issues cite, the entries of its
+   folder's `decisions.md` that name those ids, and, for a screen, its artboard in
    `docs/design/` (README first).
 5. Read the descriptions of the later open milestones: statements in their
    scope are not yet due and are left alone.
@@ -42,7 +42,7 @@ script block.
    (`git branch -a -i --list "*$ARGUMENTS*"` after
    `git fetch`); otherwise `git switch -c <m-xx>-<slug> origin/main`.
 2. Settle each `decision` issue first: the spec statement and its
-   `docs/decisions.md` entry in one commit, before any code.
+   `decisions.md` entry in one commit, before any code.
 3. Work through the task issues. A choice the spec does not cover is a new
    id with its reason, committed before the code. Commit each vertical
    slice when `pnpm lint && pnpm test` passes.

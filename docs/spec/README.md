@@ -73,8 +73,8 @@ alternatives rejected: one entry per choice, a bold sentence naming the
 choice followed by the ids it explains. An entry stays only while a
 plausible change would otherwise undo a deliberate choice: a rejected
 alternative, or a constraint the code, the configuration, and the statement
-itself do not show. What they show, what fails at once when broken, and
-history have no entry.
+itself do not show. What they show, what fails at once when broken,
+history, and progress have no entry.
 
 - A choice the specification does not cover becomes a new statement in the
   area's file and an entry in its `decisions.md`, committed before the code.

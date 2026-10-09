@@ -2,94 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-# AlgoFlow
+@ARCHITECTURE.md
 
-Block-based algorithm learning tool (browser only; English UI, Japanese added last)
-whose blocks are a fixed Python subset; functions and classes can be moved into
-modules and reused across programs (`docs/spec/modules/`). Specs in
-`docs/spec/` are normative; every statement has an id like `L-20`, never
-renumbered. Read `docs/spec/README.md` first, then the folder of the area
-you change. Tests name the ids they verify; code comments and commit
-messages cite none. If a task conflicts with a spec, stop and report the conflict.
+@CONTRIBUTING.md
 
-## Commands
+## Before changing an area
 
-```
-pnpm dev · pnpm test [path] · pnpm lint · pnpm format · pnpm build
-pnpm check [challenge.json]   # schema, interpreter, CPython, i18n
-pnpm test:e2e                 # after build
-gh issue list --milestone <M-xx> · gh pr list · gh pr checks <n>
-```
-
-Run `pnpm lint` and the relevant `pnpm test <path>` after each set of edits.
-`pnpm check` needs CPython 3.12 or later, run as `python3` from PATH or as
-named by the `PYTHON` variable.
-
-## Fixed choices
-
-- TypeScript 7 (its Go compiler is the `tsc` binary), Oxlint with
-  `oxlint-tsgolint`, and Oxfmt; never add ESLint, Prettier, or TypeScript
-  earlier than 7.
-- shadcn/ui on Base UI (not Radix); dnd-kit; Zustand; no graph/flow/editor libraries.
-- `src/lang`, `src/runtime`, `src/python`, and `src/nodes` import only each
-  other: through `@/` across folders and `./` within one, never `../`; tests
-  may add `vitest` and `@/i18n` (an oxlint rule).
-- One block per file in `src/nodes/`; nothing else branches on block kind or name.
-- Every user-visible string comes from `src/i18n/en.json` (and `ja.json` once it exists).
-- `int` and `float` are distinct values; lists, dicts, and objects reside on the heap.
-
-## Architecture
-
-Data flows one way, and nothing below `src/store` depends on React:
-
-- `src/lang` — the `Program` AST (`types.ts`), `validate()` → `Diagnostic[]` run
-  after every edit and before every run, pure edit functions returning a new
-  `Program` (`edit.ts`), and `Data` ⇄ `Value`/heap conversion (`data.ts`).
-- `src/nodes` — one `NodeDef` per block owning its slots, `create()`, `run`
-  (interpreter behaviour), `python()` (exact emitted text), and `chart` (N-09).
-  `index.ts` is the only registry; the interpreter, the emitter, the chart,
-  the block menu, and the node editor dispatch through it (N-01).
-- `src/runtime` — `run(program, inputs, seed)` returns a `Runner`; each `next()`
-  yields one `Event` (`enter`, `read`, `write`, `swap`, `compare`, `loop`, `call`,
-  `return`, `print`). Events are the contract the UI consumes for highlights and
-  step counts. Randomness is mulberry32 seeded per run, so the same
-  program, inputs and seed replay identically (R-10).
-- `src/python` — `emit()` produces the Python file plus a NodeId → line map;
-  `parse()` turns typed expression text back into `Expr`; `unparse(parse(s))` is a
-  fixed point (G-05). Emitted Python is the behavioural reference, not the interpreter.
-- `src/challenges` — the schema, the judge shared with `scripts/check.ts`
-  (C-10), and the `Result` rows (U-23, U-81).
-- `src/store` — Zustand stores: `program` (the program, its undo history,
-  and its persistence, L-50..L-55), `editor` (the hovered and the selected
-  node, U-25, U-35), `run` (the pre-running, timer-driven driver, R-11),
-  `tests` (submission verdicts), `progress` (per-problem status under
-  `algoflow:progress`), `layout` (panel width, collapse, and playback speed
-  under `algoflow:layout`).
-- `src/ui/primitives` — shadcn components generated on Base UI (`pnpm dlx shadcn add …`);
-  `src/lib/utils.ts` holds `cn()`. Everything else under `src/ui/` is hand-written.
-  A generated file is regenerated, never edited, except that `shadcn add`
-  writes `import { cn } from "cn"` and adds an npm package `cn`: correct the
-  import to `@/lib/utils` and revert `package.json` and the lockfile.
-- `src/ui` — React. The chart is an SVG flowchart with computed layout
-  (`src/ui/chart/layout.ts`, U-30, N-09); node text and narration are plain
-  strings from `src/ui/chart/text.ts` and `src/ui/run/narrate.ts`; variable
-  views are chosen by value type only (V-01), never by block or challenge.
-- `challenges/<id>.json` — inputs, ≥3 tests (one with `edge: true`), 3 hints, solution.
-  `scripts/check.ts` runs every solution in the interpreter and in CPython (with a
-  shim replaying `draws()`) and compares both (R-20). "Recorded" expectations are
-  captured once from the solution and inserted into the file (C-20).
-
-Work proceeds by GitHub milestone: its description states the goal, the
-exit criterion, and, until `/milestone <M-xx>` splits it into task issues,
-the scope (a paragraph starting `Scope:`). Milestone work runs through `/milestone`, which holds its
-start, its reviews, and its pull request. The spec states what must be,
-never when.
-
-## Verification
-
-Each block: codegen test with exact text and interpreter test (N-10).
-Each error code: a test. `pnpm check` passes before a milestone closes.
-Report command output, not summaries of it.
+Read `docs/spec/README.md`, then the area's folder under `docs/spec/`: the
+spec files and their `decisions.md`. Before building a screen, read
+`docs/design/README.md` and the screen's artboard.
 
 ## Working style
 
@@ -103,47 +24,7 @@ on a conflict with the spec, or on a step that needs the user's permission
 When compacting keep: changed files, current milestone exit criteria, test
 commands, decisions not yet in `docs/spec/`.
 
-## Sources of truth
-
-- `docs/spec/` states what must be; the code states what is; the open GitHub
-  milestone, its issues, and the open pull requests determine what is next. There
-  is no handoff file. `docs/decisions.md` holds the reasons, in one section
-  per spec file; the spec states facts, never history.
-- `docs/design/` holds the design artboards; read the artboard before
-  building its screen. `docs/design/README.md` names them and lists where
-  the spec deviates; the spec takes precedence.
-- `gh issue create --body` applies no template: copy the sections of
-  `.github/ISSUE_TEMPLATE/<kind>.md` into the body, and set its label with
-  `--label` and the milestone with `--milestone`. A problem's title states
-  the problem as a fact; a task's title names the work. Every finding not
-  fixed where it was found becomes an issue.
-
-When you make a choice the spec does not cover, add the fact as a new id in the spec file for that area and the reason
-to `docs/decisions.md`, in a commit before the code. After changing a spec
-statement, search `docs/decisions.md` for its id and update, in the same
-commit, every entry that no longer matches it. An entry records why
-something was chosen, never how far the work has got.
-
-## Commits and pull requests
-
-Branch from `main` per pull request. Commit one vertical slice at a time, at
-the moment `pnpm lint && pnpm test` passes: a node plus its i18n keys and
-both tests, a challenge, a view. Commit cross-cutting type, event, or spec
-changes separately, before the code that uses them.
-
-Conventional Commits, imperative subject under 50 chars, scope from src/
-(lang, nodes, runtime, python, ui, challenges, i18n; `docs` and `ci` for
-those). A body only when the reason is not evident from the subject. No
-trailers. Never mention
-Claude, the session, or the prompt.
-
-A milestone is one pull request from `main`; pull requests are never stacked,
-and only a part that does not depend on the rest gets its own pull request
-from `main`. `main` takes rebase merges only, after CI. The body follows
-`.github/pull_request_template.md`: What / Why (spec ids and milestone) /
-Closes (`Closes #n` per issue resolved) / Verification (the command output,
-pasted) / Screenshots (when a screen changes) / Notes (deviations, and the
-issue of every review finding not resolved here).
+Skills: `/milestone`, `/add-node`, `/add-challenge`.
 
 ## Tooling notes
 
@@ -167,16 +48,8 @@ issue of every review finding not resolved here).
 - `MessageKey` is derived from `en.json`, so a removed key fails type-check;
   `scripts/i18n.ts` flags unknown literal keys only, never unused or
   template-literal ones.
-- `validate()`, `firstAssignments()`, and `nodesById()` are memoized per
-  `Program` object: never mutate a `Program` in place.
 - Multi-line edit scripts: write them to the scratchpad and run the file;
   a heredoc passed to the Bash tool turns `\\` into `\`.
 - The end-to-end suite runs against `dist/`, so build first. A chart can be
   inspected without a screen: write `layout()`'s result as SVG from a
   temporary Vitest file and capture a screenshot with Playwright.
-
-## Spec index
-
-`docs/spec/README.md` lists the folders, their files, and their id prefixes.
-
-Skills: `/milestone`, `/add-node`, `/add-challenge`.

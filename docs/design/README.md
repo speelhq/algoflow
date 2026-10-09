@@ -55,7 +55,10 @@ An artboard is one file of its Claude Design file. It is rendered alone in a
 browser at the size the file declares for it and captured as a PNG under the
 name of the artboard. The Claude Design files remain the working copies, and
 a changed artboard is exported again in the pull request that changes the
-spec it affects.
+spec it affects. An artboard that a later artboard or the spec has replaced
+has no PNG, because a PNG in the repository is read as the source of a
+screen. The words are Claude Design's own, artboard and its file, so
+`canvas` names the page's region that holds the chart.
 
 | Claude Design file | Holds                                         |
 | ------------------ | --------------------------------------------- |
