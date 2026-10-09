@@ -12,7 +12,19 @@ import {
 
 const LOOP = ["build", "run", "submit"] as const;
 // Step over (Shift+→) joins the table with the action itself.
-const KEYS = ["delete", "undo", "duplicate", "run", "step", "skip", "escape"] as const;
+const KEYS = [
+  "delete",
+  "undo",
+  "duplicate",
+  "run",
+  "step",
+  "skip",
+  "escape",
+  "tab",
+  "highlight",
+  "caret",
+  "enter",
+] as const;
 
 type Props = { open: boolean; onOpenChange: (open: boolean) => void };
 

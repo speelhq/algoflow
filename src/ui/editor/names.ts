@@ -1,14 +1,11 @@
-// The suggestion row of a name slot: the names the problem asks for, the names already in
-// the program, then a fixed list, each once and at most `ROW` in all.
+// The list under a name field (U-94): the names of the problem's expected variables under
+// `This problem`, the program's other variables under `Variables`, each kept while one of its
+// words begins with the text typed, and a typed name neither holds offered as a new variable.
 import { declaredBy } from "@/lang/scope";
-import type { Id, Program } from "@/lang/types";
+import { NAME_PATTERN, RESERVED, type Id, type Program } from "@/lang/types";
 import { programStmts } from "@/lang/walk";
 
-export const COMMON_NAMES: readonly Id[] = ["i", "j", "count", "found"];
-/** The most names the row offers: one line beside the name input. */
-export const ROW = 6;
-
-/** Every variable name the program has: inputs, parameters, and assigned names. */
+/** Every variable name the program has: inputs, parameters, and assigned names, in program order. */
 export function programNames(program: Program): Id[] {
   const names = new Set<Id>(program.inputs.map((input) => input.name));
   for (const fn of program.functions) for (const param of fn.params) names.add(param);
@@ -18,24 +15,36 @@ export function programNames(program: Program): Id[] {
   return [...names];
 }
 
-export type Suggestion = { name: Id; asked: boolean };
+export type NameRow = { kind: "name"; name: Id } | { kind: "new"; name: Id };
+export type NameSection = { group: "problem" | "variables" | "new"; rows: NameRow[] };
 
-/** `asked` are the names of the challenge's `expect.variables`. */
-export function nameSuggestions(program: Program, asked: readonly Id[]): Suggestion[] {
-  const seen = new Set<Id>();
-  const out: Suggestion[] = [];
-  const add = (name: Id, isAsked: boolean) => {
-    if (seen.has(name)) return;
-    seen.add(name);
-    out.push({ name, asked: isAsked });
-  };
-  for (const name of asked) add(name, true);
-  for (const name of programNames(program)) add(name, false);
-  for (const name of COMMON_NAMES) add(name, false);
-  return out.slice(0, ROW);
+/** Whether `name` is kept for the text typed: one of its words (split at `_`) begins with it. */
+export function keepsName(name: string, typed: string): boolean {
+  return typed === "" || name.startsWith(typed) || name.split("_").some((w) => w.startsWith(typed));
 }
 
-/** What a name input keeps of typed text: the characters a name may have, no digit first. */
+/** The sections of the list for the text typed; `asked` are the problem's expected names. */
+export function nameSections(program: Program, asked: readonly Id[], typed: string): NameSection[] {
+  const problem = [...new Set(asked)];
+  const others = programNames(program).filter((name) => !problem.includes(name));
+  const sections: NameSection[] = [
+    {
+      group: "problem",
+      rows: problem.filter((n) => keepsName(n, typed)).map((name) => ({ kind: "name", name })),
+    },
+    {
+      group: "variables",
+      rows: others.filter((n) => keepsName(n, typed)).map((name) => ({ kind: "name", name })),
+    },
+  ];
+  const known = problem.includes(typed) || others.includes(typed);
+  if (typed !== "" && !known && NAME_PATTERN.test(typed) && !RESERVED.has(typed)) {
+    sections.push({ group: "new", rows: [{ kind: "new", name: typed }] });
+  }
+  return sections.filter((section) => section.rows.length > 0);
+}
+
+/** What a name field keeps of typed text: the characters a name may have, no digit first. */
 export function nameChars(text: string): string {
   return text.replace(/[^a-z0-9_]/g, "").replace(/^[0-9]+/, "");
 }

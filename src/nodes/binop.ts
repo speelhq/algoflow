@@ -210,7 +210,6 @@ export const binop = defineExpr<"binop">({
   ],
 });
 
-
 const WORD_FORMS: Partial<Record<Binop["op"], string>> = {
   "%": "Mod",
   "//": "FloorDiv",

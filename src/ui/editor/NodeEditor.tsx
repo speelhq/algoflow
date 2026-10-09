@@ -1,32 +1,66 @@
-// The node editor: a popover anchored to the selected node, showing the block's sentence with
-// its slots editable in place (names as inputs with a suggestion row, expressions as chips
-// with their menu, lists with add and remove, texts as inputs), the node's diagnostics with
-// their fixes, the block's help, and `Duplicate` and `Delete`. Reads slot roles, never a kind.
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+// The node editor (U-41): a popover beside the selected node holding the node's name field
+// with `Duplicate` and `Delete`, the block's sentence with its slots editable in place (names
+// as name fields, values as value lines, lists of values with add and remove), the list of
+// the focused slot, and the explanation line. Reads slot roles, never a kind.
+import { Copy, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { getChallenge } from "@/challenges";
-import { errorText, t } from "@/i18n/t";
-import { duplicateStmt, hoistAssign, removeItem, removeStmt, setExpr, setSlot } from "@/lang/edit";
+import { errorText, t, type MessageKey } from "@/i18n/t";
+import {
+  duplicateStmt,
+  hoistAssign,
+  removeItem,
+  removeStmt,
+  setExpr,
+  setSlot,
+  setStmtName,
+  stmtName,
+} from "@/lang/edit";
 import { newId } from "@/lang/id";
+import { chartOf, variableKinds } from "@/lang/kinds";
 import { visibleAt } from "@/lang/scope";
-import type { Diagnostic, Expr, NodeId, Program, Stmt, Target } from "@/lang/types";
+import type { Diagnostic, Expr, Id, NodeId, Program, Stmt, Target } from "@/lang/types";
 import { validate } from "@/lang/validate";
-import { isExpr, nodesById, ownerStmts } from "@/lang/walk";
+import { allExprs, isEmptyExpr, isExpr, nodesById, ownerStmts } from "@/lang/walk";
 import { cn } from "@/lib/utils";
 import { getNode, keyOf } from "@/nodes";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { nodeText, templateOf } from "@/ui/chart/text";
-import { ChipView, type ChipActions } from "@/ui/expression/ChipView";
-import { emptyChip, replaceChip, unwrapChip } from "@/ui/expression/chips";
-import { firstEmpty, placeItem, type Item } from "@/ui/expression/items";
-import { matchTemplate } from "@/ui/expression/templates";
-import { ValueMenu } from "@/ui/expression/ValueMenu";
 import { Button } from "@/ui/primitives/button";
 import { Input } from "@/ui/primitives/input";
-import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { Popover, PopoverTrigger } from "@/ui/primitives/popover";
 import { apply } from "./edits";
-import { nameChars, nameSuggestions } from "./names";
+import { EditorList, type ListItem, type ListSection } from "./EditorList";
+import { allEntries, entryOf } from "./entries";
+import {
+  explainLine,
+  explainVariable,
+  functionLabel,
+  helpParts,
+  type Explanation,
+} from "./explain";
+import {
+  backspace,
+  choose,
+  endText,
+  find,
+  matches,
+  move,
+  openLine,
+  setText,
+  settle,
+  switchTo,
+  tab,
+  type,
+  type Line,
+  type LineContext,
+  type Row,
+} from "./line";
+import { listRows, listSections } from "./list";
+import { nameChars, nameSections, type NameRow } from "./names";
+import { ValueLine } from "./ValueLine";
 
 type Bag = Record<string, unknown>;
 
@@ -82,6 +116,15 @@ export function DiagnosticMessage({ diagnostic }: { diagnostic: Diagnostic }) {
   );
 }
 
+// ---------------------------------------------------------------- slots
+
+/** One editable slot of the sentence: a name, a value, or an item of a list of values. */
+type Field = { slot: string; role: "id" | "target" | "expr" | "text"; index?: number };
+
+const fieldKey = (field: Field) => `${field.slot}:${field.index ?? ""}`;
+const sameField = (a: Field | null, b: Field | null) =>
+  a !== null && b !== null && fieldKey(a) === fieldKey(b);
+
 /** The name in an `id` slot, or in a `target` slot holding a variable. */
 function nameOf(stmt: Stmt, slot: string): string | undefined {
   const value = (stmt as unknown as Bag)[slot];
@@ -95,50 +138,137 @@ function setName(program: Program, stmt: Stmt, slot: string, name: string): Prog
   return setSlot(program, stmt.id, slot, role === "target" ? { kind: "var", name } : name);
 }
 
-type Open = { chip: NodeId; root: NodeId; slot: string } | null;
+/** The fields of the sentence, in its reading order. */
+function fieldsOf(stmt: Stmt, program: Program): Field[] {
+  const def = getNode(keyOf(stmt));
+  const bag = stmt as unknown as Bag;
+  const out: Field[] = [];
+  for (const found of templateOf(stmt, program).matchAll(/\{(\w+)\}/g)) {
+    const slot = def.slots.find((s) => s.name === found[1]);
+    const value = slot ? bag[slot.name] : undefined;
+    if (!slot) continue;
+    if ((slot.role === "id" || slot.role === "target") && nameOf(stmt, slot.name) !== undefined) {
+      out.push({ slot: slot.name, role: slot.role });
+    } else if (slot.role === "expr" && isExpr(value)) out.push({ slot: slot.name, role: "expr" });
+    else if (slot.role === "exprs" && Array.isArray(value)) {
+      value.forEach((_, index) => out.push({ slot: slot.name, role: "expr", index }));
+    } else if (slot.role === "text") out.push({ slot: slot.name, role: "text" });
+  }
+  return out;
+}
 
-function Body({
-  stmt,
-  program,
-  initial,
-}: {
-  stmt: Stmt;
-  program: Program;
-  initial: string | null;
-}) {
+function valueOf(stmt: Stmt, field: Field): Expr | undefined {
+  const value = (stmt as unknown as Bag)[field.slot];
+  const item =
+    field.index === undefined ? value : Array.isArray(value) ? value[field.index] : undefined;
+  return isExpr(item) ? item : undefined;
+}
+
+/** Whether a field still has something to fill: an empty name or an input at any depth. */
+function toFill(stmt: Stmt, field: Field): boolean {
+  if (field.role === "id" || field.role === "target") return nameOf(stmt, field.slot) === "";
+  const value = valueOf(stmt, field);
+  return value !== undefined && [...allExprs(value)].some(isEmptyExpr);
+}
+
+// ---------------------------------------------------------------- the node's name
+
+/** The node's name field: one line in the learner's words, stored trimmed (U-95). */
+function NameOfNode({ stmt }: { stmt: Stmt }) {
+  const stored = stmt.name ?? "";
+  const [text, setText] = useState(stored);
+  // An undo changes the stored name under the field.
+  if (stmtName(text) !== stored) setText(stored);
+  return (
+    <label className="flex h-9 flex-1 items-center gap-2 rounded-md border px-2.5 focus-within:border-selection">
+      <span className="text-[0.7rem] tracking-wide text-muted-foreground uppercase">
+        {t("editor.name")}
+      </span>
+      <input
+        value={text}
+        placeholder={t("editor.nameHint")}
+        aria-label={t("editor.name")}
+        data-testid="node-name"
+        className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+        onChange={(event) => {
+          const next = event.target.value.replace(/[\r\n]+/g, " ");
+          setText(next);
+          apply((p) => setStmtName(p, stmt.id, next), `${stmt.id}:name`);
+        }}
+      />
+    </label>
+  );
+}
+
+// ---------------------------------------------------------------- the body
+
+type Initial = { slot: string | null; hole: NodeId | null };
+
+function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initial: Initial }) {
   const def = getNode(keyOf(stmt));
   const bag = stmt as unknown as Bag;
   const led = useEditor((s) => s.diagnostic);
   const select = useEditor((s) => s.select);
-  const names = useRef<Record<string, HTMLInputElement | null>>({});
+  const closeEditor = useEditor((s) => s.closeEditor);
+  const fields = fieldsOf(stmt, program);
+  const elements = useRef(new Map<string, HTMLElement | null>());
 
-  // The slot clicked on the node opens with its menu: an expression's chip, or a name's input.
-  const [open, setOpen] = useState<Open>(() => {
-    if (initial === null) return null;
-    const value = bag[initial];
-    const first = Array.isArray(value) ? value.find(isExpr) : value;
-    return isExpr(first) ? { chip: first.id, root: first.id, slot: initial } : null;
+  // The slot clicked on the node, else the first slot still to fill, takes the keyboard.
+  const [start] = useState<Field | null>(() => {
+    if (initial.slot !== null) {
+      const clicked = fields.filter((field) => field.slot === initial.slot);
+      const holding =
+        initial.hole === null
+          ? undefined
+          : clicked.find((field) => {
+              const value = valueOf(stmt, field);
+              return value !== undefined && find(value, initial.hole ?? "") !== undefined;
+            });
+      return holding ?? clicked[0] ?? null;
+    }
+    return fields.find((field) => toFill(stmt, field)) ?? null;
   });
-  const [nameSlot, setNameSlot] = useState<string | null>(() => {
-    const slot = def.slots.find((s) => s.name === initial);
-    return slot?.role === "id" || slot?.role === "target" ? initial : null;
+  const [focus, setFocus] = useState<Field | null>(start);
+  const [line, setLine] = useState<Line | null>(() => {
+    const root = start ? valueOf(stmt, start) : undefined;
+    return root ? openLine(root, initial.hole ?? undefined) : null;
   });
+  const [typed, setTyped] = useState<string | null>(null);
+  const [highlight, setHighlight] = useState<number | null>(null);
+  const [all, setAll] = useState(false);
+  const [switching, setSwitching] = useState<NodeId | null>(null);
+  const [focused, setFocused] = useState<Field | null>(null);
 
-  // A name slot clicked on the node takes the focus.
+  // A change made elsewhere (an undo) replaces the value under the line.
+  const shownRoot = focus ? valueOf(stmt, focus) : undefined;
+  if (line && (!shownRoot || JSON.stringify(shownRoot) !== JSON.stringify(line.root))) {
+    setLine(shownRoot ? openLine(shownRoot) : null);
+  }
+
+  // The focused field takes the keyboard once it is drawn.
   useEffect(() => {
-    if (initial !== null) names.current[initial]?.focus();
-  }, [initial]);
+    if (focus && !sameField(focus, focused)) elements.current.get(fieldKey(focus))?.focus();
+  }, [focus, focused]);
 
-  const visible = useMemo(() => visibleAt(program, stmt.id) ?? [], [program, stmt.id]);
-  const nodes = nodesById(program);
-  const challenge = getChallenge(program.challengeId);
-  const asked = Object.keys(challenge?.tests[0]?.expect.variables ?? {});
-  const suggestions = nameSuggestions(program, asked);
-  const nameSlots = def.slots.filter(
-    (slot) =>
-      (slot.role === "id" || slot.role === "target") && nameOf(stmt, slot.name) !== undefined,
+  const chart = chartOf(program, stmt.id);
+  const kinds = variableKinds(program, chart);
+  const ctx: LineContext = useMemo(
+    () => ({
+      variables: visibleAt(program, stmt.id) ?? [],
+      kinds,
+      scope: {
+        classes: program.classes.map((cls) => cls.name),
+        functions: program.functions.map((fn) => fn.name),
+      },
+      functions: program.functions.map((fn) => ({ name: fn.name, params: fn.params })),
+    }),
+    [program, stmt.id, kinds],
   );
-  const suggestFor = nameSlot ?? nameSlots[0]?.name;
+  const kindName = (name: Id) => {
+    const kind = kinds.get(name);
+    return kind ? t(`editor.kind.${kind}` as MessageKey) : undefined;
+  };
+
   // The diagnostic Run led to is shown while the program still has it, once.
   const diagnostics = nodeDiagnostics(program, stmt.id);
   const still = led ? validate(program).find((d) => sameDiagnostic(d, led)) : undefined;
@@ -146,43 +276,247 @@ function Body({
     if (!diagnostics.includes(still)) diagnostics.unshift(still);
   }
 
-  const actions = (slot: string, root: Expr): ChipActions => ({
-    open: open?.chip ?? null,
-    choose: (expr) => setOpen({ chip: expr.id, root: root.id, slot }),
-    remove: (expr) => apply((p) => emptyChip(p, expr.id)),
-    unwrap: (expr) => apply((p) => unwrapChip(p, expr)),
-  });
+  // ------------------------------------------------------------ moving between fields
 
-  const slotView = (slot: string, expr: Expr): ReactNode => {
-    const matched = def.shape === "stmt" ? matchTemplate(expr) : undefined;
-    if (!matched) return <ChipView expr={expr} actions={actions(slot, expr)} />;
-    const sentence = t(matched.template.key);
-    return (
-      <span
-        className="inline-flex flex-wrap items-center gap-1"
-        data-slot-template={matched.template.name}
-      >
-        {sentence.split(/\{([ab])\}/).map((piece, i) => {
-          // oxlint-disable-next-line react/no-array-index-key -- pieces are positional
-          if (piece === "a")
-            return <ChipView key={i} expr={matched.a} actions={actions(slot, expr)} />;
-          // oxlint-disable-next-line react/no-array-index-key -- pieces are positional
-          if (piece === "b")
-            return <ChipView key={i} expr={matched.b} actions={actions(slot, expr)} />;
-          return piece.trim() === "" ? null : (
-            <button
-              // oxlint-disable-next-line react/no-array-index-key -- pieces are positional
-              key={i}
-              type="button"
-              className="cursor-pointer rounded px-0.5 hover:bg-muted"
-              onClick={() => setOpen({ chip: expr.id, root: expr.id, slot })}
-            >
-              {piece.trim()}
-            </button>
-          );
-        })}
-      </span>
+  const enter = (field: Field | null) => {
+    setFocus(field);
+    setTyped(null);
+    setHighlight(null);
+    setAll(false);
+    setSwitching(null);
+    const placed = useProgram.getState().program;
+    const now = nodesById(placed).get(stmt.id) as Stmt | undefined;
+    const root = field && now ? valueOf(now, field) : undefined;
+    setLine(root ? openLine(root) : null);
+  };
+
+  /** Leaves the focused field for the next or previous one, settling a word typed. */
+  const go = (step: 1 | -1, from: Field | null = focus) => {
+    if (line) commit(settle(line, ctx));
+    const at = from ? fields.findIndex((field) => sameField(field, from)) : -1;
+    const next = fields[at + step];
+    if (next) enter(next);
+  };
+
+  // ------------------------------------------------------------ the value line
+
+  const commit = (next: Line) => {
+    if (!focus) return;
+    const current = valueOf(stmt, focus);
+    if (JSON.stringify(current) !== JSON.stringify(next.root)) {
+      const at = focus;
+      apply((p) => setExpr(p, stmt.id, at.slot, next.root, at.index), `${stmt.id}:${fieldKey(at)}`);
+    }
+    setLine(next);
+    setHighlight(null);
+    setSwitching(null);
+  };
+
+  const switchSections = (): { rows: Row[]; sections: ListSection[] } => {
+    const held = line && switching ? find(line.root, switching) : undefined;
+    const current = held ? entryOf(held) : undefined;
+    const others = allEntries().filter(
+      (entry) =>
+        current !== undefined &&
+        entry !== current &&
+        entry.def === current.def &&
+        entry.menu.group === current.menu.group,
     );
+    const rows = others.map((entry): Row => ({ kind: "entry", entry }));
+    const title = current ? t(`editor.lists.${current.menu.group}` as MessageKey) : "";
+    return { rows, sections: rows.length > 0 ? [{ title, items: rows.map(rowItem) }] : [] };
+  };
+
+  const rowItem = (row: Row, index: number): ListItem => {
+    switch (row.kind) {
+      case "variable":
+        return {
+          key: `v:${row.name}:${index}`,
+          label: row.name,
+          variable: true,
+          note: kindName(row.name),
+        };
+      case "entry":
+        return {
+          key: `e:${row.entry.id}`,
+          label: row.entry.label,
+          ...(row.entry.menu.symbol ? { symbol: row.entry.menu.symbol } : {}),
+        };
+      case "function":
+        return { key: `f:${row.fn.name}`, label: functionLabel(row.fn) };
+      case "brackets":
+        return { key: "brackets", label: t("editor.brackets"), symbol: t("editor.bracketsGlyph") };
+    }
+  };
+
+  const valueList = (): { rows: Row[]; sections: ListSection[] } => {
+    if (!line) return { rows: [], sections: [] };
+    if (switching) return switchSections();
+    const listed = listSections(line, ctx, all);
+    let index = 0;
+    const sections = listed.map((section) => ({
+      title: t(`editor.lists.${section.group}` as MessageKey),
+      items: section.rows.map((row) => rowItem(row, (index += 1))),
+    }));
+    return { rows: listRows(listed), sections };
+  };
+
+  const shownHighlight = (rows: readonly unknown[]) =>
+    highlight !== null && highlight < rows.length
+      ? highlight
+      : line && line.word !== "" && rows.length > 0
+        ? 0
+        : null;
+
+  const chooseRow = (row: Row) => {
+    if (!line) return;
+    if (switching && row.kind === "entry") return commit(switchTo(line, switching, row.entry));
+    commit(choose(line, row, ctx).line);
+  };
+
+  const addItem = (slot: string, at?: number) => {
+    const empty: Expr = { id: newId(), kind: "empty" };
+    if (!apply((p) => setExpr(p, stmt.id, slot, empty, at))) return;
+    const placed = nodesById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
+    const items = placed ? (placed as unknown as Bag)[slot] : undefined;
+    const index = Array.isArray(items)
+      ? items.findIndex((item) => isExpr(item) && item.id === empty.id)
+      : -1;
+    const isList = def.slots.find((s) => s.name === slot)?.role === "exprs";
+    enter({ slot, role: "expr", ...(isList ? { index } : {}) });
+  };
+
+  const onValueKey = (event: KeyboardEvent<HTMLDivElement>, rows: Row[]) => {
+    // Keys typed in a text field inside the line are the field's.
+    if (event.target instanceof HTMLInputElement) return;
+    if (!line || !focus || event.ctrlKey || event.metaKey || event.altKey) return;
+    const shown = shownHighlight(rows);
+    switch (event.key) {
+      case "Escape":
+        return;
+      case "ArrowDown":
+      case "ArrowUp": {
+        event.preventDefault();
+        if (rows.length === 0) return;
+        const step = event.key === "ArrowDown" ? 1 : -1;
+        setHighlight(
+          shown === null
+            ? step > 0
+              ? 0
+              : rows.length - 1
+            : (shown + step + rows.length) % rows.length,
+        );
+        return;
+      }
+      case "ArrowLeft":
+      case "ArrowRight":
+        if (line.word !== "") return;
+        event.preventDefault();
+        commit(move(line, event.key === "ArrowLeft" ? -1 : 1).line);
+        return;
+      case "Tab": {
+        event.preventDefault();
+        const step = event.shiftKey ? -1 : 1;
+        const moved = tab(line, step, ctx);
+        commit(moved.line);
+        if (moved.move) go(step);
+        return;
+      }
+      case "Enter": {
+        event.preventDefault();
+        const row = shown === null ? undefined : rows[shown];
+        if (row) return chooseRow(row);
+        if (line.word !== "") return commit(settle(line, ctx));
+        closeEditor();
+        return;
+      }
+      case "Backspace":
+        event.preventDefault();
+        commit(backspace(line).line);
+        return;
+      case "Delete":
+        event.preventDefault();
+        if (line.selected) commit(backspace(line).line);
+        return;
+      default: {
+        if (event.key.length !== 1) return;
+        event.preventDefault();
+        const typedKey = type(line, event.key, ctx);
+        commit(typedKey.line);
+        const list = def.slots.find((s) => s.name === focus.slot)?.role === "exprs";
+        if (typedKey.move === "item" && list) addItem(focus.slot, (focus.index ?? 0) + 1);
+      }
+    }
+  };
+
+  // ------------------------------------------------------------ names
+
+  const asked = Object.keys(getChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {});
+  const nameList = (field: Field) => {
+    const listed = nameSections(program, asked, typed ?? "");
+    const rows: NameRow[] = listed.flatMap((section) => section.rows);
+    const sections: ListSection[] = listed.map((section) => ({
+      title:
+        section.group === "problem"
+          ? t("editor.thisProblem")
+          : section.group === "variables"
+            ? t("editor.lists.variables")
+            : "",
+      items: section.rows.map((row) => ({
+        key: `${row.kind}:${row.name}`,
+        label: row.name,
+        variable: true,
+        ...(row.kind === "new" ? { lead: t("editor.newVariable") } : { note: kindName(row.name) }),
+      })),
+    }));
+    return { rows, sections, field };
+  };
+
+  const chooseName = (field: Field, name: Id) => {
+    apply((p) => setName(p, stmt, field.slot, name));
+    setTyped(null);
+    go(1, field);
+  };
+
+  const onNameKey = (event: KeyboardEvent<HTMLInputElement>, field: Field, rows: NameRow[]) => {
+    const shown = highlight !== null && highlight < rows.length ? highlight : typed ? 0 : null;
+    switch (event.key) {
+      case "ArrowDown":
+      case "ArrowUp": {
+        event.preventDefault();
+        if (rows.length === 0) return;
+        const step = event.key === "ArrowDown" ? 1 : -1;
+        setHighlight(
+          shown === null
+            ? step > 0
+              ? 0
+              : rows.length - 1
+            : (shown + step + rows.length) % rows.length,
+        );
+        return;
+      }
+      case "Enter": {
+        event.preventDefault();
+        const row = shown === null ? undefined : rows[shown];
+        if (row) return chooseName(field, row.name);
+        const last = fields.at(-1);
+        if (typed === null && last && sameField(last, field)) return closeEditor();
+        if (typed === null) return go(1, field);
+        return;
+      }
+      case "Tab":
+        event.preventDefault();
+        go(event.shiftKey ? -1 : 1, field);
+        return;
+      default:
+        return;
+    }
+  };
+
+  // ------------------------------------------------------------ the sentence
+
+  const register = (field: Field) => (element: HTMLElement | null) => {
+    elements.current.set(fieldKey(field), element);
   };
 
   const widget = (name: string): ReactNode => {
@@ -194,23 +528,32 @@ function Body({
       case "target": {
         const current = nameOf(stmt, name);
         if (current === undefined) return null;
+        const field: Field = { slot: name, role: slot.role };
+        const on = sameField(focus, field);
         return (
-          <Input
+          <input
             key={name}
-            ref={(element) => {
-              names.current[name] = element;
-            }}
-            value={current}
+            ref={register(field)}
+            value={on && typed !== null ? typed : current}
             aria-label={name}
             data-name-slot={name}
-            className="h-8 w-32 font-mono"
-            onFocus={() => setNameSlot(name)}
-            onChange={(event) =>
-              apply(
-                (p) => setName(p, stmt, name, nameChars(event.target.value)),
-                `${stmt.id}:${name}`,
-              )
-            }
+            className={cn(
+              "h-8 min-w-10 rounded-md border px-1.5 outline-none [field-sizing:content]",
+              on && "border-selection ring-1 ring-selection",
+              !on && current === "" && "border-dashed",
+              // A name not being edited reads as the variable it names (N-08).
+              !on && current !== "" && "border-transparent font-semibold text-variable",
+            )}
+            onFocus={() => {
+              setFocused(field);
+              if (!sameField(focus, field)) enter(field);
+            }}
+            onBlur={() => setTyped(null)}
+            onChange={(event) => {
+              setTyped(nameChars(event.target.value));
+              setHighlight(null);
+            }}
+            onKeyDown={(event) => onNameKey(event, field, nameList(field).rows)}
           />
         );
       }
@@ -228,17 +571,13 @@ function Body({
         );
       case "expr":
         return isExpr(value) ? (
-          <span key={name}>{slotView(name, value)}</span>
+          lineWidget({ slot: name, role: "expr" }, value)
         ) : (
           <button
             key={name}
             type="button"
-            className="h-7 rounded-full border border-dashed px-2.5 text-muted-foreground"
-            onClick={() => {
-              const empty: Expr = { id: newId(), kind: "empty" };
-              if (apply((p) => setExpr(p, stmt.id, name, empty)))
-                setOpen({ chip: empty.id, root: empty.id, slot: name });
-            }}
+            className="h-7 cursor-pointer rounded-full border border-dashed px-2.5 text-muted-foreground hover:bg-muted"
+            onClick={() => addItem(name)}
           >
             {t("editor.addValue")}
           </button>
@@ -249,12 +588,15 @@ function Body({
           <span key={name} className="inline-flex flex-wrap items-center gap-1">
             {items.map((item, index) => (
               <span key={item.id} className="inline-flex items-center gap-0.5">
-                {slotView(name, item)}
+                {index > 0 && <span>{t("editor.listSeparator")}</span>}
+                {lineWidget({ slot: name, role: "expr", index }, item)}
                 <button
                   type="button"
                   aria-label={t("editor.removeValue")}
                   className="size-5 cursor-pointer rounded-full text-muted-foreground hover:bg-muted"
-                  onClick={() => apply((p) => removeItem(p, stmt.id, name, index))}
+                  onClick={() => {
+                    if (apply((p) => removeItem(p, stmt.id, name, index))) enter(null);
+                  }}
                 >
                   {t("editor.removeGlyph")}
                 </button>
@@ -263,11 +605,7 @@ function Body({
             <button
               type="button"
               className="h-7 cursor-pointer rounded-full border border-dashed px-2.5 text-sm text-muted-foreground hover:bg-muted"
-              onClick={() => {
-                const empty: Expr = { id: newId(), kind: "empty" };
-                if (apply((p) => setExpr(p, stmt.id, name, empty)))
-                  setOpen({ chip: empty.id, root: empty.id, slot: name });
-              }}
+              onClick={() => addItem(name)}
             >
               {t("editor.addValue")}
             </button>
@@ -277,6 +615,61 @@ function Body({
       default:
         return null;
     }
+  };
+
+  const valueRows = focus?.role === "expr" ? valueList() : { rows: [], sections: [] };
+
+  const lineWidget = (field: Field, root: Expr): ReactNode => {
+    const on = sameField(focus, field) && line !== null;
+    const shown = on ? line : null;
+    return (
+      <ValueLine
+        key={fieldKey(field)}
+        ref={register(field)}
+        root={root}
+        line={shown}
+        label={field.slot}
+        unmatched={shown !== null && shown.word !== "" && matches(shown, ctx).length === 0}
+        onKey={(event) => onValueKey(event, valueRows.rows)}
+        onFocus={() => {
+          setFocused(field);
+          if (!sameField(focus, field)) enter(field);
+        }}
+        onClickAt={(id, op) => {
+          if (!sameField(focus, field)) {
+            enter(field);
+            return;
+          }
+          if (!line) return;
+          if (op) {
+            setSwitching(id);
+            setHighlight(null);
+            return;
+          }
+          const clicked = find(line.root, id);
+          if (!clicked) return;
+          setLine({
+            ...line,
+            caret: isEmptyExpr(clicked) ? { at: id } : { after: id },
+            selected: false,
+            word: "",
+          });
+          setSwitching(null);
+        }}
+        onText={(id, text) => commit(setText(line ?? openLine(root), id, text))}
+        onTextEnd={(key) => {
+          if (!line) return;
+          const ended = endText(line);
+          commit(ended);
+          if (key === "Tab" || key === "ShiftTab") {
+            const moved = tab(ended, key === "Tab" ? 1 : -1, ctx);
+            commit(moved.line);
+            if (moved.move) go(key === "Tab" ? 1 : -1);
+          }
+          if (key !== "blur") elements.current.get(fieldKey(field))?.focus();
+        }}
+      />
+    );
   };
 
   const template = templateOf(stmt, program);
@@ -291,104 +684,130 @@ function Body({
   const tail = template.slice(at).trim();
   if (tail !== "") sentence.push(<span key="tail">{tail}</span>);
 
-  const chip = open ? nodes.get(open.chip) : undefined;
-  const root = open ? nodes.get(open.root) : undefined;
-  const conditionSlot =
-    def.chart && ("branch" in def.chart || "check" in def.chart)
-      ? def.slots.find((s) => s.role === "expr")?.name
-      : undefined;
+  // ------------------------------------------------------------ the list and its explanation
 
-  const place = (expr: Expr, focus: Expr | null) => {
-    if (!open) return;
-    const at = open;
-    if (!apply((p) => replaceChip(p, at.chip, expr))) return;
-    const rootId = at.root === at.chip ? expr.id : at.root;
-    if (focus) return setOpen({ chip: focus.id, root: rootId, slot: at.slot });
-    // With the chip complete, the menu moves to the next empty slot of the same statement
-    // slot: inside this expression, else in a later item of the slot's list.
-    const placed = useProgram.getState().program;
-    const nodes = nodesById(placed);
-    const root = nodes.get(rootId);
-    const inside = root && isExpr(root) ? firstEmpty(root) : undefined;
-    if (inside) return setOpen({ chip: inside.id, root: rootId, slot: at.slot });
-    const owner = nodes.get(stmt.id) as unknown as Bag | undefined;
-    const items: unknown[] = Array.isArray(owner?.[at.slot]) ? (owner?.[at.slot] as unknown[]) : [];
-    const later = items.slice(items.findIndex((item) => isExpr(item) && item.id === rootId) + 1);
-    for (const item of later) {
-      const empty = isExpr(item) ? firstEmpty(item) : undefined;
-      if (empty && isExpr(item)) return setOpen({ chip: empty.id, root: item.id, slot: at.slot });
-    }
-    setOpen(null);
-  };
+  let list: ReactNode = null;
+  let explanation: Explanation | undefined;
+  if (focus && (focus.role === "id" || focus.role === "target")) {
+    const names = nameList(focus);
+    const shown =
+      highlight !== null && highlight < names.rows.length ? highlight : typed ? 0 : null;
+    const row = shown === null ? undefined : names.rows[shown];
+    list = (
+      <EditorList
+        sections={names.sections}
+        highlight={shown}
+        enter={typed !== null}
+        onHighlight={setHighlight}
+        onChoose={(index) => {
+          const chosen = names.rows[index];
+          if (chosen) chooseName(focus, chosen.name);
+        }}
+      />
+    );
+    explanation = row
+      ? {
+          name: row.name,
+          variable: true,
+          parts: [
+            {
+              text:
+                row.kind === "new"
+                  ? t("editor.explain.newVariable", { name: row.name })
+                  : explainVariable(program, stmt.id, row.name),
+            },
+          ],
+        }
+      : { name: "", parts: [{ text: t("editor.explain.name") }] };
+  } else if (focus?.role === "expr" && line) {
+    const { rows, sections } = valueRows;
+    const shown = shownHighlight(rows);
+    list = (
+      <EditorList
+        sections={sections}
+        highlight={shown}
+        enter={line.word !== ""}
+        onHighlight={setHighlight}
+        onChoose={(index) => {
+          const row = rows[index];
+          if (row) chooseRow(row);
+        }}
+        {...(line.word === "" && !switching && !all ? { onShowAll: () => setAll(true) } : {})}
+      />
+    );
+    explanation = explainLine(
+      line,
+      ctx,
+      shown === null ? undefined : rows[shown],
+      program,
+      stmt.id,
+    );
+  }
+  explanation ??= { name: nodeText(def.key, "label"), parts: helpParts(nodeText(def.key, "help")) };
 
   return (
-    <div className="flex flex-col gap-3" data-testid="node-editor" data-node={stmt.id}>
-      {diagnostics.map((d, i) => (
-        // oxlint-disable-next-line react/no-array-index-key -- diagnostics have no id of their own
-        <DiagnosticMessage key={i} diagnostic={d} />
-      ))}
-      <div
-        className="flex flex-wrap items-center gap-1.5 text-[0.95rem]"
-        data-testid="editor-sentence"
-      >
-        {sentence}
-      </div>
-      {suggestFor !== undefined && (
-        <div className="flex flex-wrap items-center gap-1.5" data-testid="name-suggestions">
-          <span className="text-xs tracking-wide text-muted-foreground uppercase">
-            {t("editor.names")}
-          </span>
-          {suggestions.map((s) => (
-            <span key={s.name} className="inline-flex items-center gap-1">
-              <button
-                type="button"
-                className={cn(
-                  "h-7 cursor-pointer rounded-full border px-2.5 font-mono text-sm hover:bg-muted",
-                  s.asked && "border-selection bg-selection/10",
-                )}
-                onClick={() => {
-                  apply((p) => setName(p, stmt, suggestFor, s.name));
-                  names.current[suggestFor]?.focus();
-                }}
-              >
-                {s.name}
-              </button>
-              {s.asked && (
-                <span className="text-xs text-muted-foreground">{t("editor.asked")}</span>
-              )}
-            </span>
+    <div className="flex flex-col" data-testid="node-editor" data-node={stmt.id}>
+      {diagnostics.length > 0 && (
+        <div className="flex flex-col gap-2 p-2.5 pb-0">
+          {diagnostics.map((d, i) => (
+            // oxlint-disable-next-line react/no-array-index-key -- diagnostics have no id of their own
+            <DiagnosticMessage key={i} diagnostic={d} />
           ))}
         </div>
       )}
-      {open && chip && root && (
-        <ValueMenu
-          key={open.chip}
-          program={program}
-          visible={visible}
-          condition={open.slot === conditionSlot && open.chip === open.root}
-          choose={(item: Item) => {
-            const placed = placeItem(item, chip as Expr);
-            place(placed.expr, placed.focus);
-          }}
-          template={(make) => {
-            const made = make();
-            place(made, matchTemplate(made)?.a ?? null);
-          }}
-        />
-      )}
-      <p className="text-muted-foreground">{nodeText(def.key, "help")}</p>
-      <div className="flex gap-2 border-t pt-3">
-        <Button variant="outline" onClick={() => apply((p) => duplicateStmt(p, stmt.id))}>
-          {t("editor.duplicate")}
+      <div className="flex items-center gap-2 border-b p-2.5">
+        <NameOfNode stmt={stmt} />
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label={t("editor.duplicate")}
+          title={t("editor.duplicate")}
+          onClick={() => apply((p) => duplicateStmt(p, stmt.id))}
+        >
+          <Copy />
         </Button>
         <Button
           variant="outline"
+          size="icon"
+          aria-label={t("editor.delete")}
+          title={t("editor.delete")}
           onClick={() => {
             if (apply((p) => removeStmt(p, stmt.id))) select(null);
           }}
         >
-          {t("editor.delete")}
+          <Trash2 />
         </Button>
+      </div>
+      <div
+        className="flex flex-wrap items-center gap-1.5 border-b p-2.5 text-[0.95rem]"
+        data-testid="editor-sentence"
+      >
+        {sentence}
+      </div>
+      {list && <div className="border-b">{list}</div>}
+      <div
+        className="flex items-baseline gap-2 rounded-b-lg bg-muted/40 px-2.5 py-2 text-[0.85rem]"
+        data-testid="explanation"
+      >
+        {explanation.name !== "" && (
+          <span className={cn("font-semibold", explanation.variable && "text-variable")}>
+            {explanation.name}
+          </span>
+        )}
+        <span>
+          {explanation.parts.map((part, i) => (
+            <span
+              // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+              key={i}
+              className={cn(
+                part.underline && "underline underline-offset-2",
+                part.slot === "key" && "rounded bg-muted px-1 font-mono text-[0.8rem]",
+              )}
+            >
+              {part.text}
+            </span>
+          ))}
+        </span>
       </div>
     </div>
   );
@@ -398,6 +817,7 @@ function Body({
 export function NodeEditor({ id }: { id: NodeId }) {
   const program = useProgram((s) => s.program);
   const slot = useEditor((s) => s.slot);
+  const hole = useEditor((s) => s.hole);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
   const [boundary, setBoundary] = useState<Element | null>(null);
@@ -432,17 +852,17 @@ export function NodeEditor({ id }: { id: NodeId }) {
           className="isolate z-50"
         >
           <PopoverPrimitive.Popup
-            className="z-50 flex w-104 flex-col gap-2.5 rounded-lg bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden"
+            className="z-50 flex w-90 flex-col rounded-lg bg-popover text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden"
             aria-label={t("editor.label")}
-            // Focus stays on the chart, so the editing keys act on the selected node.
+            // The keyboard stays with the chart unless a slot takes it.
             initialFocus={false}
             finalFocus={false}
           >
             <Body
-              key={`${id}:${slot ?? ""}`}
+              key={`${id}:${slot ?? ""}:${hole ?? ""}`}
               stmt={node as Stmt}
               program={program}
-              initial={slot}
+              initial={{ slot, hole }}
             />
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>

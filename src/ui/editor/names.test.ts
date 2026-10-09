@@ -1,28 +1,52 @@
-// U-41: the suggestion row of a name slot, and what a name input keeps.
+// U-94: the list under a name field, and what a name field keeps.
 import { describe, expect, it } from "vitest";
+import { CHALLENGES } from "@/challenges";
 import { ast, program } from "@/nodes/testing";
-import { nameChars, nameSuggestions, ROW } from "./names";
+import { nameChars, nameSections } from "./names";
 
 const { assign, num, for_ } = ast;
 
-describe("name suggestions (U-41)", () => {
-  it("U-41: the asked names first, marked, then the program's, then i j count found, at most six", () => {
-    const p = program([assign("count", num(0)), for_("k", num(0), num(3), [])], {
-      inputs: [{ name: "n", value: 3 }],
-    });
-    expect(nameSuggestions(p, ["total"])).toEqual([
-      { name: "total", asked: true },
-      { name: "n", asked: false },
-      { name: "count", asked: false },
-      { name: "k", asked: false },
-      { name: "i", asked: false },
-      { name: "j", asked: false },
+const shown = (sections: ReturnType<typeof nameSections>) =>
+  sections.map((section) => [section.group, section.rows.map((row) => row.name)]);
+
+describe("name list (U-94)", () => {
+  it("the problem's names first, in order, then the program's other variables, with no limit", () => {
+    const p = program(
+      [assign("count", num(0)), for_("k", num(0), num(3), []), assign("total", num(1))],
+      { inputs: [{ name: "n", value: 3 }] },
+    );
+    expect(shown(nameSections(p, ["total", "best"], ""))).toEqual([
+      ["problem", ["total", "best"]],
+      ["variables", ["n", "count", "k"]],
     ]);
     const many = program(["a", "b", "c", "d", "e", "f", "g"].map((name) => assign(name, num(0))));
-    expect(nameSuggestions(many, ["total"])).toHaveLength(ROW);
+    expect(nameSections(many, [], "")[0]?.rows).toHaveLength(7);
   });
 
-  it("U-41: a name input keeps only the characters of L-01", () => {
+  it("Sum to n: total under This problem; typing to offers New variable to", () => {
+    const sum = CHALLENGES.find((challenge) => challenge.id === "sum-to-n");
+    if (!sum) throw new Error("sum-to-n missing");
+    const asked = Object.keys(sum.tests[0]?.expect.variables ?? {});
+    const p = program([], { inputs: [{ name: "n", value: 10 }] });
+    expect(shown(nameSections(p, asked, ""))[0]).toEqual(["problem", ["total"]]);
+    expect(shown(nameSections(p, asked, "to"))).toEqual([
+      ["problem", ["total"]],
+      ["new", ["to"]],
+    ]);
+  });
+
+  it("typing keeps the names one of whose words begins with it; a valid new name is offered", () => {
+    const p = program([assign("max_len", num(0)), assign("lens", num(0))]);
+    expect(shown(nameSections(p, [], "le"))).toEqual([
+      ["variables", ["max_len", "lens"]],
+      ["new", ["le"]],
+    ]);
+    expect(shown(nameSections(p, [], "lens"))).toEqual([["variables", ["lens"]]]);
+    expect(shown(nameSections(p, [], "for"))).toEqual([]); // a keyword: no new name
+    expect(shown(nameSections(p, [], "len"))).toEqual([["variables", ["max_len", "lens"]]]);
+  });
+
+  it("a name field keeps only the characters of L-01", () => {
     expect(nameChars("Total Sum-1_x")).toBe("otalum1_x");
     expect(nameChars("i")).toBe("i");
     expect(nameChars("1x2")).toBe("x2");

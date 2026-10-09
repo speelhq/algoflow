@@ -42,6 +42,8 @@ export type Part = {
   empty?: boolean;
   hole?: NodeId;
   variable?: boolean;
+  /** The input the editor's caret is in (U-96). */
+  underline?: boolean;
 };
 
 /** The text the parts spell. */
@@ -90,10 +92,10 @@ export function templateParts(template: string, fill: (name: string) => Part[]):
   return merged;
 }
 
-const plain = (part: Part) => !part.variable && !part.empty;
+const plain = (part: Part) => !part.variable && !part.empty && !part.underline;
 
 /** The template of an expression in its form. */
-function exprTemplate(expr: Expr): string {
+export function exprTemplate(expr: Expr): string {
   const def = getNode(keyOf(expr));
   return nodeText(def.key, `template${def.form?.(expr, { creates: false }) ?? ""}`);
 }
@@ -115,7 +117,7 @@ export function isOperator(expr: Expr): boolean {
 const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
 
 /** Whether `child`, an input of `parent` on `side`, is put in brackets (N-08). */
-function bracketed(child: Expr, parent: Expr, side: Side): boolean {
+export function bracketed(child: Expr, parent: Expr, side: Side): boolean {
   if (isWordOperation(parent)) return isWordOperation(child) || isOperator(child);
   if (!isOperator(parent)) return false;
   if (isWordOperation(child)) return true;

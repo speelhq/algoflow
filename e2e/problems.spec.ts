@@ -89,6 +89,9 @@ test.describe("header, Help, and routes (U-01, U-02, U-04, U-06, U-07)", () => {
     await expect(help).toBeVisible();
     await expect(help).toContainText("Build: add blocks");
     await expect(help.getByRole("row", { name: /Ctrl\/Cmd\+Enter/ })).toContainText("Run / Pause");
+    // The editor's keys are in the table too.
+    await expect(help.getByRole("row", { name: /Tab, Shift\+Tab/ })).toContainText("slot");
+    await expect(help.getByRole("row", { name: /↑, ↓/ })).toContainText("highlight");
     await help.getByRole("button", { name: "Close" }).click();
     await expect(help).toHaveCount(0);
   });
