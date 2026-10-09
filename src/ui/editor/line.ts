@@ -561,8 +561,9 @@ export function backspace(line: Line): Outcome {
   const own = inputs(up.parent);
   const [first] = own;
   if (!first) return refused(line);
+  // While an input after the first holds a value, removing the operation would lose it.
+  if (own.slice(1).some((input) => !isEmptyExpr(input))) return move(current, -1);
   if (up.index === 0) {
-    if (own.slice(1).some((input) => !isEmptyExpr(input))) return move(current, -1);
     const next = replace(current, up.parent.id, first);
     return done({ ...next, caret: { at: first.id } });
   }
