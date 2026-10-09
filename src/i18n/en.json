@@ -345,8 +345,7 @@
       "list": "List",
       "function": "Function",
       "dict": "Dict",
-      "class": "Class",
-      "math": "Math"
+      "class": "Class"
     },
     "requires": {
       "loop": "only inside a loop",
