@@ -7,7 +7,9 @@ argument-hint: <issue number>
 Work issue #$ARGUMENTS into one pull request from `main` (`CONTRIBUTING.md`,
 How work proceeds). Each GitHub write (a push, the pull request, an issue)
 waits for approval (`CLAUDE.md`, Working style). When a session ends before
-the pull request, push the branch; the next `/issue $ARGUMENTS` continues it.
+the pull request, push the branch after making its commits final
+(CONTRIBUTING, Commits and pull requests); the next `/issue $ARGUMENTS`
+continues it.
 
 Plan and judge from the files this session reads itself (`CLAUDE.md`,
 Judgement).
@@ -67,10 +69,12 @@ Judgement).
 
 ## 5. Finish
 
-1. Run and keep the output: `pnpm lint`, `pnpm test`, `pnpm check`,
+1. Make the unpushed commits final (CONTRIBUTING, Commits and pull
+   requests).
+2. Run and keep the output: `pnpm lint`, `pnpm test`, `pnpm check`,
    `pnpm build`, `pnpm test:e2e`.
-2. After approval, push and open one pull request against `main` whose body
-   follows `.github/pull_request_template.md` (CONTRIBUTING, Commits and
-   pull requests), with `Closes #$ARGUMENTS`.
-3. Recap: the pull request, the Done when with its evidence, every finding
+3. After approval, push and open one pull request against
+   `main` whose body follows `.github/pull_request_template.md`, with
+   `Closes #$ARGUMENTS`.
+4. Recap: the pull request, the Done when with its evidence, every finding
    with its outcome, and the open proposals.

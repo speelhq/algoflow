@@ -76,9 +76,12 @@ leaves the developer to find the better option alone.
 
 **Findings.** A finding, from a review or noticed in passing, is fixed in
 the pull request, dropped with its reason, or filed as an issue when it
-needs action later; until it is settled it is a task of the session. Why:
-an issue per finding fills the tracker with items no release takes, and a
-finding kept only in a conversation is lost.
+needs action later; until it is settled it is a task of the session. A
+fault the change itself introduced is never deferred: it is fixed in that
+change, or, when its fix needs a decision, the change waits for it. Why: an
+issue per finding fills the tracker with items no release takes, a finding
+kept only in a conversation is lost, and a change that defers its own fault
+ships it.
 
 **Reviews.** Before its pull request a change is reviewed three times. First
 its author reads the whole diff against the issue's Done when, every id it
@@ -101,6 +104,15 @@ Branch from `main` per pull request. Commit one vertical slice at a time, at
 the moment `pnpm lint && pnpm test` passes: a node plus its i18n keys and
 both tests, a challenge, a view. Commit cross-cutting type, event, or spec
 changes separately, before the code that uses them.
+
+Before each push, the unpushed commits are made final: a commit that fixes
+an earlier unpushed one is folded into it (`git commit --fixup <sha>`, then
+`GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash --keep-base origin/main`),
+and a commit that a later one withdraws is dropped together with the later
+one. A pushed commit is rewritten only to rebase the branch onto `main`, by
+its author, with `git push --force-with-lease`. Why: rebase merges put every
+commit on `main`, where a commit that a later one undoes misleads
+`git blame` and `git bisect`.
 
 Conventional Commits, imperative subject under 50 chars, scope from src/
 (lang, nodes, runtime, python, ui, challenges, i18n; `docs` and `ci` for
