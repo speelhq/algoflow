@@ -1,4 +1,4 @@
-// The node editor (U-41): a popover beside the selected node holding the node's name field
+// The node editor: a popover beside the selected node holding the node's name field
 // with `Duplicate` and `Delete`, the block's sentence with its slots editable in place (names
 // as name fields, values as value lines, lists of values with add and remove), the list of
 // the focused slot, and the explanation line. Reads slot roles, never a kind.
@@ -174,7 +174,7 @@ function toFill(stmt: Stmt, field: Field): boolean {
 
 // ---------------------------------------------------------------- the node's name
 
-/** The node's name field: one line in the learner's words, stored trimmed (U-95). */
+/** The node's name field: one line in the learner's words, stored trimmed. */
 function NameOfNode({ stmt }: { stmt: Stmt }) {
   const stored = stmt.name ?? "";
   const [text, setText] = useState(stored);
@@ -566,7 +566,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
               "h-8 min-w-10 rounded-md border px-1.5 outline-none [field-sizing:content]",
               on && "border-selection ring-1 ring-selection",
               !on && current === "" && "border-dashed",
-              // A name not being edited reads as the variable it names (N-08).
+              // A name not being edited reads as the variable it names.
               !on && current !== "" && "border-transparent font-semibold text-variable",
             )}
             onFocus={() => {

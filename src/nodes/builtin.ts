@@ -13,7 +13,7 @@ export type BuiltinDef = {
   python?: string;
   aliases?: string[];
   imports?: "math" | "random";
-  /** The call's kind, given its arguments (L-59, N-12). */
+  /** The call's kind, given its arguments. */
   kind?: (args: Expr[], kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
   menu?: readonly MenuEntry[];
   evaluate(args: Value[], node: Extract<Expr, { kind: "call" }>, ctx: RunContext): Value;

@@ -1,4 +1,4 @@
-// The list under a value line (U-52): the groups chosen by what is before the caret, in one
+// The list under a value line: the groups chosen by what is before the caret, in one
 // order everywhere, or the rows a typed word matches; `Show all` lists every entry that can be
 // chosen there. Reads the entries' `group` and `on` only.
 import type { Kind } from "@/lang/types";

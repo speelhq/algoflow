@@ -1,4 +1,4 @@
-// The list under a name field (U-94): the names of the problem's expected variables under
+// The list under a name field: the names of the problem's expected variables under
 // `This problem`, the program's other variables under `Variables`, each kept while one of its
 // words begins with the text typed, and a typed name neither holds offered as a new variable.
 import { declaredBy } from "@/lang/scope";
@@ -27,7 +27,7 @@ export function keepsName(name: string, typed: string): boolean {
 export function nameSections(program: Program, asked: readonly Id[], typed: string): NameSection[] {
   const problem = [...new Set(asked)];
   const others = programNames(program).filter((name) => !problem.includes(name));
-  // A whole name comes first (U-50).
+  // A whole name comes first.
   const whole = (names: Id[]) =>
     names.toSorted((a, b) => Number(b === typed) - Number(a === typed));
   const sections: NameSection[] = [

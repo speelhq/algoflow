@@ -1,4 +1,4 @@
-// The entries of the value list as the blocks declare them (N-11): each with its block, its
+// The entries of the value list as the blocks declare them: each with its block, its
 // label and help, and how it makes its expression. Reads `menu` and `create()`, never a kind.
 import type { Expr } from "@/lang/types";
 import { NODES, getNode, keyOf, type NodeDef } from "@/nodes";
@@ -19,7 +19,7 @@ const base = (def: NodeDef, menu: MenuEntry) =>
 
 let cached: Entry[] | undefined;
 
-/** Every entry of the registered blocks, in registry order (the N-11 table's). */
+/** Every entry of the registered blocks, in registry order (the order of the value list). */
 export function allEntries(): Entry[] {
   cached ??= [...NODES.values()].flatMap((def) =>
     (def.menu ?? []).map((menu) => ({

@@ -1,4 +1,4 @@
-// A value line drawn as the chart writes its expression (U-50): variables as bold words in
+// A value line drawn as the chart writes its expression: variables as bold words in
 // their colour, an operator as its symbol, a word operation on a light underlay, an input still
 // to fill as an empty field, the brackets the chart draws and those opened and not closed, the
 // caret, and the word being typed. Keys go to `onKey`; clicks name the expression clicked.
@@ -37,7 +37,7 @@ function Caret() {
 
 export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(props, ref) {
   const { root, label, unmatched } = props;
-  // The editing state shows only while the line has the keyboard (U-51).
+  // The editing state shows only while the line has the keyboard.
   const [keys, setKeys] = useState(false);
   const line = keys ? props.line : null;
   const focused = line !== null;

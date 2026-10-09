@@ -116,7 +116,7 @@ export type BinOp =
 
 export type Node = Stmt | Expr;
 
-/** What is known of a value before the program runs (L-59). */
+/** What is known of a value before the program runs. */
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object";
 export const KINDS: readonly Kind[] = [
   "number",
