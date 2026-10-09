@@ -186,9 +186,9 @@ export function ChartRegion({ challenge }: { challenge?: Challenge }) {
   // In build mode a click selects; while running it sets or clears the breakpoint,
   // pausing first; once the run has ended it returns to build mode with the node selected.
   const onSelect = useCallback(
-    (owner: NodeId, slot?: string) => {
+    (owner: NodeId, slot?: string, hole?: NodeId) => {
       const run = useRun.getState();
-      if (run.status === "idle") return select(owner, slot);
+      if (run.status === "idle") return select(owner, slot, true, hole);
       if (run.status === "done" || run.status === "error") {
         run.stop();
         return select(owner);

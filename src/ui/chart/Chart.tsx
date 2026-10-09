@@ -28,8 +28,8 @@ type Props = {
   /** The statement outlined as selected, and the one outlined from a Python line. */
   selectedId?: NodeId | null;
   hoveredId?: NodeId | null;
-  /** A click on a statement's node (or a generated node of it), with the slot clicked on it. */
-  onSelect?: (owner: NodeId, slot?: string) => void;
+  /** A click on a statement's node (or a generated node of it), with the slot and input clicked. */
+  onSelect?: (owner: NodeId, slot?: string, hole?: NodeId) => void;
   /** The cases an Input node's menu lists, and what choosing one does; absent while read-only. */
   cases?: {
     labels: string[];
@@ -334,8 +334,8 @@ export function Chart(props: Props) {
     const click = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target : null;
       const owner = target?.closest<SVGGElement>("[data-node-id]")?.dataset.nodeId;
-      const slot = target?.closest<SVGElement>("[data-slot]")?.dataset.slot;
-      if (owner) onSelect(owner, slot);
+      const part = target?.closest<SVGElement>("[data-slot]");
+      if (owner) onSelect(owner, part?.dataset.slot, part?.dataset.hole);
     };
     element.addEventListener("click", click);
     return () => element.removeEventListener("click", click);

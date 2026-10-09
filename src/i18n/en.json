@@ -23,7 +23,10 @@
       "keysColumn": "Keys",
       "actionColumn": "Action",
       "keys": {
-        "delete": { "keys": "Delete, Backspace", "action": "Remove the selected block" },
+        "delete": {
+          "keys": "Delete, Backspace",
+          "action": "Remove the selected block, unless typing in the editor"
+        },
         "undo": { "keys": "Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z", "action": "Undo, redo" },
         "duplicate": { "keys": "Ctrl/Cmd+D", "action": "Duplicate the selected block" },
         "run": { "keys": "Ctrl/Cmd+Enter", "action": "Run / Pause" },
@@ -32,6 +35,16 @@
         "escape": {
           "keys": "Esc",
           "action": "Close a menu or editor and clear the selection; while running, clear the breakpoint, else Stop"
+        },
+        "tab": {
+          "keys": "Tab, Shift+Tab",
+          "action": "Next or previous input of a value, then the next or previous slot"
+        },
+        "highlight": { "keys": "↑, ↓", "action": "Move the highlight in the editor's list" },
+        "caret": { "keys": "←, →", "action": "Previous or next value or input of a value" },
+        "enter": {
+          "keys": "Enter",
+          "action": "Choose the highlighted entry; in a name field not typed in, go to the next slot; else close the editor"
         }
       }
     }
@@ -400,17 +413,7 @@
     "blank": "…",
     "addFirst": "Add your first block",
     "connector": "Add a block here",
-    "connectorGlyph": "+",
-    "question": {
-      "divisible": "Is {a} divisible by {b}?",
-      "equals": "Does {a} equal {b}?",
-      "notEquals": "Does {a} not equal {b}?",
-      "greater": "Is {a} greater than {b}?",
-      "less": "Is {a} less than {b}?",
-      "atLeast": "Is {a} at least {b}?",
-      "atMost": "Is {a} at most {b}?",
-      "in": "Is {a} in {b}?"
-    }
+    "connectorGlyph": "+"
   },
   "menu": {
     "label": "Blocks",
@@ -432,46 +435,57 @@
   },
   "editor": {
     "label": "Edit block",
-    "names": "Names",
-    "asked": "asked for by this problem",
-    "field": "a number, \"text\", or a name",
-    "number": "number",
-    "text": "text",
-    "buildOwn": "Build my own…",
     "noItems": "Nothing matches",
-    "groupMenu": "{group} ▸",
-    "group": {
-      "variables": "Variables",
-      "values": "Values",
-      "list": "List",
-      "math": "Math",
-      "compare": "Compare",
-      "logic": "Logic",
-      "call": "Call"
-    },
-    "blank": "□",
+    "textField": "Text",
     "listSeparator": ",",
     "addValue": "+ value",
     "removeValue": "Remove this value",
     "removeGlyph": "×",
     "duplicate": "Duplicate",
     "delete": "Delete",
-    "chip": {
-      "delete": "Delete",
-      "unwrap": "Unwrap"
-    },
     "fix": {
       "hoistAssign": "Create {name} before it"
     },
-    "template": {
-      "divisible": "{a} is divisible by {b}",
-      "equals": "{a} equals {b}",
-      "notEquals": "{a} does not equal {b}",
-      "greater": "{a} is greater than {b}",
-      "less": "{a} is less than {b}",
-      "atLeast": "{a} is at least {b}",
-      "atMost": "{a} is at most {b}",
-      "in": "{a} is in {b}"
+    "name": "Name",
+    "nameHint": "optional",
+    "typeHint": "type or choose",
+    "showAll": "Show all",
+    "brackets": "Brackets",
+    "bracketsGlyph": "( )",
+    "bracketsHelp": "Groups what is inside, so it is worked out first. Type `(`.",
+    "ownFunction": "One of this program's functions. Choosing it calls it.",
+    "didYouMean": "Did you mean {name}?",
+    "nothingLike": "Nothing has this name. Check the spelling, or choose from the list.",
+    "thisProblem": "This problem",
+    "newVariable": "New variable",
+    "enterKey": "Enter",
+    "lists": {
+      "variables": "Variables",
+      "values": "Values",
+      "conditions": "Conditions",
+      "calculate": "Calculate",
+      "items": "Items",
+      "compare": "Compare",
+      "convert": "Convert",
+      "functions": "Your functions"
+    },
+    "kind": {
+      "number": "number",
+      "text": "text",
+      "truefalse": "true/false",
+      "none": "none",
+      "list": "list",
+      "dict": "dict",
+      "object": "object"
+    },
+    "explain": {
+      "variable": "A {kind} variable. It is first set in: {statement}.",
+      "variablePlain": "A variable. It is first set in: {statement}.",
+      "input": "A {kind} input of the problem.",
+      "inputPlain": "An input of the problem.",
+      "parameter": "A parameter: the value a call hands to this function.",
+      "newVariable": "Creates the variable {name} here.",
+      "name": "The variable this block sets. Choose one below, or type a new name."
     }
   },
   "run": {

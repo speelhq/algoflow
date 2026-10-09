@@ -9,7 +9,10 @@ import { startRun } from "./actions";
 /** Keys typed into a field or a slider belong to it. */
 export function ownsKeys(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
-  return target.closest("input, textarea, select, [contenteditable], [role=slider]") !== null;
+  return (
+    target.closest("input, textarea, select, [contenteditable], [role=slider], [role=textbox]") !==
+    null
+  );
 }
 
 export function useRunKeys(): void {
