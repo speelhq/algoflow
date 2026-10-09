@@ -6,14 +6,7 @@ import type { Expr, Heap, Program, Value } from "@/lang/types";
 import { childExprs, nodesById } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
-import {
-  capitalise,
-  conditionOf,
-  exprText,
-  sentence,
-  slotSentence,
-  valueText,
-} from "@/ui/chart/text";
+import { capitalise, conditionOf, exprText, sentence, valueText } from "@/ui/chart/text";
 import { matchTemplates, variableName } from "@/ui/expression/templates";
 
 export type Narration = { key: MessageKey; params: Params };
@@ -121,7 +114,7 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
       const diamond = chart !== undefined && ("branch" in chart || "check" in chart);
       const condition = diamond ? conditionOf(node) : undefined;
       return condition
-        ? { key: "run.narrate.check", params: { condition: slotSentence(condition) } }
+        ? { key: "run.narrate.check", params: { condition: exprText(condition) } }
         : {
             key: "run.narrate.enter",
             params: { sentence: capitalise(sentence(node, ctx.program)) },

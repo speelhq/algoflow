@@ -141,11 +141,28 @@ export const binop = defineExpr<"binop">({
     const precedence = binopPrecedence(node.op);
     return `${ctx.operand(node.left, precedence, "left")} ${node.op} ${ctx.operand(node.right, precedence, "right")}`;
   },
-  // The canvas shows `×` and `÷` for `*` and `/`.
+  // `%`, `//`, `**`, and `in` are written in words, each with a template of its own.
+  form: (node) => WORD_FORMS[node.op] ?? "",
+  // The other operators are written with the symbols taught at school.
   text: (node, slot) => (slot === "op" ? (CANVAS_OPS[node.op] ?? node.op) : ""),
 });
 
-const CANVAS_OPS: Partial<Record<Binop["op"], string>> = { "*": "×", "/": "÷" };
+const WORD_FORMS: Partial<Record<Binop["op"], string>> = {
+  "%": "Mod",
+  "//": "FloorDiv",
+  "**": "Pow",
+  in: "In",
+};
+
+const CANVAS_OPS: Partial<Record<Binop["op"], string>> = {
+  "-": "−",
+  "*": "×",
+  "/": "÷",
+  "==": "=",
+  "!=": "≠",
+  "<=": "≤",
+  ">=": "≥",
+};
 
 function emptyExpr(): Expr {
   return { id: newId(), kind: "empty" };

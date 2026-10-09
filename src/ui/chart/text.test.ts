@@ -1,20 +1,23 @@
-// N-08: node sentences as plain text; U-50: template sentences and the matcher behind them.
+// N-08, N-09, U-33, U-51: node text as the chart writes it.
 import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
 import { ast, program } from "@/nodes/testing";
 import { isParseError, parse } from "@/python/parse";
-import { CONDITION_TEMPLATES, matchTemplate, matchTemplates } from "@/ui/expression/templates";
 import {
   capitalise,
   conditionOf,
+  drawn,
+  exprParts,
   exprText,
   generatedText,
-  questionText,
+  inputParts,
+  joinParts,
+  questionParts,
   sentence,
-  slotSentence,
+  sentenceParts,
 } from "./text";
 
-const { assign, num, str, bool, bin, neg, not, v, print, for_, if_, call, ret } = ast;
+const { assign, num, str, bool, bin, neg, not, v, print, for_, if_, call, ret, empty } = ast;
 
 function expr(python: string): Expr {
   const parsed = parse(python, { classes: [], functions: ["f"] });
@@ -36,75 +39,97 @@ describe("sentence (N-08)", () => {
     expect(capitalise(sentence(again, p))).toBe("Set total to total + i");
   });
 
-  it("uses each block's form and text hooks, and names builtin arguments by parameter", () => {
+  it("writes only school symbols, and names builtin arguments by parameter", () => {
     expect(exprText(bin("*", num(2, "2.50"), bin("/", v("a"), v("b"))))).toBe("2.50 × (a ÷ b)");
+    expect(
+      ["a - b", "a == b", "a != b", "a <= b", "a >= b", "a < b"].map((t) => exprText(expr(t))),
+    ).toEqual(["a − b", "a = b", "a ≠ b", "a ≤ b", "a ≥ b", "a < b"]);
     expect(exprText(bool(false))).toBe("false");
-    expect(exprText(not(v("ok")))).toBe("not ok");
     expect(exprText(neg(v("x")))).toBe("−x");
-    expect(exprText(expr("min(a, abs(b))"))).toBe("smaller of a and absolute value of b");
     expect(exprText(call("f", num(1), v("n")))).toBe("f(1, n)");
   });
 
-  it("parenthesises a child exactly where the emitter would (E-05)", () => {
-    expect(exprText(expr("(a + b) * c"))).toBe("(a + b) × c");
-    expect(exprText(expr("a + b * c"))).toBe("a + b × c");
-    expect(exprText(expr("a - (b - c)"))).toBe("a - (b - c)");
-    expect(exprText(expr("-(a + b)"))).toBe("−(a + b)");
+  it("writes %, //, **, and in in words", () => {
+    expect(exprText(expr("i % 15"))).toBe("remainder of i divided by 15");
+    expect(exprText(expr("a // b"))).toBe("whole-number quotient of a divided by b");
+    expect(exprText(expr("2 ** 3"))).toBe("2 to the power of 3");
+    expect(exprText(expr("x in nums"))).toBe("x is in nums");
   });
 
-  it("N-09: a counted loop's generated nodes carry the loop's own slots", () => {
-    const loop = for_("i", num(1), bin("+", v("n"), num(1)), []);
-    expect(generatedText(loop, "init")).toBe("Set i to 1");
-    expect(generatedText(loop, "check")).toBe("Is i < n + 1?");
-    expect(generatedText(loop, "step")).toBe("Set i to i + 1");
-    expect(conditionOf(if_(v("ok"), []))).toMatchObject({ kind: "var", name: "ok" });
+  it("parenthesises operators among themselves exactly where the emitter would (E-05)", () => {
+    expect(exprText(expr("(a + b) * c"))).toBe("(a + b) × c");
+    expect(exprText(expr("a + b * c"))).toBe("a + b × c");
+    expect(exprText(expr("a - (b - c)"))).toBe("a − (b − c)");
+    expect(exprText(expr("-(a + b)"))).toBe("−(a + b)");
+    expect(exprText(expr("a < b and b < c"))).toBe("a < b and b < c");
+  });
+
+  it("brackets a word operation next to an operator, and anything but a value inside one", () => {
+    expect(exprText(expr("i % 15 == 0"))).toBe("(remainder of i divided by 15) = 0");
+    expect(exprText(expr("(i + 1) % 3"))).toBe("remainder of (i + 1) divided by 3");
+    expect(exprText(expr("abs(i % 3)"))).toBe("absolute value of (remainder of i divided by 3)");
+    expect(exprText(expr("min(a, abs(b))"))).toBe("smaller of a and (absolute value of b)");
+    expect(exprText(expr("-x ** 2"))).toBe("−(x to the power of 2)");
+    expect(exprText(not(bin("<", v("a"), v("b"))))).toBe("not (a < b)");
+    expect(exprText(expr("not a and b"))).toBe("(not a) and b");
+    expect(exprText(expr("f(abs(x), y)"))).toBe("f(absolute value of x, y)");
+    expect(exprText(expr("str(n) + str(m)"))).toBe("(n as text) + (m as text)");
+  });
+
+  it("marks variables, and an input still to fill at any depth (U-51)", () => {
+    const hole = empty();
+    const parts = exprParts(bin("+", v("total"), hole));
+    expect(parts).toEqual([
+      { text: "total", variable: true },
+      { text: " + " },
+      { text: "choose a value", empty: true, hole: hole.id },
+    ]);
+    const p = program([assign("total", bin("+", v("total"), hole))]);
+    expect(sentenceParts(p.main[0]!, p).map((part) => [part.text, part.slot])).toEqual([
+      ["create ", undefined],
+      ["total", "target"],
+      [" and set it to ", undefined],
+      ["total", "value"],
+      [" + ", "value"],
+      ["choose a value", "value"],
+    ]);
+  });
+
+  it("writes a variable as its value when the writing gives one", () => {
+    const values: Record<string, string> = { i: "3" };
+    expect(exprText(expr("i % 15 == 0"), { value: (name) => values[name] })).toBe(
+      "(remainder of 3 divided by 15) = 0",
+    );
+  });
+
+  it("capitalises a drawn sentence only when it begins with a word of its template", () => {
+    const p = program([print(v("i")), if_(bin("<", v("i"), v("n")), [])]);
+    expect(joinParts(drawn(sentenceParts(p.main[0]!, p)))).toBe("Print i");
+    expect(joinParts(drawn(questionParts(p.main[1]!)))).toBe("i < n?");
   });
 });
 
-describe("condition templates (U-50)", () => {
-  it("every template matches its own expression, under its own name first", () => {
-    for (const template of CONDITION_TEMPLATES) {
-      const matched = matchTemplate(expr(template.python.replace("a", "x").replace("b", "y")));
-      expect(matched?.template.name).toBe(template.name);
-      expect(matched).toMatchObject({ a: { name: "x" }, b: { name: "y" } });
-    }
+describe("diamonds and generated nodes (U-33, N-09)", () => {
+  it("a diamond is its condition followed by ?, or the placeholder without it", () => {
+    expect(joinParts(questionParts(if_(expr("i % 15 == 0"), [])))).toBe(
+      "(remainder of i divided by 15) = 0?",
+    );
+    expect(joinParts(questionParts(if_(empty(), [])))).toBe("choose a value");
+    expect(conditionOf(if_(v("ok"), []))).toMatchObject({ kind: "var", name: "ok" });
   });
 
-  it("a slot holding a matching expression shows the template's sentence", () => {
-    expect(slotSentence(expr("i % 15 == 0"))).toBe("i is divisible by 15");
-    expect(slotSentence(expr("i % 15 == 1"))).toBe("i % 15 equals 1");
-    expect(slotSentence(expr("n + 1 >= f(2)"))).toBe("n + 1 is at least f(2)");
-    expect(slotSentence(expr("(a and b) == c"))).toBe("(a and b) equals c");
-    // A blank is parenthesised as an operand of the expression that holds it (`%` here, not `==`).
-    expect(slotSentence(expr("(i + 1) % 15 == 0"))).toBe("(i + 1) is divisible by 15");
-    expect(questionText(expr("i % (n + 1) == 0"))).toBe("Is i divisible by (n + 1)?");
-    const p = program([assign("ok", expr("n > 3")), print(expr("n == 3"), expr("n + 1"))]);
-    expect(p.main.map((stmt) => sentence(stmt, p))).toEqual([
-      "create ok and set it to n is greater than 3",
-      "print n equals 3, n + 1",
+  it("a counted loop's generated nodes carry the loop's own slots", () => {
+    const loop = for_("i", num(1), bin("+", v("n"), num(1)), []);
+    expect(generatedText(loop, "init")).toBe("Set i to 1");
+    expect(generatedText(loop, "check")).toBe("i < n + 1?");
+    expect(generatedText(loop, "step")).toBe("Set i to i + 1");
+  });
+
+  it("an Input node's name is a variable", () => {
+    expect(inputParts("n", 15)).toEqual([
+      { text: "Input " },
+      { text: "n", variable: true },
+      { text: " = 15" },
     ]);
-  });
-
-  it("any other expression is shown as chips, with symbols inside", () => {
-    expect(slotSentence(expr("x in nums and not x != 3"))).toBe("x in nums and not x != 3");
-    expect(exprText(expr("i % 15 == 0"))).toBe("i % 15 == 0");
-  });
-
-  it("U-33: a diamond asks its condition as a question", () => {
-    expect(questionText(expr("i % 15 == 0"))).toBe("Is i divisible by 15?");
-    expect(questionText(expr("a + 1 == b"))).toBe("Does a + 1 equal b?");
-    expect(questionText(expr("x != 0"))).toBe("Does x not equal 0?");
-    expect(questionText(expr("x in nums"))).toBe("Is x in nums?");
-    expect(questionText(expr("a < b and b < c"))).toBe("Is a < b and b < c?");
-    expect(questionText(expr("not ok"))).toBe("Is not ok?");
-  });
-
-  it("`is divisible by` also matches as `equals`, second; anything else matches nothing", () => {
-    expect(matchTemplates(expr("i % 3 == 0")).map((m) => m.template.name)).toEqual([
-      "divisible",
-      "equals",
-    ]);
-    expect(matchTemplates(expr("a + b"))).toEqual([]);
-    expect(matchTemplates(expr("a and b"))).toEqual([]);
   });
 });

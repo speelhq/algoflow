@@ -35,7 +35,7 @@ test("M-03 exit: FizzBuzz from the list to Accepted, Python, and the next proble
   await page.goto("/#/");
   await page.getByTestId("problem-fizzbuzz").click();
   await expect(page).toHaveTitle("FizzBuzz — AlgoFlow");
-  await expect(page.getByTestId("chart")).toContainText("Is i divisible by 15?");
+  await expect(page.getByTestId("chart")).toContainText("(remainder of i divided by 15) = 0?");
 
   await page.getByRole("button", { name: "▶ Run" }).click();
   await expect(page.getByTestId("transport")).toBeVisible();

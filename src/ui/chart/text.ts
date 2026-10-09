@@ -1,17 +1,19 @@
-// A node's sentence as plain text, from `node.<key>.template<form>` and the block's
-// slots; a statement's slot holding an expression that matches a condition template
-// reads as that template's sentence, while the chips nested inside an expression keep symbols.
-// Reads slot roles, `params`, `form`, `text`, and `precedence` only, never a kind.
-import { fillPlaceholders, t, type MessageKey } from "@/i18n/t";
+// A node's text from `node.<key>.template<form>` and the block's slots, as runs: the words of
+// a template, a variable (drawn bold in its own colour), and the placeholder of an input still
+// to fill. Only operators are written as symbols; an operation written in words is bracketed
+// next to an operator and inside another operation's input, and operators among themselves
+// are parenthesised as the emitter does. Reads slot roles, `params`, `form`, `text`, and
+// `precedence` only, never a kind.
+import { t, type MessageKey } from "@/i18n/t";
 import { toValue } from "@/lang/data";
-import type { Data, Expr, Heap, Node, Program, Target, Value } from "@/lang/types";
+import type { Data, Expr, Heap, Node, NodeId, Program, Target, Value } from "@/lang/types";
 import { firstAssignments } from "@/lang/validate";
-import { isEmptyExpr, isExpr } from "@/lang/walk";
+import { isEmptyExpr, isExpr, variableOf } from "@/lang/walk";
 import { getNode, hasNode, keyOf } from "@/nodes";
 import type { NodeDef, Side } from "@/nodes/types";
-import { parenthesise, writeTarget } from "@/python/emit";
+import { writeTarget } from "@/python/emit";
+import { needsParens } from "@/python/precedence";
 import { str, writeValue } from "@/runtime/values";
-import { matchTemplate, type TemplateMatch } from "@/ui/expression/templates";
 
 type Bag = Record<string, unknown>;
 
@@ -29,13 +31,18 @@ export function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** A template with its slots filled; a sentence drops the space an empty slot leaves. */
-function render(template: string, fill: (name: string) => string): string {
-  return fillPlaceholders(template, fill).replace(/\s+/g, " ").trim();
-}
-
-/** A run of a node's text: a slot's text with the slot's name, or the template's own words. */
-export type Part = { text: string; slot?: string; empty?: boolean };
+/**
+ * A run of a node's text: the template's own words, or what a slot holds (`slot` names the
+ * statement's slot it belongs to). `variable` marks a variable's name, `empty` the placeholder
+ * of an input still to fill, and `hole` that input's expression.
+ */
+export type Part = {
+  text: string;
+  slot?: string;
+  empty?: boolean;
+  hole?: NodeId;
+  variable?: boolean;
+};
 
 /** The text the parts spell. */
 export function joinParts(parts: readonly Part[]): string {
@@ -47,46 +54,19 @@ export function placeholder(): string {
   return nodeText("empty", "template");
 }
 
-/** Whether a slot holds nothing yet: an empty expression, an empty name, or no item. */
-function isEmptySlot(node: Node, def: NodeDef, name: string): boolean {
-  const slot = def.slots.find((s) => s.name === name);
-  const value = (node as unknown as Bag)[name];
-  switch (slot?.role) {
-    case "expr":
-      return isEmptyExpr(value);
-    case "exprs":
-      // A list with no item is empty only where the slot is required.
-      return (
-        Array.isArray(value) &&
-        (value.length === 0 ? slot?.required === true : value.every(isEmptyExpr))
-      );
-    case "id":
-      return value === "";
-    case "target":
-      return (
-        (value as Target | undefined)?.kind === "var" && (value as { name: string }).name === ""
-      );
-    default:
-      return false;
-  }
-}
+/** How an expression is written: `value` gives the text a variable is written as instead of its name. */
+export type Writing = { value?: (name: string) => string | undefined };
 
 /**
- * A template as parts, each placeholder of a slot of `node` a part naming its slot. Spaces
- * are collapsed across parts, as `render` does, and a part with no text is dropped.
+ * A template as parts, each placeholder replaced by the parts `fill` gives. Spaces are collapsed
+ * across parts as in a sentence, and a part left with no text is dropped.
  */
-function renderParts(template: string, node: Node, def: NodeDef): Part[] {
+export function templateParts(template: string, fill: (name: string) => Part[]): Part[] {
   const parts: Part[] = [];
   let at = 0;
   for (const found of template.matchAll(/\{(\w+)\}/g)) {
-    const name = found[1] ?? "";
     parts.push({ text: template.slice(at, found.index) });
-    const text = slotText(node, def, name);
-    const isSlot = def.slots.some((slot) => slot.name === name);
-    if (!isSlot) parts.push({ text });
-    else if (isEmptySlot(node, def, name))
-      parts.push({ text: placeholder(), slot: name, empty: true });
-    else parts.push({ text, slot: name });
+    parts.push(...fill(found[1] ?? ""));
     at = found.index + found[0].length;
   }
   parts.push({ text: template.slice(at) });
@@ -99,91 +79,180 @@ function renderParts(template: string, node: Node, def: NodeDef): Part[] {
   }
   const last = out[out.length - 1];
   if (last) last.text = last.text.replace(/ $/, "");
-  return out.filter((part) => part.text !== "");
+  // Adjacent words of one slot are one run.
+  const merged: Part[] = [];
+  for (const part of out) {
+    const before = merged[merged.length - 1];
+    if (before && plain(before) && plain(part) && before.slot === part.slot) {
+      before.text += part.text;
+    } else if (part.text !== "") merged.push({ ...part });
+  }
+  return merged;
 }
 
-/** A child is parenthesised where the emitter would parenthesise it; one with no parent never is. */
-function operand(child: Expr, parent: number | undefined, side: Side): string {
-  const text = exprText(child);
-  return parent === undefined ? text : parenthesise(child, text, parent, side);
+const plain = (part: Part) => !part.variable && !part.empty;
+
+/** The template of an expression in its form. */
+function exprTemplate(expr: Expr): string {
+  const def = getNode(keyOf(expr));
+  return nodeText(def.key, `template${def.form?.(expr, { creates: false }) ?? ""}`);
+}
+
+const hasInputs = (def: NodeDef) =>
+  def.params !== undefined || def.slots.some((s) => s.role === "expr" || s.role === "exprs");
+
+/** An operation written in words around its inputs (`remainder of i divided by 15`). */
+export function isWordOperation(expr: Expr): boolean {
+  const def = getNode(keyOf(expr));
+  return hasInputs(def) && /\p{L}/u.test(exprTemplate(expr).replace(/\{\w+\}/g, ""));
+}
+
+/** An operation written with a symbol, which has a precedence (`+`, `=`, `−`). */
+export function isOperator(expr: Expr): boolean {
+  return getNode(keyOf(expr)).precedence?.(expr) !== undefined && !isWordOperation(expr);
+}
+
+const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
+
+/** Whether `child`, an input of `parent` on `side`, is put in brackets (N-08). */
+function bracketed(child: Expr, parent: Expr, side: Side): boolean {
+  if (isWordOperation(parent)) return isWordOperation(child) || isOperator(child);
+  if (!isOperator(parent)) return false;
+  if (isWordOperation(child)) return true;
+  const own = precedenceOf(child);
+  const outer = precedenceOf(parent);
+  return own !== undefined && outer !== undefined && isOperator(child)
+    ? needsParens(own, outer, side)
+    : false;
+}
+
+function inBrackets(parts: Part[]): Part[] {
+  return [{ text: "(" }, ...parts, { text: ")" }];
+}
+
+/** The parts of an input of `parent`. */
+function operandParts(child: Expr, parent: Expr, side: Side, writing: Writing): Part[] {
+  const parts = exprParts(child, writing);
+  return bracketed(child, parent, side) ? inBrackets(parts) : parts;
+}
+
+/** An expression as the chart writes it (N-08). */
+export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
+  if (isEmptyExpr(expr)) return [{ text: placeholder(), empty: true, hole: expr.id }];
+  const name = variableOf(expr);
+  if (name !== undefined) {
+    const value = writing.value?.(name);
+    return value === undefined ? [{ text: name, variable: true }] : [{ text: value }];
+  }
+  const def = getNode(keyOf(expr));
+  const bag = expr as unknown as Bag;
+  const first = def.slots.find((s) => s.role === "expr");
+  return templateParts(exprTemplate(expr), (placeholderName) => {
+    const slot = def.slots.find((s) => s.name === placeholderName);
+    const value = slot ? bag[slot.name] : undefined;
+    switch (slot?.role) {
+      case "expr":
+        return isExpr(value)
+          ? operandParts(value, expr, slot === first ? "left" : "right", writing)
+          : [];
+      case "exprs":
+        return listParts(Array.isArray(value) ? value.filter(isExpr) : [], (item) =>
+          exprParts(item, writing),
+        );
+      case "id":
+        return [{ text: typeof value === "string" ? value : "" }];
+      case "text":
+        return [{ text: textOf(expr, def, slot.name) }];
+      case undefined: {
+        // Builtin templates name their parameters (`{a}`, `{b}`): the i-th argument.
+        const index = def.params?.indexOf(placeholderName) ?? -1;
+        const arg =
+          index >= 0 && Array.isArray(bag.args) ? (bag.args[index] as unknown) : undefined;
+        return isExpr(arg) ? operandParts(arg, expr, index === 0 ? "left" : "right", writing) : [];
+      }
+      default:
+        return [];
+    }
+  });
+}
+
+function listParts(items: Expr[], write: (item: Expr) => Part[]): Part[] {
+  return items.flatMap((item, i) => (i === 0 ? write(item) : [{ text: ", " }, ...write(item)]));
+}
+
+function textOf(node: Node, def: NodeDef, slot: string): string {
+  const value = (node as unknown as Bag)[slot];
+  return (
+    def.text?.(node, slot) ||
+    (typeof value === "string" || typeof value === "number" ? String(value) : "")
+  );
+}
+
+/** The text of an expression as the chart writes it. */
+export function exprText(expr: Expr, writing: Writing = {}): string {
+  return joinParts(exprParts(expr, writing));
 }
 
 /** A target reads as the expression of the same shape once that block exists (`index`, `key`, `field`). */
-function targetText(target: Target): string {
+function targetParts(target: Target): Part[] {
   const { kind, ...rest } = target;
-  if (kind !== "var" && hasNode(kind)) return exprText({ id: "", kind, ...rest } as Expr);
-  return writeTarget(target, exprText);
+  if (kind === "var") return [{ text: target.name, variable: true }];
+  if (hasNode(kind)) return exprParts({ id: "", kind, ...rest } as Expr);
+  return [{ text: writeTarget(target, (expr) => exprText(expr)) }];
 }
 
-/** The text of one `{name}` placeholder of `node`'s template. */
-export function slotText(node: Node, def: NodeDef, name: string): string {
-  const bag = node as unknown as Bag;
-  const precedence = def.shape === "expr" ? def.precedence?.(node as Expr) : undefined;
+/** Whether a slot holds nothing yet: an empty expression, an empty name, or no item. */
+function isEmptySlot(node: Node, def: NodeDef, name: string): boolean {
   const slot = def.slots.find((s) => s.name === name);
-  if (slot) {
-    const value = bag[slot.name];
-    const first = def.slots.find((s) => s.role === "expr") === slot;
+  const value = (node as unknown as Bag)[name];
+  switch (slot?.role) {
+    case "expr":
+      return isEmptyExpr(value);
+    case "exprs":
+      // A list with no item is empty only where the slot is required.
+      return Array.isArray(value) && value.length === 0 && slot.required === true;
+    case "id":
+      return value === "";
+    case "target":
+      return (
+        (value as Target | undefined)?.kind === "var" && (value as { name: string }).name === ""
+      );
+    default:
+      return false;
+  }
+}
+
+/** The parts of one slot of a statement, each naming the slot. */
+function stmtSlotParts(node: Node, def: NodeDef, name: string): Part[] {
+  const slot = def.slots.find((s) => s.name === name);
+  if (!slot) return [];
+  const value = (node as unknown as Bag)[name];
+  const parts = (): Part[] => {
+    if (isEmptySlot(node, def, name)) return [{ text: placeholder(), empty: true }];
     switch (slot.role) {
       case "expr":
-        if (!isExpr(value)) return "";
-        return def.shape === "stmt"
-          ? slotSentence(value)
-          : operand(value, precedence, first ? "left" : "right");
+        return isExpr(value) ? exprParts(value) : [];
       case "exprs":
-        return Array.isArray(value)
-          ? value
-              .filter(isExpr)
-              .map(def.shape === "stmt" ? slotSentence : exprText)
-              .join(", ")
-          : "";
-      case "id":
-        return typeof value === "string" && value !== "" ? value : placeholder();
-      case "text":
-        return (
-          def.text?.(node, slot.name) ||
-          (typeof value === "string" || typeof value === "number" ? String(value) : "")
+        return listParts(Array.isArray(value) ? value.filter(isExpr) : [], (item) =>
+          exprParts(item),
         );
+      case "id":
+        return [{ text: typeof value === "string" ? value : "", variable: true }];
       case "target":
-        if (!value || typeof value !== "object") return "";
-        return isEmptySlot(node, def, name) ? placeholder() : targetText(value as Target);
+        return value && typeof value === "object" ? targetParts(value as Target) : [];
+      case "text":
+        return [{ text: textOf(node, def, name) }];
       default:
-        return "";
+        return [];
     }
-  }
-  // Builtin templates name their parameters (`{a}`, `{b}`): the i-th argument.
-  const index = def.params?.indexOf(name) ?? -1;
-  const arg = index >= 0 && Array.isArray(bag.args) ? (bag.args[index] as unknown) : undefined;
-  return isExpr(arg) ? exprText(arg) : "";
-}
-
-/** The blanks of a matched template, each parenthesised as an operand of the expression holding it. */
-function blanks(matched: TemplateMatch): { a: string; b: string } {
-  const under = (within: Expr) => getNode(keyOf(within)).precedence?.(within);
-  return {
-    a: operand(matched.a, under(matched.within.a), "left"),
-    b: operand(matched.b, under(matched.within.b), "right"),
   };
+  return parts().map((part) => ({ ...part, slot: name }));
 }
 
-/** What a slot shows: the template's sentence when the expression matches one, else its chips. */
-export function slotSentence(expr: Expr): string {
-  const matched = matchTemplate(expr);
-  return matched ? t(matched.template.key, blanks(matched)) : exprText(expr);
-}
-
-/** What a diamond asks: the template's question, else `Is <chips>?`. */
-export function questionText(expr: Expr): string {
-  const matched = matchTemplate(expr);
-  return matched
-    ? t(matched.template.question, blanks(matched))
-    : t("chart.condition", { cond: exprText(expr) });
-}
-
-/** The text of an expression as chips: each block's template, with symbols for operators. */
-export function exprText(expr: Expr): string {
-  const def = getNode(keyOf(expr));
-  const form = def.form?.(expr, { creates: false }) ?? "";
-  return render(nodeText(def.key, `template${form}`), (name) => slotText(expr, def, name));
+/** A statement template as parts, one or more per slot. */
+function stmtParts(template: string, node: Node): Part[] {
+  const def = getNode(keyOf(node));
+  return templateParts(template, (name) => stmtSlotParts(node, def, name));
 }
 
 /** The sentence of a statement or expression, as written in the catalog (not capitalised). */
@@ -200,9 +269,16 @@ export function templateOf(node: Node, program: Program): string {
   return nodeText(def.key, `template${form}`);
 }
 
-/** A statement's sentence as parts, one per slot (not capitalised). */
+/** A statement's sentence as parts (not capitalised). */
 export function sentenceParts(node: Node, program: Program): Part[] {
-  return renderParts(templateOf(node, program), node, getNode(keyOf(node)));
+  return stmtParts(templateOf(node, program), node);
+}
+
+/** A sentence drawn on a node: capitalised when it begins with a word of its template. */
+export function drawn(parts: Part[]): Part[] {
+  const [first, ...rest] = parts;
+  if (!first || first.slot !== undefined) return parts;
+  return [{ ...first, text: capitalise(first.text) }, ...rest];
 }
 
 /** The text of a generated node (`init`, `check`, `step`), with the loop's own slots. */
@@ -212,18 +288,18 @@ export function generatedText(node: Node, part: "init" | "check" | "step"): stri
 
 /** A generated node's text as parts, its slots being the loop's. */
 export function generatedParts(node: Node, part: "init" | "check" | "step"): Part[] {
-  const def = getNode(keyOf(node));
-  return renderParts(nodeText(def.key, part), node, def);
+  return stmtParts(nodeText(getNode(keyOf(node)).key, part), node);
 }
 
-/** A diamond's text: its question as one part of the condition's slot, or the placeholder. */
+/** A diamond's text: its condition followed by `?`, or the placeholder without it. */
 export function questionParts(node: Node): Part[] {
   const def = getNode(keyOf(node));
   const slot = def.slots.find((s) => s.role === "expr")?.name;
   const condition = conditionOf(node);
   if (!slot || !condition) return [];
-  if (isEmptyExpr(condition)) return [{ text: placeholder(), slot, empty: true }];
-  return [{ text: questionText(condition), slot }];
+  const parts = exprParts(condition).map((part) => ({ ...part, slot }));
+  if (isEmptyExpr(condition)) return parts;
+  return templateParts(t("chart.condition"), () => parts);
 }
 
 /** The expression a diamond asks about: the block's first `expr` slot (`branch`, `check`). */
@@ -254,4 +330,11 @@ export function valueText(value: Value, heap: Heap): string {
 export function dataText(data: Data): string {
   const heap: Heap = new Map();
   return valueText(toValue(data, heap), heap);
+}
+
+/** An Input node's text, its name a variable (`Input n = 15`). */
+export function inputParts(name: string, value: Data): Part[] {
+  return templateParts(t("chart.input"), (placeholderName) =>
+    placeholderName === "name" ? [{ text: name, variable: true }] : [{ text: dataText(value) }],
+  );
 }

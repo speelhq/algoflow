@@ -431,7 +431,7 @@ describe("layout (U-31, U-33 texts)", () => {
     expect(layout(sum.solution).nodes[1]?.text).toBe("Input n = 10");
     expect(chart.nodes.at(-1)?.text).toBe("End");
     const texts = chart.nodes.filter((node) => node.generated).map((node) => node.text);
-    expect(texts).toEqual(["Set i to 1", "Is i < n + 1?", "Set i to i + 1"]);
+    expect(texts).toEqual(["Set i to 1", "i < n + 1?", "Set i to i + 1"]);
   });
 
   it("a diamond asks its condition; a function chart starts with its signature and has no inputs", () => {
@@ -442,9 +442,37 @@ describe("layout (U-31, U-33 texts)", () => {
     });
     expect(chart.nodes[0]?.text).toBe("Start f(x)");
     expect(chart.nodes.some((node) => node.role === "input")).toBe(false);
-    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe("Is x divisible by 15?");
+    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe(
+      "(remainder of x divided by 15) = 0?",
+    );
     const jumps = chart.edges.filter((edge) => edge.jump);
     expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // U-31: a Return leads to End
+  });
+
+  it("U-95: a named node shows its name alone, with its sentence as the title", () => {
+    const named = { ...print(v("x")), name: "Show x" };
+    const unfinished = { ...print(ast.empty()), name: "Show y" };
+    const loop = { ...for_("i", num(0), num(3), []), name: "Three times" };
+    const check = { ...if_(bin("<", v("x"), num(2)), []), name: "Small?" };
+    const chart = layout(program([assign("x", num(1)), named, unfinished, loop, check]));
+    const node = (id: string) => chart.nodes.find((n) => n.id === id);
+    expect(node(named.id)).toMatchObject({ text: "Show x", title: "Print x" });
+    expect(node(unfinished.id)).toMatchObject({ text: "Print choose a value" });
+    expect(node(unfinished.id)?.title).toBeUndefined();
+    expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times" });
+    expect(node(`${loop.id}:init`)?.text).toBe("Set i to 0");
+    expect(node(check.id)).toMatchObject({ text: "Small?", title: "If x < 2" });
+  });
+
+  it("N-08: a variable's run is measured bold", () => {
+    const measure: Measure = (text, _shape, bold) => text.length * (bold ? 10 : 5);
+    const shown = print(v("abc"));
+    const chart = layout(program([shown]), { measure });
+    const parts = chart.nodes.find((n) => n.id === shown.id)?.parts ?? [];
+    expect(parts.map((part) => [part.text, part.w, part.variable])).toEqual([
+      ["Print ", 30, undefined],
+      ["abc", 30, true],
+    ]);
   });
 
   it("an empty main offers its one connector between Start and End (U-34)", () => {

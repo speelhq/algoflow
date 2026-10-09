@@ -32,6 +32,22 @@ describe("registry (N-02, N-09)", () => {
     }
   });
 
+  it("N-08: binop writes school symbols, and %, //, **, and in in words", () => {
+    const binop = NODES.get("binop");
+    const node = (op: string) => ({ id: "b", kind: "binop", op }) as never;
+    const symbols = ["+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">=", "and", "or"].map((op) =>
+      binop?.text?.(node(op), "op"),
+    );
+    expect(symbols).toEqual(["+", "−", "×", "÷", "=", "≠", "<", "≤", ">", "≥", "and", "or"]);
+    const forms = ["%", "//", "**", "in", "+"].map((op) =>
+      binop?.form?.(node(op), { creates: false }),
+    );
+    expect(forms).toEqual(["Mod", "FloorDiv", "Pow", "In", ""]);
+    for (const form of ["Mod", "FloorDiv", "Pow", "In"]) {
+      expect(keys.has(`node.binop.template${form}`), form).toBe(true);
+    }
+  });
+
   it("N-09: a chart names body slots of its block; a counted loop has init, check, and step", () => {
     const shaped = [...NODES.values()].filter((def) => def.chart);
     expect(new Set(shaped.map((def) => def.key))).toEqual(
