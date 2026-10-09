@@ -25,7 +25,7 @@
       "en": "Fill the print's first value with a text, then add a second value and choose `name`."
     },
     {
-      "en": "The text is `\"Hello,\"` with the comma inside the quotes; **print** puts one space between its values."
+      "en": "Choose **Text** and type `Hello,` with its comma; **print** puts one space between its values."
     }
   ],
   "takeaway": {

@@ -35,7 +35,7 @@
   ],
   "hints": [
     {
-      "en": "Use a **for** block from 1 up to `n + 1`, and inside it an **if** whose condition is `i is divisible by 15`."
+      "en": "Use a **for** block from 1 up to `n + 1`, and inside it an **if** whose condition is that the remainder of `i` divided by 15 equals 0: type `i % 15 == 0`."
     },
     {
       "en": "Test 15 first, then 3, then 5, each **if** on the **No** side of the one before; testing 3 first would print `Fizz` for 15."
