@@ -18,6 +18,7 @@ import {
   setFields,
   setParams,
   setSlot,
+  setStmtName,
 } from "./edit";
 import { unparse } from "@/python/emit";
 import { emit } from "@/python/emit";
@@ -107,6 +108,17 @@ describe("edit (L-50)", () => {
     const sum = bin("+", num(1), num(2));
     expect(lines(setSlot(program([print(sum)]), sum.id, "op", "-"))).toEqual(["print(1 - 2)"]);
     expect(() => setSlot(p, a.id, "value", "x")).toThrow(/no settable slot/);
+  });
+
+  it("L-58: setStmtName stores one trimmed line and removes an empty name", () => {
+    const { p, loop } = sample();
+    const named = setStmtName(p, loop.id, "  Count  to\n three ");
+    expect(locateStmt(named, loop.id)?.stmt.name).toBe("Count to three");
+    expect(idsUnique(named)).toBe(true);
+    expect(locateStmt(p, loop.id)?.stmt.name).toBeUndefined();
+    const cleared = setStmtName(named, loop.id, " \n ");
+    expect(locateStmt(cleared, loop.id)?.stmt).not.toHaveProperty("name");
+    expect(() => setStmtName(p, "missing00000", "x")).toThrow(/no statement/);
   });
 
   it("setExpr replaces an expression slot, an exprs item, or a nested expression node", () => {

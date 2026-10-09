@@ -225,6 +225,21 @@ export function removeItem(program: Program, id: NodeId, slot: string, index: nu
 
 // ---------------------------------------------------------------- names
 
+/** A node's name as stored: each run of spaces and line breaks one space, trimmed. */
+export function stmtName(text: string): string {
+  return text.replace(/\s+/g, " ").trim();
+}
+
+/** Names statement `id`, or removes its name when `name` holds no text. */
+export function setStmtName(program: Program, id: NodeId, name: string): Program {
+  const next = clone(program);
+  const { stmt } = mustLocate(next, id);
+  const stored = stmtName(name);
+  if (stored === "") delete stmt.name;
+  else stmt.name = stored;
+  return next;
+}
+
 /** Renames a variable, function, or class everywhere it occurs (`id` slots, targets, declarations). */
 export function renameName(program: Program, from: Id, to: Id): Program {
   const next = clone(program);

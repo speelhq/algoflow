@@ -63,6 +63,16 @@ describe("migrate (L-53)", () => {
     expect(migrate(stored)).toEqual(p);
   });
 
+  it("L-58: keeps a statement's name and rejects one that is not one line of text", () => {
+    const named = { ...assign("x", num(1)), name: "Start at one" };
+    expect(migrate(json(program([named])))).toEqual(program([named]));
+    const broken = json(program([{ ...named, name: "two\nlines" }]));
+    expect(() => migrate(broken)).toThrow(/^main\[0\]\.name: expected one line of text/);
+    expect(() => migrate(json(program([{ ...named, name: 3 } as never])))).toThrow(
+      /^main\[0\]\.name/,
+    );
+  });
+
   it("checks id shape, field and parameter elements, and target shape", () => {
     const shortId = json(program([assign("x", num(1))])) as {
       main: Array<Record<string, unknown>>;
