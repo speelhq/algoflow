@@ -268,8 +268,9 @@ comparison and `in`, for `and` and `or` the kind of both inputs when they
 agree, for `+` the kind of both inputs when they agree and are not
 true/false, for `*` a list or a text when one input is one, and otherwise a
 number; `call:abs`, `call:int`, `call:float`, and `call:random_int` a
-number; `call:str` a text; `call:min` and `call:max` the kind of their first
-input. Where a rule gives no kind, the expression has none.
+number; `call:str` a text; `call:min` and `call:max` the kind of their
+first input; `list` a list, `dict` a dict, and `new` an object. Where a
+rule gives no kind, the expression has none.
 
 ## Adding a node
 

@@ -92,11 +92,11 @@ and a cycle degrades to `{ $cls, $id }` so the conversion terminates.
 CPython; the same holds for a function named after a builtin such as
 `random_int`, whose registry key would take precedence without notice.
 
-**Typing is one step of history** (L-52). A name typed into a slot
-changes the chart with every key, so that the generated nodes follow the
-variable as it is typed (U-42); one history entry per key would spend the
-100 entries on one word and make undo remove a letter at a time. A field
-that changed only on leaving it would keep the chart behind the editor.
+**Typing is one step of history** (L-52). A value typed into a line
+changes the chart with every key (U-41); one history entry per key would
+spend the 100 entries on one word and make undo remove a letter at a time.
+A field that changed only on leaving it would keep the chart behind the
+editor.
 
 **A save also happens when the page is hidden** (L-53). The 500 ms delay
 spares storage a write per key, but a tab closed within it would lose the
@@ -137,7 +137,9 @@ entries with it.
 both inputs have the same one; `+` on two true/false values fails (R-15),
 and `+` on a number and a text fails (L-14), so neither has a kind; `*`
 repeats a list or a text as Python does. A wrong kind would hide the
-entries that apply, while no kind lists every entry (U-52).
+entries that apply, while no kind lists every entry (U-52). `list`,
+`dict`, and `new` give the kind of what they make, which their block alone
+settles.
 
 **A `create` template after a frame**. `if c: y = 1` followed by `y = 2`
 renders both as `create y`: L-41 makes `y` invisible after the frame, so the
@@ -389,9 +391,12 @@ would cost two steps for what is one thought. An operator binds by the
 precedence Python gives it, so `total + i × 2` reads and runs as it is
 written, and the operations Python spells with keys (`%`, `//`, `**`,
 `in`) bind the same way, so typed keys group as Python groups them; any
-other word operation is a phrase around its inputs, so it takes the last
-value only, and the brackets the chart draws around it (N-08) show what it
-took. Inputs left to fill are fields in the line, reached with Tab.
+other entry takes the expression the list was chosen for (U-52): the list
+offers `As text` after `i < n` because the comparison is a true/false
+value, and applying it to `n` alone would apply what no row suggested and
+fail when run. The brackets the chart draws around a word operation (N-08)
+show what it took, and brackets typed first limit it to a part. Inputs
+left to fill are fields in the line, reached with Tab.
 
 **The Playground page reuses the Problems page** (U-15). Both pages list
 rows under one header, so the Playground page takes the Problems page's
@@ -633,14 +638,24 @@ commitment. The names are a list under the field, as the values are, with
 no limit and no fixed common names (`i`, `count`, `found`), which a
 learner would read before the names the problem needs.
 
+**A name field sets its name when chosen** (U-94). A name set with every
+key would create `t`, `to`, and `tot` on the way to `total`, each a
+variable of its own: the chart would switch between `Create` and `Set` at
+every key, and the name list would offer names that exist only while being
+typed. The list offers the name typed as `New variable`, so choosing it
+costs one key, Enter.
+
 **The popover stays; in-node editing was rejected** (U-41, U-50). The
 chart is shown fitted to its width, a diamond has little room, and a
 value being built needs space at full size; the popover is always at
 100 %. What changed is the cost of reaching it: a click on a slot drawn on
-the node opens the editor focused on that slot, ready for typing. The popover
-stays inside the chart region: one placed against the viewport flips over
-the panel whenever the node's right side lacks room, and hides the
-statement the learner is building from.
+the node opens the editor focused on that slot, ready for typing. The
+popover stays inside the canvas: one placed against the viewport flips
+over the panel whenever the node's right side lacks room, and hides the
+statement the learner is building from. It opens on the node's right
+always: one that turned below or above a node in the middle of the canvas
+covered the nodes the learner builds from, while a chart moved left as a
+scroll keeps the node in view and is followed as any scroll is.
 
 **A statement is a named action; a value is one line** (U-41, U-50, U-52). A
 statement has few, fixed parts, so its sentence shows each as a field; a
@@ -674,9 +689,18 @@ Python rejects (`07`) is not taken, so the line holds only what the
 `Python` tab can print. An operator's key at an input still to fill does
 nothing, because an operator needs the value before it; `-` there is the
 sign. Backspace at an operation's empty first input moves left: removing
-the operation would take the value typed after it too. Enter in a name
+the operation would take the value typed after it too. For the same reason
+Backspace at a later empty input moves left while another input after the
+first holds a value (`f(a, b, …)` keeps `b`); with none, it removes the
+operation, as deleting the operator of `a + …` does. Enter in a name
 field not typed in keeps the name and moves on, since the learner has read
 it and accepts it.
+
+**The explanation line shows an input by its value** (U-96). Naming each
+input in words (`position`) would need a name for every input of every
+operation in every language, while the help of each entry (N-02) already
+says in a sentence what its inputs are; the underline in the template
+shows which input the caret is in, and the line above shows what it holds.
 
 **The chart writes the block language** (N-08, U-33). Python stays in its
 tab (U-25); the chart uses the symbols a learner knows from school (`+ − × ÷
@@ -804,7 +828,11 @@ diamond then needed a second sentence per template (`Is x is divisible by
 Python's. Without templates the diamond writes its condition in the
 chart's own notation and adds `?`, which reads the same in every language;
 `Is` in front of it was dropped for the same reason. Where a condition is
-long or its purpose is not evident, the learner names the node (U-95).
+long or its purpose is not evident, the learner names the node (U-95). A
+text wider than 150 px is set on two lines, as the artboards draw it: a
+diamond is 1.4 times as wide as its text, so one long line makes it far
+wider than the boxes around it, and a split that leaves the longer line
+shortest keeps it near their width.
 
 **`break` and `continue` draw where they jump** (U-33, U-34, N-09). An edge to
 the next node, the earlier drawing, is a path the run never takes, and a
@@ -882,7 +910,7 @@ click.
 
 **Run leaves the solution** (U-27). The solution band offers no Run of its
 own: the solution is to be read, and its outcome is known. Running the
-learner's program while the chart region shows the solution would put the
+learner's program while the canvas shows the solution would put the
 highlight, the marks, and the narration on a chart other than the one
 running, so Run and Submit bring the learner's chart back first.
 
