@@ -93,20 +93,20 @@ within ±2^53; a non-integral or overflowing result is `float`.
 ## Statements
 
 ```ts
+type S = { id: NodeId; name?: string }; // L-58
 export type Stmt =
-  | { id: NodeId; kind: "assign"; target: Target; value: Expr }
-  | { id: NodeId; kind: "delete"; target: IndexTarget | KeyTarget }
-  | { id: NodeId; kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] }
-  | { id: NodeId; kind: "for"; var: Id; start: Expr; stop: Expr; body: Stmt[] }
-  | { id: NodeId; kind: "foreach"; var: Id; list: Expr; body: Stmt[] }
-  | { id: NodeId; kind: "while"; cond: Expr; body: Stmt[] }
-  | { id: NodeId; kind: "break" }
-  | { id: NodeId; kind: "continue" }
-  | { id: NodeId; kind: "print"; args: Expr[] }
-  | { id: NodeId; kind: "return"; value?: Expr }
-  | { id: NodeId; kind: "expr"; expr: Expr }
-  | { id: NodeId; kind: "swap"; list: Expr; i: Expr; j: Expr }
-  | { id: NodeId; kind: "comment"; text: string };
+  | (S & { kind: "assign"; target: Target; value: Expr })
+  | (S & { kind: "delete"; target: IndexTarget | KeyTarget })
+  | (S & { kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
+  | (S & { kind: "for"; var: Id; start: Expr; stop: Expr; body: Stmt[] })
+  | (S & { kind: "foreach"; var: Id; list: Expr; body: Stmt[] })
+  | (S & { kind: "while"; cond: Expr; body: Stmt[] })
+  | (S & { kind: "break" })
+  | (S & { kind: "continue" })
+  | (S & { kind: "print"; args: Expr[] })
+  | (S & { kind: "return"; value?: Expr })
+  | (S & { kind: "expr"; expr: Expr })
+  | (S & { kind: "swap"; list: Expr; i: Expr; j: Expr });
 
 export type Target = VarTarget | IndexTarget | KeyTarget | FieldTarget;
 export type VarTarget = { kind: "var"; name: Id };
@@ -118,7 +118,7 @@ export type FieldTarget = { kind: "field"; obj: Expr; field: Id };
 ## Expressions
 
 ```ts
-type E = { id: NodeId; source?: "text" };
+type E = { id: NodeId };
 export type Expr =
   | (E & { kind: "empty" }) // L-09
   | (E & { kind: "num"; value: number; float: boolean; raw: string })
@@ -246,8 +246,9 @@ run after every edit and before every run.
 
 L-50 `edit.ts` exports pure functions returning a new `Program`:
 `insertStmt`, `moveStmt`, `removeStmt`, `duplicateStmt`, `setSlot`,
-`setExpr`, `removeItem` (an item of an `exprs` slot), `renameName`, `addFunction`, `removeFunction`, `addClass`,
-`removeClass`, `setFields`, `setParams`, and `hoistAssign`.
+`setExpr`, `removeItem` (an item of an `exprs` slot), `renameName`,
+`setStmtName`, `addFunction`, `removeFunction`, `addClass`, `removeClass`,
+`setFields`, `setParams`, and `hoistAssign`.
 
 L-51 Every edit preserves L-04.
 
@@ -272,11 +273,30 @@ L-55 The value stored under `algoflow:program:<id>` is the `Program` JSON
 itself; loading passes it through `migrate()` and treats a rejected value as
 absent (C-13 then applies); the challenge's `challengeId` and `inputs`
 replace those of a restored program, and a Playground program has neither.
+`migrate()` drops a statement of the kind `comment`, which no block reads.
 
 L-57 A Playground program's id is `play-` followed by a NodeId;
 `algoflow:playground` holds `Record<id, { edited: number }>`, the time of
 each Playground program's last save in milliseconds since the epoch, and
 lists exactly the Playground programs in storage.
+
+L-58 A statement's `name` is the learner's name for its node (U-95): one
+line of text, stored trimmed, and absent when empty; `setStmtName` sets it,
+making each run of spaces and line breaks one space, and `migrate()` rejects
+a name that is not one line of text. A name changes neither validation nor
+execution.
+
+## Kinds
+
+L-59 A kind is what the value list (U-52) and the name list (U-94) know
+of a value before the program runs: `number`, `text`, `truefalse`,
+`none`, `list`, `dict`, or `object`. An expression's kind comes from its
+block's `kind` (N-01), given the kinds of the expressions inside it; a
+variable's kind is that of its input's value, else of the value of its
+first assignment in program order, else the kind its loop block declares
+(N-01 `declares`: `number` for a `for` variable); a parameter and a
+`foreach` variable have none, and an expression whose kind
+cannot be told has none.
 
 ## Verification
 

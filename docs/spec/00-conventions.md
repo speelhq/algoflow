@@ -64,7 +64,8 @@ statements.
 | generated node  | a node the chart draws for a loop's init, check, or step; it belongs to the loop |
 | region          | an ordered list of statements inside a branch or loop, or at top level          |
 | slot            | one editable field of a block                                                   |
-| chip            | rendering of one expression node inside a slot                                  |
+| value line      | the one-line editor of an expression slot (`05-ui.md`, U-50)                     |
+| word operation  | an expression written in words around its inputs (`03-nodes.md`, N-08)          |
 | connector       | the `+` insertion point on an edge                                              |
 | event           | one record produced by the interpreter (`04-runtime.md`)                        |
 | step            | one call to `Runner.next()`; a visible step is one the driver stops on (R-11)   |
