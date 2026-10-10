@@ -35,4 +35,4 @@ its index and the item as inline text.
 
 ## Verification
 
-U-91 (`pages.md`) saves one screenshot per view (V-01, V-02, V-06).
+The screenshots of U-91 (`pages.md`) cover one view each (V-01, V-02, V-06).

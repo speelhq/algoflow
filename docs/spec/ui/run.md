@@ -128,5 +128,5 @@ and build it there.` (`result.builtin`), and records nothing.
 
 ## Verification
 
-U-91 (`pages.md`) saves the screenshots of Run, Wrong Answer, Accepted, and
+The screenshots of U-91 (`pages.md`) cover Run, Wrong Answer, Accepted, and
 Run inside a function.

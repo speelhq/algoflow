@@ -39,14 +39,17 @@ facts, never history.
 ## Requirement identifiers
 
 Every normative statement has an identifier `X-NN` and is one testable
-rule. An identifier links a statement to the tests that establish it
+rule. A statement is a paragraph that opens with its identifier and a
+space, after a blank line, a heading, or a code fence, or a table row
+whose first cell holds its identifier alone; an identifier anywhere else
+cites it. An identifier links a statement to the tests that establish it
 (a test names the identifiers it verifies) and lets a document, an issue,
-a pull request, or a review point at one statement. Code comments and
-commit messages do not cite identifiers; a check's message may name the
-statement it enforces, so whoever meets the check finds the rule. Why: an
-id in a code comment is a second map from statements to code that nothing
-checks, so it goes stale silently, and an id in a commit message repeats
-the pull request's Why.
+a pull request, or a review point at one statement. Only Markdown files
+and tests (`*.test.*` files and `e2e/`) cite identifiers; code, data, and
+commit messages cite none. Why: an id in code is a second map from
+statements to code that nothing checks, so it goes stale silently; data
+(challenges, modules, the string catalogs) is shown to the learner; and an
+id in a commit message repeats the pull request's Why.
 
 Statements use the present indicative ("The emitter writes 4-space
 indentation") and are mandatory. "May" marks an option.
@@ -56,9 +59,8 @@ indentation") and are mandatory. "May" marks an option.
   or a finding then points at exactly the rule it concerns.
 - Changing a statement keeps its identifier; deleting a statement deletes
   its identifier and every citation of it in the repository.
-- A citation writes each identifier out, never a range (`U-10, U-12`, not
-  `U-10..U-12`). Why: a search for one identifier then finds every
-  citation of it.
+- A citation writes each identifier out, never a range of them. Why: a
+  search for one identifier then finds every citation of it.
 - A new statement takes the number after the highest one its prefix has in
   the specification, whichever file holds it. Identifiers are never
   renumbered. Why: a deleted statement takes its citations with it, so no
