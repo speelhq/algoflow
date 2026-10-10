@@ -29,10 +29,12 @@ with the keyboard table below and three lines describing the loop (build
 the chart, run it on one input, submit); texts under `app.help.*`, no
 external links.
 
-U-05 `⋯` opens a menu: `Open in Playground`, which creates a Playground
-program from the current program, titled with the problem's title, each
-input becoming an assignment at the top of `main` (the E-03 form), and
-opens it; and `Help` (U-04).
+U-05 `⋯` opens a menu of `Open in Playground` (U-110) and `Help` (U-04).
+
+U-110 `Open in Playground` creates a Playground program from the current
+program, titled with the problem's title, each input becoming an
+assignment of the chosen case's value (U-32) at the top of `main` (the E-03
+form), and opens it.
 
 U-06 Every page sets the browser tab title to `<title> — AlgoFlow`, where
 `<title>` is the problem's or Playground program's title, the module's
@@ -152,6 +154,9 @@ and one `<name>.py` per module (E-09); in a program's tab a module's file
 is read-only, has no node interaction, and carries `Open module <name>`
 (D-18), while on a Module page the module's file is the shown file with
 the full node interaction. Python text appears nowhere else.
+
+U-111 The `Python` tab writes the inputs with the values of the chosen
+case (U-32).
 
 U-26 A challenge's markdown texts (`description`, `hints`, `takeaway`,
 C-01) render paragraphs separated by a blank line, `` `code` ``,

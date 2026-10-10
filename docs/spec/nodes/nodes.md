@@ -24,8 +24,8 @@ export type NodeDef = {
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // E-08: stmt → lines, expr → text
   form?(node: Stmt | Expr, ctx: { creates: boolean }): string; // N-08
   text?(node: Stmt | Expr, slot: string): string; // N-08
-  kind?(node: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // L-59
-  declares?: Kind; // the kind of the variable its `id` slot names (L-59)
+  kind?(node: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // L-65
+  declares?: Kind; // the kind of the variable its `id` slot names (L-66)
   menu?: MenuEntry[]; // the entries of the value list (U-52, N-11)
   chart?:
     | { branch: { cond: string; yes: string; no: string } }
@@ -275,7 +275,7 @@ value is expected. Kinds are those of L-59; `any` below means every kind.
 N-15 The help of `and` reads that it is true when both sides are, and the
 help of `or` that it is true when one side or both are.
 
-N-12 The registered blocks give these kinds (L-59): `num` a number,
+N-12 The registered blocks give these kinds (L-65): `num` a number,
 `str` a text, `bool` a true/false value, `none` none; `unop` a true/false
 value for `not` and a number for `−`; `binop` a true/false value for a
 comparison and `in`, for `and` and `or` the kind of both inputs when they

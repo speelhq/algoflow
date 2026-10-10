@@ -56,6 +56,13 @@ key holding the ids and their times also gives the Playground page its list
 without scanning every key of the origin, and the `play-` prefix keeps a
 Playground id from ever reading as a challenge id.
 
+**An input declares its kind; a case gives its value** (L-66, C-01, U-32).
+A value in the program was a second copy of one case: the chart and the
+`Python` tab showed it while Run used the chosen case, and nothing kept it
+equal to any test. The kind is what L-66 needs and no case changes, so
+nothing in `src/lang` reads a case, and every value shown or run is the
+chosen case's.
+
 **Storage holds the raw `Program` JSON** (L-55). A zustand `persist` wrapper
 does not suit one key per challenge, and `migrate()` must validate whatever
 is returned; the raw form is also what Export writes (L-53). A rejected value

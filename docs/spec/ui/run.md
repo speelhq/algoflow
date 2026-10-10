@@ -122,7 +122,7 @@ steps and loops of the first case, `What you used` (the challenge's
 `takeaway`, C-01), `Move to module <name>` when the challenge names a
 module (C-19) and the program has a function or class (the D-09 operation),
 `See your program as Python`, which selects the `Python` tab, `Compare with
-the solution` (U-22), `Open in Playground` (U-05), and `Next problem →`
+the solution` (U-22), `Open in Playground` (U-110), and `Next problem →`
 (the first unsolved problem of the current plan after this one, wrapping to
 the plan's start; once every problem of the plan is solved, the next row of
 its section) or, after the last problem of a plan with every problem

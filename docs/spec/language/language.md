@@ -27,12 +27,12 @@ export type Program = {
   version: 1;
   title: string;
   challengeId?: string;
-  inputs: Input[]; // empty in Playground (S-07)
+  inputs: InputDecl[]; // empty in Playground (S-07)
   classes: ClassDef[];
   functions: FunctionDef[];
   main: Stmt[];
 };
-export type Input = { name: Id; value: Data };
+export type InputDecl = { name: Id; kind: Kind }; // its value comes from a case (C-01)
 export type ClassDef = { id: NodeId; name: Id; fields: Field[] };
 export type Field = { name: Id; default: Data }; // L-30
 export type FunctionDef = { id: NodeId; name: Id; params: Id[]; body: Stmt[] };
@@ -299,13 +299,16 @@ execution.
 
 L-59 A kind is what the value list (U-52) and the name list (U-94) know
 of a value before the program runs: `number`, `text`, `truefalse`,
-`none`, `list`, `dict`, or `object`. An expression's kind comes from its
-block's `kind` (N-01), given the kinds of the expressions inside it; a
-variable's kind is that of its input's value, else of the value of its
-first assignment in program order, else the kind its loop block declares
-(N-01 `declares`: `number` for a `for` variable); a parameter and a
-`foreach` variable have none, and an expression whose kind
-cannot be told has none.
+`none`, `list`, `dict`, or `object`.
+
+L-65 An expression's kind comes from its block's `kind` (N-01), given the
+kinds of the expressions inside it; an expression whose kind cannot be told
+has none.
+
+L-66 A variable's kind is its input's declared kind, else that of the value
+of its first assignment in program order (L-65), else the kind its loop
+block declares (N-01 `declares`: `number` for a `for` variable); a
+parameter and a `foreach` variable have none.
 
 ## Verification
 

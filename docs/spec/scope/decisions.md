@@ -23,7 +23,7 @@ anything; `defines` (C-21) refuses a submission whose named function
 resolves to a built-in module, so the exercise is retained while the
 shortcut remains available for later problems.
 
-**Playground holds many programs** (S-07, U-15, U-05). A single Playground
+**Playground holds many programs** (S-07, U-15, U-110). A single Playground
 program would make starting a new one destroy the last, and once a plan
 ends, using what the learner built in a larger program has nowhere else to
 happen than Playground. `Open in Playground` converts a solved problem into

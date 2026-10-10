@@ -11,7 +11,7 @@ export type Challenge = {
   difficulty: "easy" | "medium" | "hard";
   topics: Topic[]; // ≥ 1, from the U-14 list
   description: Localized; // markdown
-  inputs: Input[]; // language.md
+  inputs: InputDecl[]; // language.md
   tests: Test[]; // ≥ 3
   hints: Localized[]; // exactly 3 (C-22)
   takeaway?: Localized; // one sentence shown as `What you used` (U-83)
@@ -20,7 +20,7 @@ export type Challenge = {
   solution: Program; // inputs identical to `inputs`
 };
 export type Test = {
-  inputs: Record<Id, Data>; // every input present; a test is shown by these values
+  inputs: Record<Id, Data>; // every input, a value of its kind (L-59); shown by these values
   edge?: boolean; // C-03
   seed?: number; // default 1
   expect: { variables?: Record<Id, Data>; stdout?: string[] }; // ≥ 1

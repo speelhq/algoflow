@@ -51,7 +51,7 @@ is the minimal content the button can open. Directing it at the problem
 description instead has no meaning on the Problems page, which has no
 problem open.
 
-**A Playground program goes back to the Playground** (U-01, U-05). The
+**A Playground program goes back to the Playground** (U-01, U-05, U-110). The
 page a Playground program is opened from is the Playground page, so its back
 link leads there. `Open in Playground` on a Playground program would copy
 it under the same title, which `⋯` has no reason to offer; the title of a
@@ -205,12 +205,14 @@ tab agree (the third commitment of `docs/spec/README.md`), and a display
 rule for one bound form would mix `<` and `≤` across loops.
 
 **The input is a node, and Run and Submit share one view** (U-32, U-23,
-C-15). A test-case panel under the chart duplicated the Input node;
-choosing a case on the node is the same action as reading it. The case chosen
-there has an expectation, so a Run shows `Expected` beside `Output` from
-the first step and ends with that case's verdict; Submit is the same view
-with one chip per case. The learner observes that Submit is Run on every
-case, and the comparison step no longer waits for a submission.
+C-15, U-110, U-111). A test-case panel under the chart duplicated the Input
+node; choosing a case on the node is the same action as reading it. The case
+chosen there has an expectation, so a Run shows `Expected` beside `Output`
+from the first step and ends with that case's verdict; Submit is the same
+view with one chip per case. The learner observes that Submit is Run on
+every case, and the comparison step no longer waits for a submission. The
+`Python` tab and `Open in Playground` take the chosen case too (U-111,
+U-110), so the chart, the code, and the copy state the same values.
 
 **A drop cannot land inside the dragged node** (U-36). Moving a loop into
 its own body has no result: the region would be removed with the
@@ -446,10 +448,10 @@ the comment above it. There is no `comment` block: it would draw
 Python's `#` on the chart, and a named node says what a comment would say,
 where it applies.
 
-**Kinds choose the list** (L-59, U-52, N-11, U-50). After a value the list
-offers what applies to that kind of value, so a list does not offer
-`Multiply`; the kind comes from inputs and first assignments, which is known
-without running. A group names what is done with a kind of value:
+**Kinds choose the list** (L-59, L-65, L-66, U-52, N-11, U-50). After a
+value the list offers what applies to that kind of value, so a list does not
+offer `Multiply`; the kind comes from inputs and first assignments, which is
+known without running. A group names what is done with a kind of value:
 `Calculate` with a number, `Conditions` with a true/false value, `Items`
 with a list, a dict, or an object, and `Compare` and `Convert` with any, so
 after a value the learner reads its kind's group first and the two shared

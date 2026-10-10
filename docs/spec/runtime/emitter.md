@@ -2,7 +2,7 @@
 
 Emitter: `src/python/emit.ts`.
 
-E-01 `emit(program): { code: string; map: Record<NodeId, { start: number; end: number }> }`,
+E-01 `emit(program, inputs: Record<Id, Data>): { code: string; map: Record<NodeId, { start: number; end: number }> }`,
 1-based inclusive lines; a frame maps to its header line; `else:` is
 unmapped.
 
@@ -32,8 +32,8 @@ for i in range(n - 1):
 print(nums)
 ```
 
-E-03 Inputs are emitted as assignments of their `Data` in declaration
-order.
+E-03 Inputs are emitted as assignments of their values in `inputs`, in
+declaration order.
 
 E-04 4-space indentation, no trailing whitespace, one trailing newline.
 
@@ -63,7 +63,7 @@ emits `...`.
 E-11 A statement with a name (L-58) is preceded by the comment line
 `# <name>` at its indentation, and its map entry starts at that line.
 
-E-09 `emit(program, modules?)` also returns
+E-09 `emit(program, inputs, modules?)` also returns
 `modules: Array<{ name: Id; code: string; map: Record<NodeId, { start: number; end: number }> }>`,
 one entry per module the program uses (D-04), each laid out per E-02
 without inputs or `main`; `emit(module)` produces a module's file alone,

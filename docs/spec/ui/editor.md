@@ -83,7 +83,7 @@ keyboard.
 
 U-52 The list of a value line holds groups chosen by what is before the
 caret. Where a value is expected: `Variables` (the variables visible at the
-node, most recently assigned first, each with its kind, L-59), `Values` (the
+node, most recently assigned first, each with its kind, L-66), `Values` (the
 entries of group `values`: `Text`, `True`, `False`, `None`, `Empty list`,
 `Empty dict`), `Conditions` (`Not`), `Calculate` (`Random whole number`,
 then `( )`, a pair of brackets, labelled `editor.brackets`), and `Your
@@ -93,7 +93,7 @@ last `Modules ▸`, which opens one group per module listing its functions as
 calls, as U-40's does). After a value, the entries whose `on` holds the
 kind of the expression before the caret, the largest operation with a
 precedence that ends at the caret within the innermost brackets (N-01,
-L-59): `Calculate` for a number,
+L-65): `Calculate` for a number,
 `Conditions` for a true/false value, `Items` for a list, a dict, or an
 object, and `Compare` and `Convert` for every kind; an entry with a symbol
 shows it before its name (`× Multiply`). After a value of no known kind
@@ -167,7 +167,7 @@ U-94 An `id` or `target` slot is a name field with a list below it: the
 names of the `expect.variables` of the challenge's first test under `This
 problem`, in that order, then the program's other variables under
 `Variables`, the inputs, the parameters, and the assigned names in program
-order, each with its kind (L-59).
+order, each with its kind (L-66).
 
 U-102 Typing in a name field keeps the names that begin with the text
 typed, as a value line matches a name (U-50), and a typed name that
