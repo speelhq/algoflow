@@ -139,10 +139,12 @@ Report command output, not summaries of it.
 
 - `@types/node` stays on the major of `.node-version`. Why: types from a
   later major accept APIs that CI's Node lacks while every check passes.
-- Warnings do not fail `pnpm lint`. Why: most are
-  `no-unsafe-type-assertion` where something the type checker cannot follow
-  establishes a value's shape (the registry's slot list, a check after
-  `JSON.parse`), and expressing each in the types is not justified.
+- `pnpm lint` fails on any warning (`--deny-warnings`): a rule this code
+  accepts is turned off in `.oxlintrc.json` beside its reason, a line it
+  accepts is exempted by `// oxlint-disable-next-line <rule> -- <reason>`,
+  and every other warning is fixed. Why: Oxlint is pinned to an exact
+  version, so a new rule arrives only with a deliberate upgrade, which is
+  when it is judged; a warning that does not fail is missed.
 - No React Testing Library. Why: unit tests cover stores, `t()`, and script
   logic, and Playwright exercises components end to end; a DOM testing
   library would be a second, slower means of testing the same behaviour.

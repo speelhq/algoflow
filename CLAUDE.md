@@ -41,8 +41,9 @@ Skills: `/issue`, `/milestone`, `/add-node`, `/add-challenge`.
   `jsx-a11y` rejects mouse and click handlers on `li`/`tr`/`ol` (use one
   delegated listener with `data-*`); `react/set-state-in-effect` rejects
   `setState` inside effects (adjust state during render); `no-base-to-string`
-  rejects `String(unknown)`; `no-await-in-loop` is a warning the batch loops
-  accept.
+  rejects `String(unknown)`. `pnpm lint` fails on a warning: a new one is
+  fixed, its rule is turned off in `.oxlintrc.json` with the reason, or one
+  line is exempted by `// oxlint-disable-next-line <rule> -- <reason>`.
 - Hooks: a PostToolUse hook runs oxfmt on every written file under `src/`
   and `challenges/` but not `scripts/` (run `pnpm exec oxfmt scripts`
   manually; `pnpm lint` does not check formatting); re-read a file before a
