@@ -143,6 +143,10 @@ the chosen case's `Expected`, and `result.empty` (`Run to see the values`).
 U-24 The panel collapses to a 40 px rail from a toggle in its header; the
 state persists under `algoflow:layout`.
 
+U-114 `algoflow:layout` holds the record of `panel`, `collapsed`, and
+`speed` itself, with no wrapper and no `version`, as `algoflow:progress`
+holds its own (C-17).
+
 U-25 Tab `Python` shows the emitted code with line numbers (E-01):
 keywords, strings, numbers, and comments are coloured and nothing else;
 hovering a line outlines its node, selecting a node highlights its lines,

@@ -14,15 +14,15 @@ level as the core loop.
 
 ## Pages
 
-**The layout store validates on both paths** (U-03, U-24, U-60). Setters
-clamp, and `mergePersisted` re-validates whatever is returned from
+**The layout store validates on both paths** (U-03, U-24, U-60, U-114).
+Setters clamp, and `mergePersisted` re-validates whatever is returned from
 `localStorage`: a non-number or out-of-range size falls back to the default
 or the lower limit, and the upper limit, half the viewport, is applied by
 `panelWidth()` where the width is set and where it is drawn. Trusting the
 snapshot would allow a hand-edited or stale entry to render an unusable
 panel. Because both paths validate, a snapshot written under an older shape
-needs no `migrate` step: its unknown fields resolve to the defaults, so
-`version` remains `1`.
+needs no `migrate` step: its unknown fields resolve to the defaults, so the
+record carries no `version`.
 
 **The key check scans with a regex, not a parser** (U-100). The pattern
 matches `t("…")` and `t('…')` while ignoring `at(`, `obj.t(`, and template
