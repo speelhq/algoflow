@@ -78,7 +78,8 @@ R-09 Runtime error codes:
 | `E_RECURSION`  | L-28                   |                           |
 | `E_STEP_LIMIT` | L-31                   |                           |
 
-R-10 The same program, inputs, and seed produce the same event sequence.
+R-10 The same program, inputs, seed, and modules (R-01) produce the same
+event sequence.
 
 R-13 Blocks implement their behaviour as generators (N-01 `run`):
 
