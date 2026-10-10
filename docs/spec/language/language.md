@@ -231,7 +231,7 @@ run after every edit and before every run.
 | Code               | Condition                                                   | params                    |
 | ------------------ | ----------------------------------------------------------- | ------------------------- |
 | `E_UNDEFINED`      | name not visible (L-40)                                     | `name`                    |
-| `E_DECLARE_FIRST`  | L-41                                                        | `name`                    |
+| `E_DECLARE_FIRST`  | L-41                                                        | `name`, `frame`           |
 | `E_BAD_NAME`       | L-01/02/03                                                  | `name`                    |
 | `E_DUPLICATE_NAME` | L-05, L-45, L-46                                            | `name`                    |
 | `E_BREAK_OUTSIDE`  | `break`/`continue` outside a loop                           |                           |
@@ -264,10 +264,17 @@ uses embedded (D-13); import validates and migrates by `version`
 
 L-54 A statement position is
 `Place = { parent: NodeId | "main"; slot: "main" | "body" | "then" | "else"; index: number }`
-(`parent` is `"main"`, a function id, or a frame id). `insertStmt`,
-`moveStmt`, and `hoistAssign` take a `Place`; `moveStmt` counts `index` in
-the target region after the moved statement has been removed. The other
-edits address nodes by id; `setExpr` takes an item index for `exprs` slots.
+(`parent` is `"main"`, a function id, or a frame id); `insertStmt` and
+`moveStmt` take one.
+
+L-60 `moveStmt` counts `index` in the target region after the moved
+statement has been removed.
+
+L-61 `hoistAssign(program, frame, name)` takes the id of the frame before
+which it inserts the assignment (L-41), as `E_DECLARE_FIRST` reports it.
+
+L-62 The other edits address nodes by id; `setExpr` takes an item index for
+`exprs` slots.
 
 L-55 The value stored under `algoflow:program:<id>` is the `Program` JSON
 itself; loading passes it through `migrate()` and treats a rejected value as

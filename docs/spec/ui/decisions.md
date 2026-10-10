@@ -25,7 +25,7 @@ allow a hand-edited or stale entry to render an unusable panel. Because both
 paths validate, a snapshot written under an older shape needs no `migrate`
 step: its unknown fields resolve to the defaults, so `version` remains `1`.
 
-**The key check scans with a regex, not a parser** (U-71). The pattern matches `t("…")` and
+**The key check scans with a regex, not a parser** (U-100). The pattern matches `t("…")` and
 `t('…')` while ignoring `at(`, `obj.t(`, and template literals; it also
 matches inside comments, which is accepted. A parser would be more precise
 but adds a dependency to a script that must remain fast and simple. Test
@@ -33,7 +33,7 @@ files are skipped because they call `t()` with deliberately unknown keys.
 Keys built at run time are not scanned; the `node.*` keys are checked
 against the registry in `src/nodes/index.test.ts`.
 
-**`en.json` holds only keys something renders** (U-71). Keys are added
+**`en.json` holds only keys something renders** (U-71, U-101). Keys are added
 with the code that uses them, so wording is decided when the UI exists and
 the parity check never requires translating unused strings.
 
@@ -284,11 +284,11 @@ shortest keeps it near their width.
 the next node, the earlier drawing, is a path the run never takes, and a
 learner reading the chart follows it. Both blocks declare
 `requires: "loop"`, so only the kind distinguishes an exit from a jump to
-the next pass, and the chart may not branch on the kind (N-01); each
+the next pass, and the chart may not branch on the kind (N-14); each
 therefore declares its jump in `chart`, as `if` and the loops declare their
 regions, and the layout routes the edge from the declaration, so the two
 work inside any loop block added later. A rule in the layout for the two
-kinds was rejected for N-01, and a node with no edge states where control
+kinds was rejected for N-14, and a node with no edge states where control
 does not go without stating where it goes. The edges leave by the right
 like a `Return`'s and run down lanes inside the loop's right extent: `exit`
 joins the `No` lane, and `next` meets the end of the body, at the step node
@@ -338,7 +338,7 @@ left to fill are fields in the line, reached with Tab.
 **The Variables group offers no `v + 1`** (U-52). The Variables group
 offered `v + 1` and `v - 1` when the slot was an `index` or a `for` bound
 and a `for` variable was visible: an inference about the learner's intent,
-tied to two block kinds, which made the menu branch on kind against N-01;
+tied to two block kinds, which made the menu branch on kind against N-14;
 wrapping `i` with `+` or typing the text achieves the same result.
 
 **The `+` menu offers statements, in a beginner's order** (U-40). Listing
@@ -514,7 +514,7 @@ the program's own functions. Inline expansion of a call inside the caller's
 chart was rejected: the flowchart loses legibility one level down, and a
 function would have two editing locations.
 
-**Run knows the end before it plays** (R-11, U-60, U-81). Execution is
+**Run knows the end before it plays** (R-23, U-60, U-81). Execution is
 deterministic and inexpensive, so Run executes everything first and then
 replays. That informs the learner immediately that a loop never ends (at
 playback speed `E_STEP_LIMIT` is eighteen hours away at the fastest speed),
@@ -608,7 +608,7 @@ run mode. `Run` and `Play` were two buttons for one intention, to make the
 run go on: the first pre-ran and started, the second resumed. One play
 button now takes `Run`'s place and reads `Pause`, `Play`, or, at the last
 step, `Replay`, which seeks to step 0 and plays, so the button a learner
-pressed to start is the one that pauses. The pre-run (R-11) is unchanged;
+pressed to start is the one that pauses. The pre-run (R-23) is unchanged;
 it happens behind `Run`.
 
 **The narration is a line under the chart** (U-63, U-65). A tooltip beside
@@ -626,7 +626,7 @@ beside the case selector of the `Result` tab, the list it judges and the
 place its verdict and chips appear, so the button and its answer are in one
 place and away from `Run`. A module's `Test` sits there for the same reason.
 
-**Three speeds** (R-11, U-60). A slider of 1 to 50 steps a second asked for a
+**Three speeds** (R-26, U-60). A slider of 1 to 50 steps a second asked for a
 number a beginner has no use for. Three choices cover the uses: `Slow` (1)
 to follow each step, `Normal` (4) to watch a loop go round, and `Fast` (15)
 to reach a later point while still seeing the chart move; further jumps

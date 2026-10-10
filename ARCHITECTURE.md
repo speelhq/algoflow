@@ -20,7 +20,7 @@ can be moved into modules and reused across programs (`docs/spec/modules/`).
   because the other three import it, so a package reaching `src/nodes`
   would reach them all.
 - One block per file in `src/nodes/`; nothing else branches on block kind
-  or name (N-01). Why: a block is added in one file, and every consumer
+  or name (N-01, N-14). Why: a block is added in one file, and every consumer
   reads its declarations, so a block added later works in the menu, the
   chart, and the editor with no other change.
 - Every user-visible string comes from `src/i18n/en.json`. Why: Japanese
@@ -65,7 +65,7 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
 - `src/store` — Zustand stores: `program` (the open program, its undo
   history, and its persistence, L-50, L-51, L-52, L-53, L-54, L-55),
   `playground` (the Playground programs' index, L-57), `editor` (the hovered and the selected node, U-25,
-  U-35), `run` (the pre-running, timer-driven driver, R-11), `tests`
+  U-35), `run` (the pre-running, timer-driven driver, R-23, R-26), `tests`
   (submission verdicts), `progress` (per-problem status under
   `algoflow:progress`), and `layout` (panel width, collapse, and playback
   speed under `algoflow:layout`); `storage.ts` holds every read and write of

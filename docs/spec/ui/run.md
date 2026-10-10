@@ -5,14 +5,14 @@
 U-60 The run bar at the foot of the canvas holds `▶ Run` in build mode.
 `Run` with diagnostics present does not start: it shows the chart of the
 first node with a diagnostic, selects that node, and shows its message
-(U-37); `Submit` does the same. Otherwise `Run` pre-runs the program (R-11)
+(U-37); `Submit` does the same. Otherwise `Run` pre-runs the program (R-23)
 with the Input nodes' values and puts the page in run mode: editing is
 disabled, and the run bar holds, from its left, one play button in place
 of `▶ Run` (`❚❚ Pause` while playing, `▶ Play` while paused, and `↺ Replay`
 at the run's last step, which seeks to step 0 and plays), `|◀ Back`,
 `Step ▶|`, `Step over` (R-17), `Skip ▶▶` (R-19), the position bar `step k
-of N`, which can be dragged to any step (R-11 Seek), the speed as three
-choices `Slow`, `Normal`, and `Fast` (R-11), and `■ Stop`. Playback starts
+of N`, which can be dragged to any step (R-27 Seek), the speed as three
+choices `Slow`, `Normal`, and `Fast` (R-26), and `■ Stop`. Playback starts
 playing at the remembered speed (`Normal` at first, persisted under
 `algoflow:layout`); `▶ Watch this case` (U-81) starts paused. A run whose
 pre-run ends in `E_STEP_LIMIT` reports it (`run.endless`) before playback.
@@ -69,7 +69,7 @@ U-68 While running, the path bar is the call stack: `main` first, one
 segment per frame, the last one running; the chart shows the running
 frame and follows it on every `call` and `return`, and Back and Seek show
 the frame of the step they reach. A module function's frame is never a
-segment: its call is one step (R-16). A segment reads `name(args)` with
+segment: its call is one step (R-11). A segment reads `name(args)` with
 numbers, texts, and booleans shown and any other argument as `…`, adjacent
 ones merged; beyond `main` and the last three segments the middle
 collapses to `… n`, which lists them on click. While paused, clicking a
@@ -87,7 +87,7 @@ U-81 A failed submission shows `Wrong Answer`, `k of n cases passed`, one
 chip per case (`✓`/`✗`, the first failing one selected), and for the
 selected case the rows of U-23 with the first differing one marked, and
 `▶ Watch this case`, which sets the Input nodes to that case and starts a
-run paused at the first difference (R-11 Seek): the step of the `print`
+run paused at the first difference (R-27 Seek): the step of the `print`
 that produced the first differing line, or the last step of the run when
 no `print` produced it or a variable differs. The narration there
 identifies which (`run.narrate.difference`: `This printed line 1`, shown at

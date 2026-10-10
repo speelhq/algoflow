@@ -50,7 +50,7 @@ Skills: `/issue`, `/milestone`, `/add-node`, `/add-challenge`.
 - oxfmt keeps a JSON object on one line only if it already was: edit
   challenge files by line, never by `JSON.stringify`.
 - Vitest fake timers give a timeout created during a tick a delay of 1 ms,
-  so an R-11 batch loop needs `advanceTimersByTimeAsync(1)` per batch
+  so an R-24 batch loop needs `advanceTimersByTimeAsync(1)` per batch
   (`settle()` in `src/store/run.test.ts`). Stores that persist need
   `// @vitest-environment jsdom`.
 - `MessageKey` is derived from `en.json`, so a removed key fails type-check;

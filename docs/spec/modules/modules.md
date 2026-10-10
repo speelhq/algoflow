@@ -93,9 +93,9 @@ existing ones unchanged, and reports `Kept existing module <name>`.
 D-18 `Open <name>` on a module function or class (U-41, U-65) opens its
 Module page in the browser window named `algoflow-module`, so a second
 open reuses that tab: the Module page, on finding `algoflow:handoff`,
-saves its pending edits, discards any run (R-11 Stop), and shows the named
+saves its pending edits, discards any run (R-29 Stop), and shows the named
 function. The function's arguments accompany it: from a run, the arguments
-of that call as they stood at its `call` event (R-11 Seek); in build mode,
+of that call as they stood at its `call` event (R-27 Seek); in build mode,
 the arguments that are literals; otherwise none. They are transferred with
 the module and function names under `localStorage` key `algoflow:handoff`,
 which the Module page reads once and removes, and they become the Input

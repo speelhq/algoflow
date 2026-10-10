@@ -1,10 +1,8 @@
 # Nodes
 
 N-01 Every block is one file `src/nodes/<key>.ts` (a `:` in the key becomes
-`-` in the file name: `call-abs.ts`, `method-append.ts`) exporting a `NodeDef`,
-registered in `src/nodes/index.ts`; no other module branches on `kind`,
-builtin name, or method name. Traversal, validation, the block menu, the
-value list, and the chart read a block's `slots`, `menu`, and flags instead.
+`-` in the file name: `call-abs.ts`, `method-append.ts`) exporting a
+`NodeDef`:
 
 ```ts
 export type NodeDef = {
@@ -19,6 +17,8 @@ export type NodeDef = {
   loop?: boolean; // its body regions are loop bodies
   requires?: "loop" | "function"; // where the statement may appear (E_BREAK_OUTSIDE, E_RETURN_OUTSIDE)
   hidden?: boolean; // not in the block menu (`empty`, `expr`)
+  zeroLike?(node: Expr): Expr; // a literal block's zero of the same type (L-44)
+  callee?(node: Expr): Callee; // a call-like block's callee and argument count
   create(): Stmt | Expr; // required slots hold `empty` (L-09)
   run: StmtRunner | ExprRunner; // R-13
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // E-08: stmt → lines, expr → text
@@ -32,6 +32,11 @@ export type NodeDef = {
     | { check: string }
     | { counted: string }
     | { jump: "exit" | "next" }; // N-09
+};
+export type Callee = {
+  name: Id;
+  argc: number;
+  family: "builtin" | "function" | "class" | "method"; // builtin, method: arity from `params`
 };
 export type Slot = {
   name: string;
@@ -52,6 +57,14 @@ export type MenuEntry = {
 Slot roles: `expr` one expression; `exprs` an ordered list; `id` a name;
 `body` a statement region; `target` an assignment target; `text` a literal
 field (`num.value`, `str.value`, an operator).
+
+N-13 `src/nodes/registry.ts` registers every block and is the only
+registry: every other module reaches a block through it.
+
+N-14 No module other than a block's file and the registry's `keyOf`
+branches on `kind`, builtin name, or method name: traversal, validation,
+the block menu, the value list, and the chart read a block's `slots`,
+`menu`, and flags instead.
 
 N-02 i18n keys per block in `en.json`: `node.<key>.label`,
 `node.<key>.template` (the node's sentence with `{slot}` placeholders),

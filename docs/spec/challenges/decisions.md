@@ -11,7 +11,7 @@ for them.
 
 **Tests are judged on disposable runners** (C-15). The driver shows one run;
 judging three tests through it would discard the learner's position. Each test
-runs in R-11 batches with `setTimeout(0)` between them so a non-terminating
+runs in R-24 batches with `setTimeout(0)` between them so a non-terminating
 program cannot block the tab. `judge()` is shared with `scripts/check.ts` so
 the Result tab and CI agree on C-10.
 

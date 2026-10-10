@@ -14,7 +14,7 @@ imports, so `src/nodes` remains free of store and React dependencies.
 purpose, and one block can serve several groups (`binop` is `Add`,
 `Equals`, and `And`), so a block lists its entries, each with its group,
 the kinds it applies to, its symbol, and its keys; the editor reads them
-and names no block, as N-01 requires, and a block added later brings its
+and names no block, as N-14 requires, and a block added later brings its
 entries with it.
 
 **A kind is given only where the inputs settle it** (N-12). `and` and

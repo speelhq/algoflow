@@ -9,10 +9,10 @@ would distribute null checks through every block and the emitter. A dedicated
 `empty` kind keeps `Expr` a closed union, lets validation report
 `E_EMPTY_SLOT` generically, and emits `...` so the Python tab still renders.
 
-**Statements are addressed by `Place`** (L-54). Edits from the UI arrive as
-a drop at index N of region R; a `{ parent, slot, index }` triple names every
-region (main, a function body, a frame region) without exposing array
-references. `moveStmt` counts the index after removal because a drag within
+**Statements are addressed by `Place`** (L-54, L-60). Edits from the UI
+arrive as a drop at index N of region R; a `{ parent, slot, index }` triple
+names every region (main, a function body, a frame region) without exposing
+array references. `moveStmt` counts the index after removal because a drag within
 one region is the common case and the drop indicator is computed on the
 list without the dragged card.
 

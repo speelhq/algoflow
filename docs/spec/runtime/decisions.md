@@ -31,8 +31,8 @@ values as `Data` on the Python side (`$float`, `$int:` keys, `$cls`/`$id`)
 lets the TypeScript side compare with the same `dataEquals` used for
 expectations, so one equality rule (C-10) serves both engines.
 
-**The driver publishes its projection, not only its position** (R-11,
-R-12).
+**The driver publishes its projection, not only its position** (R-12,
+R-30, R-31).
 `taken`: U-61 colours the path of the current pass, which cannot be rebuilt
 from `lastEvent` after a Seek, so the projection keeps it beside `verdicts`
 and a `loop` event clears both. `pass`: `Pass 3` requires a count for each
@@ -51,7 +51,7 @@ Submit record no print steps, so only the driver's own pre-run determines
 where the differing line was printed, and an outdated difference cannot be
 passed in.
 
-**A step count includes the failing step** (R-11). A step is one call of
+**A step count includes the failing step** (R-23, R-32). A step is one call of
 `next()`, and the call that fails is one; an error run therefore has
 `total = events + 1`, step `total` has no event, and the last position of
 the position bar is where the error is shown. A finished run is `done` on

@@ -213,9 +213,14 @@ U-70 Every diagnostic and runtime code has `error.<CODE>` in `en.json`:
 U-71 All strings reside in `src/i18n/en.json` and `src/i18n/ja.json`
 under `app.*`, `problems.*`, `problem.*`, `playground.*`, `modules.*`,
 `chart.*`, `menu.*`, `editor.*`, `run.*`, `result.*`, `python.*`, `node.*`,
-`error.*`; `scripts/i18n.ts` fails on a `t()` call with an unknown literal
-key and on a key missing in either locale; test files and `*.d.ts` are
-not scanned.
+and `error.*`.
+
+U-100 `pnpm check` (`scripts/lib/i18n-check.ts`) fails on a `t()` call in
+`src/` whose literal key `en.json` does not hold; test files and `*.d.ts`
+are not scanned.
+
+U-101 `pnpm check` fails on a key that one locale holds and the other does
+not.
 
 U-72 The Japanese locale uses polite form and everyday vocabulary for
 block sentences, and gives the technical term in parentheses in `help`

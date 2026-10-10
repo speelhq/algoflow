@@ -101,7 +101,7 @@ C-12 An accepted submission requires every test to pass.
 
 C-13 Opening a problem restores its program from `localStorage` (L-53) or
 creates one with an empty `main`, with `challengeId` and `inputs` set;
-opening discards any runner (R-11 Stop) and selects the first test's
+opening discards any runner (R-29 Stop) and selects the first test's
 inputs for the Input nodes (U-32).
 
 C-14 The browser bundles `challenges/*.json` and `plans.json` at build
@@ -110,7 +110,7 @@ reads the files from disk. The schema types live in
 `src/challenges/types.ts`.
 
 C-15 Run (U-60) drives one runner with the inputs of the chosen case
-(U-32) and judges that case at the end of the run (U-23); Submit (U-80) judges every test on its own runner in R-11
+(U-32) and judges that case at the end of the run (U-23); Submit (U-80) judges every test on its own runner in R-24
 batches without affecting the driver; both use the modules the program uses
 (D-04), and every verdict comes from `src/challenges/judge.ts`, the rule
 `scripts/check.ts` applies (C-10, C-11).

@@ -114,11 +114,11 @@ R-15 `E_TYPE` params `left` and `right` are the type names of the operands
 (`int`, `float`, `str`, `bool`, `none`, `list`, `dict`, or the class name);
 a `bool` is not a number for arithmetic and ordering.
 
-R-16 A call resolved to a module function (L-46) pushes a frame with
-`module` set to the module name; inside it, names resolve within that
-module (D-05), and the `call` and `return` events are as for a program
-function. Events emitted while a module frame is on the stack are not
-visible steps (R-11).
+R-16 A call resolved to a module function (L-46) runs as a call of a
+program function does, its frame having `module` set to the module name.
+
+R-33 Inside a module frame, a `call` or `new` resolves within that module
+(D-05).
 
 R-18 `run` accepts an entry `{ fn: Id; args: Data[] }` in place of `main`:
 the named function of the program or module is the first frame, and `done`
@@ -128,24 +128,40 @@ the arguments as they are after the run (D-06, D-19).
 ## Driver (`src/store/run.ts`)
 
 R-11 A visible step is an event emitted while no module frame is on the
-stack; a module call is one visible step, its `return`. Run first advances
-a separate runner, discarded afterwards, to its end in batches of 2,000
-with `setTimeout(0)` between batches and records `total`, the number of
-visible steps it produced irrespective of how it ended (after an error the
-failing step is step `total`), `outcome`, the manner in which it ended, and `prints`, the
-visible step of each `print`; then it creates the shown runner at step 0.
-Step: `next()` until the next visible step. Play: one Step every
-`1000 / speed` ms, speed one of 1, 4, and 15 (`Slow`, `Normal`, `Fast`,
-U-60). Seek(k): a new runner advanced to
-visible step `k`, in the same batches, rebuilding `state`, `stdout`, and
-`verdicts` from every event it passes. When `k` is at or after the current
-step, the driver continues the current runner in place of a new one; the
-two reach the same position (R-10). Back: Seek(`step - 1`), and
-Seek(`k - 1`) while a Seek to `k` is in progress. Stop: discard the runner.
-While the pre-run, a Seek, or a Skip works through its batches `busy` is
-true and Step and Play do nothing; Pause during the pre-run makes the run
-open paused. A run of no step is `done` immediately; a run is `done` or in
-`error` on reaching step `total`.
+stack, or the `return` event of a call into a module: a module call is one
+visible step.
+
+R-24 The driver works through runners in batches of 2,000 calls of
+`next()` with `setTimeout(0)` between batches.
+
+R-23 Run first advances a separate runner, discarded afterwards, to its
+end in batches (R-24) and records `total`, the number of visible steps it
+produced however it ended (after an error the failing step is step
+`total`), `outcome`, how it ended, and `prints`, the visible step of each
+`print`; then it creates the shown runner at step 0.
+
+R-25 Step: `next()` until the next visible step.
+
+R-26 Play: one Step every `1000 / speed` ms, speed one of 1, 4, and 15
+(`Slow`, `Normal`, `Fast`, U-60).
+
+R-27 Seek(k): a new runner advanced to visible step `k` in batches (R-24),
+rebuilding `state`, `stdout`, and `verdicts` from every event it passes;
+when `k` is at or after the current step, the driver continues the current
+runner in place of a new one, and the two reach the same position (R-10).
+
+R-28 Back: Seek(`step - 1`), and Seek(`k - 1`) while a Seek to `k` is in
+progress.
+
+R-29 Stop: discard the runner.
+
+R-30 While the pre-run, a Seek, or a Skip works through its batches,
+`busy` is true and Step and Play do nothing.
+
+R-31 Pause during the pre-run makes the run open paused.
+
+R-32 A run of no step is `done` at once; a run is `done` or in `error` on
+reaching step `total`.
 
 R-12 Driver state: `status` (`idle | paused | playing | done | error`),
 `step`, `total`, `outcome`, `prints`, `lastEvent`, `state` (refreshed after
@@ -156,7 +172,7 @@ statements entered in the current pass, U-61), `pass` (for a `loop`
 `lastEvent`, the number of that loop's passes since it was entered, U-63),
 `activeId` (the statement that contains `lastEvent`'s node, or after an
 error the failing node, U-39),
-`breakpoint` (a `NodeId` or none, R-19), `busy` (R-11), `caseIndex` (the
+`breakpoint` (a `NodeId` or none, R-19), `busy` (R-30), `caseIndex` (the
 chosen case, U-32), `verdict` (the chosen case's result, C-15, only while
 the run is at step `total`), and `difference` (`{ step, line? }`, the step
 at which a run started by `Watch this case` opened, U-81, until Stop).
@@ -164,7 +180,7 @@ After an error `lastEvent` is none at step `total`. A published `state` is a
 copy of the frames' variables and of the heap: a later step does not change
 it. `Done.steps` counts every event, visible or not.
 
-R-17 Step over: `next()` repeatedly, in R-11 batches, until the frame
+R-17 Step over: `next()` repeatedly, in R-24 batches, until the frame
 count is at most its value before the first `next()` and the run is at a
 visible step (R-11), or the run ends.
 
@@ -172,7 +188,7 @@ R-19 The driver holds at most one breakpoint, a statement's `NodeId`, from
 its setting until Stop. Play, Step over, and Skip pause at a visible
 `enter` of that node and, when it is a loop, at each of its `loop` events
 (the run is then at the loop's check); Step and Seek ignore it. Skip:
-`next()` repeatedly, in R-11 batches and without publishing the
+`next()` repeatedly, in R-24 batches and without publishing the
 intervening steps, until such a pause or the end of the run.
 
 ## CPython check (`scripts/check.ts`)
@@ -191,4 +207,5 @@ alone and compiled by `python3 -m py_compile`.
 
 R-21 The tests of `src/runtime` and `src/store/run.ts` cover every
 semantics example of `language.md`, every R-09 code, R-10, and the
-driver's R-11, R-12, R-17, and R-19.
+driver's R-12, R-17, R-19, R-23, R-24, R-25, R-26, R-27, R-28, R-29, R-30,
+R-31, and R-32.
