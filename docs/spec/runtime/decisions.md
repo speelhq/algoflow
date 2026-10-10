@@ -5,9 +5,13 @@ rejected (`docs/spec/README.md`, Reasons).
 
 ## Interpreter
 
-**`bool` is not a number** (R-15). Python treats `True` as `1`, but block
-programs never rely on it and the interpreter's `E_TYPE` keeps the type model
-simple for learners; solutions avoid the construct so CPython agrees.
+**`bool` is not a number for arithmetic and ordering** (R-15, L-16).
+Python treats `True` as `1`, but block programs never rely on it there, and
+the interpreter's `E_TYPE` keeps the type model simple for learners while
+ending in an error that names the operands. `==` and `in` compare a `bool`
+and a number as Python does: they never fail, so a stricter rule would give
+a different answer from the emitted Python without any message, against
+the third commitment.
 
 **`state` is refreshed while playing, as a copy** (R-12). The `Result` tab
 must update per step at the fastest speed. A shallow copy of the frame list

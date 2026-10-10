@@ -175,7 +175,7 @@ Each rule has a test using the example.
 | L-13 | division or modulo by zero → `E_DIV_ZERO`                                                                                                        | `1 / 0`                      |
 | L-14 | `+` on two `str` concatenates; `str` with a number → `E_TYPE`                                                                                    | `"a" + "b" → "ab"`           |
 | L-15 | ordering between a number and a `str` → `E_TYPE`                                                                                                 | `1 < "a"`                    |
-| L-16 | `==`: numbers by value (`1 == 1.0`), strings by value, lists and dicts structurally, objects by identity                                         |                              |
+| L-16 | `==`: numbers by value (`1 == 1.0`), a `bool` and a number as `0` or `1` and the number, strings by value, lists and dicts structurally, objects by identity | `True == 1 → True`           |
 | L-17 | `and` / `or` short-circuit and return the deciding operand                                                                                       | `0 or 5 → 5`                 |
 | L-18 | false values: `0`, `0.0`, `""`, `[]`, `{}`, `None`, `False`                                                                                      |                              |
 | L-19 | `in`: list membership by L-16; dict key membership; `str` substring                                                                              |                              |
