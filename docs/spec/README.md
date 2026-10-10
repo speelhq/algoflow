@@ -55,8 +55,12 @@ Statements use the present indicative ("The emitter writes 4-space
 indentation") and are mandatory. "May" marks an option.
 
 - One rule per identifier: a statement that holds several rules is split,
-  one identifier per rule, when it is next changed. Why: a test, an issue,
-  or a finding then points at exactly the rule it concerns.
+  one identifier per rule, when it is next changed. A statement is one rule
+  when it states one subject that one test establishes; an edit that only
+  re-points a citation after a split does not change the statement it is
+  in. Why: a test, an issue, or a finding then points at exactly the rule
+  it concerns; the criterion makes a split decidable, and a split does not
+  spread to the statements that only cite the statement split.
 - Changing a statement keeps its identifier; deleting a statement deletes
   its identifier and every citation of it in the repository.
 - A citation writes each identifier out, never a range of them. Why: a
