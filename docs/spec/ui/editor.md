@@ -167,16 +167,23 @@ U-94 An `id` or `target` slot is a name field with a list below it: the
 names of the `expect.variables` of the challenge's first test under `This
 problem`, in that order, then the program's other variables under
 `Variables`, the inputs, the parameters, and the assigned names in program
-order, each with its kind (L-59). Typing keeps the names that begin with the
-text typed, as a value line matches a name (U-50), and a typed name that
+order, each with its kind (L-59).
+
+U-102 Typing in a name field keeps the names that begin with the text
+typed, as a value line matches a name (U-50), and a typed name that
 neither holds and that L-01 and L-03 allow is offered as `New variable
-<name>`; choosing a name moves the keyboard to the next slot; the field
-keeps only the characters of L-01. ↑ and ↓ move the highlight; Enter chooses
-the highlighted name, else the name typed, and in a field not typed in keeps
-its name and moves to the next slot, or closes the editor after the last
-one. In a `target` slot a list variable, once the `index` block exists, also
-offers `Item at a position` (`Set item … of <list> to …`), and the key and
-field forms are offered likewise once their blocks exist.
+<name>`.
+
+U-103 In a name field, choosing a name moves the keyboard to the next
+slot; ↑ and ↓ move the highlight; Enter chooses the highlighted name, else
+the name typed, and in a field not typed in keeps its name and moves to the
+next slot, or closes the editor after the last one.
+
+U-104 A name field keeps only the characters of L-01.
+
+U-105 In a `target` slot the name list also offers, for a list variable,
+`Item at a position` (`Set item … of <list> to …`), and for a dict and an
+object variable the key and field forms likewise.
 
 U-95 Every statement may carry a name in the learner's own words (L-58),
 typed in the editor's name field (`editor.name`, placeholder
@@ -209,4 +216,4 @@ when none is close; in a name field with nothing highlighted,
 U-97 The tests of `src/ui/editor` cover the block menu's entries, order,
 disabled entries, and search (U-40); a value line's typing, keys,
 choosing, Backspace, moving, and list (U-50, U-52, U-53, U-54, U-93); the
-name list (U-94); and the explanation line (U-96).
+name list (U-94, U-102, U-104); and the explanation line (U-96).

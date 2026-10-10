@@ -306,10 +306,10 @@ reach 200 % in four clicks and 25 % in seven.
 
 ## Editor
 
-**A target is a name with forms** (U-94). An assignment's target is a
+**A target is a name with forms** (U-94, U-105). An assignment's target is a
 variable far more often than an item or a field, so the slot is the name
 input of an `id` slot with its list; the item, key, and field forms
-are offered from that list once their blocks exist, and their parts are
+are offered from that list, and their parts are
 ordinary expression slots.
 
 **A leading minus makes a number** (U-50). `found = -1` is the commonest
@@ -361,7 +361,7 @@ commitment. The names are a list under the field, as the values are, with
 no limit and no fixed common names (`i`, `count`, `found`), which a
 learner would read before the names the problem needs.
 
-**A name field sets its name when chosen** (U-94). A name set with every
+**A name field sets its name when chosen** (U-103). A name set with every
 key would create `t`, `to`, and `tot` on the way to `total`, each a
 variable of its own: the chart would switch between `Create` and `Set` at
 every key, and the name list would offer names that exist only while being
@@ -403,7 +403,7 @@ slot when the node's words are clicked: one opened by a click on a
 finished node leaves it with the chart, where Delete and the arrow keys
 act on the node.
 
-**Small rules of the value line** (U-50, U-53, U-54, U-93, U-94). A word
+**Small rules of the value line** (U-50, U-53, U-54, U-93, U-103). A word
 that names nothing holds the key typed after it, so `totl+` does not turn
 into a `+` with nothing before it; the underline and the explanation line
 show what to correct. `Did you mean` allows one letter in three, since two
@@ -465,7 +465,7 @@ the caret, so every row it shows acts; an operation chosen where a value is
 expected is placed with its inputs empty. A typed word searches every entry
 for the same reason. It matches the start of a word only, since a match
 inside a word (`i` in `first`) is never the name meant, and a name field's
-list (U-94) filters by the same rule. Enter takes the first match, so the
+list (U-102) filters by the same rule. Enter takes the first match, so the
 kind's entries come before the rest (`an` after a comparison is `And`). `Or`
 is explained as one side or both, because in everyday English or often means
 only one.
@@ -661,10 +661,12 @@ both its ends are on the path. A loop that has ended has lost its mark
 what it leads to is on the path, whether a statement, the next loop's
 junction, or a branch's merge.
 
-**A submission is shown until the next run** (U-86, U-60, C-15). Submit
+**A submission is shown until the next run** (U-86, U-106, U-60, C-15). Submit
 judges every test on runners of its own, and the tab cannot show a run's
 rows and a submission's in 320 px, so the submission replaces the run's
-rows; the next Run, including `Watch this case`, replaces it again. A chip
+rows; the next Run, including `Watch this case`, replaces it again, and so
+does a change of the program, since the verdict judged the program as it
+was before. A chip
 only chooses which test's rows are read: setting the Input nodes from it
 would change the case under the chart, and `Watch this case` already sets
 them. While running, `Submit` is disabled: a verdict arriving during

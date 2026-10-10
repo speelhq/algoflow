@@ -19,13 +19,13 @@ in the file.
 | `Main.png`              | 1 Problems: one section per plan                       | U-02, U-10, U-12, U-13, U-14, U-99 |
 | `BuildEmpty.png`        | 2 Build: first launch, an empty chart                  | U-03, U-21, U-34, U-90             |
 | `BuildMenu.png`         | 3 Build: the + menu lists statements only              | U-40, U-33                         |
-| `BuildEdit.png`         | 4 Build: editing a block, choosing a variable          | U-41, U-94, U-95                   |
+| `BuildEdit.png`         | 4 Build: editing a block, choosing a variable          | U-41, U-94, U-102, U-95            |
 | `EditValue.png`         | 4B Build: where a value is expected                    | U-50, U-52                         |
 | `EditTyping.png`        | 4C Build: typing, and the text becomes blocks          | U-50, U-93                         |
 | `EditNumber.png`        | 4D Build: after a number, and a named check            | U-52, U-95, U-96                   |
 | `EditList.png`          | 4E Build: after a list, what can be done with it       | U-52, N-11                         |
 | `EditCheck.png`         | 4F Build: an unnamed check, then And or Or             | U-33, U-53, N-08                   |
-| `EditItem.png`          | 4G Build: set one item of a list                       | U-53, U-94, U-96                   |
+| `EditItem.png`          | 4G Build: set one item of a list                       | U-53, U-94, U-105, U-96            |
 | `Run.png`               | 5 Run: the moment on the chart, the state in Result    | U-60, U-61, U-62, U-63, U-23, R-19 |
 | `Wrong.png`             | 6 Submit: Wrong Answer, and a way to the cause         | U-81, U-82                         |
 | `Accepted.png`          | 7 Submit: Accepted, with what comes next               | U-83                               |

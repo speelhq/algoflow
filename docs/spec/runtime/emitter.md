@@ -9,8 +9,8 @@ unmapped.
 E-02 File layout (sections only if non-empty; one blank line between
 sections, two around classes and functions): the `import` lines, then one
 `from <name> import a, b` line per module the program uses (D-04, modules
-in name order, names in first-use order), then classes, functions, inputs,
-and `main`.
+in name order, names in first-use order), then classes, functions, and one
+section of the inputs followed by `main`.
 
 ```python
 import math

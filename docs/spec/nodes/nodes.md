@@ -225,8 +225,7 @@ interpreter and emitter are unaffected by `chart`.
 N-11 Expression blocks declare the entries of the value list (U-52) in
 `menu`; an entry with `on` is offered after a value of those kinds and
 takes it as its first input, and one without `on` fills an input where a
-value is expected. A block not yet registered has no entry. Kinds are
-those of L-59; `any` below means every kind.
+value is expected. Kinds are those of L-59; `any` below means every kind.
 
 | key               | name       | label                   | group      | on                   | symbol | keys  |
 | ----------------- | ---------- | ----------------------- | ---------- | -------------------- | ------ | ----- |
@@ -270,9 +269,10 @@ those of L-59; `any` below means every kind.
 | `call:int`        |            | As whole number         | convert    | number, text         |        |       |
 | `call:float`      |            | As decimal              | convert    | number, text         |        |       |
 
-`binop` entries preset `op`; `bool` entries preset `value`. The help of
-`and` reads that it is true when both sides are, and the help of `or` that
-it is true when one side or both are.
+`binop` entries preset `op`; `bool` entries preset `value`.
+
+N-15 The help of `and` reads that it is true when both sides are, and the
+help of `or` that it is true when one side or both are.
 
 N-12 The registered blocks give these kinds (L-59): `num` a number,
 `str` a text, `bool` a true/false value, `none` none; `unop` a true/false

@@ -178,9 +178,9 @@ does not count.
 | Ctrl/Cmd+→                   | Skip (run mode)                     |
 | Esc                          | close menu or editor, clear selection; while running, clear the breakpoint, else Stop |
 | Tab, Shift+Tab               | next, previous field of a value line, then slot (U-53) |
-| ↑, ↓                         | move the highlight in the editor's list (U-50, U-94) |
+| ↑, ↓                         | move the highlight in the editor's list (U-50, U-103) |
 | ←, →                         | previous, next value or input of a value line (U-53) |
-| Enter                        | choose the highlighted entry; in a name field not typed in, the next slot (U-94); else close the editor |
+| Enter                        | choose the highlighted entry; in a name field not typed in, the next slot (U-103); else close the editor |
 
 ## Messages and i18n
 

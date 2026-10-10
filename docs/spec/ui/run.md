@@ -112,9 +112,11 @@ solved, `Plan complete` with `Back to Problems`; the problem becomes
 solved (C-17).
 
 U-86 After `Submit` the `Result` tab shows the submission in place of the
-run's rows until the next `Run` or `▶ Watch this case`: the verdict, the
-case chips, and, for a wrong answer, the rows of the selected chip's test
-(U-81). A chip of a wrong answer selects which test's rows are shown and
+run's rows until the next `Run`, the next `▶ Watch this case`, or a change
+of the program: the verdict, the case chips, and, for a wrong answer, the
+rows of the selected chip's test (U-81).
+
+U-106 A chip of a wrong answer selects which test's rows are shown and
 changes neither the Input nodes nor the run (C-15); the chips of an
 accepted submission select nothing.
 
