@@ -54,7 +54,7 @@ Skills: `/issue`, `/milestone`, `/add-node`, `/add-challenge`.
   (`settle()` in `src/store/run.test.ts`). Stores that persist need
   `// @vitest-environment jsdom`.
 - `MessageKey` is derived from `en.json`, so a removed key fails type-check;
-  `scripts/i18n.ts` flags unknown literal keys only, never unused or
+  `scripts/lib/i18n-check.ts` flags unknown literal keys only, never unused or
   template-literal ones.
 - Multi-line edit scripts: write them to the scratchpad and run the file;
   a heredoc passed to the Bash tool turns `\\` into `\`.
