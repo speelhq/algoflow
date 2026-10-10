@@ -7,6 +7,7 @@ pnpm dev · pnpm test [path] · pnpm lint · pnpm format · pnpm build
 pnpm check [challenge.json]   # schema, interpreter, CPython, i18n, spec ids
 pnpm spec check · pnpm spec next <prefix>   # spec ids alone; a new id
 pnpm test:e2e                 # after build
+pnpm screenshots              # after build; rewrites e2e/screenshots/
 gh issue list --milestone <vX.Y.Z> · gh pr list · gh pr checks <n>
 ```
 
