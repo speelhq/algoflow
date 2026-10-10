@@ -52,9 +52,9 @@ the second tab is used as a tab.
 **Modules have cases because a module change reaches every program**
 (D-19, D-20, D-21). A module has no challenge, yet it is where tests
 matter most: editing `heap_pop` while solving `astar-grid` can break
-`dijkstra-heap`, solved earlier, and the module is where that is detected. A case is a saved run (arguments,
-returned value, arguments afterwards), the same idea as a recorded
-expectation (C-20), so no test is written from an empty starting point;
+`dijkstra-heap`, solved earlier, and the module is where that is detected.
+A case is a saved run (arguments, returned value, arguments afterwards), so
+no test is written from an empty starting point;
 `Test` is the established programming term, distinct from a problem's
 `Submit`. Cases recorded from an accepted submission were rejected: no rule
 selects suitable calls (the first `heap_push` of a test pushes onto an

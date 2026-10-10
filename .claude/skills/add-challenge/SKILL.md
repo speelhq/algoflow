@@ -16,7 +16,5 @@ Create the challenge described in $ARGUMENTS.
    a `takeaway`, and a complete `solution`.
    Add its id to its plan in `challenges/plans.json`, at its place in S-05: every
    problem is in exactly one plan (C-25).
-3. For expectations the spec marks as "recorded", run the solution once with the
-   stated seed and paste the resulting values into the file.
-4. Run `pnpm check challenges/<id>.json`.
-5. Recap: id, plan, number of tests, and the solution's emitted Python.
+3. Run `pnpm check challenges/<id>.json`.
+4. Recap: id, plan, number of tests, and the solution's emitted Python.

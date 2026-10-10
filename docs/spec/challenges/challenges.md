@@ -39,10 +39,6 @@ not checked.
 C-03 Every challenge has at least one test with `edge: true`, a boundary
 case such as an empty list, zero, or a single item.
 
-C-20 "Recorded" expectations are obtained by running `solution` once with
-the stated seed and inserted into the file; `scripts/check.ts` enforces them
-in both engines.
-
 C-24 Every `Localized` text of a challenge, a plan, and a built-in module
 has its `ja` text (S-03).
 
