@@ -204,11 +204,17 @@ U-70 Every diagnostic and runtime code has `error.<CODE>` in `en.json`:
 | `E_INDEX`          | Item {index} does not exist (length {length})                                                                           |
 | `E_KEY`            | Key {key} does not exist                                                                                                |
 | `E_FIELD`          | {cls} has no field {field}                                                                                              |
+| `E_VALUE`          | {op} cannot be used on {type}                                                                                           |
+| `E_NUMBER_TEXT`    | {op} cannot read the text "{text}"                                                                                      |
+| `E_EMPTY_RANGE`    | There is no whole number from {a} to {b}                                                                                |
 | `E_TYPE`           | {left} and {right} cannot be used in this operation                                                                     |
 | `E_DIV_ZERO`       | Cannot divide by zero                                                                                                   |
 | `E_POP_EMPTY`      | The list is empty, nothing to pop                                                                                       |
 | `E_RECURSION`      | Function calls are nested too deeply; check the stopping condition                                                      |
 | `E_STEP_LIMIT`     | The loop does not seem to end; check its condition                                                                      |
+
+U-107 A message writes its `op` parameter as the label of that block
+(`node.<op>.label`, R-34).
 
 U-71 All strings reside in `src/i18n/en.json` and `src/i18n/ja.json`
 under `app.*`, `problems.*`, `problem.*`, `playground.*`, `modules.*`,

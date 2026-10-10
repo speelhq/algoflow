@@ -183,6 +183,7 @@ Each rule has a test using the example.
 | L-21 | dict keys are `int` or `str`, else `E_TYPE`; missing key → `E_KEY`                                                                               |                              |
 | L-22 | `new C(args)` sets every field to a fresh copy of its default, then assigns args in field order; too many args → `E_ARITY`                       |                              |
 | L-23 | `o.f` without field `f` → `E_FIELD`                                                                                                              |                              |
+| L-64 | `v.f` where `v` is no object → `E_FIELD`, with the type name of `v` as `cls`                                                                     | `n.x` with `n = 3`           |
 | L-24 | lists, dicts, objects are references; assignment copies the reference; `copy()` copies one list level                                            |                              |
 | L-25 | `for` iterates `start … stop-1`, bounds evaluated once, `int` only else `E_TYPE`                                                                 |                              |
 | L-26 | `foreach` visits `list[0]`, `list[1]`, … and reads the list's length before each pass, as Python does, so changing the list inside the loop changes the passes | appending in the body adds a pass |
@@ -191,7 +192,8 @@ Each rule has a test using the example.
 | L-29 | `print` joins args with one space using Python `str()`: `True`, `None`, `2.0`, `[1, 2]`, `{'a': 1}`, `Value(data=2.0, grad=0.0, prev=[], op='')` |                              |
 | L-30 | a field default is a number, string, boolean, `null`, `[]`, or `{}`                                                                              |                              |
 | L-31 | a run stops with `E_STEP_LIMIT` after 1,000,000 events                                                                                           |                              |
-| L-32 | `random_int(a, b)` (inclusive, `int`) and `random_float(a, b)` draw from mulberry32 seeded per run; `a > b` → `E_TYPE`                                             |                              |
+| L-32 | `random_int(a, b)` (inclusive, `int`) and `random_float(a, b)` draw from mulberry32 seeded per run                                                |                              |
+| L-63 | `random_int(a, b)` with `a > b` → `E_EMPTY_RANGE`                                                                                                | `random_int(5, 1)`           |
 
 ## Scope
 

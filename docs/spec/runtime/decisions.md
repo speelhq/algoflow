@@ -13,6 +13,19 @@ and a number as Python does: they never fail, so a stricter rule would give
 a different answer from the emitted Python without any message, against
 the third commitment.
 
+**An error names the operation and what it was given** (R-09, R-34, L-63,
+L-64, U-107). `E_TYPE` names two operand types, which fits an operator; used
+for `random_int(5, 1)` it would read
+`5 and 1 cannot be used in this operation`, and for `abs("x")`
+`abs and str …`, naming neither the operation nor what is wrong. A code for
+each kind of fault says both: the type a one-value operation does not take,
+the text that is no number, the empty range. `op` is the block's registry
+key, written as the block's label, so the message follows the locale and no
+block spells a message key. A field read from a value that is no object is
+`E_FIELD` with the value's type name as `cls`: the fault is a field the
+value does not have, as for an object of a class without it, and `E_TYPE`
+would name a second operand where there is none.
+
 **`state` is refreshed while playing, as a copy** (R-12). The `Result` tab
 must update per step at the fastest speed. A shallow copy of the frame list
 would share the runner's variable maps and heap: a published `state` would

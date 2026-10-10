@@ -70,8 +70,11 @@ R-09 Runtime error codes:
 | `E_UNDEFINED`  | reading a variable never assigned (a loop that ran no iteration, L-43) | `name` |
 | `E_INDEX`      | L-20                   | `index`, `length`         |
 | `E_KEY`        | L-21                   | `key`                     |
-| `E_FIELD`      | L-23                   | `cls`, `field`            |
-| `E_TYPE`       | L-14/15/21/25          | `left`, `right`           |
+| `E_FIELD`      | L-23, L-64             | `cls`, `field`            |
+| `E_TYPE`       | L-14, L-15, L-21, L-25 | `left`, `right`           |
+| `E_VALUE`      | `abs`, `int`, `float`, or unary `-` of a value of a type it does not take | `op`, `type` |
+| `E_NUMBER_TEXT`| `int` or `float` of a text that is no such number | `op`, `text`     |
+| `E_EMPTY_RANGE`| L-63                   | `a`, `b`                  |
 | `E_DIV_ZERO`   | L-13                   |                           |
 | `E_POP_EMPTY`  | `pop` on an empty list |                           |
 | `E_ARITY`      | L-22                   | `name`, `expected`, `got` |
@@ -97,10 +100,16 @@ export type RunContext = {
   set(name: Id, value: Value): void;
   call(fn: Id, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
   fail(nodeId: NodeId, code: RuntimeCode, params?: Record<string, string | number>): never;
+  valueError(node: Expr, value: Value): never; // E_VALUE (R-34)
+  textError(node: Expr, text: string): never;  // E_NUMBER_TEXT (R-34)
   random: { int(a: number, b: number): number; float(a: number, b: number): number };
   print(line: string): void;
 };
 ```
+
+R-34 `E_VALUE` and `E_NUMBER_TEXT` carry as `op` the registry key of the
+failing expression (`keyOf`), and `E_VALUE` carries as `type` the type name
+of the value (R-15).
 
 R-14 `Runner.next()` resumes the program generator once; every yielded value
 is one event. Frames form a stack owned by the runner; `call` pushes a frame,
