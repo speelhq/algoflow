@@ -10,11 +10,11 @@ programs never rely on it and the interpreter's `E_TYPE` keeps the type model
 simple for learners; solutions avoid the construct so CPython agrees.
 
 **`state` is refreshed while playing, as a copy** (R-12). The `Result` tab
-must update per step at the fastest speed. The refresh was a shallow copy of the
-frame list, which shared the runner's variable maps and heap: a published
-`state` changed at the next step, so a screen could neither compare two
-states nor memoize on one, and a `compare` event narrated later showed a
-list's current contents. A published `state` is now a copy of the
+must update per step at the fastest speed. A shallow copy of the frame list
+would share the runner's variable maps and heap: a published `state` would
+change at the next step, so a screen could neither compare two states nor
+memoize on one, and a `compare` event narrated later would show a list's
+current contents. A published `state` is therefore a copy of the
 variables and of the heap entries; values are immutable records, so one
 level is sufficient. The cost per publish is proportional to the size of
 the heap. Batches publish once per batch.
@@ -59,10 +59,10 @@ reaching `total`, not one Step later: U-81 names that step "the last step
 of the run", and the driver makes one further call of `next()` there so
 that the frames have unwound.
 
-**A comparison is narrated from the frame** (R-06, U-63). The `compare`
-event carried the two operand values so that a template sentence could be
-filled with them; the operands alone (`3` and `0` of `i % 15 == 0`) hide
-where the 3 came from. The narration writes the comparison as the chart
+**A comparison is narrated from the frame** (R-06, U-63). Carrying the two
+operand values in the `compare` event, to fill a template sentence, was
+rejected: the operands alone (`3` and `0` of `i % 15 == 0`) hide where the
+3 came from. The narration writes the comparison as the chart
 does with each variable replaced by its value in the shown frame, which
 shows the origin, so the event carries its result only. A list keeps its
 name: its items were narrated by the `read` events before the comparison.
@@ -75,14 +75,13 @@ than each screen resolving the owner again.
 
 ## Emitter
 
-**Python stays the only generated language** (E-01). The note
-lists JavaScript and Dart; JavaScript would not preserve the third
-commitment: it has no int/float distinction, `-7 % 2` is `-1`, there is
-no `//`, and `in` on an array tests indices, so a faithful emitter would
-either produce output differing from the chart or wrap arithmetic in
-helper functions unsuitable for a learner to read. If a second language is
-required later, the block language must first be narrowed or the helpers
-accepted.
+**Python stays the only generated language** (E-01). Of the other languages
+considered, JavaScript and Dart, JavaScript would not preserve the third
+commitment: it has no int/float distinction, `-7 % 2` is `-1`, there is no
+`//`, and `in` on an array tests indices, so a faithful emitter would either
+produce output differing from the chart or wrap arithmetic in helper
+functions unsuitable for a learner to read. If a second language is required
+later, the block language must first be narrowed or the helpers accepted.
 
 **Modules are emitted as files, not inlined** (E-02, E-09, U-25). Inlining
 a module's functions into `main.py` would make the `Python` tab state

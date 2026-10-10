@@ -3,35 +3,34 @@
 Why the statements of this folder were chosen, and the alternatives
 rejected (`docs/spec/README.md`, Reasons).
 
-The UI is designed for a person who has never programmed (S-09), around
-one task, building a program as a flowchart and observing it run, and one
-loop per problem (S-10): read, build, run on one input, compare, fix,
-submit, proceed. The rejected alternative, cards that read as code lines
-with a blocks palette, a properties panel, and tabbed run panels, kept
-control flow invisible, placed values in a table separated from the program,
-and placed instructor tools at the same level as the core loop. The screens
-behind the ids of this folder are artboards of the Claude Design file
-"AlgoFlow Screens" (the flowchart and loop notation studies are in the
-earlier file "AlgoFlow Redesign").
+**One task and one loop per problem** (S-09, S-10, U-03, U-30). The UI is
+built for a person who has never programmed, around one task, building a
+program as a flowchart and observing it run, and one loop per problem:
+read, build, run on one input, compare, fix, submit, proceed. Cards that
+read as code lines with a blocks palette, a properties panel, and tabbed
+run panels were rejected: they keep control flow invisible, place values in
+a table separated from the program, and place instructor tools at the same
+level as the core loop.
 
 ## Pages
 
-**The layout store validates on both paths** (U-03, U-24, U-60). Setters clamp, and
-`mergePersisted` re-validates whatever is returned from `localStorage`: a
-non-number or out-of-range size falls back to the default or the lower
-limit, and the upper limit, half the viewport, is applied by `panelWidth()`
-where the width is set and where it is drawn. Trusting the snapshot would
-allow a hand-edited or stale entry to render an unusable panel. Because both
-paths validate, a snapshot written under an older shape needs no `migrate`
-step: its unknown fields resolve to the defaults, so `version` remains `1`.
+**The layout store validates on both paths** (U-03, U-24, U-60). Setters
+clamp, and `mergePersisted` re-validates whatever is returned from
+`localStorage`: a non-number or out-of-range size falls back to the default
+or the lower limit, and the upper limit, half the viewport, is applied by
+`panelWidth()` where the width is set and where it is drawn. Trusting the
+snapshot would allow a hand-edited or stale entry to render an unusable
+panel. Because both paths validate, a snapshot written under an older shape
+needs no `migrate` step: its unknown fields resolve to the defaults, so
+`version` remains `1`.
 
-**The key check scans with a regex, not a parser** (U-100). The pattern matches `t("…")` and
-`t('…')` while ignoring `at(`, `obj.t(`, and template literals; it also
-matches inside comments, which is accepted. A parser would be more precise
-but adds a dependency to a script that must remain fast and simple. Test
-files are skipped because they call `t()` with deliberately unknown keys.
-Keys built at run time are not scanned; the `node.*` keys are checked
-against the registry in `src/nodes/registry.test.ts`.
+**The key check scans with a regex, not a parser** (U-100). The pattern
+matches `t("…")` and `t('…')` while ignoring `at(`, `obj.t(`, and template
+literals; it also matches inside comments, which is accepted. A parser would
+be more precise but adds a dependency to a script that must remain fast and
+simple. Test files are skipped because they call `t()` with deliberately
+unknown keys. Keys built at run time are not scanned; the `node.*` keys are
+checked against the registry in `src/nodes/registry.test.ts`.
 
 **`en.json` holds only keys something renders** (U-71, U-101). Keys are added
 with the code that uses them, so wording is decided when the UI exists and
@@ -68,7 +67,7 @@ deleted program has no other copy and no undo reaches across pages; the
 editor's undo history belongs to the open program.
 
 **Python is opened, never shown** (U-25, U-20). A per-block Python fragment
-and Python visible by default taught syntax before the flow was
+and Python visible by default would teach syntax before the flow is
 understood. Python is a tab of the panel that nothing selects for the
 learner; the Accepted view offers it (`See your program as Python`) because
 the moment after solving is when code is worth introducing. A tab rather
@@ -80,44 +79,45 @@ narration.
 **Solution revealed on request** (U-21, U-22). A learner may view the
 solution; hiding it entirely would cause self-learners to look elsewhere.
 
-**Load the solution, then change it** (U-22). A read-only solution stops
-the note's loop at "inspect"; loading it into the learner's chart as one
-undoable edit continues to "modify". The same rule applies to built-in
+**Load the solution, then change it** (U-22). A read-only solution would
+leave the learner reading it; loading it into the learner's chart as one
+undoable edit lets them change it. The same rule applies to built-in
 modules (`Clone`): what the learner did not write is read-only until
 copied, after which it is the learner's own. `Copy into this program`,
-which copied one module function into a program where it shadowed the
-module, was dropped: it was a second means of owning module code, and it
-left a call that appears identical while resolving to something else
-without indication. A learner's own module is edited
+copying one module function into a program where it shadows the module,
+was rejected: it would be a second means of owning module code, and it
+would leave a call that appears identical while resolving to something
+else without indication. A learner's own module is edited
 in place, a built-in one is cloned, and a `defines` problem is built, not
 copied.
 
-**Two regions, on every page** (U-03, U-20). Panel and chart, nothing
-else: the `Result` tab absorbed the floating variables card and the output
-strip, the `Python` tab absorbed the right-hand pane, and the run's controls
-are the run bar at the canvas's foot. The panel may expand to half the viewport because a
-grid, an object graph, or code needs the width, and with no third region
-nothing competes for it. Playground and Module pages have the same panel
-without the `Problem` tab, so the three editing pages share one skeleton.
+**Two regions, on every page** (U-03, U-20). Panel and chart, nothing else:
+the `Result` tab absorbed the floating variables card and the output strip,
+the `Python` tab absorbed the right-hand pane, and the run's controls are
+the run bar at the canvas's foot. The panel may expand to half the viewport
+because a grid, an object graph, or code needs the width, and with no third
+region nothing competes for it. Playground and Module pages have the same
+panel without the `Problem` tab, so the three editing pages share one
+skeleton.
 
-**The top bar holds no run action** (U-03, U-05, U-60, U-80). The top bar
-held `Run` and `Submit` while the run's other controls sat in a bar under
-the chart, so starting a run and pausing it were at opposite edges of the
-page, and `Submit`, which judges every case and records the attempt, sat
-beside `Run`, which tries one case: the two read as one weight and one
-was pressed for the other. The top bar now holds only where the learner
-is and what applies to the whole page: the title, which is the only
+**The top bar holds no run action** (U-03, U-05, U-60, U-80). With `Run`
+and `Submit` in the top bar and the run's other controls in a bar under
+the chart, starting a run and pausing it would be at opposite edges of the
+page, and `Submit`, which judges every case and records the attempt, would
+sit beside `Run`, which tries one case: the two read as one weight and one
+is pressed for the other. The top bar holds only where the learner is and
+what applies to the whole page: the title, which is the only
 indication of the learner's location when the panel shows `Result` or is
 collapsed and the slot Playground's editable title and a module's name
-need, undo and redo, and `⋯` with `Open in Playground` and Help. The
-difficulty badge was removed: it assists in choosing a problem, not in
-solving one.
+need, undo and redo, and `⋯` with `Open in Playground` and Help. It has
+no difficulty badge, which assists in choosing a problem, not in solving
+one.
 
 **The solution is shown where a chart fits** (U-22). A flowchart with
 branches does not fit a 320 px panel, so the solution occupies the chart
 region, read-only, beneath a band with `Load into my chart` and
-`Back to my chart`. Hints became a section under the statement rather than
-a tab, because a hint refers to the statement it would hide.
+`Back to my chart`. Hints are a section under the statement rather than a
+tab, because a hint refers to the statement a tab would hide.
 
 **First launch counts the learner's work, once** (U-90). The layout store
 writes `algoflow:layout` as soon as the panel is resized, so "no
@@ -154,14 +154,13 @@ run bar without the chart it drives. Both are therefore unavailable until
 solution stops first, which is one click and says what happens to the run.
 
 **The panel's upper bound is applied with the viewport, not stored** (U-03).
-The store held a constant maximum of 480 px from the retired shell. Half the
-viewport width is not a constant, and a store that read `window.innerWidth`
-would not run under the node test environment and would keep an outdated
-bound after the window is resized. The store therefore keeps the requested
-width with its lower bound only, and one pure function applies the upper
-bound from the viewport width given to it, both when the handle sets the
-width and when the page draws it, so a stored width above the bound is drawn
-at the bound without being rewritten.
+Half the viewport width is not a constant, and a store that read
+`window.innerWidth` would not run under the node test environment and would
+keep an outdated bound after the window is resized. The store therefore
+keeps the requested width with its lower bound only, and one pure function
+applies the upper bound from the viewport width given to it, both when the
+handle sets the width and when the page draws it, so a stored width above
+the bound is drawn at the bound without being rewritten.
 
 **Screenshots are compared with baselines only once no page is added**
 (U-91). A baseline changes with every change to its screen, so comparing
@@ -187,22 +186,21 @@ auto-laid-out flowchart shows Yes/No paths and loop-backs graphically and
 keeps the AST as the source of truth.
 
 **Loops are drawn as init, check, and step** (U-33, N-09). Three notations
-were compared on the study "Loop notation: three options" of the Claude Design file
-"AlgoFlow Redesign". The JIS X 0121 / ISO 5807 loop-limit pair is the
-standard form for counted loops and the one Japanese textbooks and the FE
-exam use, and a dashed container is legible, but both conceal the check.
-Python's `for i in range(...)` and JavaScript's `for (init; check; step)`
-both run as init → check → body → step → check, and `while` is that
+were compared on the study "Loop notation: three options" of the Claude
+Design file "AlgoFlow Redesign". The JIS X 0121 / ISO 5807 loop-limit pair
+is the standard form for counted loops and the one Japanese textbooks and
+the FE exam use, and a dashed container is legible, but both conceal the
+check. Python's `for i in range(...)` and JavaScript's `for (init; check;
+step)` both run as init → check → body → step → check, and `while` is that
 shape, so one form serves every loop and matches the execution order. The
 form adds three nodes to every counted loop; they are generated, grey, and
 owned by the loop block, so the learner does not edit them, the program
-retains one `for`, and the emitter is unchanged. The check reads
-`i < stop?` with the bound as written, not an inclusive
-`Repeat i from 1 to n` (emitting `range(1, n + 1)`) and not a display-only
-`Is i ≤ n?` for `x + 1` bounds: the check reads as the emitted `range`
-does, so the chart and the `Python` tab agree (the third commitment of
-`docs/spec/README.md`), and a display rule for one bound form would mix `<`
-and `≤` across loops.
+retains one `for`, and the emitter is unchanged. The check reads `i < stop?`
+with the bound as written, not an inclusive `Repeat i from 1 to n` (emitting
+`range(1, n + 1)`) and not a display-only `Is i ≤ n?` for `x + 1` bounds:
+the check reads as the emitted `range` does, so the chart and the `Python`
+tab agree (the third commitment of `docs/spec/README.md`), and a display
+rule for one bound form would mix `<` and `≤` across loops.
 
 **The input is a node, and Run and Submit share one view** (U-32, U-23,
 C-15). A test-case panel under the chart duplicated the Input node;
@@ -230,10 +228,10 @@ body the learner builds, and choosing the parameters manually is where a
 beginner learns what a parameter is.
 
 **A path bar instead of tabs** (U-30, U-68). Tabs for `main`, functions,
-and classes were a flat list, conveyed no call relationships,
-overflowed at twenty charts, presented a trainee with a single `main` tab
-beside a `+` prompting a function, and needed a second component while
-running (a call-stack strip) plus a rule exchanging one for the other. One
+and classes would be a flat list, convey no call relationships, overflow at
+twenty charts, present a trainee with a single `main` tab beside a `+`
+prompting a function, and need a second component while running (a
+call-stack strip) plus a rule exchanging one for the other. One
 path states the current position in both modes: in build mode the trail of
 `Open <name>`, while running the call stack. It is always shown, even with
 `main` alone: hiding it would remove the chart list and `Add function`
@@ -241,11 +239,11 @@ from the page, would make a new component appear at the moment functions are
 introduced, and would need a display condition; shown, it introduces the
 term `main` that the `Python` tab's `main.py` repeats. All charts side by
 side on one canvas was rejected: three charts do not fit 960 px legibly.
-Observed while drawing the artboard: full argument text does not fit a
-segment, so only numbers, texts, and booleans are shown.
+Full argument text does not fit a segment, so only numbers, texts, and
+booleans are shown.
 
-**A function's own operations sit on its `Start` node** (U-31). With tabs
-removed the path bar remains purely navigational; the `Start name(params)`
+**A function's own operations sit on its `Start` node** (U-31). Without
+tabs the path bar is purely navigational; the `Start name(params)`
 terminal is the function's signature, so its editor holds the name, the
 parameters, `Delete function`, and `Move to module…`. This also gives
 parameters an editing location, which the tabbed design never stated.
@@ -266,23 +264,23 @@ bracketed; operators among themselves follow Python's precedence, so the
 chart and the emitted code group alike. A variable is a bold word in its own
 colour, not a box, which would cut the sentence into pieces.
 
-**A diamond is its condition and a question mark** (U-33). The
-condition templates (`is divisible by`, `equals`, eight in all) named only
-the conditions they listed: any other expression fell back to symbols, the
-diamond then needed a second sentence per template (`Is x is divisible by
-15?`), and a template was a third notation beside the chart's and
-Python's. Without templates the diamond writes its condition in the
-chart's own notation and adds `?`, which reads the same in every language;
-`Is` in front of it was dropped for the same reason. Where a condition is
+**A diamond is its condition and a question mark** (U-33). Condition
+templates (`is divisible by`, `equals`) would name only the conditions
+they list: any other expression would fall back to symbols, the diamond
+would need a second sentence per template (`Is x is divisible by 15?`),
+and a template would be a third notation beside the chart's and Python's.
+Without templates the diamond writes its condition in the chart's own
+notation and adds `?`, which reads the same in every language, and for the
+same reason no `Is` stands in front of it. Where a condition is
 long or its purpose is not evident, the learner names the node (U-95). A
 text wider than 150 px is set on two lines, as the artboards draw it: a
 diamond is 1.4 times as wide as its text, so one long line makes it far
 wider than the boxes around it, and a split that leaves the longer line
 shortest keeps it near their width.
 
-**`break` and `continue` draw where they jump** (U-33, U-34, N-09). An edge to
-the next node, the earlier drawing, is a path the run never takes, and a
-learner reading the chart follows it. Both blocks declare
+**`break` and `continue` draw where they jump** (U-33, U-34, N-09). An edge
+to the next node would be a path the run never takes, and a learner
+reading the chart would follow it. Both blocks declare
 `requires: "loop"`, so only the kind distinguishes an exit from a jump to
 the next pass, and the chart may not branch on the kind (N-14); each
 therefore declares its jump in `chart`, as `if` and the loops declare their
@@ -335,10 +333,10 @@ fail when run. The brackets the chart draws around a word operation (N-08)
 show what it took, and brackets typed first limit it to a part. Inputs
 left to fill are fields in the line, reached with Tab.
 
-**The Variables group offers no `v + 1`** (U-52). The Variables group
-offered `v + 1` and `v - 1` when the slot was an `index` or a `for` bound
-and a `for` variable was visible: an inference about the learner's intent,
-tied to two block kinds, which made the menu branch on kind against N-14;
+**The Variables group offers no `v + 1`** (U-52). Offering `v + 1` and
+`v - 1` there when the slot is an `index` or a `for` bound and a `for`
+variable is visible would be an inference about the learner's intent, tied
+to two block kinds, and would make the menu branch on kind against N-14;
 wrapping `i` with `+` or typing the text achieves the same result.
 
 **The `+` menu offers statements, in a beginner's order** (U-40). Listing
@@ -348,8 +346,8 @@ are shown disabled with the reason rather than hidden, which conveys that
 they exist and where they apply. The bare `expr` statement block is
 meaningless to a beginner and is hidden; it appears as method statements
 and calls. Restricting the menu per challenge was rejected: it conceals the
-language and adds authoring work. Observed while drawing the artboard:
-built-in module groups would overfill a trainee's menu, so modules are
+language and adds authoring work. Built-in module groups would overfill a
+trainee's menu, so modules are
 placed behind one `Modules ▸` row. The menu's categories are ordered
 Basic, Control, List, because a beginner needs `if` and `for` before list
 blocks.
@@ -373,20 +371,20 @@ costs one key, Enter.
 **The popover stays; in-node editing was rejected** (U-41, U-50). The
 chart is shown fitted to its width, a diamond has little room, and a
 value being built needs space at full size; the popover is always at
-100 %. What changed is the cost of reaching it: a click on a slot drawn on
-the node opens the editor focused on that slot, ready for typing. The
+100 %. Reaching it costs one click: a click on a slot drawn on the node
+opens the editor focused on that slot, ready for typing. The
 popover stays inside the canvas: one placed against the viewport flips
 over the panel whenever the node's right side lacks room, and hides the
 statement the learner is building from. It opens on the node's right
-always: one that turned below or above a node in the middle of the canvas
-covered the nodes the learner builds from, while a chart moved left as a
+always: one that turns below or above a node in the middle of the canvas
+covers the nodes the learner builds from, while a chart moved left as a
 scroll keeps the node in view and is followed as any scroll is.
 
 **A statement is a named action; a value is one line** (U-41, U-50, U-52). A
 statement has few, fixed parts, so its sentence shows each as a field; a
-value has any shape, so it is one line, typed or built from a list. The chip
-editor nested a box per operation, so a value of three operations was three
-levels of boxes, and editing one part meant finding its box; a line reads
+value has any shape, so it is one line, typed or built from a list. A chip
+editor nests a box per operation, so a value of three operations is three
+levels of boxes, and editing one part means finding its box; a line reads
 left to right as the chart writes it. The list holds every entry, symbols
 included, so nothing has to be known to be found, and its groups follow
 purpose (`Calculate`, `Compare`, `Items`) rather than block categories,
@@ -442,9 +440,9 @@ written in symbols does not say what it is for; a name in the learner's
 own words does, for any statement. A name is optional, in the learner's own
 words, and never asked for; the named node shows the name alone, and the
 statement stays one hover away and in the `Python` tab, where the name is
-the comment above it. The `comment` block is removed with it: it drew
-Python's `#` on the chart, and a named node says what it said where it
-applies.
+the comment above it. There is no `comment` block: it would draw
+Python's `#` on the chart, and a named node says what a comment would say,
+where it applies.
 
 **Kinds choose the list** (L-59, U-52, N-11, U-50). After a value the list
 offers what applies to that kind of value, so a list does not offer
@@ -474,23 +472,23 @@ only one.
 
 ## Run
 
-**The moment is on the chart, the state is in the panel** (U-23,
-U-61, U-62, U-63). Data, Trace, and Output tabs under the program drew the
+**The moment is on the chart, the state is in the panel** (U-23, U-61, U-62,
+U-63). Data, Trace, and Output tabs under the program would draw the
 learner's attention away from it, so the current step stays in the canvas:
-the current node, the taken path, and the `✓`/`✗` marks on the chart, and the
-narration in one line under it (U-63), which carries the values relevant at that step (`Pass 3: i is
-3`, `(remainder of 3 divided by 15) = 0? No`). A badge with the loop variable
-beside the loop's check was rejected: it is state, it sat beside a diamond
-that is outside the viewport while a long body runs, which is when the pass
-number is required, and extending it to `while` required an assumption about
-which variables to show. The state does not fit on the chart: a card
-positioned at the chart's top right covers the `Yes` branches that extend
-rightwards, an output strip beside `End` is outside the viewport in any chart
-longer than the window while the run scrolls to the current node, and a grid,
-a tree, or an object graph requires substantial space. Variables and output
-therefore live in the `Result` tab, beside the expected values. A trace table
-(one row per event) serves instructors, not learners, and belongs to no
-milestone.
+the current node, the taken path, and the `✓`/`✗` marks on the chart, and
+the narration in one line under it (U-63), which carries the values relevant
+at that step (`Pass 3: i is 3`, `(remainder of 3 divided by 15) = 0? No`). A
+badge with the loop variable beside the loop's check was rejected: it is
+state, it would sit beside a diamond that is outside the viewport while a
+long body runs, which is when the pass number is required, and extending it
+to `while` would require an assumption about which variables to show. The
+state does not fit on the chart: a card positioned at the chart's top right
+covers the `Yes` branches that extend rightwards, an output strip beside
+`End` is outside the viewport in any chart longer than the window while the
+run scrolls to the current node, and a grid, a tree, or an object graph
+requires substantial space. Variables and output therefore live in the
+`Result` tab, beside the expected values. A trace table (one row per event)
+serves instructors, not learners.
 
 **A loop pass starts with blank diamonds** (U-61). Clearing a mark only on
 re-entry leaves a nested diamond that the current pass skips displaying the
@@ -503,16 +501,14 @@ same step count arrives at a different position in a different program, and
 a rule that resynchronises by node breaks on the edited node; a learner
 would interpret either outcome as the fix having moved the run. The
 build/run boundary is retained, and the fix cycle is Stop, edit, Run.
-`Run to this node` (a deterministic means of returning to a position of
-interest) was recorded and not scheduled.
 
 **Step over and `Open <name>`** (R-17, U-41, U-60). Reading a program at
-more than one level of detail (the note's high, mid, and low levels) is a
-run-time operation: Step over keeps the learner at the caller's level, and
-`Open <name>` descends one level. Step (into) and Play still descend into
-the program's own functions. Inline expansion of a call inside the caller's
-chart was rejected: the flowchart loses legibility one level down, and a
-function would have two editing locations.
+more than one level of detail is a run-time operation: Step over keeps the
+learner at the caller's level, and `Open <name>` descends one level. Step
+(into) and Play still descend into the program's own functions. Inline
+expansion of a call inside the caller's chart was rejected: the flowchart
+loses legibility one level down, and a function would have two editing
+locations.
 
 **Run knows the end before it plays** (R-23, U-60, U-81). Execution is
 deterministic and inexpensive, so Run executes everything first and then
@@ -521,18 +517,17 @@ playback speed `E_STEP_LIMIT` is eighteen hours away at the fastest speed),
 gives the position bar its length, and lets a Wrong Answer move directly to
 the step that printed the first wrong line instead of stepping there. Only
 the count, the outcome, and the steps of the prints are kept, so a backward
-Seek replays from the start, as Back has always done. Observed while drawing
-the artboard: with the position bar the run's controls are too long to float
-over the chart's corner without covering the loop's back edge, so they form a
-bar docked at the canvas's foot.
+Seek replays from the start, as Back does. With the position bar the run's
+controls are too long to float over the chart's corner without covering the
+loop's back edge, so they form a bar docked at the canvas's foot.
 
 **A wrong answer marks no node** (U-81, U-82). A runtime error has a
 location, so its node is outlined. A wrong answer has a differing line and
 the node that printed it, which is rarely the cause: a loop started at 0
-prints `FizzBuzz` from a correct block. Marking that block asserted
+prints `FizzBuzz` from a correct block. Marking that block would assert
 what the application does not know, and adding the loop variable to the
-hint only mitigated an incorrect mark. Red on the chart now means a runtime
-error and nothing else. The route to the cause is one button,
+hint would only mitigate an incorrect mark. Red on the chart means a
+runtime error and nothing else. The route to the cause is one button,
 `▶ Watch this case`, which opens the run paused at the first difference
 (the `print` of the differing line, or the end of the run when nothing
 printed it, which also covers a wrong variable); from there the values are
@@ -541,7 +536,7 @@ kind of difference was dropped: the narration at the arrival step states
 what happened there.
 
 **No generated hint** (U-82, U-23). A sentence classifying the first
-difference as a missing line, an extra line, or a different value had no
+difference as a missing line, an extra line, or a different value has no
 rule behind it, and none can be given: whether `FizzBuzz` against `1` is a
 wrong value or one extra line that shifted the rest can only be inferred
 from the following lines, and that inference fails (`1, 2, 3` against
@@ -554,10 +549,10 @@ variable (`total` blank beside `sum_all 55`) with no special case. `Hint`
 retains one meaning, the three authored hints of a challenge.
 
 **One breakpoint and Skip, not `Next pass`** (R-19, U-60). Stepping is one
-event, Step over has no effect before functions exist, and dragging the
-position bar cannot arrive exactly at the start of a given pass, so a
-coarser movement was needed. `Next pass` (run to the next `loop` event) was
-a special case tied to one event type, and it failed its own purpose: in
+event, Step over equals Step in a program without functions, and dragging
+the position bar cannot arrive exactly at the start of a given pass, so a
+coarser movement is needed. `Next pass` (run to the next `loop` event) would
+be a special case tied to one event type, and it fails its own purpose: in
 bubble sort it stops at every inner pass, whereas the instructive unit is
 one outer pass putting the largest item last, and it provides no way to
 specify which loop is meant. A breakpoint specifies it by location: on the
@@ -566,12 +561,12 @@ output, and nothing about passes or events has to be learned. It is kept to
 the smallest form: one at a time, set by clicking a node during a run (a
 click while playing pauses first, the rule the path bar uses), removed at
 Stop, never stored, with one rule: the run pauses when it arrives there.
-`Skip` advances without drawing to the next pause, or to the end, which
-also replaces dragging the bar to its right end. It cannot be set in build
-mode, where a click edits. Step over is retained: it is tied to calls, the
-level of detail the design is built on. `Breakpoint` is the term used by
-every debugger the learner will encounter later, as with `Module`,
-`Clone`, and `Test`.
+`Skip` advances without drawing to the next pause, or to the end, which also
+replaces dragging the bar to its right end. It cannot be set in build mode,
+where a click edits. Step over is retained: it is tied to calls, the level
+of detail the design is built on. `Breakpoint` is the term used by every
+debugger the learner will encounter later, as with `Module`, `Clone`, and
+`Test`.
 
 **Run with diagnostics leads to the first one** (U-60). A disabled button
 gives no reason; an enabled one that opens the chart holding the problem,
@@ -590,30 +585,30 @@ requires an explicit `Stop`.
 events into one step per statement was considered; arrival followed by a
 decision and arrival followed by a value change are two distinct
 occurrences, consistent with the machine performing one operation at a
-time, so event stepping is retained, with sentences added for `enter`,
-`read`, `swap`, and the end. Python notation is excluded from the
+time, so a step is one event, and every event and the end have a
+sentence. Python notation is excluded from the
 narration.
 
 **A diamond's narration asks and answers** (U-63). The diamond already
 shows its verdict as `✓` or `✗` and colours the edge taken, so `is false,
-so No` said a third time what the chart shows, with a word, `false`, found
-nowhere else on it. The narration writes the diamond's question with the
+so No` would say a third time what the chart shows, with a word, `false`,
+found nowhere else on it. The narration writes the diamond's question with the
 values and the edge's label (`(remainder of 3 divided by 15) = 0? No`);
 `true` and `false` remain for a comparison that is a value, such as one
 side of `and`.
 
 **The run is one bar** (U-60, U-03). Every control of a run sits in the run
 bar at the canvas's foot, under the chart it drives, in build mode as in
-run mode. `Run` and `Play` were two buttons for one intention, to make the
-run go on: the first pre-ran and started, the second resumed. One play
-button now takes `Run`'s place and reads `Pause`, `Play`, or, at the last
-step, `Replay`, which seeks to step 0 and plays, so the button a learner
-pressed to start is the one that pauses. The pre-run (R-23) is unchanged;
-it happens behind `Run`.
+run mode. `Run` and `Play` as two buttons would serve one intention, to
+make the run go on, the first pre-running and starting, the second
+resuming. One play button takes `Run`'s place and reads `Pause`, `Play`,
+or, at the last step, `Replay`, which seeks to step 0 and plays, so the
+button a learner pressed to start is the one that pauses. The pre-run
+(R-23) happens behind `Run`.
 
 **The narration is a line under the chart** (U-63, U-65). A tooltip beside
-the current node moved with every step, covered the node it described
-whenever the chart was narrower than the tooltip, and left the viewport
+the current node would move with every step, cover the node it describes
+whenever the chart is narrower than the tooltip, and leave the viewport
 with a node near its edge. One line between the chart and the run bar is
 always in the same place, so the eye learns where the sentence is, it
 never covers the chart, and it reads the same at every zoom. The chart
@@ -626,8 +621,8 @@ beside the case selector of the `Result` tab, the list it judges and the
 place its verdict and chips appear, so the button and its answer are in one
 place and away from `Run`. A module's `Test` sits there for the same reason.
 
-**Three speeds** (R-26, U-60). A slider of 1 to 50 steps a second asked for a
-number a beginner has no use for. Three choices cover the uses: `Slow` (1)
+**Three speeds** (R-26, U-60). A slider of 1 to 50 steps a second would ask
+for a number a beginner has no use for. Three choices cover the uses: `Slow` (1)
 to follow each step, `Normal` (4) to watch a loop go round, and `Fast` (15)
 to reach a later point while still seeing the chart move; further jumps
 are `Skip` and the position bar.
@@ -637,11 +632,11 @@ the next row after the last course problem would place a trainee in the
 first data-structure problem; `Plan complete` returns the choice to the
 learner.
 
-**A loop that has ended loses its mark** (U-61). A `for` that ended kept the
-`✓` of its last successful pass, because it never evaluates its check as an
-expression, while the same loop written as a `while` showed the `✗` of its
-failing compare. Emitting an event for the failed check would have changed
-every event count of every finished loop; keeping the mark would leave a
+**A loop that has ended loses its mark** (U-61). A `for` that ends would
+keep the `✓` of its last successful pass, because it never evaluates its
+check as an expression, while the same loop written as a `while` shows the
+`✗` of its failing compare. Emitting an event for the failed check would
+change every event count of every finished loop; keeping the mark would leave a
 `✓` on a check that has failed. The driver instead clears a loop's own
 diamond at the first `enter` outside the loop, which needs no new event and
 uses the body lists it already keeps for U-61. A loop that is the last
@@ -672,9 +667,9 @@ rows and a submission's in 320 px, so the submission replaces the run's
 rows; the next Run, including `Watch this case`, replaces it again. A chip
 only chooses which test's rows are read: setting the Input nodes from it
 would change the case under the chart, and `Watch this case` already sets
-them. While running, `Submit` is disabled: a verdict arriving during playback would replace the rows
-of the run being watched, and a learner who has watched a run reaches
-Submit with one `Stop`.
+them. While running, `Submit` is disabled: a verdict arriving during
+playback would replace the rows of the run being watched, and a learner who
+has watched a run reaches Submit with one `Stop`.
 
 **A refused built-in function names its module** (U-85). The refusal of a
 built-in function in a `defines` problem names the module and both

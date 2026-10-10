@@ -14,20 +14,21 @@ testable.
 **Plans chain through modules, not starters** (S-05, C-19, C-21). A
 starter chain (each problem starts from the previous solution) discards
 the learner's own version; a module chain keeps it, and a bug in the
-learner's `heap_pop` surfacing in `dijkstra-heap` is the note's "inspect
-the block you rely on", not a defect. A built-in module with the same
-names lets a learner who skipped a problem, or a self-learner, start
-anywhere (the note's "predefined blocks as shortcuts, still inspectable"),
-but it would let every problem after the first be passed without building
+learner's `heap_pop` surfacing in `dijkstra-heap` makes the learner
+inspect the block they rely on, which is the aim, not a defect. A built-in
+module with the same names lets a learner who skipped a problem, or a
+self-learner, start anywhere with blocks that stay inspectable, but it
+would let every problem after the first be passed without building
 anything; `defines` (C-21) refuses a submission whose named function
 resolves to a built-in module, so the exercise is retained while the
 shortcut remains available for later problems.
 
-**Playground holds many programs** (S-07, U-15, U-05). One `free` slot
-made starting a new program an act of destruction; the note's "use it in
-a larger program" has nowhere else to happen than Playground once a plan
-ends. `Open in Playground` converts a solved problem into the start of that
-larger program, with inputs fixed as the assignments E-03 already emits.
+**Playground holds many programs** (S-07, U-15, U-05). A single Playground
+program would make starting a new one destroy the last, and once a plan
+ends, using what the learner built in a larger program has nowhere else to
+happen than Playground. `Open in Playground` converts a solved problem into
+the start of that larger program, with inputs fixed as the assignments E-03
+already emits.
 
 **Plans `structures` and `dp`** (S-05). A plan's order must be
 significant. The seven `structures` problems build on one another through

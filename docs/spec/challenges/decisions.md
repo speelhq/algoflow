@@ -27,9 +27,9 @@ duplicate a spec fact, and making `plans.json` the authority would remove
 the curriculum from the spec.
 
 **The tutorial prints two values** (S-05, C-22, L-29). `"Hello, " + name`
-made the first action combine a text, an operator applied to a value,
-and a variable, and its second hint explained wrapping before any problem had
-introduced an operator. `print("Hello,", name)` prints the same line for
+would make the first action combine a text, an operator applied to a
+value, and a variable, and its second hint would explain operators before
+any problem introduces one. `print("Hello,", name)` prints the same line for
 every test, because `print` joins its values with one space, and its first
 action adds a second value to a slot that already holds one; `+` on text is
 left to a later problem whose subject is operators. The instructor chose
@@ -45,8 +45,8 @@ middleware.
 counts across the three sorts was dropped as a special case: an inferred
 relation between problems, and one more stored field.
 
-**A boundary test is flagged, not named** (C-03). A boundary test was one
-whose localized name began with `edge:`, a flag concealed in a display
-string, and the name itself was displayed nowhere (cases are shown by their
-inputs) while still requiring a Japanese text; the name was dropped and the
-flag is `edge: true`.
+**A boundary test is flagged, not named** (C-03). A localized name
+beginning with `edge:` would conceal a flag in a display string, and the
+name would be displayed nowhere (cases are shown by their inputs) while
+still requiring a Japanese text; a test has no name, and the flag is
+`edge: true`.

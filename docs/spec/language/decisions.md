@@ -12,9 +12,9 @@ would distribute null checks through every block and the emitter. A dedicated
 **Statements are addressed by `Place`** (L-54, L-60). Edits from the UI
 arrive as a drop at index N of region R; a `{ parent, slot, index }` triple
 names every region (main, a function body, a frame region) without exposing
-array references. `moveStmt` counts the index after removal because a drag within
-one region is the common case and the drop indicator is computed on the
-list without the dragged card.
+array references. `moveStmt` counts the index after removal because a drag
+within one region is the common case and the drop indicator is computed on
+the list without the dragged card.
 
 **A `for` variable belongs to the enclosing region** (L-43). Python leaves
 the loop variable defined after the loop, and `for` reads its bounds before
@@ -61,10 +61,10 @@ does not suit one key per challenge, and `migrate()` must validate whatever
 is returned; the raw form is also what Export writes (L-53). A rejected value
 resolves to an empty main rather than failing the load.
 
-**`foreach` visits the live list** (L-26). `foreach` iterated over a
-snapshot, so a body that changes its list ran differently here and in the
-emitted Python, without any indication, unlike the other differences from
-Python (a `bool` is not a number, recursion stops at 200,
-`E_DECLARE_FIRST`), which are all stricter and terminate in an error; it
-now visits the live list by index as Python does, keeping the third
-commitment for learners' programs, which are not checked against CPython.
+**`foreach` visits the live list** (L-26). Iterating over a snapshot would
+run a body that changes its list differently here and in the emitted
+Python, without any indication, unlike the other differences from Python
+(a `bool` is not a number, recursion stops at 200, `E_DECLARE_FIRST`),
+which are all stricter and end in an error; visiting the live list by
+index as Python does keeps the third commitment for learners' programs,
+which are not checked against CPython.
