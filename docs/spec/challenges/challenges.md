@@ -30,10 +30,11 @@ export type Topic = "output" | "variables" | "loops" | "conditions" | "lists" | 
   | "sorting" | "recursion" | "dictionaries" | "classes";
 ```
 
-C-02 `scripts/check.ts` validates the schema, validates (`language.md`) `solution`
-with the built-in modules (D-15), checks C-03, C-25, C-21, and C-22, runs
-`solution` through the interpreter and CPython (R-20) for every test, and
-checks every built-in module with its cases (D-15).
+C-02 For every challenge `scripts/check.ts` checks the schema (C-01),
+C-03, and C-24, validates (`language.md`) `solution` with the built-in
+modules (D-15), and runs it on every test in the interpreter against
+`expect` (C-10). What the hints name, in their order (C-22), is reviewed,
+not checked.
 
 C-03 Every challenge has at least one test with `edge: true`, a boundary
 case such as an empty list, zero, or a single item.
