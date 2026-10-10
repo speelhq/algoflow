@@ -1,5 +1,5 @@
 // Schema, validation, interpreter, and CPython agreement for
-// every challenge (or the files given as arguments), then the i18n check.
+// every challenge (or the files given as arguments), then the i18n and spec-id checks.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,9 +10,15 @@ import type { Data } from "@/lang/types";
 import { emit } from "@/python/emit";
 import { checkChallengeSchema } from "./lib/challenge";
 import { runPython } from "./lib/cpython";
+import { repoFiles } from "./lib/files";
 import { checkI18n, formatReport } from "./lib/i18n-check";
 import { execute } from "./lib/interp";
 import { checkPlans } from "./lib/plans";
+import {
+  checkSpecIds,
+  failed as specIdsFailed,
+  formatReport as formatSpecIds,
+} from "./lib/spec-ids";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const PLANS_FILE = "plans.json";
@@ -128,8 +134,12 @@ const plansPassed = checkFile(join(root, "challenges", PLANS_FILE), "plans", (js
 });
 if (!plansPassed) failed += 1;
 
-const i18n = checkI18n({ root, srcDir: join(root, "src"), i18nDir: join(root, "src", "i18n") });
+const repository = repoFiles(root);
+const i18n = checkI18n({ root, files: repository, i18nDir: join(root, "src", "i18n") });
 for (const line of formatReport(i18n)) console.log(line);
 const i18nFailed = i18n.unknown.length + i18n.missing.length > 0;
 
-process.exit(failed > 0 || i18nFailed ? 1 : 0);
+const specIds = checkSpecIds(root, repository);
+for (const line of formatSpecIds(specIds)) console.log(line);
+
+process.exit(failed > 0 || i18nFailed || specIdsFailed(specIds) ? 1 : 0);

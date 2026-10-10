@@ -4,7 +4,8 @@
 
 ```
 pnpm dev · pnpm test [path] · pnpm lint · pnpm format · pnpm build
-pnpm check [challenge.json]   # schema, interpreter, CPython, i18n
+pnpm check [challenge.json]   # schema, interpreter, CPython, i18n, spec ids
+pnpm spec check · pnpm spec next <prefix>   # spec ids alone; a new id
 pnpm test:e2e                 # after build
 gh issue list --milestone <vX.Y.Z> · gh pr list · gh pr checks <n>
 ```
@@ -115,9 +116,9 @@ commit on `main`, where a commit that a later one undoes misleads
 `git blame` and `git bisect`.
 
 Conventional Commits, imperative subject under 50 chars, scope from src/
-(lang, nodes, runtime, python, ui, challenges, i18n; `docs` and `ci` for
-those). A body only when the reason is not evident from the subject. No
-trailers. Never mention Claude, the session, or the prompt.
+(lang, nodes, runtime, python, ui, challenges, i18n), or `scripts`, `docs`,
+or `ci` for those folders. A body only when the reason is not evident from
+the subject. No trailers. Never mention Claude, the session, or the prompt.
 
 `main` takes rebase merges only, after CI. The body follows
 `.github/pull_request_template.md`: What / Why (spec ids, issue, and
