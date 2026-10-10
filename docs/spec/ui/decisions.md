@@ -162,8 +162,13 @@ applies the upper bound from the viewport width given to it, both when the
 handle sets the width and when the page draws it, so a stored width above
 the bound is drawn at the bound without being rewritten.
 
+**A run of the suite writes its screenshots aside** (U-112). Every run
+redrew the tracked screenshots, and the antialiasing of text alone left each
+run with modified files to discard; the files under `e2e/screenshots/`
+change only when they are asked for, as a baseline update is.
+
 **Screenshots are compared with baselines only once no page is added**
-(U-91). A baseline changes with every change to its screen, so comparing
+(U-113). A baseline changes with every change to its screen, so comparing
 while pages are still being added would turn each such pull request into a
 baseline update and catch nothing; the screenshots are saved for review
 until then.

@@ -50,8 +50,9 @@ Judgement).
 3. One vertical slice per commit, each when `pnpm lint && pnpm test` passes;
    `pnpm check <challenge.json>` before a commit that changes that
    challenge.
-4. A screen's states are saved by `e2e/screenshots.spec.ts` (U-91); look at
-   each image beside its artboard.
+4. A screen's states are drawn by `e2e/screenshots.spec.ts` (U-91) and
+   written to `e2e/screenshots/` by `pnpm screenshots` (U-112); look at each
+   image beside its artboard.
 
 ## 4. Review
 

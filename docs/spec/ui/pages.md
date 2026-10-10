@@ -244,8 +244,13 @@ key itself when no text exists.
 
 ## Verification
 
-U-91 The end-to-end suite saves one screenshot per screen state under
-`e2e/screenshots/`: Problems, Build, Run, Wrong Answer, Accepted,
-Solution, the Python tab, Run inside a function, Playground, Modules, and
-Module, and one per view (V-01, V-02, V-06), in each locale; CI compares
-each screenshot with its baseline.
+U-91 The end-to-end suite draws one screenshot per screen state:
+Problems, Build, Run, Wrong Answer, Accepted, Solution, the Python tab, Run
+inside a function, Playground, Modules, and Module, and one per view
+(V-01, V-02, V-06), in each locale.
+
+U-112 A run of the screenshot suite that updates snapshots
+(`pnpm screenshots` passes `--update-snapshots`) writes the screenshots to
+`e2e/screenshots/`; every other run writes them under `test-results/`.
+
+U-113 CI compares each screenshot with its baseline.
