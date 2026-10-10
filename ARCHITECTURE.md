@@ -54,7 +54,8 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
 - `src/challenges` — the schema types (`types.ts`), the bundled challenges
   and plans (`index.ts`, `plans.ts`), the judge shared with
   `scripts/check.ts` (`judge.ts`, C-10, C-15), the `Result` rows (`rows.ts`,
-  U-23, U-81), and the next problem (`next.ts`, U-83). The challenge files
+  U-23, U-81), and a plan's button and the next problem (`next.ts`, U-99,
+  U-83). The challenge files
   are bundled with `import.meta.glob`. Why: fetching them at run time would
   need a manifest, asynchronous loading, and the deployment's base path, and
   a generated module would add a build step; the glob is typed by
