@@ -41,8 +41,8 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   and the undo history holds earlier programs.
 - `src/nodes` — one `NodeDef` per block owning its slots, `create()`, `run`
   (interpreter behaviour), `python()` (exact emitted text), and `chart`
-  (N-09). `index.ts` is the only registry; the interpreter, the emitter, the
-  chart, the block menu, and the node editor dispatch through it (N-01).
+  (N-09). `registry.ts` is the only registry; the interpreter, the emitter,
+  the chart, the block menu, and the node editor dispatch through it (N-13).
 - `src/runtime` — `run()` returns a `Runner` whose `next()` yields one
   event, or `Done` at the end (R-01, R-02). Events are the contract the UI
   consumes for highlights and step counts, and a run is deterministic

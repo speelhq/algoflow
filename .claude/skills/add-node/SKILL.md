@@ -9,7 +9,7 @@ Add the block described in $ARGUMENTS.
 
 1. Read `docs/spec/nodes/nodes.md` and find the block's row. If there is no row,
    add one first and state so in the recap.
-2. Read `src/nodes/index.ts` and one existing block of the same shape.
+2. Read `src/nodes/registry.ts` and one existing block of the same shape.
 3. Create `src/nodes/<key>.ts` with `key`, `shape`, `category`, `slots`, `create`,
    `run`, `python`. The emitted Python must equal the row's Python column exactly.
    An expression block also declares `kind` (L-59) and its `menu` entries from the
@@ -17,7 +17,7 @@ Add the block described in $ARGUMENTS.
 4. Add `node.<key>.label`, `node.<key>.template`, `node.<key>.help` to
    `src/i18n/en.json`, and to `ja.json` if that file exists; a named menu entry adds
    `node.<key>.<name>.label` and `.help`.
-5. Register the block in `src/nodes/index.ts`.
+5. Register the block in `src/nodes/registry.ts`.
 6. Add tests: the exact emitted Python text; the interpreter's event sequence and
    result; one error case if the block can fail.
 7. Run `pnpm test src/nodes src/python src/runtime` and `pnpm lint`.

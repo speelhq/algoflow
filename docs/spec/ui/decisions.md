@@ -31,7 +31,7 @@ matches inside comments, which is accepted. A parser would be more precise
 but adds a dependency to a script that must remain fast and simple. Test
 files are skipped because they call `t()` with deliberately unknown keys.
 Keys built at run time are not scanned; the `node.*` keys are checked
-against the registry in `src/nodes/index.test.ts`.
+against the registry in `src/nodes/registry.test.ts`.
 
 **`en.json` holds only keys something renders** (U-71, U-101). Keys are added
 with the code that uses them, so wording is decided when the UI exists and
