@@ -170,13 +170,15 @@ until then.
 
 ## Chart
 
-**The chart highlights the owning statement** (U-39, U-61). `compare`,
-`read`, and `call` events carry expression ids while the chart has nodes
-only for statements; `ownerStmts()` resolves them once per program. A
-diamond's ✓/✗ comes from its last `compare`, or from the `loop` event of a
-generated check, and clears when the diamond is entered again or a loop
-containing it starts a new pass, so a loop shows the current iteration;
-`not (a < b)` shows the inner compare, which is accepted.
+**The chart highlights the owning statement** (U-39). `compare`, `read`,
+and `call` events carry expression ids while the chart has nodes only for
+statements; `ownerStmts()` resolves them once per program.
+
+**A diamond's mark answers its whole condition** (U-108, R-35). The mark is
+the answer to the diamond's question, so it comes from the `compare` of the
+whole condition and never from a comparison inside it: the last inner
+compare of `not (a < b)` or `a < b and c < d` is not that answer, and a
+condition such as `found` or `stack` contains no comparison at all.
 
 **A flowchart, not sentence blocks or a node graph** (U-30). Three
 directions were drawn. Sentence blocks keep branches as indented text and
@@ -185,7 +187,7 @@ drawing and loops manually and does not suit a structured `Program`. The
 auto-laid-out flowchart shows Yes/No paths and loop-backs graphically and
 keeps the AST as the source of truth.
 
-**Loops are drawn as init, check, and step** (U-33, N-09). Three notations
+**Loops are drawn as init, check, and step** (U-33, N-09, N-16). Three notations
 were compared on the study "Loop notation: three options" of the Claude
 Design file "AlgoFlow Redesign". The JIS X 0121 / ISO 5807 loop-limit pair
 is the standard form for counted loops and the one Japanese textbooks and
@@ -472,25 +474,25 @@ only one.
 
 ## Run
 
-**The moment is on the chart, the state is in the panel** (U-23, U-61, U-62,
-U-63). Data, Trace, and Output tabs under the program would draw the
-learner's attention away from it, so the current step stays in the canvas:
-the current node, the taken path, and the `✓`/`✗` marks on the chart, and
-the narration in one line under it (U-63), which carries the values relevant
-at that step (`Pass 3: i is 3`, `(remainder of 3 divided by 15) = 0? No`). A
-badge with the loop variable beside the loop's check was rejected: it is
-state, it would sit beside a diamond that is outside the viewport while a
-long body runs, which is when the pass number is required, and extending it
-to `while` would require an assumption about which variables to show. The
-state does not fit on the chart: a card positioned at the chart's top right
-covers the `Yes` branches that extend rightwards, an output strip beside
-`End` is outside the viewport in any chart longer than the window while the
-run scrolls to the current node, and a grid, a tree, or an object graph
-requires substantial space. Variables and output therefore live in the
-`Result` tab, beside the expected values. A trace table (one row per event)
-serves instructors, not learners.
+**The moment is on the chart, the state is in the panel** (U-23, U-61,
+U-115, U-108, U-62, U-63, U-116). Data, Trace, and Output tabs under the
+program would draw the learner's attention away from it, so the current step
+stays in the canvas: the current node, the taken path, and the `✓`/`✗` marks
+on the chart, and the narration in one line under it (U-63), which carries
+the values relevant at that step (`Pass 3: i is 3`,
+`(remainder of 3 divided by 15) = 0? No`). A badge with the loop variable
+beside the loop's check was rejected: it is state, it would sit beside a
+diamond that is outside the viewport while a long body runs, which is when
+the pass number is required, and extending it to `while` would require an
+assumption about which variables to show. The state does not fit on the
+chart: a card positioned at the chart's top right covers the `Yes` branches
+that extend rightwards, an output strip beside `End` is outside the viewport
+in any chart longer than the window while the run scrolls to the current
+node, and a grid, a tree, or an object graph requires substantial space.
+Variables and output therefore live in the `Result` tab, beside the expected
+values. A trace table (one row per event) serves instructors, not learners.
 
-**A loop pass starts with blank diamonds** (U-61). Clearing a mark only on
+**A loop pass starts with blank diamonds** (U-109). Clearing a mark only on
 re-entry leaves a nested diamond that the current pass skips displaying the
 previous pass's `✗`, which reads as "this condition is false now" for a
 condition that was never evaluated. U-61 draws the current pass, so the
@@ -581,21 +583,24 @@ mode and opens its editor; after a runtime error that is the failing node,
 one click from its correction. While paused there is a position, so leaving
 requires an explicit `Stop`.
 
-**One step is one event, and every event is narrated** (U-63). Grouping
-events into one step per statement was considered; arrival followed by a
-decision and arrival followed by a value change are two distinct
-occurrences, consistent with the machine performing one operation at a
-time, so a step is one event, and every event and the end have a
-sentence. Python notation is excluded from the
-narration.
+**One step is one event, and every event is narrated** (U-63, U-117).
+Grouping events into one step per statement was considered; arrival followed
+by a decision and arrival followed by a value change are two distinct
+occurrences, consistent with the machine performing one operation at a time,
+so a step is one event, and every event and the end have a sentence. Python
+notation is excluded from the narration.
 
-**A diamond's narration asks and answers** (U-63). The diamond already
-shows its verdict as `✓` or `✗` and colours the edge taken, so `is false,
-so No` would say a third time what the chart shows, with a word, `false`,
-found nowhere else on it. The narration writes the diamond's question with the
-values and the edge's label (`(remainder of 3 divided by 15) = 0? No`);
-`true` and `false` remain for a comparison that is a value, such as one
-side of `and`.
+**A diamond's narration asks and answers** (U-116). The diamond already
+shows its verdict as `✓` or `✗` and colours the edge taken, so
+`is false, so No` would say a third time what the chart shows, with a word,
+`false`, found nowhere else on it. The narration writes the diamond's
+question with the values and the edge's label
+(`(remainder of 3 divided by 15) = 0? No`); `true` and `false` remain for a
+comparison that is a value, such as one side of `and`. A condition that is
+one variable keeps its name (`found? Yes`, `n? Yes`): the question asks
+whether that variable holds and the answer says it, so its value in the
+name's place would drop the question, and for a boolean (`true? Yes`) say
+the verdict twice.
 
 **The run is one bar** (U-60, U-03). Every control of a run sits in the run
 bar at the canvas's foot, under the chart it drives, in build mode as in
@@ -632,14 +637,14 @@ the next row after the last course problem would place a trainee in the
 first data-structure problem; `Plan complete` returns the choice to the
 learner.
 
-**A loop that has ended loses its mark** (U-61). A `for` that ends would
+**A loop that has ended loses its mark** (U-109). A `for` that ends would
 keep the `✓` of its last successful pass, because it never evaluates its
 check as an expression, while the same loop written as a `while` shows the
 `✗` of its failing compare. Emitting an event for the failed check would
 change every event count of every finished loop; keeping the mark would leave a
 `✓` on a check that has failed. The driver instead clears a loop's own
 diamond at the first `enter` outside the loop, which needs no new event and
-uses the body lists it already keeps for U-61. A loop that is the last
+uses the body lists it already keeps for U-109. A loop that is the last
 statement of its frame is followed by no `enter`, so its mark stays; the
 narration at that point (`Finished in N steps`) already says the run is over.
 
@@ -651,13 +656,13 @@ modifier on the click has no touch equivalent and adds a key that works only
 while running. The three actions are already specified and each is one
 click.
 
-**A labelled edge is taken by its verdict** (U-61). `taken` lists the
+**A labelled edge is taken by its verdict** (U-61, U-108). `taken` lists the
 statements of the current pass, which places both ends of a diamond's `Yes`
 and `No` edges on the path whenever the diamond was entered. The diamond's
 mark says which way the check went, so a `Yes` edge is drawn as taken when
 the mark is `✓`, a `No` edge when it is `✗`, and an unlabelled edge when
 both its ends are on the path. A loop that has ended has lost its mark
-(U-61), so once control is elsewhere its `No` edge is drawn as taken when
+(U-109), so once control is elsewhere its `No` edge is drawn as taken when
 what it leads to is on the path, whether a statement, the next loop's
 junction, or a branch's merge.
 

@@ -58,6 +58,11 @@ R-05 `write` is emitted for `assign`, `append` (new index), `insert`,
 R-06 `compare` is emitted for every comparison `binop` (`== != < <= > >=`
 and `in`), with its result; the operator and the operands are the node's.
 
+R-35 After `if` and `while` evaluate their condition, a `compare` with the
+condition's id and its truth value (L-18) is emitted, unless the last event
+of evaluating the condition is a `compare` with that id: each check of a
+diamond ends in one `compare` of its whole condition.
+
 R-07 `loop` is emitted at the start of each iteration of `for`, `foreach`,
 and `while` (after the `while` compare).
 
@@ -177,7 +182,7 @@ R-12 Driver state: `status` (`idle | paused | playing | done | error`),
 `step`, `total`, `outcome`, `prints`, `lastEvent`, `state` (refreshed after
 each step in step and play mode, at the end of each batch, and on pause,
 done, error), `frame` (the index of the frame shown, U-68), `stdout`,
-`verdicts` (the last check result per diamond, U-61), `taken` (the
+`verdicts` (the last check result per diamond, U-108), `taken` (the
 statements entered in the current pass, U-61), `pass` (for a `loop`
 `lastEvent`, the number of that loop's passes since it was entered, U-63),
 `activeId` (the statement that contains `lastEvent`'s node, or after an

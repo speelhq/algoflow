@@ -28,8 +28,8 @@ export type NodeDef = {
   declares?: Kind; // the kind of the variable its `id` slot names (L-59)
   menu?: MenuEntry[]; // the entries of the value list (U-52, N-11)
   chart?:
-    | { branch: { yes: string; no: string } }
-    | { check: string }
+    | { branch: { cond: string; yes: string; no: string } }
+    | { check: { cond: string; body: string } }
     | { counted: string }
     | { jump: "exit" | "next" }; // N-09
 };
@@ -203,22 +203,23 @@ and the editor show the template as written.
 
 N-09 A block with body regions, or one that sends control elsewhere than
 the next statement in a loop, declares `chart` (U-33): `if` declares
-`{ branch: { yes: "then", no: "else" } }`; `while` declares
-`{ check: "body" }`; `for` and `foreach` declare `{ counted: "body" }` and
-carry three more keys, `node.<key>.init`, `node.<key>.check`, and
-`node.<key>.step`, the texts of the generated nodes:
+`{ branch: { cond: "cond", yes: "then", no: "else" } }`; `while` declares
+`{ check: { cond: "cond", body: "body" } }`, `cond` naming the slot of the
+condition its diamond asks; `for` and `foreach` declare
+`{ counted: "body" }`; `break` declares `{ jump: "exit" }` and `continue`
+declares `{ jump: "next" }`: the edge of each leads where control goes, out
+of the innermost loop or into its next pass (U-33). The chart renders every
+other block as a box with its sentence; the interpreter and emitter are
+unaffected by `chart`.
+
+N-16 A block that declares `counted` has three more keys,
+`node.<key>.init`, `node.<key>.check`, and `node.<key>.step`, the texts of
+the generated nodes:
 
 | key       | init                    | check                          | step                        |
 | --------- | ----------------------- | ------------------------------ | --------------------------- |
 | `for`     | `Set {var} to {start}`  | `{var} < {stop}?`              | `Set {var} to {var} + 1`    |
 | `foreach` | `Start at the first item of {list}` | `Is there an item left?` | `Set {var} to the next item` |
-
-`break` declares `{ jump: "exit" }` and `continue` declares
-`{ jump: "next" }`: the edge of each leads where control goes, out of the
-innermost loop or into its next pass (U-33).
-
-The chart renders every other block as a box with its sentence; the
-interpreter and emitter are unaffected by `chart`.
 
 ## Menu entries
 

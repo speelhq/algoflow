@@ -13,6 +13,18 @@ and a number as Python does: they never fail, so a stricter rule would give
 a different answer from the emitted Python without any message, against
 the third commitment.
 
+**A condition ends in its own `compare`** (R-35, R-14, U-108, U-116). The
+mark and the narrated answer of a diamond need the truth of its whole
+condition. The driver could infer it from the region entered next, but an
+empty region is entered by no statement and a loop's exit enters whatever
+follows it; the runner knows it at the moment it decides. The `compare` is
+added unless the condition's last event is its own, so a condition that is
+one comparison still yields one event, and the event counts of such programs
+do not change. The last event decides, not any event: a call inside the
+condition can reach the same diamond in another frame, whose `compare` has
+the same id, and every call ends in its `return` (R-14), so that `compare`
+is never the last.
+
 **An error names the operation and what it was given** (R-09, R-34, L-63,
 L-64, U-107). `E_TYPE` names two operand types, which fits an operator; used
 for `random_int(5, 1)` it would read

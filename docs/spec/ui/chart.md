@@ -35,7 +35,7 @@ U-33 Node shapes come from the block's `chart` field (N-09):
 | absent   | a rounded box with the block's sentence (N-02)                                                                                                                                                                            |
 | `branch` | a diamond with the condition; the `yes` region to the right joined by a `Yes` edge, the `no` region below joined by a `No` edge, both merging below; an empty `no` region is a bare `No` edge                            |
 | `check`  | a diamond with the condition; `Yes` leads down into the body, whose last node returns by a back edge to a junction above the diamond; `No` leads on past the loop                                                        |
-| `counted`| three generated nodes around the body: `Set i to start`, the diamond `i < stop?`, and `Set i to i + 1` (texts `node.<key>.init/check/step`, N-09), drawn grey; the body and the back edge as for `check`             |
+| `counted`| three generated nodes around the body: `Set i to start`, the diamond `i < stop?`, and `Set i to i + 1` (texts `node.<key>.init/check/step`, N-16), drawn grey; the body and the back edge as for `check`             |
 | `jump`   | a box with the sentence whose edge leads, in place of the next node, to the innermost loop around it: for `exit` past the loop, joining its `No` edge; for `next` into its next pass, at the step node of a `counted` loop and at the start of the back edge of a `check` loop; the edge carries the connector after it (U-34); outside every loop, a box as for an absent `chart` |
 
 The text of a `branch` or `check` diamond is its condition as the chart

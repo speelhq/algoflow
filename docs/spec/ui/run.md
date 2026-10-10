@@ -26,37 +26,55 @@ without drawing the intervening steps, or to the end of the run when no
 breakpoint is set.
 
 U-61 While running, the edges and nodes of the current pass are drawn in
-the taken-path colour, the current node has the accent outline and is
-scrolled into view, and a diamond shows `✓` or `✗` after its check (from
-its `compare`, or from the `loop` event of a generated check), cleared when
-the diamond is entered again and when a loop containing it starts a new
-pass (its `loop` event clears every diamond in its body); a loop's own
-diamond is also cleared at the first `enter` of a statement outside that
-loop, so a loop that has ended shows no mark once the run has moved on.
+the taken-path colour.
+
+U-115 While running, the current node has the accent outline and is
+scrolled into view.
+
+U-108 A diamond shows `✓` or `✗` after its check: the result of the
+`compare` of its whole condition (R-35), or of the `loop` event of a
+generated check.
+
+U-109 A diamond's mark is cleared when the diamond is entered again and
+when a loop containing it starts a new pass (its `loop` event clears every
+diamond in its body); a loop's own diamond is also cleared at the first
+`enter` of a statement outside that loop, so a loop that has ended shows no
+mark once the run has moved on.
 
 U-62 No variable's value is drawn on the chart: the current values
 are in the narration (U-63), every variable is in the `Result` tab (U-23),
 and the call stack is the path bar (U-68).
 
-U-63 While running, the narration line, one line between the chart and
-the run bar, describes the last event in one sentence (`run.narrate.*`): `enter` → `Checking
-(remainder of i divided by 3) = 0` for a condition and the block's sentence
-otherwise; `read` → `Read item 2 of nums: 5`; `compare` → the comparison
-as the chart writes it (N-08), every variable that holds a number, a text,
-a boolean, or none written as its value in the shown frame: for a
-diamond's whole condition, its question and the answer
-(`(remainder of 3 divided by 15) = 0? No`, `3 < 15 + 1? Yes`), and for any
-other comparison, the comparison and its value (`3 < 10 is true`); `write`
-→ `i is now 3`; `swap` → `Swapped items 1 and 2 of nums`; `loop` →
-`Pass 3: i is 3`; `print` → `Printed "Fizz"`; `call` → `Calling f(2)`;
+U-63 While running, the narration line, one line between the chart and the
+run bar, describes the last event in one sentence (`run.narrate.*`): `enter`
+→ `Checking (remainder of i divided by 3) = 0` for a condition and the
+block's sentence otherwise; `read` → `Read item 2 of nums: 5`, or for
+several items `Read 3 items of nums`; `compare` → the comparison as the
+chart writes it (N-08), every variable that holds a number, a text, a
+boolean, or none written as its value in the shown frame, and its value
+(`3 < 10 is true`), or for a diamond's whole condition its question and
+answer (U-116); `write` → `i is now 3`; `swap` →
+`Swapped items 1 and 2 of nums`; `loop` → `Pass 3: i is 3`, or without a
+variable `Pass 3`; `print` → `Printed "Fizz"`; `call` → `Calling f(2)`;
 `return` → `f returned 4`, which is the sole narration of a module call
-(R-11); the end of the run → `Finished in 124 steps`; an error → the
-message (U-70). Values are written as the blocks write them: `true`,
-`false`, `none`, a text in quotes. A named node is narrated by its
-statement, not its name. A `read` of several items → `Read 3 items of
-nums`; a `loop` without a variable → `Pass 3`; a field is written `next of
-node`, a dict's key `counts at "a"`; a list that no variable of the frame
-references is rendered as `a list` (`run.narrate.ref.*`).
+(R-11); the end of the run → `Finished in 124 steps`; an error → the message
+(U-70).
+
+U-116 The `compare` of a diamond's whole condition (R-35) is narrated as the
+diamond's question and the label of the edge taken, the condition written as
+U-63 writes a comparison (`(remainder of 3 divided by 15) = 0? No`,
+`3 < 15 + 1? Yes`), except that a condition that is one variable keeps its
+name (`found? Yes`).
+
+U-117 The narration writes a value as the blocks write it: `true`, `false`,
+`none`, a text in quotes.
+
+U-118 A named node is narrated by its statement, not its name.
+
+U-119 The narration names a location by the variable of the shown frame that
+holds it: an item `item 2 of nums`, a field `next of node`, a dict's key
+`counts at "a"`; a list that no variable of the frame references is `a list`
+(`run.narrate.ref.*`).
 
 U-65 A runtime error outlines the failing node in the error colour, shows
 the message (U-70) in the narration line in the error colour, stops
