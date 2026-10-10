@@ -52,6 +52,13 @@ in the file.
 - `Main.png` notes that the page scrolls on to `Build a Tiny Neural
   Network` and `More problems`; the spec has three plans, and every problem
   is in one (S-05, C-25).
+- `Main.png` sets the row that `Continue` leads to on a coloured ground,
+  which U-10 does not state; every row is drawn alike.
+- `Run.png` and `Wrong.png` fold the `Output` and `Expected` columns to
+  `… n more`; the `Result` tab shows every line (U-23), and only the
+  `Example` of the `Problem` tab folds (U-21).
+- The grey sentences under the rows of `Run.png` and `Wrong.png` annotate
+  the artboards and are not part of the screen.
 - The artboards use a hand-drawn typeface to mark them as drafts; the
   application uses the typeface of `src/ui/theme.css`.
 
