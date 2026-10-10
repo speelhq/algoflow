@@ -29,9 +29,9 @@ value is not a literal the default is `None`, which any later assignment
 replaces.
 
 **Repeated objects carry the same `$id` in `toData`** (L-06). A list holding
-the same object twice (micrograd `mul(a, a)`) must show identity; a second
-full copy with the same `$id` is simpler to compare than a reference node,
-and a cycle degrades to `{ $cls, $id }` so the conversion terminates.
+the same object twice must show identity; a second full copy with the same
+`$id` is simpler to compare than a reference node, and a cycle degrades to
+`{ $cls, $id }` so the conversion terminates.
 
 **Variables may not shadow callables** (L-45). `count = 0` alongside
 `def count()` runs in the interpreter (calls resolve by name) but fails in

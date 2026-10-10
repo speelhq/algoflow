@@ -32,17 +32,14 @@ programs (D-03).
 
 ## Curriculum
 
-S-05 The problem set contains exactly these problems. Four study plans
-(C-16) order subsets of it; the remaining problems belong to no plan and
-are reached from the list by topic.
+S-05 The problem set is exactly the problems of these study plans (C-16),
+in this order:
 
-| Plan                                    | Problems, in order                                                                                                                 |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `course` 3-Day Course                   | tutorial, sum-to-n, fizzbuzz, max-of-three, countdown, list-max, count-evens, linear-search, binary-search, bubble-sort, selection-sort, insertion-sort, reverse-list |
-| `structures` Build the Data Structures  | stack-balance, bfs-grid, heap-push, heap-pop, dijkstra-grid, dijkstra-heap, astar-grid                                             |
-| `dp` Dynamic Programming                | coin-change, knapsack, lcs                                                                                                         |
-| `micrograd` Build a Tiny Neural Network | slope, value, expression, manual-grad, local-backward, topo-backward, tanh, neuron, mlp, train                                     |
-| (no plan)                               | gcd, is-prime, fibonacci-memo, fisher-yates, hanoi                                                                                 |
+| Plan                                   | Problems, in order                                                                                                                 |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `course` 3-Day Course                  | tutorial, sum-to-n, fizzbuzz, max-of-three, countdown, list-max, count-evens, linear-search, binary-search, bubble-sort, selection-sort, insertion-sort, reverse-list |
+| `structures` Build the Data Structures | stack-balance, bfs-grid, heap-push, heap-pop, dijkstra-grid, dijkstra-heap, astar-grid                                             |
+| `dp` Dynamic Programming               | coin-change, knapsack, lcs                                                                                                         |
 
 S-06 Every challenge is solvable with the blocks in `nodes.md` and the
 built-in modules (D-15), and with no other means.

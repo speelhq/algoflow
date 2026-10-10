@@ -11,8 +11,10 @@ problem title, `Export` (L-53) before undo, and a `⋯` of `Help` alone
 
 U-02 Problems page: a 52 px header with the app name, the tabs `Problems`,
 `Playground`, and `Modules`, Help, and the JA/EN switch; below it one
-section per study plan and `More problems` (U-12). The Playground and
-Modules pages share the header.
+section per study plan (U-12).
+
+U-98 The Playground and Modules pages share the header of the Problems
+page (U-02).
 
 U-03 Problem page: a 52 px top bar with `← Problems`, the title, undo,
 redo, and `⋯` (U-05), and no action on the program's run; below it two
@@ -65,22 +67,21 @@ the title, the difficulty (`Easy`, `Medium`, `Hard`), and the topic tags; a
 row opens the Problem page.
 
 U-12 The page shows one section per plan in C-16 order: the title, the
-one-line description, `n of m solved`, `Start` (the plan's first problem)
-while no problem of the plan has a progress entry (C-17), else
-`Continue: <title>` (the first unsolved problem, named) while one is
-unsolved, and no button once
-every problem is solved; then the plan's rows in plan order. A last section
-`More problems` holds the problems in no plan, ordered by title, and is
-absent while there are none. There are no filters and no overall progress
+one-line description, `n of m solved`, the plan's button (U-99), then the
+plan's rows in plan order. There are no filters and no overall progress
 meter.
+
+U-99 A plan's button is `Start` (the plan's first problem) while no
+problem of the plan has a progress entry (C-17), else `Continue: <title>`
+(the first unsolved problem, named) while one is unsolved, and absent once
+every problem is solved.
 
 U-13 Per-problem progress (C-17) drives the status marks and the plan
 counts.
 
 U-14 Topics are fixed: `Output`, `Variables`, `Loops`, `Conditions`,
-`Lists`, `Searching`, `Sorting`, `Recursion`, `Dictionaries`, `Classes`,
-`Gradients` (`problems.topic.<key>`); they appear as tags on rows (U-10)
-and in the `Problem` tab (U-21).
+`Lists`, `Searching`, `Sorting`, `Recursion`, `Dictionaries`, and
+`Classes` (`problems.topic.<key>`).
 
 ## Playground page
 

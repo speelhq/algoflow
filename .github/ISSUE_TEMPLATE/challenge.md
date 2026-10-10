@@ -18,7 +18,7 @@ labels: challenge
 ## Plan
 
 <!-- The study plan the problems join, new or existing, and where in its
-     order; `None` and why for a problem in no plan. -->
+     order; every problem is in one plan (C-25). -->
 
 ## Blocks needed
 

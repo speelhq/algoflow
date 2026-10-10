@@ -16,7 +16,7 @@ in the file.
 
 | File                    | Artboard title                                         | Spec                               |
 | ----------------------- | ------------------------------------------------------ | ---------------------------------- |
-| `Main.png`              | 1 Problems: one section per plan                       | U-02, U-10, U-12, U-13, U-14       |
+| `Main.png`              | 1 Problems: one section per plan                       | U-02, U-10, U-12, U-13, U-14, U-99 |
 | `BuildEmpty.png`        | 2 Build: first launch, an empty chart                  | U-03, U-21, U-34, U-90             |
 | `BuildMenu.png`         | 3 Build: the + menu lists statements only              | U-40, U-33                         |
 | `BuildEdit.png`         | 4 Build: editing a block, choosing a variable          | U-41, U-94, U-95                   |
@@ -49,6 +49,9 @@ in the file.
   drafts derived from D-16, not emitted code.
 - `Main.png` names the first problem `Hello`; its challenge file is
   `tutorial`, and the title is the one in that file.
+- `Main.png` notes that the page scrolls on to `Build a Tiny Neural
+  Network` and `More problems`; the spec has three plans, and every problem
+  is in one (S-05, C-25).
 - The artboards use a hand-drawn typeface to mark them as drafts; the
   application uses the typeface of `src/ui/theme.css`.
 

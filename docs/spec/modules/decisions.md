@@ -29,10 +29,9 @@ encounters it again as `import`, and it groups `heap_push`, `heap_pop`, and
 
 **A module uses no other module** (D-05). Module-to-module imports need
 dependency order, cycle detection, and a second `from … import` layer in
-E-09; nothing in the curriculum needs them, so `micrograd` is one module
-rather than `engine` and `nn`. The rule can be lifted when a plan needs a
-module built on another; the trigger is a challenge whose `module` would
-have to call another learner module.
+E-09, and nothing in the curriculum needs them. The rule can be lifted when
+a plan needs a module built on another; the trigger is a challenge whose
+`module` would have to call another learner module.
 
 **A learner module shadows a built-in one** (D-02, D-11). The note's
 "rebuild it from basic blocks" needs the learner's version to take
@@ -64,8 +63,8 @@ the second tab is used as a tab.
 **Modules have cases because a module change reaches every program**
 (D-19, D-20, D-21). The absence of a challenge had been read as the absence
 of
-tests, but a module is where tests matter most: editing `backward_step` for
-the `tanh` problem can break every solved problem that uses it, and the
+tests, but a module is where tests matter most: editing `heap_pop` while
+solving `astar-grid` can break `dijkstra-heap`, solved earlier, and the
 module is where that is detected. A case is a saved run (arguments,
 returned value, arguments afterwards), the same idea as a recorded
 expectation (C-20), so no test is written from an empty starting point;

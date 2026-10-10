@@ -146,12 +146,6 @@ sifts it down, and returns the root; items are compared with `<`, and a
 list item by its item 0; `heap_pop` on an empty list raises `E_POP_EMPTY`
 from the list method it calls.
 
-D-17 The built-in module `micrograd` (title `Tiny Neural Network`) defines
-`Value`, `add`, `mul`, `tanh_v`, `backward_step` (with its `"tanh"` case),
-`build_topo`, `backward`, `Neuron`, `make_neuron`, `forward_neuron`,
-`Layer`, `MLP`, `make_mlp`, `forward_mlp`, `parameters`, and `zero_grad`,
-as the micrograd rows of `challenges.md` define them.
-
 ## Verification
 
 D-23 Tests cover the resolution and shadowing of L-46, the E-09 file text

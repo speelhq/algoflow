@@ -38,15 +38,13 @@ with the code that uses them, so wording is decided when the UI exists and
 the parity check never requires translating unused strings.
 
 **The catalog is its plans** (U-10, U-12, U-13, U-14, C-16). "Day 1/2/3"
-tabs and a
-"micrograd" tab grouped problems by course logistics; ordered study plans
-state which problem to attempt next instead. With 38 problems the page is one
-section per plan plus `More problems`: a flat list under a filter row
-(topics, difficulty, status, search) suits thousands of problems, and here
-its order would be the plans' order in any case. Topics
-remain as tags so a problem outside the plans states what it practises. No
-global progress meter and no "blocks used" column: neither assists a
-beginner in choosing.
+tabs grouped problems by course logistics; ordered study plans state which
+problem to attempt next instead. The page is one section per plan: a flat
+list under a filter row (topics, difficulty, status, search) suits
+thousands of problems, and here its order would be the plans' order in any
+case. Topics remain as tags so a row states what it practises. No global
+progress meter and no "blocks used" column: neither assists a beginner in
+choosing.
 
 **Help is the keyboard table** (U-04). The keyboard actions have no other
 surface, so a dialog holding that table plus the build → run → submit loop
@@ -129,11 +127,10 @@ runs once per load: the tutorial records nothing until its first
 submission, hint, or shown solution, so a check on every visit to the
 Problems page would send `← Problems` straight back to the tutorial.
 
-**A plan's button follows its progress** (U-12). `Start` on a plan with
+**A plan's button follows its progress** (U-99). `Start` on a plan with
 entries would hide that the learner has begun; `Continue` on a plan with no
 unsolved problem has no destination, so the button is removed rather than
-pointed at a solved problem. `More problems` is omitted while empty for the
-reason C-18 gives for plans: an empty section is inert.
+pointed at a solved problem.
 
 **Markdown is a four-rule subset** (U-26). Challenge texts are written in
 the repository and use paragraphs, code, bold, and italic; a markdown

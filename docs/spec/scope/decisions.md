@@ -29,15 +29,18 @@ a larger program" has nowhere else to happen than Playground once a plan
 ends. `Open in Playground` converts a solved problem into the start of that
 larger program, with inputs fixed as the assignments E-03 already emits.
 
-**Plans `structures` and `dp`; the rest stays out of plans** (S-05). A
-plan's order must be significant. The seven `structures` problems build on
-one another through the list-as-stack, list-as-queue, and `heap` module;
-`dijkstra-grid` then `dijkstra-heap` shows a block being swapped for a
-faster one with the same answer, visible in the step count on the Accepted
-card. The three `dp` problems widen the same table technique (one
-dimension, two, strings), which is the same form of concept progression as
-the course plan. `gcd`, `is-prime`, and `fisher-yates` are not built upon
-later; `fibonacci-memo` and `hanoi` would form a two-problem recursion
-plan, which is insufficient until further recursion problems are added.
-Adding any of them to the course plan is the instructor's decision, since
-that plan mirrors a fixed three-day course.
+**Plans `structures` and `dp`** (S-05). A plan's order must be
+significant. The seven `structures` problems build on one another through
+the list-as-stack, list-as-queue, and `heap` module; `dijkstra-grid` then
+`dijkstra-heap` shows a block being swapped for a faster one with the same
+answer, visible in the step count on the Accepted card. The three `dp`
+problems widen the same table technique (one dimension, two, strings),
+which is the same form of concept progression as the course plan. Adding a
+problem to the course plan is the instructor's decision, since that plan
+mirrors a fixed three-day course.
+
+**Every problem is in a plan** (S-05, C-25). A problem in no plan would
+need a section of its own, an order by title, and a rule of its own for
+`Next problem`, and would give the learner no next step after it. A
+problem that no plan takes yet waits as a `challenge` issue
+(CONTRIBUTING), so the catalog holds plans only.

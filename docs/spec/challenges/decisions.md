@@ -15,17 +15,16 @@ runs in R-11 batches with `setTimeout(0)` between them so a non-terminating
 program cannot block the tab. `judge()` is shared with `scripts/check.ts` so
 the Result tab and CI agree on C-10.
 
-**Plans grow with the files** (C-18). C-16 makes `pnpm check` fail on an id
-without a file, and a plan with no members would render an inert U-12 card
-(`0 of 0 solved`, `Start` with no destination), so a plan enters
+**Plans grow with the files** (C-18). C-25 makes `pnpm check` fail on a
+member without a file, and a plan with no members would render an inert
+U-12 card (`0 of 0 solved`, `Start` with no destination), so a plan enters
 `plans.json` with its first member and lists the members that exist. The
 plans are bundled by a static import in `src/challenges/plans.ts` rather
 than the challenge glob of `index.ts`, which lets the glob exclude
 `plans.json` with a negated pattern. Membership and order are not checked
 against the S-05 table by code: copying the table into `scripts/` would
 duplicate a spec fact, and making `plans.json` the authority would remove
-the curriculum from the spec. `pnpm check` prints `in no plan: …` after
-the plans line so an omitted entry is visible on every run.
+the curriculum from the spec.
 
 **The tutorial prints two values** (S-05, C-22, L-29). `"Hello, " + name`
 made the first action combine a text, an operator applied to a value,
@@ -41,9 +40,6 @@ entry, and a learner who only viewed the solution has used the problem as
 much as one who took a hint; the entry is `attempted`. The key holds the
 bare record, as C-17 writes it, through a custom storage of the persist
 middleware.
-
-**hanoi prints the disk it moves** (S-05). `src` and `dst` are lists with
-no name to print; the final lists verify the moves.
 
 **Step counts are not compared across problems** (C-17). Comparing step
 counts across the three sorts was dropped as a special case: an inferred

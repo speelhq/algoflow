@@ -47,9 +47,10 @@ Why: a pull request that stands alone is never stacked or retargeted, is
 reviewed while it is small, and lets any merge be released; the skill keeps
 the procedure tracked and reviewed like the code.
 
-A problem idea is an issue labelled `challenge`, with no milestone until a
-release takes it. Why: the label finds every idea without promising it to
-a release.
+A problem idea is an issue labelled `challenge` that names the study plan
+it joins, with no milestone until a release takes it. Why: the label finds
+every idea without promising it to a release, and every problem is in a
+plan (C-25), so an idea is complete only with its place in one.
 
 `gh issue create --body` applies no template: copy the sections of
 `.github/ISSUE_TEMPLATE/<kind>.md` into the body, and set the template's

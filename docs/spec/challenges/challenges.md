@@ -27,16 +27,20 @@ export type Test = {
 };
 export type Localized = { en: string; ja?: string }; // ja: C-24
 export type Topic = "output" | "variables" | "loops" | "conditions" | "lists" | "searching"
-  | "sorting" | "recursion" | "dictionaries" | "classes" | "gradients";
+  | "sorting" | "recursion" | "dictionaries" | "classes";
 ```
 
 C-02 `scripts/check.ts` validates the schema, validates (`language.md`) `solution`
-with the built-in modules (D-15), checks C-03, C-16, C-21, and C-22, runs
+with the built-in modules (D-15), checks C-03, C-25, C-21, and C-22, runs
 `solution` through the interpreter and CPython (R-20) for every test, and
 checks every built-in module with its cases (D-15).
 
 C-03 Every challenge has at least one test with `edge: true`, a boundary
 case such as an empty list, zero, or a single item.
+
+C-20 "Recorded" expectations are obtained by running `solution` once with
+the stated seed and inserted into the file; `scripts/check.ts` enforces them
+in both engines.
 
 C-24 Every `Localized` text of a challenge, a plan, and a built-in module
 has its `ja` text (S-03).
@@ -60,15 +64,18 @@ C-16 `challenges/plans.json` lists the study plans in display order:
 
 ```ts
 export type Plan = {
-  id: string;
+  id: string; // unique among the plans
   title: Localized;
   description: Localized; // one line
-  problems: string[]; // challenge ids, in order; each id in at most one plan
+  problems: string[]; // challenge ids, in order
 };
 ```
 
-`scripts/check.ts` fails on an unknown id, a duplicate id, or an id in two
-plans. The plans and their members are those of S-05.
+The plans and their members are those of S-05.
+
+C-25 Every challenge is in exactly one plan, once: `scripts/check.ts`
+fails on a plan member with no challenge file, a member listed twice, a
+challenge in two plans, and a challenge in no plan.
 
 C-18 `plans.json` lists a plan once the file of its first S-05 member
 exists, with the S-05 members whose files exist, in S-05 order;
@@ -155,44 +162,7 @@ or the built-in one (L-46).
 | knapsack    | hard, lists loops  | `weights: [1, 3, 4], values: [15, 20, 30], cap: 4` | `best = 35`, table `dp`                    | `edge: cap 0` → `0`                           |
 | lcs         | hard, lists loops  | `s: "ABCBDAB", t: "BDCABA"`                        | `length = 4`, table `dp` 8 × 7             | `edge: empty` → `0`                           |
 
-## Problems in no plan
-
-| id             | difficulty, topics             | inputs                             | expectation                                                                                   | edge tests                          |
-| -------------- | ------------------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------- |
-| gcd            | easy, loops                    | `a: 48, b: 18`                     | `result = 6` via `while b != 0`                                                               | `edge: 0` `b = 0` → `a`; `a < b`    |
-| is-prime       | easy, loops conditions         | `n: 29`                            | `prime = True`                                                                                | `edge: 1` → `False`; `2`; `9`       |
-| fibonacci-memo | medium, recursion dictionaries | `n: 30`                            | `result = 832040` with `fib(n, memo)` and dict `memo`                                         | `edge: 0`; `1`                      |
-| fisher-yates   | medium, lists loops            | `nums: [1, 2, 3, 4, 5]`, seed 1    | `nums` = permutation recorded from `solution`; `while i > 0`                                  | `edge: empty`; `edge: one`          |
-| hanoi          | medium, recursion              | `n: 3, a: [3, 2, 1], b: [], c: []` | `c = [3, 2, 1]`, `a = []`; stdout 7 lines, the disk moved each time (`1 2 1 3 1 2 1`); recursive `hanoi(n, src, dst, via)` | `edge: 1` → 1 line; `4` → 15 lines  |
-
-## Neural-network plan (`micrograd`)
-
-Each problem defines its new functions and classes in its program and
-calls the earlier ones from the learner's `micrograd` module or the
-built-in one (D-17); every problem from `value` on carries
-`module: micrograd`, and `defines` lists the names of its `defines` column.
-Names are fixed. Topics: `classes gradients` (`slope`: `variables`;
-`neuron`, `mlp`, `train` add `lists`); difficulty `medium` up to `tanh`,
-then `hard`.
-
-| id             | defines                                                                                                                                                              | inputs                                                              | expectation                                                                                                                                        |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| slope          | `f(x)` = `3 * x ** 2 - 4 * x + 5`                                                                                                                                    | `x: 3.0, h: 0.001`                                                  | `slope = (f(x + h) - f(x)) / h` = `14.003`; edge `h: 0.0001`                                                                                       |
-| value          | class `Value(data=0.0, grad=0.0, prev=[], op="")`; `add(a, b)`, `mul(a, b)` returning a new `Value` with `prev = [a, b]`, `op` `"+"` / `"*"`                         | `a: 2.0, b: -3.0`                                                   | `s = add(a, b)`: `s.data = -1.0`, `s.op = "+"`, `len(s.prev) = 2`; `p = mul(a, b)`: `-6.0`; edge `mul(a, a)` has `prev = [a, a]`                   |
-| expression     | —                                                                                                                                                                    | `a: 2.0, b: -3.0, c: 10.0, f: -2.0`                                 | `e = mul(a, b)`, `d = add(e, c)`, `L = mul(d, f)`: `L.data = -8.0`, `d.data = 4.0`; 7 objects                                                      |
-| manual-grad    | —                                                                                                                                                                    | same                                                                | gradients set manually: `L 1.0, d -2.0, f 4.0, e -2.0, c -2.0, a 6.0, b -4.0`                                                                           |
-| local-backward | `backward_step(v)`: `"+"` adds `v.grad` to both children; `"*"` adds `v.grad * other.data`                                                                           | same                                                                | `backward_step` on `L`, `d`, `e` after `L.grad = 1.0` yields manual-grad values                                                                    |
-| topo-backward  | `build_topo(v, visited, topo)` recursive with list `visited` and `in`; `backward(root)`: `root.grad = 1.0`, build, iterate reversed with `backward_step`             | same                                                                | `backward(L)` yields manual-grad values; edge `mul(a, a)` → `a.grad = 2 * a.data`                                                                  |
-| tanh           | `tanh_v(v)` = `Value(math.tanh(v.data), prev=[v], op="tanh")`; the `"tanh"` case of `backward_step`, `child.grad += (1 - v.data ** 2) * v.grad`, added to the learner's module (D-11 when it is the built-in one) | `x1: 2.0, x2: 0.0, w1: -3.0, w2: 1.0, b: 6.8813735870195432`        | `o = tanh_v(add(add(mul(x1, w1), mul(x2, w2)), b))`, `o.data ≈ 0.7071`; after `backward(o)`: `x1.grad -1.5, w1.grad 1.0, x2.grad 0.5, w2.grad 0.0` |
-| neuron         | class `Neuron(w=[], b=None)`; `make_neuron(nin)` with `random_float(-1, 1)`; `forward_neuron(n, x)` = `tanh_v(Σ mul(w_i, x_i) + b)`                                  | `nin: 3, x: [2.0, 3.0, -1.0]`, seed 1                               | `out.data` recorded; `len(n.w) = 3`                                                                                                                |
-| mlp            | `Layer(neurons=[])`, `MLP(layers=[])`; `make_mlp(nin, sizes)`; `forward_mlp(m, x)` (list, or the single `Value` when the last layer has one neuron); `parameters(m)` | `nin: 3, sizes: [4, 4, 1], x: [2.0, 3.0, -1.0]`, seed 1             | `len(parameters(m)) = 41`; `out.data` recorded                                                                                                     |
-| train          | `zero_grad(params)`; loop in main                                                                                                                                    | `xs: 4×3, ys: [1.0, -1.0, -1.0, 1.0], epochs: 20, lr: 0.05`, seed 1 | stdout 20 lines of `round(loss.data, 4)` recorded; `losses` length 20                                                                              |
-
-C-20 "Recorded" expectations are obtained by running `solution` once with
-the stated seed and inserted into the file; `scripts/check.ts` enforces them
-in both engines.
-
 ## Verification
 
 C-23 `pnpm check` passes: every challenge, every test in both engines,
-the plans (C-16), and the built-in modules (D-15).
+the plans (C-25, C-18), and the built-in modules (D-15).
