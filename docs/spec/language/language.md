@@ -280,9 +280,10 @@ L-62 The other edits address nodes by id; `setExpr` takes an item index for
 
 L-55 The value stored under `algoflow:program:<id>` is the `Program` JSON
 itself; loading passes it through `migrate()` and treats a rejected value as
-absent (C-13 then applies); the challenge's `challengeId` and `inputs`
-replace those of a restored program, and a Playground program has neither.
-`migrate()` drops a statement of the kind `comment`, which no block reads.
+absent (C-13 then applies).
+
+L-67 A restored program takes the `challengeId` and `inputs` of its
+challenge, and a Playground program has neither.
 
 L-57 A Playground program's id is `play-` followed by a NodeId;
 `algoflow:playground` holds `Record<id, { edited: number }>`, the time of

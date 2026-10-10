@@ -443,15 +443,14 @@ where Python has one (`%`, `//`, `**`), so a learner who later reads the
 and `)` closes it, and brackets are not stored, so a bracket can never be
 left unclosed.
 
-**A node may be named, and the name is a comment** (U-95, L-58, E-11,
-L-55). No generated sentence fits every expression, and a condition
-written in symbols does not say what it is for; a name in the learner's
-own words does, for any statement. A name is optional, in the learner's own
-words, and never asked for; the named node shows the name alone, and the
-statement stays one hover away and in the `Python` tab, where the name is
-the comment above it. There is no `comment` block: it would draw
-Python's `#` on the chart, and a named node says what a comment would say,
-where it applies.
+**A node may be named, and the name is a comment** (U-95, L-58, E-11). No
+generated sentence fits every expression, and a condition written in symbols
+does not say what it is for; a name in the learner's own words does, for any
+statement. A name is optional, in the learner's own words, and never asked
+for; the named node shows the name alone, and the statement stays one hover
+away and in the `Python` tab, where the name is the comment above it. There
+is no `comment` block: it would draw Python's `#` on the chart, and a named
+node says what a comment would say, where it applies.
 
 **Kinds choose the list** (L-59, L-65, L-66, U-52, N-11, U-50). After a
 value the list offers what applies to that kind of value, so a list does not

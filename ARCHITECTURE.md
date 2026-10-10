@@ -64,7 +64,7 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   disk (C-14), so no module it imports (`types.ts`, `judge.ts`) imports
   `index.ts`.
 - `src/store` — Zustand stores: `program` (the open program, its undo
-  history, and its persistence, L-50, L-51, L-52, L-53, L-54, L-55),
+  history, and its persistence, L-50, L-51, L-52, L-53, L-54, L-55, L-67),
   `playground` (the Playground programs' index, L-57), `editor` (the hovered and the selected node, U-25,
   U-35), `run` (the pre-running, timer-driven driver, R-23, R-26), `tests`
   (submission verdicts), `progress` (per-problem status under
