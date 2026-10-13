@@ -35,10 +35,10 @@
   ],
   "hints": [
     {
-      "en": "Use a **for** block from 1 up to `n + 1`, and inside it an **if** whose condition is that the remainder of `i` divided by 15 equals 0: type `i % 15 == 0`."
+      "en": "Use a **for** block that counts `i` through the numbers, and inside it **if** blocks that ask whether `i` is a multiple of 15, of 3, and of 5."
     },
     {
-      "en": "Test 15 first, then 3, then 5, each **if** on the **No** side of the one before; testing 3 first would print `Fizz` for 15."
+      "en": "Count with `i ← 1` and the check `i < n + 1?`. Ask `i % 15 = 0?` (typed `i % 15 == 0`) first, then 3, then 5, each **if** on the **No** side of the one before; testing 3 first would print `Fizz` for 15."
     },
     { "en": "Print the word on each **Yes** side, and `i` itself on the last **No** side." }
   ],

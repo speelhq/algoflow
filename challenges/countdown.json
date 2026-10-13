@@ -4,7 +4,7 @@
   "difficulty": "easy",
   "topics": ["loops"],
   "description": {
-    "en": "Print `n`, then `n - 1`, and so on down to `0`, one number per line. Use a **while** block."
+    "en": "Print `n`, then `n − 1`, and so on down to `0`, one number per line. Use a **while** block."
   },
   "inputs": [{ "name": "n", "kind": "number" }],
   "tests": [
@@ -18,9 +18,9 @@
   "hints": [
     { "en": "Use a **while** block, which repeats its body as long as its condition holds." },
     {
-      "en": "Count down with a variable you can change: set `k` to `n` before the loop, and loop **while** `k >= 0`."
+      "en": "Count down with a variable you can change: `k ← n` before the loop, and a **while** block whose check is `k ≥ 0?`."
     },
-    { "en": "Inside the loop, print `k`, then set `k` to `k - 1`, or the loop never ends." }
+    { "en": "Inside the loop, `print(k)`, then `k ← k − 1`, or the loop never ends." }
   ],
   "takeaway": { "en": "A **while** loop kept going until its condition became false." },
   "solution": {
