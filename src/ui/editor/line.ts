@@ -14,7 +14,7 @@ import { allExprs, isEmptyExpr, variableOf } from "@/lang/walk";
 import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import { isParseError, NO_DEFINITIONS, parse, type ParseScope } from "@/python/parse";
 import { levelAssociativity } from "@/python/precedence";
-import { exprNotation, exprText, placeholderValue, templatePieces } from "@/ui/chart/text";
+import { exprNotation, exprText, isCall, placeholderValue, templatePieces } from "@/ui/chart/text";
 import { allEntries, makeEntry, takesValue, type Entry } from "./entries";
 
 type Bag = Record<string, unknown>;
@@ -130,7 +130,7 @@ export function stops(expr: Expr): Caret[] {
   const own = inputs(expr);
   if (own.length === 0) return [{ after: expr.id }];
   const inner = own.flatMap(stops);
-  // An operation with no precedence, a call, ends after its bracket: a stop of its own.
+  // An operation with no precedence ends with its own text (a call's bracket): a stop of its own.
   return precedenceOf(expr) === undefined ? [...inner, { after: expr.id }] : inner;
 }
 
@@ -396,7 +396,7 @@ export function wordRows(line: Line, ctx: LineContext): Row[] {
     return [
       ...ctx.variables.map((name): Row => ({ kind: "variable", name })),
       ...allEntries()
-        .filter((entry) => !takesValue(entry))
+        .filter((entry) => !takesValue(entry) || entry.call)
         .map((entry): Row => ({ kind: "entry", entry })),
       ...ctx.functions.map((fn): Row => ({ kind: "function", fn })),
     ];
@@ -440,6 +440,9 @@ export function settle(line: Line, ctx: LineContext): Line {
 }
 
 // ---------------------------------------------------------------- typing
+
+/** The key that opens a pair of brackets, or a call's own after its name. */
+export const BRACKETS_KEY = "(";
 
 /** The keys that end a word. */
 const ENDS_WORD = /^[-+*/%<>=!(),[\]]$/;
@@ -488,7 +491,7 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
     if (!exact) return refused(line);
     const chosen = choose(current, exact, ctx);
     // A call's `(` is the bracket the call already has.
-    if (!chosen.taken || key === " " || (key === "(" && makesCall(exact))) return chosen;
+    if (!chosen.taken || key === " " || (key === BRACKETS_KEY && makesCall(exact))) return chosen;
     current = chosen.line;
   }
   if (key === " ") return done(current);
@@ -501,7 +504,7 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
   if (/[0-9.]/.test(key)) return typeDigit(current, key);
   const value = !atInput(current);
   switch (key) {
-    case "(": {
+    case BRACKETS_KEY: {
       const base = current.selected ? cleared(current) : current;
       return "at" in base.caret
         ? done({ ...base, open: [...base.open, base.caret.at] })
@@ -509,16 +512,28 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
     }
     case ")": {
       const group = current.open.at(-1);
-      if (group === undefined) return leave(current) ?? refused(line);
-      const held = find(current.root, group);
+      const held = group === undefined ? undefined : find(current.root, group);
+      // A call begun inside the innermost brackets closes before them.
+      const around = callAround(current);
+      if (around && (group === undefined || (held && find(held, around.call.id)))) {
+        return done({ ...current, caret: { after: around.call.id } });
+      }
+      if (group === undefined) return refused(line);
       return done({
         ...current,
         open: current.open.slice(0, -1),
         caret: { after: held ? held.id : group },
       });
     }
-    case ",":
-      return { line: current, taken: true, move: "item" };
+    case ",": {
+      // In a call, the call's next input; elsewhere, the next value of the slot.
+      const around = current.selected ? undefined : callAround(current);
+      if (!around) return { line: current, taken: true, move: "item" };
+      const next = inputs(around.call)[around.index + 1];
+      if (!next) return refused(line);
+      const empty = [...allExprs(next)].find(isEmptyExpr);
+      return done(closeBehind({ ...current, caret: empty ? { at: empty.id } : endOf(next) }));
+    }
     case "-":
       if (!value || current.selected) {
         const base = current.selected ? cleared(current) : current;
@@ -539,22 +554,15 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
   return refused(line);
 }
 
-/** Whether an expression is a call: its notation ends with its own bracket (`abs({x})`). */
-function isCall(expr: Expr): boolean {
-  const last = templatePieces(exprNotation(expr)).at(-1);
-  return last !== undefined && "words" in last && last.words.endsWith(")");
-}
-
 /** Whether a row makes a call: a function of the program, or an entry whose block is one. */
-const makesCall = (row: Row) =>
-  row.kind === "function" || (row.kind === "entry" && isCall(makeEntry(row.entry)));
+const makesCall = (row: Row) => row.kind === "function" || (row.kind === "entry" && row.entry.call);
 
-/** `)` with no bracket open closes the brackets of the innermost call around the caret. */
-function leave(line: Line): Outcome | undefined {
+/** The innermost call with an input that holds the caret, and that input's position. */
+function callAround(line: Line): { call: Expr; index: number } | undefined {
   const { caret, root } = line;
   let up = parentOf(root, "at" in caret ? caret.at : caret.after);
   while (up && !isCall(up.parent)) up = parentOf(root, up.parent.id);
-  return up ? done({ ...line, caret: { after: up.parent.id }, pending: undefined }) : undefined;
+  return up && { call: up.parent, index: up.index };
 }
 
 // ---------------------------------------------------------------- removing and moving
