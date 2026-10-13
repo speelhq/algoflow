@@ -27,7 +27,7 @@ export type NodeDef = {
   create(): Stmt | Expr; // required slots hold `empty` (`language.md`, Expressions)
   run: StmtRunner | ExprRunner; // `interpreter.md`, Blocks
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // `emitter.md`: stmt → lines, expr → text
-  form?(node: Stmt | Expr, ctx: { creates: boolean }): string; // Node text
+  notation(node: Stmt | Expr): string; // Node text
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined; // `language.md`, Data
   text?(node: Stmt | Expr, slot: string): string; // Node text
   kind?(node: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
@@ -36,10 +36,10 @@ export type NodeDef = {
   chart?:
     | { branch: { cond: string; yes: string; no: string } }
     | { check: { cond: string; body: string } }
-    | { counted: string }
+    | { counted: { body: string; init: string; check: string; step: string } }
     | { jump: "exit" | "next" }; // Chart shape
 };
-export type Param = { name: string; optional?: true }; // `name` as the template writes it
+export type Param = { name: string; optional?: true }; // `name` as the notation writes it
 export type FieldFault = { field: string; message: string }; // a stored field no edit writes
 export type Callee = {
   name: Id;
@@ -64,7 +64,7 @@ export type MenuEntry = {
 
 An optional parameter is marked by `optional`, not in its name: a mark
 such as `n?` would have to be stripped wherever a parameter is looked up by
-the name its template writes.
+the name its notation writes.
 
 Slot roles: `expr` one expression; `exprs` an ordered list; `id` a name;
 `body` a statement region; `target` an assignment target; `text` a literal
@@ -89,82 +89,81 @@ flags instead.
 
 ## Catalog keys
 
-i18n keys per block in `en.json`: `node.<key>.label`, `node.<key>.template`
-(the node's sentence with `{slot}` placeholders), `node.<key>.help`. The
-template column below is the `en.json` text; `ja.json` provides the same
-keys with the same placeholders. A block with a second template form keeps
-it under `node.<key>.template<Form>`: `assign.templateCreate`,
-`bool.templateFalse`, `unop.templateNot`, `binop.templateMod`,
-`binop.templateFloorDiv`, `binop.templatePow`, `binop.templateIn`. A menu
-entry with a `name` has `node.<key>.<name>.label` and
+i18n keys per block in `en.json`: `node.<key>.label`, the block's name in
+the block menu and the value list, `node.<key>.help`, and
+`node.<key>.slot.<slot>`, the name of each slot of a statement that the
+editor shows as a field (`node.assign.slot.value`: `value`); `ja.json`
+provides the same keys. The hidden `empty` block has its label and help. A
+menu entry with a `name` has `node.<key>.<name>.label` and
 `node.<key>.<name>.help`; a help that ends with how to type the entry names
-its keys (`Type %.`).
+its keys (`Type %.`). A block's node text is no catalog key: it is the
+block's `notation()`, the same in every locale (Node text).
 
 ## Statements
 
 The Python column is the exact emitted text; `<x>` denotes an emitted slot.
 
-| key        | category | slots                  | en template                                                                                                         | Python                                                                              |
+| key        | category | slots                  | notation                                                                                                            | Python                                                                              |
 | ---------- | -------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `assign`   | basic    | target, value          | `set {target} to {value}`; when `target` is a variable not visible before it (`language.md`, Scope): `create {target} and set it to {value}` | `<target> = <value>`                                                                |
-| `if`       | control  | cond, then, else       | `if {cond}`                                                                                                         | `if <cond>:` … `else:` (else omitted when empty; empty region → `pass`)             |
-| `for`      | control  | var, start, stop, body | `for {var} from {start} up to {stop}`                                                                               | `for <var> in range(<stop>):` when start is `num` 0, else `range(<start>, <stop>):` |
-| `foreach`  | list     | var, list, body        | `for each {var} in {list}`                                                                                          | `for <var> in <list>:`                                                              |
-| `while`    | control  | cond, body             | `while {cond}`                                                                                                      | `while <cond>:`                                                                     |
-| `break`    | control  |                        | `stop the loop`                                                                                                     | `break`                                                                             |
-| `continue` | control  |                        | `skip to next iteration`                                                                                            | `continue`                                                                          |
-| `print`    | basic    | args                   | `print {args}`                                                                                                      | `print(<a>, <b>)`                                                                   |
-| `return`   | function | value?                 | `return {value}`                                                                                                    | `return <value>` / `return`                                                         |
+| `assign`   | basic    | target, value          | `{target} ← {value}`                                                                                                | `<target> = <value>`                                                                |
+| `if`       | control  | cond, then, else       | `{cond}` (its diamond, `chart.md`, Shapes)                                                                          | `if <cond>:` … `else:` (else omitted when empty; empty region → `pass`)             |
+| `for`      | control  | var, start, stop, body | `{var} ← {start}`, its init (Chart shape)                                                                           | `for <var> in range(<stop>):` when start is `num` 0, else `range(<start>, <stop>):` |
+| `foreach`  | list     | var, list, body        | `for {var} in {list}`                                                                                               | `for <var> in <list>:`                                                              |
+| `while`    | control  | cond, body             | `{cond}` (its diamond)                                                                                              | `while <cond>:`                                                                     |
+| `break`    | control  |                        | `break`                                                                                                             | `break`                                                                             |
+| `continue` | control  |                        | `continue`                                                                                                          | `continue`                                                                          |
+| `print`    | basic    | args                   | `print({args})`                                                                                                     | `print(<a>, <b>)`                                                                   |
+| `return`   | function | value?                 | `return {value}` / `return`                                                                                         | `return <value>` / `return`                                                         |
 | `expr`     | basic    | expr                   | `{expr}`                                                                                                            | `<expr>`                                                                            |
-| `swap`     | list     | list, i, j             | `swap items {i} and {j} of {list}`                                                                                  | `<list>[<i>], <list>[<j>] = <list>[<j>], <list>[<i>]`                               |
-| `delete`   | list     | target                 | `delete {target}`                                                                                                   | `del <target>`                                                                      |
+| `swap`     | list     | list, i, j             | `swap({list}[{i}], {list}[{j}])`                                                                                    | `<list>[<i>], <list>[<j>] = <list>[<j>], <list>[<i>]`                               |
+| `delete`   | list     | target                 | `del {target}`                                                                                                      | `del <target>`                                                                      |
 
 A new `for` has no variable name: `create()` receives no context, and
 filling in the first unused of `i`, `j`, `k` would be a special case.
 
 ## Expressions
 
-| key     | category | slots           | en template                                                         | Python                 |
+| key     | category | slots           | notation                                                            | Python                 |
 | ------- | -------- | --------------- | ------------------------------------------------------------------- | ---------------------- |
 | `num`   | basic    | value           | `{value}`                                                           | `raw`                  |
 | `str`   | basic    | value           | `"{value}"`                                                         | double-quoted, escaped |
-| `bool`  | basic    |                 | `true` / `false`                                                    | `True` / `False`       |
-| `none`  | basic    |                 | `none`                                                              | `None`                 |
+| `bool`  | basic    |                 | `True` / `False`                                                    | `True` / `False`       |
+| `none`  | basic    |                 | `None`                                                              | `None`                 |
 | `var`   | basic    | name            | `{name}`                                                            | `name`                 |
-| `binop` | basic    | op, left, right | `{left} {op} {right}` (Node text); `remainder of {left} divided by {right}`, `whole-number quotient of {left} divided by {right}`, `{left} to the power of {right}`, `{left} is in {right}` | infix (`emitter.md`) |
+| `binop` | basic    | op, left, right | `{left} {op} {right}` (Node text)                                   | infix (`emitter.md`)   |
 | `unop`  | basic    | op, operand     | `−{operand}` / `not {operand}`                                      | `-<x>` / `not <x>`     |
-| `index` | list     | list, index     | `item {index} of {list}`                                            | `<list>[<index>]`      |
+| `index` | list     | list, index     | `{list}[{index}]`                                                   | `<list>[<index>]`      |
 | `list`  | list     | items           | `[{items}]`                                                         | `[<a>, <b>]`           |
-| `key`   | dict     | dict, key       | `{dict} at {key}`                                                   | `<dict>[<key>]`        |
+| `key`   | dict     | dict, key       | `{dict}[{key}]`                                                     | `<dict>[<key>]`        |
 | `dict`  | dict     | entries         | `{ {entries} }`                                                     | `{<k>: <v>, …}`        |
-| `field` | class    | obj, field      | `{field} of {obj}`                                                  | `<obj>.<field>`        |
-| `new`   | class    | cls, args       | `new {cls}({args})`                                                 | `<Cls>(<args>)`        |
+| `field` | class    | obj, field      | `{obj}.{field}`                                                     | `<obj>.<field>`        |
+| `new`   | class    | cls, args       | `{cls}({args})`                                                     | `<Cls>(<args>)`        |
 | `call`  | function | fn, args        | `{fn}({args})`                                                      | `<fn>(<args>)`         |
 
 ## Builtin calls (`key = "call:<name>"`, shape expr)
 
-| name                         | category | args | en template                                        | Python                                 |
+| name                         | category | args | notation                                           | Python                                 |
 | ---------------------------- | -------- | ---- | -------------------------------------------------- | -------------------------------------- |
-| `len`                        | list     | a    | `count of {a}`                                     | `len(<a>)`                             |
-| `abs`                        | basic    | x    | `absolute value of {x}`                            | `abs(<x>)`                             |
-| `min`, `max`                 | basic    | a, b | `smaller of {a} and {b}` / `larger of {a} and {b}` | `min(<a>, <b>)` / `max(<a>, <b>)`      |
-| `sum`                        | list     | a    | `sum of {a}`                                       | `sum(<a>)`                             |
-| `str`, `int`, `float`        | basic    | x    | `{x} as text` / `as whole number` / `as decimal`   | `str(<x>)` / `int(<x>)` / `float(<x>)` |
-| `random_int`                 | basic    | a, b | `random whole number from {a} to {b}`              | `random.randint(<a>, <b>)`             |
+| `len`                        | list     | a    | `len({a})`                                         | `len(<a>)`                             |
+| `abs`                        | basic    | x    | `abs({x})`                                         | `abs(<x>)`                             |
+| `min`, `max`                 | basic    | a, b | `min({a}, {b})` / `max({a}, {b})`                  | `min(<a>, <b>)` / `max(<a>, <b>)`      |
+| `sum`                        | list     | a    | `sum({a})`                                         | `sum(<a>)`                             |
+| `str`, `int`, `float`        | basic    | x    | `str({x})` / `int({x})` / `float({x})`             | `str(<x>)` / `int(<x>)` / `float(<x>)` |
+| `random_int`                 | basic    | a, b | `randint({a}, {b})`                                | `random.randint(<a>, <b>)`             |
 
 `random_int` adds `import random` (`emitter.md`).
 
 ## Methods (`key = "method:<name>"`)
 
-| name     | on   | shape | args       | en template                               | Python                       |
+| name     | on   | shape | args       | notation                                  | Python                       |
 | -------- | ---- | ----- | ---------- | ----------------------------------------- | ---------------------------- |
-| `append` | list | stmt  | x          | `append {x} to {a}`                       | `<a>.append(<x>)`            |
-| `insert` | list | stmt  | i, x       | `insert {x} at {i} in {a}`                | `<a>.insert(<i>, <x>)`       |
-| `pop`    | list | expr  | i?         | `take the last item of {a}` / `take item {i} of {a}` | `<a>.pop()` / `<a>.pop(<i>)` |
-| `copy`   | list | expr  |            | `copy of {a}`                             | `<a>.copy()`                 |
-| `sort`   | list | stmt  |            | `sort {a} ascending`                      | `<a>.sort()`                 |
-| `get`    | dict | expr  | k, default | `{d} at {k} or {default}`                 | `<d>.get(<k>, <default>)`    |
-| `keys`   | dict | expr  |            | `keys of {d}`                             | `list(<d>.keys())`           |
+| `append` | list | stmt  | x          | `{a}.append({x})`                         | `<a>.append(<x>)`            |
+| `insert` | list | stmt  | i, x       | `{a}.insert({i}, {x})`                    | `<a>.insert(<i>, <x>)`       |
+| `pop`    | list | expr  | i?         | `{a}.pop()` / `{a}.pop({i})`              | `<a>.pop()` / `<a>.pop(<i>)` |
+| `copy`   | list | expr  |            | `{a}.copy()`                              | `<a>.copy()`                 |
+| `sort`   | list | stmt  |            | `{a}.sort()`                              | `<a>.sort()`                 |
+| `get`    | dict | expr  | k, default | `{d}.get({k}, {default})`                 | `<d>.get(<k>, <default>)`    |
+| `keys`   | dict | expr  |            | `{d}.keys()`                              | `list(<d>.keys())`           |
 
 Method statements (`append`, `insert`, `sort`) are `expr` statements
 wrapping a `method` expression; the block menu lists them as statements.
@@ -197,38 +196,55 @@ Calls).
 
 ## Node text
 
-The chart renders every node and every expression from
-`node.<key>.template<form>` (Catalog keys) where `form` is
-`form(node, { creates })` (`""` for the base template; `assign` → `Create`
-when the statement creates its variable, `bool` → `False`, `unop` → `Not`,
-`binop` → `Mod`, `FloorDiv`, `Pow`, `In` for `%`, `//`, `**`, `in`).
+The chart, the value line, the block menu, the explanation line, and the
+narration write a node and an expression from its block's `notation(node)`
+(the tables above), with `{slot}` placeholders; a notation is the same in
+every locale. A node is read again at every step of a run, in whichever
+language the learner reads; the words a learner needs to choose
+and understand a block are its label and help, the value list, the
+explanation line, and the narration, in the learner's language
+(`pages.md`, Catalogs).
 
-It renders a `text` slot with `text(node, slot)` (`num` → `raw`; `binop`
-`op` → `−` `×` `÷` `=` `≠` `≤` `≥` for `-` `*` `/` `==` `!=` `<=` `>=`),
-defaulting to the slot's string value; the hidden `empty` block has the
-three catalog keys and its template is the placeholder text of an empty
-input (`editor.md`, Value line).
+A `text` slot is written with `text(node, slot)` (`num` → `raw`; `binop`
+`op` → `−` `×` `÷` `=` `≠` `≤` `≥` for `-` `*` `/` `==` `!=` `<=` `>=`, and
+`%`, `//`, `**`, `and`, `or`, `in` as Python writes them), defaulting to
+the slot's string value. The hidden `empty` block's notation is `…`, drawn
+as the placeholder of an empty input (`editor.md`, Value line).
 
-Only `+ − × ÷ ( ) = ≠ < ≤ > ≥` are written as symbols; every other
-operation is written in words. An expression whose template for its form
-has words outside its placeholders is a word operation: as an operand of an
-operator it is put in brackets, and an operator or a word operation inside
-a word operation's input is put in brackets
-(`(remainder of i divided by 15) = 0`, `item (i + 1) of nums`); an operator
-is an expression with a precedence whose template has no words outside its
-placeholders, and operators among themselves are parenthesised as the
-emitter does (`emitter.md`). The chart keeps to the symbols a learner knows
-from school and leaves Python's notation to its tab; `=` only compares,
-since setting a variable is always `Set … to`. A word operation beside a
-symbol or inside another is ambiguous without its brackets
-(`remainder of i + 1 divided by 3`).
+Every expression is an operator between or before its inputs (`i % 15`,
+`not done`), a call (`len(nums)`, `f(x)`), an item, a key, or a field
+(`nums[i]`, `d["a"]`, `node.next`), or a value; none is written in the
+learner's language, so no rule of the chart or the editor reads a
+translated word. The words of a notation (`and`, `not`, `len`, `print`) are
+Python's, the same in every locale.
+
+Operators are parenthesised as the emitter does (`emitter.md`). Comparison
+and arithmetic keep the symbols a learner knows from school (`=`, `≠`, `≤`,
+`×`, `÷`); an operation school has no symbol for is written with Python's
+(`%`, `//`, `**`) and named in words in the value list. An operation in
+words was rejected: it needs brackets of its own
+(`(remainder of i divided by 15) = 0`), carries one language's word order
+into every translation, and is a second notation the learner leaves for
+Python.
+
+A variable gets a value with `←` (`total ← 0`), the first time and every
+time after: no adult reads the arrow as an equation, and `=` keeps its
+school meaning, to compare. A first assignment has no form of its own, as
+Python has none: a separate `create` form would draw one statement two ways.
+
+A builtin and a method are written as calls named as Python names them,
+a builtin without its module (`randint`); `print(…)`, `return`, `break`,
+`continue`, and `del` as Python writes them. `swap` is a call of its own
+(`swap(nums[j], nums[j + 1])`), which names the two items it exchanges and
+which the `Python` tab writes as their exchange. The `Python` tab writes
+Python (`emitter.md`), where `←` becomes `=`.
+
+A slot written twice in a notation (`swap`'s `{list}`) is a field at its
+first place and drawn as its value at the other.
 
 A variable is written as a bold word in the variable colour, on the chart
-and in the editor, never in a box, which would cut the sentence into
-pieces. A node's sentence is drawn with its
-first letter capitalised when it begins with a word of its template
-(`Set total to 0`) and as written when it begins with a slot
-(`i < n + 1?`); the block menu and the editor show the template as written.
+and in the editor, never in a box, which would cut the node into pieces. A
+node is drawn as its notation writes it, with no capital added.
 
 ## Chart shape
 
@@ -237,20 +253,25 @@ next statement in a loop, declares `chart` (`chart.md`, Shapes): `if`
 declares `{ branch: { cond: "cond", yes: "then", no: "else" } }`; `while`
 declares `{ check: { cond: "cond", body: "body" } }`, `cond` naming the
 slot of the condition its diamond asks; `for` and `foreach` declare
-`{ counted: "body" }`; `break` declares `{ jump: "exit" }` and `continue`
+`counted`, naming their body and the texts of their generated nodes; `break` declares `{ jump: "exit" }` and `continue`
 declares `{ jump: "next" }`: the edge of each leads where control goes, out
 of the innermost loop or into its next pass. The chart renders every other
-block as a box with its sentence; the interpreter and emitter are
+block as a box with its notation; the interpreter and emitter are
 unaffected by `chart`.
 
-A block that declares `counted` has three more keys, `node.<key>.init`,
-`node.<key>.check`, and `node.<key>.step`, the texts of the generated
-nodes:
+The texts of a counted loop's generated nodes, with `{slot}` placeholders:
 
-| key       | init                    | check                          | step                        |
-| --------- | ----------------------- | ------------------------------ | --------------------------- |
-| `for`     | `Set {var} to {start}`  | `{var} < {stop}?`              | `Set {var} to {var} + 1`    |
-| `foreach` | `Start at the first item of {list}` | `Is there an item left?` | `Set {var} to the next item` |
+| key       | init                    | check                     | step                 |
+| --------- | ----------------------- | ------------------------- | -------------------- |
+| `for`     | `{var} ← {start}`       | `{var} < {stop}?`         | `{var} ← {var} + 1`  |
+| `foreach` | `First item of {list}`  | `{list} has another item?` | `{var} ← next item` |
+
+The texts of `for` are notation, declared by the block and the same in
+every locale. Those of `foreach` hold words, as its steps have no
+expression to write (Python keeps the position hidden): they are its
+catalog keys `node.foreach.init`, `check`, and `step`, translated, the one
+node text in words. A counted loop's own notation names it in the block
+menu and the editor (`for`'s is its init).
 
 ## Menu entries
 
@@ -269,24 +290,24 @@ several groups (`binop` is `Add`, `Equals`, and `And`).
 | `none`            |            | None                    | values     |                      |        |       |
 | `list`            |            | Empty list              | values     |                      |        | `[`   |
 | `dict`            |            | Empty dict              | values     |                      |        |       |
-| `unop`            | `not`      | Not                     | conditions |                      |        | `not` |
-| `binop`           | `and`      | And                     | conditions | truefalse            |        | `and` |
-| `binop`           | `or`       | Or                      | conditions | truefalse            |        | `or`  |
-| `call:random_int` |            | Random whole number     | calculate  |                      |        |       |
+| `unop`            | `not`      | Not                     | conditions |                      | `not`  | `not` |
+| `binop`           | `and`      | And                     | conditions | truefalse            | `and`  | `and` |
+| `binop`           | `or`       | Or                      | conditions | truefalse            | `or`   | `or`  |
+| `call:random_int` |            | Random whole number     | calculate  |                      |        | `randint` |
 | `binop`           | `add`      | Add                     | calculate  | number, text         | `+`    | `+`   |
 | `binop`           | `sub`      | Subtract                | calculate  | number               | `−`    | `-`   |
 | `binop`           | `mul`      | Multiply                | calculate  | number               | `×`    | `*`   |
 | `binop`           | `div`      | Divide                  | calculate  | number               | `÷`    | `/`   |
-| `binop`           | `mod`      | Remainder               | calculate  | number               |        | `%`   |
-| `binop`           | `floorDiv` | Whole-number quotient   | calculate  | number               |        | `//`  |
-| `binop`           | `pow`      | Power                   | calculate  | number               |        | `**`  |
-| `call:abs`        |            | Absolute value          | calculate  | number               |        |       |
-| `call:max`        |            | Larger of two           | calculate  | number, text         |        |       |
-| `call:min`        |            | Smaller of two          | calculate  | number, text         |        |       |
+| `binop`           | `mod`      | Remainder               | calculate  | number               | `%`    | `%`   |
+| `binop`           | `floorDiv` | Whole-number quotient   | calculate  | number               | `//`   | `//`  |
+| `binop`           | `pow`      | Power                   | calculate  | number               | `**`   | `**`  |
+| `call:abs`        |            | Absolute value          | calculate  | number               |        | `abs` |
+| `call:max`        |            | Larger of two           | calculate  | number, text         |        | `max` |
+| `call:min`        |            | Smaller of two          | calculate  | number, text         |        | `min` |
 | `index`           |            | Item at a position      | items      | list                 |        |       |
 | `method:pop`      |            | Take the last item      | items      | list                 |        |       |
-| `call:len`        |            | Count                   | items      | list, text, dict     |        |       |
-| `call:sum`        |            | Sum                     | items      | list                 |        |       |
+| `call:len`        |            | Count                   | items      | list, text, dict     |        | `len` |
+| `call:sum`        |            | Sum                     | items      | list                 |        | `sum` |
 | `method:copy`     |            | Copy                    | items      | list                 |        |       |
 | `binop`           | `join`     | Join with another list  | items      | list                 | `+`    |       |
 | `key`             |            | Value at a key          | items      | dict                 |        |       |
@@ -297,10 +318,10 @@ several groups (`binop` is `Add`, `Equals`, and `And`).
 | `binop`           | `le`       | At most                 | compare    | number, text         | `≤`    | `<=`  |
 | `binop`           | `gt`       | Greater than            | compare    | number, text         | `>`    | `>`   |
 | `binop`           | `ge`       | At least                | compare    | number, text         | `≥`    | `>=`  |
-| `binop`           | `in`       | Is in a list            | compare    | any                  |        | `in`  |
-| `call:str`        |            | As text                 | convert    | any                  |        |       |
-| `call:int`        |            | As whole number         | convert    | number, text         |        |       |
-| `call:float`      |            | As decimal              | convert    | number, text         |        |       |
+| `binop`           | `in`       | Is in a list            | compare    | any                  | `in`   | `in`  |
+| `call:str`        |            | As text                 | convert    | any                  |        | `str` |
+| `call:int`        |            | As whole number         | convert    | number, text         |        | `int` |
+| `call:float`      |            | As decimal              | convert    | number, text         |        | `float` |
 
 `binop` entries preset `op`; `bool` entries preset `value`.
 
@@ -324,7 +345,7 @@ that apply, while no kind lists every entry.
 
 ## Verification
 
-Each block has a test asserting its exact Python text (Statements and the
-tables after it), one asserting its event sequence and result, one per rule
+Each block has a test asserting its exact notation and its exact Python
+text (Statements and the tables after it), one asserting its event sequence and result, one per rule
 filed under it in the Semantics of `language.md`, and, where it can fail,
 one error case.

@@ -12,8 +12,10 @@ The block menu lists the registered statement blocks (blocks of
 search over `label` and `help`, grouped in the category order of `nodes.md`,
 The block definition (`Basic`, `Control`, `List`, `Function`, `Dict`,
 `Class`), each category in a fixed order that puts `assign`, `print`, `if`,
-`for`, and `while` first in theirs; an entry reads as the block's template
-with every slot as `…` (`set … to …`, `print …`); a block whose `requires`
+`for`, and `while` first in theirs; an entry reads as the block's label
+followed by its notation with every slot as `…` (`Set variable  … ← …`,
+`Print  print(…)`, `For loop  … ← …`, `For each loop  for … in …`);
+a block whose `requires`
 the connector does not meet is listed disabled with the reason
 (`menu.requires.loop`, `menu.requires.function`). The `Function` category
 ends with `New function…`, which prompts for a name, creates the function,
@@ -55,15 +57,15 @@ From top to bottom the editor holds the node's name field (Node names),
 with `Duplicate` and `Delete` as icon buttons beside it and, when the node
 calls a function or constructs a class, `Open <name>`, which shows that
 function's or class's chart (`chart.md`, Charts and the path bar) or, for a module's, opens its
-Module page (`modules.md`, Operations); the block's sentence with its slots
-editable in place: `id` and `target` slots as name fields (Name fields),
+Module page (`modules.md`, Operations); the block's notation with its slots
+editable in place (a `for`'s init and check, `i ← 1` and `i < n + 1?`): `id` and `target` slots as name fields (Name fields),
 `expr` slots as value lines (Value line), an optional `expr` slot left
 empty as `+ value` (`editor.addValue`), which adds its value line, `exprs`
 slots as value lines separated by commas, each with a remove button
 (`editor.removeValue`), followed by `+ value`, which adds one, `body` slots
 not shown; the list of the focused slot (Value list, Name fields); and the
 explanation line (Explanation line). A separator divides each of the name
-field, the sentence, and the list from the next. The slot clicked on the
+field, the notation, and the list from the next. The slot clicked on the
 node, or a first slot still to fill, takes the keyboard when the editor
 opens; otherwise the keyboard stays with the chart, so Delete removes the
 node (`chart.md`, Editing on the chart). An edit applies at once; Esc or a
@@ -72,11 +74,10 @@ press outside the editor closes it.
 The editor is placed by its node without a control on the node: nothing
 there takes the keyboard or announces a popup.
 
-A field of the editor's sentence is named, for assistive technology, by the
-template's words just before it, else by the block's label: `set` names the
-variable of `set … to …` and `to` its value. A slot's own name (`target`,
-`args`) is an identifier of the code, in no catalog, while the template's
-words are what a learner reads before the field.
+A field of the editor's notation is named, for assistive technology, by
+the block's label and the slot's name (`node.<key>.slot.<slot>`, `nodes.md`,
+Catalog keys): `Set variable, value`. The symbols before a field (`←`,
+`print(`) name nothing a screen reader can say.
 
 A loop's editor edits the variable and the bounds (`for`), the list
 (`foreach`), or the condition (`while`); the generated nodes (`chart.md`,
@@ -86,8 +87,7 @@ Shapes) follow.
 
 A value line edits one expression, written as the chart writes it
 (`nodes.md`, Node text): variables as bold words in the variable colour, an
-operator as its symbol, a word operation on a light underlay over its
-extent, and an input still to fill as an empty field. A chip editor was
+operator as its symbol, and an input still to fill as an empty field. A chip editor was
 rejected: it nests a box per operation, so a value of three operations is
 three levels of boxes, where a line reads left to right as the chart writes
 it.
@@ -135,7 +135,7 @@ line edits the program at each key, so its undo is the program's. AltGr is
 how several keyboard layouts type `[` and `{`.
 
 An empty required input is an empty field in the value line and a dashed
-`choose a value` on the node, at any depth of the value; clicking it on the
+`…` on the node, at any depth of the value; clicking it on the
 node opens the editor focused on it. An empty name slot is drawn with the
 same placeholder; an `exprs` slot with no item draws nothing unless it is
 required; a diamond whose condition is empty shows the placeholder without
@@ -173,16 +173,15 @@ value, not by block category; `Combine`, `Other`, `Totals`, `Order`, and
 the list to two block kinds (`nodes.md`, The block definition).
 
 An entry chosen after a value takes that value as its first input: an
-entry whose block has a precedence (an operator, and `Remainder`,
-`Whole-number quotient`, `Power`, `Is in a list`) stands between the value
+entry whose block has a precedence (an operator) stands between the value
 before the caret and the next one, and binds by the precedence of
 `emitter.md` within the innermost brackets; any other entry takes the
 expression before the caret whose kind chose the list, so `i < n` followed
-by `As text` gives `(i < n) as text`. An entry chosen where a value is
+by `As text` gives `str(i < n)`. An entry chosen where a value is
 expected fills that input. The inputs a choice leaves appear as fields in
 the line and the caret moves to the first of them; Tab and Shift+Tab move
 between the fields of the line and, past its last or first field, to the
-next or previous slot of the sentence, and → at the end of an operation's
+next or previous slot of the notation, and → at the end of an operation's
 last input leaves the operation; while no word is typed, ← and → move the
 caret to the previous or next value or input, and brackets left behind
 close; a click on a value puts the caret after it, and on an input at it. A
@@ -204,8 +203,9 @@ new `for`, which a caret after it would extend (`01`).
 ## Backspace and keys
 
 Backspace removes what is before the caret: the last digit of a number, a
-value, or an operator; on the words of an operation it removes the
-operation and keeps its first input in its place; at an operation's first
+value, or an operator; on an operator, the name of a call, or the brackets
+or dot of an item, a key, or a field it removes the operation and keeps its
+first input in its place; at an operation's first
 input still to fill while a later input holds a value, it removes nothing
 and moves the caret left; at a later input still to fill, it removes the
 operation and keeps its first input when no input after the first holds a
@@ -229,8 +229,8 @@ its keys (`keys`, `nodes.md`, Menu entries):
 | `(`                     | a pair of brackets, the caret inside them         |
 | `[` `,`                 | a list's pair of brackets; `,` between its items  |
 | `,` in an `exprs` slot  | the next value of the slot (Node editor)         |
-| `%` `//` `**`           | Remainder, Whole-number quotient, Power          |
-| `and` `or` `not` `in`   | And, Or, Not, Is in a list                       |
+| `%` `//` `**`           | as typed                                         |
+| `and` `or` `not` `in`   | as typed                                         |
 
 A single `=` inserts nothing; a comparison typed after a comparison is
 refused and the explanation line shows the message of `E_PARSE_CHAIN`. At an
@@ -239,7 +239,7 @@ nothing, `-` aside; `(` opens brackets only there, and `)` closes the
 innermost open pair. `**` and `//`, typed as two keys, become one operator
 that binds by its own precedence: `2*3**2` multiplies 2 by 3 to the power of
 2. A single `=` is Python's assignment, so it is never read as a
-comparison; a word operation has a key where Python has one, so the
+comparison; every operator has a key where Python has one, so the
 `Python` tab later shows keys the learner has typed. Brackets are not
 stored, so none is ever left unclosed.
 
@@ -265,14 +265,14 @@ In a name field, choosing a name moves the keyboard to the next slot; ↑ and
 ↓ move the highlight; Enter chooses the highlighted name, else the name
 typed, and in a field not typed in keeps its name and moves to the next
 slot, or closes the editor after the last one. A name is set when chosen,
-not with every key, which would create `t`, `to`, and `tot` on the way to
-`total` and switch the chart between `Create` and `Set` at each one.
+not with every key, which would give `t`, `to`, and `tot` values on the way
+to `total`.
 
 A name field keeps only the characters a name may hold (`language.md`,
 Identifiers).
 
 In a `target` slot the name list also offers, for a list variable,
-`Item at a position` (`Set item … of <list> to …`), and for a dict and an
+`Item at a position` (`<list>[…] ← …`), and for a dict and an
 object variable the key and field forms likewise, as a target is far more
 often a variable than an item or a field.
 
@@ -282,10 +282,10 @@ Every statement may carry a name in the learner's own words (`language.md`,
 Statement names), typed in the editor's name field (`editor.name`,
 placeholder `editor.nameHint`: `optional`); the application never
 translates it and never asks for it. A named node shows its name alone, in
-place of its sentence or its question, unless a slot of it is still empty,
-when it shows its sentence with the placeholder; a named counted loop shows
+place of its notation or its question, unless a slot of it is still empty,
+when it shows its notation with the placeholder; a named counted loop shows
 its name on its check, its other generated nodes keeping their text;
-hovering a named node shows the sentence, and the `Python` tab writes the
+hovering a named node shows its notation, a named counted loop its check, and the `Python` tab writes the
 name as a comment above the statement (`emitter.md`). A condition written in
 symbols does not say what it is for, which a name in the learner's words
 does; a `comment` block was rejected, as it would draw Python's `#` on the
@@ -297,13 +297,14 @@ The explanation line at the foot of the editor explains what the list
 highlights or the caret is in: an entry's name and its help (`nodes.md`,
 Catalog keys), which ends with how to type it when keys insert it
 (`Type %.`); the brackets' label with `editor.bracketsHelp`; a variable's
-name with its kind and the statement that first sets it (`A number
-variable. It is first set in: Set i to 1.`, `editor.explain.variablePlain`
+name with its kind and the statement that first gives it a value (`A number
+variable. It first gets a value in: i ← 1.`, `editor.explain.variablePlain`
 when it has no kind), an input's kind (`editor.explain.input`), a parameter
 (`editor.explain.parameter`), or, for a name set nowhere yet, that choosing
-it creates it (`editor.explain.newVariable`); inside an operation's input,
-the operation's name and its template with every input as its value, an
-empty one as `…`, and the input the caret is in underlined (`item … of dp`,
+it makes a new variable that gets its value there
+(`editor.explain.newVariable`); inside an operation's input, the operation's
+name and its notation with every input as its value, an empty one as `…`,
+and the input the caret is in underlined (`dp[…]`,
 its `…` underlined); the message of a refused key (Backspace and keys); the
 closest name for a word that matches nothing (Value line), or
 `editor.nothingLike` when none is close; in a name field with nothing
