@@ -326,6 +326,28 @@ sentences, and gives the technical term in parentheses in `help` texts
 `params`, falls back from the current locale to `en`, and returns the key
 itself when no text exists.
 
+A change of language makes the part of the page below the header again,
+keyed by the locale, so every component and memo there is made in the new
+language. A reload was rejected: it shows a blank page and moves the
+keyboard focus off the switch. A re-render in place was rejected: every
+memo whose result holds text would have to list the language, while making
+the page again leaves a rule only for the few places text is kept beyond
+it (below).
+
+The header is rendered again in place on a change of language, so the
+switch keeps the keyboard focus.
+
+The header memoizes no text, a module-level cache of text (the value list's
+entries) is kept per locale, and a store holds keys and codes, not texts:
+these are what making the page again does not reach.
+
+A title the application gives a program (`playground.untitled`, or the
+problem's title that `Open in Playground` gives) is the learner's data and
+keeps the language it was given in.
+
+`<html lang>` is the current locale, so a screen reader reads a text in its
+language and the browser chooses fonts for it.
+
 ## Values on one line
 
 A value written on one line (an Input node, a case label, `Example`, the
@@ -341,6 +363,11 @@ Run, Wrong Answer, Accepted, Solution, the Python tab, Run inside a
 function, Playground, Modules, and Module, and one per view (`views.md`:
 the views chosen by value, the object graph, and the views a learner
 switches to), in each locale.
+
+The end-to-end suite switches the language on each page that holds the
+switch, then draws that page and each screen state above, and finds every
+text but a program's title the same as when it is loaded in the language
+chosen.
 
 A run of the screenshot suite that updates snapshots (`pnpm screenshots`
 passes `--update-snapshots`) writes the screenshots to `e2e/screenshots/`;
