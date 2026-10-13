@@ -33,10 +33,10 @@
   "hints": [
     { "en": "Use two **if** blocks, one for `b` and one for `c`." },
     {
-      "en": "Each **if** asks whether its value is greater than `biggest`, the largest so far: `b > biggest`."
+      "en": "Each **if** asks whether its value is greater than `biggest`, the largest so far: `b > biggest?`."
     },
     {
-      "en": "Before them, set `biggest` to `a`; on the **Yes** side of each, set `biggest` to that value."
+      "en": "Before them add `biggest ← a`, and on the **Yes** side of each `biggest ← b` or `biggest ← c`."
     }
   ],
   "takeaway": { "en": "Two **if** blocks replaced `biggest` whenever a larger value appeared." },
