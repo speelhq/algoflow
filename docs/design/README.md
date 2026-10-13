@@ -64,6 +64,10 @@ in the file.
   tab).
 - The grey sentences under the rows of `Run.png` and `Wrong.png` annotate
   the artboards and are not part of the screen.
+- Every artboard that shows a node, a value, or the narration writes the
+  notation the blocks had before `nodes.md`, Node text set it
+  (`Set i to 1`, `(remainder of i divided by 15) = 0?`, `n = 15`); the node
+  text is the spec's until the artboards are drawn again.
 - The artboards use a hand-drawn typeface to mark them as drafts; the
   application uses the typeface of `src/ui/theme.css`.
 

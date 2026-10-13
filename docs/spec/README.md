@@ -8,7 +8,7 @@ One folder per area, holding its specification files.
 | ------------- | ---------------- | --------------------------------------------------------------- |
 | `scope/`      | `scope.md`       | product scope, the learner, curriculum, acceptance              |
 | `language/`   | `language.md`    | AST types, data model, semantics, validation, edits, kinds      |
-| `nodes/`      | `nodes.md`       | every block: slots, Python output, sentence, chart, menu entries |
+| `nodes/`      | `nodes.md`       | every block: slots, Python output, notation, chart, menu entries |
 | `runtime/`    | `interpreter.md` | runner, events, runtime errors, driver, CPython check           |
 |               | `emitter.md`     | the Python emitter                                              |
 |               | `parser.md`      | the expression parser                                           |
@@ -74,7 +74,7 @@ a check already enforces. A changed statement's reason changes with it.
 | region          | an ordered list of statements inside a branch or loop, or at top level          |
 | slot            | one editable field of a block                                                   |
 | value line      | the one-line editor of an expression slot (`editor.md`, Value line)             |
-| word operation  | an expression written in words around its inputs (`nodes.md`, Node text)        |
+| notation        | a block's text on its node, the same in every locale (`nodes.md`, Node text)     |
 | connector       | the `+` insertion point on an edge                                              |
 | event           | one record produced by the interpreter (`interpreter.md`)                       |
 | step            | one call to `Runner.next()`; a visible step is one the driver stops on (`interpreter.md`, Steps and batches) |

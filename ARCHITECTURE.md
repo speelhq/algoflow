@@ -78,7 +78,7 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
 - `src/ui` — React. The chart is an SVG flowchart with computed layout
   (`src/ui/chart/layout.ts`); node text and narration are plain
   strings from `src/ui/chart/text.ts` and `src/ui/run/narrate.ts`, and
-  `text.ts` holds the one reading of a template; the node editor's state is
+  `text.ts` holds the one reading of a notation; the node editor's state is
   a session that changes only through pure steps
   (`src/ui/editor/session.ts`); variable views are chosen by value type only
   (`docs/spec/ui/views.md`), never by block or challenge.

@@ -71,14 +71,14 @@ no `version` or migration.
 ├─────────────────────┬────────────────────────────────────────────────┤
 │ Problem Result Py…  │ ▾ main                                         │
 │                     │                 ● Start                        │
-│ Case n=15 ▾ ✓ Submit│                 Input n = 15 ▾                 │
-│ Variables           │                 Set i to 1                     │
-│  n 15   i 3         │            ◇ i < n + 1? ──No──▶ ● End          │
+│ Case n ← 15 ▾ Submit│                 Input n ← 15 ▾                 │
+│ Variables           │                 i ← 1                          │
+│  n ← 15   i ← 3     │            ◇ i < n + 1? ──No──▶ ● End          │
 │ Output   Expected   │              Yes                               │
-│  1        1         │  ◇ (remainder of i divided by 15) = 0? ✗       │
+│  1        1         │            ◇ i % 15 = 0? ✗                     │
 │  2        2         │              No …                              │
 │           Fizz      ├────────────────────────────────────────────────┤
-│                     │ (remainder of 3 divided by 15) = 0? No         │
+│                     │ 3 % 15 = 0? No                                 │
 │                     │ ❚❚ |◀ ▶| ⤼ ▶▶ ━●━ 23 of 124  Slow Normal Fast ■│
 └─────────────────────┴────────────────────────────────────────────────┘
 ```
@@ -194,7 +194,7 @@ shown frame (`run.md`, Call stack) with one view each (`views.md`);
 `Output`, the lines printed so far; beside it `Expected`, when the case is
 one of the challenge's tests and expects `stdout`, the two aligned line by
 line with a blank cell where one side has no line; every expected variable
-as a row with its value, or a blank when the program never created it,
+as a row with its value, or a blank when the program never gave it a value,
 beside its expected value; and, when the run ends on such a case, that
 case's verdict (`challenges.md`, Judging) with the first output row that
 differs, or else the first variable row that differs, marked. While a run
@@ -262,6 +262,10 @@ A message writes its `op` parameter as the label of that block
 A number a message names (`run.endless`'s step limit) is written as the
 current locale writes numbers (`1,000,000`).
 
+A message, a help, and an explanation say that a variable gets or has a
+value, never that it is created: a variable has no form of its own for its
+first value (`nodes.md`, Node text).
+
 ## Catalogs
 
 All strings reside in `src/i18n/en.json` and `src/i18n/ja.json` under
@@ -308,18 +312,20 @@ passed to `t()` with a cast to `MessageKey` names no key: TypeScript does
 not check what it yields, and its pattern would match a whole namespace.
 
 A key left behind when a member leaves a family whose template literal
-remains, or a template form, a named menu entry, or a generated node's
-text leaves a registered block, is not reported, while a removed block's
-keys are. A family's members are a type, which the check does not read
-without the type checker; a block's forms are what `form()` returns, which
-no list declares; and naming a block's keys one by one would copy `nodes.md`,
-Catalog keys, into the check beside the code that builds them.
+remains, or a named menu entry, a slot's name, or a generated node's text
+leaves a registered block, is not reported, while a removed block's keys
+are. A family's members are a type, which the check does not read without
+the type checker, and naming a block's keys one by one would copy
+`nodes.md`, Catalog keys, into the check beside the code that builds them.
 
 `pnpm check` fails on a key that one locale holds and the other does not.
 
-The Japanese locale uses polite form and everyday vocabulary for block
-sentences, and gives the technical term in parentheses in `help` texts
-(e.g. the loanword for "loop" beside the everyday word).
+The Japanese locale writes a label, a menu entry, a button, and a
+`foreach`'s generated nodes in plain form or as a noun (`余り`, `値を入れる`),
+as a command is named, and help, explanations, messages, and the narration
+in polite form, as they are spoken to the learner; a help gives the
+technical term in parentheses (e.g. the loanword for "loop" beside the
+everyday word).
 
 `src/i18n/glossary.json` lists, for each term, the English term, the
 Japanese word the Japanese texts call it by, the technical word a `help`
@@ -378,9 +384,14 @@ language and the browser chooses fonts for it.
 
 A value written on one line (an Input node, a case label, `Example`, the
 narration, a `Result` row, `Variables`) is written as the blocks write it: a
-number as Python's `str()` writes it (`3`, `2.0`), `true`, `false`, `none`,
+number as Python's `str()` writes it (`3`, `2.0`), `True`, `False`, `None`,
 a text in quotes, a list `[1, "a"]`, and a dict `{"a": 1, 3: 2}`, its items
-written by the same rule and separated by `, `.
+written by the same rule and separated by `, `. A variable shown with its
+value or its view (`views.md`) in `Variables`, a `Result` row, a case label,
+the case menu, an Input node, or `Example` is written as an assignment
+writes it (`n ← 15`); the narration says it in a sentence (`run.md`,
+Narration). `Output` shows what `print` printed, as Python's `str()` writes
+it.
 
 ## Verification
 

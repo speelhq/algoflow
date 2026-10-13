@@ -93,14 +93,14 @@ which serves instructors, not learners.
 
 While running, the narration line, one line between the chart and the run
 bar, describes the last event in one sentence (`run.narrate.*`): `enter` →
-`Checking (remainder of i divided by 3) = 0` for a condition and the
-block's sentence otherwise; `read` → `Read item 2 of nums: 5`, or for
+`Checking i % 3 = 0` for a condition and
+`Running total ← total + i`, its notation, otherwise; `read` → `Read nums[2]: 5`, or for
 several items `Read 3 items of nums`; `compare` → the comparison as the
 chart writes it (`nodes.md`, Node text), every variable that holds a
 number, a text, a boolean, or none written as its value in the frame the
-event ran in, and its value (`3 < 10 is true`), or for a diamond's whole
+event ran in, and its value (`3 < 10 is True`), or for a diamond's whole
 condition its question and answer (below); `write` → `i is now 3`; `swap` →
-`Swapped items 1 and 2 of nums`; `loop` → `Pass 3: i is 3`, or without a
+`Swapped nums[1] and nums[2]`; `loop` → `Pass 3: i is 3`, or without a
 variable `Pass 3`; `print` → `Printed "Fizz"`; `call` → `Calling f(2)`;
 `return` → `f returned 4`, which is the sole narration of a module call
 (`interpreter.md`, Steps and batches); the end of the run →
@@ -111,18 +111,18 @@ the node it describes, and leave the view near an edge.
 
 The `compare` of a diamond's whole condition is narrated as the diamond's
 question and the label of the edge taken, the condition written as a
-comparison is written above (`(remainder of 3 divided by 15) = 0? No`,
+comparison is written above (`3 % 15 = 0? No`,
 `3 < 15 + 1? Yes`), except that a condition that is one variable keeps its
 name (`found? Yes`). `is false, so No` would say a third time what the mark
 and the edge show, with a word found nowhere on the chart; a lone variable
 keeps its name, as its value in its place would drop the question
-(`true? Yes`).
+(`True? Yes`).
 
 A named node is narrated by its statement, not its name.
 
 The narration names a location by the variable of the frame the event ran
-in that holds it: an item `item 2 of nums`, a field `next of node`, a
-dict's key `counts at "a"`; a list that no variable of that frame references
+in that holds it, written as the nodes write it: an item `nums[2]`, a field
+`node.next`, a dict's key `counts["a"]`; a list that no variable of that frame references
 is `a list` (`run.narrate.ref.*`).
 
 ## Errors

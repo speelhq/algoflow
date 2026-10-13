@@ -15,12 +15,13 @@ Add the block described in $ARGUMENTS.
    committed before any code.
 2. Read `src/nodes/registry.ts` and one existing block of the same shape.
 3. Create `src/nodes/<key>.ts` exporting the block's `NodeDef` with the fields
-   of `nodes.md`, The block definition, that the block needs. The emitted
-   Python equals the row's Python column exactly.
-4. Add `node.<key>.label`, `node.<key>.template`, `node.<key>.help` to
-   `src/i18n/en.json`, and to `ja.json` if that file exists (`nodes.md`,
-   Catalog keys); a named menu entry adds `node.<key>.<name>.label` and
-   `.help`.
+   of `nodes.md`, The block definition, that the block needs. Its `notation()`
+   equals the row's notation column, and the emitted Python equals the row's
+   Python column, exactly.
+4. Add `node.<key>.label`, `node.<key>.help`, and a `node.<key>.slot.<slot>`
+   per slot the editor shows to `src/i18n/en.json`, and to `ja.json` if that
+   file exists (`nodes.md`, Catalog keys); a named menu entry adds
+   `node.<key>.<name>.label` and `.help`.
 5. Register the block in `src/nodes/registry.ts`.
 6. Add the tests of `nodes.md`, Verification: the exact emitted Python text,
    the interpreter's event sequence and result, one test per Semantics rule
