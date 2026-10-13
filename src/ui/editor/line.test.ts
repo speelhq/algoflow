@@ -159,6 +159,9 @@ describe("typing", () => {
     expect(clicked.open).toHaveLength(1);
     expect(py(keys("+1", clicked))).toBe("i * (5 + 1)");
     expect(py(keys("twice(i)+1"))).toBe("twice(i) + 1");
+    expect(py(keys("abs(i)+1"))).toBe("abs(i) + 1");
+    expect(py(keys("str(n)"))).toBe("str(n)");
+    expect(py(keys("i abs"))).toBe("abs(i)");
     const random = raw("randint(");
     expect([py(random), random.open]).toEqual(["random.randint(..., ...)", []]);
     expect(py(keys("i)", random))).toBe("random.randint(i, ...)");
@@ -166,6 +169,28 @@ describe("typing", () => {
     expect(type(abs, ")", ctx).line.caret).toEqual({ after: abs.root.id });
     // Inside a call, a variable's ( opens nothing.
     expect(type(raw("randint(i"), "(", ctx).taken).toBe(false);
+  });
+
+  it("`)` closes a call begun inside brackets before the brackets", () => {
+    expect(py(keys("2*(abs(i)-1)"))).toBe("2 * (abs(i) - 1)");
+    expect(py(keys("(abs(i)+1)*2"))).toBe("(abs(i) + 1) * 2");
+    expect(py(keys("(min(i,n))*2"))).toBe("min(i, n) * 2");
+    expect(py(keys("abs((i+1)*2)"))).toBe("abs((i + 1) * 2)");
+  });
+
+  it("`,` in a call moves to its next input, and elsewhere to the slot's next value", () => {
+    expect(py(keys("randint(1,6)"))).toBe("random.randint(1, 6)");
+    expect(py(keys("min(i,n+1)"))).toBe("min(i, n + 1)");
+    expect(py(keys("twice(abs(i),"))).toBe("twice(abs(i))");
+    expect(type(raw("twice(1"), ",", ctx).taken).toBe(false);
+    expect(type(keys("max(i,n)"), ",", ctx).move).toBe("item");
+    expect(type(keys("1"), ",", ctx).move).toBe("item");
+    // A filled next input takes the caret at its end.
+    const filled = keys("min(i,n+1)");
+    const [first, second] = (filled.root as Extract<Expr, { kind: "call" }>).args;
+    const moved = type(clickAt(filled, first?.id ?? ""), ",", ctx).line;
+    const one = (second as Extract<Expr, { kind: "binop" }>).right;
+    expect(moved.caret).toEqual({ after: one.id });
   });
 
   it("Tab forgets the first key of a two-key operator", () => {
@@ -197,9 +222,18 @@ describe("typing", () => {
       "And",
     );
     const names = matches(raw("t"), ctx).map((row) =>
-      row.kind === "variable" ? row.name : row.kind,
+      row.kind === "variable" ? row.name : row.kind === "entry" ? row.entry.label : row.kind,
     );
-    expect(names).toEqual(["total", "entry", "entry", "function"]);
+    // Where a value is expected, the calls are offered too (`As text` is `str`).
+    expect(names).toEqual([
+      "total",
+      "Text",
+      "True",
+      "Larger of two",
+      "Smaller of two",
+      "As text",
+      "function",
+    ]);
     expect(exactRow(raw("i"), ctx)).toEqual({ kind: "variable", name: "i" });
     expect(matches(raw("i%"), ctx)).toEqual([]);
     expect(

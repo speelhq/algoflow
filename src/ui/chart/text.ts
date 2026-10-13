@@ -115,6 +115,12 @@ export function exprNotation(expr: Expr): string {
   return def.notation(expr);
 }
 
+/** Whether an expression is a call: its notation ends with its own bracket (`abs({x})`). */
+export function isCall(expr: Expr): boolean {
+  const last = templatePieces(exprNotation(expr)).at(-1);
+  return last !== undefined && "words" in last && last.words.endsWith(")");
+}
+
 const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
 
 /** Whether `child`, an input of `parent` on `side`, is put in brackets: as the emitter does. */

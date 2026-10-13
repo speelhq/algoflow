@@ -4,6 +4,7 @@ import type { Expr } from "@/lang/types";
 import { NODES, getNode, keyOf, type NodeDef } from "@/nodes/registry";
 import type { MenuEntry, MenuGroup } from "@/nodes/types";
 import { nodeText } from "@/i18n/t";
+import { isCall } from "@/ui/chart/text";
 
 export type Entry = {
   /** `<key>` or `<key>.<name>`. */
@@ -12,10 +13,17 @@ export type Entry = {
   menu: MenuEntry;
   label: string;
   help: string;
+  /** Its block is a call, typed where a value is expected as the chart writes it (`abs(x)`). */
+  call: boolean;
 };
 
 const base = (def: NodeDef, menu: MenuEntry) =>
   menu.name === "" ? def.key : `${def.key}.${menu.name}`;
+
+const made = (def: NodeDef, menu: MenuEntry): Expr => ({
+  ...(def.create() as Expr),
+  ...menu.preset,
+});
 
 let cached: Entry[] | undefined;
 
@@ -28,6 +36,7 @@ export function allEntries(): Entry[] {
       menu,
       label: nodeText(base(def, menu), "label"),
       help: nodeText(base(def, menu), "help"),
+      call: isCall(made(def, menu)),
     })),
   );
   return cached;
@@ -40,7 +49,7 @@ export function takesValue(entry: Entry): boolean {
 
 /** The entry's expression: its block's `create()` with the entry's preset. */
 export function makeEntry(entry: Entry): Expr {
-  return { ...(entry.def.create() as Expr), ...entry.menu.preset };
+  return made(entry.def, entry.menu);
 }
 
 /** The entry an expression was made from: its block's entry whose preset it holds. */
