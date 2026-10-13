@@ -32,8 +32,8 @@ test("hovering a flagged node shows its message, and the fix applies", async ({ 
   await expect(page.getByTestId("diagnostic-dot")).toHaveCount(1);
   await page.locator('[data-chart-node="dgn-prnt-001"]').hover();
   const card = page.getByTestId("diagnostic-card");
-  await expect(card).toContainText("Create total before the if or loop");
-  await card.getByRole("button", { name: "Create total before it" }).click();
+  await expect(card).toContainText("Give total a value before the if or loop");
+  await card.getByRole("button", { name: "Give total a value before it" }).click();
   await expect(page.getByTestId("diagnostic-dot")).toHaveCount(0);
   await expect(page.getByTestId("chart")).toContainText("total ← None");
 });
