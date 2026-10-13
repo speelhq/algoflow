@@ -75,6 +75,6 @@ if (!plansPassed) failed += 1;
 const repository = repoFiles(root);
 const i18n = checkI18n({ root, files: repository, i18nDir: join(root, "src", "i18n") });
 for (const line of formatReport(i18n)) console.log(line);
-const i18nFailed = i18n.unknown.length + i18n.missing.length > 0;
+const i18nFailed = i18n.unknown.length + i18n.unused.length + i18n.missing.length > 0;
 
 process.exit(failed > 0 || i18nFailed ? 1 : 0);
