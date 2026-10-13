@@ -206,9 +206,12 @@ export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
   });
 }
 
+/** What separates items, arguments, and parameters, as Python separates them, in every locale. */
+export const SEPARATOR = ", ";
+
 function listParts(items: Expr[], write: (item: Expr) => Part[]): Part[] {
   return items.flatMap((item, i) =>
-    i === 0 ? write(item) : [{ text: t("chart.listSeparator") }, ...write(item)],
+    i === 0 ? write(item) : [{ text: SEPARATOR }, ...write(item)],
   );
 }
 

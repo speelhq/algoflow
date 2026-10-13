@@ -355,7 +355,6 @@
   "chart": {
     "start": "Start",
     "startFn": "Start {name}({params})",
-    "listSeparator": ", ",
     "end": "End",
     "input": "Input {name} = {value}",
     "condition": "{cond}?",
