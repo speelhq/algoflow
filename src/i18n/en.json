@@ -1,0 +1,548 @@
+{
+  "app": {
+    "name": "AlgoFlow",
+    "title": "{title} — AlgoFlow",
+    "desktopOnly": "AlgoFlow needs a window at least 1280 px wide. Please open it in a desktop browser.",
+    "nav": {
+      "label": "Pages",
+      "problems": "Problems",
+      "playground": "Playground"
+    },
+    "help": {
+      "open": "Help",
+      "glyph": "?",
+      "title": "Help",
+      "close": "Close",
+      "loop": {
+        "build": "Build: add blocks to the chart under Start.",
+        "run": "Run: watch the chart work on one input, step by step, and compare its output with the expected one.",
+        "submit": "Submit: check every case; fix the chart until all of them pass."
+      },
+      "keysTitle": "Keyboard",
+      "keysColumn": "Keys",
+      "actionColumn": "Action",
+      "keys": {
+        "delete": {
+          "keys": "Delete, Backspace",
+          "action": "Remove the selected block, unless typing in the editor"
+        },
+        "undo": { "keys": "Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z", "action": "Undo, redo" },
+        "duplicate": { "keys": "Ctrl/Cmd+D", "action": "Duplicate the selected block" },
+        "run": { "keys": "Ctrl/Cmd+Enter", "action": "Run, Pause, Play, Replay" },
+        "step": { "keys": "→, ←", "action": "Step, Back (while running)" },
+        "skip": { "keys": "Ctrl/Cmd+→", "action": "Skip (while running)" },
+        "escape": {
+          "keys": "Esc",
+          "action": "Close a menu or editor and clear the selection; while running, clear the breakpoint, else Stop"
+        },
+        "tab": {
+          "keys": "Tab, Shift+Tab",
+          "action": "Next or previous input of a value, then the next or previous slot"
+        },
+        "highlight": { "keys": "↑, ↓", "action": "Move the highlight in the editor's list" },
+        "caret": { "keys": "←, →", "action": "Previous or next value or input of a value" },
+        "enter": {
+          "keys": "Enter",
+          "action": "Choose the highlighted entry; in a name field not typed in, go to the next slot; else close the editor"
+        }
+      }
+    }
+  },
+  "problems": {
+    "title": "Problems",
+    "solved": "{n} of {m} solved",
+    "start": "Start",
+    "continue": "Continue: {title} ▶",
+    "mark": {
+      "solved": "✓",
+      "attempted": "•"
+    },
+    "status": {
+      "solved": "Solved",
+      "attempted": "Attempted",
+      "untouched": "Not started"
+    },
+    "difficulty": {
+      "easy": "Easy",
+      "medium": "Medium",
+      "hard": "Hard"
+    },
+    "topic": {
+      "output": "Output",
+      "variables": "Variables",
+      "loops": "Loops",
+      "conditions": "Conditions",
+      "lists": "Lists",
+      "searching": "Searching",
+      "sorting": "Sorting",
+      "recursion": "Recursion",
+      "dictionaries": "Dictionaries",
+      "classes": "Classes"
+    }
+  },
+  "problem": {
+    "back": "← Problems",
+    "submit": "✓ Submit",
+    "more": "More",
+    "moreGlyph": "⋯",
+    "help": "Help",
+    "openInPlayground": "Open in Playground",
+    "undo": "Undo",
+    "redo": "Redo",
+    "undoGlyph": "↶",
+    "redoGlyph": "↷",
+    "assignment": "{name} = {value}",
+    "caseSeparator": " · ",
+    "tabs": {
+      "problem": "Problem",
+      "result": "Result",
+      "python": "Python"
+    },
+    "panel": {
+      "label": "Panel",
+      "collapse": "Collapse the panel",
+      "expand": "Expand the panel",
+      "resize": "Resize the panel",
+      "collapseGlyph": "«",
+      "expandGlyph": "»"
+    },
+    "example": "Example",
+    "exampleOutput": "Output",
+    "exampleVariables": "Variables",
+    "fold": "… {n} more",
+    "cases": "Cases used by Submit",
+    "hints": "Hints",
+    "hintsShown": "{n} of {m} shown",
+    "showHint": "Show next hint",
+    "solution": "Solution",
+    "showSolution": "Show solution",
+    "solutionShown": "shown in the chart"
+  },
+  "python": {
+    "copy": "Copy",
+    "download": "Download .py",
+    "code": "Python code"
+  },
+  "result": {
+    "empty": "Run to see the values",
+    "case": "Case",
+    "variables": "Variables",
+    "output": "Output",
+    "expected": "Expected",
+    "casePassed": "✓ This case passes",
+    "caseFailed": "✗ This case does not pass",
+    "submitting": "Checking every case…",
+    "accepted": "Accepted",
+    "wrong": "Wrong Answer",
+    "passedCount": "{k} of {n} cases passed",
+    "watch": "▶ Watch this case",
+    "stepsLoops": "Steps {steps} · Loops {loops} (first case)",
+    "whatYouUsed": "What you used",
+    "seePython": "See your program as Python",
+    "compare": "Compare with the solution",
+    "nextProblem": "Next problem →",
+    "planComplete": "Plan complete",
+    "backToProblems": "Back to Problems",
+    "chipPass": "✓ {case}",
+    "chipFail": "✗ {case}"
+  },
+  "playground": {
+    "title": "Playground",
+    "description": "Programs of your own: no problem, no inputs, no Submit. The last one you edited comes first.",
+    "new": "New",
+    "import": "Import…",
+    "importFailed": "This file is not an AlgoFlow program, so nothing was added.",
+    "empty": "No programs yet. New opens an empty one.",
+    "untitled": "Untitled",
+    "delete": "Delete",
+    "deleteTitle": "Delete “{title}”?",
+    "deleteText": "The program is removed from this browser. This cannot be undone.",
+    "cancel": "Cancel",
+    "back": "← Playground",
+    "export": "Export",
+    "titleLabel": "Program title",
+    "rows": "Playground programs"
+  },
+  "node": {
+    "empty": {
+      "label": "Empty slot",
+      "template": "choose a value",
+      "help": "A slot that still needs a value."
+    },
+    "assign": {
+      "label": "Set variable",
+      "template": "set {target} to {value}",
+      "templateCreate": "create {target} and set it to {value}",
+      "help": "Creates a variable, or changes the value of one that exists."
+    },
+    "if": {
+      "label": "If",
+      "template": "if {cond}",
+      "help": "Runs the then region when the condition is true, otherwise the else region."
+    },
+    "for": {
+      "label": "For loop",
+      "template": "for {var} from {start} up to {stop}",
+      "init": "Set {var} to {start}",
+      "check": "{var} < {stop}?",
+      "step": "Set {var} to {var} + 1",
+      "help": "Counts the variable from start up to, but not including, stop."
+    },
+    "while": {
+      "label": "While loop",
+      "template": "while {cond}",
+      "help": "Repeats the body as long as the condition stays true."
+    },
+    "break": {
+      "label": "Break",
+      "template": "stop the loop",
+      "help": "Leaves the innermost loop at once."
+    },
+    "continue": {
+      "label": "Continue",
+      "template": "skip to next iteration",
+      "help": "Skips the rest of the body and starts the next iteration."
+    },
+    "print": {
+      "label": "Print",
+      "template": "print {args}",
+      "help": "Writes the values to the Output tab, separated by spaces."
+    },
+    "return": {
+      "label": "Return",
+      "template": "return {value}",
+      "help": "Leaves the function and hands back the value."
+    },
+    "expr": {
+      "label": "Expression",
+      "template": "{expr}",
+      "help": "Evaluates an expression for its effect, such as a method call."
+    },
+    "num": {
+      "label": "Number",
+      "template": "{value}",
+      "help": "A whole number or a decimal."
+    },
+    "str": {
+      "label": "Text",
+      "template": "\"{value}\"",
+      "help": "A piece of text, typed without quotes."
+    },
+    "bool": {
+      "label": "True / false",
+      "template": "true",
+      "templateFalse": "false",
+      "help": "A truth value.",
+      "true": { "label": "True", "help": "The value of a condition that holds." },
+      "false": { "label": "False", "help": "The value of a condition that does not hold." }
+    },
+    "none": {
+      "label": "None",
+      "template": "none",
+      "help": "The value that stands for nothing."
+    },
+    "var": {
+      "label": "Variable",
+      "template": "{name}",
+      "help": "The current value of a variable."
+    },
+    "binop": {
+      "label": "Operator",
+      "template": "{left} {op} {right}",
+      "templateMod": "remainder of {left} divided by {right}",
+      "templateFloorDiv": "whole-number quotient of {left} divided by {right}",
+      "templatePow": "{left} to the power of {right}",
+      "templateIn": "{left} is in {right}",
+      "help": "Combines two values with arithmetic, a comparison, and/or, or in.",
+      "and": {
+        "label": "And",
+        "help": "True when both sides are true. Example: i > 0 and i < 10 is true when i is 5. Type `and`."
+      },
+      "or": {
+        "label": "Or",
+        "help": "True when one side or both sides are true. Example: i = 3 or i = 5 is true when i is 3 and when i is 5. Type `or`."
+      },
+      "add": {
+        "label": "Add",
+        "help": "Adds two numbers, or joins two texts. Example: 2 + 3 is 5. Type `+`."
+      },
+      "sub": {
+        "label": "Subtract",
+        "help": "Takes the right number away from the left one. Example: 7 − 2 is 5. Type `-`."
+      },
+      "mul": {
+        "label": "Multiply",
+        "help": "Multiplies two numbers. Example: 4 × 3 is 12. Type `*`."
+      },
+      "div": {
+        "label": "Divide",
+        "help": "Divides the left number by the right one; the result is a decimal. Example: 7 ÷ 2 is 3.5. Type `/`."
+      },
+      "mod": {
+        "label": "Remainder",
+        "help": "What is left when the left number is divided by the right one. Example: the remainder of 7 divided by 3 is 1. Type `%`."
+      },
+      "floorDiv": {
+        "label": "Whole-number quotient",
+        "help": "How many whole times the right number fits into the left one. Example: the whole-number quotient of 7 divided by 3 is 2. Type `//`."
+      },
+      "pow": {
+        "label": "Power",
+        "help": "The left number multiplied by itself as many times as the right one says. Example: 2 to the power of 3 is 8. Type `**`."
+      },
+      "join": {
+        "label": "Join with another list",
+        "help": "A new list with the items of the left list followed by those of the right one. Example: [1, 2] + [3] is [1, 2, 3]."
+      },
+      "eq": {
+        "label": "Equals",
+        "help": "True when both sides are the same value. Example: 2 + 2 = 4 is true. Type `==`."
+      },
+      "ne": {
+        "label": "Does not equal",
+        "help": "True when the two sides are different values. Example: 3 ≠ 4 is true. Type `!=`."
+      },
+      "lt": {
+        "label": "Less than",
+        "help": "True when the left value is smaller than the right one. Example: 3 < 4 is true. Type `<`."
+      },
+      "le": {
+        "label": "At most",
+        "help": "True when the left value is smaller than the right one or equal to it. Example: 4 ≤ 4 is true. Type `<=`."
+      },
+      "gt": {
+        "label": "Greater than",
+        "help": "True when the left value is larger than the right one. Example: 5 > 4 is true. Type `>`."
+      },
+      "ge": {
+        "label": "At least",
+        "help": "True when the left value is larger than the right one or equal to it. Example: 4 ≥ 4 is true. Type `>=`."
+      },
+      "in": {
+        "label": "Is in a list",
+        "help": "True when the left value is an item of the list on the right, a key of the dict, or part of the text. Example: 2 is in [1, 2, 3] is true. Type `in`."
+      }
+    },
+    "unop": {
+      "label": "Negate",
+      "template": "−{operand}",
+      "templateNot": "not {operand}",
+      "help": "Flips the sign of a number or the truth of a value.",
+      "not": {
+        "label": "Not",
+        "help": "True when the value after it is false. Example: not (3 > 4) is true. Type `not`."
+      }
+    },
+    "call": {
+      "label": "Call function",
+      "template": "{fn}({args})",
+      "help": "Calls one of your functions with the given arguments."
+    },
+    "call:abs": {
+      "label": "Absolute value",
+      "template": "absolute value of {x}",
+      "help": "Drops the sign of a number."
+    },
+    "call:min": {
+      "label": "Smaller of two",
+      "template": "smaller of {a} and {b}",
+      "help": "Picks the smaller of two numbers or texts."
+    },
+    "call:max": {
+      "label": "Larger of two",
+      "template": "larger of {a} and {b}",
+      "help": "Picks the larger of two numbers or texts."
+    },
+    "call:str": {
+      "label": "As text",
+      "template": "{x} as text",
+      "help": "Turns any value into its text form."
+    },
+    "call:int": {
+      "label": "As whole number",
+      "template": "{x} as whole number",
+      "help": "Turns a decimal or numeric text into a whole number."
+    },
+    "call:float": {
+      "label": "As decimal",
+      "template": "{x} as decimal",
+      "help": "Turns a whole number or numeric text into a decimal."
+    },
+    "call:random_int": {
+      "label": "Random whole number",
+      "template": "random whole number from {a} to {b}",
+      "help": "A random whole number between the two bounds, both included."
+    }
+  },
+  "chart": {
+    "start": "Start",
+    "startFn": "Start {name}({params})",
+    "listSeparator": ", ",
+    "end": "End",
+    "input": "Input {name} = {value}",
+    "condition": "{cond}?",
+    "label": "Flowchart",
+    "yes": "Yes",
+    "no": "No",
+    "path": "Chart path",
+    "inputGlyph": "▾",
+    "zoomInGlyph": "+",
+    "zoomOutGlyph": "−",
+    "markYes": "✓",
+    "markNo": "✗",
+    "main": "main",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "zoomReset": "Zoom to 100 %",
+    "percent": "{n}%",
+    "solution": "Solution",
+    "readOnly": "read-only",
+    "backToMine": "Back to my chart",
+    "load": "Load into my chart",
+    "blank": "…",
+    "addFirst": "Add your first block",
+    "connector": "Add a block here",
+    "connectorGlyph": "+"
+  },
+  "menu": {
+    "label": "Blocks",
+    "search": "Search blocks",
+    "empty": "No block matches",
+    "program": "This program",
+    "category": {
+      "basic": "Basic",
+      "control": "Control",
+      "list": "List",
+      "function": "Function",
+      "dict": "Dict"
+    },
+    "requires": {
+      "loop": "only inside a loop",
+      "function": "only inside a function"
+    }
+  },
+  "editor": {
+    "label": "Edit block",
+    "noItems": "Nothing matches",
+    "textField": "Text",
+    "addValue": "+ value",
+    "removeValue": "Remove this value",
+    "removeGlyph": "×",
+    "duplicate": "Duplicate",
+    "delete": "Delete",
+    "fix": {
+      "hoistAssign": "Create {name} before it"
+    },
+    "name": "Name",
+    "nameHint": "optional",
+    "typeHint": "type or choose",
+    "showAll": "Show all",
+    "brackets": "Brackets",
+    "bracketsGlyph": "( )",
+    "bracketsHelp": "Groups what is inside, so it is worked out first. Type `(`.",
+    "ownFunction": "One of this program's functions. Choosing it calls it.",
+    "didYouMean": "Did you mean {name}?",
+    "nothingLike": "Nothing has this name. Check the spelling, or choose from the list.",
+    "thisProblem": "This problem",
+    "newVariable": "New variable",
+    "enterKey": "Enter",
+    "lists": {
+      "variables": "Variables",
+      "values": "Values",
+      "conditions": "Conditions",
+      "calculate": "Calculate",
+      "items": "Items",
+      "compare": "Compare",
+      "convert": "Convert",
+      "functions": "Your functions"
+    },
+    "kind": {
+      "number": "number",
+      "text": "text",
+      "truefalse": "true/false",
+      "none": "none",
+      "list": "list",
+      "dict": "dict"
+    },
+    "explain": {
+      "variable": "A {kind} variable. It is first set in: {statement}.",
+      "variablePlain": "A variable. It is first set in: {statement}.",
+      "input": "A {kind} input of the problem.",
+      "inputPlain": "An input of the problem.",
+      "parameter": "A parameter: the value a call hands to this function.",
+      "newVariable": "Creates the variable {name} here.",
+      "name": "The variable this block sets. Choose one below, or type a new name."
+    }
+  },
+  "run": {
+    "run": "▶ Run",
+    "replay": "↺ Replay",
+    "stop": "■ Stop",
+    "speeds": {
+      "slow": "Slow",
+      "normal": "Normal",
+      "fast": "Fast"
+    },
+    "back": "|◀ Back",
+    "play": "▶ Play",
+    "pause": "❚❚ Pause",
+    "step": "Step ▶|",
+    "skip": "Skip ▶▶",
+    "position": "step {k} of {n}",
+    "positionLabel": "Position",
+    "speed": "Speed",
+    "breakpoint": "breakpoint",
+    "endless": "This run never reached its end: it stopped after {limit} steps. A loop does not seem to end; check its condition.",
+    "narrate": {
+      "enter": "{sentence}",
+      "check": "Checking {condition}",
+      "read": "Read {what}: {value}",
+      "readMany": "Read {count} items of {name}",
+      "compareAnswer": "{condition}? {answer}",
+      "compareTrue": "{condition} is true",
+      "compareFalse": "{condition} is false",
+      "write": "{what} is now {value}",
+      "swap": "Swapped items {i} and {j} of {name}",
+      "loop": "Pass {pass}: {var} is {value}",
+      "loopPlain": "Pass {pass}",
+      "print": "Printed \"{text}\"",
+      "call": "Calling {fn}({args})",
+      "return": "{fn} returned {value}",
+      "done": "Finished in {steps} steps",
+      "difference": {
+        "line": "This printed line {line}",
+        "end": "The run ended here"
+      },
+      "ref": {
+        "index": "item {index} of {name}",
+        "key": "{name} at {key}",
+        "list": "a list",
+        "dict": "a dict"
+      }
+    }
+  },
+  "error": {
+    "E_UNDEFINED": "Variable {name} has not been created yet",
+    "E_DECLARE_FIRST": "Create {name} before the if or loop",
+    "E_BAD_NAME": "Names start with a lowercase letter or _ and use only lowercase letters, digits, and _; Python keywords are not allowed",
+    "E_DUPLICATE_NAME": "{name} is already in use",
+    "E_BREAK_OUTSIDE": "This block only works inside a loop",
+    "E_RETURN_OUTSIDE": "Return only works inside a function",
+    "E_ARITY": "{name} needs {expected} values (got {got})",
+    "E_UNKNOWN_CALL": "{name} was not found",
+    "E_EMPTY_SLOT": "{slot} is empty",
+    "E_DUPLICATE_ID": "Two blocks share the same id",
+    "E_PARSE_SYNTAX": "Syntax error at character {position}",
+    "E_PARSE_CHAIN": "Write a < b < c as a < b and b < c",
+    "E_INDEX": "Item {index} does not exist (length {length})",
+    "E_KEY": "Key {key} does not exist",
+    "E_TYPE": "{left} and {right} cannot be used in this operation",
+    "E_VALUE": "{op} cannot be used on {type}",
+    "E_NUMBER_TEXT": "{op} cannot read the text \"{text}\"",
+    "E_EMPTY_RANGE": "There is no whole number from {a} to {b}",
+    "E_DIV_ZERO": "Cannot divide by zero",
+    "E_POP_EMPTY": "The list is empty, nothing to pop",
+    "E_RECURSION": "Function calls are nested too deeply; check the stopping condition",
+    "E_STEP_LIMIT": "The loop does not seem to end; check its condition"
+  }
+}

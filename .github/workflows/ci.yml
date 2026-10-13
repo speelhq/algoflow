@@ -1,0 +1,88 @@
+# lint, format, test, check, build, test:e2e on every pull request and on
+# every push to main; on a pull request, beside them, the message of each of
+# its commits; main deploys dist/ to GitHub Pages.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to a pull request cancels the run of the one before. On main a run waits for the
+# one before, and of the runs waiting only the latest starts, so main's latest commit is always
+# checked and deployed.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Project Pages serve from /<repo>/; vite.config.ts and playwright.config.ts read this.
+  VITE_BASE: /${{ github.event.repository.name }}/
+
+jobs:
+  # Apart from verify, so that a message to reword never hides how the code fares.
+  commits:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      # The whole history, so that the commits of the pull request can be read.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm commits ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      # scripts/check.ts runs every solution under CPython as `python3`.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pnpm install --frozen-lockfile
+      # Lint type-checks too (`--type-check`); the build does not repeat it.
+      - run: pnpm lint
+      - run: pnpm format --check
+      - run: pnpm test
+      - run: pnpm check
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+      - if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,53 @@
+{
+  "env": {
+    "CLAUDE_CODE_SUBAGENT_MODEL": "opus"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/format.mjs\"",
+            "timeout": 30,
+            "statusMessage": "oxfmt"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/lint-before-commit.mjs\"",
+            "timeout": 300,
+            "statusMessage": "pnpm lint before commit"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm test*)",
+      "Bash(pnpm lint)",
+      "Bash(pnpm check*)",
+      "Bash(pnpm build)",
+      "Bash(pnpm exec oxfmt*)",
+      "Bash(pnpm commits*)",
+      "Bash(pnpm format*)",
+      "Bash(pnpm screenshots)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(gh issue list*)",
+      "Bash(gh issue view*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr view*)",
+      "Bash(gh pr checks*)"
+    ],
+    "ask": ["Bash(git push*)", "Bash(rm *)"]
+  }
+}

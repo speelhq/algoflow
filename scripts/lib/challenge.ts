@@ -1,0 +1,155 @@
+// Structural checks of a challenge file (used by scripts/check.ts).
+// The schema types live in src/challenges/types.ts.
+import { DIFFICULTIES, TOPICS, type Challenge, type Localized } from "@/challenges/types";
+import { dataError } from "@/lang/data";
+import { dataKind } from "@/lang/kinds";
+import { isInputDecl, migrate } from "@/lang/migrate";
+import { isRecord } from "@/lang/record";
+import type { Data, Kind } from "@/lang/types";
+import { isValidName, validate } from "@/lang/validate";
+import { isParseError, parseData } from "@/python/parse";
+
+export function isLocalized(value: unknown, requireJa: boolean): value is Localized {
+  if (!isRecord(value) || typeof value.en !== "string") return false;
+  if (requireJa && typeof value.ja !== "string") return false;
+  return value.ja === undefined || typeof value.ja === "string";
+}
+
+const isName = (value: unknown): value is string => typeof value === "string" && isValidName(value);
+
+function sameData(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/** The keys a challenge file may hold. */
+const KEYS: ReadonlySet<string> = new Set([
+  "id",
+  "title",
+  "difficulty",
+  "topics",
+  "description",
+  "inputs",
+  "tests",
+  "hints",
+  "takeaway",
+  "module",
+  "defines",
+  "solution",
+]);
+
+export type SchemaResult = { challenge: Challenge | null; problems: string[] };
+
+/** Validates one challenge file's JSON. `fileId` is the file name without `.json`. */
+export function checkChallengeSchema(
+  json: unknown,
+  fileId: string,
+  opts: { requireJa?: boolean } = {},
+): SchemaResult {
+  const problems: string[] = [];
+  const requireJa = opts.requireJa ?? false;
+  if (!isRecord(json)) return { challenge: null, problems: ["not an object"] };
+
+  if (json.id !== fileId)
+    problems.push(`id "${String(json.id)}" does not match the file name "${fileId}"`);
+  for (const key of Object.keys(json)) if (!KEYS.has(key)) problems.push(`unknown key "${key}"`);
+  if (!isLocalized(json.title, requireJa)) problems.push("title must be { en, ja? }");
+  if (!DIFFICULTIES.some((d) => d === json.difficulty))
+    problems.push(
+      `difficulty "${String(json.difficulty)}" is not one of ${DIFFICULTIES.join(", ")}`,
+    );
+  if (!Array.isArray(json.topics) || json.topics.length === 0)
+    problems.push("topics must be a non-empty array");
+  else
+    for (const topic of json.topics)
+      if (!TOPICS.some((t) => t === topic))
+        problems.push(`topic "${String(topic)}" is not one of ${TOPICS.join(", ")}`);
+  if (!isLocalized(json.description, requireJa)) problems.push("description must be { en, ja? }");
+  if (json.takeaway !== undefined && !isLocalized(json.takeaway, requireJa))
+    problems.push("takeaway must be { en, ja? }");
+  if (json.module !== undefined && !isName(json.module))
+    problems.push("module must be a valid name");
+  const defines: string[] = [];
+  // A class name is refused: no registered block constructs an object.
+  if (Array.isArray(json.defines) && json.defines.every(isName)) defines.push(...json.defines);
+  else if (json.defines !== undefined) problems.push("defines must be an array of function names");
+
+  const inputs = Array.isArray(json.inputs) ? json.inputs : [];
+  if (!Array.isArray(json.inputs)) problems.push("inputs must be an array");
+  /** Each declared input with its kind. */
+  const declared = new Map<string, Kind>();
+  inputs.forEach((input, i) => {
+    if (!isInputDecl(input)) {
+      problems.push(`inputs[${i}] must be { name, kind }`);
+      return;
+    }
+    if (!isValidName(input.name))
+      problems.push(`inputs[${i}] name "${input.name}" is not a valid name`);
+    if (declared.has(input.name)) problems.push(`inputs[${i}] name "${input.name}" is duplicated`);
+    declared.set(input.name, input.kind);
+  });
+
+  const tests = Array.isArray(json.tests) ? json.tests : [];
+  if (!Array.isArray(json.tests) || tests.length < 3)
+    problems.push("tests must be an array of at least 3");
+  /** Whether a value is canonical Data; a fault is reported at its path. */
+  const canonical = (value: unknown, at: string): boolean => {
+    const fault = dataError(value);
+    if (fault) problems.push(`${at}${fault.at}: ${fault.message}`);
+    return fault === undefined;
+  };
+  let edge = false;
+  tests.forEach((test, i) => {
+    if (!isRecord(test)) return problems.push(`tests[${i}] must be an object`);
+    if (test.edge !== undefined && typeof test.edge !== "boolean")
+      problems.push(`tests[${i}].edge must be a boolean`);
+    else if (test.edge === true) edge = true;
+    if (!isRecord(test.inputs)) problems.push(`tests[${i}].inputs must be an object`);
+    else {
+      for (const [name, kind] of declared) {
+        if (!Object.hasOwn(test.inputs, name))
+          problems.push(`tests[${i}].inputs is missing "${name}"`);
+        else if (!canonical(test.inputs[name], `tests[${i}].inputs.${name}`)) continue;
+        else if (dataKind(test.inputs[name] as Data) !== kind)
+          problems.push(`tests[${i}].inputs.${name} is not of the kind ${kind}`);
+        else if (isParseError(parseData(test.inputs[name] as Data)))
+          problems.push(`tests[${i}].inputs.${name} is a value no block writes`);
+      }
+      for (const name of Object.keys(test.inputs))
+        if (!declared.has(name)) problems.push(`tests[${i}].inputs has unknown input "${name}"`);
+    }
+    if (test.seed !== undefined && typeof test.seed !== "number")
+      problems.push(`tests[${i}].seed must be a number`);
+    if (
+      !isRecord(test.expect) ||
+      (!isRecord(test.expect.variables) && !Array.isArray(test.expect.stdout))
+    ) {
+      problems.push(`tests[${i}].expect needs variables and/or stdout`);
+    } else if (isRecord(test.expect.variables)) {
+      for (const [name, value] of Object.entries(test.expect.variables))
+        canonical(value, `tests[${i}].expect.variables.${name}`);
+    }
+  });
+  if (tests.length > 0 && !edge) problems.push("no test has edge: true");
+
+  const hints = Array.isArray(json.hints) ? json.hints : [];
+  if (!Array.isArray(json.hints) || hints.length !== 3) problems.push("hints must be exactly 3");
+  hints.forEach((hint, i) => {
+    if (!isLocalized(hint, requireJa)) problems.push(`hints[${i}] must be { en, ja? }`);
+  });
+
+  try {
+    const program = migrate(json.solution);
+    if (!sameData(program.inputs, inputs)) problems.push("solution.inputs must equal inputs");
+    if (program.challengeId !== undefined && program.challengeId !== fileId)
+      problems.push(`solution.challengeId must be "${fileId}"`);
+    for (const d of validate(program))
+      problems.push(`solution: ${d.code} at ${d.nodeId} ${JSON.stringify(d.params)}`);
+    const own = new Set(program.functions.map((def) => def.name));
+    for (const name of defines)
+      if (!own.has(name)) problems.push(`solution does not define "${name}"`);
+  } catch (error) {
+    problems.push(`solution: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  return { challenge: problems.length === 0 ? (json as unknown as Challenge) : null, problems };
+}

@@ -1,0 +1,78 @@
+{
+  "id": "countdown",
+  "title": { "en": "Countdown" },
+  "difficulty": "easy",
+  "topics": ["loops"],
+  "description": {
+    "en": "Print `n`, then `n - 1`, and so on down to `0`, one number per line. Use a **while** block."
+  },
+  "inputs": [{ "name": "n", "kind": "number" }],
+  "tests": [
+    {
+      "inputs": { "n": 5 },
+      "expect": { "stdout": ["5", "4", "3", "2", "1", "0"] }
+    },
+    { "inputs": { "n": 0 }, "edge": true, "expect": { "stdout": ["0"] } },
+    { "inputs": { "n": 2 }, "expect": { "stdout": ["2", "1", "0"] } }
+  ],
+  "hints": [
+    { "en": "Use a **while** block, which repeats its body as long as its condition holds." },
+    {
+      "en": "Count down with a variable you can change: set `k` to `n` before the loop, and loop **while** `k >= 0`."
+    },
+    { "en": "Inside the loop, print `k`, then set `k` to `k - 1`, or the loop never ends." }
+  ],
+  "takeaway": { "en": "A **while** loop kept going until its condition became false." },
+  "solution": {
+    "version": 1,
+    "title": "Countdown",
+    "challengeId": "countdown",
+    "inputs": [{ "name": "n", "kind": "number" }],
+    "classes": [],
+    "functions": [],
+    "main": [
+      {
+        "id": "cnt-init-001",
+        "kind": "assign",
+        "target": { "kind": "var", "name": "k" },
+        "value": { "id": "cnt-nvar-001", "kind": "var", "name": "n" }
+      },
+      {
+        "id": "cnt-loop-001",
+        "kind": "while",
+        "cond": {
+          "id": "cnt-ge00-001",
+          "kind": "binop",
+          "op": ">=",
+          "left": { "id": "cnt-kvar-001", "kind": "var", "name": "k" },
+          "right": { "id": "cnt-zero-001", "kind": "num", "value": 0, "float": false, "raw": "0" }
+        },
+        "body": [
+          {
+            "id": "cnt-prnt-001",
+            "kind": "print",
+            "args": [{ "id": "cnt-kvar-002", "kind": "var", "name": "k" }]
+          },
+          {
+            "id": "cnt-decr-001",
+            "kind": "assign",
+            "target": { "kind": "var", "name": "k" },
+            "value": {
+              "id": "cnt-mins-001",
+              "kind": "binop",
+              "op": "-",
+              "left": { "id": "cnt-kvar-003", "kind": "var", "name": "k" },
+              "right": {
+                "id": "cnt-one0-001",
+                "kind": "num",
+                "value": 1,
+                "float": false,
+                "raw": "1"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

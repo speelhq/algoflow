@@ -1,0 +1,130 @@
+import { describe, expect, it } from "vitest";
+import { ast, program, withInputs } from "@/nodes/testing";
+import { dataToPython, emit, unparse } from "./emit";
+import { EXPRESSION_FIXTURE } from "./fixtures/expressions";
+import { isParseError, NO_DEFINITIONS, parse } from "./parse";
+import { pyString } from "./strings";
+
+const { assign, print, if_, for_, while_, num, str, bin, v, call } = ast;
+
+const CR = String.fromCharCode(13);
+const SOH = String.fromCharCode(1);
+const DEL = String.fromCharCode(127);
+
+describe("emit (emitter.md)", () => {
+  it("1-based inclusive lines; a frame maps to its header; else: is unmapped", () => {
+    const inner = assign("x", num(1));
+    const frame = if_(bin("<", v("a"), v("b")), [inner], [assign("x", num(2))]);
+    const after = print(v("x"));
+    const { code, map } = emit(program([frame, after]), {});
+    expect(code).toBe("if a < b:\n    x = 1\nelse:\n    x = 2\nprint(x)\n");
+    expect(map[frame.id]).toEqual({ start: 1, end: 1 });
+    expect(map[inner.id]).toEqual({ start: 2, end: 2 });
+    expect(map[after.id]).toEqual({ start: 5, end: 5 });
+    expect(Object.values(map).some((m) => m.start === 3)).toBe(false);
+  });
+
+  it("sections separated by one blank line, two around functions", () => {
+    const prog = program([assign("d", call("random_int", num(1), num(6)))], {
+      inputs: [{ name: "n", kind: "number" }],
+      functions: [
+        {
+          id: "f0000000000f",
+          name: "twice",
+          params: ["x"],
+          body: [print(bin("*", v("x"), num(2)))],
+        },
+      ],
+    });
+    const { code, map } = emit(prog, { n: 3 });
+    expect(code).toBe(
+      [
+        "import random",
+        "",
+        "",
+        "def twice(x):",
+        "    print(x * 2)",
+        "",
+        "",
+        "n = 3",
+        "d = random.randint(1, 6)",
+        "",
+      ].join("\n"),
+    );
+    expect(map["f0000000000f"]).toEqual({ start: 4, end: 4 });
+  });
+
+  it("a named statement is preceded by its name as a comment, where its map entry starts", () => {
+    const inner = { ...print(v("i")), name: "Show it" };
+    const loop = { ...for_("i", num(0), num(3), [inner]), name: "Count to three" };
+    const { code, map } = emit(program([loop]), {});
+    expect(code).toBe("# Count to three\nfor i in range(3):\n    # Show it\n    print(i)\n");
+    expect(map[loop.id]).toEqual({ start: 1, end: 2 });
+    expect(map[inner.id]).toEqual({ start: 3, end: 4 });
+  });
+
+  it("inputs are emitted as assignments of their values, in declaration order", () => {
+    const made = withInputs(
+      {
+        nums: [5, 3, 1],
+        name: "Claude",
+        x: { $float: 2 },
+        d: { a: 1, "$int:2": [true, null] },
+      },
+      [],
+    );
+    const { code } = emit(made.program, made.inputs);
+    expect(() => emit(made.program, { nums: [1] })).toThrow(/no value for input name/);
+    expect(code).toBe(
+      'nums = [5, 3, 1]\nname = "Claude"\nx = 2.0\nd = {"a": 1, 2: [True, None]}\n',
+    );
+    expect(dataToPython(1.5)).toBe("1.5");
+    expect(dataToPython(1e-7)).toBe("1e-07");
+  });
+
+  it("an int input is its digits, a float input its repr", () => {
+    expect(dataToPython(2 ** 53 - 1)).toBe("9007199254740991");
+    expect(dataToPython(12)).toBe("12");
+    expect(dataToPython({ $float: 2 })).toBe("2.0");
+    expect(dataToPython({ "$int:-3": "a" })).toBe('{-3: "a"}');
+  });
+
+  it("4-space indentation, no trailing whitespace, one trailing newline", () => {
+    const { code } = emit(
+      program([for_("i", num(0), num(3), [while_(v("ok"), [print(v("i"))])])]),
+      {},
+    );
+    expect(code).toBe("for i in range(3):\n    while ok:\n        print(i)\n");
+    expect(code.endsWith("\n\n")).toBe(false);
+    expect(code.split("\n").some((line) => /\s$/.test(line))).toBe(false);
+  });
+
+  it("string escapes, including control characters CPython would reject raw", () => {
+    expect(pyString('a"b\\c\nd\te')).toBe('"a\\"b\\\\c\\nd\\te"');
+    expect(pyString(`a${CR}b${SOH}c${DEL}`)).toBe('"a\\rb\\x01c\\x7f"');
+    expect(unparse(str("plain"))).toBe('"plain"');
+    const roundTrip = parse(unparse(str(`a${CR}b${SOH}`)), NO_DEFINITIONS);
+    expect(!isParseError(roundTrip) && unparse(roundTrip)).toBe('"a\\rb\\x01"');
+  });
+
+  it("emits an empty program as an empty file and an empty main region under inputs", () => {
+    expect(emit(program([]), {}).code).toBe("\n");
+    const made = withInputs({ n: 1 }, []);
+    expect(emit(made.program, made.inputs).code).toBe("n = 1\n");
+  });
+});
+
+describe("200-expression fixture", () => {
+  it("has at least 200 cases", () => {
+    expect(EXPRESSION_FIXTURE.length).toBeGreaterThanOrEqual(200);
+  });
+
+  for (const entry of EXPRESSION_FIXTURE) {
+    const [input, expected] = typeof entry === "string" ? [entry, entry] : entry;
+    it(`${JSON.stringify(input)} → ${JSON.stringify(expected)}`, () => {
+      const expr = parse(input, NO_DEFINITIONS);
+      if (isParseError(expr)) throw new Error(`parse failed: ${JSON.stringify(expr)}`);
+      expect(unparse(expr)).toBe(expected);
+    });
+  }
+});

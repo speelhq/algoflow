@@ -1,0 +1,164 @@
+// The Program AST, run-time values, and diagnostics (docs/spec/language/language.md).
+// No third-party imports.
+
+export type NodeId = string; // 12 characters from the nanoid alphabet (id.ts)
+export type Id = string;
+
+// ---------------------------------------------------------------- Program
+
+export type Program = {
+  version: 1;
+  title: string;
+  challengeId?: string;
+  inputs: InputDecl[]; // empty in a Playground program
+  /** Empty: no registered block constructs an object, so `migrate()` refuses a class. */
+  classes: [];
+  functions: FunctionDef[];
+  main: Stmt[];
+};
+/** An input of the program: its name and kind; its value comes from the chosen case. */
+export type InputDecl = { name: Id; kind: Kind };
+export type FunctionDef = { id: NodeId; name: Id; params: Id[]; body: Stmt[] };
+
+// ---------------------------------------------------------------- Data (JSON form)
+
+export type Data =
+  | number // integer → int; fractional or exponent → float
+  | { $float: number } // integral float, e.g. 2.0
+  | string
+  | boolean
+  | null
+  | Data[]
+  | { [key: string]: Data }; // dict; int keys are written "$int:3"
+
+// ---------------------------------------------------------------- Run-time values
+
+export type Value =
+  | { t: "int"; v: number }
+  | { t: "float"; v: number }
+  | { t: "str"; v: string }
+  | { t: "bool"; v: boolean }
+  | { t: "none" }
+  | { t: "list"; ref: HeapId }
+  | { t: "dict"; ref: HeapId };
+export type HeapId = number;
+export type HeapEntry =
+  | { kind: "list"; items: Value[] }
+  | { kind: "dict"; entries: Map<string, Value> }; // "i:3" for int 3, "s:ab" for str "ab"
+export type Heap = Map<HeapId, HeapEntry>;
+
+// ---------------------------------------------------------------- Statements
+
+/** `name`: the learner's name for the node, one trimmed line, absent when empty. */
+type S = { id: NodeId; name?: string };
+export type Stmt =
+  | (S & { kind: "assign"; target: Target; value: Expr })
+  | (S & { kind: "delete"; target: IndexTarget | KeyTarget })
+  | (S & { kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
+  | (S & { kind: "for"; var: Id; start: Expr; stop: Expr; body: Stmt[] })
+  | (S & { kind: "foreach"; var: Id; list: Expr; body: Stmt[] })
+  | (S & { kind: "while"; cond: Expr; body: Stmt[] })
+  | (S & { kind: "break" })
+  | (S & { kind: "continue" })
+  | (S & { kind: "print"; args: Expr[] })
+  | (S & { kind: "return"; value?: Expr })
+  | (S & { kind: "expr"; expr: Expr })
+  | (S & { kind: "swap"; list: Expr; i: Expr; j: Expr });
+export type StmtKind = Stmt["kind"];
+
+export type Target = VarTarget | IndexTarget | KeyTarget;
+export type VarTarget = { kind: "var"; name: Id };
+export type IndexTarget = { kind: "index"; list: Expr; index: Expr };
+export type KeyTarget = { kind: "key"; dict: Expr; key: Expr };
+
+// ---------------------------------------------------------------- Expressions
+
+type E = { id: NodeId };
+export type Expr =
+  | (E & { kind: "empty" }) // An unfilled required slot
+  | (E & { kind: "num"; value: number; float: boolean; raw: string })
+  | (E & { kind: "str"; value: string })
+  | (E & { kind: "bool"; value: boolean })
+  | (E & { kind: "none" })
+  | (E & { kind: "var"; name: Id })
+  | (E & { kind: "binop"; op: BinOp; left: Expr; right: Expr })
+  | (E & { kind: "unop"; op: "neg" | "not"; operand: Expr })
+  | (E & { kind: "index"; list: Expr; index: Expr })
+  | (E & { kind: "key"; dict: Expr; key: Expr })
+  | (E & { kind: "list"; items: Expr[] })
+  | (E & { kind: "dict"; entries: Array<{ key: Expr; value: Expr }> })
+  | (E & { kind: "call"; fn: Id; args: Expr[] })
+  | (E & { kind: "method"; obj: Expr; name: Id; args: Expr[] });
+export type ExprKind = Expr["kind"];
+export type BinOp =
+  | "+"
+  | "-"
+  | "*"
+  | "/"
+  | "//"
+  | "%"
+  | "**"
+  | "=="
+  | "!="
+  | "<"
+  | "<="
+  | ">"
+  | ">="
+  | "and"
+  | "or"
+  | "in";
+
+export type Node = Stmt | Expr;
+
+/** What is known of a value before the program runs. */
+export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict";
+export const KINDS: readonly Kind[] = ["number", "text", "truefalse", "none", "list", "dict"];
+
+// ---------------------------------------------------------------- Names
+
+export const NAME_PATTERN = /^[a-z_][a-z0-9_]*$/;
+/** Python's keywords. */
+export const PYTHON_KEYWORDS: ReadonlySet<string> = new Set(
+  `False None True and as assert async await break class continue def del elif
+else except finally for from global if import in is lambda nonlocal not or
+pass raise return try while with yield`.split(/\s+/),
+);
+/** Python's keywords, and the builtin and module names a name may not take. */
+export const RESERVED: ReadonlySet<string> = new Set([
+  ...PYTHON_KEYWORDS,
+  ...`list dict set len print range min max sum abs input str int float bool
+tuple id type self math random round sorted`.split(/\s+/),
+]);
+
+// ---------------------------------------------------------------- Validation
+
+export const DIAGNOSTIC_CODES = [
+  "E_UNDEFINED",
+  "E_DECLARE_FIRST",
+  "E_BAD_NAME",
+  "E_DUPLICATE_NAME",
+  "E_BREAK_OUTSIDE",
+  "E_RETURN_OUTSIDE",
+  "E_ARITY",
+  "E_UNKNOWN_CALL",
+  "E_EMPTY_SLOT",
+  "E_DUPLICATE_ID",
+] as const;
+export type DiagnosticCode = (typeof DIAGNOSTIC_CODES)[number];
+
+export type Diagnostic = {
+  nodeId: NodeId;
+  code: DiagnosticCode;
+  params: Record<string, string | number>;
+  /** The edit that fixes it: `hoistAssign`, for `E_DECLARE_FIRST`. */
+  fix?: "hoistAssign";
+};
+
+// ---------------------------------------------------------------- Edits
+
+/** A statement position. `parent` is a frame or function id, or "main". */
+export type Place = {
+  parent: NodeId | "main";
+  slot: "main" | "body" | "then" | "else";
+  index: number;
+};

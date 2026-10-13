@@ -1,0 +1,221 @@
+// Traversal driven by each block's slots, so no module lists block kinds.
+import { getNode, keyOf } from "@/nodes/registry";
+import type { Expr, FunctionDef, Node, NodeId, Program, Stmt, Target } from "./types";
+
+type Bag = Record<string, unknown>;
+
+/** The fields of a target that hold names, and those that hold expressions, in order. */
+export type TargetParts = { names: readonly string[]; exprs: readonly string[] };
+
+/** A kind's parts, each a field of that kind of target. */
+type PartsOf<T> = TargetParts & {
+  names: ReadonlyArray<Extract<keyof T, string>>;
+  exprs: ReadonlyArray<Extract<keyof T, string>>;
+};
+
+/** The parts of each kind of assignment target: the names it holds and its expressions, in order. */
+export const TARGET_PARTS: {
+  readonly [K in Target["kind"]]: PartsOf<Extract<Target, { kind: K }>>;
+} = {
+  var: { names: ["name"], exprs: [] },
+  index: { names: [], exprs: ["list", "index"] },
+  key: { names: [], exprs: ["dict", "key"] },
+};
+
+/** A target's expressions, in order, as the target holds them. */
+export function targetExprs(target: Target): Expr[] {
+  const bag = target as unknown as Bag;
+  const parts: TargetParts = TARGET_PARTS[target.kind];
+  return parts.exprs.map((name) => bag[name] as Expr);
+}
+
+export function isExpr(value: unknown): value is Expr {
+  return typeof value === "object" && value !== null && "kind" in value && "id" in value;
+}
+
+/** An unfilled slot: the one expression that is no block a learner chooses. */
+export function isEmptyExpr(value: unknown): boolean {
+  return isExpr(value) && value.kind === "empty";
+}
+
+/**
+ * The name an expression reads, when it is a variable: the block whose one slot is a name.
+ * Read from the block's slots, so no module names the variable block.
+ */
+export function variableOf(expr: Expr): string | undefined {
+  const { slots } = getNode(keyOf(expr));
+  const [slot] = slots;
+  if (slots.length !== 1 || slot?.role !== "id") return undefined;
+  const name = (expr as unknown as Bag)[slot.name];
+  return typeof name === "string" ? name : undefined;
+}
+
+/**
+ * The argument a builtin's or method's parameter `name` takes, and its position among the
+ * arguments; undefined when the node has no such parameter or that argument is not passed.
+ */
+export function paramArg(node: Node, name: string): { arg: Expr; index: number } | undefined {
+  const index = getNode(keyOf(node)).params?.findIndex((param) => param.name === name) ?? -1;
+  const args = (node as unknown as Bag).args;
+  const arg: unknown = index >= 0 && Array.isArray(args) ? args[index] : undefined;
+  return isExpr(arg) ? { arg, index } : undefined;
+}
+
+export type SlotExpr = { slot: string; expr: Expr; index?: number };
+
+/** Direct expression children with the slot each sits in (target children under the target slot). */
+export function childSlots(node: Node): SlotExpr[] {
+  const def = getNode(keyOf(node));
+  const bag = node as unknown as Bag;
+  const out: SlotExpr[] = [];
+  for (const slot of def.slots) {
+    const value = bag[slot.name];
+    if (slot.role === "expr" && isExpr(value)) out.push({ slot: slot.name, expr: value });
+    else if (slot.role === "exprs" && Array.isArray(value)) {
+      value.forEach((item, index) => {
+        if (isExpr(item)) out.push({ slot: slot.name, expr: item, index });
+      });
+    } else if (slot.role === "target" && value && typeof value === "object") {
+      for (const expr of targetExprs(value as Target)) out.push({ slot: slot.name, expr });
+    }
+  }
+  return out;
+}
+
+/** Direct expression children of a statement or expression, in slot order. */
+function childExprs(node: Node): Expr[] {
+  return childSlots(node).map((entry) => entry.expr);
+}
+
+/** Body regions of a statement, in slot order (empty for simple statements). */
+export function regionsOf(stmt: Stmt): Array<{ slot: string; stmts: Stmt[] }> {
+  const def = getNode(keyOf(stmt));
+  const bag = stmt as unknown as Bag;
+  const out: Array<{ slot: string; stmts: Stmt[] }> = [];
+  for (const slot of def.slots) {
+    const value = bag[slot.name];
+    if (slot.role === "body" && Array.isArray(value)) {
+      out.push({ slot: slot.name, stmts: value as Stmt[] });
+    }
+  }
+  return out;
+}
+
+/** Every statement under `stmts`, pre-order. */
+export function* allStmts(stmts: Stmt[]): Generator<Stmt, void, void> {
+  for (const stmt of stmts) {
+    yield stmt;
+    for (const region of regionsOf(stmt)) yield* allStmts(region.stmts);
+  }
+}
+
+/** `expr` and every expression under it, pre-order. */
+export function* allExprs(expr: Expr): Generator<Expr, void, void> {
+  yield expr;
+  for (const child of childExprs(expr)) yield* allExprs(child);
+}
+
+/** Every expression of a statement (not its regions). */
+export function* stmtExprs(stmt: Stmt): Generator<Expr, void, void> {
+  for (const child of childExprs(stmt)) yield* allExprs(child);
+}
+
+/** Every NodeId under `stmts`: statements and their expressions, pre-order. */
+export function* idsUnder(stmts: Stmt[]): Generator<NodeId, void, void> {
+  for (const stmt of allStmts(stmts)) {
+    yield stmt.id;
+    for (const expr of stmtExprs(stmt)) yield expr.id;
+  }
+}
+
+export type StmtSite = { stmt: Stmt; fn: FunctionDef | null };
+
+/** Every statement in the program with the function it belongs to (null for main). */
+export function* programStmts(program: Program): Generator<StmtSite, void, void> {
+  for (const fn of program.functions) for (const stmt of allStmts(fn.body)) yield { stmt, fn };
+  for (const stmt of allStmts(program.main)) yield { stmt, fn: null };
+}
+
+export function* programExprs(program: Program): Generator<Expr, void, void> {
+  for (const { stmt } of programStmts(program)) yield* stmtExprs(stmt);
+}
+
+/**
+ * The statement that contains each node. Expressions map to their statement,
+ * statements and functions to themselves.
+ */
+export function ownerStmts(program: Program): Map<NodeId, NodeId> {
+  const owners = new Map<NodeId, NodeId>();
+  for (const fn of program.functions) owners.set(fn.id, fn.id);
+  for (const { stmt } of programStmts(program)) {
+    owners.set(stmt.id, stmt.id);
+    for (const expr of stmtExprs(stmt)) owners.set(expr.id, stmt.id);
+  }
+  return owners;
+}
+
+/** The condition a diamond asks: the slot its block's `branch` or `check` names, and what it holds. */
+export function conditionOf(node: Node): SlotExpr | undefined {
+  const chart = getNode(keyOf(node)).chart;
+  if (!chart || !("branch" in chart || "check" in chart)) return undefined;
+  const slot = "branch" in chart ? chart.branch.cond : chart.check.cond;
+  const value = (node as unknown as Bag)[slot];
+  return isExpr(value) ? { slot, expr: value } : undefined;
+}
+
+const conditions = new WeakMap<Program, Map<NodeId, NodeId>>();
+
+/** Each diamond's condition by id, with the statement whose diamond asks it; one pass per Program. */
+export function diamondConditions(program: Program): Map<NodeId, NodeId> {
+  let found = conditions.get(program);
+  if (!found) {
+    found = new Map();
+    for (const { stmt } of programStmts(program)) {
+      const condition = conditionOf(stmt);
+      if (condition) found.set(condition.expr.id, stmt.id);
+    }
+    conditions.set(program, found);
+  }
+  return found;
+}
+
+/**
+ * For each statement with body regions, the ids of every statement inside them,
+ * at any depth. A loop's `loop` event clears the marks of these statements.
+ */
+export function bodyStmts(program: Program): Map<NodeId, NodeId[]> {
+  const bodies = new Map<NodeId, NodeId[]>();
+  for (const { stmt } of programStmts(program)) {
+    const regions = regionsOf(stmt);
+    if (regions.length === 0) continue;
+    const ids: NodeId[] = [];
+    for (const region of regions) for (const inner of allStmts(region.stmts)) ids.push(inner.id);
+    bodies.set(stmt.id, ids);
+  }
+  return bodies;
+}
+
+const indexes = new WeakMap<Program, Map<NodeId, Node>>();
+
+/** Every statement and expression of the program by id; one pass per Program object. */
+export function nodesById(program: Program): Map<NodeId, Node> {
+  let index = indexes.get(program);
+  if (!index) {
+    index = new Map();
+    for (const { stmt } of programStmts(program)) {
+      index.set(stmt.id, stmt);
+      for (const expr of stmtExprs(stmt)) index.set(expr.id, expr);
+    }
+    indexes.set(program, index);
+  }
+  return index;
+}
+
+/** Every NodeId in the program: functions, statements, expressions. */
+export function* programIds(program: Program): Generator<NodeId, void, void> {
+  for (const fn of program.functions) {
+    yield fn.id;
+    yield* idsUnder(fn.body);
+  }
+  yield* idsUnder(program.main);
+}
