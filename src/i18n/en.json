@@ -170,51 +170,45 @@
     },
     "assign": {
       "label": "Set variable",
-      "template": "set {target} to {value}",
-      "templateCreate": "create {target} and set it to {value}",
+      "slot": { "target": "variable", "value": "value" },
       "help": "Creates a variable, or changes the value of one that exists."
     },
     "if": {
       "label": "If",
-      "template": "if {cond}",
+      "slot": { "cond": "condition" },
       "help": "Runs the then region when the condition is true, otherwise the else region."
     },
     "for": {
       "label": "For loop",
-      "template": "for {var} from {start} up to {stop}",
-      "init": "Set {var} to {start}",
-      "check": "{var} < {stop}?",
-      "step": "Set {var} to {var} + 1",
+      "slot": { "var": "variable", "start": "start", "stop": "stop" },
       "help": "Counts the variable from start up to, but not including, stop."
     },
     "while": {
       "label": "While loop",
-      "template": "while {cond}",
+      "slot": { "cond": "condition" },
       "help": "Repeats the body as long as the condition stays true."
     },
     "break": {
       "label": "Break",
-      "template": "stop the loop",
       "help": "Leaves the innermost loop at once."
     },
     "continue": {
       "label": "Continue",
-      "template": "skip to next iteration",
       "help": "Skips the rest of the body and starts the next iteration."
     },
     "print": {
       "label": "Print",
-      "template": "print {args}",
+      "slot": { "args": "value" },
       "help": "Writes the values to the Output tab, separated by spaces."
     },
     "return": {
       "label": "Return",
-      "template": "return {value}",
+      "slot": { "value": "value" },
       "help": "Leaves the function and hands back the value."
     },
     "expr": {
       "label": "Expression",
-      "template": "{expr}",
+      "slot": { "expr": "expression" },
       "help": "Evaluates an expression for its effect, such as a method call."
     },
     "num": {
@@ -413,6 +407,7 @@
     "nameHint": "optional",
     "typeHint": "type or choose",
     "typeKeys": "Type `{keys}`.",
+    "fieldName": "{label}, {slot}",
     "showAll": "Show all",
     "brackets": "Brackets",
     "bracketsGlyph": "( )",
@@ -471,7 +466,7 @@
     "breakpoint": "breakpoint",
     "endless": "This run never reached its end: it stopped after {limit} steps. A loop does not seem to end; check its condition.",
     "narrate": {
-      "enter": "{sentence}",
+      "enter": "{notation}",
       "check": "Checking {condition}",
       "read": "Read {what}: {value}",
       "readMany": "Read {count} items of {name}",

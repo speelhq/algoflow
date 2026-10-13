@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { forStmt } from "./for";
-import { ast, eventTypes, program, runAll, varData, withInputs } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData, withInputs } from "./testing";
 
 const { for_, assign, num, float, str, bin, v, brk, cont, if_ } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -92,7 +92,20 @@ describe("for (nodes.md)", () => {
     });
   });
 
-  it("a counted loop over `body`", () => {
-    expect(forStmt.chart).toEqual({ counted: "body" });
+  it("a counted loop over `body`, its generated nodes written in the notation", () => {
+    expect(forStmt.chart).toEqual({
+      counted: {
+        body: "body",
+        init: "{var} ← {start}",
+        check: "{var} < {stop}",
+        step: "{var} ← {var} + 1",
+      },
+    });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(for_("i", num(1), v("n"), []))).toBe("{var} ← {start}");
   });
 });

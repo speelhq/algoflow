@@ -29,4 +29,5 @@ export const ifStmt = defineStmt<"if">({
     ctx.block(node.then),
     ...(node.else.length > 0 ? ["else:", ctx.block(node.else)] : []),
   ],
+  notation: () => "{cond}",
 });

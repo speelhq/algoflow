@@ -1,7 +1,7 @@
 // The slot clicked, else the first to fill, takes the keyboard; keys in a value line, Tab past its last field, `,` in a list; a handler's changes chain on what each returns.
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
-import { ast, program } from "@/nodes/testing";
+import { ast } from "@/nodes/testing";
 import { fieldsOf, startField, type Field } from "./fields";
 import type { LineContext } from "./line";
 import {
@@ -39,7 +39,7 @@ describe("editor session", () => {
   it("the slot clicked takes the keyboard, else the first field still to fill", () => {
     const hole = empty();
     const stmt = assign("total", bin("+", v("x"), hole));
-    const fields = fieldsOf(stmt, program([stmt]));
+    const fields = fieldsOf(stmt);
     expect(fields).toEqual([
       { slot: "target", role: "target" },
       { slot: "value", role: "expr" },

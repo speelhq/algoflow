@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { getNode } from "./registry";
-import { ast, eventTypes, program, runAll } from "./testing";
+import { ast, eventTypes, notation, program, runAll } from "./testing";
 
 const { exprStmt, call, num, bin } = ast;
 
@@ -27,5 +27,11 @@ describe("expr (nodes.md)", () => {
       type: "error",
       error: { code: "E_DIV_ZERO" },
     });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(exprStmt(call("f")))).toBe("{expr}");
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, program, runAll, varData } from "./testing";
+import { ast, notation, program, runAll, varData } from "./testing";
 
 const { brk, for_, assign, num, v, while_, bool } = ast;
 
@@ -21,5 +21,11 @@ describe("break (nodes.md)", () => {
     );
     expect(varData(result, "outer")).toBe(2);
     expect(result.done).toMatchObject({ loops: 6 });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(brk())).toBe("break");
   });
 });

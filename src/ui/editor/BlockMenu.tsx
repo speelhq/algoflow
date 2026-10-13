@@ -55,7 +55,15 @@ function Entries({ place, done }: { place: Place; done: () => void }) {
                 )}
                 onClick={() => choose(entry)}
               >
-                <span>{entry.text}</span>
+                <span>
+                  {entry.label}
+                  {entry.notation !== undefined && (
+                    <>
+                      {" "}
+                      <span className="ml-1 text-muted-foreground">{entry.notation}</span>
+                    </>
+                  )}
+                </span>
                 {entry.disabled && <span className="text-xs">{entry.disabled}</span>}
               </button>
             ))}

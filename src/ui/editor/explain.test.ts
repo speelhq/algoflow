@@ -56,10 +56,10 @@ describe("explanation line", () => {
 
   it("a variable: its kind and the statement that first sets it; an input; a new name", () => {
     expect(explainVariable(p, target.id, "i")).toBe(
-      "A number variable. It is first set in: Set i to 1.",
+      "A number variable. It is first set in: i ← 1.",
     );
     expect(explainVariable(p, target.id, "total")).toBe(
-      "A number variable. It is first set in: Create total and set it to 0.",
+      "A number variable. It is first set in: total ← 0.",
     );
     expect(explainVariable(p, target.id, "n")).toBe("A number input of the problem.");
     expect(explainVariable(p, target.id, "found")).toBe("Creates the variable found here.");

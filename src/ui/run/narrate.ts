@@ -6,7 +6,7 @@ import { errorKey, errorParams, t, type MessageKey, type Params } from "@/i18n/t
 import type { Expr, Heap, Program, Value } from "@/lang/types";
 import { conditionOf, diamondConditions, isExpr, nodesById, variableOf } from "@/lang/walk";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
-import { capitalise, exprText, SEPARATOR, sentence, valueText } from "@/ui/chart/text";
+import { exprText, notationText, SEPARATOR, valueText } from "@/ui/chart/text";
 
 export type Narration = { key: MessageKey; params: Params };
 
@@ -66,13 +66,13 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
   const node = nodesById(ctx.program).get(event.nodeId);
   switch (event.type) {
     case "enter": {
-      if (!node) return { key: "run.narrate.enter", params: { sentence: "" } };
+      if (!node) return { key: "run.narrate.enter", params: { notation: "" } };
       const condition = conditionOf(node);
       return condition
         ? { key: "run.narrate.check", params: { condition: exprText(condition.expr) } }
         : {
             key: "run.narrate.enter",
-            params: { sentence: capitalise(sentence(node, ctx.program)) },
+            params: { notation: notationText(node) },
           };
     }
     case "read": {

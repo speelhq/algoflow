@@ -1,5 +1,5 @@
 // The node editor: a popover beside the selected node holding the node's name field
-// with `Duplicate` and `Delete`, the block's sentence with its slots editable in place (names
+// with `Duplicate` and `Delete`, the block's notation with its slots editable in place (names
 // as name fields, values as value lines, lists of values with add and remove), the list of
 // the focused slot, and the explanation line. Reads slot roles, never a kind. The editing state
 // is a session (`session.ts`) that only its transitions change.
@@ -18,7 +18,7 @@ import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import { parseScope } from "@/python/parse";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
-import { placeholderValue, templateOf, templatePieces } from "@/ui/chart/text";
+import { placeholderValue, slotParts } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics } from "./diagnostics";
@@ -26,6 +26,7 @@ import { apply } from "./edits";
 import { EditorList } from "./EditorList";
 import { explainLine, explainVariable, helpParts, type Explanation } from "./explain";
 import {
+  editedLines,
   fieldKey,
   fieldLabel,
   fieldsOf,
@@ -70,7 +71,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const led = useEditor((s) => s.diagnostic);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
-  const fields = fieldsOf(stmt, program);
+  const fields = fieldsOf(stmt);
   const elements = useRef(new Map<string, HTMLElement | null>());
   const [kept, setSession] = useState(() =>
     openSession(stmt, startField(stmt, fields, initial), initial.hole),
@@ -123,7 +124,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     return next;
   };
 
-  /** Leaves `field` for the next or previous field of the sentence. */
+  /** Leaves `field` for the next or previous field of the notation. */
   const go = (from: Session, step: 1 | -1, field: Field | null): void => {
     const at = field ? fields.findIndex((each) => sameField(each, field)) : -1;
     const next = fields[at + step];
@@ -180,7 +181,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         ref={register(field)}
         root={root}
         line={shown}
-        label={fieldLabel(stmt, program, field.slot)}
+        label={fieldLabel(stmt, field.slot)}
         unmatched={shown !== null && shown.word !== "" && matches(shown, ctx).length === 0}
         onKey={onValueKey}
         onFocus={() => {
@@ -239,7 +240,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     }
   };
 
-  // ------------------------------------------------------------ the sentence
+  // ------------------------------------------------------------ the notation
 
   const widget = (name: string): ReactNode => {
     const held = placeholderValue(stmt, name);
@@ -254,7 +255,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           <NameField
             key={name}
             slot={name}
-            label={fieldLabel(stmt, program, name)}
+            label={fieldLabel(stmt, name)}
             name={shownName}
             typed={on ? session.typed : null}
             on={on}
@@ -295,12 +296,30 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     }
   };
 
-  const sentence = templatePieces(templateOf(stmt, program)).map((piece, i) => {
-    if (!("words" in piece)) return widget(piece.name);
-    const text = piece.words.trim();
-    // oxlint-disable-next-line react/no-array-index-key -- a template's pieces keep their order
-    return text === "" ? null : <span key={`t${i}`}>{text}</span>;
-  });
+  // A counted loop shows its init and its check, one line each, as the chart draws them; a slot
+  // written again is drawn as its value.
+  const notation = editedLines(stmt).map((pieces, l) => (
+    // oxlint-disable-next-line react/no-array-index-key -- the lines keep their order
+    <div key={l} className="flex flex-wrap items-center gap-1.5">
+      {pieces.map(({ piece, again }, i) => {
+        if ("words" in piece) {
+          const text = piece.words.trim();
+          // oxlint-disable-next-line react/no-array-index-key -- a notation's pieces keep their order
+          return text === "" ? null : <span key={`t${i}`}>{text}</span>;
+        }
+        if (!again) return widget(piece.name);
+        return slotParts(stmt, piece.name).map((part, j) => (
+          <span
+            // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+            key={`v${i}:${j}`}
+            className={cn(part.variable && "font-semibold text-variable")}
+          >
+            {part.text}
+          </span>
+        ));
+      })}
+    </div>
+  ));
 
   // ------------------------------------------------------------ the list and its explanation
 
@@ -397,10 +416,10 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         </Button>
       </div>
       <div
-        className="flex flex-wrap items-center gap-1.5 border-b p-2.5 text-[0.95rem]"
-        data-testid="editor-sentence"
+        className="flex flex-col gap-1.5 border-b p-2.5 text-[0.95rem]"
+        data-testid="editor-notation"
       >
-        {sentence}
+        {notation}
       </div>
       {list && <div className="border-b">{list}</div>}
       <div

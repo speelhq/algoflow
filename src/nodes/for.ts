@@ -2,16 +2,24 @@
 import { newId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { typeName } from "@/runtime/values";
-import { defineStmt } from "./types";
+import { defineStmt, type Counted } from "./types";
 import { emptyExpr } from "./empty";
 
 const isZero = (expr: Expr) => expr.kind === "num" && !expr.float && expr.value === 0;
+
+/** The generated nodes in the order a `for` runs them, written in the notation. */
+const COUNTED: Counted = {
+  body: "body",
+  init: "{var} ← {start}",
+  check: "{var} < {stop}",
+  step: "{var} ← {var} + 1",
+};
 
 export const forStmt = defineStmt<"for">({
   key: "for",
   category: "control",
   loop: true,
-  chart: { counted: "body" },
+  chart: { counted: COUNTED },
   declares: "number",
   slots: [
     { name: "var", role: "id", required: true },
@@ -50,4 +58,6 @@ export const forStmt = defineStmt<"for">({
     `for ${node.var} in range(${isZero(node.start) ? "" : `${ctx.expr(node.start)}, `}${ctx.expr(node.stop)}):`,
     ctx.block(node.body),
   ],
+  // Its init names it in the block menu and the editor.
+  notation: () => COUNTED.init,
 });

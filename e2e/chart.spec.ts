@@ -24,7 +24,7 @@ test("FizzBuzz draws its loop's generated nodes, diamonds as questions, and Yes/
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   const chart = page.getByTestId("chart");
-  for (const text of ["Set i to 1", "i < n + 1?", "Set i to i + 1", "i % 15 = 0?"]) {
+  for (const text of ["i ← 1", "i < n + 1?", "i ← i + 1", "i % 15 = 0?"]) {
     await expect(chart.locator("text", { hasText: text }).first()).toBeVisible();
   }
   await expect(chart.locator("text", { hasText: /^Yes$/ })).toHaveCount(4);

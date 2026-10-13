@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { ifStmt } from "./if";
-import { ast, eventTypes, program, runAll, varData } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData } from "./testing";
 
 const { if_, assign, num, bin, v, for_, brk } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -51,5 +51,11 @@ describe("if (nodes.md)", () => {
 
   it("a branch with `then` as Yes and `else` as No", () => {
     expect(ifStmt.chart).toEqual({ branch: { cond: "cond", yes: "then", no: "else" } });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(if_(v("ok"), []))).toBe("{cond}");
   });
 });

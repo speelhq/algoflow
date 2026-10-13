@@ -15,4 +15,5 @@ export const exprStmt = defineStmt<"expr">({
     return undefined;
   },
   python: (node, ctx) => [ctx.expr(node.expr)],
+  notation: () => "{expr}",
 });

@@ -1,21 +1,20 @@
 // Node text as the chart writes it; a value as the blocks write it.
 import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
-import { ast, program, withInputs } from "@/nodes/testing";
+import { ast, withInputs } from "@/nodes/testing";
 import { isParseError, parse } from "@/python/parse";
 import { run } from "@/runtime/run";
 import {
-  capitalise,
-  drawn,
   exprParts,
   exprText,
-  generatedText,
+  generatedParts,
   inputParts,
   joinParts,
   placeholderValue,
   questionParts,
-  sentence,
-  sentenceParts,
+  hasInputToFill,
+  notationParts,
+  notationText,
   templatePieces,
   valueText,
 } from "./text";
@@ -30,10 +29,9 @@ function expr(python: string): Expr {
 
 describe("templatePieces and placeholderValue", () => {
   it("reads a template or a notation as its own text and placeholders, in order", () => {
-    expect(templatePieces("set {target} to {value}")).toEqual([
-      { words: "set " },
+    expect(templatePieces("{target} ← {value}")).toEqual([
       { name: "target" },
-      { words: " to " },
+      { words: " ← " },
       { name: "value" },
     ]);
     expect(templatePieces("abs({x})")).toEqual([{ words: "abs(" }, { name: "x" }, { words: ")" }]);
@@ -59,18 +57,17 @@ describe("templatePieces and placeholderValue", () => {
   });
 });
 
-describe("sentence", () => {
-  it("renders statements from their template, with the create form of a first assignment", () => {
+describe("notation", () => {
+  it("writes a statement in its notation, a first assignment as every later one", () => {
     const first = assign("total", num(0));
     const again = assign("total", bin("+", v("total"), v("i")));
-    const p = program([first, again, print(str("a"), v("total")), ret()]);
-    expect(sentence(first, p)).toBe("create total and set it to 0");
-    expect(sentence(again, p)).toBe("set total to total + i");
-    expect(p.main.slice(2).map((stmt) => sentence(stmt, p))).toEqual([
-      'print "a", total',
+    expect(notationText(first)).toBe("total ← 0");
+    expect(notationText(again)).toBe("total ← total + i");
+    expect([print(str("a"), v("total")), ret(), ret(v("x"))].map(notationText)).toEqual([
+      'print("a", total)',
       "return",
+      "return x",
     ]);
-    expect(capitalise(sentence(again, p))).toBe("Set total to total + i");
   });
 
   it("writes only school symbols, and names builtin arguments by parameter", () => {
@@ -126,15 +123,18 @@ describe("sentence", () => {
       { text: " + " },
       { text: "…", empty: true, hole: hole.id },
     ]);
-    const p = program([assign("total", bin("+", v("total"), hole))]);
-    expect(sentenceParts(p.main[0]!, p).map((part) => [part.text, part.slot])).toEqual([
-      ["create ", undefined],
+    const set = assign("total", bin("+", v("total"), hole));
+    expect(notationParts(set).map((part) => [part.text, part.slot])).toEqual([
       ["total", "target"],
-      [" and set it to ", undefined],
+      [" ← ", undefined],
       ["total", "value"],
       [" + ", "value"],
       ["…", "value"],
     ]);
+    expect(hasInputToFill(set)).toBe(true);
+    // A counted loop's stop, which its notation (its init) does not write, counts too.
+    expect(hasInputToFill(for_("i", num(0), empty(), []))).toBe(true);
+    expect(hasInputToFill(for_("i", num(0), num(3), []))).toBe(false);
   });
 
   it("writes a variable as its value when the writing gives one", () => {
@@ -142,10 +142,10 @@ describe("sentence", () => {
     expect(exprText(expr("i % 15 == 0"), { value: (name) => values[name] })).toBe("3 % 15 = 0");
   });
 
-  it("capitalises a drawn sentence only when it begins with a word of its template", () => {
-    const p = program([print(v("i")), if_(bin("<", v("i"), v("n")), [])]);
-    expect(joinParts(drawn(sentenceParts(p.main[0]!, p)))).toBe("Print i");
-    expect(joinParts(drawn(questionParts(p.main[1]!)))).toBe("i < n?");
+  it("adds no capital to a node", () => {
+    expect(notationText(print(v("i")))).toBe("print(i)");
+    expect(notationText(ast.brk())).toBe("break");
+    expect(joinParts(questionParts(if_(bin("<", v("i"), v("n")), [])))).toBe("i < n?");
   });
 });
 
@@ -160,9 +160,12 @@ describe("diamonds and generated nodes", () => {
 
   it("a counted loop's generated nodes carry the loop's own slots", () => {
     const loop = for_("i", num(1), bin("+", v("n"), num(1)), []);
-    expect(generatedText(loop, "init")).toBe("Set i to 1");
-    expect(generatedText(loop, "check")).toBe("i < n + 1?");
-    expect(generatedText(loop, "step")).toBe("Set i to i + 1");
+    const drawn = (part: "init" | "check" | "step") => joinParts(generatedParts(loop, part));
+    expect(drawn("init")).toBe("i ← 1");
+    // The check is asked as every diamond asks its condition.
+    expect(drawn("check")).toBe("i < n + 1?");
+    expect(drawn("step")).toBe("i ← i + 1");
+    expect(notationText(loop)).toBe("i ← 1");
   });
 
   it("an Input node's name is a variable", () => {

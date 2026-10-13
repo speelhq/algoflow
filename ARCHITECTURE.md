@@ -34,7 +34,7 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   run after every edit and before every run, pure edit functions returning a
   new `Program` (`edit.ts`), and `Data` ⇄ `Value`/heap conversion
   (`data.ts`). A `Program` is never mutated in place: `validate()`,
-  `firstAssignments()`, and `nodesById()` are memoized per `Program` object,
+  `refusedDefinitions()`, and `nodesById()` are memoized per `Program` object,
   and the undo history holds earlier programs.
 - `src/nodes` — one `NodeDef` per block owning its slots, `create()`, `run`
   (interpreter behaviour), `python()` (exact emitted text), and `chart`

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, eventTypes, program, runAll, withInputs } from "./testing";
+import { ast, eventTypes, notation, program, runAll, withInputs } from "./testing";
 
 const { print, num, float, str, bool, none, bin, v } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -31,5 +31,11 @@ describe("print (nodes.md)", () => {
     ]);
     const result = runAll(made.program, made.inputs);
     expect(result.stdout).toEqual(["[1, 'a', 2.0]", "{'a': 1}"]);
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(print(v("a"), v("b")))).toBe("print({args})");
   });
 });

@@ -11,7 +11,7 @@ import { getNode, keyOf } from "@/nodes/registry";
 import type { Side } from "@/nodes/types";
 import {
   bracketed,
-  exprNotation,
+  notationOf,
   exprText,
   placeholderValue,
   templatePieces,
@@ -147,7 +147,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
 
   const operation = (expr: Expr): ReactNode => {
     const pieces: ReactNode[] = [];
-    templatePieces(exprNotation(expr)).forEach((piece, i) => {
+    templatePieces(notationOf(expr)).forEach((piece, i) => {
       if ("words" in piece) {
         // oxlint-disable-next-line react/no-array-index-key -- a notation's pieces keep their order
         if (piece.words.trim() !== "") pieces.push(<span key={`w${i}`}>{piece.words}</span>);

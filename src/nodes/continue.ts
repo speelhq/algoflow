@@ -13,4 +13,5 @@ export const continueStmt = defineStmt<"continue">({
     return { kind: "continue" };
   },
   python: () => ["continue"],
+  notation: () => "continue",
 });

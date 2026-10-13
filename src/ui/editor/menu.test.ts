@@ -44,7 +44,9 @@ describe("block menu", () => {
     const groups = menuGroups(p, MAIN);
     const last = groups[groups.length - 1];
     expect(last?.title).toBe("This program");
-    expect(last?.entries.map((entry) => entry.text)).toEqual(["double(…)"]);
+    expect(last?.entries.map((entry) => [entry.label, entry.notation])).toEqual([
+      ["double(…)", undefined],
+    ]);
     const stmt = last?.entries[0]?.create();
     expect(stmt).toMatchObject({ kind: "expr", expr: { kind: "call", fn: "double" } });
     expect(stmt?.kind === "expr" && stmt.expr.kind === "call" && stmt.expr.args).toHaveLength(1);
@@ -64,11 +66,21 @@ describe("block menu", () => {
     expect(offered).toEqual(["call:double"]);
   });
 
-  it("entries show the block's template with … for each slot", () => {
-    expect(blankTemplate("for {var} from {start} up to {stop}")).toBe("for … from … up to …");
+  it("an entry reads as the block's label followed by its notation with … for each slot", () => {
+    expect(blankTemplate("{var} ← {start}")).toBe("… ← …");
     const entries = menuGroups(program([]), MAIN).flatMap((group) => group.entries);
-    expect(entries.find((e) => e.id === "assign")?.text).toBe("set … to …");
-    expect(entries.find((e) => e.id === "print")?.text).toBe("print …");
+    const read = (id: string) => {
+      const entry = entries.find((e) => e.id === id);
+      return `${entry?.label}  ${entry?.notation}`;
+    };
+    expect(["assign", "print", "for", "while", "break", "return"].map(read)).toEqual([
+      "Set variable  … ← …",
+      "Print  print(…)",
+      "For loop  … ← …",
+      "While loop  …",
+      "Break  break",
+      "Return  return …",
+    ]);
   });
 
   it("the search keeps the entries whose label or help contains the text", () => {

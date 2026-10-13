@@ -1,7 +1,8 @@
 // The block menu's entries for one connector: the registered statement blocks
 // grouped by category in menu order, each in registration order, those whose `requires`
 // the place does not meet disabled with the reason, then the program's functions a call can
-// name, as calls. Reads `shape`, `hidden`, `category`, and `requires`, never a kind.
+// name, as calls. Reads `shape`, `hidden`, `category`, `requires`, and the notation of a
+// block's `create()`, never a kind.
 import { nodeText, t } from "@/i18n/t";
 import { placeContext } from "@/lang/scope";
 import type { Place, Program, Stmt } from "@/lang/types";
@@ -15,9 +16,10 @@ import { callableFunctions, callExpr, type LineFunction } from "./line";
 export type BlockMenuEntry = {
   /** The registry key, or `call:<name>` for a function of the program. */
   id: string;
-  /** The block's template with every slot written `…`. */
-  text: string;
+  /** The block's label, or a program function's call as the value list labels it (`double(…)`). */
   label: string;
+  /** The block's notation with every slot written `…`; absent for a call, whose label it is. */
+  notation?: string;
   help: string;
   /** Why the block cannot go here; absent when it can. */
   disabled?: string;
@@ -37,8 +39,8 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
           (def.requires === "loop" && !here.loop) || (def.requires === "function" && !here.fn);
         const entry: BlockMenuEntry = {
           id: def.key,
-          text: blankTemplate(nodeText(def.key, "template")),
           label: nodeText(def.key, "label"),
+          notation: blankTemplate(def.notation(def.create())),
           help: nodeText(def.key, "help"),
           create: () => def.create() as Stmt,
         };
@@ -52,8 +54,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
   const calls = callableFunctions(program).map((fn): BlockMenuEntry => {
     return {
       id: `call:${fn.name}`,
-      text: functionLabel(fn),
-      label: fn.name,
+      label: functionLabel(fn),
       help: nodeText("call", "help"),
       create: () => callStatement(program, fn),
     };
