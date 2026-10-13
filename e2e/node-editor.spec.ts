@@ -56,7 +56,7 @@ test("FizzBuzz is built from an empty chart by typing and choosing, and accepted
   await keys(page, "i%15==0");
   await expect(editor(page).getByTestId("explanation")).toContainText("Equals");
   await page.keyboard.press("Enter");
-  await expect(chart(page)).toContainText("(remainder of i divided by 15) = 0?");
+  await expect(chart(page)).toContainText("i % 15 = 0?");
   await printText(page, `${fifteen}/then/0`, "FizzBuzz");
 
   const three = await insert(page, `${fifteen}/else/0`, "if");
@@ -102,8 +102,8 @@ test("the list follows what is before the caret, and a choice after a value take
   await expect(list).toContainText("Calculate");
   await expect(list).not.toContainText("Random whole number");
   await list.locator('[data-row="e:call:str"]').click();
-  await expect(chart(page)).toContainText("Create total and set it to n as text");
-  // Backspace on the operation's words keeps its first input.
+  await expect(chart(page)).toContainText("Create total and set it to str(n)");
+  // Backspace after the call's bracket keeps its first input.
   await page.keyboard.press("Backspace");
   await expect(chart(page)).toContainText("Create total and set it to n");
 });
@@ -123,7 +123,7 @@ test("naming a node shows the name on it and as a comment in Python", async ({ p
   await page.locator('[data-chart-node="fzb-if15-001"]').click({ position: { x: 20, y: 30 } });
   await editor(page).getByTestId("node-name").fill("Is i a multiple of 15?");
   await expect(chart(page)).toContainText("Is i a multiple of 15?");
-  await expect(chart(page)).not.toContainText("(remainder of i divided by 15) = 0?");
+  await expect(chart(page)).not.toContainText("i % 15 = 0?");
   await page.keyboard.press("Escape");
   await page.getByTestId("tab-python").click();
   await expect(page.getByTestId("python-code")).toContainText("    # Is i a multiple of 15?");
@@ -174,7 +174,7 @@ test("`,` in a list of values opens the next value after this one", async ({ pag
   await expect(chart(page)).toContainText("Print 1, 2");
   await editor(page).locator("[data-value-line]").first().click();
   await keys(page, ",");
-  await expect(chart(page)).toContainText("Print 1, choose a value, 2");
+  await expect(chart(page)).toContainText("Print 1, …, 2");
 });
 
 test("a print with no value draws no placeholder", async ({ page }) => {
@@ -182,5 +182,5 @@ test("a print with no value draws no placeholder", async ({ page }) => {
   await page.goto("/#/p/tutorial");
   await insert(page, "main/main/0", "print");
   await editor(page).getByRole("button", { name: "Remove this value" }).click();
-  await expect(chart(page)).not.toContainText("choose a value");
+  await expect(chart(page)).not.toContainText("…");
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr } from "./testing";
+import { ast, evalExpr, notation } from "./testing";
 
 const { str } = ast;
 
@@ -17,5 +17,11 @@ describe("str (nodes.md)", () => {
       data: "ab",
       events: [],
     });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(str("a"))).toBe('"{value}"');
   });
 });

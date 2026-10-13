@@ -30,6 +30,7 @@ export const num = defineExpr<"num">({
     return makeNumber(node.value, node.float);
   },
   python: (node) => node.raw,
-  text: (node) => node.raw, // the canvas shows the literal as typed
+  notation: () => "{value}",
+  text: (node) => node.raw, // the literal as typed
   kind: () => "number",
 });

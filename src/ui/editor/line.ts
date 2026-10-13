@@ -2,8 +2,9 @@
 // an input still to fill or after a value, the brackets opened and not yet closed, the word
 // being typed, and the first key of a two-key operator. Every change is a new `Line`.
 // Blocks are made by the parser (a variable, a number, a sign, a call) or by an entry's
-// block (`create()` with its preset), and read through their slots, their template (the caret
-// moves in reading order), and `precedence`, so this file names no block kind.
+// block (`create()` with its preset), and read through their slots, their notation (the caret
+// moves in reading order, and a call ends with its bracket), and `precedence`, so this file
+// names no block kind.
 import { errorText } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
 import { exprKind } from "@/lang/kinds";
@@ -13,7 +14,7 @@ import { allExprs, isEmptyExpr, variableOf } from "@/lang/walk";
 import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import { isParseError, NO_DEFINITIONS, parse, type ParseScope } from "@/python/parse";
 import { levelAssociativity } from "@/python/precedence";
-import { exprTemplate, exprText, placeholderValue, templatePieces } from "@/ui/chart/text";
+import { exprNotation, exprText, placeholderValue, templatePieces } from "@/ui/chart/text";
 import { allEntries, makeEntry, takesValue, type Entry } from "./entries";
 
 type Bag = Record<string, unknown>;
@@ -61,11 +62,11 @@ export type Outcome = { line: Line; taken: boolean; move?: "next" | "previous" |
 // ---------------------------------------------------------------- the tree
 
 /**
- * The inputs of an expression in reading order, as its template places them: the order the
+ * The inputs of an expression in reading order, as its notation places them: the order the
  * caret moves in. Which input an entry's value goes into is the slot order's (`withFirst`).
  */
 export function inputs(expr: Expr): Expr[] {
-  return templatePieces(exprTemplate(expr)).flatMap((piece) => {
+  return templatePieces(exprNotation(expr)).flatMap((piece) => {
     if ("words" in piece) return [];
     const held = placeholderValue(expr, piece.name);
     if (held?.role === "expr") return held.expr ? [held.expr] : [];
@@ -129,7 +130,7 @@ export function stops(expr: Expr): Caret[] {
   const own = inputs(expr);
   if (own.length === 0) return [{ after: expr.id }];
   const inner = own.flatMap(stops);
-  // An operation with no precedence ends after its words: a stop of its own.
+  // An operation with no precedence, a call, ends after its bracket: a stop of its own.
   return precedenceOf(expr) === undefined ? [...inner, { after: expr.id }] : inner;
 }
 
@@ -538,27 +539,21 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
   return refused(line);
 }
 
-/** The template's last words, when it ends with words rather than a placeholder. */
-function closingWords(expr: Expr): string | undefined {
-  const last = templatePieces(exprTemplate(expr)).findLast(
-    (piece) => !("words" in piece) || piece.words.trim() !== "",
-  );
-  return last && "words" in last ? last.words.trim() : undefined;
+/** Whether an expression is a call: its notation ends with its own bracket (`abs({x})`). */
+function isCall(expr: Expr): boolean {
+  const last = templatePieces(exprNotation(expr)).at(-1);
+  return last !== undefined && "words" in last && last.words.endsWith(")");
 }
 
 /** `)` with no bracket open closes the brackets of the innermost call around the caret. */
 function leave(line: Line): Outcome | undefined {
   const { caret, root } = line;
-  const bracketed = (expr: Expr) => closingWords(expr)?.endsWith(")") ?? false;
   let up = parentOf(root, "at" in caret ? caret.at : caret.after);
-  while (up && !bracketed(up.parent)) up = parentOf(root, up.parent.id);
+  while (up && !isCall(up.parent)) up = parentOf(root, up.parent.id);
   return up ? done({ ...line, caret: { after: up.parent.id }, pending: undefined }) : undefined;
 }
 
 // ---------------------------------------------------------------- removing and moving
-
-/** Whether an operation's template ends with its own words (`{x} as text`). */
-const endsInWords = (expr: Expr) => closingWords(expr) !== undefined;
 
 /** Backspace removes what is before the caret. */
 export function backspace(line: Line): Outcome {
@@ -576,11 +571,13 @@ export function backspace(line: Line): Outcome {
     const own = inputs(last);
     const [first] = own;
     if (first) {
-      // An operation that ends in an input: what is before the caret is that input's end.
-      if (!endsInWords(last)) {
+      // An operator ends in an input: what is before the caret is that input's end.
+      if (precedenceOf(last) !== undefined) {
         const end = own.at(-1);
         return end ? backspace({ ...current, caret: endOf(end) }) : refused(line);
       }
+      // A call ends in its bracket; removing it would lose the value of an input after the first.
+      if (own.slice(1).some((input) => !isEmptyExpr(input))) return move(current, -1);
       const next = replace(current, last.id, first);
       return done({ ...next, caret: endOf(first) });
     }

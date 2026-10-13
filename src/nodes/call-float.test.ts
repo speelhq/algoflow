@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr } from "./testing";
+import { ast, evalExpr, notation } from "./testing";
 
 const { call, num, str, bool, none } = ast;
 
@@ -25,5 +25,11 @@ describe("builtin float (nodes.md)", () => {
       type: "error",
       error: { code: "E_VALUE", params: { op: "call:float", type: "none" } },
     });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(call("float", num(1)))).toBe("float({x})");
   });
 });

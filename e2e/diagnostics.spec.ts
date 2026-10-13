@@ -35,7 +35,7 @@ test("hovering a flagged node shows its message, and the fix applies", async ({ 
   await expect(card).toContainText("Create total before the if or loop");
   await card.getByRole("button", { name: "Create total before it" }).click();
   await expect(page.getByTestId("diagnostic-dot")).toHaveCount(0);
-  await expect(page.getByTestId("chart")).toContainText("Create total and set it to none");
+  await expect(page.getByTestId("chart")).toContainText("Create total and set it to None");
 });
 
 test("an empty slot shows no dot, only its placeholder", async ({ page }) => {
@@ -47,6 +47,6 @@ test("an empty slot shows no dot, only its placeholder", async ({ page }) => {
   };
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");
-  await expect(page.getByTestId("chart")).toContainText("choose a value");
+  await expect(page.getByTestId("chart")).toContainText("Create x and set it to …");
   await expect(page.getByTestId("diagnostic-dot")).toHaveCount(0);
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr } from "./testing";
+import { ast, evalExpr, notation } from "./testing";
 
 const { bool } = ast;
 
@@ -16,5 +16,12 @@ describe("bool (nodes.md)", () => {
       data: false,
       events: [],
     });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(bool(true))).toBe("True");
+    expect(notation(bool(false))).toBe("False");
   });
 });

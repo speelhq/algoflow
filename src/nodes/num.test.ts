@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr } from "./testing";
+import { ast, evalExpr, notation } from "./testing";
 
 const { num, float } = ast;
 
@@ -16,5 +16,11 @@ describe("num (nodes.md)", () => {
     expect(evalExpr(num(5))).toMatchObject({ value: { t: "int", v: 5 }, events: [] });
     expect(evalExpr(float(2))).toMatchObject({ value: { t: "float", v: 2 }, data: { $float: 2 } });
     expect(evalExpr(num(2.5)).value).toEqual({ t: "float", v: 2.5 });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(num(3))).toBe("{value}");
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr } from "./testing";
+import { ast, evalExpr, notation } from "./testing";
 
 describe("none (nodes.md)", () => {
   it("emits None", () => {
@@ -9,5 +9,11 @@ describe("none (nodes.md)", () => {
 
   it("evaluates to none", () => {
     expect(evalExpr(ast.none())).toMatchObject({ value: { t: "none" }, data: null, events: [] });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(ast.none())).toBe("None");
   });
 });

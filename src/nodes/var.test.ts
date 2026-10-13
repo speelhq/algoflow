@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, runAll, withInputs } from "./testing";
+import { ast, evalExpr, notation, runAll, withInputs } from "./testing";
 
 const { v, num, for_, print } = ast;
 
@@ -28,5 +28,11 @@ describe("var (nodes.md)", () => {
       type: "error",
       error: { nodeId: read.id, code: "E_UNDEFINED", params: { name: "i" } },
     });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(v("n"))).toBe("{name}");
   });
 });

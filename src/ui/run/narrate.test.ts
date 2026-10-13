@@ -40,7 +40,7 @@ describe("narrate", () => {
     const check = if_(bin("==", bin("%", v("i"), num(3)), num(0)), []);
     const p = program([assign("i", num(6)), check, while_(bin(">", v("i"), num(9)), [])]);
     expect(told(p, "enter", 1)).toBe("Create i and set it to 6");
-    expect(told(p, "enter", 2)).toBe("Checking (remainder of i divided by 3) = 0");
+    expect(told(p, "enter", 2)).toBe("Checking i % 3 = 0");
     expect(told(p, "enter", 3)).toBe("Checking i > 9");
     expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("For i from 1 up to 3");
   });
@@ -66,8 +66,8 @@ describe("narrate", () => {
       if_(bin("==", bin("%", v("i"), num(15)), num(0)), []),
       if_(bin("==", bin("%", bin("+", v("i"), num(1)), num(2)), num(0)), []),
     ]);
-    expect(told(p, "compare", 1)).toBe("(remainder of 3 divided by 15) = 0? No");
-    expect(told(p, "compare", 2)).toBe("(remainder of (3 + 1) divided by 2) = 0? Yes");
+    expect(told(p, "compare", 1)).toBe("3 % 15 = 0? No");
+    expect(told(p, "compare", 2)).toBe("(3 + 1) % 2 = 0? Yes");
   });
 
   it("compare: any other comparison, such as a side of and, says its value", () => {
@@ -82,7 +82,7 @@ describe("narrate", () => {
     expect(told(p, "compare", 4)).toBe("1 ≠ 1 is false");
     const negated = program([assign("a", num(1)), while_(not(bin(">=", v("a"), num(1))), [])]);
     expect(told(negated, "compare", 1)).toBe("1 ≥ 1 is true");
-    expect(told(negated, "compare", 2)).toBe("not (1 ≥ 1)? No");
+    expect(told(negated, "compare", 2)).toBe("not 1 ≥ 1? No");
   });
 
   it("compare: a condition that is one variable keeps its name; inside one it is a value", () => {
@@ -93,18 +93,18 @@ describe("narrate", () => {
       while_(bin("and", not(v("found")), bin("<", v("i"), num(15))), []),
     ]);
     expect(told(p, "compare", 1)).toBe("found? Yes");
-    expect(told(p, "compare", 2)).toBe("(not true) and 3 < 15? No");
+    expect(told(p, "compare", 2)).toBe("not True and 3 < 15? No");
   });
 
-  it("compare: values are written with the block words, never Python's", () => {
+  it("compare: values are written as the blocks write them", () => {
     const p = program([
       assign("done", bool(true)),
       assign("name", str("Fizz")),
       if_(bin("==", v("done"), bool(false)), []),
       if_(bin("!=", v("name"), none()), []),
     ]);
-    expect(told(p, "compare", 1)).toBe("true = false? No");
-    expect(told(p, "compare", 2)).toBe('"Fizz" ≠ none? Yes');
+    expect(told(p, "compare", 1)).toBe("True = False? No");
+    expect(told(p, "compare", 2)).toBe('"Fizz" ≠ None? Yes');
   });
 
   it("write, loop, print, call, and return", () => {
@@ -131,7 +131,7 @@ describe("narrate", () => {
     ]);
     expect(told(p, "read", 1, inputs)).toBe("Read 3 items of nums");
     // A list keeps its name: its items were narrated by the read before the comparison.
-    expect(told(p, "compare", 1, inputs)).toBe("5 is in nums? Yes");
+    expect(told(p, "compare", 1, inputs)).toBe("5 in nums? Yes");
 
     const runner = run(p, inputs, 1);
     const state = runner.state();
@@ -151,7 +151,7 @@ describe("narrate", () => {
       ref: { heap: 1, index: 0 },
       value: { t: "none" },
     };
-    expect(say(narrate(item, ctx))).toBe("item 0 of nums is now none");
+    expect(say(narrate(item, ctx))).toBe("item 0 of nums is now None");
   });
 
   it("a dict's key is named as the chart writes it", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr } from "./testing";
+import { ast, evalExpr, notation } from "./testing";
 
 const { num, float, str, bin, v, neg, not } = ast;
 
@@ -29,5 +29,12 @@ describe("unop (nodes.md)", () => {
       type: "error",
       error: { nodeId: e.id, code: "E_VALUE", params: { op: "unop", type: "str" } },
     });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(neg(v("x")))).toBe("−{operand}");
+    expect(notation(not(v("x")))).toBe("not {operand}");
   });
 });

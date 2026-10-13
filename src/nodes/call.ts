@@ -21,4 +21,5 @@ export const call = defineExpr<"call">({
     return yield* ctx.call(node.fn, args, node.id);
   },
   python: (node, ctx) => `${node.fn}(${node.args.map((arg) => ctx.expr(arg)).join(", ")})`,
+  notation: () => "{fn}({args})",
 });

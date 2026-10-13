@@ -20,4 +20,5 @@ export const empty = defineExpr<"empty">({
     throw new Error(`empty slot ${node.id} cannot run`);
   },
   python: () => "...",
+  notation: () => "…",
 });

@@ -11,4 +11,5 @@ export const variable = defineExpr<"var">({
     return ctx.get(node.name, node.id);
   },
   python: (node) => node.name,
+  notation: () => "{name}",
 });

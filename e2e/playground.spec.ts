@@ -112,10 +112,10 @@ test("an edit on a problem is saved and restored on reload", async ({ page }) =>
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "Add your first block" }).click();
   await page.getByTestId("block-menu").locator('[data-entry="print"]').click();
-  await expect(page.getByTestId("chart")).toContainText("Print choose a value");
+  await expect(page.getByTestId("chart")).toContainText("Print …");
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("algoflow:program:fizzbuzz")))
     .toContain('"kind":"print"');
   await page.reload();
-  await expect(page.getByTestId("chart")).toContainText("Print choose a value");
+  await expect(page.getByTestId("chart")).toContainText("Print …");
 });

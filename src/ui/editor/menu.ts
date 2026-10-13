@@ -9,6 +9,7 @@ import { getNode, menuBlocks } from "@/nodes/registry";
 import { CATEGORIES, type Category } from "@/nodes/categories";
 import { parseScope } from "@/python/parse";
 import { blankTemplate } from "@/ui/chart/text";
+import { functionLabel } from "./explain";
 import { callableFunctions, callExpr, type LineFunction } from "./line";
 
 export type BlockMenuEntry = {
@@ -49,13 +50,9 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
     }
   }
   const calls = callableFunctions(program).map((fn): BlockMenuEntry => {
-    const text = t("node.call.template", {
-      fn: fn.name,
-      args: fn.params.length > 0 ? blankTemplate("{a}") : "",
-    });
     return {
       id: `call:${fn.name}`,
-      text,
+      text: functionLabel(fn),
       label: fn.name,
       help: nodeText("call", "help"),
       create: () => callStatement(program, fn),

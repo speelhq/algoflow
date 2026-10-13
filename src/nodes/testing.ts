@@ -15,6 +15,7 @@ import type {
 } from "@/lang/types";
 import { run } from "@/runtime/run";
 import type { Done, Event, State } from "@/runtime/types";
+import { getNode, keyOf } from "./registry";
 
 let counter = 0;
 
@@ -85,6 +86,11 @@ export const ast = {
   ret: (value?: Expr): Stmt =>
     value ? { id: tid(), kind: "return", value } : { id: tid(), kind: "return" },
 };
+
+/** The notation its block writes `expr` in (`nodes.md`, Node text). */
+export function notation(expr: Expr): string | undefined {
+  return getNode(keyOf(expr)).notation?.(expr);
+}
 
 export function program(
   main: Stmt[],

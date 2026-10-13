@@ -7,9 +7,10 @@ import { isEmptyExpr } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes/registry";
 import {
   capitalise,
-  exprTemplate,
+  exprNotation,
   exprText,
   generatedText,
+  placeholder,
   placeholderValue,
   sentence,
   templateParts,
@@ -79,7 +80,7 @@ function explainRow(row: Row, program: Program, at: NodeId): Explanation {
 
 /** A function as the list names it: `name(…)`, or `name()` with no parameter. */
 export function functionLabel(fn: { name: string; params: readonly string[] }): string {
-  return `${fn.name}(${fn.params.length > 0 ? t("chart.blank") : ""})`;
+  return `${fn.name}(${fn.params.length > 0 ? placeholder() : ""})`;
 }
 
 /** The edit distance of two words, ignoring case. */
@@ -128,13 +129,13 @@ function operationAt(line: Line): { operation: Expr; input: Expr } | undefined {
   return up && input ? { operation: up.parent, input } : undefined;
 }
 
-/** An operation's template with the caret's input underlined and every other empty one `…`. */
+/** An operation's notation with the caret's input underlined and every other empty one `…`. */
 function operationParts(operation: Expr, current: Expr): Part[] {
   const written = (input: Expr): Part => {
-    const text = isEmptyExpr(input) ? t("chart.blank") : exprText(input);
+    const text = isEmptyExpr(input) ? placeholder() : exprText(input);
     return input === current ? { text, underline: true } : { text };
   };
-  return templateParts(exprTemplate(operation), (name) => {
+  return templateParts(exprNotation(operation), (name) => {
     const held = placeholderValue(operation, name);
     switch (held?.role) {
       case "expr":
