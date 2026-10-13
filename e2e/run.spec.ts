@@ -78,7 +78,7 @@ test.describe("running FizzBuzz", () => {
     await expect(page.getByTestId("breakpoint")).toBeVisible();
     await page.getByRole("button", { name: "Skip ▶▶" }).click();
     await expect(fizz).toHaveAttribute("data-current", "running");
-    await expect(page.getByTestId("narration")).toHaveText('print("Fizz")');
+    await expect(page.getByTestId("narration")).toHaveText('Running print("Fizz")');
     await expect(page.getByTestId("variables")).toContainText("i ← 3");
     await fizz.click();
     await expect(page.getByTestId("breakpoint")).toHaveCount(0);

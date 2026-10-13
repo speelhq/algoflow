@@ -1,6 +1,7 @@
-// One sentence per event; a comparison as the chart writes it,
+// One sentence per event; a statement and a comparison as the chart writes them,
 // with the values of the moment; a diamond's question and its answer; values as the blocks write
-// them; a named node by its statement; a location by the variable that holds it.
+// them; a named node by its statement; a location as the nodes write it, by the variable that
+// holds it.
 import { describe, expect, it } from "vitest";
 import { t } from "@/i18n/t";
 import type { Data, Program } from "@/lang/types";
@@ -36,18 +37,18 @@ function told(p: Program, type: Event["type"], nth = 1, inputs: Record<string, D
 }
 
 describe("narrate", () => {
-  it("enter: `Checking …` for a condition, the block's notation otherwise", () => {
+  it("enter: `Checking …` for a condition, `Running …` and the block's notation otherwise", () => {
     const check = if_(bin("==", bin("%", v("i"), num(3)), num(0)), []);
     const p = program([assign("i", num(6)), check, while_(bin(">", v("i"), num(9)), [])]);
-    expect(told(p, "enter", 1)).toBe("i ← 6");
+    expect(told(p, "enter", 1)).toBe("Running i ← 6");
     expect(told(p, "enter", 2)).toBe("Checking i % 3 = 0");
     expect(told(p, "enter", 3)).toBe("Checking i > 9");
-    expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("i ← 1");
+    expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("Running i ← 1");
   });
 
   it("enter: a named node is narrated by its statement, not its name", () => {
     const named = { ...assign("i", num(6)), name: "start counting" };
-    expect(told(program([named]), "enter")).toBe("i ← 6");
+    expect(told(program([named]), "enter")).toBe("Running i ← 6");
   });
 
   it("compare: a diamond's whole condition is its question with the values, and its answer", () => {
@@ -70,18 +71,18 @@ describe("narrate", () => {
     expect(told(p, "compare", 2)).toBe("(3 + 1) % 2 = 0? Yes");
   });
 
-  it("compare: any other comparison, such as a side of and, says its value", () => {
+  it("compare: any other comparison, such as a side of and, says its value as the blocks write it", () => {
     const both = bin("and", bin("<", v("a"), num(2)), bin("<", v("a"), num(9)));
     const p = program([
       assign("a", num(1)),
       if_(both, []),
       assign("ok", bin("!=", v("a"), num(1))),
     ]);
-    expect(told(p, "compare", 1)).toBe("1 < 2 is true");
+    expect(told(p, "compare", 1)).toBe("1 < 2 is True");
     expect(told(p, "compare", 3)).toBe("1 < 2 and 1 < 9? Yes");
-    expect(told(p, "compare", 4)).toBe("1 ≠ 1 is false");
+    expect(told(p, "compare", 4)).toBe("1 ≠ 1 is False");
     const negated = program([assign("a", num(1)), while_(not(bin(">=", v("a"), num(1))), [])]);
-    expect(told(negated, "compare", 1)).toBe("1 ≥ 1 is true");
+    expect(told(negated, "compare", 1)).toBe("1 ≥ 1 is True");
     expect(told(negated, "compare", 2)).toBe("not 1 ≥ 1? No");
   });
 
@@ -125,7 +126,7 @@ describe("narrate", () => {
     expect(told(p, "return")).toBe("f returned 4");
   });
 
-  it("read and swap name the list by the variable that holds it", () => {
+  it("read, swap, and write name an item as the nodes write it, by the variable that holds it", () => {
     const { program: p, inputs } = withInputs({ nums: [4, 9, 5], x: 5 }, [
       if_(bin("in", v("x"), v("nums")), []),
     ]);
@@ -137,24 +138,33 @@ describe("narrate", () => {
     const state = runner.state();
     const ctx = { program: p, state, frame: 0, pass: null };
     const read: Event = { type: "read", nodeId: "none", refs: [{ heap: 1, index: 2 }] };
-    expect(say(narrate(read, ctx))).toBe("Read item 2 of nums: 5");
+    expect(say(narrate(read, ctx))).toBe("Read nums[2]: 5");
     const swap: Event = {
       type: "swap",
       nodeId: "none",
       a: { heap: 1, index: 1 },
       b: { heap: 1, index: 2 },
     };
-    expect(say(narrate(swap, ctx))).toBe("Swapped items 1 and 2 of nums");
+    expect(say(narrate(swap, ctx))).toBe("Swapped nums[1] and nums[2]");
     const item: Event = {
       type: "write",
       nodeId: "none",
       ref: { heap: 1, index: 0 },
       value: { t: "none" },
     };
-    expect(say(narrate(item, ctx))).toBe("item 0 of nums is now None");
+    expect(say(narrate(item, ctx))).toBe("nums[0] is now None");
   });
 
-  it("a dict's key is named as the chart writes it", () => {
+  it("an item of a list that no variable of the frame references is one of `a list`", () => {
+    const { program: p, inputs } = withInputs({ grid: [[0, 7]] }, []);
+    const state = run(p, inputs, 1).state();
+    const ctx = { program: p, state, frame: 0, pass: null };
+    // The inner list is allocated before the list that holds it.
+    const read: Event = { type: "read", nodeId: "none", refs: [{ heap: 1, index: 1 }] };
+    expect(say(narrate(read, ctx))).toBe("Read a list[1]: 7");
+  });
+
+  it("a dict's key is named as the nodes write it", () => {
     const { program: p, inputs } = withInputs({ counts: {} }, []);
     const state = run(p, inputs, 1).state();
     const ctx = { program: p, state, frame: 0, pass: null };
@@ -164,7 +174,9 @@ describe("narrate", () => {
       ref: { heap: 1, key: "s:a" },
       value: { t: "int", v: 1 },
     };
-    expect(say(narrate(key, ctx))).toBe('counts at "a" is now 1');
+    expect(say(narrate(key, ctx))).toBe('counts["a"] is now 1');
+    const number: Event = { ...key, ref: { heap: 1, key: "i:3" } };
+    expect(say(narrate(number, ctx))).toBe("counts[3] is now 1");
   });
 
   it("the end of the run, an error, and the step Watch this case opens at", () => {
