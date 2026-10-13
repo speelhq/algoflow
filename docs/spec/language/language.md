@@ -253,15 +253,15 @@ every other difference from Python is stricter and ends in an error (a
 | `swap` exchanges `list[i]` and `list[j]` | |
 | `copy()` copies one list level | |
 
-### Calls (`call`, `print`, `call:random_int`)
+### Calls (`call`, `print`, `call:randint`)
 
 | Rule | Example |
 | --- | --- |
 | a call of a program function is positional with exact arity (validated); no `return` → `None`; depth > 200 → `E_RECURSION` | |
 | `print` joins args with one space using Python `str()`: `True`, `None`, `2.0`, `[1, 2]`, `{'a': 1}`, `Value(data=2.0, grad=0.0, prev=[], op='')` | |
-| `random_int(a, b)` (inclusive, `int`) draws from mulberry32 seeded per run | |
-| `random_int(a, b)` with `a > b` → `E_EMPTY_RANGE` | `random_int(5, 1)` |
-| `random_int(a, b)` with a bound that is no `int` → `E_TYPE` | `random_int(1.0, 2)` |
+| `randint(a, b)` (inclusive, `int`) draws from mulberry32 seeded per run | |
+| `randint(a, b)` with `a > b` → `E_EMPTY_RANGE` | `randint(5, 1)` |
+| `randint(a, b)` with a bound that is no `int` → `E_TYPE` | `randint(1.0, 2)` |
 
 A bound of `1.0` is refused too: CPython 3.12 and later, which `pnpm check`
 requires, raise `TypeError` for any `float` bound.

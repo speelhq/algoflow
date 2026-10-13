@@ -389,7 +389,9 @@ a text in quotes, a list `[1, "a"]`, and a dict `{"a": 1, 3: 2}`, its items
 written by the same rule and separated by `, `. A variable shown with its
 value or its view (`views.md`) in `Variables`, a `Result` row, a case label,
 the case menu, an Input node, or `Example` is written as an assignment
-writes it (`n ← 15`); the narration says it in a sentence (`run.md`,
+writes it (`n ← 15`), and the variables of a case label and the case menu
+are separated by `, ` (`a ← 3, b ← 9`) in every locale, as items are
+(`nodes.md`, Node text); the narration says it in a sentence (`run.md`,
 Narration). `Output` shows what `print` printed, as Python's `str()` writes
 it.
 

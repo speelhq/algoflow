@@ -17,7 +17,7 @@ export type NodeDef = {
   slots: Slot[];
   params?: Param[]; // builtin and method parameters in order (argument counts below)
   aliases?: string[]; // Python spellings the parser accepts (`parser.md`), e.g. "random.randint"
-  imports?: "random"; // `random_int` (Builtin calls)
+  imports?: "random"; // a builtin's module (Builtin calls)
   precedence?(node: Expr): number; // `emitter.md`; undefined = atom
   loop?: boolean; // its body regions are loop bodies
   requires?: "loop" | "function"; // where the statement may appear (E_BREAK_OUTSIDE, E_RETURN_OUTSIDE)
@@ -95,9 +95,11 @@ the block menu and the value list, `node.<key>.help`, and
 editor shows as a field (`node.assign.slot.value`: `value`); `ja.json`
 provides the same keys. The hidden `empty` block has its label and help. A
 menu entry with a `name` has `node.<key>.<name>.label` and
-`node.<key>.<name>.help`; a help that ends with how to type the entry names
-its keys (`Type %.`). A block's node text is no catalog key: it is the
-block's `notation()`, the same in every locale (Node text).
+`node.<key>.<name>.help`. No help names its entry's keys: the explanation
+line writes them from `keys` (`editor.md`, Explanation line), as a help that
+named them would repeat the block's `keys` in every locale. A block's node
+text is no catalog key: it is the block's `notation()`, the same in every
+locale (Node text).
 
 ## Statements
 
@@ -149,9 +151,14 @@ filling in the first unused of `i`, `j`, `k` would be a special case.
 | `min`, `max`                 | basic    | a, b | `min({a}, {b})` / `max({a}, {b})`                  | `min(<a>, <b>)` / `max(<a>, <b>)`      |
 | `sum`                        | list     | a    | `sum({a})`                                         | `sum(<a>)`                             |
 | `str`, `int`, `float`        | basic    | x    | `str({x})` / `int({x})` / `float({x})`             | `str(<x>)` / `int(<x>)` / `float(<x>)` |
-| `random_int`                 | basic    | a, b | `randint({a}, {b})`                                | `random.randint(<a>, <b>)`             |
+| `randint`                    | basic    | a, b | `randint({a}, {b})`                                | `random.randint(<a>, <b>)`             |
 
-`random_int` adds `import random` (`emitter.md`).
+A builtin is named as Python names it; one of a module (`randint`, of
+`random`) is called `<module>.<name>` in Python, which the parser accepts as
+its alias, and adds `import <module>` (`emitter.md`). A name of its own
+(`random_int`) was rejected: the chart writes the Python name, so a function
+could take it and be drawn as the builtin, while the name it may not take
+would be one the learner never reads.
 
 ## Methods (`key = "method:<name>"`)
 
@@ -242,6 +249,10 @@ Python (`emitter.md`), where `←` becomes `=`.
 A slot written twice in a notation (`swap`'s `{list}`) is a field at its
 first place and drawn as its value at the other.
 
+The items of an `exprs` slot, a call's arguments, and a function's
+parameters are separated by `, `, as Python separates them, in every
+locale.
+
 A variable is written as a bold word in the variable colour, on the chart
 and in the editor, never in a box, which would cut the node into pieces. A
 node is drawn as its notation writes it, with no capital added.
@@ -293,7 +304,7 @@ several groups (`binop` is `Add`, `Equals`, and `And`).
 | `unop`            | `not`      | Not                     | conditions |                      | `not`  | `not` |
 | `binop`           | `and`      | And                     | conditions | truefalse            | `and`  | `and` |
 | `binop`           | `or`       | Or                      | conditions | truefalse            | `or`   | `or`  |
-| `call:random_int` |            | Random whole number     | calculate  |                      |        | `randint` |
+| `call:randint`    |            | Random whole number     | calculate  |                      |        | `randint` |
 | `binop`           | `add`      | Add                     | calculate  | number, text         | `+`    | `+`   |
 | `binop`           | `sub`      | Subtract                | calculate  | number               | `−`    | `-`   |
 | `binop`           | `mul`      | Multiply                | calculate  | number               | `×`    | `*`   |
@@ -337,7 +348,7 @@ true/false value for `not` and a number for `−`; `binop` a true/false value
 for a comparison and `in`, for `and` and `or` the kind of both inputs when
 they agree, for `+` the kind of both inputs when they agree and are not
 true/false, for `*` a list or a text when one input is one, and otherwise a
-number; `call:abs`, `call:int`, `call:float`, and `call:random_int` a
+number; `call:abs`, `call:int`, `call:float`, and `call:randint` a
 number; `call:str` a text; `call:min` and `call:max` the kind of their
 first input; `list` a list, `dict` a dict, and `new` an object. Where a rule
 gives no kind, the expression has none: a wrong kind would hide the entries

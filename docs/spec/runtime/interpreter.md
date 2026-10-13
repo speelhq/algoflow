@@ -106,10 +106,10 @@ Runtime error codes:
 | `E_INDEX`      | a list index (`language.md`, Semantics, Values and the run) | `index`, `length` |
 | `E_KEY`        | a missing dict key (same)                         | `key`                     |
 | `E_FIELD`      | a missing field (`language.md`, Semantics, Objects) | `cls`, `field`          |
-| `E_TYPE`       | `+` mixing `str` and a number, ordering a number with a `str`, a dict key, a `for` bound, a `random_int` bound (`language.md`, Semantics) | `left`, `right` |
+| `E_TYPE`       | `+` mixing `str` and a number, ordering a number with a `str`, a dict key, a `for` bound, a `randint` bound (`language.md`, Semantics) | `left`, `right` |
 | `E_VALUE`      | `abs`, `int`, `float`, or unary `-` of a value of a type it does not take | `op`, `type` |
 | `E_NUMBER_TEXT`| `int` or `float` of a text that is no such number | `op`, `text`     |
-| `E_EMPTY_RANGE`| `random_int(a, b)` with `a > b`                   | `a`, `b`                  |
+| `E_EMPTY_RANGE`| `randint(a, b)` with `a > b`                      | `a`, `b`                  |
 | `E_DIV_ZERO`   | division or modulo by zero; zero to a negative power | |
 | `E_POP_EMPTY`  | `pop` on an empty list |                           |
 | `E_ARITY`      | `new` with more arguments than fields             | `name`, `expected`, `got` |
