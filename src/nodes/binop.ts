@@ -171,6 +171,7 @@ export const binop = defineExpr<"binop">({
       group: "conditions",
       on: ["truefalse"],
       preset: { op: "and" },
+      symbol: "and",
       keys: "and",
     },
     {
@@ -178,6 +179,7 @@ export const binop = defineExpr<"binop">({
       group: "conditions",
       on: ["truefalse"],
       preset: { op: "or" },
+      symbol: "or",
       keys: "or",
     },
     {
@@ -217,6 +219,7 @@ export const binop = defineExpr<"binop">({
       group: "calculate",
       on: ["number"],
       preset: { op: "%" },
+      symbol: "%",
       keys: "%",
     },
     {
@@ -224,6 +227,7 @@ export const binop = defineExpr<"binop">({
       group: "calculate",
       on: ["number"],
       preset: { op: "//" },
+      symbol: "//",
       keys: "//",
     },
     {
@@ -231,6 +235,7 @@ export const binop = defineExpr<"binop">({
       group: "calculate",
       on: ["number"],
       preset: { op: "**" },
+      symbol: "**",
       keys: "**",
     },
     { name: "join", group: "items", on: ["list"], preset: { op: "+" }, symbol: "+" },
@@ -240,7 +245,7 @@ export const binop = defineExpr<"binop">({
     { name: "le", group: "compare", on: ORDERED, preset: { op: "<=" }, symbol: "≤", keys: "<=" },
     { name: "gt", group: "compare", on: ORDERED, preset: { op: ">" }, symbol: ">", keys: ">" },
     { name: "ge", group: "compare", on: ORDERED, preset: { op: ">=" }, symbol: "≥", keys: ">=" },
-    { name: "in", group: "compare", on: KINDS, preset: { op: "in" }, keys: "in" },
+    { name: "in", group: "compare", on: KINDS, preset: { op: "in" }, symbol: "in", keys: "in" },
   ],
 });
 

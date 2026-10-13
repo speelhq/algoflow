@@ -325,31 +325,31 @@
     },
     "call:abs": {
       "label": "Absolute value",
-      "help": "Drops the sign of a number."
+      "help": "Drops the sign of a number. Type `abs`."
     },
     "call:min": {
       "label": "Smaller of two",
-      "help": "Picks the smaller of two numbers or texts."
+      "help": "Picks the smaller of two numbers or texts. Type `min`."
     },
     "call:max": {
       "label": "Larger of two",
-      "help": "Picks the larger of two numbers or texts."
+      "help": "Picks the larger of two numbers or texts. Type `max`."
     },
     "call:str": {
       "label": "As text",
-      "help": "Turns any value into its text form."
+      "help": "Turns any value into its text form. Type `str`."
     },
     "call:int": {
       "label": "As whole number",
-      "help": "Turns a decimal or numeric text into a whole number."
+      "help": "Turns a decimal or numeric text into a whole number. Type `int`."
     },
     "call:float": {
       "label": "As decimal",
-      "help": "Turns a whole number or numeric text into a decimal."
+      "help": "Turns a whole number or numeric text into a decimal. Type `float`."
     },
     "call:random_int": {
       "label": "Random whole number",
-      "help": "A random whole number between the two bounds, both included."
+      "help": "A random whole number between the two bounds, both included. Type `randint`."
     }
   },
   "chart": {
