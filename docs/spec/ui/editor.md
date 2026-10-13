@@ -102,8 +102,11 @@ Python does, so `-3 ** 2` keeps Python's meaning.
 A typed word, a letter or `_` followed by letters, digits, and `_`, matches a
 name one of whose words starts with it, or an entry's keys (`multiply` finds
 `×`, `%` finds `Remainder`): where a value is expected, the visible
-variables and the entries offered there, and after a value, every entry that
-takes one. While it is unfinished its matches replace the list's groups, a
+variables, the entries offered there, and every call (`abs`, `str`), and
+after a value, every entry that takes one. A call is typed where a value is
+expected as the chart writes it (`abs(x)`), and after a value as the value
+is built (`x` then `abs`); offering it only after its value would refuse
+what a learner copies from the chart. While it is unfinished its matches replace the list's groups, a
 whole name first and, after a value, the entries for its kind first; Enter
 or a click chooses the highlighted match, and ↑ and ↓ move the highlight. A
 space or any key of the key table (Backspace and keys) ends the word: when it
@@ -226,8 +229,9 @@ its keys (`keys`, `nodes.md`, Menu entries):
 | `-`                     | `−`; at an empty input, the sign of what follows |
 | `*` `/`                 | `×` `÷`                                          |
 | `==` `!=` `<=` `>=`     | `=` `≠` `≤` `≥`                                  |
-| `(`                     | a pair of brackets, the caret inside them         |
+| `(`                     | a pair of brackets, the caret inside them; after a call's name, the call's own |
 | `[` `,`                 | a list's pair of brackets; `,` between its items  |
+| `,` in a call           | the call's next input                            |
 | `,` in an `exprs` slot  | the next value of the slot (Node editor)         |
 | `%` `//` `**`           | as typed                                         |
 | `and` `or` `not` `in`   | as typed                                         |
@@ -235,8 +239,12 @@ its keys (`keys`, `nodes.md`, Menu entries):
 A single `=` inserts nothing; a comparison typed after a comparison is
 refused and the explanation line shows the message of `E_PARSE_CHAIN`. At an
 input still to fill, a key that inserts an operation after a value inserts
-nothing, `-` aside; `(` opens brackets only there, and `)` closes the
-innermost open pair. `**` and `//`, typed as two keys, become one operator
+nothing, `-` aside; `(` opens brackets only there. `)` leaves the innermost
+call around the caret when no pair is open or the call begins inside the
+innermost open pair, and otherwise closes that pair, so `2*(abs(i)-1)` keeps
+both. A `,` after the last input a call holds is refused: inside a call's
+brackets a `,` separates its arguments, as in Python, never the values
+around the call. `**` and `//`, typed as two keys, become one operator
 that binds by its own precedence: `2*3**2` multiplies 2 by 3 to the power of
 2. A single `=` is Python's assignment, so it is never read as a
 comparison; every operator has a key where Python has one, so the
@@ -295,8 +303,9 @@ chart.
 
 The explanation line at the foot of the editor explains what the list
 highlights or the caret is in: an entry's name and its help (`nodes.md`,
-Catalog keys), which ends with how to type it when keys insert it
-(`Type %.`); the brackets' label with `editor.bracketsHelp`; a variable's
+Catalog keys), followed, when keys insert it, by how to type them
+(`editor.typeKeys`: `Type %.`); the brackets' label with `editor.bracketsHelp`
+and how to type them; a variable's
 name with its kind and the statement that first gives it a value (`A number
 variable. It first gets a value in: i ← 1.`, `editor.explain.variablePlain`
 when it has no kind), an input's kind (`editor.explain.input`), a parameter
