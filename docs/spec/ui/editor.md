@@ -293,7 +293,7 @@ translates it and never asks for it. A named node shows its name alone, in
 place of its notation or its question, unless a slot of it is still empty,
 when it shows its notation with the placeholder; a named counted loop shows
 its name on its check, its other generated nodes keeping their text;
-hovering a named node shows its notation, a named counted loop its check, and the `Python` tab writes the
+hovering a named node shows what it draws without its name, its notation or its question, a named counted loop its check, and the `Python` tab writes the
 name as a comment above the statement (`emitter.md`). A condition written in
 symbols does not say what it is for, which a name in the learner's words
 does; a `comment` block was rejected, as it would draw Python's `#` on the

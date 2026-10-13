@@ -115,7 +115,7 @@ The Python column is the exact emitted text; `<x>` denotes an emitted slot.
 | `break`    | control  |                        | `break`                                                                                                             | `break`                                                                             |
 | `continue` | control  |                        | `continue`                                                                                                          | `continue`                                                                          |
 | `print`    | basic    | args                   | `print({args})`                                                                                                     | `print(<a>, <b>)`                                                                   |
-| `return`   | function | value?                 | `return {value}` / `return`                                                                                         | `return <value>` / `return`                                                         |
+| `return`   | function | value?                 | `return {value}`, drawn `return` with no value                                                                      | `return <value>` / `return`                                                         |
 | `expr`     | basic    | expr                   | `{expr}`                                                                                                            | `<expr>`                                                                            |
 | `swap`     | list     | list, i, j             | `swap({list}[{i}], {list}[{j}])`                                                                                    | `<list>[<i>], <list>[<j>] = <list>[<j>], <list>[<i>]`                               |
 | `delete`   | list     | target                 | `del {target}`                                                                                                      | `del <target>`                                                                      |
@@ -274,8 +274,11 @@ The texts of a counted loop's generated nodes, with `{slot}` placeholders:
 
 | key       | init                    | check                     | step                 |
 | --------- | ----------------------- | ------------------------- | -------------------- |
-| `for`     | `{var} ← {start}`       | `{var} < {stop}?`         | `{var} ← {var} + 1`  |
-| `foreach` | `First item of {list}`  | `{list} has another item?` | `{var} ← next item` |
+| `for`     | `{var} ← {start}`       | `{var} < {stop}`          | `{var} ← {var} + 1`  |
+| `foreach` | `First item of {list}`  | `{list} has another item` | `{var} ← next item` |
+
+A check is drawn as every diamond asks its condition (`chart.md`, Shapes:
+`i < n + 1?`), so the `?` of a diamond has one rule.
 
 The texts of `for` are notation, declared by the block and the same in
 every locale. Those of `foreach` hold words, as its steps have no
