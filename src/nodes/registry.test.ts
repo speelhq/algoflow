@@ -120,13 +120,13 @@ describe("registry", () => {
     ]);
   });
 
-  it("a named entry has its label and help, and a help names the entry's keys", () => {
+  it("a named entry has its label and help, and no help names the entry's keys", () => {
     for (const def of NODES.values()) {
       for (const entry of def.menu ?? []) {
         const base = entry.name === "" ? `node.${def.key}` : `node.${def.key}.${entry.name}`;
         expect(keys.has(`${base}.label`), `${base}.label`).toBe(true);
         const help = flatten(en)[`${base}.help`] ?? "";
-        if (entry.keys) expect(help.endsWith(`Type \`${entry.keys}\`.`), base).toBe(true);
+        expect(help, base).not.toContain("Type `");
       }
     }
   });

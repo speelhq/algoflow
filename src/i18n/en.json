@@ -244,39 +244,39 @@
       "help": "Combines two values with arithmetic, a comparison, and/or, or in.",
       "and": {
         "label": "And",
-        "help": "True when both sides are true. Example: i > 0 and i < 10 is true when i is 5. Type `and`."
+        "help": "True when both sides are true. Example: i > 0 and i < 10 is true when i is 5."
       },
       "or": {
         "label": "Or",
-        "help": "True when one side or both sides are true. Example: i = 3 or i = 5 is true when i is 3 and when i is 5. Type `or`."
+        "help": "True when one side or both sides are true. Example: i = 3 or i = 5 is true when i is 3 and when i is 5."
       },
       "add": {
         "label": "Add",
-        "help": "Adds two numbers, or joins two texts. Example: 2 + 3 is 5. Type `+`."
+        "help": "Adds two numbers, or joins two texts. Example: 2 + 3 is 5."
       },
       "sub": {
         "label": "Subtract",
-        "help": "Takes the right number away from the left one. Example: 7 − 2 is 5. Type `-`."
+        "help": "Takes the right number away from the left one. Example: 7 − 2 is 5."
       },
       "mul": {
         "label": "Multiply",
-        "help": "Multiplies two numbers. Example: 4 × 3 is 12. Type `*`."
+        "help": "Multiplies two numbers. Example: 4 × 3 is 12."
       },
       "div": {
         "label": "Divide",
-        "help": "Divides the left number by the right one; the result is a decimal. Example: 7 ÷ 2 is 3.5. Type `/`."
+        "help": "Divides the left number by the right one; the result is a decimal. Example: 7 ÷ 2 is 3.5."
       },
       "mod": {
         "label": "Remainder",
-        "help": "What is left when the left number is divided by the right one. Example: 7 % 3 is 1. Type `%`."
+        "help": "What is left when the left number is divided by the right one. Example: 7 % 3 is 1."
       },
       "floorDiv": {
         "label": "Whole-number quotient",
-        "help": "How many whole times the right number fits into the left one. Example: 7 // 3 is 2. Type `//`."
+        "help": "How many whole times the right number fits into the left one. Example: 7 // 3 is 2."
       },
       "pow": {
         "label": "Power",
-        "help": "The left number multiplied by itself as many times as the right one says. Example: 2 ** 3 is 8. Type `**`."
+        "help": "The left number multiplied by itself as many times as the right one says. Example: 2 ** 3 is 8."
       },
       "join": {
         "label": "Join with another list",
@@ -284,31 +284,31 @@
       },
       "eq": {
         "label": "Equals",
-        "help": "True when both sides are the same value. Example: 2 + 2 = 4 is true. Type `==`."
+        "help": "True when both sides are the same value. Example: 2 + 2 = 4 is true."
       },
       "ne": {
         "label": "Does not equal",
-        "help": "True when the two sides are different values. Example: 3 ≠ 4 is true. Type `!=`."
+        "help": "True when the two sides are different values. Example: 3 ≠ 4 is true."
       },
       "lt": {
         "label": "Less than",
-        "help": "True when the left value is smaller than the right one. Example: 3 < 4 is true. Type `<`."
+        "help": "True when the left value is smaller than the right one. Example: 3 < 4 is true."
       },
       "le": {
         "label": "At most",
-        "help": "True when the left value is smaller than the right one or equal to it. Example: 4 ≤ 4 is true. Type `<=`."
+        "help": "True when the left value is smaller than the right one or equal to it. Example: 4 ≤ 4 is true."
       },
       "gt": {
         "label": "Greater than",
-        "help": "True when the left value is larger than the right one. Example: 5 > 4 is true. Type `>`."
+        "help": "True when the left value is larger than the right one. Example: 5 > 4 is true."
       },
       "ge": {
         "label": "At least",
-        "help": "True when the left value is larger than the right one or equal to it. Example: 4 ≥ 4 is true. Type `>=`."
+        "help": "True when the left value is larger than the right one or equal to it. Example: 4 ≥ 4 is true."
       },
       "in": {
         "label": "Is in a list",
-        "help": "True when the left value is an item of the list on the right, a key of the dict, or part of the text. Example: 2 in [1, 2, 3] is true. Type `in`."
+        "help": "True when the left value is an item of the list on the right, a key of the dict, or part of the text. Example: 2 in [1, 2, 3] is true."
       }
     },
     "unop": {
@@ -316,7 +316,7 @@
       "help": "Flips the sign of a number or the truth of a value.",
       "not": {
         "label": "Not",
-        "help": "True when the value after it is false. Example: not 3 > 4 is true. Type `not`."
+        "help": "True when the value after it is false. Example: not 3 > 4 is true."
       }
     },
     "call": {
@@ -325,31 +325,31 @@
     },
     "call:abs": {
       "label": "Absolute value",
-      "help": "Drops the sign of a number. Type `abs`."
+      "help": "Drops the sign of a number."
     },
     "call:min": {
       "label": "Smaller of two",
-      "help": "Picks the smaller of two numbers or texts. Type `min`."
+      "help": "Picks the smaller of two numbers or texts."
     },
     "call:max": {
       "label": "Larger of two",
-      "help": "Picks the larger of two numbers or texts. Type `max`."
+      "help": "Picks the larger of two numbers or texts."
     },
     "call:str": {
       "label": "As text",
-      "help": "Turns any value into its text form. Type `str`."
+      "help": "Turns any value into its text form."
     },
     "call:int": {
       "label": "As whole number",
-      "help": "Turns a decimal or numeric text into a whole number. Type `int`."
+      "help": "Turns a decimal or numeric text into a whole number."
     },
     "call:float": {
       "label": "As decimal",
-      "help": "Turns a whole number or numeric text into a decimal. Type `float`."
+      "help": "Turns a whole number or numeric text into a decimal."
     },
     "call:random_int": {
       "label": "Random whole number",
-      "help": "A random whole number between the two bounds, both included. Type `randint`."
+      "help": "A random whole number between the two bounds, both included."
     }
   },
   "chart": {
@@ -413,10 +413,11 @@
     "name": "Name",
     "nameHint": "optional",
     "typeHint": "type or choose",
+    "typeKeys": "Type `{keys}`.",
     "showAll": "Show all",
     "brackets": "Brackets",
     "bracketsGlyph": "( )",
-    "bracketsHelp": "Groups what is inside, so it is worked out first. Type `(`.",
+    "bracketsHelp": "Groups what is inside, so it is worked out first.",
     "ownFunction": "One of this program's functions. Choosing it calls it.",
     "didYouMean": "Did you mean {name}?",
     "nothingLike": "Nothing has this name. Check the spelling, or choose from the list.",
