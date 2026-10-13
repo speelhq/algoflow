@@ -17,8 +17,8 @@ The UI is available in English and Japanese. The initial language is the
 browser language when a locale for it exists, otherwise English; the
 header switches it and the choice is stored in `localStorage`.
 
-The application is deployed as static files to GitHub Pages from `main` by
-CI.
+The application is deployed as static assets to Cloudflare Workers, on
+`*.workers.dev`, from `main` by CI once `main` passes its checks.
 
 ## The learner
 
