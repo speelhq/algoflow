@@ -56,6 +56,10 @@ an assignment (`pages.md`, Help and `⋯`).
 Every `Localized` text of a challenge, a plan, and a built-in module has its
 `ja` text (`scope.md`, Product).
 
+`scripts/check.ts` fails on a `ja` text of a challenge, a plan, or a
+built-in module that holds a word the glossary avoids, compared as
+`pages.md`, Catalogs states, naming the file, the field, and the word.
+
 Every challenge is in exactly one plan, once: `scripts/check.ts` fails on a
 plan member with no challenge file, a member listed twice, a challenge in
 two plans, and a challenge in no plan. A problem in no plan would need a

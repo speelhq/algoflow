@@ -321,6 +321,32 @@ The Japanese locale uses polite form and everyday vocabulary for block
 sentences, and gives the technical term in parentheses in `help` texts
 (e.g. the loanword for "loop" beside the everyday word).
 
+`src/i18n/glossary.json` lists, for each term, the English term, the
+Japanese word the Japanese texts call it by, the technical word a `help`
+text gives in parentheses where the term has one, and the words avoided
+for it; a term's Japanese word and technical word are its glossary words.
+The learner cannot tell two words for one thing from two things, and the
+instructor teaches with the words the screens use, so one list serves the
+writer and the reviewer of every Japanese text.
+
+`pnpm check` fails on a text of `ja.json` that holds an avoided word,
+naming the key and the word; the words are compared after Unicode NFKC
+normalization, so a half-width katakana word is found too. A glossary with
+no check was rejected: a word that drifts is found only when a review
+notices it. A check that a Japanese text holds a term's glossary word
+wherever its English holds the term was rejected: a natural Japanese
+sentence often leaves the term out, and each such text would need an
+exception.
+
+`pnpm check` fails on a glossary that lists a term twice, gives one
+glossary word to two terms, or avoids a word that is a glossary word or
+part of one: Japanese has no spaces between words, so an avoided word is
+found inside a longer one.
+
+The glossary exempts no key or file: a text that fails although its word is
+right is reworded, or the word leaves the avoided words, as an exemption
+kept by key goes stale while the texts change.
+
 `t(key, params?)` in `src/i18n/t.ts` accepts only keys of `en.json` (type
 `MessageKey`, derived from the file), replaces `{name}` placeholders from
 `params`, falls back from the current locale to `en`, and returns the key
