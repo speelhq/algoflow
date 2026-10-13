@@ -24,9 +24,10 @@ One folder per area, holding its specification files.
 
 All specification text, identifiers, sentences, and example strings are
 English, and English (`en.json`, `en` fields) is the development locale.
-Japanese is a translation: it exists only in `src/i18n/ja.json` and in the
+Japanese is a translation: it exists only in `src/i18n/ja.json`, in the
+glossary `src/i18n/glossary.json` (`ui/pages.md`, Catalogs), and in the
 `ja` fields of challenge, plan, and module files, and the specification
-refers to it by key. Labels quoted in `ui/` are `en.json` texts; `ja.json`
+refers to it by key, and to a glossary word by its English term. Labels quoted in `ui/` are `en.json` texts; `ja.json`
 holds the same keys with Japanese texts (`ui/pages.md`, Catalogs).
 
 ## Statements

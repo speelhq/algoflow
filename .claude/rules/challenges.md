@@ -11,3 +11,4 @@ curriculum of `docs/spec/scope/scope.md`. A challenge is added with `/add-challe
 
 - oxfmt keeps a JSON object on one line only if it already was: edit challenge files by
   line, never by `JSON.stringify`.
+- A `ja` text calls each term by its word in `src/i18n/glossary.json` (`pages.md`, Catalogs).
