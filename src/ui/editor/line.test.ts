@@ -261,7 +261,7 @@ describe("choosing", () => {
   it("where a value is expected, an entry fills the input and the caret moves to its first input", () => {
     const placed = choose(empty(), entry("binop.add"), ctx).line;
     expect(py(placed)).toBe("... + ...");
-    const random = choose(empty(), entry("call:random_int"), ctx).line;
+    const random = choose(empty(), entry("call:randint"), ctx).line;
     expect(py(random)).toBe("random.randint(..., ...)");
     expect(py(choose(empty(), { kind: "variable", name: "n" }, ctx).line)).toBe("n");
     expect(py(choose(empty(), { kind: "function", fn: ctx.functions[0]! }, ctx).line)).toBe(
@@ -374,7 +374,7 @@ describe("Backspace and moving", () => {
   });
 
   it("Tab moves between inputs still to fill, then to the next slot", () => {
-    const placed = choose(empty(), entry("call:random_int"), ctx).line;
+    const placed = choose(empty(), entry("call:randint"), ctx).line;
     const second = tab(placed, 1, ctx);
     expect(second.move).toBeUndefined();
     expect(tab(second.line, 1, ctx).move).toBe("next");

@@ -22,7 +22,7 @@ export function isValidName(name: string): boolean {
   return NAME_PATTERN.test(name) && !RESERVED.has(name);
 }
 
-/** A builtin call key (`abs`, `random_int`, …) may not be redefined. */
+/** A builtin call key (`abs`, `randint`, …) may not be redefined. */
 function isBuiltinName(name: string): boolean {
   return hasNode(builtinKey(name));
 }

@@ -76,9 +76,9 @@ describe("validate (language.md, Validation)", () => {
       { nodeId: fn.id, code: "E_DUPLICATE_NAME", params: { name: "a" } },
       { nodeId: expect.any(String), code: "E_DUPLICATE_NAME", params: { name: "count" } },
     ]);
-    const shadow = { id: "f0000000000g", name: "random_int", params: [], body: [] };
+    const shadow = { id: "f0000000000g", name: "randint", params: [], body: [] };
     expect(codes(program([], { functions: [shadow] }))).toEqual(["E_DUPLICATE_NAME"]);
-    expect(codes(program([for_("random_int", num(0), num(1), [])]))).toEqual(["E_DUPLICATE_NAME"]);
+    expect(codes(program([for_("randint", num(0), num(1), [])]))).toEqual(["E_DUPLICATE_NAME"]);
   });
 
   it("a for variable stays visible after its loop; a while body cannot define its condition", () => {

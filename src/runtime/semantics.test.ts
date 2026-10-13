@@ -178,7 +178,7 @@ describe("event rules", () => {
 
   it("the same program, inputs, and seed produce the same event sequence", () => {
     const prog = program([
-      for_("i", num(0), num(5), [assign("x", call("random_int", num(0), num(9)))]),
+      for_("i", num(0), num(5), [assign("x", call("randint", num(0), num(9)))]),
     ]);
     expect(runAll(prog, {}, 3).events).toEqual(runAll(prog, {}, 3).events);
   });
