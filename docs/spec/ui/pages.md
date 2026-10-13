@@ -272,12 +272,48 @@ decided when the UI exists and no translation is asked for an unused
 string.
 
 `pnpm check` (`scripts/lib/i18n-check.ts`) fails on a `t()` call in `src/`
-whose literal key `en.json` does not hold; test files, which call `t()`
-with unknown keys on purpose, and `*.d.ts` are not scanned. The call is
-found by a pattern, `t("…")` or `t('…')`, not by a parser, which would add a
-dependency to the script: it ignores `at(`, `obj.t(`, and template
-literals, matches inside comments too, and leaves keys built at run time
-unscanned.
+whose first argument is a string literal that `en.json` does not hold;
+test files, which call `t()` with unknown keys on purpose, and `*.d.ts` are
+not scanned. The check reads each file with `oxc-parser`, so a call is one
+whose callee is the name `t` (not `at(` or `obj.t(`) and comments are not
+read. A pattern over the text was rejected: it cannot tell a comment from code, nor read a template
+literal that spans lines or nests another. A template literal passed to
+`t()` is checked by TypeScript instead: it yields only keys of
+`MessageKey`.
+
+`pnpm check` fails on a scanned file that `oxc-parser` rejects.
+
+`pnpm check` fails on a key of `en.json` that no scanned file names. A
+string literal, or a template literal with no placeholder, that is the
+whole key names it wherever it stands (a `t()` argument, a branch of a
+ternary, a value of a map, a narration's `key`).
+
+A template literal that `t()`'s first argument can evaluate to (the
+argument itself, or a branch of a conditional or logical expression in it)
+names every key its text matches, each placeholder standing for one
+segment, a run of characters other than `.`:
+`` t(`problems.topic.${topic}`) `` names every `problems.topic.*` key. A
+template literal that begins with a placeholder, or stands anywhere else,
+names none, as one such as a storage key's `${prefix}${id}` would match
+every key. A list of each family's members was rejected: it would repeat
+the union the code already types, beside the template literal that builds
+the family's keys.
+
+The keys built from data are built in `src/i18n/t.ts`, and the check names
+them with the same functions: `node.<key>.<part>` (`nodeKey`) under
+`nodePrefix(key)` for each key the registry holds, and `error.<code>`
+(`errorKey`) for each code of `ERROR_CODES` (`src/i18n/codes.ts`:
+`DIAGNOSTIC_CODES`, `RUNTIME_CODES`, and `PARSE_CODES`). A template literal
+passed to `t()` with a cast to `MessageKey` names no key: TypeScript does
+not check what it yields, and its pattern would match a whole namespace.
+
+A key left behind when a member leaves a family whose template literal
+remains, or a template form, a named menu entry, or a generated node's
+text leaves a registered block, is not reported, while a removed block's
+keys are. A family's members are a type, which the check does not read
+without the type checker; a block's forms are what `form()` returns, which
+no list declares; and naming a block's keys one by one would copy `nodes.md`,
+Catalog keys, into the check beside the code that builds them.
 
 `pnpm check` fails on a key that one locale holds and the other does not.
 
