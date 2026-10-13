@@ -2,6 +2,7 @@
 // and a list of values with a remove button on each item.
 import type { KeyboardEvent, ReactNode } from "react";
 import { t } from "@/i18n/t";
+import { SEPARATOR } from "@/ui/chart/text";
 import type { Expr } from "@/lang/types";
 import { cn } from "@/lib/utils";
 
@@ -80,7 +81,7 @@ export function ValueItems(props: {
         // An item keeps its field while the value in it changes.
         // oxlint-disable-next-line react/no-array-index-key -- the field is the position
         <span key={index} className="inline-flex items-center gap-0.5">
-          {index > 0 && <span>{t("chart.listSeparator")}</span>}
+          {index > 0 && <span>{SEPARATOR}</span>}
           {props.line(item, index)}
           <button
             type="button"

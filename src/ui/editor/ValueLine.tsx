@@ -15,6 +15,7 @@ import {
   exprText,
   placeholderValue,
   templatePieces,
+  SEPARATOR,
 } from "@/ui/chart/text";
 import { inputs, type Line } from "./line";
 
@@ -160,7 +161,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
           return;
         case "exprs":
           held.items.forEach((item, j) => {
-            if (j > 0) pieces.push(<span key={`c${item.id}`}>{t("chart.listSeparator")}</span>);
+            if (j > 0) pieces.push(<span key={`c${item.id}`}>{SEPARATOR}</span>);
             pieces.push(draw(item));
           });
           return;

@@ -6,7 +6,7 @@ import { errorKey, errorParams, t, type MessageKey, type Params } from "@/i18n/t
 import type { Expr, Heap, Program, Value } from "@/lang/types";
 import { conditionOf, diamondConditions, isExpr, nodesById, variableOf } from "@/lang/walk";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
-import { capitalise, exprText, sentence, valueText } from "@/ui/chart/text";
+import { capitalise, exprText, SEPARATOR, sentence, valueText } from "@/ui/chart/text";
 
 export type Narration = { key: MessageKey; params: Params };
 
@@ -135,7 +135,7 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
         key: "run.narrate.call",
         params: {
           fn: event.fn,
-          args: event.args.map((arg) => valueText(arg, heap)).join(t("chart.listSeparator")),
+          args: event.args.map((arg) => valueText(arg, heap)).join(SEPARATOR),
         },
       };
     case "return":

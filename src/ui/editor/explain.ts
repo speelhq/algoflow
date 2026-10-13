@@ -15,6 +15,7 @@ import {
   sentence,
   templateParts,
   type Part,
+  SEPARATOR,
 } from "@/ui/chart/text";
 import { labelOf } from "./entries";
 import {
@@ -159,7 +160,7 @@ function operationParts(operation: Expr, current: Expr): Part[] {
         return held.expr ? [written(held.expr)] : [];
       case "exprs":
         return held.items.flatMap((item, i) =>
-          i === 0 ? [written(item)] : [{ text: t("chart.listSeparator") }, written(item)],
+          i === 0 ? [written(item)] : [{ text: SEPARATOR }, written(item)],
         );
       case "text":
         return [{ text: held.text }];
