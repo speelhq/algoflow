@@ -465,15 +465,14 @@
     "breakpoint": "breakpoint",
     "endless": "This run never reached its end: it stopped after {limit} steps. A loop does not seem to end; check its condition.",
     "narrate": {
-      "enter": "{notation}",
+      "enter": "Running {notation}",
       "check": "Checking {condition}",
       "read": "Read {what}: {value}",
       "readMany": "Read {count} items of {name}",
       "compareAnswer": "{condition}? {answer}",
-      "compareTrue": "{condition} is true",
-      "compareFalse": "{condition} is false",
+      "compare": "{condition} is {value}",
       "write": "{what} is now {value}",
-      "swap": "Swapped items {i} and {j} of {name}",
+      "swap": "Swapped {a} and {b}",
       "loop": "Pass {pass}: {var} is {value}",
       "loopPlain": "Pass {pass}",
       "print": "Printed \"{text}\"",
@@ -485,8 +484,6 @@
         "end": "The run ended here"
       },
       "ref": {
-        "index": "item {index} of {name}",
-        "key": "{name} at {key}",
         "list": "a list",
         "dict": "a dict"
       }

@@ -236,6 +236,11 @@ function targetParts(target: Target): Part[] {
   return [{ text: writeTarget(target, (expr) => exprText(expr)) }];
 }
 
+/** A target as the chart writes it: a variable, an item (`nums[2]`), or a key (`counts["a"]`). */
+export function targetText(target: Target): string {
+  return joinParts(targetParts(target));
+}
+
 /** Whether a slot is drawn as the placeholder: an empty expression, an empty name, or no item. */
 function drawsPlaceholder(node: Node, def: NodeDef, name: string): boolean {
   const slot = def.slots.find((s) => s.name === name);

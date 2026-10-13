@@ -1,12 +1,13 @@
 // One sentence per event, as a message key with its params (`run.narrate.*`). Values
-// are written the way blocks write them (`true`, `none`, `"text"`), never in Python notation,
-// and a comparison as the chart writes it, with the values of the shown frame.
-import { keyValue } from "@/lang/data";
+// are written the way blocks write them (`True`, `None`, `"text"`), a statement, a comparison,
+// and a location as the chart writes them, a comparison with the values of the shown frame.
+import { keyValue, toData } from "@/lang/data";
 import { errorKey, errorParams, t, type MessageKey, type Params } from "@/i18n/t";
-import type { Expr, Heap, Program, Value } from "@/lang/types";
+import type { Data, Expr, Heap, Program, Target, Value } from "@/lang/types";
 import { conditionOf, diamondConditions, isExpr, nodesById, variableOf } from "@/lang/walk";
+import { isParseError, parseData } from "@/python/parse";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
-import { exprText, notationText, SEPARATOR, valueText } from "@/ui/chart/text";
+import { exprText, notationText, SEPARATOR, targetText, valueText } from "@/ui/chart/text";
 
 export type Narration = { key: MessageKey; params: Params };
 
@@ -28,11 +29,25 @@ function nameOf(ref: number, frame: Frame | undefined, heap: Heap): string {
   return t(heap.get(ref)?.kind === "dict" ? "run.narrate.ref.dict" : "run.narrate.ref.list");
 }
 
+/** A position or a key as the block of its value writes it. */
+function literal(data: Data): Expr {
+  const expr = parseData(data);
+  if (isParseError(expr)) throw new Error(`no block writes ${JSON.stringify(data)}`);
+  return expr;
+}
+
+/**
+ * A location as the nodes write it (`nums[2]`, `counts["a"]`), its list or dict named by the
+ * variable of the frame that holds it.
+ */
 function refText(ref: Ref, frame: Frame | undefined, heap: Heap): string {
   if ("var" in ref) return ref.var;
-  const name = nameOf(ref.heap, frame, heap);
-  if ("index" in ref) return t("run.narrate.ref.index", { index: ref.index, name });
-  return t("run.narrate.ref.key", { name, key: valueText(keyValue(ref.key), heap) });
+  const holder: Expr = { id: "", kind: "var", name: nameOf(ref.heap, frame, heap) };
+  const target: Target =
+    "index" in ref
+      ? { kind: "index", list: holder, index: literal(ref.index) }
+      : { kind: "key", dict: holder, key: literal(toData(keyValue(ref.key), heap)) };
+  return targetText(target);
 }
 
 function valueAt(ref: Ref, frame: Frame | undefined, heap: Heap): Value | undefined {
@@ -102,25 +117,19 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
         return { key: "run.narrate.compareAnswer", params: { condition, answer } };
       }
       const condition = expr ? comparedText(expr, frame, heap) : "";
-      const key = event.result ? "run.narrate.compareTrue" : "run.narrate.compareFalse";
-      return { key, params: { condition } };
+      const value = valueText({ t: "bool", v: event.result }, heap);
+      return { key: "run.narrate.compare", params: { condition, value } };
     }
     case "write":
       return {
         key: "run.narrate.write",
         params: { what: refText(event.ref, frame, heap), value: valueText(event.value, heap) },
       };
-    case "swap": {
-      const name = "heap" in event.a ? nameOf(event.a.heap, frame, heap) : "";
+    case "swap":
       return {
         key: "run.narrate.swap",
-        params: {
-          i: "index" in event.a ? event.a.index : "",
-          j: "index" in event.b ? event.b.index : "",
-          name,
-        },
+        params: { a: refText(event.a, frame, heap), b: refText(event.b, frame, heap) },
       };
-    }
     case "loop":
       return event.var !== undefined && event.value
         ? {
