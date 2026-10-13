@@ -1,5 +1,5 @@
 // Catalog keys are the dotted paths of en.json's string leaves.
-// Dependency-free so both t.ts and scripts/lib/i18n-check.ts share it.
+// Shared by t.ts, the catalog tests, and scripts/lib/i18n-check.ts.
 import { isRecord } from "@/lang/record";
 
 export function flatten(

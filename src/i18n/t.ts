@@ -1,5 +1,6 @@
 // Every user-visible string comes from a catalog. `en.json` is the only one; the `ja` slot
 // takes `ja.json`, which with the locale switch is all Japanese adds.
+import type { ErrorCode } from "./codes";
 import en from "./en.json";
 import { flatten } from "./flatten";
 
@@ -54,9 +55,23 @@ export function formatNumber(value: number): string {
   return new Intl.NumberFormat(current).format(value);
 }
 
-/** The one place a registry key becomes an i18n key (the key check does not scan dynamic keys). */
+/** The prefix of every catalog key of a block, through which the key check names them. */
+export function nodePrefix(key: string): string {
+  return `node.${key}.`;
+}
+
+/** The one place a registry key becomes a catalog key. */
+export function nodeKey(key: string, part: string): MessageKey {
+  return `${nodePrefix(key)}${part}` as MessageKey;
+}
+
+/** The one place an error code becomes a catalog key, which the key check names through it. */
+export function errorKey(code: ErrorCode): MessageKey {
+  return `error.${code}`;
+}
+
 export function nodeText(key: string, part: string, params?: Record<string, string>): string {
-  return t(`node.${key}.${part}` as MessageKey, params);
+  return t(nodeKey(key, part), params);
 }
 
 /** An error's params as its message writes them: `op`, a registry key, as that block's label. */
@@ -66,8 +81,8 @@ export function errorParams(params: Params): Params {
 }
 
 /** The message of a diagnostic or runtime error. */
-export function errorText(error: { code: string; params: Params }): string {
-  return t(`error.${error.code}` as MessageKey, errorParams(error.params));
+export function errorText(error: { code: ErrorCode; params: Params }): string {
+  return t(errorKey(error.code), errorParams(error.params));
 }
 
 /** A challenge-file text (`Localized`) in the current locale, falling back to `en`. */

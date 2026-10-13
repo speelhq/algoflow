@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { repoFiles } from "./lib/files";
-import { checkI18n, formatReport, usagesIn } from "./lib/i18n-check";
+import { checkI18n, formatReport, scan } from "./lib/i18n-check";
 
 let root: string;
 
@@ -30,6 +30,7 @@ describe("the key check", () => {
     write("src/ui/a.tsx", 'const x = t("app.name");\nconst y = t("app.saved", { n: 1 });');
     const report = run();
     expect(report.unknown).toEqual([]);
+    expect(report.unused).toEqual([]);
     expect(report.usages).toBe(2);
     expect(formatReport(report).at(-1)).toBe("i18n: 2 keys, 2 usages, ok");
   });
@@ -43,9 +44,72 @@ describe("the key check", () => {
 
   it("ignores test files and calls that are not t()", () => {
     write("src/ui/c.test.tsx", 'expect(t("app.nope"))');
-    write("src/ui/d.ts", 'list.at("app.nope"); obj.t("app.nope"); format("app.nope")');
+    const text = 'list.at("app.nope"); obj.t("app.nope"); format("app.nope")';
+    write("src/ui/d.ts", text);
     expect(run().usages).toBe(0);
-    expect(usagesIn(join(root, "src/ui/d.ts"), root)).toEqual([]);
+    expect(scan({ file: "src/ui/d.ts", text }).usages).toEqual([]);
+  });
+
+  it("fails on a file the parser rejects", () => {
+    write("src/ui/bad.ts", "const = ;");
+    expect(run).toThrow(/^src\/ui\/bad\.ts: /);
+  });
+
+  it("names a key by a whole string literal wherever it stands, and not in a comment", () => {
+    write(
+      "src/i18n/en.json",
+      JSON.stringify({
+        result: { pass: "Passed", fail: "Failed" },
+        run: { run: "Run", narrate: { done: "Done" } },
+        app: { unused: "Unused", "sign-in": "Sign in", old: "Old" },
+      }),
+    );
+    write("src/ui/ternary.tsx", 't(ok ? "result.pass" : "result.fail")');
+    write("src/ui/map.tsx", 'const LABEL = { idle: "run.run" } as const;');
+    write("src/ui/narrate.ts", "const told = { key: `run.narrate.done`, params: {} };");
+    write("src/ui/sign.tsx", '<p className="a b">{t("app.sign-in")}</p>; // was "app.old"');
+    const report = run();
+    expect(report.unused).toEqual(["app.unused", "app.old"]);
+    expect(formatReport(report)[0]).toBe('en.json unused key "app.unused"');
+  });
+
+  it("names every key a t() template literal matches, and none by one elsewhere", () => {
+    write(
+      "src/i18n/en.json",
+      JSON.stringify({
+        problems: {
+          topic: { loops: "Loops", lists: "Lists", deep: { x: "X" } },
+          mark: { solved: "✓" },
+          other: "Other",
+        },
+        app: { nav: { problems: "Problems" }, cast: { a: "A" }, stored: "Stored" },
+      }),
+    );
+    write("src/ui/tags.tsx", "t(`problems.topic.${topic}`)");
+    write(
+      "src/ui/forms.tsx",
+      "t(ok ? `problems.mark.${mark}` : (`app.nav.${\n  label({ tab })\n}`))",
+    );
+    write("src/ui/cast.tsx", "t(`app.cast.${name}` as MessageKey)");
+    write("src/store/keys.ts", "const key = `${prefix}.${id}`;");
+    write("src/ui/any.tsx", "t(`${ns}.${name}`)");
+    expect(run().unused).toEqual([
+      "problems.topic.deep.x",
+      "problems.other",
+      "app.cast.a",
+      "app.stored",
+    ]);
+  });
+
+  it("names the keys of registered blocks and of the error codes", () => {
+    write(
+      "src/i18n/en.json",
+      JSON.stringify({
+        node: { print: { label: "Print", help: "Shows a value" }, gone: { label: "Gone" } },
+        error: { E_KEY: "Key {key} does not exist", E_GONE: "Gone" },
+      }),
+    );
+    expect(run().unused).toEqual(["node.gone.label", "error.E_GONE"]);
   });
 
   it("checks key parity with ja.json once it exists", () => {
