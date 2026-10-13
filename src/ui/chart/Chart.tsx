@@ -172,7 +172,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
           y={node.y + node.h / 2}
           dominantBaseline="central"
           className={cn("fill-foreground", node.generated && "fill-muted-foreground")}
-          style={{ font: CHART_FONT }}
+          style={{ font: CHART_FONT, whiteSpace: "pre" }}
         >
           {node.parts.map((part, i) => (
             <tspan
