@@ -52,9 +52,9 @@ test("FizzBuzz from the list to Accepted, Python, and the next problem", async (
   await page.getByRole("button", { name: "✓ Submit" }).click();
   await expect(page.getByTestId("verdict")).toHaveText("Accepted");
   await expect(page.getByTestId("case-chips").locator("[data-chip]")).toHaveText([
-    "✓ n = 15",
-    "✓ n = 1",
-    "✓ n = 3",
+    "✓ n ← 15",
+    "✓ n ← 1",
+    "✓ n ← 3",
   ]);
   await expect(page.getByTestId("steps-loops")).toHaveText(/^Steps \d+ · Loops 15 \(first case\)$/);
   await expect(page.getByTestId("submission")).toContainText("What you used");
@@ -93,12 +93,12 @@ test("Wrong Answer shows the rows only, and Watch opens at the first difference"
 
   await page
     .getByTestId("case-chips")
-    .getByRole("button", { name: "✗ n = 1", exact: true })
+    .getByRole("button", { name: "✗ n ← 1", exact: true })
     .click();
   await expect(page.getByTestId("output-row")).toHaveText(["FizzBuzz1", "1"]);
 
   await page.getByRole("button", { name: "▶ Watch this case" }).click();
-  await expect(page.getByTestId("case-select")).toContainText("n = 1");
+  await expect(page.getByTestId("case-select")).toContainText("n ← 1");
   await expect(page.getByTestId("narration")).toHaveText("This printed line 1");
   await expect(page.getByRole("button", { name: "▶ Play" })).toBeVisible();
   await expect(page.getByTestId("submission")).toHaveCount(0);

@@ -13,7 +13,7 @@ test("an empty main draws Start, the Input node, and End under a path bar of mai
   const chart = page.getByTestId("chart");
   await expect(chart.locator("[data-chart-node]")).toHaveCount(3);
   await expect(chart).toContainText("Start");
-  await expect(chart).toContainText('Input name = "Claude"');
+  await expect(chart).toContainText('Input name ← "Claude"');
   await expect(chart).toContainText("End");
   await expect(page.getByTestId("path-segment")).toHaveText("main");
 });
@@ -48,8 +48,8 @@ test("clicking a node selects its statement and highlights its Python lines", as
 test("an Input node lists the cases and choosing one sets it", async ({ page }) => {
   await page.goto("/#/p/fizzbuzz");
   await page.getByTestId("input-node").click();
-  await page.getByRole("menuitem", { name: "n = 3" }).click();
-  await expect(page.getByTestId("chart")).toContainText("Input n = 3");
+  await page.getByRole("menuitem", { name: "n ← 3" }).click();
+  await expect(page.getByTestId("chart")).toContainText("Input n ← 3");
 });
 
 test("zoom steps and returns to 100 %", async ({ page }) => {
@@ -85,7 +85,7 @@ test("opening another problem while a solution is shown draws that problem's cha
   await page.getByRole("button", { name: "Show solution" }).click();
   await expect(page.getByTestId("solution-band")).toBeVisible();
   await page.goto("/#/p/max-of-three");
-  await expect(page.getByTestId("chart")).toContainText("Input a = 3");
+  await expect(page.getByTestId("chart")).toContainText("Input a ← 3");
 });
 
 test("Load into my chart replaces the program with the solution as one undoable edit", async ({

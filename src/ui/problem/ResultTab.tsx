@@ -12,7 +12,7 @@ import { mainVars } from "@/runtime/outcome";
 import { inRun, useMode } from "@/store/mode";
 import { useRun } from "@/store/run";
 import { useTests } from "@/store/tests";
-import { valueText } from "@/ui/chart/text";
+import { assignmentText, valueText } from "@/ui/chart/text";
 import {
   Select,
   SelectContent,
@@ -93,7 +93,7 @@ function Variables() {
       <ul className="flex flex-wrap gap-1.5" data-testid="variables">
         {[...shown.vars].map(([name, value]) => (
           <li key={name} className="rounded-full border px-2.5 py-0.5 font-mono text-xs">
-            {t("problem.assignment", { name, value: valueText(value, state.heap) })}
+            {assignmentText(name, valueText(value, state.heap))}
           </li>
         ))}
       </ul>

@@ -5,6 +5,7 @@ import { ast, withInputs } from "@/nodes/testing";
 import { isParseError, parse } from "@/python/parse";
 import { run } from "@/runtime/run";
 import {
+  assignmentText,
   exprParts,
   exprText,
   generatedParts,
@@ -178,8 +179,13 @@ describe("diamonds and generated nodes", () => {
     expect(inputParts("n", 15)).toEqual([
       { text: "Input " },
       { text: "n", variable: true },
-      { text: " = 15" },
+      { text: " ← 15" },
     ]);
+  });
+
+  it("a variable shown with its value keeps the spaces of a text", () => {
+    expect(assignmentText("s", '"a  b"')).toBe('s ← "a  b"');
+    expect(joinParts(inputParts("s", "a  b"))).toBe('Input s ← "a  b"');
   });
 });
 

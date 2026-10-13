@@ -16,16 +16,16 @@ test.describe("Problem page", () => {
     await expect(tab).toContainText("Loops");
     await expect(tab.locator("code", { hasText: "Fizz" }).first()).toBeVisible();
     const example = page.getByTestId("example");
-    await expect(example).toContainText("Input n = 15");
+    await expect(example).toContainText("Input n ← 15");
     await expect(example).toContainText("Buzz");
     await expect(example).toContainText("… 10 more");
     await expect(example).not.toContainText("FizzBuzz");
-    await expect(page.getByTestId("cases")).toHaveText("n = 15 · n = 1 · n = 3");
+    await expect(page.getByTestId("cases")).toHaveText("n ← 15 · n ← 1 · n ← 3");
   });
 
-  test("an expected variable shows in Example as name = value", async ({ page }) => {
+  test("an expected variable shows in Example as an assignment writes it", async ({ page }) => {
     await page.goto("/#/p/sum-to-n");
-    await expect(page.getByTestId("example")).toContainText("total = 55");
+    await expect(page.getByTestId("example")).toContainText("total ← 55");
   });
 
   test("Show next hint reveals one hint per click and records the count", async ({ page }) => {
