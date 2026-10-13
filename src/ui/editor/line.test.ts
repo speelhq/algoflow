@@ -159,8 +159,13 @@ describe("typing", () => {
     expect(clicked.open).toHaveLength(1);
     expect(py(keys("+1", clicked))).toBe("i * (5 + 1)");
     expect(py(keys("twice(i)+1"))).toBe("twice(i) + 1");
+    const random = raw("randint(");
+    expect([py(random), random.open]).toEqual(["random.randint(..., ...)", []]);
+    expect(py(keys("i)", random))).toBe("random.randint(i, ...)");
     const abs = keys("i", choose(empty(), entry("call:abs"), ctx).line);
     expect(type(abs, ")", ctx).line.caret).toEqual({ after: abs.root.id });
+    // Inside a call, a variable's ( opens nothing.
+    expect(type(raw("randint(i"), "(", ctx).taken).toBe(false);
   });
 
   it("Tab forgets the first key of a two-key operator", () => {

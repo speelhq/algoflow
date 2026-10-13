@@ -1,6 +1,7 @@
 // Shared shape of the builtin call blocks (nodes.md "Builtin calls"): key `call:<name>`,
 // one `args` slot, positional parameters, the argument counts of `expectedArgs`, and a
-// notation that calls the builtin as Python names it, without its module (`randint`).
+// notation that calls the builtin as Python names it, without its module (`randint`), which
+// is also what typed in a value line inserts it.
 import { newId } from "@/lang/id";
 import type { Expr, Kind, Value } from "@/lang/types";
 import {
@@ -44,7 +45,7 @@ export function defineBuiltin(def: BuiltinDef): NodeDef {
     }),
     ...(def.aliases ? { aliases: def.aliases } : {}),
     ...(def.imports ? { imports: def.imports } : {}),
-    ...(def.menu ? { menu: def.menu } : {}),
+    ...(def.menu ? { menu: def.menu.map((entry) => ({ ...entry, keys: written })) } : {}),
     ...(def.kind ? { kind: (node, kindOf) => def.kind?.(node.args, kindOf) } : {}),
     create: () => ({
       id: newId(),

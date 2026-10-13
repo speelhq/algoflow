@@ -488,7 +488,7 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
     if (!exact) return refused(line);
     const chosen = choose(current, exact, ctx);
     // A call's `(` is the bracket the call already has.
-    if (!chosen.taken || key === " " || (key === "(" && exact.kind === "function")) return chosen;
+    if (!chosen.taken || key === " " || (key === "(" && makesCall(exact))) return chosen;
     current = chosen.line;
   }
   if (key === " ") return done(current);
@@ -544,6 +544,10 @@ function isCall(expr: Expr): boolean {
   const last = templatePieces(exprNotation(expr)).at(-1);
   return last !== undefined && "words" in last && last.words.endsWith(")");
 }
+
+/** Whether a row makes a call: a function of the program, or an entry whose block is one. */
+const makesCall = (row: Row) =>
+  row.kind === "function" || (row.kind === "entry" && isCall(makeEntry(row.entry)));
 
 /** `)` with no bracket open closes the brackets of the innermost call around the caret. */
 function leave(line: Line): Outcome | undefined {

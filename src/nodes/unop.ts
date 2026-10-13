@@ -39,5 +39,5 @@ export const unop = defineExpr<"unop">({
   },
   notation: (node) => (node.op === "not" ? "not {operand}" : "−{operand}"),
   kind: (node) => (node.op === "not" ? "truefalse" : "number"),
-  menu: [{ name: "not", group: "conditions", preset: { op: "not" }, keys: "not" }],
+  menu: [{ name: "not", group: "conditions", preset: { op: "not" }, symbol: "not", keys: "not" }],
 });
