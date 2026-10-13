@@ -446,13 +446,13 @@ describe("layout texts", () => {
     const sum = CHALLENGES.find((challenge) => challenge.id === "sum-to-n");
     if (!sum) throw new Error("sum-to-n missing");
     const chart = layout(sum.solution, { inputs: { n: 0 }, measure: estimatedWidth });
-    expect(chart.nodes.slice(0, 2).map((node) => node.text)).toEqual(["Start", "Input n = 0"]);
+    expect(chart.nodes.slice(0, 2).map((node) => node.text)).toEqual(["Start", "Input n ← 0"]);
     expect(
       layout(sum.solution, {
         inputs: caseInputs(sum.solution, 0),
         measure: estimatedWidth,
       }).nodes[1]?.text,
-    ).toBe("Input n = 10");
+    ).toBe("Input n ← 10");
     expect(chart.nodes.at(-1)?.text).toBe("End");
     const texts = chart.nodes.filter((node) => node.generated).map((node) => node.text);
     expect(texts).toEqual(["i ← 1", "i < n + 1?", "i ← i + 1"]);

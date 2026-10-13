@@ -3,13 +3,13 @@ import { describe, expect, it } from "vitest";
 import { caseText } from "./caseText";
 
 describe("caseText", () => {
-  it("joins every input as name = value", () => {
-    expect(caseText({ n: 15 })).toBe("n = 15");
-    expect(caseText({ a: 3, b: 9, c: 5 })).toBe("a = 3, b = 9, c = 5");
+  it("joins every input as an assignment writes it", () => {
+    expect(caseText({ n: 15 })).toBe("n ← 15");
+    expect(caseText({ a: 3, b: 9, c: 5 })).toBe("a ← 3, b ← 9, c ← 5");
   });
 
   it("writes texts in quotes and booleans and none as the blocks do", () => {
-    expect(caseText({ name: "" })).toBe('name = ""');
-    expect(caseText({ ok: true, x: null, xs: [1, 2] })).toBe("ok = True, x = None, xs = [1, 2]");
+    expect(caseText({ name: "" })).toBe('name ← ""');
+    expect(caseText({ ok: true, x: null, xs: [1, 2] })).toBe("ok ← True, x ← None, xs ← [1, 2]");
   });
 });

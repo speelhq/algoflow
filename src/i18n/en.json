@@ -91,7 +91,6 @@
     "redo": "Redo",
     "undoGlyph": "↶",
     "redoGlyph": "↷",
-    "assignment": "{name} = {value}",
     "caseSeparator": " · ",
     "tabs": {
       "problem": "Problem",
@@ -350,7 +349,7 @@
     "start": "Start",
     "startFn": "Start {name}({params})",
     "end": "End",
-    "input": "Input {name} = {value}",
+    "input": "Input {assignment}",
     "condition": "{cond}?",
     "label": "Flowchart",
     "yes": "Yes",

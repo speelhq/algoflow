@@ -5,7 +5,7 @@ import type { FirstDifference, Rows } from "@/challenges/rows";
 import { t } from "@/i18n/t";
 import type { Data } from "@/lang/types";
 import { cn } from "@/lib/utils";
-import { dataText } from "@/ui/chart/text";
+import { assignmentText, dataText } from "@/ui/chart/text";
 
 type Props = {
   rows: Rows;
@@ -21,9 +21,9 @@ type Props = {
 
 const cell = "min-w-0 px-2 py-0.5 font-mono text-xs whitespace-pre-wrap break-words";
 
-/** A variable row's cell: `name = value`, or blank when the program never created it. */
+/** A variable row's cell: `name ← value`, or blank when the program never gave it a value. */
 function assignment(name: string, value: Data | undefined): string {
-  return value === undefined ? "" : t("problem.assignment", { name, value: dataText(value) });
+  return value === undefined ? "" : assignmentText(name, dataText(value));
 }
 
 export function ResultRows({ rows, marked, error, expected, printed }: Props) {

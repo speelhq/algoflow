@@ -26,7 +26,7 @@ test.describe("running FizzBuzz", () => {
 
   test("Run in the run bar plays, selects Result, and Stop returns", async ({ page }) => {
     await page.getByRole("button", { name: "▶ Run" }).click();
-    await expect(page.getByTestId("case-select")).toContainText("n = 15");
+    await expect(page.getByTestId("case-select")).toContainText("n ← 15");
     await expect(page.getByTestId("tab-result")).toHaveAttribute("aria-selected", "true");
     await expect(page.getByRole("button", { name: "❚❚ Pause" })).toBeVisible();
     await expect.poll(async () => (await position(page)).k).toBeGreaterThan(0);
@@ -79,7 +79,7 @@ test.describe("running FizzBuzz", () => {
     await page.getByRole("button", { name: "Skip ▶▶" }).click();
     await expect(fizz).toHaveAttribute("data-current", "running");
     await expect(page.getByTestId("narration")).toHaveText('print("Fizz")');
-    await expect(page.getByTestId("variables")).toContainText("i = 3");
+    await expect(page.getByTestId("variables")).toContainText("i ← 3");
     await fizz.click();
     await expect(page.getByTestId("breakpoint")).toHaveCount(0);
   });
@@ -163,11 +163,11 @@ test("reopening a problem selects its first case again", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/fizzbuzz");
   await page.getByTestId("input-node").click();
-  await page.getByRole("menuitem", { name: "n = 3" }).click();
-  await expect(page.getByTestId("chart")).toContainText("Input n = 3");
+  await page.getByRole("menuitem", { name: "n ← 3" }).click();
+  await expect(page.getByTestId("chart")).toContainText("Input n ← 3");
   await page.getByRole("link", { name: "← Problems" }).click();
   await page.getByTestId("problem-fizzbuzz").click();
-  await expect(page.getByTestId("chart")).toContainText("Input n = 15");
+  await expect(page.getByTestId("chart")).toContainText("Input n ← 15");
 });
 
 test("before any run, Result shows the case, its Expected, and Run to see the values", async ({
@@ -177,7 +177,7 @@ test("before any run, Result shows the case, its Expected, and Run to see the va
   await page.goto("/#/p/fizzbuzz");
   await page.getByTestId("tab-result").click();
   await expect(page.getByTestId("result-tab")).toContainText("Run to see the values");
-  await expect(page.getByTestId("case-select")).toHaveText(/n = 15/);
+  await expect(page.getByTestId("case-select")).toHaveText(/n ← 15/);
   await expect(page.getByTestId("output-row").nth(2)).toHaveText("Fizz");
 });
 

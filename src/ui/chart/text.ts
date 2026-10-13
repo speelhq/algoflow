@@ -1,7 +1,8 @@
 // A node's text as runs: its block's `notation()` with the block's slots filled in, the same in
 // every locale; a variable is drawn bold in its own colour, and an input still to fill as the
 // placeholder. Operators are parenthesised as the emitter does. Reads slot roles, `params`,
-// `notation`, `text`, `chart`, and `precedence` only, never a kind.
+// `notation`, `text`, `chart`, and `precedence` only, never a kind; a variable shown with its
+// value is written by the `assign` block's notation.
 import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import { isRecord } from "@/lang/record";
@@ -343,15 +344,33 @@ export function valueText(value: Value, heap: Heap): string {
   );
 }
 
-/** A case's input value (`Input n = 15`), written like any other value. */
+/** A case's input value (`Input n ← 15`), written like any other value. */
 export function dataText(data: Data): string {
   const heap: Heap = new Map();
   return valueText(toValue(data, heap), heap);
 }
 
-/** An Input node's text, its name a variable (`Input n = 15`). */
-export function inputParts(name: string, value: Data): Part[] {
-  return templateParts(t("chart.input"), (placeholderName) =>
-    placeholderName === "name" ? [{ text: name, variable: true }] : [{ text: dataText(value) }],
+/** The block whose notation writes a variable with its value. */
+const ASSIGN = getNode("assign").create();
+
+/**
+ * A variable shown with its value, written as an assignment writes it (`n ← 15`): its name in
+ * the target's place, a variable, and the value's text in the value's.
+ */
+export function assignmentParts(name: string, value: string): Part[] {
+  return templateParts(notationOf(ASSIGN), (placeholderName) =>
+    placeholderValue(ASSIGN, placeholderName)?.role === "target"
+      ? [{ text: name, variable: true }]
+      : [{ text: value }],
   );
+}
+
+/** A variable shown with its value, as text (`n ← 15`). */
+export function assignmentText(name: string, value: string): string {
+  return joinParts(assignmentParts(name, value));
+}
+
+/** An Input node's text, its name a variable (`Input n ← 15`). */
+export function inputParts(name: string, value: Data): Part[] {
+  return templateParts(t("chart.input"), () => assignmentParts(name, dataText(value)));
 }

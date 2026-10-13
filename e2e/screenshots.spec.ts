@@ -50,7 +50,7 @@ test.describe("FizzBuzz", () => {
     await page.locator('[data-chart-node="fzb-if03-001"]').click();
     for (let pass = 0; pass < 3; pass += 1) {
       await page.getByRole("button", { name: "Skip ▶▶" }).click();
-      await expect(page.getByTestId("variables")).toContainText(`i = ${pass + 1}`);
+      await expect(page.getByTestId("variables")).toContainText(`i ← ${pass + 1}`);
     }
     await expect(page.getByTestId("narration")).toHaveText("Checking i % 3 = 0");
     await page.screenshot({ path: shot("run"), animations: "disabled" });
