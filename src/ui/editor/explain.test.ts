@@ -47,6 +47,11 @@ describe("explanation line", () => {
     );
     expect(explained?.name).toBe("Remainder");
     expect(explained?.parts.at(-2)).toEqual({ text: "%", slot: "key" });
+    expect(shown(explained)?.[1]).toMatch(/is 1\. Type %\.$/);
+    const text = allEntries().find((entry) => entry.id === "str");
+    if (!text) throw new Error("no Text");
+    const plain = explainLine(keys(""), ctx, { kind: "entry", entry: text }, p, target.id);
+    expect(shown(plain)?.[1]).toBe("A piece of text, typed without quotes.");
   });
 
   it("a variable: its kind and the statement that first sets it; an input; a new name", () => {

@@ -17,7 +17,16 @@ import {
   type Part,
 } from "@/ui/chart/text";
 import { labelOf } from "./entries";
-import { find, matches, parentOf, wordRows, type Line, type LineContext, type Row } from "./line";
+import {
+  BRACKETS_KEY,
+  find,
+  matches,
+  parentOf,
+  wordRows,
+  type Line,
+  type LineContext,
+  type Row,
+} from "./line";
 
 export type Explanation = {
   /** What is explained: a name, drawn as a variable when it is one. */
@@ -60,6 +69,11 @@ export function explainVariable(program: Program, at: NodeId, name: Id): string 
     : t("editor.explain.variablePlain", { statement });
 }
 
+/** A help followed, when keys insert what it explains, by how to type them. */
+function typedHelp(help: string, keys: string | undefined): Part[] {
+  return helpParts(keys === undefined ? help : `${help} ${t("editor.typeKeys", { keys })}`);
+}
+
 /** The row's explanation. */
 function explainRow(row: Row, program: Program, at: NodeId): Explanation {
   switch (row.kind) {
@@ -70,9 +84,12 @@ function explainRow(row: Row, program: Program, at: NodeId): Explanation {
         parts: [{ text: explainVariable(program, at, row.name) }],
       };
     case "entry":
-      return { name: row.entry.label, parts: helpParts(row.entry.help) };
+      return { name: row.entry.label, parts: typedHelp(row.entry.help, row.entry.menu.keys) };
     case "brackets":
-      return { name: t("editor.brackets"), parts: helpParts(t("editor.bracketsHelp")) };
+      return {
+        name: t("editor.brackets"),
+        parts: typedHelp(t("editor.bracketsHelp"), BRACKETS_KEY),
+      };
     case "function":
       return { name: functionLabel(row.fn), parts: [{ text: t("editor.ownFunction") }] };
   }
