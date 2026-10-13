@@ -1,8 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const base = process.env.VITE_BASE ?? "/";
 const port = 4173;
-const url = `http://localhost:${port}${base}`;
+const url = `http://localhost:${port}/`;
 // Chromium alone at 1440 × 900: one browser keeps CI under a minute and matches the desktop-only
 // scope, and the viewport exceeds the 1280 px gate with room for the default panel sizes. The
 // screenshot suite draws at the artboards' 1280 × 800 instead.

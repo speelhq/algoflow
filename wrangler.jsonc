@@ -1,0 +1,7 @@
+// The Worker serves dist/ as static assets and runs no code of its own; CI deploys it
+// (.github/workflows/ci.yml).
+{
+  "name": "algoflow",
+  "compatibility_date": "2026-09-28",
+  "assets": { "directory": "./dist" },
+}

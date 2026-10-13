@@ -1,6 +1,6 @@
 # lint, format, test, check, build, test:e2e on every pull request and on
 # every push to main; on a pull request, beside them, the message of each of
-# its commits; main deploys dist/ to GitHub Pages.
+# its commits; main deploys dist/ to Cloudflare Workers once it passes.
 name: CI
 
 on:
@@ -17,10 +17,6 @@ permissions:
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
-env:
-  # Project Pages serve from /<repo>/; vite.config.ts and playwright.config.ts read this.
-  VITE_BASE: /${{ github.event.repository.name }}/
 
 jobs:
   # Apart from verify, so that a message to reword never hides how the code fares.
@@ -69,20 +65,31 @@ jobs:
           path: playwright-report
           retention-days: 7
       - if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: dist
           path: dist
+          retention-days: 1
 
   deploy:
     needs: verify
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      # wrangler.jsonc names the Worker and the assets directory.
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      # wrangler is a devDependency, so the lockfile fixes every package that receives the token.
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - run: pnpm exec wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
