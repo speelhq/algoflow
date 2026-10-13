@@ -25,7 +25,7 @@ describe("emit (emitter.md)", () => {
   });
 
   it("sections separated by one blank line, two around functions", () => {
-    const prog = program([assign("d", call("random_int", num(1), num(6)))], {
+    const prog = program([assign("d", call("randint", num(1), num(6)))], {
       inputs: [{ name: "n", kind: "number" }],
       functions: [
         {

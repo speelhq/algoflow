@@ -11,7 +11,7 @@ import { floatCall } from "./call-float";
 import { intCall } from "./call-int";
 import { max } from "./call-max";
 import { min } from "./call-min";
-import { randomInt } from "./call-random_int";
+import { randomInt } from "./call-randint";
 import { strCall } from "./call-str";
 import type { Category } from "./categories";
 import { continueStmt } from "./continue";

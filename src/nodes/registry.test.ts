@@ -93,7 +93,7 @@ describe("registry", () => {
       "bool | false | values |  |  | ",
       "none |  | values |  |  | ",
       "unop | not | conditions |  | not | not",
-      "call:random_int |  | calculate |  |  | randint",
+      "call:randint |  | calculate |  |  | randint",
       "binop | and | conditions | truefalse | and | and",
       "binop | or | conditions | truefalse | or | or",
       "binop | add | calculate | number,text | + | +",

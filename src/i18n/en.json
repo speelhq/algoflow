@@ -347,7 +347,7 @@
       "label": "As decimal",
       "help": "Turns a whole number or numeric text into a decimal."
     },
-    "call:random_int": {
+    "call:randint": {
       "label": "Random whole number",
       "help": "A random whole number between the two bounds, both included."
     }

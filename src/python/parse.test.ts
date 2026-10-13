@@ -102,7 +102,7 @@ describe("call resolution", () => {
   });
 
   it("accepts the Python aliases of builtins", () => {
-    expect(ok("random.randint(1, 6)")).toMatchObject({ kind: "call", fn: "random_int" });
+    expect(ok("random.randint(1, 6)")).toMatchObject({ kind: "call", fn: "randint" });
     expect(unparse(ok("random.randint(1, 6)"))).toBe("random.randint(1, 6)");
   });
 

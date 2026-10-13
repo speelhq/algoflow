@@ -4,17 +4,17 @@ import { ast, evalExpr, notation, program, runAll, varData } from "./testing";
 
 const { call, num, float, str, assign, for_ } = ast;
 
-describe("builtin random_int (nodes.md)", () => {
+describe("builtin randint (nodes.md)", () => {
   it("emits `random.randint(<a>, <b>)` and adds `import random`", () => {
-    expect(unparse(call("random_int", num(1), num(6)))).toBe("random.randint(1, 6)");
-    expect(emit(program([assign("d", call("random_int", num(1), num(6)))]), {}).code).toBe(
+    expect(unparse(call("randint", num(1), num(6)))).toBe("random.randint(1, 6)");
+    expect(emit(program([assign("d", call("randint", num(1), num(6)))]), {}).code).toBe(
       "import random\n\nd = random.randint(1, 6)\n",
     );
   });
 
   it("inclusive int draws, recorded in draws(), identical for the same seed", () => {
     const prog = program([
-      for_("i", num(0), num(50), [assign("d", call("random_int", num(1), num(3)))]),
+      for_("i", num(0), num(50), [assign("d", call("randint", num(1), num(3)))]),
     ]);
     const a = runAll(prog, {}, 7);
     const b = runAll(prog, {}, 7);
@@ -27,18 +27,18 @@ describe("builtin random_int (nodes.md)", () => {
   });
 
   it("a bound that is no int → E_TYPE, naming the types of both bounds", () => {
-    expect(evalExpr(call("random_int", float(1), num(2))).done).toMatchObject({
+    expect(evalExpr(call("randint", float(1), num(2))).done).toMatchObject({
       type: "error",
       error: { code: "E_TYPE", params: { left: "float", right: "int" } },
     });
-    expect(evalExpr(call("random_int", num(1), str("2"))).done).toMatchObject({
+    expect(evalExpr(call("randint", num(1), str("2"))).done).toMatchObject({
       type: "error",
       error: { code: "E_TYPE", params: { left: "int", right: "str" } },
     });
   });
 
-  it("random_int(5, 1) → E_EMPTY_RANGE, as CPython's empty range", () => {
-    expect(evalExpr(call("random_int", num(5), num(1))).done).toMatchObject({
+  it("randint(5, 1) → E_EMPTY_RANGE, as CPython's empty range", () => {
+    expect(evalExpr(call("randint", num(5), num(1))).done).toMatchObject({
       type: "error",
       error: { code: "E_EMPTY_RANGE", params: { a: 5, b: 1 } },
     });
@@ -47,6 +47,6 @@ describe("builtin random_int (nodes.md)", () => {
 
 describe("notation (nodes.md, Node text)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(call("random_int", num(1), num(6)))).toBe("randint({a}, {b})");
+    expect(notation(call("randint", num(1), num(6)))).toBe("randint({a}, {b})");
   });
 });
