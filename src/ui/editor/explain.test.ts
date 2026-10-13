@@ -54,15 +54,17 @@ describe("explanation line", () => {
     expect(shown(plain)?.[1]).toBe("A piece of text, typed without quotes.");
   });
 
-  it("a variable: its kind and the statement that first sets it; an input; a new name", () => {
+  it("a variable: its kind and where it first gets a value; an input; a new name", () => {
     expect(explainVariable(p, target.id, "i")).toBe(
-      "A number variable. It is first set in: i ← 1.",
+      "A number variable. It first gets a value in: i ← 1.",
     );
     expect(explainVariable(p, target.id, "total")).toBe(
-      "A number variable. It is first set in: total ← 0.",
+      "A number variable. It first gets a value in: total ← 0.",
     );
     expect(explainVariable(p, target.id, "n")).toBe("A number input of the problem.");
-    expect(explainVariable(p, target.id, "found")).toBe("Creates the variable found here.");
+    expect(explainVariable(p, target.id, "found")).toBe(
+      "Choosing it makes a new variable found, which gets its value here.",
+    );
   });
 
   it("inside an operation's input: its name and its template with that input underlined", () => {

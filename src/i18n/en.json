@@ -171,7 +171,7 @@
     "assign": {
       "label": "Set variable",
       "slot": { "target": "variable", "value": "value" },
-      "help": "Creates a variable, or changes the value of one that exists."
+      "help": "Gives a variable a value, the first time or again."
     },
     "if": {
       "label": "If",
@@ -401,7 +401,7 @@
     "duplicate": "Duplicate",
     "delete": "Delete",
     "fix": {
-      "hoistAssign": "Create {name} before it"
+      "hoistAssign": "Give {name} a value before it"
     },
     "name": "Name",
     "nameHint": "optional",
@@ -437,12 +437,12 @@
       "dict": "dict"
     },
     "explain": {
-      "variable": "A {kind} variable. It is first set in: {statement}.",
-      "variablePlain": "A variable. It is first set in: {statement}.",
+      "variable": "A {kind} variable. It first gets a value in: {statement}.",
+      "variablePlain": "A variable. It first gets a value in: {statement}.",
       "input": "A {kind} input of the problem.",
       "inputPlain": "An input of the problem.",
       "parameter": "A parameter: the value a call hands to this function.",
-      "newVariable": "Creates the variable {name} here.",
+      "newVariable": "Choosing it makes a new variable {name}, which gets its value here.",
       "name": "The variable this block sets. Choose one below, or type a new name."
     }
   },
@@ -494,8 +494,8 @@
     }
   },
   "error": {
-    "E_UNDEFINED": "Variable {name} has not been created yet",
-    "E_DECLARE_FIRST": "Create {name} before the if or loop",
+    "E_UNDEFINED": "Variable {name} has no value yet",
+    "E_DECLARE_FIRST": "Give {name} a value before the if or loop",
     "E_BAD_NAME": "Names start with a lowercase letter or _ and use only lowercase letters, digits, and _; Python keywords are not allowed",
     "E_DUPLICATE_NAME": "{name} is already in use",
     "E_BREAK_OUTSIDE": "This block only works inside a loop",
