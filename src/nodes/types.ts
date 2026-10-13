@@ -123,23 +123,24 @@ export type EmitContext = {
   block(stmts: Stmt[]): PyLine;
 };
 
-// ---------------------------------------------------------------- canvas text
-
-/** `creates`: the statement is the first assignment of its variable (`templateCreate`). */
-export type FormContext = { creates: boolean };
-
 // ---------------------------------------------------------------- chart shape
 
 /**
  * How the chart draws a block: the slot of the condition its diamond asks and its body regions
- * by slot name (a branch, a checked loop, a counted loop), or where its edge jumps to (out of
- * the innermost loop, or into its next pass).
+ * by slot name (a branch, a checked loop, a counted loop with the texts of its generated nodes),
+ * or where its edge jumps to (out of the innermost loop, or into its next pass).
  */
 export type ChartShape =
   | { branch: { cond: string; yes: string; no: string } }
   | { check: { cond: string; body: string } }
-  | { counted: string }
+  | { counted: Counted }
   | { jump: "exit" | "next" };
+
+/** A counted loop's body slot, and the texts of its generated nodes with `{slot}` placeholders. */
+export type Counted = { body: string; init: string; check: string; step: string };
+
+/** A counted loop's generated nodes. */
+export type Generated = "init" | "check" | "step";
 
 // ---------------------------------------------------------------- NodeDef
 
@@ -168,10 +169,8 @@ export type NodeDef = {
   create(): Stmt | Expr;
   run: StmtRunner | ExprRunner;
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string;
-  /** An expression's text with `{slot}` placeholders, the same in every locale (Node text). */
-  notation?(node: Stmt | Expr): string;
-  /** A statement's template variant (`node.<key>.template<Form>`); `""` or absent: the base. */
-  form?(node: Stmt | Expr, ctx: FormContext): string;
+  /** The node's text with `{slot}` placeholders, the same in every locale (Node text). */
+  notation(node: Stmt | Expr): string;
   /**
    * Which of a stored node's literal fields no edit could have written (an operator, a number's
    * text), and why; undefined when its block would make them.
@@ -179,7 +178,7 @@ export type NodeDef = {
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined;
   /** The notation's text of a `text` slot; default `String(node[slot])`. */
   text?(node: Stmt | Expr, slot: string): string;
-  /** How the chart draws the block's regions; absent = a box with the sentence. */
+  /** How the chart draws the block's regions; absent = a box with the notation. */
   chart?: ChartShape;
   /** The kind of the expression, given the kinds of the expressions inside it. */
   kind?: (node: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
@@ -192,13 +191,13 @@ export type NodeDef = {
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
 type ExprOf<K extends ExprKind> = Extract<Expr, { kind: K }>;
 
-type Generic = "shape" | "create" | "run" | "python" | "notation" | "form" | "text" | "kind";
+type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "kind";
 
 type StmtDef<K extends StmtKind> = Omit<NodeDef, Generic> & {
   create(): StmtOf<K>;
   run(node: StmtOf<K>, ctx: RunContext): Generator<Event, Signal, void>;
   python(node: StmtOf<K>, ctx: EmitContext): PyLine[];
-  form?(node: StmtOf<K>, ctx: FormContext): string;
+  notation(node: StmtOf<K>): string;
   text?(node: StmtOf<K>, slot: string): string;
 };
 

@@ -14,7 +14,7 @@ import { allExprs, isEmptyExpr, variableOf } from "@/lang/walk";
 import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import { isParseError, NO_DEFINITIONS, parse, type ParseScope } from "@/python/parse";
 import { levelAssociativity } from "@/python/precedence";
-import { exprNotation, exprText, isCall, placeholderValue, templatePieces } from "@/ui/chart/text";
+import { notationOf, exprText, isCall, placeholderValue, templatePieces } from "@/ui/chart/text";
 import { allEntries, makeEntry, takesValue, type Entry } from "./entries";
 
 type Bag = Record<string, unknown>;
@@ -66,7 +66,7 @@ export type Outcome = { line: Line; taken: boolean; move?: "next" | "previous" |
  * caret moves in. Which input an entry's value goes into is the slot order's (`withFirst`).
  */
 export function inputs(expr: Expr): Expr[] {
-  return templatePieces(exprNotation(expr)).flatMap((piece) => {
+  return templatePieces(notationOf(expr)).flatMap((piece) => {
     if ("words" in piece) return [];
     const held = placeholderValue(expr, piece.name);
     if (held?.role === "expr") return held.expr ? [held.expr] : [];

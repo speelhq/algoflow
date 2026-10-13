@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { whileStmt } from "./while";
-import { ast, eventTypes, program, runAll, varData, withInputs } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData, withInputs } from "./testing";
 
 const { while_, assign, num, bin, v, brk, bool } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -68,5 +68,11 @@ describe("while (nodes.md)", () => {
 
   it("a checked loop over `body`", () => {
     expect(whileStmt.chart).toEqual({ check: { cond: "cond", body: "body" } });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(while_(v("ok"), []))).toBe("{cond}");
   });
 });

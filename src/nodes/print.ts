@@ -20,4 +20,5 @@ export const print = defineStmt<"print">({
     return undefined;
   },
   python: (node, ctx) => [`print(${node.args.map((arg) => ctx.expr(arg)).join(", ")})`],
+  notation: () => "print({args})",
 });

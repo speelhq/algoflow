@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, program, runAll, varData } from "./testing";
+import { ast, notation, program, runAll, varData } from "./testing";
 
 const { cont, for_, assign, num, v, bin, while_ } = ast;
 
@@ -34,5 +34,11 @@ describe("continue (nodes.md)", () => {
       ]),
     );
     expect(varData(result, "k")).toBe(0);
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(cont())).toBe("continue");
   });
 });

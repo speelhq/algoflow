@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, eventTypes, program, runAll, varData, withInputs } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData, withInputs } from "./testing";
 
 const { assign, assignTo, num, bin, v } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -44,5 +44,11 @@ describe("assign (nodes.md)", () => {
       type: "error",
       error: { nodeId: stmt.id, code: "E_INDEX", params: { index: 5, length: 2 } },
     });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(assign("total", num(0)))).toBe("{target} ← {value}");
   });
 });

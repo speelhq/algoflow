@@ -455,7 +455,16 @@ describe("layout texts", () => {
     ).toBe("Input n = 10");
     expect(chart.nodes.at(-1)?.text).toBe("End");
     const texts = chart.nodes.filter((node) => node.generated).map((node) => node.text);
-    expect(texts).toEqual(["Set i to 1", "i < n + 1?", "Set i to i + 1"]);
+    expect(texts).toEqual(["i ← 1", "i < n + 1?", "i ← i + 1"]);
+    // Every statement in the notation, the first value of `total` as every later one.
+    const drawn = chart.nodes.slice(2, -1).filter((node) => node.shape !== "junction");
+    expect(drawn.map((node) => node.text)).toEqual([
+      "total ← 0",
+      "i ← 1",
+      "i < n + 1?",
+      "total ← total + i",
+      "i ← i + 1",
+    ]);
   });
 
   it("a diamond asks its condition; a function chart starts with its signature and has no inputs", () => {
@@ -473,7 +482,7 @@ describe("layout texts", () => {
     expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // a Return leads to End
   });
 
-  it("a named node shows its name alone, with its sentence as the title", () => {
+  it("a named node shows its name alone, with what it would draw unnamed as the title", () => {
     const named = { ...print(v("x")), name: "Show x" };
     const unfinished = { ...print(ast.empty()), name: "Show y" };
     const loop = { ...for_("i", num(0), num(3), []), name: "Three times" };
@@ -483,15 +492,15 @@ describe("layout texts", () => {
       measure: estimatedWidth,
     });
     const node = (id: string) => chart.nodes.find((n) => n.id === id);
-    expect(node(named.id)).toMatchObject({ text: "Show x", title: "Print x" });
-    expect(node(unfinished.id)).toMatchObject({ text: "Print …" });
+    expect(node(named.id)).toMatchObject({ text: "Show x", title: "print(x)" });
+    expect(node(unfinished.id)).toMatchObject({ text: "print(…)" });
     expect(node(unfinished.id)?.title).toBeUndefined();
-    expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times" });
-    expect(node(`${loop.id}:init`)?.text).toBe("Set i to 0");
+    expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times", title: "i < 3?" });
+    expect(node(`${loop.id}:init`)?.text).toBe("i ← 0");
     const startless = { ...for_("k", ast.empty(), num(3), []), name: "Counting" };
     const unfinishedLoop = layout(program([startless]), { inputs: {}, measure: estimatedWidth });
     expect(unfinishedLoop.nodes.find((n) => n.id === `${startless.id}:check`)?.text).toBe("k < 3?");
-    expect(node(check.id)).toMatchObject({ text: "Small?", title: "If x < 2" });
+    expect(node(check.id)).toMatchObject({ text: "Small?", title: "x < 2?" });
   });
 
   it("a long diamond's text is drawn on two lines, split at a space between words", () => {
@@ -522,8 +531,9 @@ describe("layout texts", () => {
     const chart = layout(program([shown]), { inputs: {}, measure });
     const parts = chart.nodes.find((n) => n.id === shown.id)?.parts ?? [];
     expect(parts.map((part) => [part.text, part.w, part.variable])).toEqual([
-      ["Print ", 30, undefined],
+      ["print(", 30, undefined],
       ["abc", 30, true],
+      [")", 5, undefined],
     ]);
   });
 

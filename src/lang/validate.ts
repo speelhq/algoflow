@@ -31,8 +31,6 @@ type Scope = { loop: number; inFunction: boolean };
 
 class Collector {
   readonly diagnostics: Diagnostic[] = [];
-  /** Statements whose var target is the first assignment of that name in its region (`templateCreate`). */
-  readonly firstAssigns = new Set<NodeId>();
   /** Functions whose own name a diagnostic refuses: no call can name them. */
   readonly refusedDefinitions = new Set<NodeId>();
   /** Functions: names a variable may not shadow (they would call a different thing in CPython). */
@@ -111,15 +109,12 @@ class Collector {
       this.reads(stmt, visible, inner);
       this.control(stmt, def, scope);
 
-      for (const { name, role } of declaredBy(stmt)) {
+      for (const { name } of declaredBy(stmt)) {
         if (!isValidName(name)) this.report(stmt.id, "E_BAD_NAME", { name });
         else if (this.callables.has(name) || isBuiltinName(name)) {
           this.report(stmt.id, "E_DUPLICATE_NAME", { name });
         }
-        if (!visible.has(name)) {
-          declared.add(name);
-          if (role === "target") this.firstAssigns.add(stmt.id);
-        }
+        if (!visible.has(name)) declared.add(name);
         visible.add(name);
       }
 
@@ -236,7 +231,6 @@ function isEmptySlot(slot: Slot, value: unknown): boolean {
 
 type Analysis = {
   diagnostics: Diagnostic[];
-  firstAssigns: Set<NodeId>;
   refusedDefinitions: Set<NodeId>;
 };
 
@@ -253,7 +247,6 @@ function analyze(program: Program): Analysis {
     collector.scopes();
     analysis = {
       diagnostics: collector.diagnostics,
-      firstAssigns: collector.firstAssigns,
       refusedDefinitions: collector.refusedDefinitions,
     };
     analyses.set(program, analysis);
@@ -268,15 +261,6 @@ export function validate(program: Program): Diagnostic[] {
 /** A program runs only when it has no diagnostic. */
 export function canRun(program: Program): boolean {
   return validate(program).length === 0;
-}
-
-/**
- * Ids of the `assign` statements that create their variable (first assignment in the
- * region): the canvas renders them with `templateCreate`. Inputs, parameters,
- * and loop variables are created elsewhere and never count.
- */
-export function firstAssignments(program: Program): Set<NodeId> {
-  return analyze(program).firstAssigns;
 }
 
 /** Ids of the functions whose own name a diagnostic refuses: no call can name them. */

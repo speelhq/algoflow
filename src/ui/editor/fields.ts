@@ -1,16 +1,16 @@
-// The fields of a statement's sentence in the node editor: each name slot, each value slot, and
-// each item of a list of values, in the sentence's reading order.
-import { nodeText } from "@/i18n/t";
+// The fields of a statement's notation in the node editor: each name slot, each value slot, and
+// each item of a list of values, in the notation's reading order.
+import { nodeText, t } from "@/i18n/t";
 import { setSlot } from "@/lang/edit";
 import type { Expr, NodeId, Program, Stmt, Target } from "@/lang/types";
 import { allExprs, isEmptyExpr, isExpr } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes/registry";
-import { placeholderValue, templateOf, templatePieces } from "@/ui/chart/text";
+import { generatedNotation, placeholderValue, templatePieces, type Piece } from "@/ui/chart/text";
 import { find } from "./line";
 
 type Bag = Record<string, unknown>;
 
-/** One editable slot of the sentence: a name, a value, or an item of a list of values. */
+/** One editable slot of the notation: a name, a value, or an item of a list of values. */
 export type Field = { slot: string; role: "id" | "target" | "expr"; index?: number };
 
 export const fieldKey = (field: Field) => `${field.slot}:${field.index ?? ""}`;
@@ -32,11 +32,33 @@ export function setName(program: Program, stmt: Stmt, slot: string, name: string
   return setSlot(program, stmt.id, slot, role === "target" ? { kind: "var", name } : name);
 }
 
-/** The fields of the sentence, in its reading order. */
-export function fieldsOf(stmt: Stmt, program: Program): Field[] {
+/**
+ * The lines the editor shows, each as its pieces: a counted loop's init and check (`i ← 1`,
+ * `i < n + 1?`), else the block's notation. `again` marks a slot written before, which is drawn
+ * as its value rather than as a field.
+ */
+export function editedLines(stmt: Stmt): { piece: Piece; again: boolean }[][] {
+  const init = generatedNotation(stmt, "init");
+  const check = generatedNotation(stmt, "check");
+  const notations =
+    init !== undefined && check !== undefined
+      ? [init, check]
+      : [getNode(keyOf(stmt)).notation(stmt)];
+  const seen = new Set<string>();
+  return notations.map((notation) =>
+    templatePieces(notation).map((piece) => {
+      const again = "name" in piece && seen.has(piece.name);
+      if ("name" in piece) seen.add(piece.name);
+      return { piece, again };
+    }),
+  );
+}
+
+/** The fields of the notation, in its reading order. */
+export function fieldsOf(stmt: Stmt): Field[] {
   const out: Field[] = [];
-  for (const piece of templatePieces(templateOf(stmt, program))) {
-    if ("words" in piece) continue;
+  for (const { piece, again } of editedLines(stmt).flat()) {
+    if ("words" in piece || again) continue;
     const held = placeholderValue(stmt, piece.name);
     const slot = piece.name;
     if ((held?.role === "id" || held?.role === "target") && nameOf(stmt, slot) !== undefined) {
@@ -49,12 +71,13 @@ export function fieldsOf(stmt: Stmt, program: Program): Field[] {
   return out;
 }
 
-/** A slot's accessible name: the template's words just before it, else the block's label. */
-export function fieldLabel(stmt: Stmt, program: Program, slot: string): string {
-  const pieces = templatePieces(templateOf(stmt, program));
-  const before = pieces[pieces.findIndex((piece) => "name" in piece && piece.name === slot) - 1];
-  const words = before && "words" in before ? before.words.trim() : "";
-  return words !== "" ? words : nodeText(getNode(keyOf(stmt)).key, "label");
+/** A slot's accessible name: the block's label and the slot's name (`Set variable, value`). */
+export function fieldLabel(stmt: Stmt, slot: string): string {
+  const { key } = getNode(keyOf(stmt));
+  return t("editor.fieldName", {
+    label: nodeText(key, "label"),
+    slot: nodeText(key, `slot.${slot}`),
+  });
 }
 
 /** The expression a value field holds. */

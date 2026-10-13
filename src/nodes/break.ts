@@ -13,4 +13,5 @@ export const breakStmt = defineStmt<"break">({
     return { kind: "break" };
   },
   python: () => ["break"],
+  notation: () => "break",
 });

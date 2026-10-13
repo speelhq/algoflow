@@ -53,15 +53,15 @@ test("undo, redo, and duplicate act while a value line has the keyboard", async 
   const chart = page.getByTestId("chart");
   await expect(line).toBeFocused();
   await page.keyboard.type("1");
-  await expect(chart).toContainText("Print 1");
+  await expect(chart).toContainText("print(1)");
   await page.keyboard.press("Control+z");
-  await expect(chart).not.toContainText("Print 1");
+  await expect(chart).not.toContainText("print(1)");
   await expect(line).toBeFocused();
   await page.keyboard.press("Control+Shift+z");
-  await expect(chart).toContainText("Print 1");
+  await expect(chart).toContainText("print(1)");
   await expect(line).toBeFocused();
   await page.keyboard.press("Control+d");
-  await expect(chart.locator("text", { hasText: "Print 1" })).toHaveCount(2);
+  await expect(chart.locator("text", { hasText: "print(1)" })).toHaveCount(2);
 });
 
 test("Ctrl+D duplicates the selected node, and Esc clears the selection", async ({ page }) => {
@@ -69,7 +69,7 @@ test("Ctrl+D duplicates the selected node, and Esc clears the selection", async 
   await page.goto("/#/p/fizzbuzz");
   await node(page, "fzb-prfz-001").click({ position: { x: 8, y: 20 } });
   await page.keyboard.press("Control+d");
-  await expect(page.getByTestId("chart").locator("text", { hasText: 'Print "Fizz"' })).toHaveCount(
+  await expect(page.getByTestId("chart").locator("text", { hasText: 'print("Fizz")' })).toHaveCount(
     2,
   );
   await page.keyboard.press("Escape");

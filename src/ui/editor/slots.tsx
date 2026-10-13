@@ -1,4 +1,4 @@
-// The editable slots of the editor's sentence other than a value line: a name field, `+ value`,
+// The editable slots of the editor's notation other than a value line: a name field, `+ value`,
 // and a list of values with a remove button on each item.
 import type { KeyboardEvent, ReactNode } from "react";
 import { t } from "@/i18n/t";

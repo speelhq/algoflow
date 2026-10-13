@@ -4,15 +4,12 @@ import { t } from "@/i18n/t";
 import { chartOf, firstSetters, variableKinds } from "@/lang/kinds";
 import type { Expr, Id, Kind, NodeId, Program } from "@/lang/types";
 import { isEmptyExpr } from "@/lang/walk";
-import { getNode, keyOf } from "@/nodes/registry";
 import {
-  capitalise,
-  exprNotation,
+  notationOf,
   exprText,
-  generatedText,
   placeholder,
   placeholderValue,
-  sentence,
+  notationText,
   templateParts,
   type Part,
   SEPARATOR,
@@ -60,11 +57,8 @@ export function explainVariable(program: Program, at: NodeId, name: Id): string 
   if (fn?.params.includes(name)) return t("editor.explain.parameter");
   const setter = firstSetters(program, chart).get(name);
   if (!setter) return t("editor.explain.newVariable", { name });
-  const chartShape = getNode(keyOf(setter)).chart;
-  const statement =
-    chartShape && "counted" in chartShape
-      ? generatedText(setter, "init")
-      : capitalise(sentence(setter, program));
+  // A counted loop's notation is its init, where its variable first gets a value.
+  const statement = notationText(setter);
   return kind
     ? t("editor.explain.variable", { kind: kindName(kind), statement })
     : t("editor.explain.variablePlain", { statement });
@@ -153,7 +147,7 @@ function operationParts(operation: Expr, current: Expr): Part[] {
     const text = isEmptyExpr(input) ? placeholder() : exprText(input);
     return input === current ? { text, underline: true } : { text };
   };
-  return templateParts(exprNotation(operation), (name) => {
+  return templateParts(notationOf(operation), (name) => {
     const held = placeholderValue(operation, name);
     switch (held?.role) {
       case "expr":

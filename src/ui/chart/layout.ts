@@ -12,12 +12,12 @@ import type { Data, Id, NodeId, Place, Program, Stmt } from "@/lang/types";
 import { regionsOf } from "@/lang/walk";
 import { getNode, keyOf } from "@/nodes/registry";
 import {
-  drawn,
   generatedParts,
+  hasInputToFill,
   inputParts,
   joinParts,
   questionParts,
-  sentenceParts,
+  notationParts,
   type Part,
   SEPARATOR,
 } from "./text";
@@ -45,7 +45,7 @@ export type ChartNode = {
   /** Drawn grey, not selectable on its own. */
   generated: boolean;
   text: string;
-  /** The statement's sentence, shown on hover where the node shows its name instead. */
+  /** What the node draws without its name, shown on hover where it shows its name instead. */
   title?: string;
   /** The text in runs, each at `dx` from the node's left with width `w`; a slot's run names it. */
   parts: PlacedPart[];
@@ -285,8 +285,8 @@ class Builder {
   }
 
   /**
-   * A statement's node: its name alone when it has one and no slot is still empty, with its
-   * sentence as the title; otherwise `parts`.
+   * A statement's node: its name alone when it has one and no input is still to fill, with
+   * `parts`, what it draws without its name, as the title; otherwise `parts`.
    */
   private named(
     stmt: Stmt,
@@ -296,12 +296,11 @@ class Builder {
     parts: Part[],
     y: number,
   ): ChartNode {
-    const unfinished = sentenceParts(stmt, this.program).some((part) => part.empty);
-    if (stmt.name === undefined || unfinished || parts.some((part) => part.empty)) {
+    if (stmt.name === undefined || hasInputToFill(stmt)) {
       return this.node(id, stmt.id, role, shape, parts, y);
     }
     const node = this.node(id, stmt.id, role, shape, [{ text: stmt.name }], y);
-    return { ...node, title: joinParts(drawn(sentenceParts(stmt, this.program))) };
+    return { ...node, title: joinParts(parts) };
   }
 
   /** Places `region` with its entry at `at` and joins `stub` to it; returns what flows out. */
@@ -359,12 +358,12 @@ class Builder {
     if ("branch" in chart) return this.branch(stmt, chart.branch);
     return "check" in chart
       ? this.loop(stmt, chart.check.body, false)
-      : this.loop(stmt, chart.counted, true);
+      : this.loop(stmt, chart.counted.body, true);
   }
 
   /** A box; `leaves` names where its edge goes when it is not to the next node. */
   private box(stmt: Stmt, leaves: Leave | null): Frag {
-    const parts = drawn(sentenceParts(stmt, this.program));
+    const parts = notationParts(stmt);
     const node = this.named(stmt, stmt.id, "stmt", "box", parts, 0);
     const half = node.w / 2;
     return {
@@ -383,7 +382,7 @@ class Builder {
   }
 
   private diamond(stmt: Stmt, y: number): ChartNode {
-    return this.named(stmt, stmt.id, "stmt", "diamond", drawn(questionParts(stmt)), y);
+    return this.named(stmt, stmt.id, "stmt", "diamond", questionParts(stmt), y);
   }
 
   /** `branch`: Yes to the right, No below on the axis, both merging below. */

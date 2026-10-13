@@ -48,6 +48,6 @@ export const assign = defineStmt<"assign">({
     }
   },
   python: (node, ctx) => [`${ctx.target(node.target)} = ${ctx.expr(node.value)}`],
-  // `create {target} and set it to {value}` when this statement creates the variable.
-  form: (_node, ctx) => (ctx.creates ? "Create" : ""),
+  // The first value and every later one alike: Python has no form of its own for the first.
+  notation: () => "{target} ← {value}",
 });

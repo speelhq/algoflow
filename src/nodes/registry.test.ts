@@ -11,7 +11,7 @@ const keys = new Set(Object.keys(flatten(en)));
 function regionsIn(chart: ChartShape): string[] {
   if ("branch" in chart) return [chart.branch.yes, chart.branch.no];
   if ("jump" in chart) return [];
-  return "check" in chart ? [chart.check.body] : [chart.counted];
+  return "check" in chart ? [chart.check.body] : [chart.counted.body];
 }
 
 /** The slot a diamond's condition is in, for the shapes that draw one. */
@@ -42,14 +42,26 @@ describe("registry", () => {
     expect(NODES.get("continue")?.chart).toEqual({ jump: "next" });
   });
 
-  it("every block has label and help; a statement has its template, an expression none", () => {
-    for (const [key, def] of NODES) {
+  it("every block has label and help, and its notation no catalog key", () => {
+    for (const key of NODES.keys()) {
       for (const part of ["label", "help"]) {
         expect(keys.has(`node.${key}.${part}`), `node.${key}.${part}`).toBe(true);
       }
-      const templates = [...keys].filter((k) => k.startsWith(`node.${key}.template`));
-      expect(templates.length > 0, key).toBe(def.shape === "stmt");
-      expect(def.notation !== undefined, key).toBe(def.shape === "expr");
+      expect(
+        [...keys].filter((k) => k.startsWith(`node.${key}.template`)),
+        key,
+      ).toEqual([]);
+    }
+  });
+
+  it("each slot a statement's editor shows as a field has its name", () => {
+    for (const def of NODES.values()) {
+      if (def.shape !== "stmt") continue;
+      for (const slot of def.slots) {
+        if (slot.role === "body") continue;
+        const key = `node.${def.key}.slot.${slot.name}`;
+        expect(keys.has(key), key).toBe(true);
+      }
     }
   });
 
@@ -147,12 +159,16 @@ describe("registry", () => {
     }
   });
 
-  it("a counted loop has the texts of init, check, and step", () => {
+  it("a counted loop's generated texts name only its own slots, and its notation is its init", () => {
     for (const def of NODES.values()) {
       if (!def.chart || !("counted" in def.chart)) continue;
-      for (const part of ["init", "check", "step"]) {
-        expect(keys.has(`node.${def.key}.${part}`), `node.${def.key}.${part}`).toBe(true);
-      }
+      const { init, check, step } = def.chart.counted;
+      const named = [init, check, step].flatMap((text) =>
+        [...text.matchAll(/\{(\w+)\}/g)].map((found) => found[1]),
+      );
+      const slots = def.slots.map((slot) => slot.name);
+      for (const name of named) expect(slots, def.key).toContain(name);
+      expect(def.notation(def.create()), def.key).toBe(init);
     }
   });
 });

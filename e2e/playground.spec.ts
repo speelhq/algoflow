@@ -102,7 +102,7 @@ test("Open in Playground carries the inputs as assignments, and its ⋯ holds He
   await page.getByRole("menuitem", { name: "Open in Playground" }).click();
   await expect(page).toHaveURL(/#\/play\/play-/);
   await expect(page.getByTestId("program-title")).toHaveValue("FizzBuzz");
-  await expect(page.getByTestId("chart")).toContainText("Create n and set it to 15");
+  await expect(page.getByTestId("chart")).toContainText("n ← 15");
 
   await page.getByRole("button", { name: "More" }).click();
   await expect(page.getByRole("menuitem")).toHaveText(["Help"]);
@@ -112,10 +112,10 @@ test("an edit on a problem is saved and restored on reload", async ({ page }) =>
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "Add your first block" }).click();
   await page.getByTestId("block-menu").locator('[data-entry="print"]').click();
-  await expect(page.getByTestId("chart")).toContainText("Print …");
+  await expect(page.getByTestId("chart")).toContainText("print(…)");
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("algoflow:program:fizzbuzz")))
     .toContain('"kind":"print"');
   await page.reload();
-  await expect(page.getByTestId("chart")).toContainText("Print …");
+  await expect(page.getByTestId("chart")).toContainText("print(…)");
 });

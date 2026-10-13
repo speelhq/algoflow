@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { FunctionDef } from "@/lang/types";
 import { emit } from "@/python/emit";
-import { ast, program, runAll, varData } from "./testing";
+import { ast, notation, program, runAll, varData } from "./testing";
 
 const { call, num, bin, v, assign, ret, for_, if_ } = ast;
 
@@ -35,5 +35,12 @@ describe("return (nodes.md)", () => {
     );
     expect(varData(result, "r")).toBe(0);
     expect(result.done).toMatchObject({ type: "done", loops: 1 });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(ret(v("x")))).toBe("return {value}");
+    expect(notation(ret())).toBe("return {value}");
   });
 });

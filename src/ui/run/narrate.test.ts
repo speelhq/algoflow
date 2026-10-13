@@ -36,18 +36,18 @@ function told(p: Program, type: Event["type"], nth = 1, inputs: Record<string, D
 }
 
 describe("narrate", () => {
-  it("enter: `Checking …` for a condition, the block's sentence otherwise", () => {
+  it("enter: `Checking …` for a condition, the block's notation otherwise", () => {
     const check = if_(bin("==", bin("%", v("i"), num(3)), num(0)), []);
     const p = program([assign("i", num(6)), check, while_(bin(">", v("i"), num(9)), [])]);
-    expect(told(p, "enter", 1)).toBe("Create i and set it to 6");
+    expect(told(p, "enter", 1)).toBe("i ← 6");
     expect(told(p, "enter", 2)).toBe("Checking i % 3 = 0");
     expect(told(p, "enter", 3)).toBe("Checking i > 9");
-    expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("For i from 1 up to 3");
+    expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("i ← 1");
   });
 
   it("enter: a named node is narrated by its statement, not its name", () => {
     const named = { ...assign("i", num(6)), name: "start counting" };
-    expect(told(program([named]), "enter")).toBe("Create i and set it to 6");
+    expect(told(program([named]), "enter")).toBe("i ← 6");
   });
 
   it("compare: a diamond's whole condition is its question with the values, and its answer", () => {
