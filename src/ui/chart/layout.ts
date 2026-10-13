@@ -109,12 +109,12 @@ const BREAK: Part = { text: " " };
 
 /**
  * Runs split into two lines at the space that makes the longer line shortest; a space inside
- * a variable or a placeholder is never one. One line when there is no space to split at.
+ * a variable is never one. One line when there is no space to split at.
  */
 function inTwo(runs: Part[], width: (part: Part) => number): Part[][] {
   let best: { lines: Part[][]; longest: number } | undefined;
   runs.forEach((run, r) => {
-    if (run.variable || run.empty) return;
+    if (run.variable) return;
     for (let k = run.text.indexOf(" "); k >= 0; k = run.text.indexOf(" ", k + 1)) {
       const head = run.text.slice(0, k).trimEnd();
       const rest = run.text.slice(k + 1).trimStart();

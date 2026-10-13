@@ -45,7 +45,7 @@ export function methodKey(name: string): string {
   return `${METHOD}${name}`;
 }
 
-/** A builtin's or method's parameter, `name` as its template writes it. */
+/** A builtin's or method's parameter, `name` as its notation writes it. */
 export type Param = { name: string; optional?: true };
 
 /**
@@ -148,7 +148,7 @@ export type NodeDef = {
   shape: "stmt" | "expr";
   category: Category;
   slots: Slot[];
-  /** Builtin and method parameters in order (`expectedArgs`); template placeholders name them. */
+  /** Builtin and method parameters in order (`expectedArgs`); notation placeholders name them. */
   params?: Param[];
   /** Emitter aliases accepted by the parser, e.g. "random.randint". */
   aliases?: string[];
@@ -168,14 +168,16 @@ export type NodeDef = {
   create(): Stmt | Expr;
   run: StmtRunner | ExprRunner;
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string;
-  /** Template variant suffix (`node.<key>.template<Form>`); `""` or absent = the base template. */
+  /** An expression's text with `{slot}` placeholders, the same in every locale (Node text). */
+  notation?(node: Stmt | Expr): string;
+  /** A statement's template variant (`node.<key>.template<Form>`); `""` or absent: the base. */
   form?(node: Stmt | Expr, ctx: FormContext): string;
   /**
    * Which of a stored node's literal fields no edit could have written (an operator, a number's
    * text), and why; undefined when its block would make them.
    */
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined;
-  /** Canvas text of a `text` slot; default `String(node[slot])`. */
+  /** The notation's text of a `text` slot; default `String(node[slot])`. */
   text?(node: Stmt | Expr, slot: string): string;
   /** How the chart draws the block's regions; absent = a box with the sentence. */
   chart?: ChartShape;
@@ -190,7 +192,7 @@ export type NodeDef = {
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
 type ExprOf<K extends ExprKind> = Extract<Expr, { kind: K }>;
 
-type Generic = "shape" | "create" | "run" | "python" | "form" | "text" | "kind";
+type Generic = "shape" | "create" | "run" | "python" | "notation" | "form" | "text" | "kind";
 
 type StmtDef<K extends StmtKind> = Omit<NodeDef, Generic> & {
   create(): StmtOf<K>;
@@ -204,7 +206,7 @@ type ExprDef<K extends ExprKind> = Omit<NodeDef, Generic> & {
   create(): ExprOf<K>;
   run(node: ExprOf<K>, ctx: RunContext): Generator<Event, Value, void>;
   python(node: ExprOf<K>, ctx: EmitContext): string;
-  form?(node: ExprOf<K>, ctx: FormContext): string;
+  notation(node: ExprOf<K>): string;
   text?(node: ExprOf<K>, slot: string): string;
   kind?(node: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
 };

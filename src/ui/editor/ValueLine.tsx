@@ -1,7 +1,7 @@
 // A value line drawn as the chart writes its expression: variables as bold words in
-// their colour, an operator as its symbol, a word operation on a light underlay, an input still
-// to fill as an empty field, the brackets the chart draws and those opened and not closed, the
-// caret, and the word being typed. Keys go to `onKey`; clicks name the expression clicked.
+// their colour, an operator as its symbol, an input still to fill as an empty field, the
+// brackets the chart draws and those opened and not closed, the caret, and the word being
+// typed. Keys go to `onKey`; clicks name the expression clicked.
 import { forwardRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { t } from "@/i18n/t";
 import type { Expr, NodeId } from "@/lang/types";
@@ -11,9 +11,8 @@ import { getNode, keyOf } from "@/nodes/registry";
 import type { Side } from "@/nodes/types";
 import {
   bracketed,
-  exprTemplate,
+  exprNotation,
   exprText,
-  isWordOperation,
   placeholderValue,
   templatePieces,
 } from "@/ui/chart/text";
@@ -147,9 +146,9 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
 
   const operation = (expr: Expr): ReactNode => {
     const pieces: ReactNode[] = [];
-    templatePieces(exprTemplate(expr)).forEach((piece, i) => {
+    templatePieces(exprNotation(expr)).forEach((piece, i) => {
       if ("words" in piece) {
-        // oxlint-disable-next-line react/no-array-index-key -- a template's pieces keep their order
+        // oxlint-disable-next-line react/no-array-index-key -- a notation's pieces keep their order
         if (piece.words.trim() !== "") pieces.push(<span key={`w${i}`}>{piece.words}</span>);
         else pieces.push(" ");
         return;
@@ -187,13 +186,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
           return;
       }
     });
-    return isWordOperation(expr) ? (
-      <span className="rounded bg-muted px-1 py-0.5" data-operation={expr.id}>
-        {pieces}
-      </span>
-    ) : (
-      <>{pieces}</>
-    );
+    return <>{pieces}</>;
   };
 
   const empty = isEmptyExpr(root) && !focused;

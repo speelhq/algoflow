@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr } from "./testing";
+import { ast, evalExpr, notation } from "./testing";
 
 const { call, num, float, str } = ast;
 
@@ -20,5 +20,11 @@ describe("builtin max (nodes.md)", () => {
       type: "error",
       error: { code: "E_TYPE" },
     });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(call("max", num(1), num(2)))).toBe("max({a}, {b})");
   });
 });

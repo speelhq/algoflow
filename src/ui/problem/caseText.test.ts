@@ -10,6 +10,6 @@ describe("caseText", () => {
 
   it("writes texts in quotes and booleans and none as the blocks do", () => {
     expect(caseText({ name: "" })).toBe('name = ""');
-    expect(caseText({ ok: true, x: null, xs: [1, 2] })).toBe("ok = true, x = none, xs = [1, 2]");
+    expect(caseText({ ok: true, x: null, xs: [1, 2] })).toBe("ok = True, x = None, xs = [1, 2]");
   });
 });

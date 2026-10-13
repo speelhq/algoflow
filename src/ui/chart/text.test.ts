@@ -29,14 +29,14 @@ function expr(python: string): Expr {
 }
 
 describe("templatePieces and placeholderValue", () => {
-  it("reads a template as its words and placeholders, in order", () => {
+  it("reads a template or a notation as its own text and placeholders, in order", () => {
     expect(templatePieces("set {target} to {value}")).toEqual([
       { words: "set " },
       { name: "target" },
       { words: " to " },
       { name: "value" },
     ]);
-    expect(templatePieces("{x} as text")).toEqual([{ name: "x" }, { words: " as text" }]);
+    expect(templatePieces("abs({x})")).toEqual([{ words: "abs(" }, { name: "x" }, { words: ")" }]);
     expect(templatePieces("break")).toEqual([{ words: "break" }]);
   });
 
@@ -78,16 +78,23 @@ describe("sentence", () => {
     expect(
       ["a - b", "a == b", "a != b", "a <= b", "a >= b", "a < b"].map((t) => exprText(expr(t))),
     ).toEqual(["a − b", "a = b", "a ≠ b", "a ≤ b", "a ≥ b", "a < b"]);
-    expect(exprText(bool(false))).toBe("false");
+    expect(exprText(bool(false))).toBe("False");
     expect(exprText(neg(v("x")))).toBe("−x");
     expect(exprText(call("f", num(1), v("n")))).toBe("f(1, n)");
   });
 
-  it("writes %, //, **, and in in words", () => {
-    expect(exprText(expr("i % 15"))).toBe("remainder of i divided by 15");
-    expect(exprText(expr("a // b"))).toBe("whole-number quotient of a divided by b");
-    expect(exprText(expr("2 ** 3"))).toBe("2 to the power of 3");
-    expect(exprText(expr("x in nums"))).toBe("x is in nums");
+  it("writes %, //, **, and in as Python writes them", () => {
+    expect(exprText(expr("i % 15"))).toBe("i % 15");
+    expect(exprText(expr("a // b"))).toBe("a // b");
+    expect(exprText(expr("2 ** 3"))).toBe("2 ** 3");
+    expect(exprText(expr("x in nums"))).toBe("x in nums");
+  });
+
+  it("writes a builtin as a call named as Python names it, without its module", () => {
+    expect(exprText(expr("abs(x)"))).toBe("abs(x)");
+    expect(exprText(expr("min(a, b)"))).toBe("min(a, b)");
+    expect(exprText(expr("str(n)"))).toBe("str(n)");
+    expect(exprText(expr("random.randint(1, 6)"))).toBe("randint(1, 6)");
   });
 
   it("parenthesises operators among themselves exactly where the emitter would", () => {
@@ -98,16 +105,17 @@ describe("sentence", () => {
     expect(exprText(expr("a < b and b < c"))).toBe("a < b and b < c");
   });
 
-  it("brackets a word operation next to an operator, and anything but a value inside one", () => {
-    expect(exprText(expr("i % 15 == 0"))).toBe("(remainder of i divided by 15) = 0");
-    expect(exprText(expr("(i + 1) % 3"))).toBe("remainder of (i + 1) divided by 3");
-    expect(exprText(expr("abs(i % 3)"))).toBe("absolute value of (remainder of i divided by 3)");
-    expect(exprText(expr("min(a, abs(b))"))).toBe("smaller of a and (absolute value of b)");
-    expect(exprText(expr("-x ** 2"))).toBe("−(x to the power of 2)");
-    expect(exprText(not(bin("<", v("a"), v("b"))))).toBe("not (a < b)");
-    expect(exprText(expr("not a and b"))).toBe("(not a) and b");
-    expect(exprText(expr("f(abs(x), y)"))).toBe("f(absolute value of x, y)");
-    expect(exprText(expr("str(n) + str(m)"))).toBe("(n as text) + (m as text)");
+  it("brackets no call and no input of one, and every operator as the emitter does", () => {
+    expect(exprText(expr("i % 15 == 0"))).toBe("i % 15 = 0");
+    expect(exprText(expr("(i + 1) % 3"))).toBe("(i + 1) % 3");
+    expect(exprText(expr("abs(i % 3)"))).toBe("abs(i % 3)");
+    expect(exprText(expr("min(a, abs(b))"))).toBe("min(a, abs(b))");
+    expect(exprText(expr("-x ** 2"))).toBe("−x ** 2");
+    expect(exprText(expr("(-x) ** 2"))).toBe("(−x) ** 2");
+    expect(exprText(not(bin("<", v("a"), v("b"))))).toBe("not a < b");
+    expect(exprText(expr("not (a and b)"))).toBe("not (a and b)");
+    expect(exprText(expr("f(abs(x), y)"))).toBe("f(abs(x), y)");
+    expect(exprText(expr("str(n) + str(m)"))).toBe("str(n) + str(m)");
   });
 
   it("marks variables, and an input still to fill at any depth", () => {
@@ -116,7 +124,7 @@ describe("sentence", () => {
     expect(parts).toEqual([
       { text: "total", variable: true },
       { text: " + " },
-      { text: "choose a value", empty: true, hole: hole.id },
+      { text: "…", empty: true, hole: hole.id },
     ]);
     const p = program([assign("total", bin("+", v("total"), hole))]);
     expect(sentenceParts(p.main[0]!, p).map((part) => [part.text, part.slot])).toEqual([
@@ -125,15 +133,13 @@ describe("sentence", () => {
       [" and set it to ", undefined],
       ["total", "value"],
       [" + ", "value"],
-      ["choose a value", "value"],
+      ["…", "value"],
     ]);
   });
 
   it("writes a variable as its value when the writing gives one", () => {
     const values: Record<string, string> = { i: "3" };
-    expect(exprText(expr("i % 15 == 0"), { value: (name) => values[name] })).toBe(
-      "(remainder of 3 divided by 15) = 0",
-    );
+    expect(exprText(expr("i % 15 == 0"), { value: (name) => values[name] })).toBe("3 % 15 = 0");
   });
 
   it("capitalises a drawn sentence only when it begins with a word of its template", () => {
@@ -145,10 +151,9 @@ describe("sentence", () => {
 
 describe("diamonds and generated nodes", () => {
   it("a diamond is its condition followed by ?, or the placeholder without it", () => {
-    expect(joinParts(questionParts(if_(expr("i % 15 == 0"), [])))).toBe(
-      "(remainder of i divided by 15) = 0?",
-    );
-    expect(joinParts(questionParts(if_(empty(), [])))).toBe("choose a value");
+    expect(joinParts(questionParts(if_(expr("i % 15 == 0"), [])))).toBe("i % 15 = 0?");
+    expect(joinParts(questionParts(if_(expr("abs(x) < 3"), [])))).toBe("abs(x) < 3?");
+    expect(joinParts(questionParts(if_(empty(), [])))).toBe("…");
     // The condition's runs name its slot; the `?` names none.
     expect(questionParts(if_(v("ok"), [])).map((part) => part.slot)).toEqual(["cond", undefined]);
   });
@@ -170,11 +175,11 @@ describe("diamonds and generated nodes", () => {
 });
 
 describe("valueText", () => {
-  it("writes containers with the same words inside", () => {
+  it("writes True, False, None, and a text in quotes, inside containers too", () => {
     const made = withInputs({ d: { a: [true, null, "x", { $float: 2 }], "$int:3": 1 } }, []);
     const runner = run(made.program, made.inputs, 1);
     const { frames, heap } = runner.state();
     const value = frames[0]?.vars.get("d");
-    expect(value && valueText(value, heap)).toBe('{"a": [true, none, "x", 2.0], 3: 1}');
+    expect(value && valueText(value, heap)).toBe('{"a": [True, None, "x", 2.0], 3: 1}');
   });
 });

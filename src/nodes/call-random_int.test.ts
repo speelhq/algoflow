@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit, unparse } from "@/python/emit";
-import { ast, evalExpr, program, runAll, varData } from "./testing";
+import { ast, evalExpr, notation, program, runAll, varData } from "./testing";
 
 const { call, num, float, str, assign, for_ } = ast;
 
@@ -42,5 +42,11 @@ describe("builtin random_int (nodes.md)", () => {
       type: "error",
       error: { code: "E_EMPTY_RANGE", params: { a: 5, b: 1 } },
     });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(call("random_int", num(1), num(6)))).toBe("randint({a}, {b})");
   });
 });

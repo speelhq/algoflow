@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { FunctionDef } from "@/lang/types";
 import { validate } from "@/lang/validate";
 import { emit, unparse } from "@/python/emit";
-import { ast, eventTypes, program, runAll, varData } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData } from "./testing";
 
 const { call, num, bin, v, assign, ret, print, if_, exprStmt } = ast;
 
@@ -81,5 +81,11 @@ describe("call (nodes.md)", () => {
       runAll(program([assign("r", call("down", num(n)))], { functions: [down] })).done;
     expect(deepest(198)).toMatchObject({ type: "done" });
     expect(deepest(199)).toMatchObject({ type: "error", error: { code: "E_RECURSION" } });
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(call("f", v("x")))).toBe("{fn}({args})");
   });
 });

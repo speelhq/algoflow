@@ -1,5 +1,6 @@
 // Shared shape of the builtin call blocks (nodes.md "Builtin calls"): key `call:<name>`,
-// one `args` slot, positional parameters, the argument counts of `expectedArgs`.
+// one `args` slot, positional parameters, the argument counts of `expectedArgs`, and a
+// notation that calls the builtin as Python names it, without its module (`randint`).
 import { newId } from "@/lang/id";
 import type { Expr, Kind, Value } from "@/lang/types";
 import {
@@ -30,6 +31,7 @@ export type BuiltinDef = {
 
 export function defineBuiltin(def: BuiltinDef): NodeDef {
   const callee = def.python ?? def.name;
+  const written = callee.split(".").at(-1) ?? callee;
   return defineExpr<"call">({
     key: builtinKey(def.name),
     category: def.category,
@@ -60,5 +62,10 @@ export function defineBuiltin(def: BuiltinDef): NodeDef {
       return def.evaluate(values, node, ctx);
     },
     python: (node, ctx) => `${callee}(${node.args.map((arg) => ctx.expr(arg)).join(", ")})`,
+    notation: (node) => {
+      // An optional parameter is written only when its argument is given.
+      const given = def.params.filter((param, i) => !param.optional || i < node.args.length);
+      return `${written}(${given.map((param) => `{${param.name}}`).join(", ")})`;
+    },
   });
 }

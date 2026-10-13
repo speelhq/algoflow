@@ -468,9 +468,7 @@ describe("layout texts", () => {
     });
     expect(chart.nodes[0]?.text).toBe("Start f(x)");
     expect(chart.nodes.some((node) => node.role === "input")).toBe(false);
-    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe(
-      "(remainder of x divided by 15) = 0?",
-    );
+    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe("x % 15 = 0?");
     const jumps = chart.edges.filter((edge) => edge.jump);
     expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // a Return leads to End
   });
@@ -486,7 +484,7 @@ describe("layout texts", () => {
     });
     const node = (id: string) => chart.nodes.find((n) => n.id === id);
     expect(node(named.id)).toMatchObject({ text: "Show x", title: "Print x" });
-    expect(node(unfinished.id)).toMatchObject({ text: "Print choose a value" });
+    expect(node(unfinished.id)).toMatchObject({ text: "Print …" });
     expect(node(unfinished.id)?.title).toBeUndefined();
     expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times" });
     expect(node(`${loop.id}:init`)?.text).toBe("Set i to 0");
@@ -498,8 +496,9 @@ describe("layout texts", () => {
 
   it("a long diamond's text is drawn on two lines, split at a space between words", () => {
     const measure: Measure = (text) => text.length * 7;
-    const check = if_(bin("==", bin("%", v("i"), num(15)), num(0)), []);
-    const short = if_(bin("<", v("i"), num(2)), []);
+    const divides = (by: number) => bin("==", bin("%", v("i"), num(by)), num(0));
+    const check = if_(bin("and", divides(15), bin("<", v("i"), ast.empty())), []);
+    const short = if_(divides(15), []);
     const chart = layout(program([assign("i", num(1)), check, short]), { inputs: {}, measure });
     const lines = (id: string) => {
       const parts = chart.nodes.find((n) => n.id === id)?.parts ?? [];
@@ -511,10 +510,8 @@ describe("layout texts", () => {
           .trimEnd(),
       );
     };
-    expect(chart.nodes.find((n) => n.id === check.id)?.text).toBe(
-      "(remainder of i divided by 15) = 0?",
-    );
-    expect(lines(check.id)).toEqual(["(remainder of i", "divided by 15) = 0?"]);
+    expect(chart.nodes.find((n) => n.id === check.id)?.text).toBe("i % 15 = 0 and i < …?");
+    expect(lines(check.id)).toEqual(["i % 15 = 0", "and i < …?"]);
     const one = chart.nodes.find((n) => n.id === short.id)?.parts ?? [];
     expect(new Set(one.map((part) => part.dy))).toEqual(new Set([0]));
   });

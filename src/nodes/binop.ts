@@ -149,9 +149,8 @@ export const binop = defineExpr<"binop">({
     const precedence = binopPrecedence(node.op);
     return `${ctx.operand(node.left, precedence, "left")} ${node.op} ${ctx.operand(node.right, precedence, "right")}`;
   },
-  // `%`, `//`, `**`, and `in` are written in words, each with a template of its own.
-  form: (node) => WORD_FORMS[node.op] ?? "",
-  // The other operators are written with the symbols taught at school.
+  notation: () => "{left} {op} {right}",
+  // The symbols taught at school, and Python's where school has none (`%`, `//`, `**`, `in`).
   text: (node, slot) => (slot === "op" ? (CANVAS_OPS[node.op] ?? node.op) : ""),
   kind: (node, kindOf) => {
     if (isComparison(node.op)) return "truefalse";
@@ -167,8 +166,20 @@ export const binop = defineExpr<"binop">({
     return "number";
   },
   menu: [
-    { name: "and", group: "conditions", on: ["truefalse"], preset: { op: "and" }, keys: "and" },
-    { name: "or", group: "conditions", on: ["truefalse"], preset: { op: "or" }, keys: "or" },
+    {
+      name: "and",
+      group: "conditions",
+      on: ["truefalse"],
+      preset: { op: "and" },
+      keys: "and",
+    },
+    {
+      name: "or",
+      group: "conditions",
+      on: ["truefalse"],
+      preset: { op: "or" },
+      keys: "or",
+    },
     {
       name: "add",
       group: "calculate",
@@ -201,9 +212,27 @@ export const binop = defineExpr<"binop">({
       symbol: "÷",
       keys: "/",
     },
-    { name: "mod", group: "calculate", on: ["number"], preset: { op: "%" }, keys: "%" },
-    { name: "floorDiv", group: "calculate", on: ["number"], preset: { op: "//" }, keys: "//" },
-    { name: "pow", group: "calculate", on: ["number"], preset: { op: "**" }, keys: "**" },
+    {
+      name: "mod",
+      group: "calculate",
+      on: ["number"],
+      preset: { op: "%" },
+      keys: "%",
+    },
+    {
+      name: "floorDiv",
+      group: "calculate",
+      on: ["number"],
+      preset: { op: "//" },
+      keys: "//",
+    },
+    {
+      name: "pow",
+      group: "calculate",
+      on: ["number"],
+      preset: { op: "**" },
+      keys: "**",
+    },
     { name: "join", group: "items", on: ["list"], preset: { op: "+" }, symbol: "+" },
     { name: "eq", group: "compare", on: KINDS, preset: { op: "==" }, symbol: "=", keys: "==" },
     { name: "ne", group: "compare", on: KINDS, preset: { op: "!=" }, symbol: "≠", keys: "!=" },
@@ -214,13 +243,6 @@ export const binop = defineExpr<"binop">({
     { name: "in", group: "compare", on: KINDS, preset: { op: "in" }, keys: "in" },
   ],
 });
-
-const WORD_FORMS: Partial<Record<Binop["op"], string>> = {
-  "%": "Mod",
-  "//": "FloorDiv",
-  "**": "Pow",
-  in: "In",
-};
 
 const CANVAS_OPS: Partial<Record<Binop["op"], string>> = {
   "-": "−",

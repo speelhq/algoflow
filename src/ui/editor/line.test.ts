@@ -79,7 +79,7 @@ const groups = (line: Line, all = false) =>
 describe("typing", () => {
   it("keys insert what the chart writes", () => {
     expect(py(keys("i%15==0"))).toBe("i % 15 == 0");
-    expect(exprText(keys("i%15==0").root)).toBe("(remainder of i divided by 15) = 0");
+    expect(exprText(keys("i%15==0").root)).toBe("i % 15 = 0");
     expect(py(keys("a<=b".replace("a", "i").replace("b", "n")))).toBe("i <= n");
     expect(py(keys("i!=n"))).toBe("i != n");
     expect(py(keys("i>=n"))).toBe("i >= n");
@@ -159,9 +159,8 @@ describe("typing", () => {
     expect(clicked.open).toHaveLength(1);
     expect(py(keys("+1", clicked))).toBe("i * (5 + 1)");
     expect(py(keys("twice(i)+1"))).toBe("twice(i) + 1");
-    // A word operation has no brackets for ) to close.
     const abs = keys("i", choose(empty(), entry("call:abs"), ctx).line);
-    expect(type(abs, ")", ctx).taken).toBe(false);
+    expect(type(abs, ")", ctx).line.caret).toEqual({ after: abs.root.id });
   });
 
   it("Tab forgets the first key of a two-key operator", () => {
@@ -212,7 +211,7 @@ describe("choosing", () => {
     const more = choose(keys("i"), entry("call:max"), ctx).line;
     expect(py(more)).toBe("max(i, ...)");
     expect("at" in more.caret).toBe(true);
-    // A word operation takes what the list is about; an operator binds by precedence.
+    // A call takes what the list is about; an operator binds by precedence.
     expect(py(choose(keys("total+i"), entry("call:str"), ctx).line)).toBe("str(total + i)");
     expect(py(choose(keys("i<n"), entry("call:str"), ctx).line)).toBe("str(i < n)");
     expect(py(choose(keys("total+i"), entry("binop.mul"), ctx).line)).toBe("total + i * ...");
@@ -279,16 +278,27 @@ describe("Backspace and moving", () => {
     expect(py(back(openLine(ast.v("n"))))).toBe("...");
   });
 
-  it("after an operation that ends in an input, it removes what ends that input", () => {
-    const inside = keys("12", choose(empty(), entry("call:abs"), ctx).line);
-    const after = move(inside, 1).line;
-    expect(py(back(after))).toBe("abs(1)");
-    expect(py(back(after, 3))).toBe("...");
+  it("after an operator's last input, it removes what ends that input", () => {
+    const after = keys("(i+12)");
+    expect(after.caret).toEqual({ after: after.root.id });
+    expect(py(back(after))).toBe("i + 1");
+    expect(py(back(after, 3))).toBe("i");
   });
 
-  it("on an operation's words it removes the operation and keeps its first input", () => {
+  it("after a call's bracket it removes the call and keeps its first input", () => {
     const line = choose(keys("i"), entry("call:str"), ctx).line;
     expect(py(back(line))).toBe("i");
+    const inside = keys("12", choose(empty(), entry("call:abs"), ctx).line);
+    expect(py(back(move(inside, 1).line))).toBe("12");
+  });
+
+  it("after a call whose later input holds a value, it removes nothing and moves left", () => {
+    const larger = keys("3)", choose(keys("i"), entry("call:max"), ctx).line);
+    expect([py(larger), larger.caret]).toEqual(["max(i, 3)", { after: larger.root.id }]);
+    const after = backspace(larger).line;
+    expect(py(after)).toBe("max(i, 3)");
+    expect(after.caret).not.toEqual(larger.caret);
+    expect(py(back(after))).toBe("max(i, ...)");
   });
 
   it("at a first input still to fill while a later one holds a value, it moves left", () => {

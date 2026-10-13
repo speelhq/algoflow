@@ -1,8 +1,7 @@
-// A node's text from `node.<key>.template<form>` and the block's slots, as runs: the words of
-// a template, a variable (drawn bold in its own colour), and the placeholder of an input still
-// to fill. Only operators are written as symbols; an operation written in words is bracketed
-// next to an operator and inside another operation's input, and operators among themselves
-// are parenthesised as the emitter does. Reads slot roles, `params`, `form`, `text`, and
+// A node's text as runs: an expression from its block's `notation()`, a statement from
+// `node.<key>.template<form>`, with the block's slots filled in; a variable is drawn bold in
+// its own colour, and an input still to fill as the placeholder. Operators are parenthesised
+// as the emitter does. Reads slot roles, `params`, `notation`, `form`, `text`, and
 // `precedence` only, never a kind.
 import { nodeText, t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
@@ -10,7 +9,7 @@ import { isRecord } from "@/lang/record";
 import type { Data, Expr, Heap, Node, NodeId, Program, Target, Value } from "@/lang/types";
 import { firstAssignments } from "@/lang/validate";
 import { conditionOf, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/walk";
-import { getNode, hasNode, keyOf } from "@/nodes/registry";
+import { emptyExpr, getNode, hasNode, keyOf } from "@/nodes/registry";
 import type { NodeDef, Side } from "@/nodes/types";
 import { writeTarget } from "@/python/emit";
 import { needsParens } from "@/python/precedence";
@@ -18,10 +17,13 @@ import { str, writeValue } from "@/runtime/values";
 
 type Bag = Record<string, unknown>;
 
-/** A piece of a template: its own words, or a placeholder naming a slot or a parameter. */
+/** A piece of a notation or a template: its own text, or a placeholder naming a slot or a param. */
 export type Piece = { words: string } | { name: string };
 
-/** A template as its words and its placeholders in reading order: the one reading of a template. */
+/**
+ * A notation or a template as its own text and its placeholders in reading order: the one
+ * reading of either.
+ */
 export function templatePieces(template: string): Piece[] {
   const pieces: Piece[] = [];
   let at = 0;
@@ -34,17 +36,10 @@ export function templatePieces(template: string): Piece[] {
   return pieces;
 }
 
-/** A template with every placeholder written as `…`. */
+/** A template with every placeholder written as the placeholder `…`. */
 export function blankTemplate(template: string): string {
   return templatePieces(template)
-    .map((piece) => ("words" in piece ? piece.words : t("chart.blank")))
-    .join("");
-}
-
-/** The words of a template, without its placeholders. */
-function templateWords(template: string): string {
-  return templatePieces(template)
-    .map((piece) => ("words" in piece ? piece.words : ""))
+    .map((piece) => ("words" in piece ? piece.words : placeholder()))
     .join("");
 }
 
@@ -72,9 +67,12 @@ export function joinParts(parts: readonly Part[]): string {
   return parts.map((part) => part.text).join("");
 }
 
-/** The empty slot's placeholder, `choose a value`. */
+/** An input still to fill, whose block's notation is the placeholder. */
+const EMPTY = emptyExpr();
+
+/** The placeholder of an input still to fill: the `empty` block's notation, `…`. */
 export function placeholder(): string {
-  return nodeText("empty", "template");
+  return exprNotation(EMPTY);
 }
 
 /** How an expression is written: `value` gives the text a variable is written as instead of its name. */
@@ -110,38 +108,20 @@ export function templateParts(template: string, fill: (name: string) => Part[]):
 
 const plain = (part: Part) => !part.variable && !part.empty && !part.underline;
 
-/** The template of an expression in its form. */
-export function exprTemplate(expr: Expr): string {
+/** An expression's notation (`nodes.md`, Node text). */
+export function exprNotation(expr: Expr): string {
   const def = getNode(keyOf(expr));
-  return nodeText(def.key, `template${def.form?.(expr, { creates: false }) ?? ""}`);
-}
-
-const hasInputs = (def: NodeDef) =>
-  def.params !== undefined || def.slots.some((s) => s.role === "expr" || s.role === "exprs");
-
-/** An operation written in words around its inputs (`remainder of i divided by 15`). */
-export function isWordOperation(expr: Expr): boolean {
-  const def = getNode(keyOf(expr));
-  return hasInputs(def) && /\p{L}/u.test(templateWords(exprTemplate(expr)));
-}
-
-/** An operation written with a symbol, which has a precedence (`+`, `=`, `−`). */
-function isOperator(expr: Expr): boolean {
-  return getNode(keyOf(expr)).precedence?.(expr) !== undefined && !isWordOperation(expr);
+  if (!def.notation) throw new Error(`block "${def.key}" declares no notation`);
+  return def.notation(expr);
 }
 
 const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
 
-/** Whether `child`, an input of `parent` on `side`, is put in brackets. */
+/** Whether `child`, an input of `parent` on `side`, is put in brackets: as the emitter does. */
 export function bracketed(child: Expr, parent: Expr, side: Side): boolean {
-  if (isWordOperation(parent)) return isWordOperation(child) || isOperator(child);
-  if (!isOperator(parent)) return false;
-  if (isWordOperation(child)) return true;
   const own = precedenceOf(child);
   const outer = precedenceOf(parent);
-  return own !== undefined && outer !== undefined && isOperator(child)
-    ? needsParens(own, outer, side)
-    : false;
+  return own !== undefined && outer !== undefined && needsParens(own, outer, side);
 }
 
 function inBrackets(parts: Part[]): Part[] {
@@ -155,9 +135,9 @@ function operandParts(child: Expr, parent: Expr, side: Side, writing: Writing): 
 }
 
 /**
- * What a placeholder of a node's template holds: an expression slot or a builtin's parameter
- * (its input, and the side it is on), a list of values, a name, a target, or a literal field as
- * its block writes it. Undefined when the placeholder holds nothing drawn (a body).
+ * What a placeholder of a node's notation or template holds: an expression slot or a builtin's
+ * parameter (its input, and the side it is on), a list of values, a name, a target, or a literal
+ * field as its block writes it. Undefined when the placeholder holds nothing drawn (a body).
  */
 export type Held =
   | { role: "expr"; expr: Expr | undefined; side: Side }
@@ -166,12 +146,12 @@ export type Held =
   | { role: "target"; target: Target | undefined }
   | { role: "text"; text: string };
 
-/** What the placeholder `name` of `node`'s template holds. */
+/** What the placeholder `name` of `node`'s notation or template holds. */
 export function placeholderValue(node: Node, name: string): Held | undefined {
   const def = getNode(keyOf(node));
   const slot = def.slots.find((s) => s.name === name);
   if (!slot) {
-    // Builtin templates name their parameters (`{a}`, `{b}`).
+    // A builtin's notation names its parameters (`{a}`, `{b}`).
     const found = paramArg(node, name);
     return found && { role: "expr", expr: found.arg, side: found.index === 0 ? "left" : "right" };
   }
@@ -203,7 +183,7 @@ export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
     const value = writing.value?.(name);
     return value === undefined ? [{ text: name, variable: true }] : [{ text: value }];
   }
-  return templateParts(exprTemplate(expr), (placeholderName) => {
+  return templateParts(exprNotation(expr), (placeholderName) => {
     const held = placeholderValue(expr, placeholderName);
     switch (held?.role) {
       case "expr":
@@ -342,20 +322,11 @@ export function questionParts(node: Node): Part[] {
   return templateParts(t("chart.condition"), () => parts);
 }
 
-/** A value as the blocks write it: `true` / `false` / `none`, a text in quotes, the rest as `str()`. */
+/** A value as the blocks write it: a text in quotes, the rest as `str()` (`True`, `None`). */
 export function valueText(value: Value, heap: Heap): string {
-  return writeValue(value, heap, (scalar) => {
-    switch (scalar.t) {
-      case "bool":
-        return t(scalar.v ? "node.bool.template" : "node.bool.templateFalse");
-      case "none":
-        return t("node.none.template");
-      case "str":
-        return t("node.str.template", { value: scalar.v });
-      default:
-        return str(scalar, heap);
-    }
-  });
+  return writeValue(value, heap, (scalar) =>
+    scalar.t === "str" ? `"${scalar.v}"` : str(scalar, heap),
+  );
 }
 
 /** A case's input value (`Input n = 15`), written like any other value. */

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
 import { getNode, menuBlocks } from "./registry";
-import { ast, evalExpr } from "./testing";
+import { ast, evalExpr, notation } from "./testing";
 
 describe("empty", () => {
   it("emits `...` so a program with an unfilled slot still renders as Python", () => {
@@ -17,5 +17,11 @@ describe("empty", () => {
   it("cannot run: the interpreter refuses an empty slot it is given", () => {
     const slot = ast.empty();
     expect(() => evalExpr(slot)).toThrow(`empty slot ${slot.id} cannot run`);
+  });
+});
+
+describe("notation (nodes.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(ast.empty())).toBe("…");
   });
 });

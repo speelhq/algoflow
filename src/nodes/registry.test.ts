@@ -42,28 +42,35 @@ describe("registry", () => {
     expect(NODES.get("continue")?.chart).toEqual({ jump: "next" });
   });
 
-  it("every block has label, template, and help", () => {
-    for (const key of NODES.keys()) {
-      for (const part of ["label", "template", "help"]) {
+  it("every block has label and help; a statement has its template, an expression none", () => {
+    for (const [key, def] of NODES) {
+      for (const part of ["label", "help"]) {
         expect(keys.has(`node.${key}.${part}`), `node.${key}.${part}`).toBe(true);
       }
+      const templates = [...keys].filter((k) => k.startsWith(`node.${key}.template`));
+      expect(templates.length > 0, key).toBe(def.shape === "stmt");
+      expect(def.notation !== undefined, key).toBe(def.shape === "expr");
     }
   });
 
-  it("binop writes school symbols, and %, //, **, and in in words", () => {
+  it("binop writes school symbols, and Python's where school has none", () => {
     const binop = NODES.get("binop");
     const node = (op: string) => ({ id: "b", kind: "binop", op }) as never;
-    const symbols = ["+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">=", "and", "or"].map((op) =>
-      binop?.text?.(node(op), "op"),
-    );
-    expect(symbols).toEqual(["+", "−", "×", "÷", "=", "≠", "<", "≤", ">", "≥", "and", "or"]);
-    const forms = ["%", "//", "**", "in", "+"].map((op) =>
-      binop?.form?.(node(op), { creates: false }),
-    );
-    expect(forms).toEqual(["Mod", "FloorDiv", "Pow", "In", ""]);
-    for (const form of ["Mod", "FloorDiv", "Pow", "In"]) {
-      expect(keys.has(`node.binop.template${form}`), form).toBe(true);
-    }
+    const school = ["+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">="];
+    expect(school.map((op) => binop?.text?.(node(op), "op"))).toEqual([
+      "+",
+      "−",
+      "×",
+      "÷",
+      "=",
+      "≠",
+      "<",
+      "≤",
+      ">",
+      "≥",
+    ]);
+    const python = ["%", "//", "**", "and", "or", "in"];
+    expect(python.map((op) => binop?.text?.(node(op), "op"))).toEqual(python);
   });
 
   it("expression blocks declare the value list's entries in the table's order", () => {
