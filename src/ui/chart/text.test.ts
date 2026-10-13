@@ -142,6 +142,12 @@ describe("notation", () => {
     expect(exprText(expr("i % 15 == 0"), { value: (name) => values[name] })).toBe("3 % 15 = 0");
   });
 
+  it("keeps the spaces a text holds, and leaves no space where a slot holds nothing", () => {
+    expect(notationText(print(str("a  b"), str(" x ")))).toBe('print("a  b", " x ")');
+    expect(exprText(bin("+", str("  "), v("s")))).toBe('"  " + s');
+    expect(notationText(ret())).toBe("return");
+  });
+
   it("adds no capital to a node", () => {
     expect(notationText(print(v("i")))).toBe("print(i)");
     expect(notationText(ast.brk())).toBe("break");

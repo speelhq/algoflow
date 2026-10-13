@@ -73,25 +73,32 @@ export function placeholder(): string {
 export type Writing = { value?: (name: string) => string | undefined };
 
 /**
- * A template as parts, each placeholder replaced by the parts `fill` gives. Spaces are collapsed
- * across parts as in a sentence, and a part left with no text is dropped.
+ * A template as parts, each placeholder replaced by the parts `fill` gives. The template's own
+ * words have their spaces collapsed as in a sentence, so a placeholder that holds nothing leaves
+ * no double or edge space; what a placeholder holds keeps its text, a text's spaces included. A
+ * part left with no text is dropped.
  */
 export function templateParts(template: string, fill: (name: string) => Part[]): Part[] {
   const parts = templatePieces(template).flatMap((piece) =>
-    "words" in piece ? [{ text: piece.words }] : fill(piece.name),
+    "words" in piece
+      ? [{ part: { text: piece.words }, words: true }]
+      : fill(piece.name).map((part) => ({ part, words: false })),
   );
-  const out: Part[] = [];
-  for (const part of parts) {
-    const before = out[out.length - 1]?.text ?? "";
-    let text = part.text.replace(/\s+/g, " ");
-    if (before === "" || before.endsWith(" ")) text = text.replace(/^ /, "");
-    if (text !== "") out.push({ ...part, text });
+  const out: { part: Part; words: boolean }[] = [];
+  for (const { part, words } of parts) {
+    const before = out.at(-1)?.part.text ?? "";
+    let text = part.text;
+    if (words) {
+      text = text.replace(/\s+/g, " ");
+      if (before === "" || before.endsWith(" ")) text = text.replace(/^ /, "");
+    }
+    if (text !== "") out.push({ part: { ...part, text }, words });
   }
-  const last = out[out.length - 1];
-  if (last) last.text = last.text.replace(/ $/, "");
+  const last = out.at(-1);
+  if (last?.words) last.part.text = last.part.text.replace(/ $/, "");
   // Adjacent words of one slot are one run.
   const merged: Part[] = [];
-  for (const part of out) {
+  for (const { part } of out) {
     const before = merged[merged.length - 1];
     if (before && plain(before) && plain(part) && before.slot === part.slot) {
       before.text += part.text;
