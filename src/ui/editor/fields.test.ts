@@ -82,6 +82,21 @@ describe("the notation the editor shows", () => {
   });
 });
 
+describe("a slot written twice", () => {
+  it("is a field at its first place and drawn as its value at the other (swap's list)", () => {
+    const stmt = ast.swap(v("nums"), num(0), num(2));
+    expect(notationText(stmt)).toBe("swap(nums[0], nums[2])");
+    expect(fieldsOf(stmt)).toEqual([
+      { slot: "list", role: "expr" },
+      { slot: "i", role: "expr" },
+      { slot: "j", role: "expr" },
+    ]);
+    // `[` after the list goes on to its first position, `]` after a position to the next.
+    expect(wordsAfter(stmt, { slot: "list", role: "expr" })).toBe("[");
+    expect(wordsAfter(stmt, { slot: "i", role: "expr" })).toBe("],");
+  });
+});
+
 describe("a target holding an item", () => {
   it("is offered for a list variable by the item block's entry, for no variable of no known kind", () => {
     expect(formsFor("list")).toEqual(["index"]);

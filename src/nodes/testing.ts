@@ -84,6 +84,7 @@ export const ast = {
   while_: (cond: Expr, body: Stmt[]): Stmt => ({ id: tid(), kind: "while", cond, body }),
   brk: (): Stmt => ({ id: tid(), kind: "break" }),
   cont: (): Stmt => ({ id: tid(), kind: "continue" }),
+  swap: (list: Expr, i: Expr, j: Expr): Stmt => ({ id: tid(), kind: "swap", list, i, j }),
   ret: (value?: Expr): Stmt =>
     value ? { id: tid(), kind: "return", value } : { id: tid(), kind: "return" },
 };

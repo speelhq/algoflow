@@ -210,6 +210,11 @@
       "slot": { "expr": "expression" },
       "help": "Evaluates an expression for its effect, such as a method call."
     },
+    "swap": {
+      "label": "Swap two items",
+      "slot": { "list": "list", "i": "first position", "j": "second position" },
+      "help": "Exchanges two items of a list, each found by its position. Example: swap(nums[0], nums[2]) turns [4, 9, 2] into [2, 9, 4]."
+    },
     "num": {
       "label": "Number",
       "help": "A whole number or a decimal."

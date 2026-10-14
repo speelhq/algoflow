@@ -11,7 +11,7 @@ const MAIN = { parent: "main", slot: "main", index: 0 } as const;
 describe("block menu", () => {
   it("groups follow the category order, each starting with its first blocks", () => {
     const groups = menuGroups(program([]), MAIN);
-    expect(groups.map((group) => group.title)).toEqual(["Basic", "Control", "Function"]);
+    expect(groups.map((group) => group.title)).toEqual(["Basic", "Control", "List", "Function"]);
     const ids = groups.map((group) => group.entries.map((entry) => entry.id));
     expect(ids[0]?.slice(0, 2)).toEqual(["assign", "print"]);
     expect(ids[1]?.slice(0, 3)).toEqual(["if", "for", "while"]);

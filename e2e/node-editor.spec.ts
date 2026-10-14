@@ -261,3 +261,28 @@ test("an item target is typed by keys alone, as the chart writes it", async ({ p
   await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
   await expect(page.getByTestId("variables")).toContainText("nums ← [3, 3, 2]");
 });
+
+test("a swap is typed as the chart writes it, and run", async ({ page }) => {
+  await seedProgress(page, {});
+  const id = "play-swapkeys0001";
+  await seedProgram(page, id, { ...programWith([]), title: "Swap" });
+  await seedPlayground(page, { [id]: { edited: 0 } });
+  await page.goto(`/#/play/${id}`);
+
+  await insert(page, "main/main/0", "assign");
+  await keys(page, "nums");
+  await page.keyboard.press("Enter");
+  await keys(page, "[4,9,2]");
+  await page.keyboard.press("Enter");
+
+  // `[` after the list goes on to the first position, `]` after it to the second.
+  await insert(page, "main/main/1", "swap");
+  await keys(page, "nums[0]2");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("swap(nums[0], nums[2])");
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "▶ Run" }).click();
+  await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
+  await expect(page.getByTestId("variables")).toContainText("nums ← [2, 9, 4]");
+});

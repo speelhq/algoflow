@@ -15,6 +15,7 @@ import { min } from "./call-min";
 import { randomInt } from "./call-randint";
 import { strCall } from "./call-str";
 import { sum } from "./call-sum";
+import { swap } from "./swap";
 import type { Category } from "./categories";
 import { continueStmt } from "./continue";
 import { empty } from "./empty";
@@ -44,6 +45,7 @@ const ALL: NodeDef[] = [
   print,
   exprStmt,
   returnStmt,
+  swap,
   // expressions, in the order of the value list's entries
   empty,
   num,
