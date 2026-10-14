@@ -31,21 +31,25 @@ import {
   fieldLabel,
   fieldPath,
   fieldsOf,
-  ITEM,
-  itemField,
+  firstPart,
+  formIn,
+  formOfKey,
+  formsFor,
   nameOf,
   namePart,
   sameField,
-  setItem,
+  setForm,
   setName,
+  setVariable,
   startField,
   targetPieces,
   valueOf,
+  wordsAfter,
   type Field,
 } from "./fields";
 import { callableFunctions, lineTakes, matches, openLine, setText, type LineContext } from "./line";
 import { NameOfNode } from "./NameOfNode";
-import { nameChars, type NameRow } from "./names";
+import { nameChars, type FormOf, type NameRow } from "./names";
 import { nameList, shownNameRow, valueList } from "./rows";
 import {
   chooseRow,
@@ -131,10 +135,11 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     return next;
   };
 
-  /** Leaves `field` for the next or previous field of the notation. */
+  /** Leaves `field` for the next or previous field of the notation, as the statement is now. */
   const go = (from: Session, step: 1 | -1, field: Field | null): void => {
-    const at = field ? fields.findIndex((each) => sameField(each, field)) : -1;
-    const next = fields[at + step];
+    const now = fieldsOf(current() ?? stmt);
+    const at = field ? now.findIndex((each) => sameField(each, field)) : -1;
+    const next = now[at + step];
     if (next) enter(from, next, null);
   };
 
@@ -165,14 +170,20 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const onValueKey = (event: KeyboardEvent<HTMLDivElement>) => {
     // Keys typed in a text field inside the line are the field's.
     if (event.target instanceof HTMLInputElement || !lineTakes(event)) return;
-    const result = valueKey(session, event, values.rows, ctx);
+    const next = focus ? wordsAfter(stmt, focus) : "";
+    const result = valueKey(session, event, values.rows, ctx, next);
     if (!result.taken) return;
     event.preventDefault();
-    const next = run(result);
+    const left = run(result);
     const { after } = result;
     if (after === "close") closeEditor();
-    else if (after && "go" in after) go(next, after.go, next.focus);
-    else if (after && next.focus) addItem(next, next.focus.slot, after.addItem);
+    else if (after === "variable") {
+      const slot = left.focus?.slot;
+      if (slot === undefined) return;
+      apply((p) => setVariable(p, stmt, slot));
+      enter(left, { slot, role: "target" }, null);
+    } else if (after && "go" in after) go(left, after.go, left.focus);
+    else if (after && left.focus) addItem(left, left.focus.slot, after.addItem);
   };
 
   const register = (field: Field) => (element: HTMLElement | null) => {
@@ -206,7 +217,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           const result = textEnded(session, key, ctx);
           const next = run(result);
           const { after } = result;
-          if (after && after !== "close" && "go" in after) go(next, after.go, next.focus);
+          if (typeof after === "object" && "go" in after) go(next, after.go, next.focus);
         }}
       />
     );
@@ -215,18 +226,29 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   // ------------------------------------------------------------ names
 
   const asked = Object.keys(getChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {});
-  // A target can be set to an item of a list variable visible here (`editor.md`, Name fields).
-  const lists =
-    focus?.role === "target" ? ctx.variables.filter((name) => kinds.get(name) === "list") : [];
-  const names = nameList(program, asked, session.typed, kinds, lists);
+  // A target can be set to a form of a variable visible here (`editor.md`, Name fields).
+  const forms: FormOf[] =
+    focus?.role === "target"
+      ? ctx.variables.flatMap((name) => formsFor(kinds.get(name)).map((form) => ({ form, name })))
+      : [];
+  const names = nameList(program, asked, session.typed, kinds, forms);
 
   const chooseName = (field: Field, row: NameRow) => {
-    if (row.kind === "item") {
-      apply((p) => setItem(p, stmt, field.slot, row.name));
-      enter(leaveName(session), itemField(field.slot), null);
+    if (row.kind === "form") {
+      apply((p) => setForm(p, stmt, field.slot, row.form, row.name));
+      const now = current();
+      const part = now ? firstPart(now, field.slot) : undefined;
+      if (part) enter(leaveName(session), part, null);
       return;
     }
-    apply((p) => setName(p, stmt, field.slot, row.name));
+    // A name the list offers the target's form of keeps that form and its other parts.
+    const form = formIn(stmt, field.slot);
+    const keeps = forms.some((each) => each.form === form && each.name === row.name);
+    apply((p) =>
+      form && keeps
+        ? setForm(p, stmt, field.slot, form, row.name)
+        : setName(p, stmt, field.slot, row.name),
+    );
     go(leaveName(session), 1, field);
   };
 
@@ -250,8 +272,16 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         event.preventDefault();
         go(session, event.shiftKey ? -1 : 1, field);
         return;
-      default:
+      default: {
+        // A form's key after a name the list offers that form of sets it (`nums[`).
+        const name = session.typed ?? nameOf(stmt, field.slot);
+        const offered = forms.filter((each) => each.name === name).map((each) => each.form);
+        const form = formOfKey(offered, event.key);
+        if (name === undefined || !form) return;
+        event.preventDefault();
+        chooseName(field, { kind: "form", form, name });
         return;
+      }
     }
   };
 
@@ -370,8 +400,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
       />
     );
     explanation =
-      row?.kind === "item"
-        ? { name: nodeText(ITEM, "label"), parts: helpParts(nodeText(ITEM, "help")) }
+      row?.kind === "form"
+        ? { name: nodeText(row.form, "label"), parts: helpParts(nodeText(row.form, "help")) }
         : row
           ? {
               name: row.name,

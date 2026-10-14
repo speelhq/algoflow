@@ -9,8 +9,8 @@ import { allEntries, entryOf } from "./entries";
 import { functionLabel } from "./explain";
 import { find, type LineContext, type Row } from "./line";
 import { listRows, listSections } from "./list";
-import { ITEM, itemTarget } from "./fields";
-import { nameSections, type NameRow, type NameSection } from "./names";
+import { formTarget } from "./fields";
+import { nameSections, type FormOf, type NameRow, type NameSection } from "./names";
 import type { Session } from "./session";
 
 /** A variable's kind as the lists name it. */
@@ -89,23 +89,27 @@ function nameItem(row: NameRow, kinds: Kinds): ListItem {
       return { key, label: row.name, variable: true, note: kindName(kinds, row.name) };
     case "new":
       return { key, label: row.name, variable: true, lead: t("editor.newVariable") };
-    case "item":
-      return { key, label: targetText(itemTarget(row.name)), lead: nodeText(ITEM, "label") };
+    case "form":
+      return {
+        key: `${key}:${row.form}`,
+        label: targetText(formTarget(row.form, row.name)),
+        lead: nodeText(row.form, "label"),
+      };
   }
 }
 
 /**
- * The rows of a name field's list for the name typed, and its sections as drawn; `lists` are the
- * list variables whose item the field can be set to.
+ * The rows of a name field's list for the name typed, and its sections as drawn; `forms` are the
+ * forms of variables the field can be set to.
  */
 export function nameList(
   program: Program,
   asked: readonly Id[],
   typed: string | null,
   kinds: Kinds,
-  lists: readonly Id[],
+  forms: readonly FormOf[],
 ): { rows: NameRow[]; sections: ListSection[] } {
-  const listed = nameSections(program, asked, typed ?? "", lists);
+  const listed = nameSections(program, asked, typed ?? "", forms);
   const sections = listed.map((section) => ({
     title: SECTION_TITLES[section.group](),
     items: section.rows.map((row) => nameItem(row, kinds)),

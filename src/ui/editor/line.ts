@@ -191,6 +191,18 @@ function closeBehind(line: Line): Line {
   return { ...line, open };
 }
 
+/** The caret is after the whole value, with no word typed, no bracket open, and nothing selected. */
+export function atEnd(line: Line): boolean {
+  const { caret, root } = line;
+  return (
+    !line.selected &&
+    line.word === "" &&
+    line.open.length === 0 &&
+    !isEmptyExpr(root) &&
+    sameCaret(caret, endOf(root))
+  );
+}
+
 /** The caret is at an input still to fill (and nothing is selected). */
 export function atInput(line: Line): boolean {
   return !line.selected && "at" in line.caret;

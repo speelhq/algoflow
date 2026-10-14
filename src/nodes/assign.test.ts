@@ -12,6 +12,11 @@ describe("assign (nodes.md)", () => {
     expect(lines([assignTo({ kind: "index", list: v("xs"), index: num(0) }, num(9))])).toEqual([
       "xs[0] = 9",
     ]);
+    // An item target is written by its block, its list bracketed as its slot declares.
+    const sum = bin("+", v("a"), v("b"));
+    expect(lines([assignTo({ kind: "index", list: sum, index: num(0) }, num(9))])).toEqual([
+      "(a + b)[0] = 9",
+    ]);
   });
 
   it("enter then write, and the variable is set", () => {

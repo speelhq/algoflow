@@ -147,6 +147,17 @@ describe("notation", () => {
     expect(notationText(assignTo(item(v("nums"), v("i")), num(0)))).toBe("nums[i] ← 0");
   });
 
+  it("a target's part after its variable opens its own value line when clicked", () => {
+    const position = bin("+", v("i"), num(1));
+    const parts = notationParts(assignTo(item(v("nums"), position), num(0)));
+    expect(parts.find((part) => part.text === "nums")?.hole).toBeUndefined();
+    expect(parts.filter((part) => part.hole === position.id).map((part) => part.text)).toEqual([
+      "i",
+      " + 1",
+    ]);
+    expect(parts.find((part) => part.text === "]")?.hole).toBeUndefined();
+  });
+
   it("marks variables, and an input still to fill at any depth", () => {
     const hole = empty();
     const parts = exprParts(bin("+", v("total"), hole));

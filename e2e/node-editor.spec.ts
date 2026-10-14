@@ -217,7 +217,7 @@ test("a list is typed, its item read, and one item set from the name list", asyn
   // A target offers an item of a list variable, its position then taking the keyboard.
   await insert(page, "main/main/2", "assign");
   await expect(list).toContainText("Item at a position");
-  await list.locator('[data-row="item:nums"]').click();
+  await list.locator('[data-row="form:nums:index"]').click();
   await expect(chart(page)).toContainText("nums[…] ← …");
   await keys(page, "0");
   await page.keyboard.press("Tab");
@@ -230,4 +230,34 @@ test("a list is typed, its item read, and one item set from the name list", asyn
   await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
   await expect(page.getByTestId("variables")).toContainText("nums ← [9, 9, 2, 7]");
   await expect(page.getByTestId("variables")).toContainText("x ← 9");
+});
+
+test("an item target is typed by keys alone, as the chart writes it", async ({ page }) => {
+  await seedProgress(page, {});
+  const id = "play-itemkeys0001";
+  await seedProgram(page, id, { ...programWith([]), title: "Items" });
+  await seedPlayground(page, { [id]: { edited: 0 } });
+  await page.goto(`/#/play/${id}`);
+
+  await insert(page, "main/main/0", "assign");
+  await keys(page, "nums");
+  await page.keyboard.press("Enter");
+  await keys(page, "[3,1,2]");
+  await page.keyboard.press("Enter");
+  await insert(page, "main/main/1", "assign");
+  await keys(page, "j");
+  await page.keyboard.press("Enter");
+  await keys(page, "0");
+  await page.keyboard.press("Enter");
+
+  // `[` after the list's name makes the item, and `]` after its position goes on to the value.
+  await insert(page, "main/main/2", "assign");
+  await keys(page, "nums[j+1]nums[j]");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("nums[j + 1] ← nums[j]");
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "▶ Run" }).click();
+  await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
+  await expect(page.getByTestId("variables")).toContainText("nums ← [3, 3, 2]");
 });

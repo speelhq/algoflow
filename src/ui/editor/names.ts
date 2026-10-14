@@ -1,10 +1,11 @@
 // The list under a name field: the names of the problem's expected variables under
 // `This problem`, the program's other variables under `Variables`, each kept while one of its
 // words begins with the text typed, a typed name neither holds offered as a new variable, and in
-// a target an item of each list variable given (`Item at a position`).
+// a target each form of a variable given (`Item at a position`).
 import { declaredBy } from "@/lang/scope";
 import { NAME_PATTERN, RESERVED, type Id, type Program } from "@/lang/types";
 import { programStmts } from "@/lang/walk";
+import type { Form } from "./fields";
 import { matchesName } from "./line";
 
 /** Every variable name the program has: inputs, parameters, and assigned names, in program order. */
@@ -17,22 +18,25 @@ function programNames(program: Program): Id[] {
   return [...names];
 }
 
-/** A name, a new variable, or an item of the list variable `name`. */
+/** A name, a new variable, or a form of the variable `name` (`Item at a position`). */
 export type NameRow =
   | { kind: "name"; name: Id }
   | { kind: "new"; name: Id }
-  | { kind: "item"; name: Id };
+  | { kind: "form"; form: Form; name: Id };
 export type NameSection = { group: "problem" | "variables" | "new" | "items"; rows: NameRow[] };
+
+/** A form a target can be set to: `form` of the variable `name`. */
+export type FormOf = { form: Form; name: Id };
 
 /**
  * The sections of the list for the text typed; `asked` are the problem's expected names, and
- * `lists` the list variables whose item the field can be set to (none in an `id` slot).
+ * `forms` the forms of variables the field can be set to (none in an `id` slot).
  */
 export function nameSections(
   program: Program,
   asked: readonly Id[],
   typed: string,
-  lists: readonly Id[],
+  forms: readonly FormOf[],
 ): NameSection[] {
   const problem = [...new Set(asked)];
   const others = programNames(program).filter((name) => !problem.includes(name));
@@ -61,7 +65,9 @@ export function nameSections(
   }
   sections.push({
     group: "items",
-    rows: lists.filter((n) => matchesName(n, typed)).map((name) => ({ kind: "item", name })),
+    rows: forms
+      .filter(({ name }) => matchesName(name, typed))
+      .map(({ form, name }) => ({ kind: "form", form, name })),
   });
   return sections.filter((section) => section.rows.length > 0);
 }

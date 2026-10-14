@@ -7,7 +7,7 @@ import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import { isRecord } from "@/lang/record";
 import type { Data, Expr, Heap, Node, NodeId, Target, Value } from "@/lang/types";
-import { conditionOf, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/walk";
+import { conditionOf, isEmptyExpr, isExpr, paramArg, targetExprs, variableOf } from "@/lang/walk";
 import { emptyExpr, getNode, hasNode, keyOf } from "@/nodes/registry";
 import type { Generated, NodeDef, Side } from "@/nodes/types";
 import { writeTarget } from "@/python/emit";
@@ -45,7 +45,8 @@ export function blankTemplate(template: string): string {
 /**
  * A run of a node's text: the template's own words, or what a slot holds (`slot` names the
  * statement's slot it belongs to). `variable` marks a variable's name, `empty` the placeholder
- * of an input still to fill, and `hole` that input's expression.
+ * of an input still to fill, and `hole` the expression a click on the run opens: that input, or a
+ * part of a target holding a form (the position of `nums[0]`).
  */
 export type Part = {
   text: string;
@@ -101,7 +102,13 @@ export function templateParts(template: string, fill: (name: string) => Part[]):
   const merged: Part[] = [];
   for (const { part } of out) {
     const before = merged[merged.length - 1];
-    if (before && plain(before) && plain(part) && before.slot === part.slot) {
+    if (
+      before &&
+      plain(before) &&
+      plain(part) &&
+      before.slot === part.slot &&
+      before.hole === part.hole
+    ) {
       before.text += part.text;
     } else if (part.text !== "") merged.push({ ...part });
   }
@@ -252,8 +259,20 @@ export function exprText(expr: Expr, writing: Writing = {}): string {
 function targetParts(target: Target): Part[] {
   const { kind, ...rest } = target;
   if (kind === "var") return [{ text: target.name, variable: true }];
-  if (hasNode(kind)) return exprParts({ id: "", kind, ...rest } as Expr);
-  return [{ text: writeTarget(target, (expr) => exprText(expr)) }];
+  if (!hasNode(kind)) return [{ text: writeTarget(target, (expr) => exprText(expr)) }];
+  // Each part after the variable carries the expression it draws, so a click on it opens its
+  // own value line (`editor.md`, Name fields).
+  const shape = { id: "", kind, ...rest } as Expr;
+  const [held] = targetExprs(target);
+  return templateParts(notationOf(shape), (name) => {
+    const placed = placeholderValue(shape, name);
+    if (placed?.role !== "expr" || !placed.expr) return [];
+    const parts = operandParts(placed.expr, placed, {});
+    const root = placed.expr.id;
+    return placed.expr === held
+      ? parts
+      : parts.map((part) => ({ ...part, hole: part.hole ?? root }));
+  });
 }
 
 /** A target as the chart writes it: a variable, an item (`nums[2]`), or a key (`counts["a"]`). */

@@ -3,13 +3,14 @@
 // its list's name and a value for each of its other parts.
 import { nodeText, t } from "@/i18n/t";
 import { setSlot } from "@/lang/edit";
-import type { Expr, Id, IndexTarget, NodeId, Program, Stmt, Target } from "@/lang/types";
+import type { Expr, Id, Kind, NodeId, Program, Stmt, Target } from "@/lang/types";
 import { allExprs, isEmptyExpr, isExpr, TARGET_PARTS, targetExprs, variableOf } from "@/lang/walk";
 import { emptyExpr, getNode, hasNode, keyOf } from "@/nodes/registry";
 import {
   generatedNotation,
   notationOf,
   placeholderValue,
+  SEPARATOR,
   templatePieces,
   type Piece,
 } from "@/ui/chart/text";
@@ -23,16 +24,39 @@ export type Field = { slot: string; role: "id" | "target" | "expr"; index?: numb
 
 export const fieldKey = (field: Field) => `${field.slot}:${field.index ?? ""}:${field.part ?? ""}`;
 
-/** The item form of a target, `<list>[…] ← …` (`editor.md`, Name fields). */
-export const ITEM = "index" satisfies Target["kind"];
-
 type Bag = Record<string, unknown>;
 
-/** A target holding an item of the list variable `list`, its position still to fill. */
-export function itemTarget(list: Id): Target {
-  const variable = variableExpr(list);
-  if (!variable) throw new Error(`${list} is no variable`);
-  return { kind: ITEM, list: variable, index: emptyExpr() };
+/** A form of a target other than a variable: an item (`nums[…]`), a key, or a field. */
+export type Form = Exclude<Target["kind"], "var">;
+
+const FORMS = Object.keys(TARGET_PARTS).filter((kind): kind is Form => kind !== "var");
+
+/**
+ * The forms a target can take for a variable of `kind` (`editor.md`, Name fields): those whose
+ * block is registered and whose entry is offered after a value of that kind; none when the kind
+ * cannot be told.
+ */
+export function formsFor(kind: Kind | undefined): Form[] {
+  if (kind === undefined) return [];
+  return FORMS.filter(
+    (form) => hasNode(form) && (getNode(form).menu ?? []).some((entry) => entry.on?.includes(kind)),
+  );
+}
+
+/** The form among `forms` whose entry a key inserts after a value (`[` for an item). */
+export function formOfKey(forms: readonly Form[], key: string): Form | undefined {
+  return forms.find((form) =>
+    (getNode(form).menu ?? []).some((entry) => entry.on !== undefined && entry.keys === key),
+  );
+}
+
+/** A target of `form` holding the variable `name`, its other parts still to fill. */
+export function formTarget(form: Form, name: Id): Target {
+  const variable = variableExpr(name);
+  if (!variable) throw new Error(`${name} is no variable`);
+  const [held, ...others] = TARGET_PARTS[form].exprs;
+  const parts = Object.fromEntries(others.map((part) => [part, emptyExpr()]));
+  return { kind: form, ...(held ? { [held]: variable } : {}), ...parts } as unknown as Target;
 }
 
 /**
@@ -79,25 +103,73 @@ export function nameOf(stmt: Stmt, slot: string): string | undefined {
   return target ? targetName(target) : undefined;
 }
 
-/** The program with `name` in the name slot `slot` of `stmt`. */
-export function setName(program: Program, stmt: Stmt, slot: string, name: string): Program {
+/** The target `slot` of `stmt` holds, if it is a target slot. */
+function targetIn(stmt: Stmt, slot: string): Target | undefined {
   const role = getNode(keyOf(stmt)).slots.find((s) => s.name === slot)?.role;
-  return setSlot(program, stmt.id, slot, role === "target" ? { kind: "var", name } : name);
+  return role === "target" ? ((stmt as unknown as Bag)[slot] as Target) : undefined;
+}
+
+/** The form an editable target in `slot` of `stmt` holds, if it holds one. */
+export function formIn(stmt: Stmt, slot: string): Form | undefined {
+  const target = targetIn(stmt, slot);
+  return target && target.kind !== "var" && namePart(target) !== undefined
+    ? target.kind
+    : undefined;
+}
+
+/** The program with `name` in the name slot `slot` of `stmt`: a target becomes that variable. */
+export function setName(program: Program, stmt: Stmt, slot: string, name: string): Program {
+  return targetIn(stmt, slot)
+    ? setSlot(program, stmt.id, slot, { kind: "var", name })
+    : setSlot(program, stmt.id, slot, name);
+}
+
+/** The program with the target `slot` of `stmt` set back to the variable its form holds. */
+export function setVariable(program: Program, stmt: Stmt, slot: string): Program {
+  const name = nameOf(stmt, slot);
+  return name === undefined ? program : setSlot(program, stmt.id, slot, { kind: "var", name });
 }
 
 /**
- * The program with an item of the list variable `list` in the target slot `slot` of `stmt`; one
- * that already holds an item of that list keeps its position.
+ * The program with `form` of the variable `name` in the target `slot` of `stmt`; a target that
+ * already holds that form has its variable replaced and keeps its other parts.
  */
-export function setItem(program: Program, stmt: Stmt, slot: string, list: Id): Program {
-  const held = (stmt as unknown as Bag)[slot] as Target | undefined;
-  if (held?.kind === ITEM && nameOf(stmt, slot) === list) return program;
-  return setSlot(program, stmt.id, slot, itemTarget(list));
+export function setForm(program: Program, stmt: Stmt, slot: string, form: Form, name: Id): Program {
+  const target = targetIn(stmt, slot);
+  const part = target?.kind === form ? namePart(target) : undefined;
+  const variable = variableExpr(name);
+  if (target && part !== undefined && variable) {
+    return setSlot(program, stmt.id, slot, { ...target, [part]: variable });
+  }
+  return setSlot(program, stmt.id, slot, formTarget(form, name));
 }
 
-/** The field of an item's position in the target slot `slot`. */
-export function itemField(slot: string): Field {
-  return { slot, role: "expr", part: "index" satisfies keyof IndexTarget };
+/** The first part of a target holding a form, as a field: where the keyboard goes once it is set. */
+export function firstPart(stmt: Stmt, slot: string): Field | undefined {
+  return fieldsOf(stmt).find((field) => field.slot === slot && field.part !== undefined);
+}
+
+/**
+ * The words the notation writes right after a field (`]` after an item's position), which a key
+ * that begins them, typed after the field's value, moves on from (`editor.md`, Backspace and
+ * keys).
+ */
+export function wordsAfter(stmt: Stmt, field: Field): string {
+  // After an item of a list of values other than its last, the notation writes their separator.
+  const items = (stmt as unknown as Bag)[field.slot];
+  if (field.index !== undefined && Array.isArray(items) && field.index < items.length - 1) {
+    return SEPARATOR.trim();
+  }
+  const target = field.part === undefined ? undefined : targetIn(stmt, field.slot);
+  const pieces = target
+    ? targetPieces(target)
+    : editedLines(stmt)
+        .flat()
+        .map(({ piece }) => piece);
+  const name = field.part ?? field.slot;
+  const at = pieces.findIndex((piece) => "name" in piece && piece.name === name);
+  const next = pieces[at + 1];
+  return at >= 0 && next && "words" in next ? next.words.trim() : "";
 }
 
 /**
