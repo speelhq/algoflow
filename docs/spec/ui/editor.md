@@ -182,7 +182,10 @@ entry whose block has a precedence (an operator) stands between the value
 before the caret and the next one, and binds by the precedence of
 `emitter.md` within the innermost brackets; any other entry takes the
 expression before the caret whose kind chose the list, so `i < n` followed
-by `As text` gives `str(i < n)`. An entry chosen where a value is
+by `As text` gives `str(i < n)`, and an entry whose first input binds as
+an atom (`Item at a position`, `nodes.md`, Node text) takes the value just
+before the caret, as Python binds it (`i + nums[…]`), whether chosen or
+typed. An entry chosen where a value is
 expected fills that input. The inputs a choice leaves appear as fields in
 the line and the caret moves to the first of them; Tab and Shift+Tab move
 between the fields of the line and, past its last or first field, to the
@@ -256,7 +259,11 @@ chart writes it. In a
 list, `,` adds an item to fill after the one the caret is in; `]` leaves the
 innermost list or item around the caret, a list's item still to fill at its
 end removed first, so `[` then `]` makes an empty list; a `,` acts on the
-innermost call or list around the caret. Backspace at an item still to fill
+innermost call or list around the caret. With the caret after a field's
+whole value, a key that begins the words the notation writes after that
+field, and that the line does not take, moves the keyboard to the next
+field: `]` after an item's position in a target goes on to its value.
+Backspace at an item still to fill
 of a list, other than its first, removes that item and puts the caret at the
 end of the item before it; after a list it removes from the end of its last
 item, and after an empty list the list: removing the list there would lose
@@ -299,7 +306,20 @@ Identifiers).
 In a `target` slot the name list also offers, for a list variable,
 `Item at a position` (`<list>[…] ← …`), and for a dict and an
 object variable the key and field forms likewise, as a target is far more
-often a variable than an item or a field.
+often a variable than an item or a field. A form is offered for a variable
+whose kind its block's entry is offered after (`nodes.md`, Menu entries).
+
+A target holding a form is edited as its block's notation writes it: its
+variable a name field and each other part a value line (`nums[…] ← …`). A
+name chosen there whose same form the list offers replaces the variable and
+keeps the other parts; any other name, a new one among them, sets the target
+to that name alone, as `total[i]` of a number is no target. In a `target`
+slot, a key that inserts a form's entry after a value (`[`, Backspace and
+keys), typed after a name whose form the list offers, sets the target to
+that form of it and moves the keyboard to its first part, so `nums[j] ← …`
+is typed as the chart writes it; Backspace at an empty part, nothing typed
+in it, sets the target back to its variable and moves the keyboard to the
+name field.
 
 ## Node names
 
@@ -329,15 +349,16 @@ when it has no kind), an input's kind (`editor.explain.input`), a parameter
 (`editor.explain.parameter`), or, for a name set nowhere yet, that choosing
 it makes a new variable that gets its value there
 (`editor.explain.newVariable`); inside an operation's input, the operation's
-name and its notation with every input as its value, an empty one as `…`,
-and the input the caret is in underlined (`dp[…]`,
-its `…` underlined); the message of a refused key (Backspace and keys); the
-closest name for a word that matches nothing (Value line), or
-`editor.nothingLike` when none is close; in a name field with nothing
-highlighted, `editor.explain.name`; or else the block's help
-(`node.<key>.help`). An input is shown by its value, not named in words
-(`position`), which would need a name for every input of every operation in
-every language.
+name (the entry offered after the kind of its first input, `Join with
+another list` for `+` after a list) and its notation with every input as
+its value, bracketed as the chart brackets it, an empty one as `…`, and the
+input the caret is in underlined (`dp[…]`, its `…` underlined); the message
+of a refused key (Backspace and keys); the closest name for a word that
+matches nothing (Value line), or `editor.nothingLike` when none is close;
+in a name field with nothing highlighted, `editor.explain.name`; or else the
+block's help (`node.<key>.help`). An input is shown by its value, not named
+in words (`position`), which would need a name for every input of every
+operation in every language.
 
 ## Verification
 

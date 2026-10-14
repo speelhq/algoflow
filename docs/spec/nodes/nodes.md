@@ -50,6 +50,7 @@ export type Slot = {
   name: string;
   role: "expr" | "exprs" | "id" | "body" | "target" | "text";
   required?: boolean;
+  atom?: true; // its input binds as an atom (Node text)
 };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
 export type MenuEntry = {
@@ -225,7 +226,11 @@ learner's language, so no rule of the chart or the editor reads a
 translated word. The words of a notation (`and`, `not`, `len`, `print`) are
 Python's, the same in every locale.
 
-Operators are parenthesised as the emitter does (`emitter.md`). Comparison
+Operators are parenthesised as the emitter does (`emitter.md`), and an
+input whose slot declares `atom` (the list of an item, of `swap`) binds as
+an atom, as Python binds the value an item is taken from: an operation there
+is bracketed (`(a + b)[0]`). The emitter, the chart, and the value line read
+that one declaration. Comparison
 and arithmetic keep the symbols a learner knows from school (`=`, `≠`, `≤`,
 `×`, `÷`); an operation school has no symbol for is written with Python's
 (`%`, `//`, `**`) and named in words in the value list. An operation in
@@ -302,7 +307,7 @@ several groups (`binop` is `Add`, `Equals`, and `And`).
 | `bool`            | `true`     | True                    | values     |                      |        |       |
 | `bool`            | `false`    | False                   | values     |                      |        |       |
 | `none`            |            | None                    | values     |                      |        |       |
-| `list`            |            | Empty list              | values     |                      |        | `[`   |
+| `list`            | `empty`    | Empty list              | values     |                      |        | `[`   |
 | `dict`            |            | Empty dict              | values     |                      |        |       |
 | `unop`            | `not`      | Not                     | conditions |                      | `not`  | `not` |
 | `binop`           | `and`      | And                     | conditions | truefalse            | `and`  | `and` |
@@ -337,7 +342,9 @@ several groups (`binop` is `Add`, `Equals`, and `And`).
 | `call:int`        |            | As whole number         | convert    | number, text         |        | `int` |
 | `call:float`      |            | As decimal              | convert    | number, text         |        | `float` |
 
-`binop` entries preset `op`; `bool` entries preset `value`.
+`binop` entries preset `op`; `bool` entries preset `value`; `list`'s
+`empty` presets no item, so a list with items is named by the block's own
+label (`List`).
 
 The help of `and` reads that it is true when both sides are, and the help
 of `or` that it is true when one side or both are, since in everyday
