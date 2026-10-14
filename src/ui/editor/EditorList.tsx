@@ -33,11 +33,16 @@ type Props = {
 export function EditorList(props: Props) {
   const { sections, highlight, enter } = props;
   const highlighted = useRef<HTMLButtonElement>(null);
-  // A block body: browsers that return a promise from scrollIntoView would hand it to React
-  // as the effect's cleanup.
+  const shown = useRef<HTMLDivElement>(null);
+  // Only a row wholly out of sight is scrolled in: one the pointer can reach is partly in sight,
+  // and scrolling it would move the rows under the pointer.
   useEffect(() => {
-    if (highlight === null) return;
-    highlighted.current?.scrollIntoView({ block: "nearest" });
+    const row = highlighted.current?.getBoundingClientRect();
+    const view = shown.current?.getBoundingClientRect();
+    if (highlight === null || !row || !view) return;
+    if (row.bottom <= view.top || row.top >= view.bottom) {
+      highlighted.current?.scrollIntoView({ block: "nearest" });
+    }
   }, [highlight]);
   // Where each section's rows start in the count across sections.
   const starts = sections.map((_, i) =>
@@ -45,7 +50,11 @@ export function EditorList(props: Props) {
   );
   const rows = sections.reduce((count, section) => count + section.items.length, 0);
   return (
-    <div className="flex max-h-72 flex-col overflow-y-auto px-1.5 py-1.5" data-testid="editor-list">
+    <div
+      ref={shown}
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto px-1.5 py-1.5"
+      data-testid="editor-list"
+    >
       {rows === 0 && <p className="px-2 py-1 text-muted-foreground">{t("editor.noItems")}</p>}
       {sections.map((section, s) => (
         // oxlint-disable-next-line react/no-array-index-key -- two sections may both have no title
