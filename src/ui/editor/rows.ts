@@ -45,7 +45,7 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
 function switchRows(session: Session, kinds: Kinds): { rows: Row[]; sections: ListSection[] } {
   const { line, switching } = session;
   const held = line && switching ? find(line.root, switching) : undefined;
-  const current = held ? entryOf(held) : undefined;
+  const current = held ? entryOf(held, kinds) : undefined;
   if (!current) return { rows: [], sections: [] };
   const rows = allEntries()
     .filter(

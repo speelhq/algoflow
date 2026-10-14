@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
 import { ast, program } from "@/nodes/testing";
-import { allEntries } from "./entries";
+import { allEntries, labelOf, makeEntry } from "./entries";
 import { explainLine, explainVariable } from "./explain";
 import { openLine, settle, type, type Line, type LineContext } from "./line";
 
@@ -76,6 +76,24 @@ describe("explanation line", () => {
       "Whole-number quotient",
       "(i + n) // …",
     ]);
+  });
+
+  it("an operation is named by the entry offered after its first input's kind", () => {
+    const lists: LineContext = { ...ctx, variables: ["nums"], kinds: new Map([["nums", "list"]]) };
+    const typed = (text: string) => {
+      let line = openLine(empty());
+      for (const key of text) line = type(line, key, lists).line;
+      return explainLine(line, lists, undefined, p, target.id);
+    };
+    expect(shown(typed("nums+"))).toEqual(["Join with another list", "nums + …"]);
+    // A list with items is named by its block; `Empty list` names one with none.
+    expect(typed("[1,")?.name).toBe("List");
+    const blank = allEntries().find((entry) => entry.id === "list.empty");
+    if (!blank) throw new Error("no Empty list");
+    const [one, two] = [makeEntry(blank), makeEntry(blank)];
+    expect(labelOf(one, lists.kinds)).toBe("Empty list");
+    // Each made list has its own items, none shared with the menu.
+    expect(Reflect.get(one, "items")).not.toBe(Reflect.get(two, "items"));
   });
 
   it("a word that matches nothing: the closest name, or that nothing is like it", () => {

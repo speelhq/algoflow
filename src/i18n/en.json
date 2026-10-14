@@ -229,8 +229,12 @@
       "help": "The value that stands for nothing."
     },
     "list": {
-      "label": "Empty list",
-      "help": "A list with no items yet. Example: [4, 9, 2] is a list of three numbers."
+      "label": "List",
+      "help": "Values kept in order. Example: [4, 9, 2] is a list of three numbers.",
+      "empty": {
+        "label": "Empty list",
+        "help": "A list with no items yet. Example: [4, 9, 2] is a list of three numbers."
+      }
     },
     "var": {
       "label": "Variable",
