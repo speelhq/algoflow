@@ -330,7 +330,7 @@
     },
     "call:len": {
       "label": "Count",
-      "help": "How many items a list holds, or characters a text holds. Example: len([4, 9, 2]) is 3."
+      "help": "How many items a list or a dict holds, or characters a text holds. Example: len([4, 9, 2]) is 3."
     },
     "call:sum": {
       "label": "Sum",
