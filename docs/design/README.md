@@ -56,6 +56,9 @@ in the file.
 - `Main.png` notes that the page scrolls on to `Build a Tiny Neural
   Network` and `More problems`; the spec has three plans, and every problem
   is in one (`scope.md`, Curriculum).
+- `BuildEdit.png` and `EditValue.png` draw the node editor as high as its
+  list; while a list is shown the editor is 480 px high, its list scrolling
+  within it (`editor.md`, Node editor).
 - `Main.png` sets the row that `Continue` leads to on a coloured ground,
   which `pages.md`, Problems page does not state; every row is drawn alike.
 - `Run.png` and `Wrong.png` fold the `Output` and `Expected` columns to
