@@ -318,7 +318,7 @@ several groups (`binop` is `Add`, `Equals`, and `And`).
 | `call:abs`        |            | Absolute value          | calculate  | number               |        | `abs` |
 | `call:max`        |            | Larger of two           | calculate  | number, text         |        | `max` |
 | `call:min`        |            | Smaller of two          | calculate  | number, text         |        | `min` |
-| `index`           |            | Item at a position      | items      | list                 |        |       |
+| `index`           |            | Item at a position      | items      | list                 |        | `[`   |
 | `method:pop`      |            | Take the last item      | items      | list                 |        |       |
 | `call:len`        |            | Count                   | items      | list, text, dict     |        | `len` |
 | `call:sum`        |            | Sum                     | items      | list                 |        | `sum` |
@@ -353,9 +353,14 @@ they agree, for `+` the kind of both inputs when they agree and are not
 true/false, for `*` a list or a text when one input is one, and otherwise a
 number; `call:abs`, `call:int`, `call:float`, and `call:randint` a
 number; `call:str` a text; `call:min` and `call:max` the kind of their
-first input; `list` a list, `dict` a dict, and `new` an object. Where a rule
-gives no kind, the expression has none: a wrong kind would hide the entries
-that apply, while no kind lists every entry.
+first input; `call:len` and `call:sum` a number; `list` and `method:copy` a
+list, `dict` a dict, and `new` an object. Where a rule gives no kind, the
+expression has none: a wrong kind would hide the entries that apply, while
+no kind lists every entry.
+
+`index`, `key`, `field`, and `method:pop` have no kind: the kind of an item
+would need a list kind that names the kind of its items, which a kind does
+not hold (`language.md`, Kinds), as a `foreach` variable has none.
 
 ## Verification
 

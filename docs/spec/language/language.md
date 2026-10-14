@@ -284,7 +284,7 @@ there is none.
 | Rule | Example |
 | --- | --- |
 | false values: `0`, `0.0`, `""`, `[]`, `{}`, `None`, `False` | |
-| list index is `int`; negative counts from the end; otherwise `E_INDEX` | `[1,2][-1] → 2` |
+| list index is `int`, else `E_TYPE`; negative counts from the end; out of range → `E_INDEX` | `[1,2][-1] → 2` |
 | dict keys are `int` or `str`, else `E_TYPE`; missing key → `E_KEY` | |
 | lists, dicts, objects are references; assignment copies the reference | |
 | a run stops with `E_STEP_LIMIT` after 1,000,000 events | |
