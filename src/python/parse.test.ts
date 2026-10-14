@@ -57,10 +57,8 @@ describe("parse", () => {
   });
 
   it("reports grammar forms whose block is not registered yet as E_PARSE_SYNTAX at their token", () => {
-    // index, field, list, and dict have no registered block, so the registry says no.
-    expect(err("xs[i + 1]")).toEqual({ code: "E_PARSE_SYNTAX", position: 2 });
+    // field and dict have no registered block, so the registry says no.
     expect(err("p.x")).toEqual({ code: "E_PARSE_SYNTAX", position: 2 });
-    expect(err("[1, 2]")).toEqual({ code: "E_PARSE_SYNTAX", position: 0 });
     expect(err("1 + {}")).toEqual({ code: "E_PARSE_SYNTAX", position: 4 });
   });
 
@@ -158,7 +156,7 @@ function generator(seed: number) {
   const id = () => `g${String((n += 1)).padStart(11, "0")}`;
   const gen = (depth: number): Expr => {
     const leaf = depth <= 0 || rand() < 0.3;
-    const choice = Math.floor(rand() * (leaf ? 5 : 8));
+    const choice = Math.floor(rand() * (leaf ? 5 : 10));
     switch (choice) {
       case 0: {
         const raw = pick(RAWS);
@@ -187,6 +185,14 @@ function generator(seed: number) {
           op: rand() < 0.5 ? "neg" : "not",
           operand: gen(depth - 1),
         };
+      case 7:
+        return {
+          id: id(),
+          kind: "list",
+          items: Array.from({ length: Math.floor(rand() * 3) }, () => gen(depth - 1)),
+        };
+      case 8:
+        return { id: id(), kind: "index", list: gen(depth - 1), index: gen(depth - 1) };
       default: {
         const def = pick(BUILTINS);
         return {

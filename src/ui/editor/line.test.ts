@@ -393,7 +393,7 @@ describe("the list", () => {
   it("where a value is expected: variables, values, Not, Random whole number and ( ), functions", () => {
     expect(groups(empty())).toEqual([
       ["variables", ["i", "total", "n", "ok", "nums"]],
-      ["values", ["Text", "True", "False", "None"]],
+      ["values", ["Text", "True", "False", "None", "Empty list"]],
       ["conditions", ["Not"]],
       ["calculate", ["Random whole number", "( )"]],
       ["functions", ["twice"]],
@@ -408,7 +408,7 @@ describe("the list", () => {
       ["convert", ["As text"]],
     ]);
     expect(groups(keys("nums"))).toEqual([
-      ["items", ["Join with another list"]],
+      ["items", ["Item at a position", "Count", "Sum", "Join with another list"]],
       ["compare", ["Equals", "Does not equal", "Is in a list"]],
       ["convert", ["As text"]],
     ]);

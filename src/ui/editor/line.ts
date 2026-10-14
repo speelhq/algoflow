@@ -545,7 +545,7 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
       break;
   }
   const entry = entryByKeys(key);
-  if (entry && value) {
+  if (entry && value && takesValue(entry)) {
     const placed = takeValue(current, entry);
     if (placed.taken && startsKeys(key)) placed.line.pending = { key, before: current };
     return placed;

@@ -23,6 +23,8 @@ const {
   call,
   exprStmt,
   if_,
+  list,
+  item,
 } = ast;
 
 describe("values and the run", () => {
@@ -69,17 +71,33 @@ describe("values and the run", () => {
     expect(evalExpr(not(v("xs")), { xs: [0] }).data).toBe(false);
   });
 
-  it("a list index is int, negative from the end, else E_INDEX (write path)", () => {
-    const write = (index: number) => {
-      const stmt = assignTo({ kind: "index", list: v("xs"), index: num(index) }, num(0));
+  it("a list index is int, else E_TYPE; negative from the end; out of range E_INDEX", () => {
+    const write = (index: ReturnType<typeof num>) => {
+      const stmt = assignTo({ kind: "index", list: v("xs"), index }, num(0));
       const made = withInputs({ xs: [1, 2] }, [stmt]);
       return runAll(made.program, made.inputs);
     };
-    expect(varData(write(-1), "xs")).toEqual([1, 0]);
-    expect(write(2).done).toMatchObject({
+    expect(varData(write(num(-1)), "xs")).toEqual([1, 0]);
+    expect(write(num(2)).done).toMatchObject({
       type: "error",
       error: { code: "E_INDEX", params: { index: 2, length: 2 } },
     });
+    const read = (index: ReturnType<typeof num>) => evalExpr(item(v("xs"), index), { xs: [1, 2] });
+    expect(read(num(-1)).data).toBe(2);
+    expect(read(num(-3)).done).toMatchObject({
+      type: "error",
+      error: { code: "E_INDEX", params: { index: -3, length: 2 } },
+    });
+    for (const [index, type] of [
+      [float(1), "float"],
+      [bool(true), "bool"],
+      [str("0"), "str"],
+    ] as const) {
+      expect(read(index).done, type).toMatchObject({
+        type: "error",
+        error: { code: "E_TYPE", params: { left: "list", right: type } },
+      });
+    }
   });
 
   it("dict keys are int or str, else E_TYPE (write path)", () => {
@@ -99,6 +117,17 @@ describe("values and the run", () => {
     ]);
     const result = runAll(made.program, made.inputs);
     expect(varData(result, "xs")).toEqual([9]);
+    // A list built by a block is a reference too, and its item reads the list as it is now.
+    const built = runAll(
+      program([
+        assign("a", list(num(1), num(2))),
+        assign("b", v("a")),
+        assignTo({ kind: "index", list: v("b"), index: num(1) }, num(5)),
+        assign("seen", item(v("a"), num(1))),
+      ]),
+    );
+    expect(varData(built, "a")).toEqual([1, 5]);
+    expect(varData(built, "seen")).toBe(5);
   });
 
   it("a run stops with E_STEP_LIMIT after 1,000,000 events", () => {

@@ -20,7 +20,10 @@ import {
   valueText,
 } from "./text";
 
-const { assign, num, str, bool, bin, neg, not, v, print, for_, if_, call, ret, empty } = ast;
+const { assign, assignTo, num, str, bool, bin, neg, not, v, print, for_, if_, call, ret, empty } =
+  ast;
+
+const item = (list: Expr, index: Expr) => ({ kind: "index" as const, list, index });
 
 function expr(python: string): Expr {
   const parsed = parse(python, { functions: ["f"] });
@@ -114,6 +117,18 @@ describe("notation", () => {
     expect(exprText(expr("not (a and b)"))).toBe("not (a and b)");
     expect(exprText(expr("f(abs(x), y)"))).toBe("f(abs(x), y)");
     expect(exprText(expr("str(n) + str(m)"))).toBe("str(n) + str(m)");
+  });
+
+  it("writes a list and an item as Python does, the list of an item as an atom", () => {
+    expect(exprText(expr("[]"))).toBe("[]");
+    expect(exprText(expr('[1, "a", [x]]'))).toBe('[1, "a", [x]]');
+    expect(exprText(expr("nums[i + 1]"))).toBe("nums[i + 1]");
+    expect(exprText(expr("nums[j] > nums[j + 1]"))).toBe("nums[j] > nums[j + 1]");
+    expect(exprText(expr("(a + b)[0]"))).toBe("(a + b)[0]");
+    expect(exprText(expr("(-xs)[0]"))).toBe("(−xs)[0]");
+    expect(exprText(expr("-xs[0]"))).toBe("−xs[0]");
+    expect(exprText(expr("len(nums) - 1"))).toBe("len(nums) − 1");
+    expect(notationText(assignTo(item(v("nums"), v("i")), num(0)))).toBe("nums[i] ← 0");
   });
 
   it("marks variables, and an input still to fill at any depth", () => {

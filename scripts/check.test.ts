@@ -128,12 +128,12 @@ describe("checkChallengeSchema", () => {
       "tests[1].inputs.n: expected an integer within the int range",
       "tests[2].expect.variables.total[1]: expected an integer within the int range",
     ]);
-    // No list block exists yet, so no block writes a list.
-    const list = valid();
-    list.inputs = [{ name: "n", kind: "list" }];
-    list.solution.inputs = [{ name: "n", kind: "list" }];
-    for (const test of list.tests) (test.inputs as Record<string, unknown>).n = [1];
-    expect(checkChallengeSchema(list, "demo").problems).toEqual(
+    // No dict block exists yet, so no block writes a dict.
+    const dict = valid();
+    dict.inputs = [{ name: "n", kind: "dict" }];
+    dict.solution.inputs = [{ name: "n", kind: "dict" }];
+    for (const test of dict.tests) (test.inputs as Record<string, unknown>).n = { a: 1 };
+    expect(checkChallengeSchema(dict, "demo").problems).toEqual(
       expect.arrayContaining(["tests[0].inputs.n is a value no block writes"]),
     );
     const undeclared = valid();
