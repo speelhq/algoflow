@@ -5,6 +5,7 @@ import { chartOf, firstSetters, variableKinds } from "@/lang/kinds";
 import type { Expr, Id, Kind, NodeId, Program } from "@/lang/types";
 import { isEmptyExpr } from "@/lang/walk";
 import {
+  bracketed,
   notationOf,
   exprText,
   placeholder,
@@ -151,7 +152,10 @@ function operationParts(operation: Expr, current: Expr): Part[] {
     const held = placeholderValue(operation, name);
     switch (held?.role) {
       case "expr":
-        return held.expr ? [written(held.expr)] : [];
+        if (!held.expr) return [];
+        return bracketed(held.expr, held)
+          ? [{ text: "(" }, written(held.expr), { text: ")" }]
+          : [written(held.expr)];
       case "exprs":
         return held.items.flatMap((item, i) =>
           i === 0 ? [written(item)] : [{ text: SEPARATOR }, written(item)],

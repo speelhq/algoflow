@@ -126,9 +126,10 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
     );
   };
 
-  const draw = (expr: Expr, parent?: Expr, side: Side = "left"): ReactNode => {
+  /** An expression; `placed` says how its parent places it, for its brackets. */
+  const draw = (expr: Expr, placed?: { binds: number | undefined; side: Side }): ReactNode => {
     const open = line?.open.includes(expr.id) ?? false;
-    const brackets = (parent !== undefined && bracketed(expr, parent, side)) || open;
+    const brackets = (placed !== undefined && bracketed(expr, placed)) || open;
     let body: ReactNode;
     if (isEmptyExpr(expr)) body = field(expr);
     else if (inputs(expr).length === 0) body = leaf(expr);
@@ -157,7 +158,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
       const held = placeholderValue(expr, piece.name);
       switch (held?.role) {
         case "expr":
-          if (held.expr) pieces.push(draw(held.expr, expr, held.side));
+          if (held.expr) pieces.push(draw(held.expr, held));
           return;
         case "exprs":
           held.items.forEach((item, j) => {
