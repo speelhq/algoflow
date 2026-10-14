@@ -593,10 +593,10 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
         ? undefined
         : enclosing(current, (expr) => closedBy(expr, "]"));
       if (!around) return refused(line);
-      const { held, with: holding } = items(around.parent);
-      const last = held.at(-1);
-      const trailing = isSequence(around.parent) && last !== undefined && isEmptyExpr(last);
-      const kept = trailing ? holding(held.slice(0, -1)) : around.parent;
+      const list = isSequence(around.parent) ? items(around.parent) : undefined;
+      const last = list?.held.at(-1);
+      const trailing = list !== undefined && last !== undefined && isEmptyExpr(last);
+      const kept = trailing ? list.with(list.held.slice(0, -1)) : around.parent;
       const next = replace(current, around.parent.id, kept);
       return done(closeBehind({ ...next, caret: { after: kept.id } }));
     }
