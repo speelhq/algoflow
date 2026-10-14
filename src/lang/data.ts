@@ -86,7 +86,8 @@ export function dataError(json: unknown): DataFault | undefined {
   return faultAt(json, "");
 }
 
-function alloc(heap: Heap, entry: HeapEntry): HeapId {
+/** A new heap entry, numbered after the last. */
+export function alloc(heap: Heap, entry: HeapEntry): HeapId {
   const id = heap.size + 1;
   heap.set(id, entry);
   return id;

@@ -11,7 +11,7 @@ import { conditionOf, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/w
 import { emptyExpr, getNode, hasNode, keyOf } from "@/nodes/registry";
 import type { Generated, NodeDef, Side } from "@/nodes/types";
 import { writeTarget } from "@/python/emit";
-import { needsParens } from "@/python/precedence";
+import { needsParens, PRECEDENCE } from "@/python/precedence";
 import { str, writeValue } from "@/runtime/values";
 
 type Bag = Record<string, unknown>;
@@ -123,10 +123,22 @@ export function isCall(expr: Expr): boolean {
 
 const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
 
+/**
+ * Whether `child` is the input an operation with no precedence of its own is written after
+ * (`nums` of `nums[i]`): it binds as an atom, as the emitter writes it.
+ */
+function writtenBefore(child: Expr, parent: Expr): boolean {
+  const [first] = templatePieces(notationOf(parent));
+  if (!first || "words" in first) return false;
+  const held = placeholderValue(parent, first.name);
+  return held?.role === "expr" && held.expr === child;
+}
+
 /** Whether `child`, an input of `parent` on `side`, is put in brackets: as the emitter does. */
 export function bracketed(child: Expr, parent: Expr, side: Side): boolean {
   const own = precedenceOf(child);
-  const outer = precedenceOf(parent);
+  const outer =
+    precedenceOf(parent) ?? (writtenBefore(child, parent) ? PRECEDENCE.atom : undefined);
   return own !== undefined && outer !== undefined && needsParens(own, outer, side);
 }
 

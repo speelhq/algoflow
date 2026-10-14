@@ -228,6 +228,10 @@
       "label": "None",
       "help": "The value that stands for nothing."
     },
+    "list": {
+      "label": "Empty list",
+      "help": "A list with no items yet. Example: [4, 9, 2] is a list of three numbers."
+    },
     "var": {
       "label": "Variable",
       "help": "The current value of a variable."
@@ -315,6 +319,18 @@
     "call": {
       "label": "Call function",
       "help": "Calls one of your functions with the given arguments."
+    },
+    "index": {
+      "label": "Item at a position",
+      "help": "One item of a list, found by its position. Positions start at 0, and −1 is the last item. Example: [4, 9, 2][0] is 4."
+    },
+    "call:len": {
+      "label": "Count",
+      "help": "How many items a list holds, or characters a text holds. Example: len([4, 9, 2]) is 3."
+    },
+    "call:sum": {
+      "label": "Sum",
+      "help": "The total of the numbers in a list. Example: sum([4, 9, 2]) is 15."
     },
     "call:abs": {
       "label": "Absolute value",

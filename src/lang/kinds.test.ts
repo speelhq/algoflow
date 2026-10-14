@@ -47,6 +47,21 @@ describe("kinds", () => {
     expect(kind("f(1)")).toBeUndefined();
   });
 
+  it("a list is a list, its count and sum numbers, and an item has no kind", () => {
+    expect(["[]", "[1, s]", "len(xs)", "len(s)", "sum(xs)"].map(kind)).toEqual([
+      "list",
+      "list",
+      "number",
+      "number",
+      "number",
+    ]);
+    expect([kind("xs[0]"), kind("[1, 2][0]"), kind("xs[0] + 1")]).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ]);
+  });
+
   it("binop by its operator and, where they settle it, its inputs", () => {
     expect(["n < 1", "s == n", "n in xs"].map(kind)).toEqual([
       "truefalse",

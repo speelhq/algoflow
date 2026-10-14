@@ -9,16 +9,20 @@ import { call } from "./call";
 import { abs } from "./call-abs";
 import { floatCall } from "./call-float";
 import { intCall } from "./call-int";
+import { len } from "./call-len";
 import { max } from "./call-max";
 import { min } from "./call-min";
 import { randomInt } from "./call-randint";
 import { strCall } from "./call-str";
+import { sum } from "./call-sum";
 import type { Category } from "./categories";
 import { continueStmt } from "./continue";
 import { empty } from "./empty";
 import { exprStmt } from "./expr";
 import { forStmt } from "./for";
 import { ifStmt } from "./if";
+import { index } from "./index";
+import { list } from "./list";
 import { none } from "./none";
 import { num } from "./num";
 import { print } from "./print";
@@ -47,8 +51,13 @@ const ALL: NodeDef[] = [
   str,
   bool,
   none,
+  list,
   unop,
   randomInt,
+  // the items of a list before `Join with another list`, which `binop` declares
+  index,
+  len,
+  sum,
   binop,
   abs,
   max,

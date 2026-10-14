@@ -54,6 +54,7 @@ export const ast = {
   neg: (operand: Expr): Expr => ({ id: tid(), kind: "unop", op: "neg", operand }),
   not: (operand: Expr): Expr => ({ id: tid(), kind: "unop", op: "not", operand }),
   list: (...items: Expr[]): Expr => ({ id: tid(), kind: "list", items }),
+  item: (list: Expr, index: Expr): Expr => ({ id: tid(), kind: "index", list, index }),
   call: (fn: string, ...args: Expr[]): Expr => ({ id: tid(), kind: "call", fn, args }),
 
   assign: (name: string, value: Expr): Stmt => ({
