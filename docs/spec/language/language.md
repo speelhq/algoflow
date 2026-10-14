@@ -250,8 +250,14 @@ every other difference from Python is stricter and ends in an error (a
 
 | Rule | Example |
 | --- | --- |
-| `swap` exchanges `list[i]` and `list[j]` | |
+| `swap` exchanges `list[i]` and `list[j]` | `swap(nums[0], nums[2])` on `[4, 9, 2]` → `[2, 9, 4]` |
+| `swap` evaluates as its Python line: `list` and `j`, then `list` and `i`, to read the two items, then `list` and `i`, then `list` and `j`, to write them | `swap(nums[5], nums[7])` on 3 items → `E_INDEX` for 7 |
 | `copy()` copies one list level | |
+
+`swap` evaluates its inputs as many times and in the order its Python line
+does: evaluating each once would draw a `randint` in a position fewer times
+than the emitted Python, which the CPython check replays draw by draw
+(`interpreter.md`, CPython check).
 
 ### Calls (`call`, `print`, `call:randint`)
 

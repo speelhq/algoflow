@@ -239,7 +239,7 @@ is expected and `Item at a position` after one:
 | `(`                     | a pair of brackets, the caret inside them; after a call's name, the call's own |
 | `[` `,` `]`             | a list's pair of brackets; `,` between its items; `]` leaves it; after a value, `[` an item of it (`nums[…]`) |
 | `,` in a call           | the call's next input                            |
-| `,` in an `exprs` slot  | the next value of the slot (Node editor)         |
+| `,` in an `exprs` slot  | a value of the slot after this one (Node editor) |
 | `%` `//` `**`           | as typed                                         |
 | `and` `or` `not` `in`   | as typed                                         |
 
@@ -261,8 +261,14 @@ innermost list or item around the caret, a list's item still to fill at its
 end removed first, so `[` then `]` makes an empty list; a `,` acts on the
 innermost call or list around the caret. With the caret after a field's
 whole value, a key that begins the words the notation writes after that
-field, and that the line does not take, moves the keyboard to the next
-field: `]` after an item's position in a target goes on to its value.
+field moves the keyboard to the next field, before the line can take it:
+`]` after an item's position in a target goes on to its value, and `[`
+after `swap`'s list to its first position. Letting the line take the key
+first would make `nums[` in `swap`'s list an item of `nums`, a tree the
+chart draws differently from what was typed; an item as that list is
+chosen from the value list instead. The `, ` between the values of an
+`exprs` slot is the slot's own: `,` there adds a value after the one the
+caret is in.
 Backspace at an item still to fill
 of a list, other than its first, removes that item and puts the caret at the
 end of the item before it; after a list it removes from the end of its last
