@@ -58,8 +58,10 @@ A statement block's `python()` returns `PyLine[]` where
 `PyLine = string | { block: Stmt[] }`; an expression block's returns text.
 The emitter indents a block by one level, writes `pass` for an empty block,
 and records the line map while flattening. Blocks receive
-`EmitContext = { expr(e): string; operand(e, precedence, side): string; target(t): string; block(stmts): PyLine }`;
-`operand` applies the parentheses rule above. Targets are rendered by the
+`EmitContext = { expr(e): string; operand(e, precedence, side): string; slot(node, name): string; target(t): string; block(stmts): PyLine }`;
+`operand` applies the parentheses rule above, and `slot` writes the input of
+a slot, bracketed as an atom when the slot declares `atom` (`nodes.md`, Node
+text). Targets are rendered by the
 emitter: `name`, `<list>[<index>]`, `<dict>[<key>]`, `<obj>.<field>`. An
 `empty` expression emits `...`.
 
