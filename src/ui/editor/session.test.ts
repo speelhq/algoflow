@@ -85,14 +85,19 @@ describe("editor session", () => {
     expect(valueKey(session, { key: "Escape", shiftKey: false }, [], ctx, "").taken).toBe(false);
   });
 
-  it("a key the line refuses after its value, beginning the words after the field, moves on", () => {
+  it("a key beginning the words after the field, typed after its value, moves on first", () => {
     const stmt = assign("total", num(1));
     const field: Field = { slot: "value", role: "expr" };
     const typed = press(openSession(stmt, field, null), "x").session;
-    expect(valueKey(typed, { key: "]", shiftKey: false }, [], ctx, "]").after).toEqual({ go: 1 });
-    // Words that do not begin with the key, or a key the line takes, stay in the line.
-    expect(valueKey(typed, { key: "]", shiftKey: false }, [], ctx, ")").after).toBeUndefined();
-    expect(valueKey(typed, { key: "+", shiftKey: false }, [], ctx, "+").after).toBeUndefined();
+    const key = (k: string, next: string) =>
+      valueKey(typed, { key: k, shiftKey: false }, [], ctx, next);
+    expect(key("]", "]").after).toEqual({ go: 1 });
+    // `[`, which the line would take as an item of `x`, moves on too (`swap`'s list).
+    expect(key("[", "[").after).toEqual({ go: 1 });
+    // Words that do not begin with the key stay in the line, as does a key before the value's end.
+    expect(key("]", ")").after).toBeUndefined();
+    const open = press(openSession(stmt, field, null), "(x").session;
+    expect(valueKey(open, { key: "[", shiftKey: false }, [], ctx, "[").after).toBeUndefined();
   });
 
   it("Backspace at an empty part of a target, nothing typed, sets the target to its variable", () => {

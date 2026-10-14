@@ -10,7 +10,6 @@ import {
   generatedNotation,
   notationOf,
   placeholderValue,
-  SEPARATOR,
   templatePieces,
   type Piece,
 } from "@/ui/chart/text";
@@ -155,10 +154,10 @@ export function firstPart(stmt: Stmt, slot: string): Field | undefined {
  * keys).
  */
 export function wordsAfter(stmt: Stmt, field: Field): string {
-  // After an item of a list of values other than its last, the notation writes their separator.
+  // The separator between the values of a list of values is the slot's own: `,` adds a value.
   const items = (stmt as unknown as Bag)[field.slot];
   if (field.index !== undefined && Array.isArray(items) && field.index < items.length - 1) {
-    return SEPARATOR.trim();
+    return "";
   }
   const target = field.part === undefined ? undefined : targetIn(stmt, field.slot);
   const pieces = target

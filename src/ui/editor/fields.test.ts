@@ -116,9 +116,9 @@ describe("a target holding an item", () => {
     expect(wordsAfter(stmt, position)).toBe("]");
     expect(wordsAfter(stmt, { slot: "target", role: "target" })).toBe("←");
     expect(wordsAfter(stmt, { slot: "value", role: "expr" })).toBe("");
-    // After an item of a list of values the notation writes `, `, and its bracket after the last.
+    // The `, ` between the values of a list of values is the slot's own; its bracket follows the last.
     const shown = ast.print(v("a"), v("b"));
-    expect(wordsAfter(shown, { slot: "args", role: "expr", index: 0 })).toBe(",");
+    expect(wordsAfter(shown, { slot: "args", role: "expr", index: 0 })).toBe("");
     expect(wordsAfter(shown, { slot: "args", role: "expr", index: 1 })).toBe(")");
   });
 

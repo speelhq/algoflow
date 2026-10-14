@@ -216,13 +216,13 @@ export function valueKey(
       return taken(line.selected ? commit(session, backspace(line).line) : still(session));
     default: {
       if (key.key.length !== 1) return left;
-      const typed = type(line, key.key, ctx);
-      // A key the line refuses after the whole value, its word chosen, beginning the words that
-      // follow the field, moves on to the next field, as the notation goes on there.
-      if (!typed.taken && next !== "" && next.startsWith(key.key)) {
+      // After the whole value, its word chosen, a key beginning the words that follow the field
+      // moves on to the next field before the line takes it, as the notation goes on there.
+      if (next !== "" && next.startsWith(key.key)) {
         const settled = settle(line, ctx);
         if (atEnd(settled)) return taken(commit(session, settled), { go: 1 });
       }
+      const typed = type(line, key.key, ctx);
       // `,` in an item of a list adds the next item.
       const { index } = focus;
       const item = typed.move === "item" && index !== undefined;
