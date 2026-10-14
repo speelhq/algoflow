@@ -53,6 +53,19 @@ needs space at full size. Placed against the viewport, the editor would
 flip over the panel and hide the statement the learner builds from, and
 turned below or above the node it would cover the nodes built from.
 
+While a list is shown (Value list, Name fields), the editor is 480 px high,
+or as high as the canvas less its margins when the canvas is lower, its
+explanation line keeps the height of four lines, the longest help's, and
+its list scrolls within what the rest leaves, scrolling a highlighted row
+into sight only when none of it is in sight: placed by that height, the
+editor moves neither when typing shortens the list nor when the highlight
+changes the explanation line, and no row moves under the pointer. In a
+canvas lower than the rest and a few rows, the editor scrolls within its
+height. Scrolling the
+chart up to make room below the node, as it is scrolled left, was rejected:
+with an editor that high it would scroll for nearly every node and hide the
+statements above the one being built.
+
 From top to bottom the editor holds the node's name field (Node names),
 with `Duplicate` and `Delete` as icon buttons beside it and, when the node
 calls a function or constructs a class, `Open <name>`, which shows that
