@@ -193,6 +193,59 @@ describe("typing", () => {
     expect(moved.caret).toEqual({ after: one.id });
   });
 
+  it("`[` opens a list with an item to fill; `,` adds an item, and `]` leaves the list", () => {
+    expect(py(keys("[4,9,2]"))).toBe("[4, 9, 2]");
+    expect(py(keys("[i+1,n]"))).toBe("[i + 1, n]");
+    expect(py(keys("[[1,2],[3]]"))).toBe("[[1, 2], [3]]");
+    expect(py(keys("[abs(i),2]"))).toBe("[abs(i), 2]");
+    expect(py(raw("["))).toBe("[...]");
+    // `]` removes an item still to fill at the end first, so `[` then `]` is an empty list.
+    expect(py(keys("[]"))).toBe("[]");
+    expect(py(keys("[4,]"))).toBe("[4]");
+    const left = keys("[1]");
+    expect(left.caret).toEqual({ after: left.root.id });
+    // Once the list is left, `,` is the slot's next value again.
+    expect(type(left, ",", ctx).move).toBe("item");
+    // A selected value is replaced by the list typed.
+    expect(py(keys("[1]", openLine(ast.num(5))))).toBe("[1]");
+  });
+
+  it("`]` leaves the innermost item or list around the caret", () => {
+    const inList = keys("i]", choose(keys("[nums "), entry("index"), ctx).line);
+    expect(py(inList)).toBe("[nums[i]]");
+    // The item is left, so a `,` adds the list's next item.
+    expect(py(keys(",2]", inList))).toBe("[nums[i], 2]");
+    const alone = keys("0]", choose(keys("nums "), entry("index"), ctx).line);
+    expect(alone.caret).toEqual({ after: alone.root.id });
+  });
+
+  it("`[` after a value inserts an item of it, typed as the chart writes it", () => {
+    expect(py(keys("nums[i]"))).toBe("nums[i]");
+    expect(py(keys("nums[i+1]-1"))).toBe("nums[i + 1] - 1");
+    expect(py(keys("nums[nums[0]]"))).toBe("nums[nums[0]]");
+    expect(py(keys("[4,9][1]"))).toBe("[4, 9][1]");
+    // It binds to the value just before it, as Python reads it.
+    expect(py(keys("i+nums[0]"))).toBe("i + nums[0]");
+    expect(py(keys("(i+n)[0]"))).toBe("(i + n)[0]");
+    expect(py(keys("abs(i)[0]"))).toBe("abs(i)[0]");
+    expect(py(keys("nums[i]>nums[i+1]"))).toBe("nums[i] > nums[i + 1]");
+    // In place of a selected value, `[` opens a list.
+    expect(py(keys("[1]", openLine(ast.v("nums"))))).toBe("[1]");
+  });
+
+  it("`]` outside a list or an item inserts nothing", () => {
+    expect(type(keys("i"), "]", ctx).taken).toBe(false);
+    expect(type(raw("abs(i"), "]", ctx).taken).toBe(false);
+  });
+
+  it("an item and a count are chosen after a list, as the chart writes them", () => {
+    const item = keys("i+1", choose(keys("nums"), entry("index"), ctx).line);
+    expect(py(item)).toBe("nums[i + 1]");
+    expect(py(keys("nums len"))).toBe("len(nums)");
+    expect(py(keys("len(nums)-1"))).toBe("len(nums) - 1");
+    expect(py(keys("nums sum"))).toBe("sum(nums)");
+  });
+
   it("Tab forgets the first key of a two-key operator", () => {
     const moved = tab(raw("i*"), 1, ctx).line;
     expect(moved.pending).toBeUndefined();
@@ -329,6 +382,35 @@ describe("Backspace and moving", () => {
     expect(py(back(line))).toBe("i");
     const inside = keys("12", choose(empty(), entry("call:abs"), ctx).line);
     expect(py(back(move(inside, 1).line))).toBe("12");
+  });
+
+  it("at an item still to fill of a list, other than its first, it removes that item", () => {
+    const added = raw("[4,");
+    const removed = back(added);
+    expect(py(removed)).toBe("[4]");
+    const [four] = (removed.root as Extract<Expr, { kind: "list" }>).items;
+    expect(removed.caret).toEqual({ after: four?.id });
+    // The only item left to fill goes with its list.
+    expect(py(back(raw("[")))).toBe("...");
+  });
+
+  it("after a list, it removes from its last item, and an empty list as a value", () => {
+    const two = keys("[4,9]");
+    expect(py(back(two))).toBe("[4, ...]");
+    expect(py(back(two, 2))).toBe("[4]");
+    expect(py(back(two, 3))).toBe("[...]");
+    expect(py(back(two, 4))).toBe("...");
+    expect(py(back(keys("[[1]]")))).toBe("[[...]]");
+    expect(py(back(keys("[]")))).toBe("...");
+  });
+
+  it("after an item's bracket it removes its position, then the item, keeping its list", () => {
+    const item = keys("i", choose(keys("nums"), entry("index"), ctx).line);
+    const after = move(item, 1).line;
+    expect(after.caret).toEqual({ after: item.root.id });
+    expect(py(back(after))).toBe("nums[i]");
+    expect(py(back(after, 2))).toBe("nums[...]");
+    expect(py(back(after, 3))).toBe("nums");
   });
 
   it("after a call whose later input holds a value, it removes nothing and moves left", () => {

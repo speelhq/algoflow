@@ -115,10 +115,15 @@ export function notationOf(node: Node): string {
   return getNode(keyOf(node)).notation(node);
 }
 
+/** Whether an expression's notation ends with `bracket`: a call's `)`, a list's or an item's `]`. */
+export function closedBy(expr: Expr, bracket: ")" | "]"): boolean {
+  const last = templatePieces(notationOf(expr)).at(-1);
+  return last !== undefined && "words" in last && last.words.endsWith(bracket);
+}
+
 /** Whether an expression is a call: its notation ends with its own bracket (`abs({x})`). */
 export function isCall(expr: Expr): boolean {
-  const last = templatePieces(notationOf(expr)).at(-1);
-  return last !== undefined && "words" in last && last.words.endsWith(")");
+  return closedBy(expr, ")");
 }
 
 const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);

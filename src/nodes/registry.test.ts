@@ -107,7 +107,7 @@ describe("registry", () => {
       "list |  | values |  |  | [",
       "unop | not | conditions |  | not | not",
       "call:randint |  | calculate |  |  | randint",
-      "index |  | items | list |  | ",
+      "index |  | items | list |  | [",
       "call:len |  | items | list,text,dict |  | len",
       "call:sum |  | items | list |  | sum",
       "binop | and | conditions | truefalse | and | and",

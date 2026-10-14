@@ -26,5 +26,5 @@ export const index = defineExpr<"index">({
   python: (node, ctx) =>
     `${ctx.operand(node.list, PRECEDENCE.atom, "left")}[${ctx.expr(node.index)}]`,
   notation: () => "{list}[{index}]",
-  menu: [{ name: "", group: "items", on: ["list"] }],
+  menu: [{ name: "", group: "items", on: ["list"], keys: "[" }],
 });
