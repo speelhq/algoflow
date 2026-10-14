@@ -11,14 +11,14 @@ import { nodeText, t } from "@/i18n/t";
 import { duplicateStmt, insertItem, removeItem, removeStmt, setExpr } from "@/lang/edit";
 import { chartOf, variableKinds } from "@/lang/kinds";
 import { visibleAt } from "@/lang/scope";
-import type { Expr, Id, NodeId, Program, Stmt } from "@/lang/types";
+import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
 import { isExpr, nodesById } from "@/lang/walk";
 import { cn } from "@/lib/utils";
 import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import { parseScope } from "@/python/parse";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
-import { placeholderValue, slotParts } from "@/ui/chart/text";
+import { joinParts, placeholderValue, slotParts } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics } from "./diagnostics";
@@ -29,11 +29,18 @@ import {
   editedLines,
   fieldKey,
   fieldLabel,
+  fieldPath,
   fieldsOf,
+  ITEM,
+  itemField,
   nameOf,
+  namePart,
   sameField,
+  setItem,
   setName,
   startField,
+  targetPieces,
+  valueOf,
   type Field,
 } from "./fields";
 import { callableFunctions, lineTakes, matches, openLine, setText, type LineContext } from "./line";
@@ -109,7 +116,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const run = (step: Step): Session => {
     for (const { field, root } of step.edits) {
       const at = `${stmt.id}:${fieldKey(field)}`;
-      apply((p) => setExpr(p, stmt.id, field.slot, root, field.index), at);
+      apply((p) => setExpr(p, stmt.id, fieldPath(field), root, field.index), at);
     }
     setSession(step.session);
     return step.session;
@@ -181,7 +188,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         ref={register(field)}
         root={root}
         line={shown}
-        label={fieldLabel(stmt, field.slot)}
+        label={fieldLabel(stmt, field)}
         unmatched={shown !== null && shown.word !== "" && matches(shown, ctx).length === 0}
         onKey={onValueKey}
         onFocus={() => {
@@ -208,10 +215,18 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   // ------------------------------------------------------------ names
 
   const asked = Object.keys(getChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {});
-  const names = nameList(program, asked, session.typed, kinds);
+  // A target can be set to an item of a list variable visible here (`editor.md`, Name fields).
+  const lists =
+    focus?.role === "target" ? ctx.variables.filter((name) => kinds.get(name) === "list") : [];
+  const names = nameList(program, asked, session.typed, kinds, lists);
 
-  const chooseName = (field: Field, name: Id) => {
-    apply((p) => setName(p, stmt, field.slot, name));
+  const chooseName = (field: Field, row: NameRow) => {
+    if (row.kind === "item") {
+      apply((p) => setItem(p, stmt, field.slot, row.name));
+      enter(leaveName(session), itemField(field.slot), null);
+      return;
+    }
+    apply((p) => setName(p, stmt, field.slot, row.name));
     go(leaveName(session), 1, field);
   };
 
@@ -226,7 +241,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
       case "Enter": {
         event.preventDefault();
         const row = shown === null ? undefined : rows[shown];
-        if (row) return chooseName(field, row.name);
+        if (row) return chooseName(field, row);
         if (session.typed !== null) return;
         if (sameField(fields.at(-1) ?? null, field)) return closeEditor();
         return go(session, 1, field);
@@ -248,27 +263,41 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
       case "id":
       case "target": {
         const shownName = nameOf(stmt, name);
-        if (shownName === undefined) return null;
         const field: Field = { slot: name, role: held.role };
         const on = sameField(focus, field);
-        return (
-          <NameField
-            key={name}
-            slot={name}
-            label={fieldLabel(stmt, name)}
-            name={shownName}
-            typed={on ? session.typed : null}
-            on={on}
-            register={register(field)}
-            onFocus={() => {
-              setFocused(field);
-              if (!sameField(focus, field)) enter(session, field, null);
-            }}
-            onBlur={() => setSession((s) => leaveName(s))}
-            onType={(text) => setSession((s) => typeName(s, nameChars(text)))}
-            onKey={(event) => onNameKey(event, field, names.rows)}
-          />
-        );
+        const nameField =
+          shownName === undefined ? null : (
+            <NameField
+              key={name}
+              slot={name}
+              label={fieldLabel(stmt, field)}
+              name={shownName}
+              typed={on ? session.typed : null}
+              on={on}
+              register={register(field)}
+              onFocus={() => {
+                setFocused(field);
+                if (!sameField(focus, field)) enter(session, field, null);
+              }}
+              onBlur={() => setSession((s) => leaveName(s))}
+              onType={(text) => setSession((s) => typeName(s, nameChars(text)))}
+              onKey={(event) => onNameKey(event, field, names.rows)}
+            />
+          );
+        if (held.role !== "target" || !held.target || held.target.kind === "var") return nameField;
+        // A target holding an item: its list's name, then a value line for each other part; one
+        // the editor cannot edit (its list no variable) is drawn as the chart draws it.
+        const pieces = targetPieces(held.target);
+        if (pieces.length === 0) return <span key={name}>{joinParts(slotParts(stmt, name))}</span>;
+        const listPart = namePart(held.target);
+        return pieces.map((piece, i) => {
+          // oxlint-disable-next-line react/no-array-index-key -- a notation's pieces keep their order
+          if ("words" in piece) return <span key={`${name}w${i}`}>{piece.words.trim()}</span>;
+          if (piece.name === listPart) return nameField;
+          const part: Field = { slot: name, role: "expr", part: piece.name };
+          const value = valueOf(stmt, part);
+          return value ? lineWidget(part, value) : null;
+        });
       }
       case "expr":
         return held.expr ? (
@@ -336,24 +365,27 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         onHighlight={(index) => setSession((s) => highlightRow(s, index))}
         onChoose={(index) => {
           const chosen = names.rows[index];
-          if (chosen) chooseName(focus, chosen.name);
+          if (chosen) chooseName(focus, chosen);
         }}
       />
     );
-    explanation = row
-      ? {
-          name: row.name,
-          variable: true,
-          parts: [
-            {
-              text:
-                row.kind === "new"
-                  ? t("editor.explain.newVariable", { name: row.name })
-                  : explainVariable(program, stmt.id, row.name),
-            },
-          ],
-        }
-      : { name: "", parts: [{ text: t("editor.explain.name") }] };
+    explanation =
+      row?.kind === "item"
+        ? { name: nodeText(ITEM, "label"), parts: helpParts(nodeText(ITEM, "help")) }
+        : row
+          ? {
+              name: row.name,
+              variable: true,
+              parts: [
+                {
+                  text:
+                    row.kind === "new"
+                      ? t("editor.explain.newVariable", { name: row.name })
+                      : explainVariable(program, stmt.id, row.name),
+                },
+              ],
+            }
+          : { name: "", parts: [{ text: t("editor.explain.name") }] };
   } else if (focus?.role === "expr" && line) {
     const { rows, sections } = values;
     const shown = shownHighlight(session, rows.length);

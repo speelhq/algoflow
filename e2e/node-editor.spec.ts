@@ -2,7 +2,7 @@
 // typing and choosing in value lines, and submit it to Accepted.
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { seedProgram, seedProgress, solutionOf } from "./seed";
+import { programWith, seedPlayground, seedProgram, seedProgress, solutionOf } from "./seed";
 
 const editor = (page: Page) => page.getByTestId("node-editor");
 const chart = (page: Page) => page.getByTestId("chart");
@@ -186,4 +186,48 @@ test("a print with no value draws no placeholder", async ({ page }) => {
   await insert(page, "main/main/0", "print");
   await editor(page).getByRole("button", { name: "Remove this value" }).click();
   await expect(chart(page)).not.toContainText("…");
+});
+
+test("a list is typed, its item read, and one item set from the name list", async ({ page }) => {
+  await seedProgress(page, {});
+  const id = "play-listitems001";
+  await seedProgram(page, id, { ...programWith([]), title: "Lists" });
+  await seedPlayground(page, { [id]: { edited: 0 } });
+  await page.goto(`/#/play/${id}`);
+
+  await insert(page, "main/main/0", "assign");
+  await keys(page, "nums");
+  await page.keyboard.press("Enter");
+  await keys(page, "[4,9,2,7]");
+  // After a list, the list offers what can be done with it.
+  const list = editor(page).getByTestId("editor-list");
+  await expect(list.locator('section[aria-label="Items"]')).toContainText("Item at a position");
+  await expect(list.locator('section[aria-label="Items"]')).toContainText("Count");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("nums ← [4, 9, 2, 7]");
+
+  await insert(page, "main/main/1", "assign");
+  await keys(page, "x");
+  await page.keyboard.press("Enter");
+  // An item is typed as the chart writes it.
+  await keys(page, "nums[1]");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("x ← nums[1]");
+
+  // A target offers an item of a list variable, its position then taking the keyboard.
+  await insert(page, "main/main/2", "assign");
+  await expect(list).toContainText("Item at a position");
+  await list.locator('[data-row="item:nums"]').click();
+  await expect(chart(page)).toContainText("nums[…] ← …");
+  await keys(page, "0");
+  await page.keyboard.press("Tab");
+  await keys(page, "x");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("nums[0] ← x");
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "▶ Run" }).click();
+  await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
+  await expect(page.getByTestId("variables")).toContainText("nums ← [9, 9, 2, 7]");
+  await expect(page.getByTestId("variables")).toContainText("x ← 9");
 });
