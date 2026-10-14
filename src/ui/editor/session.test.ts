@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
 import { ast } from "@/nodes/testing";
+import { allEntries } from "./entries";
 import { fieldsOf, startField, type Field } from "./fields";
 import type { LineContext } from "./line";
 import {
@@ -12,6 +13,8 @@ import {
   settleWord,
   stepHighlight,
   chain,
+  chooseRow,
+  textEnded,
   valueKey,
   type Session,
   type Step,
@@ -111,6 +114,23 @@ describe("editor session", () => {
     const value: Field = { slot: "value", role: "expr" };
     const blank = assign("total", empty());
     expect(valueKey(openSession(blank, value, null), back, [], ctx, "").after).toBeUndefined();
+  });
+
+  it("Backspace in an empty text field removes the text, leaving its input to fill", () => {
+    const stmt = print(empty());
+    const field: Field = { slot: "args", role: "expr", index: 0 };
+    const text = allEntries().find((entry) => entry.id === "str");
+    if (!text) throw new Error("no Text");
+    // `Text` opens an empty field, as the learner chooses it.
+    const editing = chooseRow(openSession(stmt, field, null), { kind: "entry", entry: text }, ctx);
+    expect(editing.session.line?.text).toBeDefined();
+    const step = textEnded(editing.session, "Backspace", ctx);
+    expect(step.session.line?.root.kind).toBe("empty");
+    expect(step.session.line?.text).toBeUndefined();
+    expect(step.edits.at(-1)?.root.kind).toBe("empty");
+    // Once the field has ended, Backspace from it removes nothing more.
+    const ended = textEnded(editing.session, "Enter", ctx).session;
+    expect(textEnded(ended, "Backspace", ctx).session.line?.root.kind).toBe("str");
   });
 
   it("a value changed elsewhere reopens the line; focusing a field opens its value", () => {

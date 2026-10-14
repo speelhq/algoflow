@@ -369,9 +369,17 @@ function fill(line: Line, made: Expr, text = false): Outcome {
   return done({ ...next, caret, word: "", ...(text ? { text: made.id } : {}) });
 }
 
-/** Whether the entry's block holds a text typed in a field (`Text`). */
-function typedText(made: Expr): boolean {
-  return inputs(made).length === 0 && getNode(keyOf(made)).slots.some((s) => s.role === "text");
+/** The slot of a value typed in a text field of its own (`Text`); a number is typed in the line. */
+function textSlot(made: Expr): string | undefined {
+  if (isNumber(made) || inputs(made).length > 0) return undefined;
+  return getNode(keyOf(made)).slots.find((s) => s.role === "text")?.name;
+}
+
+/** What a value typed in a text field of its own holds, or undefined for any other value. */
+export function textOf(expr: Expr): string | undefined {
+  const slot = textSlot(expr);
+  const held = slot === undefined ? undefined : (expr as unknown as Bag)[slot];
+  return typeof held === "string" ? held : undefined;
 }
 
 /** Chooses a row of the list at the caret. */
@@ -395,7 +403,7 @@ export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
       return done({ ...base, open: [...base.open, base.caret.at] });
     case "entry": {
       const made = makeEntry(row.entry);
-      return fill(base, made, typedText(made));
+      return fill(base, made, textSlot(made) !== undefined);
     }
   }
 }
@@ -662,6 +670,15 @@ export function backspace(line: Line): Outcome {
       const made = numberOf(exprText(last).slice(0, -1));
       if (made) return done(replace(current, last.id, { ...made, id: last.id }));
     }
+    // A text loses its last character as its field counts one, and the field opens on the rest.
+    const typed = textOf(last);
+    if (typed) {
+      const characters = Array.from(new Intl.Segmenter().segment(typed), (part) => part.segment);
+      return done({
+        ...setText(current, last.id, characters.slice(0, -1).join("")),
+        text: last.id,
+      });
+    }
     const own = inputs(last);
     const [first] = own;
     if (first) {
@@ -734,20 +751,21 @@ export function tab(line: Line, step: -1 | 1, ctx: LineContext): Outcome {
   return done(closeBehind({ ...current, caret: field.stop, selected: false }));
 }
 
-/** A click on a value puts the caret after it, and on an input at it. */
+/** A click on a value puts the caret after it, and on an input at it; on a text it opens its field. */
 export function clickAt(line: Line, id: NodeId): Line {
   const clicked = find(line.root, id);
   if (!clicked) return line;
   const caret: Caret = isEmptyExpr(clicked) ? { at: id } : endOf(clicked);
-  return closeBehind({ ...line, caret, selected: false, word: "", pending: undefined });
+  const text = textSlot(clicked) === undefined ? undefined : id;
+  return closeBehind({ ...line, caret, selected: false, word: "", pending: undefined, text });
 }
 
 /** The text being typed changes. */
 export function setText(line: Line, id: NodeId, text: string): Line {
   const held = find(line.root, id);
-  const slot = held ? getNode(keyOf(held)).slots.find((s) => s.role === "text") : undefined;
-  if (!held || !slot) return line;
-  return replace(line, id, { ...held, [slot.name]: text });
+  const slot = held ? textSlot(held) : undefined;
+  if (!held || slot === undefined) return line;
+  return replace(line, id, { ...held, [slot]: text });
 }
 
 /** The text field ends; the caret is after the text. */
