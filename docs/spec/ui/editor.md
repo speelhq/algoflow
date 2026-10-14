@@ -140,7 +140,10 @@ three, as two letters on a short word reach unrelated names (`totl` and
 
 A text is entered only through the list's `Text`, which places a text field
 in the line where the text is typed without quotes; Enter, Tab, or leaving
-the field ends it, so no quote is typed and none can be left out.
+the field ends it, so no quote is typed and none can be left out. A click
+on a text in the line opens its field again, holding the text, and
+Backspace in an empty text field removes the text, leaving its input to
+fill.
 
 A digit that would make an int outside the int range (`language.md`,
 Run-time values), or a float beyond the largest float, is not taken
@@ -223,15 +226,20 @@ new `for`, which a caret after it would extend (`01`).
 
 ## Backspace and keys
 
-Backspace removes what is before the caret: the last digit of a number, a
-value, or an operator; on an operator, the name of a call, or the brackets
+Backspace removes what is before the caret: the last character of a value
+typed by its characters, a number's digit (a one-digit number goes whole) or
+a text's character as the text's field counts one, the field opening on the
+rest, empty or not; a value chosen whole (a name), a text with no character,
+or an operator; on an operator, the name of a call, or the brackets
 or dot of an item, a key, or a field it removes the operation and keeps its
 first input in its place; at an operation's first
 input still to fill while a later input holds a value, it removes nothing
 and moves the caret left; at a later input still to fill, it removes the
 operation and keeps its first input when no input after the first holds a
 value, and otherwise removes nothing and moves the caret to the end of the
-input before it. Delete removes a selected value as Backspace does.
+input before it. A name goes whole rather than by its letters, as a name is
+replaced far more often than corrected, and a correction is chosen from
+the list. Delete removes a selected value as Backspace does.
 Clicking an operator in the line lists the other entries of its block in
 its group, and choosing one replaces it (`<` to `≤`, `+` to `Remainder`).
 Removing the operation also removes the values of its other inputs, so
