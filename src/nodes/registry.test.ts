@@ -104,7 +104,7 @@ describe("registry", () => {
       "bool | true | values |  |  | ",
       "bool | false | values |  |  | ",
       "none |  | values |  |  | ",
-      "list |  | values |  |  | [",
+      "list | empty | values |  |  | [",
       "unop | not | conditions |  | not | not",
       "call:randint |  | calculate |  |  | randint",
       "index |  | items | list |  | [",

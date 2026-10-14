@@ -4,13 +4,15 @@ import { newId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { defineExpr } from "./types";
 
+const empty = () => ({ id: newId(), kind: "list" as const, items: [] });
+
 export const list = defineExpr<"list">({
   key: "list",
   category: "list",
   // A list with no item is a value of its own (`Empty list`), so its items are not required.
   slots: [{ name: "items", role: "exprs" }],
-  create: () => ({ id: newId(), kind: "list", items: [] }),
-  zeroLike: () => ({ id: newId(), kind: "list", items: [] }),
+  create: empty,
+  zeroLike: empty,
   *run(node, ctx) {
     const items: Value[] = [];
     for (const item of node.items) items.push(yield* ctx.eval(item));
@@ -19,5 +21,6 @@ export const list = defineExpr<"list">({
   python: (node, ctx) => `[${node.items.map((item) => ctx.expr(item)).join(", ")}]`,
   notation: () => "[{items}]",
   kind: () => "list",
-  menu: [{ name: "", group: "values", keys: "[" }],
+  // `Empty list` names only a list with no item; one with items is named `List`.
+  menu: [{ name: "empty", group: "values", keys: "[", preset: { items: [] } }],
 });

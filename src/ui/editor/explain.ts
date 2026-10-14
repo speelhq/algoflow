@@ -191,5 +191,8 @@ export function explainLine(
   if (highlighted) return explainRow(highlighted, program, at);
   const inside = operationAt(line);
   if (!inside) return undefined;
-  return { name: labelOf(inside.operation), parts: operationParts(inside.operation, inside.input) };
+  return {
+    name: labelOf(inside.operation, ctx.kinds),
+    parts: operationParts(inside.operation, inside.input),
+  };
 }
