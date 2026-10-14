@@ -1,14 +1,16 @@
 // The lists under the editor's fields: the value list of the focused value line (or, while an
 // operator is switched, the other operators of its group), and the name list of a name field.
-import { t } from "@/i18n/t";
+import { nodeText, t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
 import type { Id, Program } from "@/lang/types";
 import type { ListItem, ListSection } from "./EditorList";
+import { targetText } from "@/ui/chart/text";
 import { allEntries, entryOf } from "./entries";
 import { functionLabel } from "./explain";
 import { find, type LineContext, type Row } from "./line";
 import { listRows, listSections } from "./list";
-import { nameSections, type NameRow } from "./names";
+import { ITEM, itemTarget } from "./fields";
+import { nameSections, type NameRow, type NameSection } from "./names";
 import type { Session } from "./session";
 
 /** A variable's kind as the lists name it. */
@@ -73,29 +75,40 @@ export function valueList(
   return { rows: listRows(listed), sections };
 }
 
-/** The rows of a name field's list for the name typed, and its sections as drawn. */
+const SECTION_TITLES: Record<NameSection["group"], () => string> = {
+  problem: () => t("editor.thisProblem"),
+  variables: () => t("editor.lists.variables"),
+  new: () => "",
+  items: () => t("editor.lists.items"),
+};
+
+function nameItem(row: NameRow, kinds: Kinds): ListItem {
+  const key = `${row.kind}:${row.name}`;
+  switch (row.kind) {
+    case "name":
+      return { key, label: row.name, variable: true, note: kindName(kinds, row.name) };
+    case "new":
+      return { key, label: row.name, variable: true, lead: t("editor.newVariable") };
+    case "item":
+      return { key, label: targetText(itemTarget(row.name)), lead: nodeText(ITEM, "label") };
+  }
+}
+
+/**
+ * The rows of a name field's list for the name typed, and its sections as drawn; `lists` are the
+ * list variables whose item the field can be set to.
+ */
 export function nameList(
   program: Program,
   asked: readonly Id[],
   typed: string | null,
   kinds: Kinds,
+  lists: readonly Id[],
 ): { rows: NameRow[]; sections: ListSection[] } {
-  const listed = nameSections(program, asked, typed ?? "");
+  const listed = nameSections(program, asked, typed ?? "", lists);
   const sections = listed.map((section) => ({
-    title:
-      section.group === "problem"
-        ? t("editor.thisProblem")
-        : section.group === "variables"
-          ? t("editor.lists.variables")
-          : "",
-    items: section.rows.map((row) => ({
-      key: `${row.kind}:${row.name}`,
-      label: row.name,
-      variable: true,
-      ...(row.kind === "new"
-        ? { lead: t("editor.newVariable") }
-        : { note: kindName(kinds, row.name) }),
-    })),
+    title: SECTION_TITLES[section.group](),
+    items: section.rows.map((row) => nameItem(row, kinds)),
   }));
   return { rows: listed.flatMap((section) => section.rows), sections };
 }

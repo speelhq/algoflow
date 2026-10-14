@@ -262,7 +262,7 @@ function isNumber(expr: Expr): boolean {
 }
 
 /** `name` as a variable. */
-function variableExpr(name: Id): Expr | undefined {
+export function variableExpr(name: Id): Expr | undefined {
   const made = parsed(name, NO_DEFINITIONS);
   return made && variableOf(made) === name ? made : undefined;
 }

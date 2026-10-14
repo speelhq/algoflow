@@ -1,6 +1,7 @@
 // The list under a name field: the names of the problem's expected variables under
 // `This problem`, the program's other variables under `Variables`, each kept while one of its
-// words begins with the text typed, and a typed name neither holds offered as a new variable.
+// words begins with the text typed, a typed name neither holds offered as a new variable, and in
+// a target an item of each list variable given (`Item at a position`).
 import { declaredBy } from "@/lang/scope";
 import { NAME_PATTERN, RESERVED, type Id, type Program } from "@/lang/types";
 import { programStmts } from "@/lang/walk";
@@ -16,11 +17,23 @@ function programNames(program: Program): Id[] {
   return [...names];
 }
 
-export type NameRow = { kind: "name"; name: Id } | { kind: "new"; name: Id };
-export type NameSection = { group: "problem" | "variables" | "new"; rows: NameRow[] };
+/** A name, a new variable, or an item of the list variable `name`. */
+export type NameRow =
+  | { kind: "name"; name: Id }
+  | { kind: "new"; name: Id }
+  | { kind: "item"; name: Id };
+export type NameSection = { group: "problem" | "variables" | "new" | "items"; rows: NameRow[] };
 
-/** The sections of the list for the text typed; `asked` are the problem's expected names. */
-export function nameSections(program: Program, asked: readonly Id[], typed: string): NameSection[] {
+/**
+ * The sections of the list for the text typed; `asked` are the problem's expected names, and
+ * `lists` the list variables whose item the field can be set to (none in an `id` slot).
+ */
+export function nameSections(
+  program: Program,
+  asked: readonly Id[],
+  typed: string,
+  lists: readonly Id[],
+): NameSection[] {
   const problem = [...new Set(asked)];
   const others = programNames(program).filter((name) => !problem.includes(name));
   // A whole name comes first.
@@ -46,6 +59,10 @@ export function nameSections(program: Program, asked: readonly Id[], typed: stri
   if (typed !== "" && !known && NAME_PATTERN.test(typed) && !RESERVED.has(typed)) {
     sections.push({ group: "new", rows: [{ kind: "new", name: typed }] });
   }
+  sections.push({
+    group: "items",
+    rows: lists.filter((n) => matchesName(n, typed)).map((name) => ({ kind: "item", name })),
+  });
   return sections.filter((section) => section.rows.length > 0);
 }
 
