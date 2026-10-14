@@ -106,8 +106,8 @@ Runtime error codes:
 | `E_INDEX`      | a list index (`language.md`, Semantics, Values and the run) | `index`, `length` |
 | `E_KEY`        | a missing dict key (same)                         | `key`                     |
 | `E_FIELD`      | a missing field (`language.md`, Semantics, Objects) | `cls`, `field`          |
-| `E_TYPE`       | `+` mixing `str` and a number, ordering a number with a `str`, a dict key, a `for` bound, a `randint` bound (`language.md`, Semantics) | `left`, `right` |
-| `E_VALUE`      | `abs`, `int`, `float`, or unary `-` of a value of a type it does not take | `op`, `type` |
+| `E_TYPE`       | `+` mixing `str` and a number, ordering a number with a `str`, a dict key, a `for` bound, a `randint` bound, a list index that is no `int` or an item of a value that is no list, a `sum` item that is no number (`language.md`, Semantics) | `left`, `right` |
+| `E_VALUE`      | `abs`, `int`, `float`, `len`, `sum`, or unary `-` of a value of a type it does not take | `op`, `type` |
 | `E_NUMBER_TEXT`| `int` or `float` of a text that is no such number | `op`, `text`     |
 | `E_EMPTY_RANGE`| `randint(a, b)` with `a > b`                      | `a`, `b`                  |
 | `E_DIV_ZERO`   | division or modulo by zero; zero to a negative power | |
@@ -118,8 +118,8 @@ Runtime error codes:
 
 `E_TYPE` params `left` and `right` are the type names of the operands
 (`int`, `float`, `str`, `bool`, `none`, `list`, `dict`, or the class name);
-a `bool` is not a number for arithmetic and ordering, where Python reads
-`True` as `1`, which block programs never need there.
+a `bool` is not a number for arithmetic, ordering, a list index, or `sum`,
+where Python reads `True` as `1`, which block programs never need there.
 
 `E_VALUE` and `E_NUMBER_TEXT` carry as `op` the registry key of the failing
 expression (`keyOf`), and `E_VALUE` carries as `type` the type name of the

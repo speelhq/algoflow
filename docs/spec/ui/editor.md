@@ -76,7 +76,9 @@ there takes the keyboard or announces a popup.
 
 A field of the editor's notation is named, for assistive technology, by
 the block's label and the slot's name (`node.<key>.slot.<slot>`, `nodes.md`,
-Catalog keys): `Set variable, value`. The symbols before a field (`←`,
+Catalog keys): `Set variable, value`; the position of an item in a target
+by the item's label in place of the slot's (`Set variable, Item at a
+position`), as the slot's name is already the list's field. The symbols before a field (`←`,
 `print(`) name nothing a screen reader can say.
 
 A loop's editor edits the variable and the bounds (`for`), the list
@@ -221,7 +223,9 @@ Backspace removes it only when no input after the first holds a value
 (`f(a, b, …)` keeps `b`).
 
 Keys typed in a value line insert what the chart writes; each entry names
-its keys (`keys`, `nodes.md`, Menu entries):
+its keys (`keys`, `nodes.md`, Menu entries), and a key two entries name
+inserts the one that applies at the caret: `[` is `Empty list` where a value
+is expected and `Item at a position` after one:
 
 | Typed                   | Inserts                                          |
 | ----------------------- | ------------------------------------------------ |
@@ -230,7 +234,7 @@ its keys (`keys`, `nodes.md`, Menu entries):
 | `*` `/`                 | `×` `÷`                                          |
 | `==` `!=` `<=` `>=`     | `=` `≠` `≤` `≥`                                  |
 | `(`                     | a pair of brackets, the caret inside them; after a call's name, the call's own |
-| `[` `,`                 | a list's pair of brackets; `,` between its items  |
+| `[` `,` `]`             | a list's pair of brackets; `,` between its items; `]` leaves it; after a value, `[` an item of it (`nums[…]`) |
 | `,` in a call           | the call's next input                            |
 | `,` in an `exprs` slot  | the next value of the slot (Node editor)         |
 | `%` `//` `**`           | as typed                                         |
@@ -244,8 +248,21 @@ call around the caret when no pair is open or the call begins inside the
 innermost open pair, and otherwise closes that pair, so `2*(abs(i)-1)` keeps
 both. A `,` after the last input a call holds is refused: inside a call's
 brackets a `,` separates its arguments, as in Python, never the values
-around the call. `**` and `//`, typed as two keys, become one operator
-that binds by its own precedence: `2*3**2` multiplies 2 by 3 to the power of
+around the call. `[` at an input still to fill inserts a list with one item
+to fill and puts the caret at it; after a value it inserts an item of that
+value at a position to fill (`Item at a position`), binding to the value
+just before it as Python does (`i + nums[…]`), so `nums[i]` is typed as the
+chart writes it. In a
+list, `,` adds an item to fill after the one the caret is in; `]` leaves the
+innermost list or item around the caret, a list's item still to fill at its
+end removed first, so `[` then `]` makes an empty list; a `,` acts on the
+innermost call or list around the caret. Backspace at an item still to fill
+of a list, other than its first, removes that item and puts the caret at the
+end of the item before it; after a list it removes from the end of its last
+item, and after an empty list the list: removing the list there would lose
+the items typed before. `**` and
+`//`, typed as two keys, become one operator that binds by its own
+precedence: `2*3**2` multiplies 2 by 3 to the power of
 2. A single `=` is Python's assignment, so it is never read as a
 comparison; every operator has a key where Python has one, so the
 `Python` tab later shows keys the learner has typed. Brackets are not
