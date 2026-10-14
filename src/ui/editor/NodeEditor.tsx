@@ -73,7 +73,7 @@ import {
 } from "./session";
 import { AddValue, NameField, ValueItems } from "./slots";
 import { ValueLine } from "./ValueLine";
-import { EDITOR_GAP, EDITOR_WIDTH } from "./size";
+import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 
 type Initial = { slot: string | null; hole: NodeId | null };
 
@@ -445,7 +445,15 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   explanation ??= { name: nodeText(def.key, "label"), parts: helpParts(nodeText(def.key, "help")) };
 
   return (
-    <div className="flex flex-col" data-testid="node-editor" data-node={stmt.id}>
+    <div
+      // While a list is shown the editor keeps one height, so neither the list nor the explanation
+      // line moves it; the positioner gives the canvas's height as `--available-height`. In a
+      // canvas lower than its fixed parts and a few rows, the editor scrolls within that height.
+      className={cn("flex flex-col", list && "overflow-y-auto")}
+      style={list ? { height: `min(${EDITOR_HEIGHT}px, var(--available-height))` } : undefined}
+      data-testid="node-editor"
+      data-node={stmt.id}
+    >
       {diagnostics.length > 0 && (
         <div className="flex flex-col gap-2 p-2.5 pb-0">
           {diagnostics.map((d, i) => (
@@ -483,9 +491,13 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
       >
         {notation}
       </div>
-      {list && <div className="border-b">{list}</div>}
+      {list && <div className="flex h-0 min-h-24 flex-1 flex-col border-b">{list}</div>}
       <div
-        className="flex items-baseline gap-2 rounded-b-lg bg-muted/40 px-2.5 py-2 text-[0.85rem]"
+        className={cn(
+          "flex items-baseline gap-2 rounded-b-lg bg-muted/40 px-2.5 py-2 text-[0.85rem]",
+          // Four lines, the longest help's, so the highlight does not change the list's height.
+          list && "min-h-[calc(4lh+1rem)]",
+        )}
         data-testid="explanation"
       >
         {explanation.name !== "" && (

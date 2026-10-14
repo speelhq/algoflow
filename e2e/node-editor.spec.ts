@@ -261,3 +261,48 @@ test("an item target is typed by keys alone, as the chart writes it", async ({ p
   await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
   await expect(page.getByTestId("variables")).toContainText("nums ← [3, 3, 2]");
 });
+
+test("the editor stays where it is while its list changes, within the canvas", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 520 });
+  await seedProgress(page, {});
+  const id = "play-stillness001";
+  await seedProgram(page, id, { ...programWith([]), title: "Still" });
+  await seedPlayground(page, { [id]: { edited: 0 } });
+  await page.goto(`/#/play/${id}`);
+  await insert(page, "main/main/0", "assign");
+  await keys(page, "x");
+  await page.keyboard.press("Enter");
+
+  const popup = page.getByRole("dialog");
+  const line = editor(page).getByTestId("editor-notation");
+  const place = async () => ({
+    popup: (await popup.boundingBox())?.y,
+    line: (await line.boundingBox())?.y,
+  });
+  const before = await place();
+  const canvas = await page.getByTestId("canvas").boundingBox();
+  const box = await popup.boundingBox();
+  expect(box && canvas && box.y + box.height <= canvas.y + canvas.height).toBe(true);
+
+  // Rows whose explanations differ in length move neither the editor nor the row pointed at.
+  const rows = editor(page).locator("[data-row]");
+  const count = await rows.count();
+  for (let i = 0; i < count; i += 1) {
+    const shown = await editor(page).getByTestId("editor-list").boundingBox();
+    const row = await rows.nth(i).boundingBox();
+    // A row the list has scrolled out of sight is not pointed at.
+    if (!row || !shown || row.y + row.height > shown.y + shown.height) continue;
+    const at = { x: row.x + 20, y: row.y + row.height / 2 };
+    await page.mouse.move(at.x, at.y);
+    expect(await place()).toEqual(before);
+    const pointed = await page.evaluate(
+      ({ x, y }) =>
+        document.elementFromPoint(x, y)?.closest("[data-row]")?.getAttribute("data-row"),
+      at,
+    );
+    expect(pointed).toBe(await rows.nth(i).getAttribute("data-row"));
+  }
+  // Typing that shortens the list keeps the line where it is.
+  await keys(page, "tr");
+  expect(await place()).toEqual(before);
+});
