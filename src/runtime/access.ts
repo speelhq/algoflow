@@ -1,8 +1,9 @@
 // Element access shared by the blocks that read or write
 // list items and dict entries.
 import { dictKey } from "@/lang/data";
-import type { HeapId, NodeId, Value } from "@/lang/types";
+import type { Expr, HeapId, NodeId, Value } from "@/lang/types";
 import type { RunContext } from "@/nodes/types";
+import type { Event } from "./types";
 import { entryOf, typeName } from "./values";
 
 /** `E_TYPE` with the operand type names. */
@@ -40,6 +41,22 @@ export function listIndex(items: Value[], index: Value, nodeId: NodeId, ctx: Run
     return ctx.fail(nodeId, "E_INDEX", { index: index.v, length: items.length });
   }
   return i;
+}
+
+/**
+ * An item of a list as Python finds it, the list evaluated before the position: the list's ref,
+ * its items, and the position checked (`E_TYPE`, `E_INDEX`).
+ */
+export function* itemAt(
+  list: Expr,
+  position: Expr,
+  nodeId: NodeId,
+  ctx: RunContext,
+): Generator<Event, { ref: HeapId; items: Value[]; at: number }, void> {
+  const value = yield* ctx.eval(list);
+  const index = yield* ctx.eval(position);
+  const { ref, items } = asList(value, nodeId, ctx, index);
+  return { ref, items, at: listIndex(items, index, nodeId, ctx) };
 }
 
 export function asDict(

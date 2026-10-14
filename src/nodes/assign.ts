@@ -1,7 +1,7 @@
 // The `assign` block: `<target> = <value>` and its `write` event; a target may be an
 // item or an entry.
 import { newId } from "@/lang/id";
-import { asDict, asList, dictKeyOf, listIndex } from "@/runtime/access";
+import { asDict, dictKeyOf, itemAt } from "@/runtime/access";
 import { defineStmt } from "./types";
 import { emptyExpr } from "./empty";
 
@@ -27,13 +27,9 @@ export const assign = defineStmt<"assign">({
         yield { type: "write", nodeId: node.id, ref: { var: target.name }, value };
         return undefined;
       case "index": {
-        // Python evaluates the container before the index.
-        const listValue = yield* ctx.eval(target.list);
-        const index = yield* ctx.eval(target.index);
-        const list = asList(listValue, node.id, ctx, index);
-        const i = listIndex(list.items, index, node.id, ctx);
-        list.items[i] = value;
-        yield { type: "write", nodeId: node.id, ref: { heap: list.ref, index: i }, value };
+        const { ref, items, at } = yield* itemAt(target.list, target.index, node.id, ctx);
+        items[at] = value;
+        yield { type: "write", nodeId: node.id, ref: { heap: ref, index: at }, value };
         return undefined;
       }
       case "key": {
