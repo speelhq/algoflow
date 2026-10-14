@@ -7,7 +7,6 @@ import { t } from "@/i18n/t";
 import type { Expr, NodeId } from "@/lang/types";
 import { isEmptyExpr, variableOf } from "@/lang/walk";
 import { cn } from "@/lib/utils";
-import { getNode, keyOf } from "@/nodes/registry";
 import type { Side } from "@/nodes/types";
 import {
   bracketed,
@@ -17,9 +16,8 @@ import {
   templatePieces,
   SEPARATOR,
 } from "@/ui/chart/text";
-import { inputs, type Line } from "./line";
-
-type Bag = Record<string, unknown>;
+import { inputs, textOf, type Line } from "./line";
+import type { TextEnd } from "./session";
 
 type Props = {
   /** The expression drawn. */
@@ -35,7 +33,7 @@ type Props = {
   onClickAt: (id: NodeId, op: boolean) => void;
   /** The text being typed in a text field changes or ends. */
   onText: (id: NodeId, text: string) => void;
-  onTextEnd: (key: "Enter" | "Tab" | "ShiftTab" | "blur") => void;
+  onTextEnd: (key: TextEnd) => void;
 };
 
 function Caret() {
@@ -81,9 +79,8 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
   };
 
   const leaf = (expr: Expr): ReactNode => {
-    const slot = getNode(keyOf(expr)).slots.find((s) => s.role === "text");
-    if (line?.text === expr.id && slot) {
-      const value = (expr as unknown as Bag)[slot.name];
+    const value = textOf(expr);
+    if (line?.text === expr.id && value !== undefined) {
       return (
         <input
           key={expr.id}
@@ -92,11 +89,18 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
           aria-label={t("editor.textField")}
           data-text-field
           className="h-6 w-28 rounded border border-selection px-1 align-middle outline-none"
-          value={typeof value === "string" ? value : ""}
+          value={value}
           onChange={(event) => props.onText(expr.id, event.target.value)}
           onBlur={() => props.onTextEnd("blur")}
           onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === "Tab") {
+            // A key of an input method's composition is the composition's (Enter confirms it).
+            if (event.nativeEvent.isComposing) return;
+            // Backspace in the empty field removes the text.
+            if (event.key === "Backspace" && event.currentTarget.value === "") {
+              event.preventDefault();
+              event.stopPropagation();
+              props.onTextEnd("Backspace");
+            } else if (event.key === "Enter" || event.key === "Tab") {
               event.preventDefault();
               event.stopPropagation();
               props.onTextEnd(

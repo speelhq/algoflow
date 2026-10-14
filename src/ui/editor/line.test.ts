@@ -332,6 +332,26 @@ describe("choosing", () => {
     expect(typed.text).toBeUndefined();
   });
 
+  it("a text is edited again: Backspace takes its last character, a click opens its field", () => {
+    const opened = choose(empty(), entry("str"), ctx).line;
+    const typed = endText(setText(opened, opened.text ?? "", "hello"));
+    const shorter = backspace(typed).line;
+    expect(py(shorter)).toBe('"hell"');
+    expect(shorter.text).toBe(typed.root.id);
+    // A character is one as the text field counts it: a symbol with its modifier goes whole.
+    const emoji = endText(setText(opened, opened.text ?? "", "a👍🏽"));
+    expect(py(backspace(emoji).line)).toBe('"a"');
+    // The field opens empty after the last character; a text with no character goes whole.
+    const one = backspace(endText(setText(opened, opened.text ?? "", "a"))).line;
+    expect([py(one), one.text]).toEqual(['""', typed.root.id]);
+    expect(py(backspace(endText(one)).line)).toBe("...");
+    expect(clickAt(typed, typed.root.id).text).toBe(typed.root.id);
+    // A number is typed in the line, and a click on it opens no field.
+    const number = keys("12");
+    expect(clickAt(number, number.root.id).text).toBeUndefined();
+    expect(py(backspace(number).line)).toBe("1");
+  });
+
   it("a selected value is replaced by a value typed; an operator's key takes it", () => {
     const n = openLine(ast.v("n"));
     expect(n.selected).toBe(true);

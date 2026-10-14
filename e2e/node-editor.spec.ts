@@ -306,3 +306,41 @@ test("the editor stays where it is while its list changes, within the canvas", a
   await keys(page, "tr");
   expect(await place()).toEqual(before);
 });
+
+test("a text is edited again by keys and by a click", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/tutorial");
+  await insert(page, "main/main/0", "print");
+  await keys(page, "text");
+  await page.keyboard.press("Enter");
+  await keys(page, "hello");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText('print("hello")');
+
+  // Backspace after the text takes its last character and opens its field on the rest.
+  await page.keyboard.press("Backspace");
+  const field = editor(page).locator("[data-text-field]");
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("hell");
+  // In the field, Backspace and keys edit the text as any text field does.
+  await page.keyboard.press("Backspace");
+  await keys(page, "p");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText('print("help")');
+
+  // A click opens it again; Backspace in the emptied field removes the text.
+  await editor(page).locator("[data-value]").first().click();
+  await expect(field).toHaveValue("help");
+  for (let i = 0; i < 5; i += 1) await page.keyboard.press("Backspace");
+  await expect(field).toHaveCount(0);
+  await expect(chart(page)).toContainText("print(…)");
+
+  // A click on another value while a field is open ends the field and keeps the keyboard.
+  await keys(page, "1+text");
+  await page.keyboard.press("Enter");
+  await keys(page, "ab");
+  await editor(page).locator("[data-value]").first().click();
+  await expect(field).toHaveCount(0);
+  await keys(page, "2");
+  await expect(chart(page)).toContainText('print(12 + "ab")');
+});

@@ -207,6 +207,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           if (!sameField(focus, field)) enter(session, field, null);
         }}
         onClickAt={(id, op) => {
+          // The line takes the keyboard back from a text field the click closes; a text clicked
+          // opens its own field, which takes it in turn.
+          elements.current.get(fieldKey(field))?.focus();
           if (sameField(focus, field)) setSession(clickInLine(session, { id, op }));
           else enter(session, field, { id, op });
         }}

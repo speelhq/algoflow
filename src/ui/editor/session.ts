@@ -11,11 +11,13 @@ import {
   choose,
   clickAt,
   endText,
+  find,
   move,
   openLine,
   settle,
   switchTo,
   tab,
+  textOf,
   type,
   type Line,
   type LineContext,
@@ -231,15 +233,22 @@ export function valueKey(
   }
 }
 
-/** The text field inside the line ended: the caret goes after it, and Tab moves on. */
-export function textEnded(
-  session: Session,
-  key: "Enter" | "Tab" | "ShiftTab" | "blur",
-  ctx: LineContext,
-): KeyStep {
+/** How the text field inside the line ends: by a key, or by leaving it. */
+export type TextEnd = "Enter" | "Tab" | "ShiftTab" | "Backspace" | "blur";
+
+/**
+ * The text field inside the line ended: the caret goes after it, Tab moves on, and Backspace,
+ * typed in the field once it is empty, removes the text.
+ */
+export function textEnded(session: Session, key: TextEnd, ctx: LineContext): KeyStep {
   const { line } = session;
   if (!line) return { ...still(session), taken: false };
   const ended = commit(session, endText(line));
+  // Backspace removes the text only while its field is open and empty.
+  const open = line.text === undefined ? undefined : find(line.root, line.text);
+  if (key === "Backspace" && open && textOf(open) === "") {
+    return taken(chain(ended, (next) => commit(next, backspace(next.line ?? line).line)));
+  }
   if (key !== "Tab" && key !== "ShiftTab") return taken(ended);
   const step = key === "Tab" ? 1 : -1;
   const moved = tab(ended.session.line ?? line, step, ctx);
