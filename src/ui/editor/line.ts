@@ -13,8 +13,9 @@ import { refusedDefinitions } from "@/lang/validate";
 import { allExprs, isEmptyExpr, variableOf } from "@/lang/walk";
 import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import { isParseError, NO_DEFINITIONS, parse, type ParseScope } from "@/python/parse";
-import { levelAssociativity, PRECEDENCE } from "@/python/precedence";
+import { levelAssociativity } from "@/python/precedence";
 import {
+  bindsAt,
   closedBy,
   notationOf,
   exprText,
@@ -325,14 +326,15 @@ function withFirst(made: Expr, value: Expr): Expr {
 }
 
 /**
- * An entry chosen after a value takes it as its first input: from the list, or `typed` by its
- * key, which Python reads as its operator there (`[` binds as the item of the value before it).
+ * An entry chosen after a value takes it as its first input, chosen or typed alike: an entry
+ * whose first input binds at a precedence (an operator, or an item's atom) binds by it.
  */
-function takeValue(line: Line, entry: Entry, typed: boolean): Outcome {
+function takeValue(line: Line, entry: Entry): Outcome {
   const last = lastValue(line);
   if (!last) return refused(line);
   const made = makeEntry(entry);
-  const level = precedenceOf(made) ?? (typed ? PRECEDENCE.atom : undefined);
+  const first = getNode(keyOf(made)).slots.find((s) => s.role === "expr" || s.role === "exprs");
+  const level = first ? bindsAt(made, first.name) : undefined;
   // An operator binds by its precedence; any other entry takes what the list was about.
   const target = line.selected
     ? last
@@ -364,7 +366,7 @@ function typedText(made: Expr): boolean {
 export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
   let base: Line = { ...line, word: "", refused: undefined, pending: undefined };
   if (row.kind === "entry" && takesValue(row.entry) && !atInput(base)) {
-    return takeValue(base, row.entry, false);
+    return takeValue(base, row.entry);
   }
   if (base.selected) base = cleared(base);
   if (!("at" in base.caret)) return refused(line);
@@ -529,7 +531,7 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
     const entry = entryByKeys(current.pending.key + key, true);
     const before = current.pending.before ?? current;
     current = { ...current, pending: undefined };
-    if (entry) return takeValue({ ...before, pending: undefined }, entry, true);
+    if (entry) return takeValue({ ...before, pending: undefined }, entry);
   }
   if (/[0-9.]/.test(key)) return typeDigit(current, key);
   const value = !atInput(current);
@@ -606,7 +608,7 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
   }
   const entry = entryByKeys(key, true);
   if (entry && value) {
-    const placed = takeValue(current, entry, true);
+    const placed = takeValue(current, entry);
     if (placed.taken && startsKeys(key)) placed.line.pending = { key, before: current };
     return placed;
   }

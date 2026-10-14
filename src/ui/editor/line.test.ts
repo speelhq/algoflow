@@ -224,8 +224,9 @@ describe("typing", () => {
     expect(py(keys("nums[i+1]-1"))).toBe("nums[i + 1] - 1");
     expect(py(keys("nums[nums[0]]"))).toBe("nums[nums[0]]");
     expect(py(keys("[4,9][1]"))).toBe("[4, 9][1]");
-    // It binds to the value just before it, as Python reads it.
+    // It binds to the value just before it, as Python reads it, typed or chosen alike.
     expect(py(keys("i+nums[0]"))).toBe("i + nums[0]");
+    expect(py(choose(keys("i+nums"), entry("index"), ctx).line)).toBe("i + nums[...]");
     expect(py(keys("(i+n)[0]"))).toBe("(i + n)[0]");
     expect(py(keys("abs(i)[0]"))).toBe("abs(i)[0]");
     expect(py(keys("nums[i]>nums[i+1]"))).toBe("nums[i] > nums[i + 1]");

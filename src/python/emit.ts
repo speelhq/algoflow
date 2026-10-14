@@ -2,7 +2,7 @@
 import type { Data, Expr, FunctionDef, Id, NodeId, Program, Stmt, Target } from "@/lang/types";
 import { dataKey, floatOf, inputValue, isFloatData } from "@/lang/data";
 import { programExprs } from "@/lang/walk";
-import { getNode, keyOf } from "@/nodes/registry";
+import { getNode, hasNode, keyOf } from "@/nodes/registry";
 import type { EmitContext, PyLine, Side } from "@/nodes/types";
 import { floatRepr } from "@/runtime/values";
 import { PRECEDENCE, needsParens } from "./precedence";
@@ -56,7 +56,16 @@ const ctx: EmitContext = {
   operand(expr: Expr, parent: number, side) {
     return parenthesise(expr, ctx.expr(expr), parent, side);
   },
+  slot(node, name) {
+    const expr = (node as unknown as Record<string, Expr>)[name];
+    if (!expr) throw new Error(`no expression in slot ${name}`);
+    const atom = getNode(keyOf(node)).slots.find((slot) => slot.name === name)?.atom;
+    return atom ? ctx.operand(expr, PRECEDENCE.atom, "left") : ctx.expr(expr);
+  },
   target(target: Target) {
+    // A form whose block is registered is written by that block, as the chart writes it.
+    const { kind, ...rest } = target;
+    if (kind !== "var" && hasNode(kind)) return ctx.expr({ id: "", kind, ...rest } as Expr);
     return writeTarget(target, (expr) => ctx.expr(expr));
   },
   block(stmts: Stmt[]): PyLine {

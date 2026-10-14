@@ -129,32 +129,33 @@ export function isCall(expr: Expr): boolean {
 const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
 
 /**
- * Whether `child` is the input an operation with no precedence of its own is written after
- * (`nums` of `nums[i]`): it binds as an atom, as the emitter writes it.
+ * The precedence the input in slot `slot` of `node` binds at: the node's own, as an operator's
+ * inputs do, else an atom's where the slot declares one (the list of an item), else none.
  */
-function writtenBefore(child: Expr, parent: Expr): boolean {
-  const [first] = templatePieces(notationOf(parent));
-  if (!first || "words" in first) return false;
-  const held = placeholderValue(parent, first.name);
-  return held?.role === "expr" && held.expr === child;
+export function bindsAt(node: Node, slot: string): number | undefined {
+  const def = getNode(keyOf(node));
+  const own = def.shape === "expr" ? def.precedence?.(node as Expr) : undefined;
+  return own ?? (def.slots.find((s) => s.name === slot)?.atom ? PRECEDENCE.atom : undefined);
 }
 
-/** Whether `child`, an input of `parent` on `side`, is put in brackets: as the emitter does. */
-export function bracketed(child: Expr, parent: Expr, side: Side): boolean {
+/** Whether `child`, the input `held` places, is put in brackets: as the emitter does. */
+export function bracketed(child: Expr, held: { binds: number | undefined; side: Side }): boolean {
   const own = precedenceOf(child);
-  const outer =
-    precedenceOf(parent) ?? (writtenBefore(child, parent) ? PRECEDENCE.atom : undefined);
-  return own !== undefined && outer !== undefined && needsParens(own, outer, side);
+  return own !== undefined && held.binds !== undefined && needsParens(own, held.binds, held.side);
 }
 
 function inBrackets(parts: Part[]): Part[] {
   return [{ text: "(" }, ...parts, { text: ")" }];
 }
 
-/** The parts of an input of `parent`. */
-function operandParts(child: Expr, parent: Expr, side: Side, writing: Writing): Part[] {
+/** The parts of the input `held` places. */
+function operandParts(
+  child: Expr,
+  held: { binds: number | undefined; side: Side },
+  writing: Writing,
+): Part[] {
   const parts = exprParts(child, writing);
-  return bracketed(child, parent, side) ? inBrackets(parts) : parts;
+  return bracketed(child, held) ? inBrackets(parts) : parts;
 }
 
 /**
@@ -163,7 +164,7 @@ function operandParts(child: Expr, parent: Expr, side: Side, writing: Writing): 
  * field as its block writes it. Undefined when the placeholder holds nothing drawn (a body).
  */
 export type Held =
-  | { role: "expr"; expr: Expr | undefined; side: Side }
+  | { role: "expr"; expr: Expr | undefined; side: Side; binds: number | undefined }
   | { role: "exprs"; items: Expr[] }
   | { role: "id"; name: string }
   | { role: "target"; target: Target | undefined }
@@ -176,14 +177,16 @@ export function placeholderValue(node: Node, name: string): Held | undefined {
   if (!slot) {
     // A builtin's notation names its parameters (`{a}`, `{b}`).
     const found = paramArg(node, name);
-    return found && { role: "expr", expr: found.arg, side: found.index === 0 ? "left" : "right" };
+    const side = found?.index === 0 ? "left" : "right";
+    return found && { role: "expr", expr: found.arg, side, binds: bindsAt(node, name) };
   }
   const value = (node as unknown as Bag)[name];
   switch (slot.role) {
     case "expr": {
       const first = def.slots.find((s) => s.role === "expr");
       const side = slot === first ? "left" : "right";
-      return { role: "expr", expr: isExpr(value) ? value : undefined, side };
+      const expr = isExpr(value) ? value : undefined;
+      return { role: "expr", expr, side, binds: bindsAt(node, name) };
     }
     case "exprs":
       return { role: "exprs", items: Array.isArray(value) ? value.filter(isExpr) : [] };
@@ -210,7 +213,7 @@ export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
     const held = placeholderValue(expr, placeholderName);
     switch (held?.role) {
       case "expr":
-        return held.expr ? operandParts(held.expr, expr, held.side, writing) : [];
+        return held.expr ? operandParts(held.expr, held, writing) : [];
       case "exprs":
         return listParts(held.items, (item) => exprParts(item, writing));
       case "id":
@@ -286,7 +289,7 @@ function stmtSlotParts(node: Node, def: NodeDef, name: string): Part[] {
     const held = placeholderValue(node, name);
     switch (held?.role) {
       case "expr":
-        return held.expr ? exprParts(held.expr) : [];
+        return held.expr ? operandParts(held.expr, held, {}) : [];
       case "exprs":
         return listParts(held.items, (item) => exprParts(item));
       case "id":

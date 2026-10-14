@@ -63,6 +63,8 @@ export type Slot = {
   name: string;
   role: SlotRole;
   required?: boolean;
+  /** Its input binds as an atom: an operation there is bracketed (the list of an item). */
+  atom?: true;
 };
 
 /** The groups of the value list, in its order. */
@@ -119,6 +121,8 @@ export type EmitContext = {
   expr(expr: Expr): string;
   /** `expr` wrapped in parentheses when the operator table requires it under a parent of `precedence`. */
   operand(expr: Expr, precedence: number, side: Side): string;
+  /** The input in slot `name` of `node`, bracketed as an atom where the slot declares one. */
+  slot(node: Stmt | Expr, name: string): string;
   target(target: Target): string;
   block(stmts: Stmt[]): PyLine;
 };

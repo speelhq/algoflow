@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
 import { ast, withInputs } from "@/nodes/testing";
 import { isParseError, parse } from "@/python/parse";
+import { PRECEDENCE } from "@/python/precedence";
 import { run } from "@/runtime/run";
 import {
   assignmentText,
@@ -46,11 +47,26 @@ describe("templatePieces and placeholderValue", () => {
     const left = v("a");
     const right = num(2);
     const sum = bin("+", left, right);
-    expect(placeholderValue(sum, "left")).toEqual({ role: "expr", expr: left, side: "left" });
-    expect(placeholderValue(sum, "right")).toEqual({ role: "expr", expr: right, side: "right" });
+    // An operator's inputs bind at its own precedence.
+    expect(placeholderValue(sum, "left")).toEqual({
+      role: "expr",
+      expr: left,
+      side: "left",
+      binds: PRECEDENCE.additive,
+    });
+    expect(placeholderValue(sum, "right")).toMatchObject({ expr: right, side: "right" });
     expect(placeholderValue(sum, "op")).toEqual({ role: "text", text: "+" });
     const max = call("max", left, right);
-    expect(placeholderValue(max, "b")).toEqual({ role: "expr", expr: right, side: "right" });
+    expect(placeholderValue(max, "b")).toEqual({
+      role: "expr",
+      expr: right,
+      side: "right",
+      binds: undefined,
+    });
+    // An item's list binds as an atom, as its slot declares; its position binds nowhere.
+    const nth = ast.item(left, right);
+    expect(placeholderValue(nth, "list")).toMatchObject({ binds: PRECEDENCE.atom });
+    expect(placeholderValue(nth, "index")).toMatchObject({ binds: undefined });
     expect(placeholderValue(call("max", left), "b")).toBeUndefined();
     expect(placeholderValue(print(left), "args")).toEqual({ role: "exprs", items: [left] });
     expect(placeholderValue(for_("i", num(0), num(3), []), "var")).toEqual({
