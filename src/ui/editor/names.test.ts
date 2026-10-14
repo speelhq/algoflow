@@ -49,16 +49,17 @@ describe("name list", () => {
     expect(shown(nameSections(p, [], "len", []))).toEqual([["variables", ["max_len", "lens"]]]);
   });
 
-  it("in a target, an item of each list variable given, kept while its name matches", () => {
+  it("in a target, each form of a variable given, kept while its name matches", () => {
     const p = program([assign("nums", ast.list()), assign("i", num(0))]);
-    expect(shown(nameSections(p, [], "", ["nums"]))).toEqual([
+    const forms = [{ form: "index" as const, name: "nums" }];
+    expect(shown(nameSections(p, [], "", forms))).toEqual([
       ["variables", ["nums", "i"]],
       ["items", ["nums"]],
     ]);
-    expect(nameSections(p, [], "", ["nums"]).at(-1)?.rows).toEqual([
-      { kind: "item", name: "nums" },
+    expect(nameSections(p, [], "", forms).at(-1)?.rows).toEqual([
+      { kind: "form", form: "index", name: "nums" },
     ]);
-    expect(shown(nameSections(p, [], "i", ["nums"]))).toEqual([["variables", ["i"]]]);
+    expect(shown(nameSections(p, [], "i", forms))).toEqual([["variables", ["i"]]]);
   });
 
   it("a name field keeps only the characters a name may hold", () => {

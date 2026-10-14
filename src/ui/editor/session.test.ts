@@ -17,7 +17,7 @@ import {
   type Step,
 } from "./session";
 
-const { assign, print, num, bin, v, empty } = ast;
+const { assign, assignTo, print, num, bin, v, empty } = ast;
 
 const ctx: LineContext = {
   variables: ["x", "total"],
@@ -30,7 +30,7 @@ const ctx: LineContext = {
 const press = (session: Session, keys: string): Step => {
   let step: Step = { session, edits: [] };
   for (const key of keys) {
-    step = chain(step, (s) => valueKey(s, { key, shiftKey: false }, [], ctx));
+    step = chain(step, (s) => valueKey(s, { key, shiftKey: false }, [], ctx, ""));
   }
   return step;
 };
@@ -65,7 +65,7 @@ describe("editor session", () => {
     const field: Field = { slot: "args", role: "expr", index: 0 };
     const word = press(openSession(stmt, field, null), "x");
     expect(word.edits).toEqual([]);
-    const comma = valueKey(word.session, { key: ",", shiftKey: false }, [], ctx);
+    const comma = valueKey(word.session, { key: ",", shiftKey: false }, [], ctx, "");
     expect(comma.after).toEqual({ addItem: 1 });
     expect(comma.edits).toMatchObject([{ field, root: { kind: "var", name: "x" } }]);
     // Leaving the line from the session the key returned writes nothing more; from the session
@@ -78,9 +78,39 @@ describe("editor session", () => {
     const stmt = assign("total", num(1));
     const field: Field = { slot: "value", role: "expr" };
     const session = openSession(stmt, field, null);
-    expect(valueKey(session, { key: "Tab", shiftKey: false }, [], ctx).after).toEqual({ go: 1 });
-    expect(valueKey(session, { key: "Enter", shiftKey: false }, [], ctx).after).toBe("close");
-    expect(valueKey(session, { key: "Escape", shiftKey: false }, [], ctx).taken).toBe(false);
+    expect(valueKey(session, { key: "Tab", shiftKey: false }, [], ctx, "").after).toEqual({
+      go: 1,
+    });
+    expect(valueKey(session, { key: "Enter", shiftKey: false }, [], ctx, "").after).toBe("close");
+    expect(valueKey(session, { key: "Escape", shiftKey: false }, [], ctx, "").taken).toBe(false);
+  });
+
+  it("a key the line refuses after its value, beginning the words after the field, moves on", () => {
+    const stmt = assign("total", num(1));
+    const field: Field = { slot: "value", role: "expr" };
+    const typed = press(openSession(stmt, field, null), "x").session;
+    expect(valueKey(typed, { key: "]", shiftKey: false }, [], ctx, "]").after).toEqual({ go: 1 });
+    // Words that do not begin with the key, or a key the line takes, stay in the line.
+    expect(valueKey(typed, { key: "]", shiftKey: false }, [], ctx, ")").after).toBeUndefined();
+    expect(valueKey(typed, { key: "+", shiftKey: false }, [], ctx, "+").after).toBeUndefined();
+  });
+
+  it("Backspace at an empty part of a target, nothing typed, sets the target to its variable", () => {
+    const stmt = assignTo({ kind: "index", list: v("nums"), index: empty() }, num(0));
+    const part: Field = { slot: "target", role: "expr", part: "index" };
+    const back = { key: "Backspace", shiftKey: false };
+    expect(valueKey(openSession(stmt, part, null), back, [], ctx, "]").after).toBe("variable");
+    // A word or a bracket still typed is removed first.
+    for (const keys of ["jx", "("]) {
+      const typed = press(openSession(stmt, part, null), keys).session;
+      const step = valueKey(typed, back, [], ctx, "]");
+      expect(step.after).toBeUndefined();
+      expect(step.session.line).not.toEqual(typed.line);
+    }
+    // A value line that is no part of a target leaves the empty value as it is.
+    const value: Field = { slot: "value", role: "expr" };
+    const blank = assign("total", empty());
+    expect(valueKey(openSession(blank, value, null), back, [], ctx, "").after).toBeUndefined();
   });
 
   it("a value changed elsewhere reopens the line; focusing a field opens its value", () => {
@@ -93,6 +123,12 @@ describe("editor session", () => {
     expect(follow(session, undone).line?.root).toMatchObject({ kind: "num", value: 2 });
     const target: Field = { slot: "target", role: "target" };
     expect(focusField(session, stmt, target, null)).toMatchObject({ focus: target, line: null });
+    // A field the statement no longer has, a target's part after an undo, leaves the keyboard.
+    const part: Field = { slot: "target", role: "expr", part: "index" };
+    const item = assignTo({ kind: "index", list: v("nums"), index: num(0) }, num(1));
+    const plain = assign("nums", num(1));
+    plain.id = item.id;
+    expect(follow(openSession(item, part, null), plain)).toMatchObject({ focus: null, line: null });
   });
 
   it("↓ and ↑ wrap round the list, and `chain` keeps both steps' values in order", () => {

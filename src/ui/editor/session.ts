@@ -3,8 +3,10 @@
 // switched. Every change is a pure transition from one session to the next, returning the values
 // it writes, so a handler that makes several changes chains them on what each one returned.
 import type { Expr, NodeId, Stmt } from "@/lang/types";
+import { isEmptyExpr } from "@/lang/walk";
 import { sameField, valueOf, type Field } from "./fields";
 import {
+  atEnd,
   backspace,
   choose,
   clickAt,
@@ -62,7 +64,8 @@ export function follow(session: Session, stmt: Stmt): Session {
   if (!line) return session;
   const root = focus ? valueOf(stmt, focus) : undefined;
   if (root && JSON.stringify(root) === JSON.stringify(line.root)) return session;
-  return { ...session, line: root ? openLine(root) : null };
+  // A field the statement no longer has (a target's part, after an undo) leaves the keyboard.
+  return { ...session, line: root ? openLine(root) : null, focus: root ? focus : null };
 }
 
 /**
@@ -151,8 +154,11 @@ export function chooseRow(session: Session, row: Row, ctx: LineContext): Step {
   return commit(session, choose(line, row, ctx).line);
 }
 
-/** What a key in a value line leaves to the editor: closing it, another field, or a new item. */
-export type After = "close" | { go: 1 | -1 } | { addItem: number };
+/**
+ * What a key in a value line leaves to the editor: closing it, another field, a new item, or
+ * the target set back to its variable.
+ */
+export type After = "close" | { go: 1 | -1 } | { addItem: number } | "variable";
 
 /** A key pressed in the focused value line; `taken` is false when the line leaves it alone. */
 export type KeyStep = Step & { taken: boolean; after?: After };
@@ -160,12 +166,16 @@ export type KeyStep = Step & { taken: boolean; after?: After };
 const taken = (step: Step, after?: After): KeyStep =>
   after === undefined ? { ...step, taken: true } : { ...step, taken: true, after };
 
-/** A key the focused value line takes; `rows` is the value list shown under it. */
+/**
+ * A key the focused value line takes; `rows` is the value list shown under it, and `next` the
+ * words the notation writes after the field (`]` after an item's position).
+ */
 export function valueKey(
   session: Session,
   key: { key: string; shiftKey: boolean },
   rows: readonly Row[],
   ctx: LineContext,
+  next: string,
 ): KeyStep {
   const { line, focus } = session;
   const left: KeyStep = { ...still(session), taken: false };
@@ -194,13 +204,25 @@ export function valueKey(
       if (line.word !== "") return taken(commit(session, settle(line, ctx)));
       return taken(still(session), "close");
     }
-    case "Backspace":
-      return taken(commit(session, backspace(line).line));
+    case "Backspace": {
+      const removed = backspace(line);
+      // At an empty part of a target, with nothing typed, it sets the target back to its variable.
+      if (!removed.taken && focus.part !== undefined && isEmptyExpr(line.root)) {
+        return taken(still(session), "variable");
+      }
+      return taken(commit(session, removed.line));
+    }
     case "Delete":
       return taken(line.selected ? commit(session, backspace(line).line) : still(session));
     default: {
       if (key.key.length !== 1) return left;
       const typed = type(line, key.key, ctx);
+      // A key the line refuses after the whole value, its word chosen, beginning the words that
+      // follow the field, moves on to the next field, as the notation goes on there.
+      if (!typed.taken && next !== "" && next.startsWith(key.key)) {
+        const settled = settle(line, ctx);
+        if (atEnd(settled)) return taken(commit(session, settled), { go: 1 });
+      }
       // `,` in an item of a list adds the next item.
       const { index } = focus;
       const item = typed.move === "item" && index !== undefined;
