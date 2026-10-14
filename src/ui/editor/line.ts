@@ -13,8 +13,15 @@ import { refusedDefinitions } from "@/lang/validate";
 import { allExprs, isEmptyExpr, variableOf } from "@/lang/walk";
 import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import { isParseError, NO_DEFINITIONS, parse, type ParseScope } from "@/python/parse";
-import { levelAssociativity } from "@/python/precedence";
-import { notationOf, exprText, isCall, placeholderValue, templatePieces } from "@/ui/chart/text";
+import { levelAssociativity, PRECEDENCE } from "@/python/precedence";
+import {
+  closedBy,
+  notationOf,
+  exprText,
+  isCall,
+  placeholderValue,
+  templatePieces,
+} from "@/ui/chart/text";
 import { allEntries, makeEntry, takesValue, type Entry } from "./entries";
 
 type Bag = Record<string, unknown>;
@@ -123,6 +130,24 @@ function replace(line: Line, id: NodeId, by: Expr): Line {
 }
 
 const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
+
+/** The slot of an operation's list of values, when it has one. */
+const valuesSlot = (expr: Expr) => getNode(keyOf(expr)).slots.find((s) => s.role === "exprs");
+
+/** An operation that holds a list of values and is no call (`[a, b]`): `,` adds a value to it. */
+function isSequence(expr: Expr): boolean {
+  return valuesSlot(expr) !== undefined && !isCall(expr);
+}
+
+/** The values of a sequence, and the sequence holding `items` in their place. */
+function items(expr: Expr): { held: Expr[]; with: (items: Expr[]) => Expr } {
+  const name = valuesSlot(expr)?.name ?? "";
+  const held = (expr as unknown as Bag)[name];
+  return {
+    held: Array.isArray(held) ? held : [],
+    with: (next) => ({ ...expr, [name]: next }),
+  };
+}
 
 /** The caret stops of an expression in reading order. */
 export function stops(expr: Expr): Caret[] {
@@ -299,12 +324,15 @@ function withFirst(made: Expr, value: Expr): Expr {
   return mapInputs(made, (input, index) => (index === 0 ? value : input));
 }
 
-/** An entry chosen after a value takes it as its first input. */
-function takeValue(line: Line, entry: Entry): Outcome {
+/**
+ * An entry chosen after a value takes it as its first input: from the list, or `typed` by its
+ * key, which Python reads as its operator there (`[` binds as the item of the value before it).
+ */
+function takeValue(line: Line, entry: Entry, typed: boolean): Outcome {
   const last = lastValue(line);
   if (!last) return refused(line);
   const made = makeEntry(entry);
-  const level = precedenceOf(made);
+  const level = precedenceOf(made) ?? (typed ? PRECEDENCE.atom : undefined);
   // An operator binds by its precedence; any other entry takes what the list was about.
   const target = line.selected
     ? last
@@ -336,7 +364,7 @@ function typedText(made: Expr): boolean {
 export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
   let base: Line = { ...line, word: "", refused: undefined, pending: undefined };
   if (row.kind === "entry" && takesValue(row.entry) && !atInput(base)) {
-    return takeValue(base, row.entry);
+    return takeValue(base, row.entry, false);
   }
   if (base.selected) base = cleared(base);
   if (!("at" in base.caret)) return refused(line);
@@ -447,7 +475,9 @@ export const BRACKETS_KEY = "(";
 /** The keys that end a word. */
 const ENDS_WORD = /^[-+*/%<>=!(),[\]]$/;
 
-const entryByKeys = (keys: string) => allEntries().find((entry) => entry.menu.keys === keys);
+/** The entry `keys` insert: after a value one that takes it, else one that fills an input. */
+const entryByKeys = (keys: string, afterValue: boolean) =>
+  allEntries().find((entry) => entry.menu.keys === keys && takesValue(entry) === afterValue);
 const startsKeys = (key: string) =>
   allEntries().some(
     (entry) => (entry.menu.keys ?? "").length > key.length && entry.menu.keys?.startsWith(key),
@@ -496,10 +526,10 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
   }
   if (key === " ") return done(current);
   if (current.pending) {
-    const entry = entryByKeys(current.pending.key + key);
+    const entry = entryByKeys(current.pending.key + key, true);
     const before = current.pending.before ?? current;
     current = { ...current, pending: undefined };
-    if (entry) return takeValue({ ...before, pending: undefined }, entry);
+    if (entry) return takeValue({ ...before, pending: undefined }, entry, true);
   }
   if (/[0-9.]/.test(key)) return typeDigit(current, key);
   const value = !atInput(current);
@@ -514,9 +544,9 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
       const group = current.open.at(-1);
       const held = group === undefined ? undefined : find(current.root, group);
       // A call begun inside the innermost brackets closes before them.
-      const around = callAround(current);
-      if (around && (group === undefined || (held && find(held, around.call.id)))) {
-        return done({ ...current, caret: { after: around.call.id } });
+      const around = enclosing(current, isCall);
+      if (around && (group === undefined || (held && find(held, around.parent.id)))) {
+        return done({ ...current, caret: { after: around.parent.id } });
       }
       if (group === undefined) return refused(line);
       return done({
@@ -526,13 +556,35 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
       });
     }
     case ",": {
-      // In a call, the call's next input; elsewhere, the next value of the slot.
-      const around = current.selected ? undefined : callAround(current);
+      // In a call, the call's next input; in a list, a new item; elsewhere, the slot's next value.
+      const around = current.selected
+        ? undefined
+        : enclosing(current, (expr) => isCall(expr) || isSequence(expr));
       if (!around) return { line: current, taken: true, move: "item" };
-      const next = inputs(around.call)[around.index + 1];
+      if (isSequence(around.parent)) {
+        const { held, with: holding } = items(around.parent);
+        const fresh = emptyExpr();
+        const at = held.findIndex((item) => item.id === around.input.id) + 1;
+        const next = replace(current, around.parent.id, holding(held.toSpliced(at, 0, fresh)));
+        return done(closeBehind({ ...next, caret: { at: fresh.id } }));
+      }
+      const next = inputs(around.parent)[around.index + 1];
       if (!next) return refused(line);
       const empty = [...allExprs(next)].find(isEmptyExpr);
       return done(closeBehind({ ...current, caret: empty ? { at: empty.id } : endOf(next) }));
+    }
+    case "]": {
+      // Leaves the innermost list or item, a list's item still to fill at its end removed first.
+      const around = current.selected
+        ? undefined
+        : enclosing(current, (expr) => closedBy(expr, "]"));
+      if (!around) return refused(line);
+      const { held, with: holding } = items(around.parent);
+      const last = held.at(-1);
+      const trailing = isSequence(around.parent) && last !== undefined && isEmptyExpr(last);
+      const kept = trailing ? holding(held.slice(0, -1)) : around.parent;
+      const next = replace(current, around.parent.id, kept);
+      return done(closeBehind({ ...next, caret: { after: kept.id } }));
     }
     case "-":
       if (!value || current.selected) {
@@ -544,9 +596,17 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
     default:
       break;
   }
-  const entry = entryByKeys(key);
-  if (entry && value && takesValue(entry)) {
-    const placed = takeValue(current, entry);
+  // A value's key where a value is expected, or in place of the selected one: a list opens with
+  // an item to fill (`[`).
+  const filling = entryByKeys(key, false);
+  if (filling && (!value || current.selected)) {
+    const base = current.selected ? cleared(current) : current;
+    const made = makeEntry(filling);
+    return fill(base, isSequence(made) ? items(made).with([emptyExpr()]) : made);
+  }
+  const entry = entryByKeys(key, true);
+  if (entry && value) {
+    const placed = takeValue(current, entry, true);
     if (placed.taken && startsKeys(key)) placed.line.pending = { key, before: current };
     return placed;
   }
@@ -557,12 +617,20 @@ export function type(line: Line, key: string, ctx: LineContext): Outcome {
 /** Whether a row makes a call: a function of the program, or an entry whose block is one. */
 const makesCall = (row: Row) => row.kind === "function" || (row.kind === "entry" && row.entry.call);
 
-/** The innermost call with an input that holds the caret, and that input's position. */
-function callAround(line: Line): { call: Expr; index: number } | undefined {
+/** The innermost operation `is` accepts with an input that holds the caret, and that input. */
+function enclosing(
+  line: Line,
+  is: (expr: Expr) => boolean,
+): { parent: Expr; input: Expr; index: number } | undefined {
   const { caret, root } = line;
-  let up = parentOf(root, "at" in caret ? caret.at : caret.after);
-  while (up && !isCall(up.parent)) up = parentOf(root, up.parent.id);
-  return up && { call: up.parent, index: up.index };
+  let id = "at" in caret ? caret.at : caret.after;
+  let up = parentOf(root, id);
+  while (up && !is(up.parent)) {
+    id = up.parent.id;
+    up = parentOf(root, id);
+  }
+  const input = up && inputs(up.parent)[up.index];
+  return up && input && { parent: up.parent, input, index: up.index };
 }
 
 // ---------------------------------------------------------------- removing and moving
@@ -583,8 +651,8 @@ export function backspace(line: Line): Outcome {
     const own = inputs(last);
     const [first] = own;
     if (first) {
-      // An operator ends in an input: what is before the caret is that input's end.
-      if (precedenceOf(last) !== undefined) {
+      // An operator ends in an input, and a list in its last item: what is before the caret ends it.
+      if (precedenceOf(last) !== undefined || isSequence(last)) {
         const end = own.at(-1);
         return end ? backspace({ ...current, caret: endOf(end) }) : refused(line);
       }
@@ -600,6 +668,14 @@ export function backspace(line: Line): Outcome {
     return done({ ...current, open: current.open.slice(0, -1) });
   const up = parentOf(root, caret.at);
   if (!up) return refused(line);
+  const item = isSequence(up.parent) ? items(up.parent) : undefined;
+  const at = item ? item.held.findIndex((each) => each.id === caret.at) : -1;
+  const before = item?.held[at - 1];
+  if (item && before) {
+    // An item of a list, other than its first, goes alone; the caret ends the one before it.
+    const next = replace(current, up.parent.id, item.with(item.held.toSpliced(at, 1)));
+    return done({ ...next, caret: endOf(before) });
+  }
   const own = inputs(up.parent);
   const [first] = own;
   if (!first) return refused(line);
