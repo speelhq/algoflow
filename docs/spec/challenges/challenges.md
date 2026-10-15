@@ -44,6 +44,10 @@ interpreter against `expect` (Judging). What the hints name, in their order
 names: an input has no NodeId to attach a diagnostic to, and no edit
 changes it.
 
+A `solution` is written in the version `migrate()` returns (`language.md`,
+Storage): the application bundles a challenge file as it is, with no
+`migrate()`, so an older version would reach the chart unmigrated.
+
 Every challenge has at least one test with `edge: true`, a boundary case
 such as an empty list, zero, or a single item. It is a flag, not a name
 beginning with `edge:`: a test has no shown name (cases are shown by their
