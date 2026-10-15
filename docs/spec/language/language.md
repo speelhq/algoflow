@@ -157,7 +157,8 @@ export type Stmt =
 A target is an expression that names where a value is stored: a `var`, an
 `index`, a `key`, or a `field`, each a block that declares `store`
 (`nodes.md`, The block definition). A `target` slot holds one, or `empty`
-while unfilled (Expressions); any other expression there is `E_NOT_TARGET`.
+while unfilled (Expressions); `migrate()` refuses any other expression
+there, which no edit makes (`editor.md`, Targets).
 A target type of its own was rejected: Python reads a target as an
 expression in store position (`nums[j] = …`), and a second type repeats in
 the emitter, the chart, and every traversal each rule the expression already
@@ -345,7 +346,6 @@ run after every edit and before every run.
 | `E_ARITY`          | wrong argument count                                        | `name`, `expected`, `got` |
 | `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`                    |
 | `E_EMPTY_SLOT`     | required slot empty (prevents execution)                    | `slot`                    |
-| `E_NOT_TARGET`     | a `target` slot holding no target (Statements)              | `slot`                    |
 | `E_DEFAULT`        | a field default that Semantics, Objects does not allow      | `field`                   |
 | `E_DUPLICATE_ID`   | two nodes share an id (Program)                             |                           |
 
