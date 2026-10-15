@@ -28,6 +28,23 @@ describe("inBatches", () => {
     expect(between).toHaveBeenCalledTimes(2);
   });
 
+  it("tells the step whether its call is the last of a batch", async () => {
+    const lasts: number[] = [];
+    let calls = 0;
+    const done = inBatches(
+      (last) => {
+        calls += 1;
+        if (last) lasts.push(calls);
+        return calls === BATCH + 3;
+      },
+      () => {},
+      () => false,
+    );
+    await vi.advanceTimersByTimeAsync(0);
+    expect(await done).toBe(true);
+    expect(lasts).toEqual([BATCH]);
+  });
+
   it("gives up when the work is stale once it finished, also before any wait", async () => {
     let stale = false;
     const done = inBatches(

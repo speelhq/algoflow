@@ -2,7 +2,7 @@
 // Shared by the stores (which run in batches) and scripts/check.ts (which drains a run at once).
 import { toData } from "@/lang/data";
 import type { Data, Id } from "@/lang/types";
-import type { Done, Runner, State } from "./types";
+import type { Done, Event, Runner, State } from "./types";
 
 export type Outcome = {
   done: Done;
@@ -11,11 +11,16 @@ export type Outcome = {
   draws: number[];
 };
 
+/** Whether a call of `next()` ended the run. */
+export function isDone(next: Event | Done): next is Done {
+  return next.type === "done" || next.type === "error";
+}
+
 /** Calls `next()` until the run ends, at the latest at the step limit. */
 export function finish(runner: Runner): Done {
   for (;;) {
     const next = runner.next();
-    if (next.type === "done" || next.type === "error") return next;
+    if (isDone(next)) return next;
   }
 }
 

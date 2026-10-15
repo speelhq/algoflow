@@ -61,7 +61,8 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   collapse, and playback speed under `algoflow:layout`); `mode.ts` derives
   the page's mode (build, solution, running, ended) from `run` and `editor`,
   and every check of what the page allows reads it; `batches.ts` is the one
-  loop that works through a run in batches; `open.ts` is the one way a
+  loop that works through a run in batches; `steps.ts` reads a run one
+  visible step at a time, an exchange of two places as one; `open.ts` is the one way a
   page's program is opened; `storage.ts` holds every read and write
   of `localStorage`.
 - `src/ui/primitives` — shadcn components generated on Base UI, regenerated

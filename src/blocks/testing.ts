@@ -12,6 +12,7 @@ import type {
   Stmt,
   Value,
 } from "@/lang/types";
+import { isDone } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Done, Event, State } from "@/runtime/types";
 import { getBlock, keyOf } from "./registry";
@@ -136,7 +137,7 @@ export function runAll(prog: Program, inputs: Record<string, Data> = {}, seed = 
   const events: Event[] = [];
   for (;;) {
     const next = runner.next();
-    if ("type" in next && (next.type === "done" || next.type === "error")) {
+    if (isDone(next)) {
       return {
         events,
         done: next,

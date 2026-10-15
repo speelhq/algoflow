@@ -8,7 +8,7 @@ import { caseInputs, caseOf } from "@/challenges/cases";
 import { judge, type TestResult } from "@/challenges/judge";
 import { firstDifference, watchStep, type WatchStep } from "@/challenges/rows";
 import { seedOf, type Test } from "@/challenges/types";
-import type { Data, HeapEntry, Id, NodeId, Program } from "@/lang/types";
+import type { Data, Id, NodeId, Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
 import { bodyStmts, diamondConditions, nodesById, ownerStmts } from "@/lang/walk";
 import { clamp } from "@/lib/utils";
@@ -19,7 +19,7 @@ import type { Done, Runner, State } from "@/runtime/types";
 import { inBatches } from "./batches";
 import { useLayout } from "./layout";
 import { useProgram } from "./program";
-import type { StepEvent } from "./steps";
+import { copyState, stepsOf, type StepEvent, type Steps } from "./steps";
 
 export type Status = "idle" | "paused" | "playing" | "done" | "error";
 
@@ -88,6 +88,8 @@ type Findings = {
 type Projection = {
   step: number;
   lastEvent: StepEvent | null;
+  /** The state of the step when the reader read past its end (`Step`), else the runner's. */
+  held: State | undefined;
   verdicts: Record<NodeId, boolean>;
   taken: Record<NodeId, true>;
   /** `loop` events per loop since its last `enter`. */
@@ -95,6 +97,8 @@ type Projection = {
 };
 
 let runner: Runner | null = null;
+/** The shown runner read a visible step at a time. */
+let steps: Steps | null = null;
 let origin: Origin | null = null;
 let findings: Findings | null = null;
 let owners = new Map<NodeId, NodeId>();
@@ -119,6 +123,7 @@ function freshProjection(): Projection {
   return {
     step: 0,
     lastEvent: null,
+    held: undefined,
     verdicts: {},
     taken: {},
     passes: new Map(),
@@ -141,26 +146,11 @@ function cancel(): void {
   clearTimer();
 }
 
-/** A published state is a copy; values are immutable records, so one level suffices. */
-function copyEntry(entry: HeapEntry): HeapEntry {
-  switch (entry.kind) {
-    case "list":
-      return { kind: "list", items: [...entry.items] };
-    case "dict":
-      return { kind: "dict", entries: new Map(entry.entries) };
-  }
-}
-
 function snapshot(): State | null {
-  if (!runner) return null;
-  const { frames, heap } = runner.state();
-  return {
-    frames: frames.map((frame) => ({ ...frame, vars: new Map(frame.vars) })),
-    heap: new Map([...heap].map(([id, entry]) => [id, copyEntry(entry)])),
-  };
+  return runner ? copyState(runner.state()) : null;
 }
 
-/** Feeds one event into the projection (no store update). */
+/** Feeds one visible step's event into the projection (no store update). */
 function apply(event: StepEvent): void {
   const p = projection;
   p.step += 1;
@@ -202,19 +192,21 @@ function atEnd(): boolean {
 }
 
 /**
- * One visible step; call only before the end. Every event is visible until module
- * frames exist: this is where the driver will pass over the steps inside one.
+ * One visible step (`steps.ts`); call only before the end. `shown`: the step is published, so a
+ * write read past keeps the state from before. Module frames will be passed over here too.
  */
-function advance(): void {
-  if (!runner || !findings) return;
-  const next = runner.next();
-  if (next.type === "done" || next.type === "error") {
+function advance(shown: boolean): void {
+  if (!runner || !steps || !findings) return;
+  const next = steps.next(shown);
+  if (!("event" in next)) {
     // The failing `next()` is itself step `total`; it has no event.
     projection.step = findings.total;
     projection.lastEvent = null;
+    projection.held = undefined;
     return;
   }
-  apply(next);
+  apply(next.event);
+  projection.held = next.state;
   // The last event of a finished run: one more `next()` lets the frames unwind.
   if (projection.step === findings.total) runner.next();
 }
@@ -245,19 +237,22 @@ function originFor(caseIndex: number): Origin | null {
 
 function reset(from: Origin): void {
   runner = startRunner(from.program, from.inputs, from.seed);
+  steps = stepsOf(runner);
   projection = freshProjection();
 }
 
 /** The whole run on a throwaway runner, in batches; undefined when another action took over. */
 async function prerun(from: Origin, mine: number): Promise<Findings | undefined> {
   const probe = startRunner(from.program, from.inputs, from.seed);
+  const visible = stepsOf(probe);
   const prints: number[] = [];
-  let events = 0;
+  let count = 0;
   let found: Findings | undefined;
   const step = (): boolean => {
-    const next = probe.next();
-    if (next.type === "done" || next.type === "error") {
-      const total = next.type === "error" ? events + 1 : events;
+    // The pre-run shows no step.
+    const next = visible.next(false);
+    if (!("event" in next)) {
+      const total = next.type === "error" ? count + 1 : count;
       const verdict = from.test ? judge(from.test, outcomeOf(probe, next)) : null;
       found = {
         total,
@@ -268,8 +263,8 @@ async function prerun(from: Origin, mine: number): Promise<Findings | undefined>
       };
       return true;
     }
-    events += 1;
-    if (next.type === "print") prints.push(events);
+    count += 1;
+    if (next.event.type === "print") prints.push(count);
     return false;
   };
   const finished = await inBatches(
@@ -291,7 +286,7 @@ export const useRun = create<RunState>()((set, get) => {
     if (ended) clearTimer();
     const outcome = findings?.outcome ?? null;
     const focus = ended && outcome?.type === "error" ? outcome.error.nodeId : p.lastEvent?.nodeId;
-    const state = snapshot();
+    const state = p.held ?? snapshot();
     set({
       status: ended && outcome ? outcome.type : status,
       busy,
@@ -322,9 +317,10 @@ export const useRun = create<RunState>()((set, get) => {
   const batched = (until: number, breaks: boolean, status: Status): Promise<boolean> => {
     const mine = generation;
     return inBatches(
-      () => {
+      (last) => {
         if (projection.step >= until) return true;
-        advance();
+        // Published: the step reached, and the last of a batch (`between`).
+        advance(last || projection.step + 1 === until);
         return breaks && !atEnd() && atBreakpoint();
       },
       () => publish(status, true),
@@ -337,7 +333,7 @@ export const useRun = create<RunState>()((set, get) => {
       clearTimer();
       return;
     }
-    advance();
+    advance(true);
     if (!atEnd() && atBreakpoint()) {
       clearTimer();
       publish("paused", false);
@@ -391,7 +387,7 @@ export const useRun = create<RunState>()((set, get) => {
     stepOnce() {
       if (!running() || get().busy) return;
       cancel();
-      advance();
+      advance(true);
       publish("paused", false);
     },
 
@@ -434,6 +430,7 @@ export const useRun = create<RunState>()((set, get) => {
     stop() {
       cancel();
       runner = null;
+      steps = null;
       origin = null;
       findings = null;
       watching = false;

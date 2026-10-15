@@ -348,6 +348,12 @@ test("a swap of two items and one of two variables are typed as the chart writes
   await expect(variables).toContainText("nums ← [3, 2, 1]");
   await expect(variables).toContainText("x ← 2");
   await expect(variables).toContainText("y ← 1");
+  // The last step is the end of the run; two before it, the exchange of the items.
+  const back = page.getByRole("button", { name: "|◀ Back" });
+  await back.click();
+  await expect(page.getByTestId("narration")).toHaveText("Running swap(x, y)");
+  await back.click();
+  await expect(page.getByTestId("narration")).toHaveText("Swapped nums[0] and nums[2]");
 });
 
 test("the editor stays where it is while its list changes, within the canvas", async ({ page }) => {

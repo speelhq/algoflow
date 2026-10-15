@@ -9,19 +9,20 @@ function sleep(): Promise<void> {
 }
 
 /**
- * Calls `step` until it returns true, `BATCH` calls at a time; after each batch that did not
- * finish, calls `between` and waits for the next turn of the event loop. Resolves true when
- * `step` finished, false when `stale()` holds after a wait or once it finished (another action
- * took over, also one made right after the call, before the work could resume).
+ * Calls `step` until it returns true, `BATCH` calls at a time, telling it whether its call is the
+ * last of a batch; after each batch that did not finish, calls `between` and waits for the next
+ * turn of the event loop. Resolves true when `step` finished, false when `stale()` holds after a
+ * wait or once it finished (another action took over, also one made right after the call, before
+ * the work could resume).
  */
 export async function inBatches(
-  step: () => boolean,
+  step: (last: boolean) => boolean,
   between: () => void,
   stale: () => boolean,
 ): Promise<boolean> {
   for (;;) {
     for (let i = 0; i < BATCH; i += 1) {
-      if (step()) {
+      if (step(i === BATCH - 1)) {
         await Promise.resolve();
         return !stale();
       }
