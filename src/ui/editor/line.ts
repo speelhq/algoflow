@@ -333,13 +333,14 @@ function cleared(line: Line): Line {
 const done = (line: Line): Outcome => ({ line, taken: true });
 const refused = (line: Line): Outcome => ({ line, taken: false });
 
-/**
- * `outcome` where the line's slot keeps its value: any value, or in a target slot a target or an
- * input still to fill; else the line before it, refused with the reason.
- */
+/** Whether the line's slot keeps `root`: any value, or in a target slot a target or an input to fill. */
+function keeps(root: Expr, ctx: LineContext): boolean {
+  return ctx.target === null || isEmptyExpr(root) || isTarget(root);
+}
+
+/** `outcome` where the line's slot keeps its value; else the line before it, refused with the reason. */
 function inSlot(line: Line, outcome: Outcome, ctx: LineContext): Outcome {
-  const { root } = outcome.line;
-  if (!outcome.taken || ctx.target === null || isEmptyExpr(root) || isTarget(root)) return outcome;
+  if (!outcome.taken || keeps(outcome.line.root, ctx)) return outcome;
   return refused({ ...line, refused: t("editor.notTarget") });
 }
 
@@ -418,7 +419,9 @@ export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
 function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
   let base: Line = { ...line, word: "", refused: undefined, pending: undefined };
   if (row.kind === "entry" && takesValue(row.entry) && !atInput(base)) {
-    return takeValue(base, row.entry);
+    // A refused choice leaves the line as it was, its word still to correct, with the reason.
+    const placed = takeValue(base, row.entry);
+    return placed.taken ? placed : refused({ ...line, refused: placed.line.refused });
   }
   if (base.selected) base = cleared(base);
   if (!("at" in base.caret)) return refused(line);
@@ -479,9 +482,15 @@ export function wholeTargetRows(line: Line, ctx: LineContext): Row[] | undefined
   return ctx.target && fillsWhole(line) ? targetNames(line.word, ctx.target) : undefined;
 }
 
-/** The rows of `rows` the line's slot keeps when chosen: in a target slot, those leaving a target. */
+/**
+ * The rows of `rows` the line's slot keeps: a row is left out only when choosing it leaves a value
+ * the slot refuses; one refused for another reason stays, refused when chosen.
+ */
 export function keptRows(line: Line, rows: readonly Row[], ctx: LineContext): Row[] {
-  return ctx.target === null ? [...rows] : rows.filter((row) => choose(line, row, ctx).taken);
+  return rows.filter((row) => {
+    const chosen = chooseRow(line, row, ctx);
+    return !chosen.taken || keeps(chosen.line.root, ctx);
+  });
 }
 
 /**
@@ -554,9 +563,11 @@ export const BRACKETS_KEY = "(";
 /** The keys that end a word. */
 const ENDS_WORD = /^[-+*/%<>=!(),[\]]$/;
 
-/** The entry `keys` insert: after a value one that takes it, else one that fills an input. */
-const entryByKeys = (keys: string, afterValue: boolean) =>
-  allEntries().find((entry) => entry.menu.keys === keys && takesValue(entry) === afterValue);
+/** The entries `keys` name, the one that fills an input before the one that takes a value. */
+const entriesByKeys = (keys: string) =>
+  allEntries()
+    .filter((entry) => entry.menu.keys === keys)
+    .toSorted((a, b) => Number(takesValue(a)) - Number(takesValue(b)));
 const startsKeys = (key: string) =>
   allEntries().some(
     (entry) => (entry.menu.keys ?? "").length > key.length && entry.menu.keys?.startsWith(key),
@@ -585,16 +596,9 @@ export function lineTakes(
   return (!event.ctrlKey && !event.metaKey) || event.getModifierState("AltGraph");
 }
 
-/**
- * One key typed in the line, as the line's slot keeps it. A key two entries name inserts the one
- * the slot keeps: on a target's selected variable, `[` makes its item rather than a list.
- */
+/** One key typed in the line, as the line's slot keeps it. */
 export function type(line: Line, key: string, ctx: LineContext): Outcome {
-  const typed = inSlot(line, typeKey(line, key, ctx), ctx);
-  if (typed.taken || !line.selected || ctx.target === null) return typed;
-  const after: Line = { ...line, selected: false, caret: endOf(line.root) };
-  const taken = inSlot(after, typeKey(after, key, ctx), ctx);
-  return taken.taken ? taken : typed;
+  return inSlot(line, typeKey(line, key, ctx), ctx);
 }
 
 function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
@@ -616,7 +620,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
   }
   if (key === " ") return done(current);
   if (current.pending) {
-    const entry = entryByKeys(current.pending.key + key, true);
+    const entry = entriesByKeys(current.pending.key + key).find(takesValue);
     const before = current.pending.before ?? current;
     current = { ...current, pending: undefined };
     if (entry) return takeValue({ ...before, pending: undefined }, entry);
@@ -686,22 +690,31 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
     default:
       break;
   }
-  // A value's key where a value is expected, or in place of the selected one: a list opens with
-  // an item to fill (`[`).
-  const filling = entryByKeys(key, false);
-  if (filling && (!value || current.selected)) {
-    const base = current.selected ? cleared(current) : current;
-    const made = makeEntry(filling);
-    return fill(base, isSequence(made) ? items(made).with([emptyExpr()]) : made);
-  }
-  const entry = entryByKeys(key, true);
-  if (entry && value) {
-    const placed = takeValue(current, entry);
-    if (placed.taken && startsKeys(key)) placed.line.pending = { key, before: current };
-    return placed;
-  }
+  // Of the entries the key names that apply at the caret, the first the slot keeps; a selected
+  // value is both an input to fill and a value (`editor.md`, Backspace and keys).
+  const applying = entriesByKeys(key)
+    .filter((entry) => (takesValue(entry) ? value : !value || current.selected))
+    .map((entry) => keyed(current, entry, key));
+  const inserted =
+    applying.find((outcome) => outcome.taken && keeps(outcome.line.root, ctx)) ?? applying[0];
+  if (inserted) return inserted;
   if (value && startsKeys(key)) return done({ ...current, pending: { key } });
   return refused(line);
+}
+
+/**
+ * The entry a key names, inserted at the caret: filling the input or the selected value's place (a
+ * list opens with an item to fill, `[`), or taking the value before it.
+ */
+function keyed(line: Line, entry: Entry, key: string): Outcome {
+  if (!takesValue(entry)) {
+    const base = line.selected ? cleared(line) : line;
+    const made = makeEntry(entry);
+    return fill(base, isSequence(made) ? items(made).with([emptyExpr()]) : made);
+  }
+  const placed = takeValue(line, entry);
+  if (placed.taken && startsKeys(key)) placed.line.pending = { key, before: line };
+  return placed;
 }
 
 /** Whether a row makes a call: a function of the program, or an entry whose block is one. */
