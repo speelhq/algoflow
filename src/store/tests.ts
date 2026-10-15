@@ -6,7 +6,7 @@ import { judge, type TestResult } from "@/challenges/judge";
 import { seedOf, type Test } from "@/challenges/types";
 import type { Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
-import { outcomeOf, type Outcome } from "@/runtime/outcome";
+import { isDone, outcomeOf, type Outcome } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Done } from "@/runtime/types";
 import { inBatches } from "./batches";
@@ -36,7 +36,7 @@ async function evaluate(program: Program, test: Test, mine: number): Promise<Out
   let done: Done | undefined;
   const step = (): boolean => {
     const next = runner.next();
-    if (next.type !== "done" && next.type !== "error") return false;
+    if (!isDone(next)) return false;
     done = next;
     return true;
   };

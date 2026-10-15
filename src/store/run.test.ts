@@ -247,6 +247,47 @@ describe("run store", () => {
     });
   });
 
+  it("an exchange is one visible step: the pre-run counts it once and Step shows it", async () => {
+    useProgram.setState({
+      program: program([assign("x", num(1)), assign("y", num(2)), ast.swap(v("x"), v("y"))]),
+    });
+    await paused();
+    expect(run().total).toBe(6);
+    await run().seek(5);
+    run().stepOnce();
+    expect(run()).toMatchObject({
+      status: "done",
+      step: 6,
+      lastEvent: { type: "swap", a: { var: "x" }, b: { var: "y" } },
+    });
+    expect([...(run().state?.frames[0]?.vars ?? [])]).toEqual([
+      ["x", { t: "int", v: 2 }],
+      ["y", { t: "int", v: 1 }],
+    ]);
+  });
+
+  it("a write before a call is shown before the call's frame, by Seek and Step alike", async () => {
+    const fn = { id: tid(), name: "f", params: [], body: [ret(num(1))] };
+    const exchange = ast.swap(ast.item(v("nums"), num(0)), ast.item(v("nums"), call("f")));
+    const nums = assign("nums", ast.list(num(1), num(2)));
+    useProgram.setState({ program: program([nums, exchange], { functions: [fn] }) });
+    await paused();
+    // nums ←, then the swap: f's call, enter, return, two reads; the write; f again; the write.
+    expect(run().total).toBe(13);
+    await run().seek(9);
+    const seeked = position(run());
+    expect(seeked).toMatchObject({
+      frame: 0,
+      lastEvent: { type: "write", ref: { heap: 1, index: 0 } },
+    });
+    expect(seeked.vars).toHaveLength(1);
+    run().stepOnce();
+    expect(run()).toMatchObject({ frame: 1, lastEvent: { type: "call" } });
+    await run().seek(0);
+    for (let k = 1; k <= 9; k += 1) run().stepOnce();
+    expect(position(run())).toEqual(seeked);
+  });
+
   // ------------------------------------------------------------ Seek, Back, Stop
 
   it("Seek rebuilds the position from every event it passes, forward or from a fresh runner", async () => {
