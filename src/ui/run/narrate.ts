@@ -7,7 +7,8 @@ import type { Data, Expr, Heap, Program } from "@/lang/types";
 import { conditionOf, diamondConditions, isExpr, nodesById, variableOf } from "@/lang/walk";
 import { isParseError, parseData } from "@/python/parse";
 import { valueAt } from "@/runtime/refs";
-import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
+import type { Done, Frame, Ref, State } from "@/runtime/types";
+import type { StepEvent } from "@/store/steps";
 import { exprText, notationText, SEPARATOR, valueText } from "@/ui/chart/text";
 
 export type Narration = { key: MessageKey; params: Params };
@@ -69,7 +70,7 @@ function questionText(expr: Expr, frame: Frame | undefined, heap: Heap): string 
   return variableOf(expr) === undefined ? comparedText(expr, frame, heap) : exprText(expr);
 }
 
-export function narrate(event: Event, ctx: NarrateContext): Narration {
+export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
   const { heap } = ctx.state;
   const frame = ctx.state.frames[ctx.frame];
   const node = nodesById(ctx.program).get(event.nodeId);
@@ -168,7 +169,7 @@ export type Position = {
   step: number;
   total: number;
   outcome: Done | null;
-  lastEvent: Event | null;
+  lastEvent: StepEvent | null;
   state: State | null;
   frame: number;
   pass: number | null;
