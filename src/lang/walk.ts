@@ -13,9 +13,9 @@ export function isEmptyExpr(value: unknown): boolean {
   return isExpr(value) && value.kind === "empty";
 }
 
-/** Whether an expression names where a value is stored: its block declares `store`. */
+/** Whether an expression names where a value is stored: its block declares `locate`. */
 export function isTarget(expr: Expr): boolean {
-  return getBlock(keyOf(expr)).store !== undefined;
+  return getBlock(keyOf(expr)).locate !== undefined;
 }
 
 /**

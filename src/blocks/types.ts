@@ -11,7 +11,7 @@ import type {
   StmtKind,
   Value,
 } from "@/lang/types";
-import type { Event, RuntimeCode } from "@/runtime/types";
+import type { Event, Ref, RuntimeCode } from "@/runtime/types";
 import type { Category } from "./categories";
 
 export type SlotRole = "expr" | "exprs" | "id" | "body" | "target" | "text";
@@ -99,9 +99,15 @@ export type RunContext = {
   heap: Heap;
   eval(expr: Expr): Generator<Event, Value, void>;
   exec(body: Stmt[]): Generator<Event, Signal, void>;
-  get(name: Id, nodeId: NodeId): Value;
-  set(name: Id, value: Value): void;
-  /** Stores `value` at `target` by its block's `store`; its event and errors carry `at`. */
+  /** The place of `target`, found by its block's `locate`; its errors carry `at`. */
+  locate(target: Expr, at: NodeId): Generator<Event, Ref, void>;
+  /**
+   * Locates `target` and reads its value (`E_UNDEFINED` at `at` for a variable never assigned),
+   * with a `read` of the target for a place that is no variable.
+   */
+  read(target: Expr, at: NodeId): Generator<Event, { ref: Ref; value: Value }, void>;
+  save(ref: Ref, value: Value): void;
+  /** Locates `target`, saves `value` there, and emits its `write`, which carries `at`. */
   store(target: Expr, value: Value, at: NodeId): Generator<Event, void, void>;
   call(fn: Id, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
   fail(nodeId: NodeId, code: RuntimeCode, params?: Record<string, string | number>): never;
@@ -193,16 +199,16 @@ export type BlockDef = {
   /** The entries of the value list. */
   menu?: readonly MenuEntry[];
   /**
-   * A target's write: evaluates the target's expressions and stores `value` there, its `write`
-   * event and errors at `at`, the statement whose effect it is. A block with `store` is a target.
+   * A target's place: evaluates the target's expressions, the container before its position, and
+   * gives the place, its errors at `at`. A block with `locate` is a target.
    */
-  store?(node: Expr, value: Value, ctx: RunContext, at: NodeId): Generator<Event, void, void>;
+  locate?(node: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
 };
 
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
 type ExprOf<K extends ExprKind> = Extract<Expr, { kind: K }>;
 
-type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "kind" | "store";
+type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "kind" | "locate";
 
 type StmtDef<K extends StmtKind> = Omit<BlockDef, Generic> & {
   create(): StmtOf<K>;
@@ -219,7 +225,7 @@ type ExprDef<K extends ExprKind> = Omit<BlockDef, Generic> & {
   notation(node: ExprOf<K>): string;
   text?(node: ExprOf<K>, slot: string): string;
   kind?(node: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
-  store?(node: ExprOf<K>, value: Value, ctx: RunContext, at: NodeId): Generator<Event, void, void>;
+  locate?(node: ExprOf<K>, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
 };
 
 export function defineStmt<K extends StmtKind>(def: StmtDef<K>): BlockDef {

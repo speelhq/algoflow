@@ -672,7 +672,7 @@ describe("a target's line (editor.md, Targets)", () => {
       const targets = allEntries().filter(
         (each) =>
           takesValue(each) &&
-          each.def.store !== undefined &&
+          each.def.locate !== undefined &&
           (kind === undefined || each.menu.on?.includes(kind)),
       );
       const listed = groups(line, false, context).flatMap(([, labels]) => labels);

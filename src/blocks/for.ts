@@ -46,7 +46,7 @@ export const forStmt = defineStmt<"for">({
     }
     for (let i = start.v; i < stop.v; i += 1) {
       const value = { t: "int", v: i } as const;
-      ctx.set(node.var, value);
+      ctx.save({ var: node.var }, value);
       yield { type: "loop", nodeId: node.id, var: node.var, value };
       const signal = yield* ctx.exec(node.body);
       if (signal?.kind === "break") break;

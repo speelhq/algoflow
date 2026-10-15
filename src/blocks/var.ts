@@ -1,4 +1,4 @@
-// The `var` block: reading a variable emits no event; storing one emits its `write`.
+// The `var` block: reading a variable emits no event; as a target its place is the variable.
 import { newId } from "@/lang/id";
 import { defineExpr } from "./types";
 
@@ -8,11 +8,10 @@ export const variable = defineExpr<"var">({
   slots: [{ name: "name", role: "id", required: true }],
   create: () => ({ id: newId(), kind: "var", name: "" }),
   *run(node, ctx) {
-    return ctx.get(node.name, node.id);
+    return (yield* ctx.read(node, node.id)).value;
   },
-  *store(node, value, ctx, at) {
-    ctx.set(node.name, value);
-    yield { type: "write", nodeId: at, ref: { var: node.name }, value };
+  *locate(node) {
+    return { var: node.name };
   },
   python: (node) => node.name,
   notation: () => "{name}",
