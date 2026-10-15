@@ -2,8 +2,8 @@
 import type { Data, Expr, FunctionDef, Id, NodeId, Program, Stmt } from "@/lang/types";
 import { dataKey, floatOf, inputValue, isFloatData } from "@/lang/data";
 import { programExprs } from "@/lang/walk";
-import { getNode, keyOf } from "@/nodes/registry";
-import type { EmitContext, PyLine, Side } from "@/nodes/types";
+import { getBlock, keyOf } from "@/blocks/registry";
+import type { EmitContext, PyLine, Side } from "@/blocks/types";
 import { floatRepr } from "@/runtime/values";
 import { PRECEDENCE, needsParens } from "./precedence";
 import { pyString } from "./strings";
@@ -32,13 +32,13 @@ export function dataToPython(data: Data): string {
 
 /** `text`, the text of `child`, in parentheses where the operator table needs them under `parent`. */
 function parenthesise(child: Expr, text: string, parent: number, side: Side): string {
-  const own = getNode(keyOf(child)).precedence?.(child) ?? PRECEDENCE.atom;
+  const own = getBlock(keyOf(child)).precedence?.(child) ?? PRECEDENCE.atom;
   return needsParens(own, parent, side) ? `(${text})` : text;
 }
 
 const ctx: EmitContext = {
   expr(expr: Expr) {
-    return getNode(keyOf(expr)).python(expr, ctx) as string;
+    return getBlock(keyOf(expr)).python(expr, ctx) as string;
   },
   operand(expr: Expr, parent: number, side) {
     return parenthesise(expr, ctx.expr(expr), parent, side);
@@ -46,7 +46,7 @@ const ctx: EmitContext = {
   slot(node, name) {
     const expr = (node as unknown as Record<string, Expr>)[name];
     if (!expr) throw new Error(`no expression in slot ${name}`);
-    const atom = getNode(keyOf(node)).slots.find((slot) => slot.name === name)?.atom;
+    const atom = getBlock(keyOf(node)).slots.find((slot) => slot.name === name)?.atom;
     return atom ? ctx.operand(expr, PRECEDENCE.atom, "left") : ctx.expr(expr);
   },
   block(stmts: Stmt[]): PyLine {
@@ -79,7 +79,7 @@ class Writer {
   }
 
   stmt(stmt: Stmt, indent: number): void {
-    const pyLines = getNode(keyOf(stmt)).python(stmt, ctx) as PyLine[];
+    const pyLines = getBlock(keyOf(stmt)).python(stmt, ctx) as PyLine[];
     // A named statement's lines start at the comment holding its name.
     const named = stmt.name === undefined ? undefined : this.lines.length + 1;
     if (stmt.name !== undefined) this.line(`# ${stmt.name}`, indent);
@@ -117,7 +117,7 @@ class Writer {
 function importsOf(program: Program): string[] {
   const modules = new Set<string>();
   for (const expr of programExprs(program)) {
-    const module = getNode(keyOf(expr)).imports;
+    const module = getBlock(keyOf(expr)).imports;
     if (module) modules.add(module);
   }
   return [...modules].toSorted();

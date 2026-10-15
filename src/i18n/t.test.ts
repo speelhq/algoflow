@@ -18,7 +18,7 @@ describe("t", () => {
 
   it("returns the en text for a nested key", () => {
     expect(t("app.name")).toBe("AlgoFlow");
-    expect(t("node.for.label")).toBe("For loop");
+    expect(t("block.for.label")).toBe("For loop");
   });
 
   it("writes a number as the locale does, as the step limit's message shows it", () => {

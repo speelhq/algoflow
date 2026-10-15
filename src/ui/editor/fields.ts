@@ -1,9 +1,9 @@
 // The fields of a statement's notation in the node editor: each name slot, each value or target
 // slot, and each item of a list of values, in the notation's reading order.
-import { nodeText, t } from "@/i18n/t";
+import { blockText, t } from "@/i18n/t";
 import type { Expr, NodeId, Stmt } from "@/lang/types";
 import { allExprs, isEmptyExpr, isExpr } from "@/lang/walk";
-import { getNode, keyOf, type Slot } from "@/nodes/registry";
+import { getBlock, keyOf, type Slot } from "@/blocks/registry";
 import {
   generatedNotation,
   placeholderValue,
@@ -31,7 +31,7 @@ export function nameOf(stmt: Stmt, slot: string): string | undefined {
 
 /** The target slot a field edits, which its line keeps a target in (`editor.md`, Targets). */
 export function targetSlot(stmt: Stmt, field: Field): Slot | undefined {
-  const slot = getNode(keyOf(stmt)).slots.find((each) => each.name === field.slot);
+  const slot = getBlock(keyOf(stmt)).slots.find((each) => each.name === field.slot);
   return slot?.role === "target" ? slot : undefined;
 }
 
@@ -65,7 +65,7 @@ export function editedLines(stmt: Stmt): { piece: Piece; again: boolean }[][] {
   const notations =
     init !== undefined && check !== undefined
       ? [init, check]
-      : [getNode(keyOf(stmt)).notation(stmt)];
+      : [getBlock(keyOf(stmt)).notation(stmt)];
   const seen = new Set<string>();
   return notations.map((notation) =>
     templatePieces(notation).map((piece) => {
@@ -94,10 +94,10 @@ export function fieldsOf(stmt: Stmt): Field[] {
 
 /** A field's accessible name: the block's label and the slot's name (`Set variable, value`). */
 export function fieldLabel(stmt: Stmt, field: Field): string {
-  const { key } = getNode(keyOf(stmt));
+  const { key } = getBlock(keyOf(stmt));
   return t("editor.fieldName", {
-    label: nodeText(key, "label"),
-    slot: nodeText(key, `slot.${field.slot}`),
+    label: blockText(key, "label"),
+    slot: blockText(key, `slot.${field.slot}`),
   });
 }
 

@@ -56,13 +56,13 @@ export function formatNumber(value: number): string {
 }
 
 /** The prefix of every catalog key of a block, through which the key check names them. */
-export function nodePrefix(key: string): string {
-  return `node.${key}.`;
+export function blockPrefix(key: string): string {
+  return `block.${key}.`;
 }
 
 /** The one place a registry key becomes a catalog key. */
-export function nodeKey(key: string, part: string): MessageKey {
-  return `${nodePrefix(key)}${part}` as MessageKey;
+export function blockKey(key: string, part: string): MessageKey {
+  return `${blockPrefix(key)}${part}` as MessageKey;
 }
 
 /** The one place an error code becomes a catalog key, which the key check names through it. */
@@ -70,14 +70,14 @@ export function errorKey(code: ErrorCode): MessageKey {
   return `error.${code}`;
 }
 
-export function nodeText(key: string, part: string, params?: Record<string, string>): string {
-  return t(nodeKey(key, part), params);
+export function blockText(key: string, part: string, params?: Record<string, string>): string {
+  return t(blockKey(key, part), params);
 }
 
 /** An error's params as its message writes them: `op`, a registry key, as that block's label. */
 export function errorParams(params: Params): Params {
   const { op } = params;
-  return typeof op === "string" ? { ...params, op: nodeText(op, "label") } : params;
+  return typeof op === "string" ? { ...params, op: blockText(op, "label") } : params;
 }
 
 /** The message of a diagnostic or runtime error. */

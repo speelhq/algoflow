@@ -3,15 +3,15 @@
 import { exprKind, type Kinds } from "@/lang/kinds";
 import type { Expr } from "@/lang/types";
 import { childSlots } from "@/lang/walk";
-import { NODES, getNode, keyOf, type NodeDef } from "@/nodes/registry";
-import type { MenuEntry, MenuGroup } from "@/nodes/types";
-import { nodeText } from "@/i18n/t";
+import { BLOCKS, getBlock, keyOf, type BlockDef } from "@/blocks/registry";
+import type { MenuEntry, MenuGroup } from "@/blocks/types";
+import { blockText } from "@/i18n/t";
 import { isCall } from "@/ui/chart/text";
 
 export type Entry = {
   /** `<key>` or `<key>.<name>`. */
   id: string;
-  def: NodeDef;
+  def: BlockDef;
   menu: MenuEntry;
   label: string;
   help: string;
@@ -19,11 +19,11 @@ export type Entry = {
   call: boolean;
 };
 
-const base = (def: NodeDef, menu: MenuEntry) =>
+const base = (def: BlockDef, menu: MenuEntry) =>
   menu.name === "" ? def.key : `${def.key}.${menu.name}`;
 
 // The preset is copied, so no expression shares a value with the menu.
-const made = (def: NodeDef, menu: MenuEntry): Expr => ({
+const made = (def: BlockDef, menu: MenuEntry): Expr => ({
   ...(def.create() as Expr),
   ...structuredClone(menu.preset),
 });
@@ -32,13 +32,13 @@ let cached: Entry[] | undefined;
 
 /** Every entry of the registered blocks, in registry order (the order of the value list). */
 export function allEntries(): Entry[] {
-  cached ??= [...NODES.values()].flatMap((def) =>
+  cached ??= [...BLOCKS.values()].flatMap((def) =>
     (def.menu ?? []).map((menu) => ({
       id: base(def, menu),
       def,
       menu,
-      label: nodeText(base(def, menu), "label"),
-      help: nodeText(base(def, menu), "help"),
+      label: blockText(base(def, menu), "label"),
+      help: blockText(base(def, menu), "help"),
       call: isCall(made(def, menu)),
     })),
   );
@@ -77,7 +77,7 @@ export function entryOf(expr: Expr, kinds: Kinds): Entry | undefined {
 
 /** The label of what an expression is: its entry's, else its block's. */
 export function labelOf(expr: Expr, kinds: Kinds): string {
-  return entryOf(expr, kinds)?.label ?? nodeText(getNode(keyOf(expr)).key, "label");
+  return entryOf(expr, kinds)?.label ?? blockText(getBlock(keyOf(expr)).key, "label");
 }
 
 export const GROUPS: readonly MenuGroup[] = [

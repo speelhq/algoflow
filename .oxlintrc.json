@@ -66,7 +66,7 @@
       }
     },
     {
-      "files": ["src/lang/**", "src/runtime/**", "src/python/**", "src/nodes/**"],
+      "files": ["src/lang/**", "src/runtime/**", "src/python/**", "src/blocks/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -81,17 +81,17 @@
                   "!@/lang",
                   "!@/runtime",
                   "!@/python",
-                  "!@/nodes",
+                  "!@/blocks",
                   "!@/lang/**",
                   "!@/runtime/**",
                   "!@/python/**",
-                  "!@/nodes/**",
+                  "!@/blocks/**",
                   "./**/../**",
                   "./**/..",
                   "@/**/../**",
                   "@/**/.."
                 ],
-                "message": "src/lang, src/runtime, src/python, and src/nodes import only each other: through @/ across folders, through ./ within one (ARCHITECTURE.md)."
+                "message": "src/lang, src/runtime, src/python, and src/blocks import only each other: through @/ across folders, through ./ within one (ARCHITECTURE.md)."
               }
             ]
           }
@@ -103,7 +103,7 @@
         "src/lang/**/*.test.ts",
         "src/runtime/**/*.test.ts",
         "src/python/**/*.test.ts",
-        "src/nodes/**/*.test.ts"
+        "src/blocks/**/*.test.ts"
       ],
       "rules": {
         "no-restricted-imports": [
@@ -119,11 +119,11 @@
                   "!@/lang",
                   "!@/runtime",
                   "!@/python",
-                  "!@/nodes",
+                  "!@/blocks",
                   "!@/lang/**",
                   "!@/runtime/**",
                   "!@/python/**",
-                  "!@/nodes/**",
+                  "!@/blocks/**",
                   "!vitest",
                   "!@/i18n/**",
                   "./**/../**",
@@ -131,7 +131,7 @@
                   "@/**/../**",
                   "@/**/.."
                 ],
-                "message": "src/lang, src/runtime, src/python, and src/nodes import only each other: through @/ across folders, through ./ within one (ARCHITECTURE.md)."
+                "message": "src/lang, src/runtime, src/python, and src/blocks import only each other: through @/ across folders, through ./ within one (ARCHITECTURE.md)."
               }
             ]
           }

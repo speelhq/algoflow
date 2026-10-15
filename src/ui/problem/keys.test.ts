@@ -2,7 +2,7 @@
 // What the focused element owns; the keyboard table's Delete and Backspace stay in an open
 // editor; Ctrl/Cmd+Enter and the play button run, pause, play, and replay as one.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { togglePlay } from "./actions";

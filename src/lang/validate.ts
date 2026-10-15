@@ -1,8 +1,8 @@
 // Every validation code, run after every edit and before every run: scope rules,
 // names, empty slots, and field defaults.
 // Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
-import { builtinKey, getNode, hasNode, keyOf } from "@/nodes/registry";
-import { expectedArgs, type NodeDef, type Slot } from "@/nodes/types";
+import { builtinKey, getBlock, hasBlock, keyOf } from "@/blocks/registry";
+import { expectedArgs, type BlockDef, type Slot } from "@/blocks/types";
 import {
   NAME_PATTERN,
   RESERVED,
@@ -24,7 +24,7 @@ export function isValidName(name: string): boolean {
 
 /** A builtin call key (`abs`, `randint`, …) may not be redefined. */
 function isBuiltinName(name: string): boolean {
-  return hasNode(builtinKey(name));
+  return hasBlock(builtinKey(name));
 }
 
 type Scope = { loop: number; inFunction: boolean };
@@ -103,7 +103,7 @@ class Collector {
   private region(stmts: Stmt[], visible: Set<Id>, inner: Map<Id, NodeId>, scope: Scope): Set<Id> {
     const declared = new Set<Id>();
     for (const stmt of stmts) {
-      const def = getNode(keyOf(stmt));
+      const def = getBlock(keyOf(stmt));
       this.slots(stmt, def);
       this.calls(stmt);
       this.reads(stmt, visible, inner);
@@ -148,14 +148,14 @@ class Collector {
     }
   }
 
-  private control(stmt: Stmt, def: NodeDef, scope: Scope): void {
+  private control(stmt: Stmt, def: BlockDef, scope: Scope): void {
     if (def.requires === "loop" && scope.loop === 0) this.report(stmt.id, "E_BREAK_OUTSIDE");
     if (def.requires === "function" && !scope.inFunction) this.report(stmt.id, "E_RETURN_OUTSIDE");
   }
 
   // ------------------------------------------------------------ slots
 
-  private slots(stmt: Stmt, def: NodeDef): void {
+  private slots(stmt: Stmt, def: BlockDef): void {
     this.requiredSlots(stmt, def, stmt.id);
     const visit = (node: Stmt | Expr) => {
       for (const { slot, expr } of childSlots(node)) {
@@ -163,14 +163,14 @@ class Collector {
           this.report(stmt.id, "E_EMPTY_SLOT", { slot });
           continue;
         }
-        this.requiredSlots(expr, getNode(keyOf(expr)), stmt.id);
+        this.requiredSlots(expr, getBlock(keyOf(expr)), stmt.id);
         visit(expr);
       }
     };
     visit(stmt);
   }
 
-  private requiredSlots(node: Stmt | Expr, def: NodeDef, stmtId: NodeId): void {
+  private requiredSlots(node: Stmt | Expr, def: BlockDef, stmtId: NodeId): void {
     const bag = node as unknown as Bag;
     for (const slot of def.slots) {
       if (slot.required && isEmptySlot(slot, bag[slot.name])) {
@@ -183,7 +183,7 @@ class Collector {
 
   private calls(stmt: Stmt): void {
     for (const expr of stmtExprs(stmt)) {
-      const def = getNode(keyOf(expr));
+      const def = getBlock(keyOf(expr));
       const callee = def.callee?.(expr);
       if (!callee) continue;
       switch (callee.family) {

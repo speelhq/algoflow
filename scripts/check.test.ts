@@ -1,7 +1,7 @@
 // The schema checker; the plans checker; a test checked against its expectation and against
 // CPython, and the CPython script shape (no python run here).
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import type { Challenge } from "@/challenges/types";
 import type { Stmt } from "@/lang/types";
 import { checkTest, type PythonRunner } from "./lib/agreement";

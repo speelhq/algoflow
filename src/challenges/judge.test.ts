@@ -1,6 +1,6 @@
 // Equality per expectation kind; a runtime error fails the test.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { finish, outcomeOf, type Outcome } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Program } from "@/lang/types";

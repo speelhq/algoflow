@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 import { CHALLENGES } from "@/challenges";
 import type { Program, Stmt } from "@/lang/types";
 import { allStmts, regionsOf } from "@/lang/walk";
-import { getNode, keyOf } from "@/nodes/registry";
-import { ast, program, tid } from "@/nodes/testing";
+import { getBlock, keyOf } from "@/blocks/registry";
+import { ast, program, tid } from "@/blocks/testing";
 import {
   estimatedWidth,
   layout,
@@ -145,13 +145,13 @@ const lay = (c: Case, measure: Measure): ChartLayout =>
 
 /** A Return, or a jump (every jump of these cases is inside a loop): no edge to the next node. */
 const leaves = (stmt: Stmt): boolean => {
-  const def = getNode(keyOf(stmt));
+  const def = getBlock(keyOf(stmt));
   return def.requires === "function" || (def.chart !== undefined && "jump" in def.chart);
 };
 
 /** Something flows out of the bottom of the statement: not a Return or jump, nor a branch whose regions all leave. */
 function flows(stmt: Stmt): boolean {
-  const shape = getNode(keyOf(stmt)).chart;
+  const shape = getBlock(keyOf(stmt)).chart;
   if (!shape || "jump" in shape) return !leaves(stmt);
   if (!("branch" in shape)) return true; // a loop's No edge
   return regionsOf(stmt).some((region) => {
@@ -197,7 +197,7 @@ describe.each([
       expect(chart.nodes[0]?.role).toBe("start");
       expect(chart.nodes.at(-1)?.role).toBe("end");
       for (const stmt of allStmts(bodyOf(c))) {
-        const shape = getNode(keyOf(stmt)).chart;
+        const shape = getBlock(keyOf(stmt)).chart;
         const ids =
           shape && "counted" in shape
             ? ["init", "check", "step"].map((r) => `${stmt.id}:${r}`)
@@ -284,7 +284,7 @@ describe.each([
       const out = (id: string, label: "yes" | "no") =>
         chart.edges.filter((edge) => edge.from === id && edge.label === label);
       for (const stmt of allStmts(bodyOf(c))) {
-        const shape = getNode(keyOf(stmt)).chart;
+        const shape = getBlock(keyOf(stmt)).chart;
         if (!shape || "jump" in shape) {
           expect(nodes.get(stmt.id)?.shape).toBe("box");
           continue;

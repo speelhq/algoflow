@@ -1,6 +1,6 @@
 // Each edit does what it says, leaves the input untouched, and keeps node ids unique.
 import { describe, expect, it } from "vitest";
-import { ast, program, withInputs } from "@/nodes/testing";
+import { ast, program, withInputs } from "@/blocks/testing";
 import {
   addFunction,
   duplicateStmt,

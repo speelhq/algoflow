@@ -7,14 +7,14 @@ import { Copy, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { getChallenge } from "@/challenges";
-import { nodeText, t } from "@/i18n/t";
+import { blockText, t } from "@/i18n/t";
 import { duplicateStmt, insertItem, removeItem, removeStmt, setExpr, setSlot } from "@/lang/edit";
 import { chartOf, variableKinds } from "@/lang/kinds";
 import { visibleAt } from "@/lang/scope";
 import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
 import { isExpr, nodesById } from "@/lang/walk";
 import { cn } from "@/lib/utils";
-import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
+import { emptyExpr, getBlock, keyOf } from "@/blocks/registry";
 import { parseScope } from "@/python/parse";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
@@ -69,7 +69,7 @@ import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 type Initial = { slot: string | null; hole: NodeId | null };
 
 function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initial: Initial }) {
-  const def = getNode(keyOf(stmt));
+  const def = getBlock(keyOf(stmt));
   const led = useEditor((s) => s.diagnostic);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
@@ -392,7 +392,10 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
       stmt.id,
     );
   }
-  explanation ??= { name: nodeText(def.key, "label"), parts: helpParts(nodeText(def.key, "help")) };
+  explanation ??= {
+    name: blockText(def.key, "label"),
+    parts: helpParts(blockText(def.key, "help")),
+  };
 
   return (
     <div
@@ -484,7 +487,7 @@ export function NodeEditor({ id }: { id: NodeId }) {
   // The node's box, which the editor is placed beside; it is no control of its own.
   const [anchor, setAnchor] = useState<Element | null>(null);
   const node = nodesById(program).get(id);
-  if (!node || !("kind" in node) || getNode(keyOf(node)).shape !== "stmt") return null;
+  if (!node || !("kind" in node) || getBlock(keyOf(node)).shape !== "stmt") return null;
   return (
     <Popover
       open

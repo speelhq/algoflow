@@ -1,6 +1,6 @@
 // Open in Playground; Export's file name and Import's validation.
 import { describe, expect, it } from "vitest";
-import { ast, program, withInputs } from "@/nodes/testing";
+import { ast, program, withInputs } from "@/blocks/testing";
 import { emit } from "@/python/emit";
 import { exportName, importedProgram, playgroundCopy } from "./programs";
 

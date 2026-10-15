@@ -1,7 +1,7 @@
 // Node text as the chart writes it; a value as the blocks write it.
 import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
-import { ast, withInputs } from "@/nodes/testing";
+import { ast, withInputs } from "@/blocks/testing";
 import { isParseError, parse } from "@/python/parse";
 import { PRECEDENCE } from "@/python/precedence";
 import { run } from "@/runtime/run";

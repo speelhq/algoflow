@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Challenge } from "@/challenges/types";
 import type { Program } from "@/lang/types";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { isPlaygroundId, PLAYGROUND_KEY, playgroundRows, readIndex } from "./playground";
 import {
   createPlaygroundProgram,

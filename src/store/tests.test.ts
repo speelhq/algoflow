@@ -1,7 +1,7 @@
 // Submit judges every test on its own runner.
 import { beforeEach, describe, expect, it } from "vitest";
 import { getChallenge } from "@/challenges";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { useProgress } from "./progress";
 import { useProgram } from "./program";
 import { useRun } from "./run";

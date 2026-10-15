@@ -1,4 +1,4 @@
-// Value helpers shared by node runners. No third-party imports.
+// Value helpers shared by block runners. No third-party imports.
 import { fitsInt, keyValue } from "@/lang/data";
 import type { Heap, HeapEntry, Value } from "@/lang/types";
 

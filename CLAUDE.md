@@ -61,7 +61,7 @@ with the spec, or a step that needs the user's permission (`git push`,
 compacting keep: changed files, the current issue and its Done when, open
 findings and proposals, test commands, decisions not yet in `docs/spec/`.
 
-Skills: `/issue`, `/milestone`, `/add-node`, `/add-challenge`.
+Skills: `/issue`, `/milestone`, `/add-block`, `/add-challenge`.
 
 ## Issues and commits
 

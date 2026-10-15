@@ -162,7 +162,7 @@
     "titleLabel": "Program title",
     "rows": "Playground programs"
   },
-  "node": {
+  "block": {
     "empty": {
       "label": "Empty slot",
       "help": "A slot that still needs a value."

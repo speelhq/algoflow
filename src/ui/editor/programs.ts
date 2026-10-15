@@ -5,7 +5,7 @@ import { caseInputs } from "@/challenges/cases";
 import { inputValue } from "@/lang/data";
 import { migrate } from "@/lang/migrate";
 import type { Data, Id, Program, Stmt } from "@/lang/types";
-import { getNode } from "@/nodes/registry";
+import { getBlock } from "@/blocks/registry";
 import { isParseError, parseData } from "@/python/parse";
 import { createPlaygroundProgram, useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
@@ -20,7 +20,7 @@ function inputAssignment(name: Id, data: Data): Stmt {
   const value = parseData(data);
   if (isParseError(value))
     throw new Error(`no block writes the value of input ${name}: ${JSON.stringify(data)}`);
-  const assign = getNode("assign").create() as Extract<Stmt, { kind: "assign" }>;
+  const assign = getBlock("assign").create() as Extract<Stmt, { kind: "assign" }>;
   const target = variableExpr(name);
   if (!target) throw new Error(`input ${name} is no variable name`);
   return { ...assign, target, value };

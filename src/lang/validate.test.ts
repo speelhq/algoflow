@@ -1,6 +1,6 @@
 // Every validation code has a failing and a passing case; scope.
 import { describe, expect, it } from "vitest";
-import { ast, program, runAll } from "@/nodes/testing";
+import { ast, program, runAll } from "@/blocks/testing";
 import type { Diagnostic, Program, Stmt } from "./types";
 import { validate } from "./validate";
 

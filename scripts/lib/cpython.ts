@@ -6,14 +6,14 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Data, Id } from "@/lang/types";
-import { NODES } from "@/nodes/registry";
+import { BLOCKS } from "@/blocks/registry";
 
 const PYTHON = process.env.PYTHON ?? "python3";
 
 /** Python functions of the random module that replay `draws()`: derived from the registry. */
 export function randomShims(): string[] {
   const names: string[] = [];
-  for (const def of NODES.values()) {
+  for (const def of BLOCKS.values()) {
     if (def.imports !== "random") continue;
     for (const alias of def.aliases ?? []) {
       if (alias.startsWith("random.")) names.push(alias.slice("random.".length));

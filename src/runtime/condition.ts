@@ -1,7 +1,7 @@
 // The check of a diamond: its condition as true or false, ending in one `compare` of the whole
 // condition, the condition's own when it is a comparison.
 import type { Expr } from "@/lang/types";
-import type { RunContext } from "@/nodes/types";
+import type { RunContext } from "@/blocks/types";
 import type { Event } from "./types";
 import { truthy } from "./values";
 

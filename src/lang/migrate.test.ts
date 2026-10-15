@@ -1,7 +1,7 @@
 // Import validates and migrates by version; it refuses a literal field its block would not make,
 // a class, and an object input.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { MigrateError, migrate } from "./migrate";
 import type { Stmt } from "./types";
 import { validate } from "./validate";
