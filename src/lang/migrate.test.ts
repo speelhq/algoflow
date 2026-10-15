@@ -108,6 +108,12 @@ describe("migrate", () => {
     expect(() => migrate(keyed)).toThrow(/^main\[0\]\.target\.kind: unknown kind "key"/);
   });
 
+  it("refuses an expression that is no target in a target slot, which no edit makes", () => {
+    const sum = asStored(program([ast.assignTo(bin("+", v("a"), num(1)), num(2))]));
+    expect(() => migrate(sum)).toThrow(/^main\[0\]\.target: expected a target/);
+    expect(migrate(asStored(program([ast.assignTo(ast.empty(), num(2))])))).toBeTruthy();
+  });
+
   it("rejects an unsupported version with the path", () => {
     expect(() => migrate({ ...program([]), version: 3 })).toThrow(MigrateError);
     expect(() => migrate({ ...program([]), version: 3 })).toThrow(

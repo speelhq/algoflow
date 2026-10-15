@@ -519,7 +519,6 @@
     "E_ARITY": "{name} needs {expected} values (got {got})",
     "E_UNKNOWN_CALL": "{name} was not found",
     "E_EMPTY_SLOT": "{slot} is empty",
-    "E_NOT_TARGET": "Only a variable or an item of a list can be given a value",
     "E_DUPLICATE_ID": "Two blocks share the same id",
     "E_PARSE_SYNTAX": "Syntax error at character {position}",
     "E_PARSE_CHAIN": "Write a < b < c as a < b and b < c",

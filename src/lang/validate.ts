@@ -1,5 +1,5 @@
 // Every validation code, run after every edit and before every run: scope rules,
-// names, empty slots, targets, and field defaults.
+// names, empty slots, and field defaults.
 // Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
 import { builtinKey, getNode, hasNode, keyOf } from "@/nodes/registry";
 import { expectedArgs, type NodeDef, type Slot } from "@/nodes/types";
@@ -14,16 +14,7 @@ import {
   type Stmt,
 } from "./types";
 import { boundVariables, declaredBy } from "./scope";
-import {
-  childSlots,
-  isEmptyExpr,
-  isExpr,
-  isTarget,
-  programIds,
-  regionsOf,
-  stmtExprs,
-  variableOf,
-} from "./walk";
+import { childSlots, isEmptyExpr, programIds, regionsOf, stmtExprs, variableOf } from "./walk";
 
 type Bag = Record<string, unknown>;
 
@@ -166,12 +157,6 @@ class Collector {
 
   private slots(stmt: Stmt, def: NodeDef): void {
     this.requiredSlots(stmt, def, stmt.id);
-    for (const slot of def.slots) {
-      const value = (stmt as unknown as Bag)[slot.name];
-      if (slot.role === "target" && isExpr(value) && !isEmptyExpr(value) && !isTarget(value)) {
-        this.report(stmt.id, "E_NOT_TARGET", { slot: slot.name });
-      }
-    }
     const visit = (node: Stmt | Expr) => {
       for (const { slot, expr } of childSlots(node)) {
         if (isEmptyExpr(expr)) {

@@ -7,6 +7,7 @@ import { stmtName } from "./edit";
 import { isNodeId, newId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
 import { isRecord } from "./record";
+import { isEmptyExpr, isTarget } from "./walk";
 
 export class MigrateError extends Error {
   constructor(
@@ -108,6 +109,13 @@ function checkStmts(value: unknown, path: string): void {
     }
     checkFields(stmt, at);
     for (const child of rawChildren(stmt, at)) checkExpr(child.value, child.path);
+    // A target slot holds a target, or an input to fill: no edit makes any other value there.
+    for (const slot of getNode(kind).slots) {
+      const held = stmt[slot.name] as Expr;
+      if (slot.role === "target" && !isEmptyExpr(held) && !isTarget(held)) {
+        throw new MigrateError(`${at}.${slot.name}`, "expected a target");
+      }
+    }
     // Every region by the block's slots: `regionsOf` passes over one that is no array.
     for (const slot of getNode(kind).slots) {
       if (slot.role === "body") checkStmts(stmt[slot.name], `${at}.${slot.name}`);
