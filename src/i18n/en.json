@@ -169,7 +169,7 @@
     },
     "assign": {
       "label": "Set variable",
-      "slot": { "target": "variable", "value": "value" },
+      "slot": { "target": "target", "value": "value" },
       "help": "Gives a variable a value, the first time or again."
     },
     "if": {
