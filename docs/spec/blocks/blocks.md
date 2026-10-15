@@ -32,7 +32,7 @@ export type BlockDef = {
   text?(node: Stmt | Expr, slot: string): string; // Node text
   kind?(node: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
   declares?: Kind; // the kind of the variable its `id` slot names (`language.md`, Kinds)
-  store?(node: Expr, value: Value, ctx: RunContext, at: NodeId): Generator<Event, void, void>; // a target's write (`interpreter.md`, Blocks)
+  locate?(node: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>; // a target's place (`interpreter.md`, Blocks)
   menu?: MenuEntry[]; // the entries of the value list (Menu entries)
   chart?:
     | { branch: { cond: string; yes: string; no: string } }
@@ -121,7 +121,7 @@ The Python column is the exact emitted text; `<x>` denotes an emitted slot.
 | `print`    | basic    | args                   | `print({args})`                                                                                                     | `print(<a>, <b>)`                                                                   |
 | `return`   | function | value?                 | `return {value}`, drawn `return` with no value                                                                      | `return <value>` / `return`                                                         |
 | `expr`     | basic    | expr                   | `{expr}`                                                                                                            | `<expr>`                                                                            |
-| `swap`     | list     | list, i, j             | `swap({list}[{i}], {list}[{j}])`                                                                                    | `<list>[<i>], <list>[<j>] = <list>[<j>], <list>[<i>]`                               |
+| `swap`     | list     | a, b                   | `swap({a}, {b})`                                                                                                    | `<a>, <b> = <b>, <a>`                                                               |
 | `delete`   | list     | target                 | `del {target}`                                                                                                      | `del <target>`                                                                      |
 
 A new `for` has no variable name: `create()` receives no context, and
@@ -230,7 +230,7 @@ translated word. The words of a notation (`and`, `not`, `len`, `print`) are
 Python's, the same in every locale.
 
 Operators are parenthesised as the emitter does (`emitter.md`), and an
-input whose slot declares `atom` (the list of an item, of `swap`) binds as
+input whose slot declares `atom` (the list of an item) binds as
 an atom, as Python binds the value an item is taken from: an operation there
 is bracketed (`(a + b)[0]`). The emitter, the chart, and the value line read
 that one declaration. Comparison
@@ -250,12 +250,13 @@ Python has none: a separate `create` form would draw one statement two ways.
 A builtin and a method are written as calls named as Python names them,
 a builtin without its module (`randint`); `print(…)`, `return`, `break`,
 `continue`, and `del` as Python writes them. `swap` is a call of its own
-(`swap(nums[j], nums[j + 1])`), which names the two items it exchanges and
+(`swap(nums[j], nums[j + 1])`), which names the two places it exchanges and
 which the `Python` tab writes as their exchange. The `Python` tab writes
 Python (`emitter.md`), where `←` becomes `=`.
 
-A slot written twice in a notation (`swap`'s `{list}`) is a field at its
-first place and drawn as its value at the other.
+A slot written twice in the lines of a block's node editor (`for`'s
+`{var}`, in its init and its check) is a field at its first place and drawn
+as its value at the other.
 
 The items of an `exprs` slot, a call's arguments, and a function's
 parameters are separated by `, `, as Python separates them, in every

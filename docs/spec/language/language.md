@@ -151,11 +151,11 @@ export type Stmt =
   | (S & { kind: "print"; args: Expr[] })
   | (S & { kind: "return"; value?: Expr })
   | (S & { kind: "expr"; expr: Expr })
-  | (S & { kind: "swap"; list: Expr; i: Expr; j: Expr });
+  | (S & { kind: "swap"; a: Expr; b: Expr });
 ```
 
 A target is an expression that names where a value is stored: a `var`, an
-`index`, a `key`, or a `field`, each a block that declares `store`
+`index`, a `key`, or a `field`, each a block that declares `locate`
 (`blocks.md`, The block definition). A `target` slot holds one, or `empty`
 while unfilled (Expressions); `migrate()` refuses any other expression
 there, which no edit makes (`editor.md`, Targets).
@@ -254,7 +254,7 @@ every other difference from Python is stricter and ends in an error (a
 
 | Rule | Example |
 | --- | --- |
-| `swap` exchanges `list[i]` and `list[j]` | |
+| `swap(a, b)` runs as `a, b = b, a`: `b`'s place is found and its value read, then `a`'s; then `a`'s place is found again and written, then `b`'s | `swap(nums[0], nums[2])` on `[1, 2, 3]` → `[3, 2, 1]`; `swap(i, nums[i])` with `i = 0`, `nums = [1, 9]` → `i = 1`, `nums = [1, 0]` |
 | `copy()` copies one list level | |
 
 ### Calls (`call`, `print`, `call:randint`)
@@ -301,7 +301,7 @@ parameter) to the end of its region and in nested regions.
 A `target` slot that `binds` (`blocks.md`, The block definition), as
 `assign`'s does, declares the variable its target is, which it does not
 read. An item, a key, or a field there, and every target of a slot that does
-not bind (`delete`), reads its expressions before the value is stored.
+not bind (`delete`, `swap`), reads its expressions before the value is stored.
 
 A name first assigned inside `then`, `else`, or a loop body and referenced
 after that frame → `E_DECLARE_FIRST`; the fix inserts

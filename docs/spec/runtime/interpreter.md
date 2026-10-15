@@ -1,9 +1,10 @@
 # Interpreter
 
 Code: the runner `src/runtime/`; the driver `src/store/run.ts` with
-`src/store/batches.ts`; the CPython check `scripts/check.ts` with
-`scripts/lib/cpython.ts` and `scripts/lib/agreement.ts`. Tests: beside each
-file; the rules of `language.md`'s Semantics as that section states.
+`src/store/steps.ts` and `src/store/batches.ts`; the CPython check
+`scripts/check.ts` with `scripts/lib/cpython.ts` and
+`scripts/lib/agreement.ts`. Tests: beside each file; the rules of
+`language.md`'s Semantics as that section states.
 
 ## Runner
 
@@ -50,8 +51,7 @@ sequence.
 export type Event =
   | { type: "enter"; nodeId: NodeId }
   | { type: "read"; nodeId: NodeId; refs: Ref[] }
-  | { type: "write"; nodeId: NodeId; ref: Ref; value: Value }
-  | { type: "swap"; nodeId: NodeId; a: Ref; b: Ref }
+  | { type: "write"; nodeId: NodeId; ref: Ref; value: Value; from?: Ref } // `from`: `swap`
   | { type: "compare"; nodeId: NodeId; result: boolean }
   | { type: "loop"; nodeId: NodeId; var?: Id; value?: Value }
   | { type: "call"; nodeId: NodeId; fn: Id; args: Value[] }
@@ -65,14 +65,21 @@ export type Ref =
 ```
 
 Per statement: one `enter`, then the events of its expressions (`read`,
-`compare`, `call`/`return`), then its effect (`write`, `swap`, `print`,
-`loop`).
+`compare`, `call`/`return`), then its effect (`write`, `print`, `loop`); a
+`swap` statement's events follow Python's order (`language.md`, Semantics,
+Lists): those of reading `b`, then `a`, then of finding `a` again and its
+`write`, then of finding `b` again and its `write`.
 
-`read` is emitted for `index`, `key`, and `field` reads and for `in` on a
-list (one ref per compared element); variable reads emit nothing.
+`read` is emitted for reading an item, a key, or a field (`read`, Blocks),
+whether an expression is evaluated or a `swap` reads its places, and for
+`in` on a list (one ref per compared element); variable reads emit nothing.
 
-`write` is emitted for `assign`, `append` (new index), `insert`, `pop`
-(removed index and value), `delete`, and each field set by `new`.
+`write` is emitted for `assign`, `swap`, `append` (new index), `insert`,
+`pop` (removed index and value), `delete`, and each field set by `new`. A
+`swap`'s `write` carries in `from` the place its value was read from, by
+which the driver tells an exchange (Steps and batches); the runner emits no
+event of its own for an exchange, so its events stay Python's, one effect
+each.
 
 `compare` is emitted for every comparison `binop` (`== != < <= > >=` and
 `in`), with its result; the operator and the operands are the node's. The
@@ -142,9 +149,10 @@ export type RunContext = {
   heap: Heap;
   eval(expr: Expr): Generator<Event, Value, void>;   // dispatches through the registry
   exec(body: Stmt[]): Generator<Event, Signal, void>; // emits `enter` per statement (Events)
-  get(name: Id, nodeId: NodeId): Value;               // current frame
-  set(name: Id, value: Value): void;
-  store(target: Expr, value: Value, at: NodeId): Generator<Event, void, void>; // the target's block's `store`
+  locate(target: Expr, at: NodeId): Generator<Event, Ref, void>; // the target's block's `locate`
+  read(target: Expr, at: NodeId): Generator<Event, { ref: Ref; value: Value }, void>;
+  save(ref: Ref, value: Value): void;
+  store(target: Expr, value: Value, at: NodeId): Generator<Event, void, void>; // locate, save, its `write`
   call(fn: Id, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
   fail(nodeId: NodeId, code: RuntimeCode, params?: Record<string, string | number>): never;
   valueError(node: Expr, value: Value): never; // E_VALUE (Errors)
@@ -154,10 +162,17 @@ export type RunContext = {
 };
 ```
 
-`store` evaluates the target's expressions after the value, the container
-before its position or key as Python does, and writes the value; its
-`write` event and its errors carry `at`, the statement whose effect the
-write is (Events).
+`locate` evaluates the target's expressions, the container before its
+position or key as Python does, and gives its place as a `Ref`; its errors
+carry `at`. `read` locates the target and reads the value there, with
+`E_UNDEFINED` for a variable never assigned, and emits a `read` with the
+target's id for a place that is no variable (Events). `store` locates the
+target after the value, saves the value, and emits its `write`, which
+carries `at`, the statement whose effect the write is (Events). `read` and
+`save` read and write by the `Ref` variant (a variable of the current frame,
+a list's item, a dict's key), not by block, so a variable, an item, and the
+places of a `swap` share one rule of where a value is and when its read is
+emitted.
 
 ## Modules
 
@@ -178,18 +193,39 @@ arguments as they are after the run (`modules.md`, Resolution; Cases).
 ### Steps and batches
 
 A visible step is an event emitted while no module frame is on the stack,
-or the `return` event of a call into a module: a module call is one visible
-step. In a program's run a module function is a block, such as taking the
+the `return` event of a call into a module, or an exchange of two writes
+(below): a module call is one visible step. In a program's run a module function is a block, such as taking the
 minimum of a heap, narrated by its returned value, and `Open <name>` shows
 its interior (`modules.md`, Operations); a function the learner is still
 building belongs to the program and is stepped into until `Move to module`.
 
-The driver works through runners in batches of 20,000 calls of `next()`
-with `setTimeout(0)` between them; at the heaviest work measured, about
-0.65 µs a call, a batch takes about 13 ms, under one frame. A batch bounded
-by time would never yield under the tests' fake timers, which stop
-`performance.now`; it becomes the better choice once a block makes one call
-far costlier.
+Two `write` events in a row, each carrying in `from` the place the other
+writes, are one visible step, an exchange, whose event is
+`{ type: "swap"; nodeId: NodeId; a: Ref; b: Ref }`, `a` and `b` the places
+the two writes write (`views.md`; `run.md`, Narration). A `swap` whose
+places are found again elsewhere (`swap(i, nums[i])`), or whose second
+place is found again with an event of its own, shows each `write` as its
+step: one `swap` there would follow a step showing the first write alone,
+which the slide would hide. The exchange is the driver's, not an event of
+the runner's, because only the event after the first write tells it, and
+the runner cannot know that event before it has run the code that makes
+it. `src/store/steps.ts` reads a runner one visible step at a time, for the
+pre-run, Step, Seek, and Skip alike, so every count of steps agrees.
+
+To tell an exchange the driver reads the event after a `write` that carries
+`from`; when that event is no partner, the write's step is published with
+the state copied before it, so a frame that a call in the second place
+pushes is not shown before its `call`. The copy is taken only for a step
+the driver publishes (Step, Play, the step a Seek reaches, the last step of
+a batch): a Seek through a long run would otherwise copy the heap at every
+`swap`.
+
+The driver works through runners in batches of 20,000 visible steps (one
+call of `next()`, or two for an exchange) with `setTimeout(0)` between
+them; at the heaviest work measured, about 0.65 µs a call, a batch takes
+about 13 ms, under one frame. A batch bounded by time would never yield
+under the tests' fake timers, which stop `performance.now`; it becomes the
+better choice once a block makes one call far costlier.
 
 Run first advances a separate runner, discarded afterwards, to its end in
 batches and records `total`, the number of visible steps it produced
@@ -207,8 +243,9 @@ no test, a Playground program's, takes seed 1, as a test without one does.
 A run of no step is `done` at once. A finished run is `done` on reaching
 step `total`, where the driver makes one further call of `next()` so that
 its frames have unwound; a failed run is in `error` there. The call that
-fails is a step of its own, so a failed run has `total = events + 1` and the
-last position of the position bar is where its error is shown.
+fails is a step of its own, so a failed run's `total` is its visible steps
+plus one, and the last position of the position bar is where its error is
+shown.
 
 ### Controls
 
