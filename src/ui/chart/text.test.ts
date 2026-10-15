@@ -24,7 +24,7 @@ import {
 const { assign, assignTo, num, str, bool, bin, neg, not, v, print, for_, if_, call, ret, empty } =
   ast;
 
-const item = (list: Expr, index: Expr) => ({ kind: "index" as const, list, index });
+const { item } = ast;
 
 function expr(python: string): Expr {
   const parsed = parse(python, { functions: ["f"] });
@@ -145,6 +145,10 @@ describe("notation", () => {
     expect(exprText(expr("-xs[0]"))).toBe("−xs[0]");
     expect(exprText(expr("len(nums) - 1"))).toBe("len(nums) − 1");
     expect(notationText(assignTo(item(v("nums"), v("i")), num(0)))).toBe("nums[i] ← 0");
+  });
+
+  it("an expression that is no target, in a target slot, is written whole", () => {
+    expect(notationText(assignTo(bin("+", v("a"), num(1)), num(2)))).toBe("a + 1 ← 2");
   });
 
   it("a target's part after its variable opens its own value line when clicked", () => {

@@ -17,7 +17,7 @@ test("hovering a flagged node shows its message, and the fix applies", async ({ 
       {
         id: "dgn-sets-001",
         kind: "assign",
-        target: { kind: "var", name: "total" },
+        target: { id: "dgn-tgt-0001", kind: "var", name: "total" },
         value: { id: "dgn-ivar-001", kind: "var", name: "i" },
       },
     ],
@@ -42,7 +42,7 @@ test("an empty slot shows no dot, only its placeholder", async ({ page }) => {
   const assign = {
     id: "dgn-asg0-001",
     kind: "assign",
-    target: { kind: "var", name: "x" },
+    target: { id: "dgn-tgt-0002", kind: "var", name: "x" },
     value: { id: "dgn-emp0-001", kind: "empty" },
   };
   await seedProgram(page, "fizzbuzz", programWith([assign]));

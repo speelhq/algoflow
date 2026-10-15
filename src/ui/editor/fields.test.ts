@@ -2,6 +2,7 @@
 // counted loop shows its init and its check, its variable a field only at the first.
 import { describe, expect, it } from "vitest";
 import { ast } from "@/nodes/testing";
+import { getNode } from "@/nodes/registry";
 import { setExpr } from "@/lang/edit";
 import type { Stmt } from "@/lang/types";
 import { program } from "@/nodes/testing";
@@ -9,7 +10,7 @@ import { notationText } from "@/ui/chart/text";
 import {
   editedLines,
   fieldLabel,
-  fieldPath,
+  fieldPlace,
   fieldsOf,
   firstPart,
   formOfKey,
@@ -101,7 +102,7 @@ describe("a target holding an item", () => {
   });
 
   it("keeps its position when its form of another variable is set; a name alone drops it", () => {
-    const set = assignTo({ kind: "index", list: v("nums"), index: v("i") }, num(1));
+    const set = assignTo(ast.item(v("nums"), v("i")), num(1));
     const p = program([set]);
     expect(formIn(set, "target")).toBe("index");
     expect(notationText(setForm(p, set, "target", "index", "other").main[0] as Stmt)).toBe(
@@ -125,14 +126,18 @@ describe("a target holding an item", () => {
   it("is its list's name, then its position as a value field, then the value", () => {
     const stmt = assignTo(itemTarget("nums"), num(5));
     expect(nameOf(stmt, "target")).toBe("nums");
+    expect(nameOf(getNode("assign").create() as Stmt, "target")).toBe("");
     expect(fieldsOf(stmt)).toEqual([
       { slot: "target", role: "target" },
       position,
       { slot: "value", role: "expr" },
     ]);
     expect(valueOf(stmt, position)?.kind).toBe("empty");
-    expect(fieldPath(position)).toBe("target.index");
-    expect(fieldPath({ slot: "value", role: "expr" })).toBe("value");
+    expect(fieldPlace(stmt, position)).toEqual({ id: stmt.target.id, slot: "index" });
+    expect(fieldPlace(stmt, { slot: "value", role: "expr" })).toEqual({
+      id: stmt.id,
+      slot: "value",
+    });
   });
 
   it("takes the keyboard at its position, which a value written there fills", () => {
@@ -141,20 +146,18 @@ describe("a target holding an item", () => {
     expect(startField(stmt, fields, { slot: null, hole: null })).toEqual(position);
     const hole = valueOf(stmt, position);
     expect(startField(stmt, fields, { slot: "target", hole: hole?.id ?? null })).toEqual(position);
-    const filled = setExpr(program([stmt]), stmt.id, fieldPath(position), v("i"));
+    const { id, slot } = fieldPlace(stmt, position);
+    const filled = setExpr(program([stmt]), id, slot, v("i"));
     expect(notationText(filled.main[0] as Stmt)).toBe("nums[i] ← 5");
   });
 });
 
 describe("a target the editor cannot edit as an item", () => {
-  it("has no field when its block is not registered or its list is no variable", () => {
-    const key = assignTo({ kind: "key", dict: v("d"), key: ast.str("a") }, num(1));
-    expect(fieldsOf(key)).toEqual([{ slot: "value", role: "expr" }]);
-    expect(nameOf(key, "target")).toBeUndefined();
-    const nested = assignTo(
-      { kind: "index", list: ast.item(v("grid"), num(0)), index: num(1) },
-      num(1),
-    );
+  it("has no field when it is no target, or its list is no variable", () => {
+    const sum = assignTo(ast.bin("+", v("a"), num(1)), num(2));
+    expect(fieldsOf(sum)).toEqual([{ slot: "value", role: "expr" }]);
+    expect(formIn(sum, "target")).toBeUndefined();
+    const nested = assignTo(ast.item(ast.item(v("grid"), num(0)), num(1)), num(1));
     expect(fieldsOf(nested)).toEqual([{ slot: "value", role: "expr" }]);
   });
 });

@@ -3,7 +3,7 @@
 // and a location as the chart writes them, a comparison with the values of the shown frame.
 import { keyValue, toData } from "@/lang/data";
 import { errorKey, errorParams, t, type MessageKey, type Params } from "@/i18n/t";
-import type { Data, Expr, Heap, Program, Target, Value } from "@/lang/types";
+import type { Data, Expr, Heap, Program, Value } from "@/lang/types";
 import { conditionOf, diamondConditions, isExpr, nodesById, variableOf } from "@/lang/walk";
 import { isParseError, parseData } from "@/python/parse";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
@@ -43,10 +43,10 @@ function literal(data: Data): Expr {
 function refText(ref: Ref, frame: Frame | undefined, heap: Heap): string {
   if ("var" in ref) return ref.var;
   const holder: Expr = { id: "", kind: "var", name: nameOf(ref.heap, frame, heap) };
-  const target: Target =
+  const target: Expr =
     "index" in ref
-      ? { kind: "index", list: holder, index: literal(ref.index) }
-      : { kind: "key", dict: holder, key: literal(toData(keyValue(ref.key), heap)) };
+      ? { id: "", kind: "index", list: holder, index: literal(ref.index) }
+      : { id: "", kind: "key", dict: holder, key: literal(toData(keyValue(ref.key), heap)) };
   return targetText(target);
 }
 

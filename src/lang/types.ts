@@ -7,7 +7,7 @@ export type Id = string;
 // ---------------------------------------------------------------- Program
 
 export type Program = {
-  version: 1;
+  version: 2;
   title: string;
   challengeId?: string;
   inputs: InputDecl[]; // empty in a Playground program
@@ -52,8 +52,8 @@ export type Heap = Map<HeapId, HeapEntry>;
 /** `name`: the learner's name for the node, one trimmed line, absent when empty. */
 type S = { id: NodeId; name?: string };
 export type Stmt =
-  | (S & { kind: "assign"; target: Target; value: Expr })
-  | (S & { kind: "delete"; target: IndexTarget | KeyTarget })
+  | (S & { kind: "assign"; target: Expr; value: Expr })
+  | (S & { kind: "delete"; target: Expr })
   | (S & { kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
   | (S & { kind: "for"; var: Id; start: Expr; stop: Expr; body: Stmt[] })
   | (S & { kind: "foreach"; var: Id; list: Expr; body: Stmt[] })
@@ -65,11 +65,6 @@ export type Stmt =
   | (S & { kind: "expr"; expr: Expr })
   | (S & { kind: "swap"; list: Expr; i: Expr; j: Expr });
 export type StmtKind = Stmt["kind"];
-
-export type Target = VarTarget | IndexTarget | KeyTarget;
-export type VarTarget = { kind: "var"; name: Id };
-export type IndexTarget = { kind: "index"; list: Expr; index: Expr };
-export type KeyTarget = { kind: "key"; dict: Expr; key: Expr };
 
 // ---------------------------------------------------------------- Expressions
 
@@ -142,6 +137,7 @@ export const DIAGNOSTIC_CODES = [
   "E_ARITY",
   "E_UNKNOWN_CALL",
   "E_EMPTY_SLOT",
+  "E_NOT_TARGET",
   "E_DUPLICATE_ID",
 ] as const;
 export type DiagnosticCode = (typeof DIAGNOSTIC_CODES)[number];

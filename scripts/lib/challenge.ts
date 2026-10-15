@@ -3,7 +3,7 @@
 import { DIFFICULTIES, TOPICS, type Challenge, type Localized } from "@/challenges/types";
 import { dataError } from "@/lang/data";
 import { dataKind } from "@/lang/kinds";
-import { isInputDecl, migrate } from "@/lang/migrate";
+import { CURRENT_VERSION, isInputDecl, migrate } from "@/lang/migrate";
 import { isRecord } from "@/lang/record";
 import type { Data, Kind } from "@/lang/types";
 import { isValidName, validate } from "@/lang/validate";
@@ -137,6 +137,9 @@ export function checkChallengeSchema(
     if (!isLocalized(hint, requireJa)) problems.push(`hints[${i}] must be { en, ja? }`);
   });
 
+  // The app bundles a solution as it is, with no migrate(), so an older version would reach it.
+  if (isRecord(json.solution) && json.solution.version !== CURRENT_VERSION)
+    problems.push(`solution.version must be ${CURRENT_VERSION}`);
   try {
     const program = migrate(json.solution);
     if (!sameData(program.inputs, inputs)) problems.push("solution.inputs must equal inputs");

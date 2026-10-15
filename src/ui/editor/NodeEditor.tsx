@@ -29,12 +29,13 @@ import {
   editedLines,
   fieldKey,
   fieldLabel,
-  fieldPath,
+  fieldPlace,
   fieldsOf,
   firstPart,
   formIn,
   formOfKey,
   formsFor,
+  isNamed,
   nameOf,
   namePart,
   sameField,
@@ -120,7 +121,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const run = (step: Step): Session => {
     for (const { field, root } of step.edits) {
       const at = `${stmt.id}:${fieldKey(field)}`;
-      apply((p) => setExpr(p, stmt.id, fieldPath(field), root, field.index), at);
+      const { id, slot } = fieldPlace(current() ?? stmt, field);
+      apply((p) => setExpr(p, id, slot, root, field.index), at);
     }
     setSession(step.session);
     return step.session;
@@ -317,7 +319,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
               onKey={(event) => onNameKey(event, field, names.rows)}
             />
           );
-        if (held.role !== "target" || !held.target || held.target.kind === "var") return nameField;
+        if (held.role !== "target" || !held.target || isNamed(held.target)) return nameField;
         // A target holding an item: its list's name, then a value line for each other part; one
         // the editor cannot edit (its list no variable) is drawn as the chart draws it.
         const pieces = targetPieces(held.target);

@@ -1,5 +1,5 @@
 // Every validation code, run after every edit and before every run: scope rules,
-// names, empty slots, and field defaults.
+// names, empty slots, targets, and field defaults.
 // Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
 import { builtinKey, getNode, hasNode, keyOf } from "@/nodes/registry";
 import { expectedArgs, type NodeDef, type Slot } from "@/nodes/types";
@@ -13,8 +13,17 @@ import {
   type Program,
   type Stmt,
 } from "./types";
-import { declaredBy } from "./scope";
-import { childSlots, isEmptyExpr, programIds, regionsOf, stmtExprs, variableOf } from "./walk";
+import { boundVariables, declaredBy } from "./scope";
+import {
+  childSlots,
+  isEmptyExpr,
+  isExpr,
+  isTarget,
+  programIds,
+  regionsOf,
+  stmtExprs,
+  variableOf,
+} from "./walk";
 
 type Bag = Record<string, unknown>;
 
@@ -137,7 +146,9 @@ class Collector {
   }
 
   private reads(stmt: Stmt, visible: Set<Id>, inner: Map<Id, NodeId>): void {
+    const bound = new Set(boundVariables(stmt));
     for (const expr of stmtExprs(stmt)) {
+      if (bound.has(expr)) continue;
       const name = variableOf(expr);
       if (name === undefined || name === "" || visible.has(name)) continue;
       const frame = inner.get(name);
@@ -155,6 +166,12 @@ class Collector {
 
   private slots(stmt: Stmt, def: NodeDef): void {
     this.requiredSlots(stmt, def, stmt.id);
+    for (const slot of def.slots) {
+      const value = (stmt as unknown as Bag)[slot.name];
+      if (slot.role === "target" && isExpr(value) && !isEmptyExpr(value) && !isTarget(value)) {
+        this.report(stmt.id, "E_NOT_TARGET", { slot: slot.name });
+      }
+    }
     const visit = (node: Stmt | Expr) => {
       for (const { slot, expr } of childSlots(node)) {
         if (isEmptyExpr(expr)) {
@@ -213,15 +230,12 @@ class Collector {
 function isEmptySlot(slot: Slot, value: unknown): boolean {
   switch (slot.role) {
     case "expr":
+    case "target":
       return value === undefined || value === null;
     case "id":
       return typeof value !== "string" || value === "";
     case "text":
       return value === undefined || value === "";
-    case "target": {
-      const target = value as { kind?: string; name?: string } | undefined;
-      return !target || (target.kind === "var" && !target.name);
-    }
     case "exprs":
       return !Array.isArray(value) || value.length === 0;
     default:

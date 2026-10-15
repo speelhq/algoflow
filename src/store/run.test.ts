@@ -22,7 +22,7 @@ const lists = vi.hoisted((): Challenge => ({
   inputs: [{ name: "nums", kind: "list" }],
   tests: [{ inputs: { nums: [4, 5] }, expect: { variables: {} } }],
   hints: [],
-  solution: { version: 1, title: "", inputs: [], classes: [], functions: [], main: [] },
+  solution: { version: 2, title: "", inputs: [], classes: [], functions: [], main: [] },
 }));
 
 vi.mock("@/challenges", async (importOriginal) => {
@@ -350,7 +350,7 @@ describe("run store", () => {
   });
 
   it("a published state is a copy; later steps do not change it", async () => {
-    const write = ast.assignTo({ kind: "index", list: v("nums"), index: num(0) }, num(9));
+    const write = ast.assignTo(ast.item(v("nums"), num(0)), num(9));
     useProgram.setState({
       program: {
         ...program([assign("x", num(1)), assign("x", num(2)), write], { inputs: lists.inputs }),

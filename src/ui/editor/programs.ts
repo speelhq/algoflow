@@ -10,6 +10,7 @@ import { isParseError, parseData } from "@/python/parse";
 import { createPlaygroundProgram, useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { navigate } from "@/ui/app/route";
+import { variableExpr } from "./line";
 
 /**
  * An input as the emitter writes it: `name = <value>`. A value the blocks cannot write throws,
@@ -20,7 +21,9 @@ function inputAssignment(name: Id, data: Data): Stmt {
   if (isParseError(value))
     throw new Error(`no block writes the value of input ${name}: ${JSON.stringify(data)}`);
   const assign = getNode("assign").create() as Extract<Stmt, { kind: "assign" }>;
-  return { ...assign, target: { kind: "var", name }, value };
+  const target = variableExpr(name);
+  if (!target) throw new Error(`input ${name} is no variable name`);
+  return { ...assign, target, value };
 }
 
 /** The Playground program `Open in Playground` makes of `program`, its inputs valued by `inputs`. */

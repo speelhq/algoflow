@@ -99,7 +99,7 @@ describe("editor session", () => {
   });
 
   it("Backspace at an empty part of a target, nothing typed, sets the target to its variable", () => {
-    const stmt = assignTo({ kind: "index", list: v("nums"), index: empty() }, num(0));
+    const stmt = assignTo(ast.item(v("nums"), empty()), num(0));
     const part: Field = { slot: "target", role: "expr", part: "index" };
     const back = { key: "Backspace", shiftKey: false };
     expect(valueKey(openSession(stmt, part, null), back, [], ctx, "]").after).toBe("variable");
@@ -145,7 +145,7 @@ describe("editor session", () => {
     expect(focusField(session, stmt, target, null)).toMatchObject({ focus: target, line: null });
     // A field the statement no longer has, a target's part after an undo, leaves the keyboard.
     const part: Field = { slot: "target", role: "expr", part: "index" };
-    const item = assignTo({ kind: "index", list: v("nums"), index: num(0) }, num(1));
+    const item = assignTo(ast.item(v("nums"), num(0)), num(1));
     const plain = assign("nums", num(1));
     plain.id = item.id;
     expect(follow(openSession(item, part, null), plain)).toMatchObject({ focus: null, line: null });

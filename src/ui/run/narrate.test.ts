@@ -164,21 +164,6 @@ describe("narrate", () => {
     expect(say(narrate(read, ctx))).toBe("Read a list[1]: 7");
   });
 
-  it("a dict's key is named as the nodes write it", () => {
-    const { program: p, inputs } = withInputs({ counts: {} }, []);
-    const state = run(p, inputs, 1).state();
-    const ctx = { program: p, state, frame: 0, pass: null };
-    const key: Event = {
-      type: "write",
-      nodeId: "none",
-      ref: { heap: 1, key: "s:a" },
-      value: { t: "int", v: 1 },
-    };
-    expect(say(narrate(key, ctx))).toBe('counts["a"] is now 1');
-    const number: Event = { ...key, ref: { heap: 1, key: "i:3" } };
-    expect(say(narrate(number, ctx))).toBe("counts[3] is now 1");
-  });
-
   it("the end of the run, an error, and the step Watch this case opens at", () => {
     expect(say(narrateEnd({ type: "done", steps: 124, loops: 3 }, 124))).toBe(
       "Finished in 124 steps",

@@ -25,7 +25,7 @@
   ],
   "takeaway": { "en": "A **for** loop added each number to a running total." },
   "solution": {
-    "version": 1,
+    "version": 2,
     "title": "Sum to n",
     "challengeId": "sum-to-n",
     "inputs": [{ "name": "n", "kind": "number" }],
@@ -35,7 +35,7 @@
       {
         "id": "sum-init-001",
         "kind": "assign",
-        "target": { "kind": "var", "name": "total" },
+        "target": { "id": "sum-tgt-0001", "kind": "var", "name": "total" },
         "value": { "id": "sum-zero-001", "kind": "num", "value": 0, "float": false, "raw": "0" }
       },
       {
@@ -54,7 +54,7 @@
           {
             "id": "sum-addi-001",
             "kind": "assign",
-            "target": { "kind": "var", "name": "total" },
+            "target": { "id": "sum-tgt-0002", "kind": "var", "name": "total" },
             "value": {
               "id": "sum-plus-001",
               "kind": "binop",

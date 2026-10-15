@@ -1,8 +1,8 @@
 // Program → Python text plus the NodeId → line map. No third-party imports.
-import type { Data, Expr, FunctionDef, Id, NodeId, Program, Stmt, Target } from "@/lang/types";
+import type { Data, Expr, FunctionDef, Id, NodeId, Program, Stmt } from "@/lang/types";
 import { dataKey, floatOf, inputValue, isFloatData } from "@/lang/data";
 import { programExprs } from "@/lang/walk";
-import { getNode, hasNode, keyOf } from "@/nodes/registry";
+import { getNode, keyOf } from "@/nodes/registry";
 import type { EmitContext, PyLine, Side } from "@/nodes/types";
 import { floatRepr } from "@/runtime/values";
 import { PRECEDENCE, needsParens } from "./precedence";
@@ -36,19 +36,6 @@ function parenthesise(child: Expr, text: string, parent: number, side: Side): st
   return needsParens(own, parent, side) ? `(${text})` : text;
 }
 
-/** A target as `name`, `<list>[<index>]`, or `<dict>[<key>]`, its parts by `write`. */
-export function writeTarget(target: Target, write: (expr: Expr) => string): string {
-  const head = (expr: Expr) => parenthesise(expr, write(expr), PRECEDENCE.atom, "left");
-  switch (target.kind) {
-    case "var":
-      return target.name;
-    case "index":
-      return `${head(target.list)}[${write(target.index)}]`;
-    case "key":
-      return `${head(target.dict)}[${write(target.key)}]`;
-  }
-}
-
 const ctx: EmitContext = {
   expr(expr: Expr) {
     return getNode(keyOf(expr)).python(expr, ctx) as string;
@@ -61,12 +48,6 @@ const ctx: EmitContext = {
     if (!expr) throw new Error(`no expression in slot ${name}`);
     const atom = getNode(keyOf(node)).slots.find((slot) => slot.name === name)?.atom;
     return atom ? ctx.operand(expr, PRECEDENCE.atom, "left") : ctx.expr(expr);
-  },
-  target(target: Target) {
-    // A form whose block is registered is written by that block, as the chart writes it.
-    const { kind, ...rest } = target;
-    if (kind !== "var" && hasNode(kind)) return ctx.expr({ id: "", kind, ...rest } as Expr);
-    return writeTarget(target, (expr) => ctx.expr(expr));
   },
   block(stmts: Stmt[]): PyLine {
     return { block: stmts };

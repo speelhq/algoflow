@@ -9,7 +9,6 @@ import type {
   Program,
   Stmt,
   StmtKind,
-  Target,
   Value,
 } from "@/lang/types";
 import type { Event, RuntimeCode } from "@/runtime/types";
@@ -65,6 +64,8 @@ export type Slot = {
   required?: boolean;
   /** Its input binds as an atom: an operation there is bracketed (the list of an item). */
   atom?: true;
+  /** A `target` slot that declares the variable its target is (`assign`'s). */
+  binds?: true;
 };
 
 /** The groups of the value list, in its order. */
@@ -100,6 +101,8 @@ export type RunContext = {
   exec(body: Stmt[]): Generator<Event, Signal, void>;
   get(name: Id, nodeId: NodeId): Value;
   set(name: Id, value: Value): void;
+  /** Stores `value` at `target` by its block's `store`; its event and errors carry `at`. */
+  store(target: Expr, value: Value, at: NodeId): Generator<Event, void, void>;
   call(fn: Id, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
   fail(nodeId: NodeId, code: RuntimeCode, params?: Record<string, string | number>): never;
   /** `E_VALUE`: the operation of `node` does not take a value of this type. */
@@ -123,7 +126,6 @@ export type EmitContext = {
   operand(expr: Expr, precedence: number, side: Side): string;
   /** The input in slot `name` of `node`, bracketed as an atom where the slot declares one. */
   slot(node: Stmt | Expr, name: string): string;
-  target(target: Target): string;
   block(stmts: Stmt[]): PyLine;
 };
 
@@ -190,12 +192,17 @@ export type NodeDef = {
   declares?: Kind;
   /** The entries of the value list. */
   menu?: readonly MenuEntry[];
+  /**
+   * A target's write: evaluates the target's expressions and stores `value` there, its `write`
+   * event and errors at `at`, the statement whose effect it is. A block with `store` is a target.
+   */
+  store?(node: Expr, value: Value, ctx: RunContext, at: NodeId): Generator<Event, void, void>;
 };
 
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
 type ExprOf<K extends ExprKind> = Extract<Expr, { kind: K }>;
 
-type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "kind";
+type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "kind" | "store";
 
 type StmtDef<K extends StmtKind> = Omit<NodeDef, Generic> & {
   create(): StmtOf<K>;
@@ -212,6 +219,7 @@ type ExprDef<K extends ExprKind> = Omit<NodeDef, Generic> & {
   notation(node: ExprOf<K>): string;
   text?(node: ExprOf<K>, slot: string): string;
   kind?(node: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
+  store?(node: ExprOf<K>, value: Value, ctx: RunContext, at: NodeId): Generator<Event, void, void>;
 };
 
 export function defineStmt<K extends StmtKind>(def: StmtDef<K>): NodeDef {

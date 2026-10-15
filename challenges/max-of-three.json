@@ -41,7 +41,7 @@
   ],
   "takeaway": { "en": "Two **if** blocks replaced `biggest` whenever a larger value appeared." },
   "solution": {
-    "version": 1,
+    "version": 2,
     "title": "Max of three",
     "challengeId": "max-of-three",
     "inputs": [
@@ -55,7 +55,7 @@
       {
         "id": "max-init-001",
         "kind": "assign",
-        "target": { "kind": "var", "name": "biggest" },
+        "target": { "id": "max-tgt-0001", "kind": "var", "name": "biggest" },
         "value": { "id": "max-avar-001", "kind": "var", "name": "a" }
       },
       {
@@ -72,7 +72,7 @@
           {
             "id": "max-setb-001",
             "kind": "assign",
-            "target": { "kind": "var", "name": "biggest" },
+            "target": { "id": "max-tgt-0002", "kind": "var", "name": "biggest" },
             "value": { "id": "max-bvar-002", "kind": "var", "name": "b" }
           }
         ],
@@ -92,7 +92,7 @@
           {
             "id": "max-setc-001",
             "kind": "assign",
-            "target": { "kind": "var", "name": "biggest" },
+            "target": { "id": "max-tgt-0003", "kind": "var", "name": "biggest" },
             "value": { "id": "max-cvar-002", "kind": "var", "name": "c" }
           }
         ],

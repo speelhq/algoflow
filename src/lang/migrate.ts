@@ -1,12 +1,12 @@
-// Import validates and migrates by `version`. Only version 1 exists. It refuses what no edit
-// could make: a wrong shape, an unknown kind, a bad id, a literal field its block would not
-// write, a class, which no registered block constructs. What editing reaches is validate()'s job.
+// Import validates and migrates by `version`: a version-1 program has its targets turned into
+// expressions, then every version is checked as version 2. It refuses what no edit could make: a
+// wrong shape, an unknown kind, a bad id, a literal field its block would not write, a class,
+// which no registered block constructs. What editing reaches is validate()'s job.
 import { getNode, hasNode, keyOf } from "@/nodes/registry";
 import { stmtName } from "./edit";
-import { isNodeId } from "./id";
-import { KINDS, type Expr, type InputDecl, type Program, type Target } from "./types";
+import { isNodeId, newId } from "./id";
+import { KINDS, type Expr, type InputDecl, type Program } from "./types";
 import { isRecord } from "./record";
-import { TARGET_PARTS, type TargetParts } from "./walk";
 
 export class MigrateError extends Error {
   constructor(
@@ -18,7 +18,8 @@ export class MigrateError extends Error {
   }
 }
 
-const CURRENT_VERSION = 1;
+/** The version `migrate()` returns, which a program file of this build is written in. */
+export const CURRENT_VERSION = 2;
 
 function expectArray(value: unknown, path: string): unknown[] {
   if (!Array.isArray(value)) throw new MigrateError(path, "expected an array");
@@ -39,10 +40,6 @@ export function isInputDecl(value: unknown): value is InputDecl {
   return (
     isRecord(value) && typeof value.name === "string" && KINDS.some((kind) => kind === value.kind)
   );
-}
-
-function isTargetKind(kind: unknown): kind is Target["kind"] {
-  return typeof kind === "string" && Object.hasOwn(TARGET_PARTS, kind);
 }
 
 function expectNodeId(value: unknown, path: string): void {
@@ -66,7 +63,7 @@ function rawChildren(
   const out: Array<{ value: unknown; path: string }> = [];
   for (const slot of getNode(keyOf(node as unknown as Expr)).slots) {
     const value = node[slot.name];
-    if (slot.role === "expr") {
+    if (slot.role === "expr" || slot.role === "target") {
       if (value !== undefined || slot.required) out.push({ value, path: `${path}.${slot.name}` });
     } else if (slot.role === "id") {
       expectName(value, `${path}.${slot.name}`);
@@ -74,14 +71,6 @@ function rawChildren(
       expectArray(value, `${path}.${slot.name}`).forEach((item, i) =>
         out.push({ value: item, path: `${path}.${slot.name}[${i}]` }),
       );
-    } else if (slot.role === "target") {
-      const at = `${path}.${slot.name}`;
-      if (!isRecord(value) || !isTargetKind(value.kind)) {
-        throw new MigrateError(at, "expected a target");
-      }
-      const parts: TargetParts = TARGET_PARTS[value.kind];
-      for (const name of parts.names) expectName(value[name], `${at}.${name}`);
-      for (const name of parts.exprs) out.push({ value: value[name], path: `${at}.${name}` });
     }
   }
   return out;
@@ -126,7 +115,7 @@ function checkStmts(value: unknown, path: string): void {
   });
 }
 
-function checkV1(json: Record<string, unknown>): Program {
+function checkProgram(json: Record<string, unknown>): Program {
   expectString(json.title, "title");
   expectArray(json.inputs, "inputs").forEach((input, i) => {
     if (!isInputDecl(input)) {
@@ -151,11 +140,57 @@ function checkV1(json: Record<string, unknown>): Program {
   return json as unknown as Program;
 }
 
+/** Every string under an `id` key of a JSON value: the ids a migrated node must not take. */
+function heldIds(value: unknown, ids: Set<string>): Set<string> {
+  if (Array.isArray(value)) for (const item of value) heldIds(item, ids);
+  else if (isRecord(value)) {
+    if (typeof value.id === "string") ids.add(value.id);
+    for (const item of Object.values(value)) heldIds(item, ids);
+  }
+  return ids;
+}
+
+/**
+ * A version-1 program as version 2 (`language.md`, Storage), in place: each target
+ * `{ kind, ...parts }` the expression of that kind with a fresh id, and a variable target with no
+ * name `empty`. A value that is no target is left for the check to refuse.
+ */
+function fromV1(json: Record<string, unknown>): void {
+  const taken = heldIds(json, new Set());
+  const freshId = (): string => {
+    let id = newId();
+    while (taken.has(id)) id = newId();
+    taken.add(id);
+    return id;
+  };
+  const upgrade = (stmts: unknown): void => {
+    if (!Array.isArray(stmts)) return;
+    for (const stmt of stmts) {
+      if (!isRecord(stmt) || typeof stmt.kind !== "string" || !hasNode(stmt.kind)) continue;
+      for (const slot of getNode(stmt.kind).slots) {
+        const value = stmt[slot.name];
+        if (slot.role === "body") upgrade(value);
+        if (slot.role !== "target" || !isRecord(value) || typeof value.kind !== "string") continue;
+        stmt[slot.name] =
+          value.kind === "var" && value.name === ""
+            ? { id: freshId(), kind: "empty" }
+            : { ...value, id: freshId() };
+      }
+    }
+  };
+  upgrade(json.main);
+  if (Array.isArray(json.functions)) {
+    for (const fn of json.functions) if (isRecord(fn)) upgrade(fn.body);
+  }
+  json.version = CURRENT_VERSION;
+}
+
 export function migrate(json: unknown): Program {
   if (!isRecord(json)) throw new MigrateError("", "expected a program object");
   const version = json.version;
-  if (version !== CURRENT_VERSION) {
+  if (version === 1) fromV1(json);
+  else if (version !== CURRENT_VERSION) {
     throw new MigrateError("version", `unsupported version ${String(version)}`);
   }
-  return checkV1(json);
+  return checkProgram(json);
 }

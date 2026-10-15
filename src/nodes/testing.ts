@@ -10,7 +10,6 @@ import type {
   NodeId,
   Program,
   Stmt,
-  Target,
   Value,
 } from "@/lang/types";
 import { run } from "@/runtime/run";
@@ -60,10 +59,15 @@ export const ast = {
   assign: (name: string, value: Expr): Stmt => ({
     id: tid(),
     kind: "assign",
-    target: { kind: "var", name },
+    target: { id: tid(), kind: "var", name },
     value,
   }),
-  assignTo: (target: Target, value: Expr): Stmt => ({ id: tid(), kind: "assign", target, value }),
+  assignTo: (target: Expr, value: Expr): Extract<Stmt, { kind: "assign" }> => ({
+    id: tid(),
+    kind: "assign",
+    target,
+    value,
+  }),
   print: (...args: Expr[]): Stmt => ({ id: tid(), kind: "print", args }),
   exprStmt: (expr: Expr): Stmt => ({ id: tid(), kind: "expr", expr }),
   if_: (cond: Expr, then: Stmt[], else_: Stmt[] = []): Stmt => ({
@@ -98,7 +102,7 @@ export function program(
   opts: { inputs?: InputDecl[]; functions?: FunctionDef[]; title?: string } = {},
 ): Program {
   return {
-    version: 1,
+    version: 2,
     title: opts.title ?? "test",
     inputs: opts.inputs ?? [],
     classes: [],

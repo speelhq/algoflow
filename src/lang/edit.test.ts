@@ -52,8 +52,9 @@ describe("edit", () => {
       moveStmt: (p) => moveStmt(p, b.id, { parent: loop.id, slot: "body", index: 0 }),
       removeStmt: (p) => removeStmt(p, a.id),
       duplicateStmt: (p) => duplicateStmt(p, loop.id),
-      setSlot: (p) => setSlot(p, a.id, "target", { kind: "index", list: value, index: value }),
+      setSlot: (p) => setSlot(p, loop.id, "var", "k"),
       setExpr: (p) => setExpr(p, b.id, "args", value, 0),
+      setTarget: (p) => setExpr(p, a.id, "target", ast.item(value, structuredClone(value))),
       insertItem: (p) => insertItem(p, b.id, "args", 0, value),
       removeItem: (p) => removeItem(p, b.id, "args", 0),
       renameName: (p) => renameName(p, "x", "total"),
@@ -124,13 +125,13 @@ describe("edit", () => {
     expect(idsUnique(next)).toBe(true);
   });
 
-  it("setSlot sets id, text, and target slots; expression slots are refused", () => {
+  it("setSlot sets id and text slots; expression and target slots are refused", () => {
     const { p, loop, a } = sample();
     expect(lines(setSlot(p, loop.id, "var", "k"))[1]).toBe("for k in range(3):");
-    expect(lines(setSlot(p, a.id, "target", { kind: "var", name: "y" }))[0]).toBe("y = 1");
     const sum = bin("+", num(1), num(2));
     expect(lines(setSlot(program([print(sum)]), sum.id, "op", "-"))).toEqual(["print(1 - 2)"]);
     expect(() => setSlot(p, a.id, "value", "x")).toThrow(/no settable slot/);
+    expect(() => setSlot(p, a.id, "target", "y")).toThrow(/no settable slot/);
   });
 
   it("setStmtName stores one trimmed line and removes an empty name", () => {
@@ -194,15 +195,13 @@ describe("edit", () => {
     expect(() => setParams(p, "nope00000000", [])).toThrow(/no function/);
   });
 
-  it("setExpr addresses a target's expression as target.<field>", () => {
-    const stmt = ast.assignTo({ kind: "index", list: v("xs"), index: num(0) }, num(9));
+  it("setExpr sets a target, and a target's part by the target's own id", () => {
+    const target = ast.item(v("xs"), num(0));
+    const stmt = ast.assignTo(target, num(9));
     const p = program([stmt]);
-    expect(lines(setExpr(p, stmt.id, "target.index", num(2)))).toEqual(["xs[2] = 9"]);
-    expect(() => setExpr(p, stmt.id, "target.nope", num(2))).toThrow(/no expression field/);
-    const plain = assign("x", num(1));
-    expect(() => setExpr(program([plain]), plain.id, "target.list", num(2))).toThrow(
-      /no expression field/,
-    );
+    expect(lines(setExpr(p, target.id, "index", num(2)))).toEqual(["xs[2] = 9"]);
+    expect(lines(setExpr(p, stmt.id, "target", v("y")))).toEqual(["y = 9"]);
+    expect(() => setExpr(p, target.id, "nope", num(2))).toThrow(/no expression slot/);
   });
 
   it("renameName rewrites variables, loop variables, and function names and calls", () => {

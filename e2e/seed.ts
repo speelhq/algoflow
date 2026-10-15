@@ -37,5 +37,5 @@ export async function seedPlayground(
 
 /** A stored program for problem id with main as given (opening the problem restores challengeId and inputs). */
 export function programWith(main: unknown[]): Record<string, unknown> {
-  return { version: 1, title: "", inputs: [], classes: [], functions: [], main };
+  return { version: 2, title: "", inputs: [], classes: [], functions: [], main };
 }
