@@ -92,7 +92,7 @@ test("the list follows what is before the caret, and a choice after a value take
   // This problem's names come first.
   await expect(editor(page).getByTestId("editor-list")).toContainText("This problem");
   await keys(page, "to");
-  await expect(editor(page).locator('[data-row="name:total"]')).toBeVisible();
+  await expect(editor(page).locator('[data-row^="v:total"]')).toBeVisible();
   await expect(editor(page).locator('[data-row="new:to"]')).toBeVisible();
   await page.keyboard.press("Enter");
   const list = editor(page).getByTestId("editor-list");
@@ -188,7 +188,7 @@ test("a print with no value draws no placeholder", async ({ page }) => {
   await expect(chart(page)).not.toContainText("…");
 });
 
-test("a list is typed, its item read, and one item set from the name list", async ({ page }) => {
+test("a list is typed, its item read, and one item set in the target's line", async ({ page }) => {
   await seedProgress(page, {});
   const id = "play-listitems001";
   await seedProgram(page, id, { ...programWith([]), title: "Lists" });
@@ -214,10 +214,12 @@ test("a list is typed, its item read, and one item set from the name list", asyn
   await page.keyboard.press("Enter");
   await expect(chart(page)).toContainText("x ← nums[1]");
 
-  // A target offers an item of a list variable, its position then taking the keyboard.
+  // After a variable, a target's list offers only an item of it, and `[` makes one.
   await insert(page, "main/main/2", "assign");
-  await expect(list).toContainText("Item at a position");
-  await list.locator('[data-row="form:nums:index"]').click();
+  await keys(page, "nums ");
+  await expect(list).toHaveText(/Item at a position/);
+  await expect(list).not.toContainText("Count");
+  await keys(page, "[");
   await expect(chart(page)).toContainText("nums[…] ← …");
   await keys(page, "0");
   await page.keyboard.press("Tab");
@@ -250,9 +252,11 @@ test("an item target is typed by keys alone, as the chart writes it", async ({ p
   await keys(page, "0");
   await page.keyboard.press("Enter");
 
-  // `[` after the list's name makes the item, and `]` after its position goes on to the value.
+  // `[` after the list's name makes the item; Tab goes on to the value.
   await insert(page, "main/main/2", "assign");
-  await keys(page, "nums[j+1]nums[j]");
+  await keys(page, "nums[j+1]");
+  await page.keyboard.press("Tab");
+  await keys(page, "nums[j]");
   await page.keyboard.press("Enter");
   await expect(chart(page)).toContainText("nums[j + 1] ← nums[j]");
 
@@ -260,6 +264,45 @@ test("an item target is typed by keys alone, as the chart writes it", async ({ p
   await page.getByRole("button", { name: "▶ Run" }).click();
   await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
   await expect(page.getByTestId("variables")).toContainText("nums ← [3, 3, 2]");
+});
+
+test("an item of a variable of no known kind is set by keys alone; no other value is taken", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  const id = "play-unknownkind";
+  await seedProgram(page, id, { ...programWith([]), title: "Rows" });
+  await seedPlayground(page, { [id]: { edited: 0 } });
+  await page.goto(`/#/play/${id}`);
+
+  await insert(page, "main/main/0", "assign");
+  await keys(page, "grid");
+  await page.keyboard.press("Enter");
+  await keys(page, "[[1,2],[3,4]]");
+  await page.keyboard.press("Enter");
+  // An item's value has no kind a list can tell, as a parameter's has none.
+  await insert(page, "main/main/1", "assign");
+  await keys(page, "row");
+  await page.keyboard.press("Enter");
+  await keys(page, "grid[0]");
+  await page.keyboard.press("Enter");
+
+  await insert(page, "main/main/2", "assign");
+  // A key that would make no target is refused, and says why.
+  await keys(page, "5");
+  await expect(editor(page).getByTestId("explanation")).toContainText(
+    "Only a variable or an item of a list can be given a value",
+  );
+  await keys(page, "row[1]");
+  await page.keyboard.press("Tab");
+  await keys(page, "9");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("row[1] ← 9");
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "▶ Run" }).click();
+  await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
+  await expect(page.getByTestId("variables")).toContainText("grid ← [[1, 9], [3, 4]]");
 });
 
 test("the editor stays where it is while its list changes, within the canvas", async ({ page }) => {

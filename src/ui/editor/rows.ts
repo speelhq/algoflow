@@ -1,16 +1,14 @@
 // The lists under the editor's fields: the value list of the focused value line (or, while an
 // operator is switched, the other operators of its group), and the name list of a name field.
-import { nodeText, t } from "@/i18n/t";
+import { t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
-import type { Id, Program } from "@/lang/types";
+import type { Id } from "@/lang/types";
 import type { ListItem, ListSection } from "./EditorList";
-import { targetText } from "@/ui/chart/text";
 import { allEntries, entryOf } from "./entries";
 import { functionLabel } from "./explain";
 import { find, type LineContext, type Row } from "./line";
-import { listRows, listSections } from "./list";
-import { formTarget } from "./fields";
-import { nameSections, type FormOf, type NameRow, type NameSection } from "./names";
+import { listRows, listSections, type ListGroup } from "./list";
+import { nameSections, type ChartNames, type NameRow, type NameSection } from "./names";
 import type { Session } from "./session";
 
 /** A variable's kind as the lists name it. */
@@ -27,6 +25,13 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
         label: row.name,
         variable: true,
         note: kindName(kinds, row.name),
+      };
+    case "new":
+      return {
+        key: `new:${row.name}`,
+        label: row.name,
+        variable: true,
+        lead: t("editor.newVariable"),
       };
     case "entry":
       return {
@@ -69,7 +74,7 @@ export function valueList(
   const listed = listSections(line, ctx, session.all);
   let index = 0;
   const sections = listed.map((section) => ({
-    title: t(`editor.lists.${section.group}`),
+    title: listTitle(section.group),
     items: section.rows.map((row) => rowItem(row, (index += 1), ctx.kinds)),
   }));
   return { rows: listRows(listed), sections };
@@ -79,8 +84,14 @@ const SECTION_TITLES: Record<NameSection["group"], () => string> = {
   problem: () => t("editor.thisProblem"),
   variables: () => t("editor.lists.variables"),
   new: () => "",
-  items: () => t("editor.lists.items"),
 };
+
+/** A value list's section title: a name's group as the name list titles it. */
+function listTitle(group: ListGroup): string {
+  return group === "problem" || group === "variables" || group === "new"
+    ? SECTION_TITLES[group]()
+    : t(`editor.lists.${group}`);
+}
 
 function nameItem(row: NameRow, kinds: Kinds): ListItem {
   const key = `${row.kind}:${row.name}`;
@@ -89,27 +100,16 @@ function nameItem(row: NameRow, kinds: Kinds): ListItem {
       return { key, label: row.name, variable: true, note: kindName(kinds, row.name) };
     case "new":
       return { key, label: row.name, variable: true, lead: t("editor.newVariable") };
-    case "form":
-      return {
-        key: `${key}:${row.form}`,
-        label: targetText(formTarget(row.form, row.name)),
-        lead: nodeText(row.form, "label"),
-      };
   }
 }
 
-/**
- * The rows of a name field's list for the name typed, and its sections as drawn; `forms` are the
- * forms of variables the field can be set to.
- */
+/** The rows of a name field's list for the name typed, and its sections as drawn. */
 export function nameList(
-  program: Program,
-  asked: readonly Id[],
+  names: ChartNames,
   typed: string | null,
   kinds: Kinds,
-  forms: readonly FormOf[],
 ): { rows: NameRow[]; sections: ListSection[] } {
-  const listed = nameSections(program, asked, typed ?? "", forms);
+  const listed = nameSections(names, typed ?? "");
   const sections = listed.map((section) => ({
     title: SECTION_TITLES[section.group](),
     items: section.rows.map((row) => nameItem(row, kinds)),

@@ -7,7 +7,7 @@ import type { Data, Expr, Heap, Program, Value } from "@/lang/types";
 import { conditionOf, diamondConditions, isExpr, nodesById, variableOf } from "@/lang/walk";
 import { isParseError, parseData } from "@/python/parse";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
-import { exprText, notationText, SEPARATOR, targetText, valueText } from "@/ui/chart/text";
+import { exprText, notationText, SEPARATOR, valueText } from "@/ui/chart/text";
 
 export type Narration = { key: MessageKey; params: Params };
 
@@ -47,7 +47,7 @@ function refText(ref: Ref, frame: Frame | undefined, heap: Heap): string {
     "index" in ref
       ? { id: "", kind: "index", list: holder, index: literal(ref.index) }
       : { id: "", kind: "key", dict: holder, key: literal(toData(keyValue(ref.key), heap)) };
-  return targetText(target);
+  return exprText(target);
 }
 
 function valueAt(ref: Ref, frame: Frame | undefined, heap: Heap): Value | undefined {

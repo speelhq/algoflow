@@ -38,6 +38,7 @@ const ctx: LineContext = {
   ]),
   scope: { functions: ["twice"] },
   functions: [{ name: "twice", params: ["x"] }],
+  target: null,
 };
 
 const empty = () => openLine(ast.empty());
@@ -62,13 +63,13 @@ const entry = (id: string): Row => {
   if (!found) throw new Error(id);
   return { kind: "entry", entry: found };
 };
-const groups = (line: Line, all = false) =>
-  listSections(line, ctx, all).map((section) => [
+const groups = (line: Line, all = false, context: LineContext = ctx) =>
+  listSections(line, context, all).map((section) => [
     section.group,
     section.rows.map((row) =>
       row.kind === "entry"
         ? row.entry.label
-        : row.kind === "variable"
+        : row.kind === "variable" || row.kind === "new"
           ? row.name
           : row.kind === "function"
             ? row.fn.name
@@ -335,21 +336,21 @@ describe("choosing", () => {
   it("a text is edited again: Backspace takes its last character, a click opens its field", () => {
     const opened = choose(empty(), entry("str"), ctx).line;
     const typed = endText(setText(opened, opened.text ?? "", "hello"));
-    const shorter = backspace(typed).line;
+    const shorter = backspace(typed, ctx).line;
     expect(py(shorter)).toBe('"hell"');
     expect(shorter.text).toBe(typed.root.id);
     // A character is one as the text field counts it: a symbol with its modifier goes whole.
     const emoji = endText(setText(opened, opened.text ?? "", "a👍🏽"));
-    expect(py(backspace(emoji).line)).toBe('"a"');
+    expect(py(backspace(emoji, ctx).line)).toBe('"a"');
     // The field opens empty after the last character; a text with no character goes whole.
-    const one = backspace(endText(setText(opened, opened.text ?? "", "a"))).line;
+    const one = backspace(endText(setText(opened, opened.text ?? "", "a")), ctx).line;
     expect([py(one), one.text]).toEqual(['""', typed.root.id]);
-    expect(py(backspace(endText(one)).line)).toBe("...");
+    expect(py(backspace(endText(one), ctx).line)).toBe("...");
     expect(clickAt(typed, typed.root.id).text).toBe(typed.root.id);
     // A number is typed in the line, and a click on it opens no field.
     const number = keys("12");
     expect(clickAt(number, number.root.id).text).toBeUndefined();
-    expect(py(backspace(number).line)).toBe("1");
+    expect(py(backspace(number, ctx).line)).toBe("1");
   });
 
   it("a selected value is replaced by a value typed; an operator's key takes it", () => {
@@ -379,7 +380,7 @@ describe("choosing", () => {
 describe("Backspace and moving", () => {
   const back = (line: Line, times = 1) => {
     let current = line;
-    for (let i = 0; i < times; i += 1) current = backspace(current).line;
+    for (let i = 0; i < times; i += 1) current = backspace(current, ctx).line;
     return current;
   };
 
@@ -437,7 +438,7 @@ describe("Backspace and moving", () => {
   it("after a call whose later input holds a value, it removes nothing and moves left", () => {
     const larger = keys("3)", choose(keys("i"), entry("call:max"), ctx).line);
     expect([py(larger), larger.caret]).toEqual(["max(i, 3)", { after: larger.root.id }]);
-    const after = backspace(larger).line;
+    const after = backspace(larger, ctx).line;
     expect(py(after)).toBe("max(i, 3)");
     expect(after.caret).not.toEqual(larger.caret);
     expect(py(back(after))).toBe("max(i, ...)");
@@ -449,7 +450,7 @@ describe("Backspace and moving", () => {
     expect(py(filled)).toBe("i * (... + 3)");
     const sum = (filled.root as Extract<Expr, { kind: "binop" }>).right;
     const first = clickAt(filled, (sum as Extract<Expr, { kind: "binop" }>).left.id);
-    const after = backspace(first).line;
+    const after = backspace(first, ctx).line;
     expect(py(after)).toBe("i * (... + 3)");
     expect(after.caret).toEqual({
       after: (filled.root as Extract<Expr, { kind: "binop" }>).left.id,
@@ -467,13 +468,13 @@ describe("Backspace and moving", () => {
     const second = tab(keys("1", placed), 1, wide).line;
     const third = tab(keys("2", second), 1, wide).line;
     expect(py(third)).toBe("three(1, 2, ...)");
-    const left = backspace(third).line;
+    const left = backspace(third, ctx).line;
     expect(py(left)).toBe("three(1, 2, ...)");
     expect("after" in left.caret).toBe(true);
     // With nothing after the first input, the call goes and its first input stays.
     const bare = tab(tab(keys("1", placed), 1, wide).line, 1, wide).line;
     expect(py(bare)).toBe("three(1, ..., ...)");
-    expect(py(backspace(bare).line)).toBe("1");
+    expect(py(backspace(bare, ctx).line)).toBe("1");
   });
 
   it("Tab moves between inputs still to fill, then to the next slot", () => {
@@ -557,5 +558,96 @@ describe("the functions offered", () => {
       { name: "twice", params: ["x"] },
       { name: "f", params: ["f", "f"] },
     ]);
+  });
+});
+
+describe("a target's line (editor.md, Targets)", () => {
+  /** A slot that binds: the problem asks for `total`, the program has `n` and `nums`. */
+  const binding: LineContext = {
+    ...ctx,
+    target: { asked: ["total"], names: ["n", "nums"], binds: true },
+  };
+  /** A slot that does not bind, in a function whose parameters `heap` and `i` have no kind. */
+  const reading: LineContext = {
+    ...ctx,
+    variables: ["heap", "i"],
+    kinds: new Map(),
+    target: { asked: [], names: ["heap", "i"], binds: false },
+  };
+  const typed = (text: string, context: LineContext, line: Line = empty()): Line => {
+    let current = line;
+    for (const key of text) current = type(current, key, context).line;
+    return settle(current, context);
+  };
+
+  it("takes an item typed as the chart writes it, of a variable of any kind", () => {
+    expect(py(typed("nums[i+1]", binding))).toBe("nums[i + 1]");
+    expect(py(typed("heap[i]", reading))).toBe("heap[i]");
+    expect(py(typed("nums[0][i]", binding))).toBe("nums[0][i]");
+  });
+
+  it("refuses a key that would leave no target, with the reason; inside an item any value", () => {
+    for (const key of ["-", "5", "[", "("]) {
+      const step = type(empty(), key, binding);
+      expect(step.taken && step.line.root.kind !== "empty", key).toBe(false);
+    }
+    const refused = type(typed("nums", binding), "+", binding);
+    expect(refused.taken).toBe(false);
+    expect(refused.line.refused).toBe("Only a variable or an item of a list can be given a value");
+    expect(py(refused.line)).toBe("nums");
+    expect(py(typed("nums[-1]", binding))).toBe("nums[-1]");
+    // Backspace at an item's position still to fill takes the item back to its variable.
+    expect(py(backspace(type(typed("nums", binding), "[", binding).line, binding).line)).toBe(
+      "nums",
+    );
+    // Backspace that would leave an operation in the target's place is refused too.
+    let sum = type(typed("nums", binding), "[", binding).line;
+    sum = move(sum, -1).line;
+    for (const key of "+1") sum = type(sum, key, binding).line;
+    expect(py(sum)).toBe("(nums + 1)[...]");
+    const at = move(move(sum, 1).line, 1).line;
+    const removed = backspace(at, binding);
+    expect(removed.taken).toBe(false);
+    expect(py(removed.line)).toBe("(nums + 1)[...]");
+  });
+
+  it("lists the problem's names, the program's, and a new name typed, last", () => {
+    expect(groups(empty(), false, binding)).toEqual([
+      ["problem", ["total"]],
+      ["variables", ["n", "nums"]],
+    ]);
+    const to = raw("to", empty());
+    expect(matches(to, binding).map((row) => [row.kind, "name" in row ? row.name : ""])).toEqual([
+      ["variable", "total"],
+      ["new", "to"],
+    ]);
+    // The word names the new variable exactly, as a variable is named, so Tab or a key chooses it.
+    expect(py(settle(to, binding))).toBe("to");
+    expect(matches(raw("for", empty()), binding)).toEqual([]);
+    // A slot that does not bind offers the variables visible there, and no new one.
+    expect(groups(empty(), false, reading)).toEqual([["variables", ["heap", "i"]]]);
+    expect(matches(raw("zz", empty()), reading)).toEqual([]);
+  });
+
+  it("`[` on the target's selected variable makes its item", () => {
+    const selected = openLine(typed("nums", binding).root);
+    expect(selected.selected).toBe(true);
+    expect(py(type(selected, "[", binding).line)).toBe("nums[...]");
+    // In any other slot it replaces the selected value with a list.
+    expect(py(type(selected, "[", ctx).line)).toBe("[...]");
+  });
+
+  it("after the target's variable lists only the entries that keep a target", () => {
+    expect(groups(typed("nums", binding), false, binding)).toEqual([
+      ["items", ["Item at a position"]],
+    ]);
+    expect(groups(typed("heap", reading), false, reading)).toEqual([
+      ["items", ["Item at a position"]],
+    ]);
+    // Inside the item, the position is any value, and the problem's names are variables there.
+    const inside = type(typed("nums", binding), "[", binding).line;
+    const listed = groups(inside, false, binding);
+    expect(listed.map(([group]) => group)).toContain("calculate");
+    expect(listed[0]).toEqual(["variables", ["i", "total", "n", "ok", "nums"]]);
   });
 });

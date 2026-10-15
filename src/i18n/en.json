@@ -435,6 +435,7 @@
     "didYouMean": "Did you mean {name}?",
     "nothingLike": "Nothing has this name. Check the spelling, or choose from the list.",
     "thisProblem": "This problem",
+    "notTarget": "Only a variable or an item of a list can be given a value",
     "newVariable": "New variable",
     "enterKey": "Enter",
     "lists": {

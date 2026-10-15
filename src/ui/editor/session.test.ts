@@ -10,6 +10,7 @@ import {
   focusField,
   follow,
   openSession,
+  pickRow,
   settleWord,
   stepHighlight,
   chain,
@@ -27,6 +28,7 @@ const ctx: LineContext = {
   kinds: new Map<string, Kind>([["x", "number"]]),
   scope: { functions: [] },
   functions: [],
+  target: null,
 };
 
 /** Each key of `keys` pressed in turn, every press on the session the one before left. */
@@ -44,7 +46,7 @@ describe("editor session", () => {
     const stmt = assign("total", bin("+", v("x"), hole));
     const fields = fieldsOf(stmt);
     expect(fields).toEqual([
-      { slot: "target", role: "target" },
+      { slot: "target", role: "expr" },
       { slot: "value", role: "expr" },
     ]);
     expect(startField(stmt, fields, { slot: null, hole: null })).toEqual(fields[1]);
@@ -98,22 +100,41 @@ describe("editor session", () => {
     expect(valueKey(typed, { key: "+", shiftKey: false }, [], ctx, "+").after).toBeUndefined();
   });
 
-  it("Backspace at an empty part of a target, nothing typed, sets the target to its variable", () => {
-    const stmt = assignTo(ast.item(v("nums"), empty()), num(0));
-    const part: Field = { slot: "target", role: "expr", part: "index" };
-    const back = { key: "Backspace", shiftKey: false };
-    expect(valueKey(openSession(stmt, part, null), back, [], ctx, "]").after).toBe("variable");
-    // A word or a bracket still typed is removed first.
-    for (const keys of ["jx", "("]) {
-      const typed = press(openSession(stmt, part, null), keys).session;
-      const step = valueKey(typed, back, [], ctx, "]");
-      expect(step.after).toBeUndefined();
-      expect(step.session.line).not.toEqual(typed.line);
-    }
-    // A value line that is no part of a target leaves the empty value as it is.
+  it("in a target's line, Enter choosing a whole target moves on; an item to fill stays", () => {
+    const targetCtx: LineContext = {
+      ...ctx,
+      target: { asked: ["total"], names: ["x"], binds: true },
+    };
+    const stmt = assignTo(empty(), num(1));
+    const field: Field = { slot: "target", role: "expr" };
+    const enter = { key: "Enter", shiftKey: false };
+    const total = { kind: "variable", name: "total" } as const;
+    const highlighted = { ...openSession(stmt, field, null), highlight: 0 };
+    const chosen = valueKey(highlighted, enter, [total], targetCtx, "←");
+    expect(chosen.after).toEqual({ go: 1 });
+    expect(chosen.edits).toMatchObject([{ field, root: { kind: "var", name: "total" } }]);
+    // A name filling an item's position completes the target and moves on too.
+    const position = empty();
+    const atPosition = openSession(
+      assignTo(ast.item(v("x"), position), num(1)),
+      field,
+      position.id,
+    );
+    expect(pickRow(atPosition, total, targetCtx).after).toEqual({ go: 1 });
+    // A choice that leaves an input to fill, or one the target refuses, keeps the keyboard.
+    const brackets = pickRow(openSession(stmt, field, null), { kind: "brackets" }, targetCtx);
+    expect(brackets.after).toBeUndefined();
+    const text = allEntries().find((entry) => entry.id === "str");
+    if (!text) throw new Error("no Text");
+    const named = openSession(assignTo(v("x"), num(1)), field, null);
+    const refused = pickRow(named, { kind: "entry", entry: text }, targetCtx);
+    expect(refused.after).toBeUndefined();
+    expect(refused.edits).toEqual([]);
+    // A value slot never moves on.
     const value: Field = { slot: "value", role: "expr" };
-    const blank = assign("total", empty());
-    expect(valueKey(openSession(blank, value, null), back, [], ctx, "").after).toBeUndefined();
+    const blank = assign("y", empty());
+    const valueOpen = { ...openSession(blank, value, null), highlight: 0 };
+    expect(valueKey(valueOpen, enter, [total], ctx, "").after).toBeUndefined();
   });
 
   it("Backspace in an empty text field removes the text, leaving its input to fill", () => {
@@ -141,14 +162,17 @@ describe("editor session", () => {
     const undone = assign("total", num(2));
     undone.id = stmt.id;
     expect(follow(session, undone).line?.root).toMatchObject({ kind: "num", value: 2 });
-    const target: Field = { slot: "target", role: "target" };
-    expect(focusField(session, stmt, target, null)).toMatchObject({ focus: target, line: null });
-    // A field the statement no longer has, a target's part after an undo, leaves the keyboard.
-    const part: Field = { slot: "target", role: "expr", part: "index" };
-    const item = assignTo(ast.item(v("nums"), num(0)), num(1));
-    const plain = assign("nums", num(1));
-    plain.id = item.id;
-    expect(follow(openSession(item, part, null), plain)).toMatchObject({ focus: null, line: null });
+    const target: Field = { slot: "target", role: "expr" };
+    expect(focusField(session, stmt, target, null)).toMatchObject({
+      focus: target,
+      line: { root: { kind: "var", name: "total" }, selected: true },
+    });
+    // A field the statement no longer has, an item removed by an undo, leaves the keyboard.
+    const second: Field = { slot: "args", role: "expr", index: 1 };
+    const two = print(num(1), num(2));
+    const one = print(num(1));
+    one.id = two.id;
+    expect(follow(openSession(two, second, null), one)).toMatchObject({ focus: null, line: null });
   });
 
   it("↓ and ↑ wrap round the list, and `chain` keeps both steps' values in order", () => {
