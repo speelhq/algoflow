@@ -6,6 +6,7 @@ import { getBlock, keyOf } from "@/blocks/registry";
 import type { ExprRunner, RunContext, Signal, StmtRunner } from "@/blocks/types";
 import { RuntimeFailure } from "./errors";
 import { createRandom } from "./random";
+import { setValueAt, valueAt } from "./refs";
 import { typeName } from "./values";
 import type { Done, Event, Frame, Runner, RuntimeCode } from "./types";
 
@@ -41,19 +42,31 @@ export function run(program: Program, inputs: Readonly<Record<Id, Data>>, seed: 
       }
       return undefined;
     },
-    get(name, nodeId) {
-      // A loop variable is visible after its loop yet unbound when the loop ran no iteration.
-      const value = top().vars.get(name);
-      if (value === undefined) return ctx.fail(nodeId, "E_UNDEFINED", { name });
-      return value;
+    *locate(target, at) {
+      const def = getBlock(keyOf(target));
+      if (!def.locate) throw new Error(`${def.key} is no target`);
+      return yield* def.locate(target, ctx, at);
     },
-    set(name, value) {
-      top().vars.set(name, value);
+    *read(target, at) {
+      const ref = yield* ctx.locate(target, at);
+      const value = valueAt(ref, top().vars, heap);
+      if ("var" in ref) {
+        // A loop variable is visible after its loop yet unbound when the loop ran no iteration.
+        if (value === undefined) return ctx.fail(at, "E_UNDEFINED", { name: ref.var });
+        return { ref, value };
+      }
+      // `locate` checked an item's position, so the place holds a value.
+      if (value === undefined) throw new Error(`no value at ${JSON.stringify(ref)}`);
+      yield { type: "read", nodeId: target.id, refs: [ref] };
+      return { ref, value };
+    },
+    save(ref, value) {
+      setValueAt(ref, value, top().vars, heap);
     },
     *store(target, value, at) {
-      const def = getBlock(keyOf(target));
-      if (!def.store) throw new Error(`${def.key} is no target`);
-      yield* def.store(target, value, ctx, at);
+      const ref = yield* ctx.locate(target, at);
+      ctx.save(ref, value);
+      yield { type: "write", nodeId: at, ref, value };
     },
     *call(fn, args, nodeId) {
       const def = functions.get(fn);

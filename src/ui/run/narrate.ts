@@ -3,9 +3,10 @@
 // and a location as the chart writes them, a comparison with the values of the shown frame.
 import { keyValue, toData } from "@/lang/data";
 import { errorKey, errorParams, t, type MessageKey, type Params } from "@/i18n/t";
-import type { Data, Expr, Heap, Program, Value } from "@/lang/types";
+import type { Data, Expr, Heap, Program } from "@/lang/types";
 import { conditionOf, diamondConditions, isExpr, nodesById, variableOf } from "@/lang/walk";
 import { isParseError, parseData } from "@/python/parse";
+import { valueAt } from "@/runtime/refs";
 import type { Done, Event, Frame, Ref, State } from "@/runtime/types";
 import { exprText, notationText, SEPARATOR, valueText } from "@/ui/chart/text";
 
@@ -50,13 +51,6 @@ function refText(ref: Ref, frame: Frame | undefined, heap: Heap): string {
   return exprText(target);
 }
 
-function valueAt(ref: Ref, frame: Frame | undefined, heap: Heap): Value | undefined {
-  if ("var" in ref) return frame?.vars.get(ref.var);
-  const entry = heap.get(ref.heap);
-  if ("index" in ref) return entry?.kind === "list" ? entry.items[ref.index] : undefined;
-  return entry?.kind === "dict" ? entry.entries.get(ref.key) : undefined;
-}
-
 /**
  * A comparison as the chart writes it, each variable that holds a number, a text, a boolean,
  * or none written as its value in the shown frame; a list keeps its name.
@@ -99,7 +93,7 @@ export function narrate(event: Event, ctx: NarrateContext): Narration {
           params: { count: event.refs.length, name: nameOf(heapRef, frame, heap) },
         };
       }
-      const value = valueAt(first, frame, heap);
+      const value = valueAt(first, frame?.vars ?? new Map(), heap);
       return {
         key: "run.narrate.read",
         params: {
