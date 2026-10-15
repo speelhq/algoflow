@@ -8,7 +8,7 @@ One folder per area, holding its specification files.
 | ------------- | ---------------- | --------------------------------------------------------------- |
 | `scope/`      | `scope.md`       | product scope, the learner, curriculum, acceptance              |
 | `language/`   | `language.md`    | AST types, data model, semantics, validation, edits, kinds      |
-| `nodes/`      | `nodes.md`       | every block: slots, Python output, notation, chart, menu entries |
+| `blocks/`     | `blocks.md`      | every block: slots, Python output, notation, chart, menu entries |
 | `runtime/`    | `interpreter.md` | runner, events, runtime errors, driver, CPython check           |
 |               | `emitter.md`     | the Python emitter                                              |
 |               | `parser.md`      | the expression parser                                           |
@@ -68,13 +68,14 @@ a check already enforces. A changed statement's reason changes with it.
 | Term            | Definition                                                                      |
 | --------------- | ------------------------------------------------------------------------------- |
 | program         | one `Program` AST (`language.md`)                                               |
-| block           | a `NodeDef` in `src/nodes/` and its entry in the block menu (`nodes.md`)        |
+| block           | a `BlockDef` in `src/blocks/` and its entry in the block menu (`blocks.md`)     |
 | node            | chart rendering of one statement (a box, a diamond, or a terminal)              |
 | generated node  | a node the chart draws for a loop's init, check, or step; it belongs to the loop |
+| `Node`, `NodeId` | in the code, a statement or an expression of a program (`language.md`, Statements, Expressions), and the id it carries, which a function and a class carry too (`language.md`, Program); a statement's node on the chart carries its statement's `NodeId` |
 | region          | an ordered list of statements inside a branch or loop, or at top level          |
 | slot            | one editable field of a block                                                   |
 | value line      | the one-line editor of an expression slot (`editor.md`, Value line)             |
-| notation        | a block's text on its node, the same in every locale (`nodes.md`, Node text)     |
+| notation        | a block's text on its node, the same in every locale (`blocks.md`, Node text)    |
 | connector       | the `+` insertion point on an edge                                              |
 | event           | one record produced by the interpreter (`interpreter.md`)                       |
 | step            | one call to `Runner.next()`; a visible step is one the driver stops on (`interpreter.md`, Steps and batches) |

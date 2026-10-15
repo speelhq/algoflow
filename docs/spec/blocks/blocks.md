@@ -1,16 +1,16 @@
-# Nodes
+# Blocks
 
-Code: `src/nodes/`: one file per block, `registry.ts`, `types.ts`,
+Code: `src/blocks/`: one file per block, `registry.ts`, `types.ts`,
 `categories.ts`. Tests: one `<key>.test.ts` per block, and
 `registry.test.ts`.
 
 ## The block definition
 
-Every block is one file `src/nodes/<key>.ts` (a `:` in the key becomes `-`
-in the file name: `call-abs.ts`, `method-append.ts`) exporting a `NodeDef`:
+Every block is one file `src/blocks/<key>.ts` (a `:` in the key becomes `-`
+in the file name: `call-abs.ts`, `method-append.ts`) exporting a `BlockDef`:
 
 ```ts
-export type NodeDef = {
+export type BlockDef = {
   key: string;
   shape: "stmt" | "expr";
   category: "basic" | "control" | "list" | "function" | "dict" | "class"; // in menu order (`editor.md`, Block menu)
@@ -56,7 +56,7 @@ export type Slot = {
 };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
 export type MenuEntry = {
-  name: string; // "" for the block's own label and help, else node.<key>.<name>.label / .help
+  name: string; // "" for the block's own label and help, else block.<key>.<name>.label / .help
   group: "values" | "conditions" | "calculate" | "items" | "compare" | "convert"; // `editor.md`, Value list
   on?: Kind[]; // offered after a value of these kinds, which it takes as its first input
   preset?: Record<string, unknown>; // slot values set on the block's create() (binop `op`)
@@ -83,7 +83,7 @@ marked `optional` to as many as it has parameters; `E_ARITY` gives as
 A builtin's `create()` gives it one empty argument per parameter not
 marked `optional`.
 
-`src/nodes/registry.ts` registers every block and is the only registry:
+`src/blocks/registry.ts` registers every block and is the only registry:
 every other module reaches a block through it.
 
 No module other than a block's file and the registry's `keyOf` branches on
@@ -93,13 +93,13 @@ flags instead.
 
 ## Catalog keys
 
-i18n keys per block in `en.json`: `node.<key>.label`, the block's name in
-the block menu and the value list, `node.<key>.help`, and
-`node.<key>.slot.<slot>`, the name of each slot of a statement that the
-editor shows as a field (`node.assign.slot.value`: `value`); `ja.json`
+i18n keys per block in `en.json`: `block.<key>.label`, the block's name in
+the block menu and the value list, `block.<key>.help`, and
+`block.<key>.slot.<slot>`, the name of each slot of a statement that the
+editor shows as a field (`block.assign.slot.value`: `value`); `ja.json`
 provides the same keys. The hidden `empty` block has its label and help. A
-menu entry with a `name` has `node.<key>.<name>.label` and
-`node.<key>.<name>.help`. No help names its entry's keys: the explanation
+menu entry with a `name` has `block.<key>.<name>.label` and
+`block.<key>.<name>.help`. No help names its entry's keys: the explanation
 line writes them from `keys` (`editor.md`, Explanation line), as a help that
 named them would repeat the block's `keys` in every locale. A block's node
 text is no catalog key: it is the block's `notation()`, the same in every
@@ -291,7 +291,7 @@ A check is drawn as every diamond asks its condition (`chart.md`, Shapes:
 The texts of `for` are notation, declared by the block and the same in
 every locale. Those of `foreach` hold words, as its steps have no
 expression to write (Python keeps the position hidden): they are its
-catalog keys `node.foreach.init`, `check`, and `step`, translated, the one
+catalog keys `block.foreach.init`, `check`, and `step`, translated, the one
 node text in words. A counted loop's own notation names it in the block
 menu and the editor (`for`'s is its init).
 

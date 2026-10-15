@@ -32,7 +32,7 @@ decoded. A construct whose block is not in the registry is `E_PARSE_SYNTAX`
 at its token, so the registry alone determines what the language accepts;
 a grammar-legal form whose block is not registered (`[1, 2]`, `xs[i]`)
 would otherwise fail later in `unparse`, `validate`, or `run` with an
-unknown-node error instead of a diagnostic.
+unknown-block error instead of a diagnostic.
 
 An int literal outside the int range (`language.md`, Run-time values), and
 a float literal beyond the largest float, is `E_PARSE_SYNTAX` at its token,
@@ -42,9 +42,9 @@ as `null`.
 
 `NAME(...)` resolves in the order of `language.md`, Scope: a class or
 function of the program, a learner module, a built-in module, a builtin in
-`nodes.md` (`random.randint` accepted as an alias), else `E_UNKNOWN_CALL`.
+`blocks.md` (`random.randint` accepted as an alias), else `E_UNKNOWN_CALL`.
 
-`a.b(...)` resolves to a method in `nodes.md`, else `E_UNKNOWN_CALL`.
+`a.b(...)` resolves to a method in `blocks.md`, else `E_UNKNOWN_CALL`.
 
 Chained comparison → `E_PARSE_CHAIN`; other syntax errors →
 `E_PARSE_SYNTAX`; both carry `position`.

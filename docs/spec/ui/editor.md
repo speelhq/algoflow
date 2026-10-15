@@ -8,8 +8,8 @@ node editor `NodeEditor.tsx` with its session `session.ts`, the value line
 ## Block menu
 
 The block menu lists the registered statement blocks (blocks of
-`shape: "stmt"` and the method statements, `nodes.md`, not `hidden`) with a
-search over `label` and `help`, grouped in the category order of `nodes.md`,
+`shape: "stmt"` and the method statements, `blocks.md`, not `hidden`) with a
+search over `label` and `help`, grouped in the category order of `blocks.md`,
 The block definition (`Basic`, `Control`, `List`, `Function`, `Dict`,
 `Class`), each category in a fixed order that puts `assign`, `print`, `if`,
 `for`, and `while` first in theirs; an entry reads as the block's label
@@ -88,7 +88,7 @@ The editor is placed by its node without a control on the node: nothing
 there takes the keyboard or announces a popup.
 
 A field of the editor's notation is named, for assistive technology, by
-the block's label and the slot's name (`node.<key>.slot.<slot>`, `nodes.md`,
+the block's label and the slot's name (`block.<key>.slot.<slot>`, `blocks.md`,
 Catalog keys): `Set variable, value`. The symbols before a field (`←`,
 `print(`) name nothing a screen reader can say.
 
@@ -99,7 +99,7 @@ Shapes) follow.
 ## Value line
 
 A value line edits one expression, written as the chart writes it
-(`nodes.md`, Node text): variables as bold words in the variable colour, an
+(`blocks.md`, Node text): variables as bold words in the variable colour, an
 operator as its symbol, and an input still to fill as an empty field. A chip editor was
 rejected: it nests a box per operation, so a value of three operations is
 three levels of boxes, where a line reads left to right as the chart writes
@@ -175,7 +175,7 @@ by `editor.ownFunction`, and last `Modules ▸`, which opens one group per
 module listing its functions as calls, as the block menu's does). After a
 value, the entries whose `on` holds the kind of the expression before the
 caret, the largest operation with a precedence that ends at the caret
-within the innermost brackets (`nodes.md`, Menu entries): `Calculate` for a
+within the innermost brackets (`blocks.md`, Menu entries): `Calculate` for a
 number, `Conditions` for a true/false value, `Items` for a list, a dict, or
 an object, and `Compare` and `Convert` for every kind; an entry with a
 symbol shows it before its name (`× Multiply`). After a value of no known
@@ -189,7 +189,7 @@ with no row reads `editor.noItems`. Groups are named by what is done with a
 value, not by block category; `Combine`, `Other`, `Totals`, `Order`, and
 `Functions` were rejected as names that mislead or head one or two rows.
 `Variables` offers no `v + 1`: guessing it for an index or a bound would tie
-the list to two block kinds (`nodes.md`, The block definition).
+the list to two block kinds (`blocks.md`, The block definition).
 
 An entry chosen after a value takes that value as its first input: an
 entry whose block has a precedence (an operator) stands between the value
@@ -197,7 +197,7 @@ before the caret and the next one, and binds by the precedence of
 `emitter.md` within the innermost brackets; any other entry takes the
 expression before the caret whose kind chose the list, so `i < n` followed
 by `As text` gives `str(i < n)`, and an entry whose first input binds as
-an atom (`Item at a position`, `nodes.md`, Node text) takes the value just
+an atom (`Item at a position`, `blocks.md`, Node text) takes the value just
 before the caret, as Python binds it (`i + nums[…]`), whether chosen or
 typed. An entry chosen where a value is
 expected fills that input. The inputs a choice leaves appear as fields in
@@ -245,7 +245,7 @@ Backspace removes it only when no input after the first holds a value
 (`f(a, b, …)` keeps `b`).
 
 Keys typed in a value line insert what the chart writes; each entry names
-its keys (`keys`, `nodes.md`, Menu entries), and a key two entries name
+its keys (`keys`, `blocks.md`, Menu entries), and a key two entries name
 inserts the one that applies at the caret: `[` is `Empty list` where a value
 is expected and `Item at a position` after one:
 
@@ -308,7 +308,7 @@ repeated what a value line does after a value, and offered the form only
 for a variable whose kind is told, so a parameter never got one.
 
 Where the whole target is still to fill, the list of a slot that `binds`
-(`nodes.md`, The block definition) holds the names a name field offers
+(`blocks.md`, The block definition) holds the names a name field offers
 (Name fields), `This problem` first, and a typed name that neither holds
 and that Identifiers allows (`language.md`) as `New variable <name>`, which
 the word names exactly; the list of a slot that does not bind holds the
@@ -371,7 +371,7 @@ chart.
 ## Explanation line
 
 The explanation line at the foot of the editor explains what the list
-highlights or the caret is in: an entry's name and its help (`nodes.md`,
+highlights or the caret is in: an entry's name and its help (`blocks.md`,
 Catalog keys), followed, when keys insert it, by how to type them
 (`editor.typeKeys`: `Type %.`); the brackets' label with `editor.bracketsHelp`
 and how to type them; a variable's
@@ -388,7 +388,7 @@ input the caret is in underlined (`dp[…]`, its `…` underlined); the message
 of a refused key (Backspace and keys); the closest name for a word that
 matches nothing (Value line), or `editor.nothingLike` when none is close;
 in a name field with nothing highlighted, `editor.explain.name`; or else the
-block's help (`node.<key>.help`). An input is shown by its value, not named
+block's help (`block.<key>.help`). An input is shown by its value, not named
 in words (`position`), which would need a name for every input of every
 operation in every language.
 

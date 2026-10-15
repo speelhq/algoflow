@@ -26,8 +26,8 @@ in the file.
 | `EditValue.png` | 4B Build: where a value is expected | `editor.md`, Value line, Value list |
 | `EditTyping.png` | 4C Build: typing, and the text becomes blocks | `editor.md`, Value line, Backspace and keys |
 | `EditNumber.png` | 4D Build: after a number, and a named check | `editor.md`, Value list, Node names, Explanation line |
-| `EditList.png` | 4E Build: after a list, what can be done with it | `editor.md`, Value list; `nodes.md`, Menu entries |
-| `EditCheck.png` | 4F Build: an unnamed check, then And or Or | `chart.md`, Shapes; `editor.md`, Value list; `nodes.md`, Node text |
+| `EditList.png` | 4E Build: after a list, what can be done with it | `editor.md`, Value list; `blocks.md`, Menu entries |
+| `EditCheck.png` | 4F Build: an unnamed check, then And or Or | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Node text |
 | `EditItem.png` | 4G Build: set one item of a list | `editor.md`, Value list, Name fields, Explanation line |
 | `Run.png` | 5 Run: the moment on the chart, the state in Result | `run.md`, Run bar, Path and marks, Narration; `pages.md`, Result tab |
 | `Wrong.png` | 6 Submit: Wrong Answer, and a way to the cause | `run.md`, Submission |
@@ -68,7 +68,7 @@ in the file.
 - The grey sentences under the rows of `Run.png` and `Wrong.png` annotate
   the artboards and are not part of the screen.
 - Every artboard that shows a node, a value, or the narration writes the
-  notation the blocks had before `nodes.md`, Node text set it
+  notation the blocks had before `blocks.md`, Node text set it
   (`Set i to 1`, `(remainder of i divided by 15) = 0?`, `n = 15`); the node
   text is the spec's until the artboards are drawn again.
 - The artboards use a hand-drawn typeface to mark them as drafts; the
