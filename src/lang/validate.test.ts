@@ -206,6 +206,13 @@ describe("validate (language.md, Validation)", () => {
     ]);
   });
 
+  it("a target of a slot that does not bind reads its variable (swap)", () => {
+    const stmt = ast.swap(v("x"), v("y"));
+    expect(validate(program([assign("y", num(1)), stmt]))).toEqual([
+      { nodeId: stmt.id, code: "E_UNDEFINED", params: { name: "x" } },
+    ]);
+  });
+
   it("E_DUPLICATE_ID: the second occurrence of an id is reported", () => {
     const a = assign("x", num(1));
     const b = { ...assign("y", num(2)), id: a.id };

@@ -69,6 +69,7 @@ export const ast = {
     value,
   }),
   print: (...args: Expr[]): Stmt => ({ id: tid(), kind: "print", args }),
+  swap: (a: Expr, b: Expr): Stmt => ({ id: tid(), kind: "swap", a, b }),
   exprStmt: (expr: Expr): Stmt => ({ id: tid(), kind: "expr", expr }),
   if_: (cond: Expr, then: Stmt[], else_: Stmt[] = []): Stmt => ({
     id: tid(),

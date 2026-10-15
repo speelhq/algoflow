@@ -28,6 +28,7 @@ import { num } from "./num";
 import { print } from "./print";
 import { returnStmt } from "./return";
 import { str } from "./str";
+import { swap } from "./swap";
 import { builtinKey, methodKey, type BlockDef } from "./types";
 import { unop } from "./unop";
 import { variable } from "./var";
@@ -44,6 +45,7 @@ const ALL: BlockDef[] = [
   print,
   exprStmt,
   returnStmt,
+  swap,
   // expressions, in the order of the value list's entries
   empty,
   num,

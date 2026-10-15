@@ -205,6 +205,11 @@
       "slot": { "value": "value" },
       "help": "Leaves the function and hands back the value."
     },
+    "swap": {
+      "label": "Swap",
+      "slot": { "a": "first", "b": "second" },
+      "help": "Exchanges the values of two places: two items of a list, or two variables."
+    },
     "expr": {
       "label": "Expression",
       "slot": { "expr": "expression" },
