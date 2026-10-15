@@ -1,6 +1,6 @@
 // Kinds known before the program runs.
 import { describe, expect, it } from "vitest";
-import { ast, program, tid } from "@/nodes/testing";
+import { ast, program, tid } from "@/blocks/testing";
 import { isParseError, parse } from "@/python/parse";
 import { chartOf, dataKind, exprKind, firstSetters, variableKinds } from "./kinds";
 import type { Expr, Kind } from "./types";

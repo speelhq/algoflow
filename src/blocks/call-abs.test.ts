@@ -1,0 +1,30 @@
+import { describe, expect, it } from "vitest";
+import { unparse } from "@/python/emit";
+import { ast, evalExpr, notation } from "./testing";
+
+const { call, num, float, str, neg } = ast;
+
+describe("builtin abs (blocks.md)", () => {
+  it("emits `abs(<x>)`", () => {
+    expect(unparse(call("abs", neg(num(3))))).toBe("abs(-3)");
+  });
+
+  it("absolute value keeps int/float", () => {
+    expect(evalExpr(call("abs", neg(num(3)))).value).toEqual({ t: "int", v: 3 });
+    expect(evalExpr(call("abs", float(-2.5))).value).toEqual({ t: "float", v: 2.5 });
+  });
+
+  it("a non-number → E_VALUE naming abs and the type", () => {
+    const e = call("abs", str("a"));
+    expect(evalExpr(e).done).toMatchObject({
+      type: "error",
+      error: { nodeId: e.id, code: "E_VALUE", params: { op: "call:abs", type: "str" } },
+    });
+  });
+});
+
+describe("notation (blocks.md, Node text)", () => {
+  it("writes the notation of its table", () => {
+    expect(notation(call("abs", num(3)))).toBe("abs({x})");
+  });
+});

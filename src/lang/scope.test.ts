@@ -1,6 +1,6 @@
 // What is visible where; the places `loop` and `requires` allow; the value list's Variables.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { assignedValue, placeContext, visibleAt } from "./scope";
 
 const { assign, num, v, bin, print, for_, if_, while_, ret } = ast;

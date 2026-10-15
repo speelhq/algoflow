@@ -3,11 +3,11 @@
 // the place does not meet disabled with the reason, then the program's functions a call can
 // name, as calls. Reads `shape`, `hidden`, `category`, `requires`, and the notation of a
 // block's `create()`, never a kind.
-import { nodeText, t } from "@/i18n/t";
+import { blockText, t } from "@/i18n/t";
 import { placeContext } from "@/lang/scope";
 import type { Place, Program, Stmt } from "@/lang/types";
-import { getNode, menuBlocks } from "@/nodes/registry";
-import { CATEGORIES, type Category } from "@/nodes/categories";
+import { getBlock, menuBlocks } from "@/blocks/registry";
+import { CATEGORIES, type Category } from "@/blocks/categories";
 import { parseScope } from "@/python/parse";
 import { blankTemplate } from "@/ui/chart/text";
 import { functionLabel } from "./explain";
@@ -39,9 +39,9 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
           (def.requires === "loop" && !here.loop) || (def.requires === "function" && !here.fn);
         const entry: BlockMenuEntry = {
           id: def.key,
-          label: nodeText(def.key, "label"),
+          label: blockText(def.key, "label"),
           notation: blankTemplate(def.notation(def.create())),
-          help: nodeText(def.key, "help"),
+          help: blockText(def.key, "help"),
           create: () => def.create() as Stmt,
         };
         if (missing && def.requires) entry.disabled = t(`menu.requires.${def.requires}`);
@@ -55,7 +55,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
     return {
       id: `call:${fn.name}`,
       label: functionLabel(fn),
-      help: nodeText("call", "help"),
+      help: blockText("call", "help"),
       create: () => callStatement(program, fn),
     };
   });
@@ -67,7 +67,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
 function callStatement(program: Program, fn: LineFunction): Stmt {
   const call = callExpr(fn, parseScope(program));
   if (!call) throw new Error(`"${fn.name}" is no function of the program`);
-  const statement = getNode("expr").create() as Extract<Stmt, { kind: "expr" }>;
+  const statement = getBlock("expr").create() as Extract<Stmt, { kind: "expr" }>;
   return { ...statement, expr: call };
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ast, program, withInputs } from "@/nodes/testing";
+import { ast, program, withInputs } from "@/blocks/testing";
 import { dataToPython, emit, unparse } from "./emit";
 import { EXPRESSION_FIXTURE } from "./fixtures/expressions";
 import { isParseError, NO_DEFINITIONS, parse } from "./parse";

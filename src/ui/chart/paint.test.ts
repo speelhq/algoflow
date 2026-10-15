@@ -1,6 +1,6 @@
 // The taken path, marks, current node, and breakpoint drawn while running.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { estimatedWidth, layout } from "./layout";
 import { currentNode, paint, type RunView } from "./paint";
 

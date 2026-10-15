@@ -1,7 +1,7 @@
 // The slot clicked, else the first to fill, takes the keyboard; keys in a value line, Tab past its last field, `,` in a list; a handler's changes chain on what each returns.
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
-import { ast } from "@/nodes/testing";
+import { ast } from "@/blocks/testing";
 import { allEntries } from "./entries";
 import { fieldsOf, startField, type Field } from "./fields";
 import type { LineContext } from "./line";

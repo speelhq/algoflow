@@ -1,6 +1,6 @@
 // Element access shared by the blocks that read or write list items.
 import type { HeapId, NodeId, Value } from "@/lang/types";
-import type { RunContext } from "@/nodes/types";
+import type { RunContext } from "@/blocks/types";
 import { entryOf, typeName } from "./values";
 
 /** `E_TYPE` with the operand type names. */

@@ -1,7 +1,7 @@
 // What the editor asks of a program's structure: the names visible at a statement,
 // and whether a place lies inside a loop or a function.
 // Registry-driven: slots, `loop`, and regions, never a kind.
-import { getNode, keyOf } from "@/nodes/registry";
+import { getBlock, keyOf } from "@/blocks/registry";
 import type { Expr, Id, NodeId, Place, Program, Stmt } from "./types";
 import { childSlots, isExpr, regionsOf, variableOf } from "./walk";
 
@@ -15,7 +15,7 @@ export type Declared = { name: Id; role: "id" | "target" };
  */
 export function boundVariables(stmt: Stmt): Expr[] {
   const bag = stmt as unknown as Bag;
-  return getNode(keyOf(stmt))
+  return getBlock(keyOf(stmt))
     .slots.filter((slot) => slot.role === "target" && slot.binds)
     .map((slot) => bag[slot.name])
     .filter((value): value is Expr => isExpr(value) && variableOf(value) !== undefined);
@@ -25,7 +25,7 @@ export function boundVariables(stmt: Stmt): Expr[] {
 export function declaredBy(stmt: Stmt): Declared[] {
   const bag = stmt as unknown as Bag;
   const names: Declared[] = [];
-  for (const slot of getNode(keyOf(stmt)).slots) {
+  for (const slot of getBlock(keyOf(stmt)).slots) {
     const value = bag[slot.name];
     if (slot.role === "id" && typeof value === "string" && value !== "") {
       names.push({ name: value, role: "id" });
@@ -40,7 +40,7 @@ export function declaredBy(stmt: Stmt): Declared[] {
 
 /** The expression a statement with a binding target assigns: its expression slot (`x = <value>`). */
 export function assignedValue(stmt: Stmt): Expr | undefined {
-  const { slots } = getNode(keyOf(stmt));
+  const { slots } = getBlock(keyOf(stmt));
   if (!slots.some((slot) => slot.role === "target" && slot.binds)) return undefined;
   const slot = slots.find((candidate) => candidate.role === "expr");
   return childSlots(stmt).find((child) => child.slot === slot?.name)?.expr;
@@ -109,7 +109,7 @@ export function placeContext(program: Program, place: Place): { loop: boolean; f
   let at: NodeId | "main" | undefined = place.parent;
   while (at !== undefined && at !== "main" && !functions.has(at)) {
     const stmt = stmts.get(at);
-    if (stmt && getNode(keyOf(stmt)).loop) loop = true;
+    if (stmt && getBlock(keyOf(stmt)).loop) loop = true;
     at = up.get(at);
   }
   return { loop, fn: at !== undefined && at !== "main" };

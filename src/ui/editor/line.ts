@@ -11,7 +11,7 @@ import { exprKind } from "@/lang/kinds";
 import type { Expr, Id, NodeId, Program } from "@/lang/types";
 import { refusedDefinitions } from "@/lang/validate";
 import { allExprs, isEmptyExpr, isTarget, variableOf } from "@/lang/walk";
-import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
+import { emptyExpr, getBlock, keyOf } from "@/blocks/registry";
 import { isParseError, NO_DEFINITIONS, parse, type ParseScope } from "@/python/parse";
 import { levelAssociativity } from "@/python/precedence";
 import {
@@ -113,7 +113,7 @@ export function parentOf(root: Expr, id: NodeId): { parent: Expr; index: number 
 function mapInputs(expr: Expr, map: (input: Expr, index: number) => Expr): Expr {
   const copy = { ...expr } as unknown as Bag;
   let index = 0;
-  for (const slot of getNode(keyOf(expr)).slots) {
+  for (const slot of getBlock(keyOf(expr)).slots) {
     const value = copy[slot.name];
     if (slot.role === "expr" && value && typeof value === "object") {
       copy[slot.name] = map(value as Expr, index);
@@ -143,10 +143,10 @@ function replace(line: Line, id: NodeId, by: Expr): Line {
   };
 }
 
-const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
+const precedenceOf = (expr: Expr) => getBlock(keyOf(expr)).precedence?.(expr);
 
 /** The slot of an operation's list of values, when it has one. */
-const valuesSlot = (expr: Expr) => getNode(keyOf(expr)).slots.find((s) => s.role === "exprs");
+const valuesSlot = (expr: Expr) => getBlock(keyOf(expr)).slots.find((s) => s.role === "exprs");
 
 /** An operation that holds a list of values and is no call (`[a, b]`): `,` adds a value to it. */
 function isSequence(expr: Expr): boolean {
@@ -373,7 +373,7 @@ function takeValue(line: Line, entry: Entry): Outcome {
   const last = lastValue(line);
   if (!last) return refused(line);
   const made = makeEntry(entry);
-  const first = getNode(keyOf(made)).slots.find((s) => s.role === "expr" || s.role === "exprs");
+  const first = getBlock(keyOf(made)).slots.find((s) => s.role === "expr" || s.role === "exprs");
   const level = first ? bindsAt(made, first.name) : undefined;
   // An operator binds by its precedence; any other entry takes what the list was about.
   const target = line.selected
@@ -400,7 +400,7 @@ function fill(line: Line, made: Expr, text = false): Outcome {
 /** The slot of a value typed in a text field of its own (`Text`); a number is typed in the line. */
 function textSlot(made: Expr): string | undefined {
   if (isNumber(made) || inputs(made).length > 0) return undefined;
-  return getNode(keyOf(made)).slots.find((s) => s.role === "text")?.name;
+  return getBlock(keyOf(made)).slots.find((s) => s.role === "text")?.name;
 }
 
 /** What a value typed in a text field of its own holds, or undefined for any other value. */

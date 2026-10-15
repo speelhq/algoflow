@@ -1,6 +1,6 @@
 // Every node maps to the statement that contains it.
 import { describe, expect, it } from "vitest";
-import { ast, program, tid } from "@/nodes/testing";
+import { ast, program, tid } from "@/blocks/testing";
 import { bodyStmts, conditionOf, diamondConditions, ownerStmts, paramArg } from "./walk";
 
 const { assign, num, bin, v, if_, for_, while_, print, ret, call } = ast;

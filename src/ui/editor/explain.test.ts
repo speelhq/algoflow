@@ -1,7 +1,7 @@
 // The explanation line explains what the list highlights or the caret is in.
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { allEntries, labelOf, makeEntry } from "./entries";
 import { explainLine, explainVariable } from "./explain";
 import { openLine, settle, type, type Line, type LineContext } from "./line";

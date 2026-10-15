@@ -1,6 +1,6 @@
 // The chosen case gives the values of a program's inputs, and its seed.
 import { describe, expect, it } from "vitest";
-import { program } from "@/nodes/testing";
+import { program } from "@/blocks/testing";
 import { caseInputs, caseOf } from "./cases";
 import { getChallenge } from "./index";
 import { seedOf } from "./types";

@@ -3,7 +3,7 @@
 // chosen there. A target's line lists the rows that keep a target, and where its whole value is
 // to fill, names (`editor.md`, Targets). Reads the entries' `group` and `on` only.
 import type { Kind } from "@/lang/types";
-import type { MenuGroup } from "@/nodes/types";
+import type { MenuGroup } from "@/blocks/types";
 import { allEntries, GROUPS, takesValue } from "./entries";
 import {
   atInput,

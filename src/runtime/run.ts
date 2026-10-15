@@ -2,8 +2,8 @@
 // owns frames, dispatch, counting, limits, and the Runner contract.
 import { inputValue, toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Id, NodeId, Program, Stmt, Value } from "@/lang/types";
-import { getNode, keyOf } from "@/nodes/registry";
-import type { ExprRunner, RunContext, Signal, StmtRunner } from "@/nodes/types";
+import { getBlock, keyOf } from "@/blocks/registry";
+import type { ExprRunner, RunContext, Signal, StmtRunner } from "@/blocks/types";
 import { RuntimeFailure } from "./errors";
 import { createRandom } from "./random";
 import { typeName } from "./values";
@@ -29,13 +29,13 @@ export function run(program: Program, inputs: Readonly<Record<Id, Data>>, seed: 
     program,
     heap,
     *eval(expr: Expr) {
-      const def = getNode(keyOf(expr));
+      const def = getBlock(keyOf(expr));
       return yield* (def.run as ExprRunner)(expr, ctx);
     },
     *exec(body: Stmt[]) {
       for (const stmt of body) {
         yield { type: "enter", nodeId: stmt.id };
-        const def = getNode(keyOf(stmt));
+        const def = getBlock(keyOf(stmt));
         const signal: Signal = yield* (def.run as StmtRunner)(stmt, ctx);
         if (signal) return signal;
       }
@@ -51,7 +51,7 @@ export function run(program: Program, inputs: Readonly<Record<Id, Data>>, seed: 
       top().vars.set(name, value);
     },
     *store(target, value, at) {
-      const def = getNode(keyOf(target));
+      const def = getBlock(keyOf(target));
       if (!def.store) throw new Error(`${def.key} is no target`);
       yield* def.store(target, value, ctx, at);
     },

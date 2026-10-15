@@ -1,7 +1,7 @@
 // The value line as keys and choices change it.
 import { describe, expect, it } from "vitest";
 import type { Expr, Kind } from "@/lang/types";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { unparse } from "@/python/emit";
 import { exprText } from "@/ui/chart/text";
 import { allEntries } from "./entries";

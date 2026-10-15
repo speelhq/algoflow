@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { finish, outcomeOf } from "./outcome";
 import { run } from "./run";
 

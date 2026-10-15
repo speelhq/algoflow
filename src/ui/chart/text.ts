@@ -7,8 +7,8 @@ import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Node, NodeId, Value } from "@/lang/types";
 import { conditionOf, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/walk";
-import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
-import type { Generated, NodeDef, Side } from "@/nodes/types";
+import { emptyExpr, getBlock, keyOf } from "@/blocks/registry";
+import type { Generated, BlockDef, Side } from "@/blocks/types";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
 import { str, writeValue } from "@/runtime/values";
 
@@ -114,9 +114,9 @@ export function templateParts(template: string, fill: (name: string) => Part[]):
 
 const plain = (part: Part) => !part.variable && !part.empty && !part.underline;
 
-/** A node's notation (`nodes.md`, Node text). */
+/** A node's notation (`blocks.md`, Node text). */
 export function notationOf(node: Node): string {
-  return getNode(keyOf(node)).notation(node);
+  return getBlock(keyOf(node)).notation(node);
 }
 
 /** Whether an expression's notation ends with `bracket`: a call's `)`, a list's or an item's `]`. */
@@ -130,14 +130,14 @@ export function isCall(expr: Expr): boolean {
   return closedBy(expr, ")");
 }
 
-const precedenceOf = (expr: Expr) => getNode(keyOf(expr)).precedence?.(expr);
+const precedenceOf = (expr: Expr) => getBlock(keyOf(expr)).precedence?.(expr);
 
 /**
  * The precedence the input in slot `slot` of `node` binds at: the node's own, as an operator's
  * inputs do, else an atom's where the slot declares one (the list of an item), else none.
  */
 export function bindsAt(node: Node, slot: string): number | undefined {
-  const def = getNode(keyOf(node));
+  const def = getBlock(keyOf(node));
   const own = def.shape === "expr" ? def.precedence?.(node as Expr) : undefined;
   return own ?? (def.slots.find((s) => s.name === slot)?.atom ? PRECEDENCE.atom : undefined);
 }
@@ -176,7 +176,7 @@ export type Held =
 
 /** What the placeholder `name` of `node`'s notation or template holds. */
 export function placeholderValue(node: Node, name: string): Held | undefined {
-  const def = getNode(keyOf(node));
+  const def = getBlock(keyOf(node));
   const slot = def.slots.find((s) => s.name === name);
   if (!slot) {
     // A builtin's notation names its parameters (`{a}`, `{b}`).
@@ -239,7 +239,7 @@ function listParts(items: Expr[], write: (item: Expr) => Part[]): Part[] {
   );
 }
 
-function textOf(node: Node, def: NodeDef, slot: string): string {
+function textOf(node: Node, def: BlockDef, slot: string): string {
   const value = (node as unknown as Bag)[slot];
   return (
     def.text?.(node, slot) ||
@@ -253,7 +253,7 @@ export function exprText(expr: Expr, writing: Writing = {}): string {
 }
 
 /** Whether a slot is drawn as the placeholder: an empty expression, an empty name, or no item. */
-function drawsPlaceholder(node: Node, def: NodeDef, name: string): boolean {
+function drawsPlaceholder(node: Node, def: BlockDef, name: string): boolean {
   const slot = def.slots.find((s) => s.name === name);
   const value = (node as unknown as Bag)[name];
   switch (slot?.role) {
@@ -271,7 +271,7 @@ function drawsPlaceholder(node: Node, def: NodeDef, name: string): boolean {
 }
 
 /** The parts of one slot of a statement, each naming the slot. */
-function stmtSlotParts(node: Node, def: NodeDef, name: string): Part[] {
+function stmtSlotParts(node: Node, def: BlockDef, name: string): Part[] {
   const parts = (): Part[] => {
     if (drawsPlaceholder(node, def, name)) return [{ text: placeholder(), empty: true }];
     const held = placeholderValue(node, name);
@@ -293,18 +293,18 @@ function stmtSlotParts(node: Node, def: NodeDef, name: string): Part[] {
 
 /** What one slot of a statement holds, as the chart writes it. */
 export function slotParts(node: Node, slot: string): Part[] {
-  return stmtSlotParts(node, getNode(keyOf(node)), slot);
+  return stmtSlotParts(node, getBlock(keyOf(node)), slot);
 }
 
 /** A statement's notation, or a generated node's text, as parts, one or more per slot. */
 function stmtParts(notation: string, node: Node): Part[] {
-  const def = getNode(keyOf(node));
+  const def = getBlock(keyOf(node));
   return templateParts(notation, (name) => stmtSlotParts(node, def, name));
 }
 
 /** A node's notation as parts: an expression as the chart writes it, a statement by its slots. */
 export function notationParts(node: Node): Part[] {
-  const def = getNode(keyOf(node));
+  const def = getBlock(keyOf(node));
   return def.shape === "expr" ? exprParts(node as Expr) : stmtParts(def.notation(node), node);
 }
 
@@ -315,7 +315,7 @@ export function notationText(node: Node): string {
 
 /** Whether a statement has an input still to fill in any of its slots, at any depth. */
 export function hasInputToFill(node: Node): boolean {
-  const def = getNode(keyOf(node));
+  const def = getBlock(keyOf(node));
   return def.slots.some((slot) => stmtSlotParts(node, def, slot.name).some((part) => part.empty));
 }
 
@@ -324,7 +324,7 @@ export function hasInputToFill(node: Node): boolean {
  * check asked as every diamond asks its condition (`chart.condition`); none for another block.
  */
 export function generatedNotation(node: Node, part: Generated): string | undefined {
-  const chart = getNode(keyOf(node)).chart;
+  const chart = getBlock(keyOf(node)).chart;
   if (!chart || !("counted" in chart)) return undefined;
   const text = chart.counted[part];
   if (part !== "check") return text;
@@ -362,7 +362,7 @@ export function dataText(data: Data): string {
 }
 
 /** The block whose notation writes a variable with its value. */
-const ASSIGN = getNode("assign").create();
+const ASSIGN = getBlock("assign").create();
 
 /**
  * A variable shown with its value, written as an assignment writes it (`n ← 15`): its name in
@@ -370,7 +370,7 @@ const ASSIGN = getNode("assign").create();
  */
 export function assignmentParts(name: string, value: string): Part[] {
   return templateParts(notationOf(ASSIGN), (placeholderName) =>
-    getNode(keyOf(ASSIGN)).slots.find((slot) => slot.name === placeholderName)?.role === "target"
+    getBlock(keyOf(ASSIGN)).slots.find((slot) => slot.name === placeholderName)?.role === "target"
       ? [{ text: name, variable: true }]
       : [{ text: value }],
   );

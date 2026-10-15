@@ -105,11 +105,11 @@ describe("the key check", () => {
     write(
       "src/i18n/en.json",
       JSON.stringify({
-        node: { print: { label: "Print", help: "Shows a value" }, gone: { label: "Gone" } },
+        block: { print: { label: "Print", help: "Shows a value" }, gone: { label: "Gone" } },
         error: { E_KEY: "Key {key} does not exist", E_GONE: "Gone" },
       }),
     );
-    expect(run().unused).toEqual(["node.gone.label", "error.E_GONE"]);
+    expect(run().unused).toEqual(["block.gone.label", "error.E_GONE"]);
   });
 
   it("checks key parity with ja.json once it exists", () => {

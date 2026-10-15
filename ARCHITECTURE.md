@@ -13,10 +13,10 @@ can be moved into modules and reused across programs (`docs/spec/modules/`).
 - No graph, flow, or editor library: the chart is laid out from the
   `Program` by the application and never positioned by hand (`docs/spec/ui/chart.md`), which
   leaves nothing for a library of freely placed nodes and edges to do.
-- `src/lang`, `src/runtime`, `src/python`, and `src/nodes` import only each
+- `src/lang`, `src/runtime`, `src/python`, and `src/blocks` import only each
   other: through `@/` across folders and `./` within one, never `../`; tests
   may add `vitest` and `@/i18n` (`.oxlintrc.json`).
-- One block per file in `src/nodes/`; nothing else branches on block kind
+- One block per file in `src/blocks/`; nothing else branches on block kind
   or name (`docs/spec/blocks/`): every consumer reads a block's
   declarations, so a block added later works in the menu, the chart, and
   the editor with no other change.
@@ -36,7 +36,7 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   (`data.ts`). A `Program` is never mutated in place: `validate()`,
   `refusedDefinitions()`, and `nodesById()` are memoized per `Program` object,
   and the undo history holds earlier programs.
-- `src/nodes` — one `NodeDef` per block owning its slots, `create()`, `run`
+- `src/blocks` — one `BlockDef` per block owning its slots, `create()`, `run`
   (interpreter behaviour), `python()` (exact emitted text), and `chart`
   (`docs/spec/blocks/`). `registry.ts` is the only registry; the interpreter,
   the emitter, the chart, the block menu, and the node editor dispatch

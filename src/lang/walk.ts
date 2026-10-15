@@ -1,5 +1,5 @@
 // Traversal driven by each block's slots, so no module lists block kinds.
-import { getNode, keyOf } from "@/nodes/registry";
+import { getBlock, keyOf } from "@/blocks/registry";
 import type { Expr, FunctionDef, Node, NodeId, Program, Stmt } from "./types";
 
 type Bag = Record<string, unknown>;
@@ -15,7 +15,7 @@ export function isEmptyExpr(value: unknown): boolean {
 
 /** Whether an expression names where a value is stored: its block declares `store`. */
 export function isTarget(expr: Expr): boolean {
-  return getNode(keyOf(expr)).store !== undefined;
+  return getBlock(keyOf(expr)).store !== undefined;
 }
 
 /**
@@ -23,7 +23,7 @@ export function isTarget(expr: Expr): boolean {
  * Read from the block's slots, so no module names the variable block.
  */
 export function variableOf(expr: Expr): string | undefined {
-  const { slots } = getNode(keyOf(expr));
+  const { slots } = getBlock(keyOf(expr));
   const [slot] = slots;
   if (slots.length !== 1 || slot?.role !== "id") return undefined;
   const name = (expr as unknown as Bag)[slot.name];
@@ -35,7 +35,7 @@ export function variableOf(expr: Expr): string | undefined {
  * arguments; undefined when the node has no such parameter or that argument is not passed.
  */
 export function paramArg(node: Node, name: string): { arg: Expr; index: number } | undefined {
-  const index = getNode(keyOf(node)).params?.findIndex((param) => param.name === name) ?? -1;
+  const index = getBlock(keyOf(node)).params?.findIndex((param) => param.name === name) ?? -1;
   const args = (node as unknown as Bag).args;
   const arg: unknown = index >= 0 && Array.isArray(args) ? args[index] : undefined;
   return isExpr(arg) ? { arg, index } : undefined;
@@ -45,7 +45,7 @@ export type SlotExpr = { slot: string; expr: Expr; index?: number };
 
 /** Direct expression children with the slot each sits in; a target is one, as an `expr` is. */
 export function childSlots(node: Node): SlotExpr[] {
-  const def = getNode(keyOf(node));
+  const def = getBlock(keyOf(node));
   const bag = node as unknown as Bag;
   const out: SlotExpr[] = [];
   for (const slot of def.slots) {
@@ -68,7 +68,7 @@ function childExprs(node: Node): Expr[] {
 
 /** Body regions of a statement, in slot order (empty for simple statements). */
 export function regionsOf(stmt: Stmt): Array<{ slot: string; stmts: Stmt[] }> {
-  const def = getNode(keyOf(stmt));
+  const def = getBlock(keyOf(stmt));
   const bag = stmt as unknown as Bag;
   const out: Array<{ slot: string; stmts: Stmt[] }> = [];
   for (const slot of def.slots) {
@@ -135,7 +135,7 @@ export function ownerStmts(program: Program): Map<NodeId, NodeId> {
 
 /** The condition a diamond asks: the slot its block's `branch` or `check` names, and what it holds. */
 export function conditionOf(node: Node): SlotExpr | undefined {
-  const chart = getNode(keyOf(node)).chart;
+  const chart = getBlock(keyOf(node)).chart;
   if (!chart || !("branch" in chart || "check" in chart)) return undefined;
   const slot = "branch" in chart ? chart.branch.cond : chart.check.cond;
   const value = (node as unknown as Bag)[slot];

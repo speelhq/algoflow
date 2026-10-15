@@ -1,7 +1,7 @@
 // The list under a name field, and what a name field keeps.
 import { describe, expect, it } from "vitest";
 import { CHALLENGES } from "@/challenges";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { chartNames, nameChars, nameSections } from "./names";
 
 const { assign, num, for_ } = ast;

@@ -1,8 +1,8 @@
 // A field of the editor's notation is named by the block's label and the slot's name; a
 // counted loop shows its init and its check, its variable a field only at the first.
 import { describe, expect, it } from "vitest";
-import { ast } from "@/nodes/testing";
-import { getNode } from "@/nodes/registry";
+import { ast } from "@/blocks/testing";
+import { getBlock } from "@/blocks/registry";
 import type { Stmt } from "@/lang/types";
 import {
   editedLines,
@@ -73,7 +73,7 @@ describe("a target", () => {
     expect(targetSlot(stmt, { slot: "value", role: "expr" })).toBeUndefined();
     // A new assignment's target is to fill first; a click on an item's position opens the target.
     const fields = fieldsOf(stmt);
-    const fresh = getNode("assign").create() as Stmt;
+    const fresh = getBlock("assign").create() as Stmt;
     expect(startField(fresh, fieldsOf(fresh), { slot: null, hole: null })).toEqual(fields[0]);
     const hole = (stmt.target as Extract<typeof stmt.target, { kind: "index" }>).index;
     expect(startField(stmt, fields, { slot: "target", hole: hole.id })).toEqual(fields[0]);

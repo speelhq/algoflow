@@ -1,7 +1,7 @@
 // The block menu's groups, order, disabled entries, search, and This program, which lists only
 // functions a call can name.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/nodes/testing";
+import { ast, program } from "@/blocks/testing";
 import { blankTemplate } from "@/ui/chart/text";
 import { menuGroups, searchMenu } from "./menu";
 

@@ -49,7 +49,7 @@ describe("commitProblems", () => {
 describe("scopesOf", () => {
   it("names each folder of src/, and scripts, docs, and ci", () => {
     const found = scopesOf(".");
-    for (const scope of ["lang", "nodes", "runtime", "python", "store", "ui", "scripts", "ci"])
+    for (const scope of ["lang", "blocks", "runtime", "python", "store", "ui", "scripts", "ci"])
       expect(found.has(scope), scope).toBe(true);
     expect(found.has("main.tsx")).toBe(false);
   });

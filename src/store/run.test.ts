@@ -3,7 +3,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getChallenge, type Challenge } from "@/challenges";
 import { canRun } from "@/lang/validate";
-import { ast, program, runAll, tid } from "@/nodes/testing";
+import { ast, program, runAll, tid } from "@/blocks/testing";
 import { SPEEDS, useLayout } from "./layout";
 import { BATCH } from "./batches";
 import { useProgram } from "./program";

@@ -2,7 +2,7 @@
 // expressions, then every version is checked as version 2. It refuses what no edit could make: a
 // wrong shape, an unknown kind, a bad id, a literal field its block would not write, a class,
 // which no registered block constructs. What editing reaches is validate()'s job.
-import { getNode, hasNode, keyOf } from "@/nodes/registry";
+import { getBlock, hasBlock, keyOf } from "@/blocks/registry";
 import { stmtName } from "./edit";
 import { isNodeId, newId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
@@ -49,7 +49,7 @@ function expectNodeId(value: unknown, path: string): void {
 
 /** A node's literal fields, as its block would write them. */
 function checkFields(node: Record<string, unknown>, path: string): void {
-  const fault = getNode(keyOf(node as unknown as Expr)).fieldsError?.(node);
+  const fault = getBlock(keyOf(node as unknown as Expr)).fieldsError?.(node);
   if (fault) throw new MigrateError(`${path}.${fault.field}`, fault.message);
 }
 
@@ -62,7 +62,7 @@ function rawChildren(
   path: string,
 ): Array<{ value: unknown; path: string }> {
   const out: Array<{ value: unknown; path: string }> = [];
-  for (const slot of getNode(keyOf(node as unknown as Expr)).slots) {
+  for (const slot of getBlock(keyOf(node as unknown as Expr)).slots) {
     const value = node[slot.name];
     if (slot.role === "expr" || slot.role === "target") {
       if (value !== undefined || slot.required) out.push({ value, path: `${path}.${slot.name}` });
@@ -81,7 +81,7 @@ function checkExpr(value: unknown, path: string): void {
   if (!isRecord(value)) throw new MigrateError(path, "expected an expression");
   expectNodeId(value.id, `${path}.id`);
   const kind = expectString(value.kind, `${path}.kind`);
-  if (!hasNode(keyOf(value as unknown as Expr))) {
+  if (!hasBlock(keyOf(value as unknown as Expr))) {
     throw new MigrateError(`${path}.kind`, `unknown kind "${kind}"`);
   }
   checkFields(value, path);
@@ -104,20 +104,20 @@ function checkStmts(value: unknown, path: string): void {
       if (name === "") delete stmt.name;
       else stmt.name = name;
     }
-    if (!hasNode(kind) || getNode(kind).shape !== "stmt") {
+    if (!hasBlock(kind) || getBlock(kind).shape !== "stmt") {
       throw new MigrateError(`${at}.kind`, `unknown kind "${kind}"`);
     }
     checkFields(stmt, at);
     for (const child of rawChildren(stmt, at)) checkExpr(child.value, child.path);
     // A target slot holds a target, or an input to fill: no edit makes any other value there.
-    for (const slot of getNode(kind).slots) {
+    for (const slot of getBlock(kind).slots) {
       const held = stmt[slot.name] as Expr;
       if (slot.role === "target" && !isEmptyExpr(held) && !isTarget(held)) {
         throw new MigrateError(`${at}.${slot.name}`, "expected a target");
       }
     }
     // Every region by the block's slots: `regionsOf` passes over one that is no array.
-    for (const slot of getNode(kind).slots) {
+    for (const slot of getBlock(kind).slots) {
       if (slot.role === "body") checkStmts(stmt[slot.name], `${at}.${slot.name}`);
     }
   });
@@ -174,8 +174,8 @@ function fromV1(json: Record<string, unknown>): void {
   const upgrade = (stmts: unknown): void => {
     if (!Array.isArray(stmts)) return;
     for (const stmt of stmts) {
-      if (!isRecord(stmt) || typeof stmt.kind !== "string" || !hasNode(stmt.kind)) continue;
-      for (const slot of getNode(stmt.kind).slots) {
+      if (!isRecord(stmt) || typeof stmt.kind !== "string" || !hasBlock(stmt.kind)) continue;
+      for (const slot of getBlock(stmt.kind).slots) {
         const value = stmt[slot.name];
         if (slot.role === "body") upgrade(value);
         if (slot.role !== "target" || !isRecord(value) || typeof value.kind !== "string") continue;

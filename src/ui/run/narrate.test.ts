@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { t } from "@/i18n/t";
 import type { Data, Program } from "@/lang/types";
-import { ast, program, tid, withInputs } from "@/nodes/testing";
+import { ast, program, tid, withInputs } from "@/blocks/testing";
 import { run } from "@/runtime/run";
 import type { Event } from "@/runtime/types";
 import {

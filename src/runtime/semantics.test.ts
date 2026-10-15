@@ -1,7 +1,7 @@
 // What the runtime itself decides: the int range and the sign of zero, the rules under Values and
 // the run of language.md, the params a runtime error carries, and the event rules.
 import { describe, expect, it } from "vitest";
-import { ast, evalExpr, eventTypes, program, runAll, varData, withInputs } from "@/nodes/testing";
+import { ast, evalExpr, eventTypes, program, runAll, varData, withInputs } from "@/blocks/testing";
 import { run, STEP_LIMIT } from "./run";
 import { floatRepr, strRepr } from "./values";
 
