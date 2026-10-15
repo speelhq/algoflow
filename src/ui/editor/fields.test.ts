@@ -91,7 +91,7 @@ describe("a target", () => {
 
   it("is named by the block's label and the slot's name", () => {
     expect(fieldLabel(assign("total", num(1)), { slot: "target", role: "expr" })).toBe(
-      "Set variable, variable",
+      "Set variable, target",
     );
     expect(nameOf(for_("i", num(0), num(3), []), "var")).toBe("i");
   });
