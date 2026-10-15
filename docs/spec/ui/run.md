@@ -96,7 +96,7 @@ bar, describes the last event in one sentence (`run.narrate.*`): `enter` →
 `Checking i % 3 = 0` for a condition and
 `Running total ← total + i`, its notation, otherwise; `read` → `Read nums[2]: 5`, or for
 several items `Read 3 items of nums`; `compare` → the comparison as the
-chart writes it (`nodes.md`, Node text), every variable that holds a
+chart writes it (`blocks.md`, Node text), every variable that holds a
 number, a text, a boolean, or none written as its value in the frame the
 event ran in, and its value (`3 < 10 is True`), or for a diamond's whole
 condition its question and answer (below); `write` → `i is now 3`; `swap` →

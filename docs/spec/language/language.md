@@ -84,7 +84,7 @@ of a key either misses a lookup CPython makes or does not convert back to
 itself.
 
 `migrate()` rejects, with the path of the fault, a field its block would
-not make (`fieldsError`, `nodes.md`) and a class field default that is not
+not make (`fieldsError`, `blocks.md`) and a class field default that is not
 canonical `Data`. The split follows where a fault is fixed:
 `validate()` reports what an edit can produce, which the learner fixes on
 its node, while a fault only a hand edit makes (an unknown kind, a missing
@@ -156,7 +156,7 @@ export type Stmt =
 
 A target is an expression that names where a value is stored: a `var`, an
 `index`, a `key`, or a `field`, each a block that declares `store`
-(`nodes.md`, The block definition). A `target` slot holds one, or `empty`
+(`blocks.md`, The block definition). A `target` slot holds one, or `empty`
 while unfilled (Expressions); `migrate()` refuses any other expression
 there, which no edit makes (`editor.md`, Targets).
 A target type of its own was rejected: Python reads a target as an
@@ -298,7 +298,7 @@ there is none.
 A name is visible from its first `assign` (or `for`/`foreach` variable, or
 parameter) to the end of its region and in nested regions.
 
-A `target` slot that `binds` (`nodes.md`, The block definition), as
+A `target` slot that `binds` (`blocks.md`, The block definition), as
 `assign`'s does, declares the variable its target is, which it does not
 read. An item, a key, or a field there, and every target of a slot that does
 not bind (`delete`), reads its expressions before the value is stored.
@@ -325,7 +325,7 @@ builtin's name, whose registry key would shadow it. `count = 0` beside
 fails in CPython.
 
 A `call` or `new` resolves its name in this order: a function or class of
-the program, a learner module, a built-in module, a builtin of `nodes.md`;
+the program, a learner module, a built-in module, a builtin of `blocks.md`;
 a program definition shadows every module, and a learner module shadows a
 built-in module of the same name (`modules.md`, Schema); a name defined by
 two modules the program both uses is `E_DUPLICATE_NAME` on the call.
@@ -432,13 +432,13 @@ Name fields) know of a
 value before the program runs: `number`, `text`, `truefalse`, `none`,
 `list`, `dict`, or `object`.
 
-An expression's kind comes from its block's `kind` (`nodes.md`), given the
+An expression's kind comes from its block's `kind` (`blocks.md`), given the
 kinds of the expressions inside it; an expression whose kind cannot be told
 has none.
 
 A variable's kind is its input's declared kind, else that of the value of
 its first assignment in program order, else the kind its loop block
-declares (`declares`, `nodes.md`: `number` for a `for` variable); a
+declares (`declares`, `blocks.md`: `number` for a `for` variable); a
 parameter and a `foreach` variable have none.
 
 ## Verification

@@ -59,7 +59,7 @@ the `dp` problems from one dimension to two and to strings), so the order is
 part of the plan. The `course` plan mirrors a fixed three-day course, and
 adding a problem to it is the instructor's decision.
 
-Every challenge is solvable with the blocks in `nodes.md` and the built-in
+Every challenge is solvable with the blocks in `blocks.md` and the built-in
 modules (`modules.md`, Built-in modules), and with no other means.
 
 A Playground program has no `challengeId`, no inputs, no tests, and no

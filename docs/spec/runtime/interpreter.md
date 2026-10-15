@@ -130,7 +130,7 @@ no block spells a message key.
 
 ## Blocks
 
-Blocks implement their behaviour as generators (`run`, `nodes.md`):
+Blocks implement their behaviour as generators (`run`, `blocks.md`):
 
 ```ts
 export type Signal =

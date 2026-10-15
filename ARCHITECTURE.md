@@ -17,7 +17,7 @@ can be moved into modules and reused across programs (`docs/spec/modules/`).
   other: through `@/` across folders and `./` within one, never `../`; tests
   may add `vitest` and `@/i18n` (`.oxlintrc.json`).
 - One block per file in `src/nodes/`; nothing else branches on block kind
-  or name (`docs/spec/nodes/`): every consumer reads a block's
+  or name (`docs/spec/blocks/`): every consumer reads a block's
   declarations, so a block added later works in the menu, the chart, and
   the editor with no other change.
 - Every user-visible string comes from `src/i18n/en.json`, so Japanese is
@@ -38,7 +38,7 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   and the undo history holds earlier programs.
 - `src/nodes` — one `NodeDef` per block owning its slots, `create()`, `run`
   (interpreter behaviour), `python()` (exact emitted text), and `chart`
-  (`docs/spec/nodes/`). `registry.ts` is the only registry; the interpreter,
+  (`docs/spec/blocks/`). `registry.ts` is the only registry; the interpreter,
   the emitter, the chart, the block menu, and the node editor dispatch
   through it.
 - `src/runtime` — `run()` returns a `Runner` whose `next()` yields one

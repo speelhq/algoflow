@@ -257,20 +257,20 @@ whose text takes the code's params (`language.md`, Validation;
 `parser.md`; `interpreter.md`, Errors).
 
 A message writes its `op` parameter as the label of that block
-(`node.<op>.label`, `interpreter.md`, Errors).
+(`block.<op>.label`, `interpreter.md`, Errors).
 
 A number a message names (`run.endless`'s step limit) is written as the
 current locale writes numbers (`1,000,000`).
 
 A message, a help, and an explanation say that a variable gets or has a
 value, never that it is created: a variable has no form of its own for its
-first value (`nodes.md`, Node text).
+first value (`blocks.md`, Node text).
 
 ## Catalogs
 
 All strings reside in `src/i18n/en.json` and `src/i18n/ja.json` under
 `app.*`, `problems.*`, `problem.*`, `playground.*`, `modules.*`, `chart.*`,
-`menu.*`, `editor.*`, `run.*`, `result.*`, `python.*`, `node.*`, and
+`menu.*`, `editor.*`, `run.*`, `result.*`, `python.*`, `block.*`, and
 `error.*`. A key is added with the code that renders it, so its wording is
 decided when the UI exists and no translation is asked for an unused
 string.
@@ -304,8 +304,8 @@ the union the code already types, beside the template literal that builds
 the family's keys.
 
 The keys built from data are built in `src/i18n/t.ts`, and the check names
-them with the same functions: `node.<key>.<part>` (`nodeKey`) under
-`nodePrefix(key)` for each key the registry holds, and `error.<code>`
+them with the same functions: `block.<key>.<part>` (`blockKey`) under
+`blockPrefix(key)` for each key the registry holds, and `error.<code>`
 (`errorKey`) for each code of `ERROR_CODES` (`src/i18n/codes.ts`:
 `DIAGNOSTIC_CODES`, `RUNTIME_CODES`, and `PARSE_CODES`). A template literal
 passed to `t()` with a cast to `MessageKey` names no key: TypeScript does
@@ -316,7 +316,7 @@ remains, or a named menu entry, a slot's name, or a generated node's text
 leaves a registered block, is not reported, while a removed block's keys
 are. A family's members are a type, which the check does not read without
 the type checker, and naming a block's keys one by one would copy
-`nodes.md`, Catalog keys, into the check beside the code that builds them.
+`blocks.md`, Catalog keys, into the check beside the code that builds them.
 
 `pnpm check` fails on a key that one locale holds and the other does not.
 
@@ -391,7 +391,7 @@ value or its view (`views.md`) in `Variables`, a `Result` row, a case label,
 the case menu, an Input node, or `Example` is written as an assignment
 writes it (`n ← 15`), and the variables of a case label and the case menu
 are separated by `, ` (`a ← 3, b ← 9`) in every locale, as items are
-(`nodes.md`, Node text); the narration says it in a sentence (`run.md`,
+(`blocks.md`, Node text); the narration says it in a sentence (`run.md`,
 Narration). `Output` shows what `print` printed, as Python's `str()` writes
 it.
 

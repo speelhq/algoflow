@@ -13,7 +13,7 @@ two paths, and so was a free node graph, which makes the learner draw edges
 and loops by hand and does not fit a structured `Program`.
 
 The canvas shows one chart at a time: `main`, one function, or one class
-(its field table, `nodes.md`, Classes). Above it the path bar is always
+(its field table, `blocks.md`, Classes). Above it the path bar is always
 present: a `▾` button listing `main`, every function, and every class of
 the program, then `Add function` and `Add class`, with a red dot on the
 button and on each listed chart that holds a diagnostic and is not shown;
@@ -56,14 +56,14 @@ reading it.
 
 ## Shapes
 
-Node shapes come from the block's `chart` field (`nodes.md`, Chart shape):
+Node shapes come from the block's `chart` field (`blocks.md`, Chart shape):
 
 | `chart`  | Rendering                                                                                                                                                                                                                 |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| absent   | a rounded box with the block's notation (`nodes.md`, Node text)                                                                                                                                                           |
+| absent   | a rounded box with the block's notation (`blocks.md`, Node text)                                                                                                                                                          |
 | `branch` | a diamond with the condition; the `yes` region to the right joined by a `Yes` edge, the `no` region below joined by a `No` edge, both merging below; an empty `no` region is a bare `No` edge                            |
 | `check`  | a diamond with the condition; `Yes` leads down into the body, whose last node returns by a back edge to a junction above the diamond; `No` leads on past the loop                                                        |
-| `counted`| three generated nodes around the body: `i ← start`, the diamond `i < stop?`, and `i ← i + 1` (texts of the block's `counted`, `nodes.md`, Chart shape), drawn grey; the body and the back edge as for `check` |
+| `counted`| three generated nodes around the body: `i ← start`, the diamond `i < stop?`, and `i ← i + 1` (texts of the block's `counted`, `blocks.md`, Chart shape), drawn grey; the body and the back edge as for `check` |
 | `jump`   | a box with the notation whose edge leaves by the right and runs down a lane inside the extent of the innermost loop around it, in place of an edge to the next node: for `exit` past the loop, joining its `No` lane; for `next` into its next pass, at the step node of a `counted` loop and at the start of the back edge of a `check` loop; the edge carries the connector after it (Editing on the chart); outside every loop, a box as for an absent `chart` |
 
 The `counted` form was chosen over the loop-limit pair of JIS X 0121 and
@@ -77,11 +77,11 @@ display-only `Is i ≤ n?`, which would mix `<` and `≤` across loops.
 A `jump` draws where it jumps: an edge to the next node would be a path the
 run never takes, which a learner reading the chart would follow, and a node
 with no edge would not say where control goes. Each block declares its
-jump, as the chart may not branch on the kind (`nodes.md`, The block
+jump, as the chart may not branch on the kind (`blocks.md`, The block
 definition).
 
 The text of a `branch` or `check` diamond is its condition as the chart
-writes it (`nodes.md`, Node text) followed by `?` (`chart.condition`:
+writes it (`blocks.md`, Node text) followed by `?` (`chart.condition`:
 `i < n + 1?`, `i % 15 = 0?`); a named node shows its
 name instead (`editor.md`, Node names). A diamond's text wider than 150 px is
 drawn on two lines, split at the space that makes the longer line shortest;
