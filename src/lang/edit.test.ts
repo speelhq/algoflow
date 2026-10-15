@@ -7,7 +7,7 @@ import {
   hoistAssign,
   insertItem,
   insertStmt,
-  locateStmt,
+  findStmt,
   moveStmt,
   removeFunction,
   removeItem,
@@ -106,7 +106,7 @@ describe("edit", () => {
     const { p, loop, inner } = sample();
     const next = removeStmt(p, loop.id);
     expect(lines(next)).toEqual(["x = 1", "print(x)"]);
-    expect(locateStmt(next, inner.id)).toBeUndefined();
+    expect(findStmt(next, inner.id)).toBeUndefined();
     expect(() => removeStmt(p, "nope00000000")).toThrow(/no statement/);
   });
 
@@ -137,11 +137,11 @@ describe("edit", () => {
   it("setStmtName stores one trimmed line and removes an empty name", () => {
     const { p, loop } = sample();
     const named = setStmtName(p, loop.id, "  Count  to\n three ");
-    expect(locateStmt(named, loop.id)?.stmt.name).toBe("Count to three");
+    expect(findStmt(named, loop.id)?.stmt.name).toBe("Count to three");
     expect(idsUnique(named)).toBe(true);
-    expect(locateStmt(p, loop.id)?.stmt.name).toBeUndefined();
+    expect(findStmt(p, loop.id)?.stmt.name).toBeUndefined();
     const cleared = setStmtName(named, loop.id, " \n ");
-    expect(locateStmt(cleared, loop.id)?.stmt).not.toHaveProperty("name");
+    expect(findStmt(cleared, loop.id)?.stmt).not.toHaveProperty("name");
     expect(() => setStmtName(p, "missing00000", "x")).toThrow(/no statement/);
   });
 

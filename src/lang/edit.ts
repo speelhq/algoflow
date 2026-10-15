@@ -71,9 +71,9 @@ function freshExpr(expr: Expr, program: Program, replaced?: Expr): Expr {
   return copy;
 }
 
-// ---------------------------------------------------------------- locating
+// ---------------------------------------------------------------- finding
 
-export type Located = { stmt: Stmt; region: Stmt[]; index: number };
+export type StmtAt = { stmt: Stmt; region: Stmt[]; index: number };
 
 function* regions(program: Program): Generator<Stmt[], void, void> {
   yield program.main;
@@ -82,7 +82,7 @@ function* regions(program: Program): Generator<Stmt[], void, void> {
     for (const region of regionsOf(stmt)) yield region.stmts;
 }
 
-export function locateStmt(program: Program, id: NodeId): Located | undefined {
+export function findStmt(program: Program, id: NodeId): StmtAt | undefined {
   for (const region of regions(program)) {
     const index = region.findIndex((stmt) => stmt.id === id);
     const stmt = region[index];
@@ -96,38 +96,38 @@ export function findRegion(program: Program, place: Place): Stmt[] | undefined {
   if (place.parent === "main") return program.main;
   const fn = program.functions.find((f) => f.id === place.parent);
   if (fn) return fn.body;
-  const located = locateStmt(program, place.parent);
-  return located && regionsOf(located.stmt).find((r) => r.slot === place.slot)?.stmts;
+  const found = findStmt(program, place.parent);
+  return found && regionsOf(found.stmt).find((r) => r.slot === place.slot)?.stmts;
 }
 
-function regionAt(program: Program, place: Place): Stmt[] {
+function getRegion(program: Program, place: Place): Stmt[] {
   const region = findRegion(program, place);
   if (!region) throw new EditError(`no region ${place.slot} of ${place.parent}`);
   return region;
 }
 
-/** Finds a statement or expression node by id. */
-function locateNode(program: Program, id: NodeId): Stmt | Expr | undefined {
+/** The statement or expression node with this id; throws when the program has none. */
+function getNode(program: Program, id: NodeId): Stmt | Expr {
   for (const { stmt } of programStmts(program)) {
     if (stmt.id === id) return stmt;
     for (const { expr } of childSlots(stmt)) {
       for (const e of allExprs(expr)) if (e.id === id) return e;
     }
   }
-  return undefined;
+  throw new EditError(`no node ${id}`);
 }
 
-function mustLocate(program: Program, id: NodeId): Located {
-  const located = locateStmt(program, id);
-  if (!located) throw new EditError(`no statement ${id}`);
-  return located;
+function getStmt(program: Program, id: NodeId): StmtAt {
+  const found = findStmt(program, id);
+  if (!found) throw new EditError(`no statement ${id}`);
+  return found;
 }
 
 // ---------------------------------------------------------------- statements
 
 export function insertStmt(program: Program, stmt: Stmt, place: Place): Program {
   const next = clone(program);
-  const region = regionAt(next, place);
+  const region = getRegion(next, place);
   const index = Math.max(0, Math.min(place.index, region.length));
   region.splice(index, 0, fresh(stmt, next));
   return next;
@@ -135,7 +135,7 @@ export function insertStmt(program: Program, stmt: Stmt, place: Place): Program 
 
 export function removeStmt(program: Program, id: NodeId): Program {
   const next = clone(program);
-  const { region, index } = mustLocate(next, id);
+  const { region, index } = getStmt(next, id);
   region.splice(index, 1);
   return next;
 }
@@ -143,16 +143,16 @@ export function removeStmt(program: Program, id: NodeId): Program {
 /** Moves a statement; `place.index` counts positions in the target region after the removal. */
 export function moveStmt(program: Program, id: NodeId, place: Place): Program {
   const next = clone(program);
-  const { stmt, region, index } = mustLocate(next, id);
+  const { stmt, region, index } = getStmt(next, id);
   region.splice(index, 1);
-  const target = regionAt(next, place);
+  const target = getRegion(next, place);
   target.splice(Math.max(0, Math.min(place.index, target.length)), 0, stmt);
   return next;
 }
 
 export function duplicateStmt(program: Program, id: NodeId): Program {
   const next = clone(program);
-  const { stmt, region, index } = mustLocate(next, id);
+  const { stmt, region, index } = getStmt(next, id);
   const copy = clone(stmt);
   reIdStmt(copy);
   region.splice(index + 1, 0, copy);
@@ -164,8 +164,7 @@ export function duplicateStmt(program: Program, id: NodeId): Program {
 /** Sets a name or literal slot (`id` or `text`) of a statement or expression. */
 export function setSlot(program: Program, id: NodeId, slot: string, value: string): Program {
   const next = clone(program);
-  const node = locateNode(next, id);
-  if (!node) throw new EditError(`no node ${id}`);
+  const node = getNode(next, id);
   const spec = getBlock(keyOf(node)).slots.find((s) => s.name === slot);
   if (spec?.role !== "id" && spec?.role !== "text") {
     throw new EditError(`node ${id} has no settable slot ${slot}`);
@@ -186,8 +185,7 @@ export function setExpr(
   index?: number,
 ): Program {
   const next = clone(program);
-  const node = locateNode(next, id);
-  if (!node) throw new EditError(`no node ${id}`);
+  const node = getNode(next, id);
   const spec = getBlock(keyOf(node)).slots.find((s) => s.name === slot);
   const bag = node as unknown as Bag;
   const old = (value: unknown) => (isExpr(value) ? value : undefined);
@@ -213,8 +211,7 @@ export function insertItem(
   expr: Expr,
 ): Program {
   const next = clone(program);
-  const node = locateNode(next, id);
-  if (!node) throw new EditError(`no node ${id}`);
+  const node = getNode(next, id);
   const spec = getBlock(keyOf(node)).slots.find((s) => s.name === slot);
   const items = (node as unknown as Bag)[slot];
   if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index > items.length) {
@@ -227,8 +224,7 @@ export function insertItem(
 /** Removes item `index` of an `exprs` slot. */
 export function removeItem(program: Program, id: NodeId, slot: string, index: number): Program {
   const next = clone(program);
-  const node = locateNode(next, id);
-  if (!node) throw new EditError(`no node ${id}`);
+  const node = getNode(next, id);
   const spec = getBlock(keyOf(node)).slots.find((s) => s.name === slot);
   const items = (node as unknown as Bag)[slot];
   if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index >= items.length) {
@@ -248,7 +244,7 @@ export function stmtName(text: string): string {
 /** Names statement `id`, or removes its name when `name` holds no text. */
 export function setStmtName(program: Program, id: NodeId, name: string): Program {
   const next = clone(program);
-  const { stmt } = mustLocate(next, id);
+  const { stmt } = getStmt(next, id);
   const stored = stmtName(name);
   if (stored === "") delete stmt.name;
   else stmt.name = stored;
@@ -323,7 +319,7 @@ function defaultFor(stmts: Stmt[], name: Id): Expr {
 /** Inserts `name = <default>` immediately before the frame `frameId`. */
 export function hoistAssign(program: Program, frameId: NodeId, name: Id): Program {
   const next = clone(program);
-  const { stmt, region, index } = mustLocate(next, frameId);
+  const { stmt, region, index } = getStmt(next, frameId);
   const inner = regionsOf(stmt).flatMap((r) => r.stmts);
   const assign: Stmt = {
     id: newId(),
