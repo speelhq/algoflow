@@ -1,33 +1,8 @@
 // Traversal driven by each block's slots, so no module lists block kinds.
 import { getNode, keyOf } from "@/nodes/registry";
-import type { Expr, FunctionDef, Node, NodeId, Program, Stmt, Target } from "./types";
+import type { Expr, FunctionDef, Node, NodeId, Program, Stmt } from "./types";
 
 type Bag = Record<string, unknown>;
-
-/** The fields of a target that hold names, and those that hold expressions, in order. */
-export type TargetParts = { names: readonly string[]; exprs: readonly string[] };
-
-/** A kind's parts, each a field of that kind of target. */
-type PartsOf<T> = TargetParts & {
-  names: ReadonlyArray<Extract<keyof T, string>>;
-  exprs: ReadonlyArray<Extract<keyof T, string>>;
-};
-
-/** The parts of each kind of assignment target: the names it holds and its expressions, in order. */
-export const TARGET_PARTS: {
-  readonly [K in Target["kind"]]: PartsOf<Extract<Target, { kind: K }>>;
-} = {
-  var: { names: ["name"], exprs: [] },
-  index: { names: [], exprs: ["list", "index"] },
-  key: { names: [], exprs: ["dict", "key"] },
-};
-
-/** A target's expressions, in order, as the target holds them. */
-export function targetExprs(target: Target): Expr[] {
-  const bag = target as unknown as Bag;
-  const parts: TargetParts = TARGET_PARTS[target.kind];
-  return parts.exprs.map((name) => bag[name] as Expr);
-}
 
 export function isExpr(value: unknown): value is Expr {
   return typeof value === "object" && value !== null && "kind" in value && "id" in value;
@@ -36,6 +11,11 @@ export function isExpr(value: unknown): value is Expr {
 /** An unfilled slot: the one expression that is no block a learner chooses. */
 export function isEmptyExpr(value: unknown): boolean {
   return isExpr(value) && value.kind === "empty";
+}
+
+/** Whether an expression names where a value is stored: its block declares `store`. */
+export function isTarget(expr: Expr): boolean {
+  return getNode(keyOf(expr)).store !== undefined;
 }
 
 /**
@@ -63,20 +43,19 @@ export function paramArg(node: Node, name: string): { arg: Expr; index: number }
 
 export type SlotExpr = { slot: string; expr: Expr; index?: number };
 
-/** Direct expression children with the slot each sits in (target children under the target slot). */
+/** Direct expression children with the slot each sits in; a target is one, as an `expr` is. */
 export function childSlots(node: Node): SlotExpr[] {
   const def = getNode(keyOf(node));
   const bag = node as unknown as Bag;
   const out: SlotExpr[] = [];
   for (const slot of def.slots) {
     const value = bag[slot.name];
-    if (slot.role === "expr" && isExpr(value)) out.push({ slot: slot.name, expr: value });
-    else if (slot.role === "exprs" && Array.isArray(value)) {
+    if ((slot.role === "expr" || slot.role === "target") && isExpr(value)) {
+      out.push({ slot: slot.name, expr: value });
+    } else if (slot.role === "exprs" && Array.isArray(value)) {
       value.forEach((item, index) => {
         if (isExpr(item)) out.push({ slot: slot.name, expr: item, index });
       });
-    } else if (slot.role === "target" && value && typeof value === "object") {
-      for (const expr of targetExprs(value as Target)) out.push({ slot: slot.name, expr });
     }
   }
   return out;

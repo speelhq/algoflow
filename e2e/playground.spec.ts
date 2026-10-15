@@ -70,7 +70,7 @@ test("Export writes the program, and Import adds it back; a bad file adds nothin
   expect(file.suggestedFilename()).toBe("Squares.algoflow.json");
   const text = await (await file.createReadStream()).toArray();
   const exported = Buffer.concat(text).toString("utf8");
-  expect(JSON.parse(exported)).toMatchObject({ version: 1, title: "Squares", main: [] });
+  expect(JSON.parse(exported)).toMatchObject({ version: 2, title: "Squares", main: [] });
 
   await page.getByRole("link", { name: "← Playground" }).click();
   await page.getByTestId("import-file").setInputFiles({

@@ -1,6 +1,4 @@
-// Element access shared by the blocks that read or write
-// list items and dict entries.
-import { dictKey } from "@/lang/data";
+// Element access shared by the blocks that read or write list items.
 import type { HeapId, NodeId, Value } from "@/lang/types";
 import type { RunContext } from "@/nodes/types";
 import { entryOf, typeName } from "./values";
@@ -40,30 +38,4 @@ export function listIndex(items: Value[], index: Value, nodeId: NodeId, ctx: Run
     return ctx.fail(nodeId, "E_INDEX", { index: index.v, length: items.length });
   }
   return i;
-}
-
-export function asDict(
-  dict: Value,
-  nodeId: NodeId,
-  ctx: RunContext,
-  other: Value,
-): { ref: HeapId; entries: Map<string, Value> } {
-  if (dict.t !== "dict") {
-    return ctx.fail(nodeId, "E_TYPE", {
-      left: typeName(dict),
-      right: typeName(other),
-    });
-  }
-  const entry = entryOf(ctx.heap, dict.ref);
-  if (entry.kind !== "dict") throw new Error("dict ref is not a dict");
-  return { ref: dict.ref, entries: entry.entries };
-}
-
-/** Keys are int or str. */
-export function dictKeyOf(key: Value, nodeId: NodeId, ctx: RunContext): string {
-  const encoded = dictKey(key);
-  if (encoded === undefined) {
-    return ctx.fail(nodeId, "E_TYPE", { left: "dict", right: typeName(key) });
-  }
-  return encoded;
 }

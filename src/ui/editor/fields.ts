@@ -2,10 +2,10 @@
 // each item of a list of values, in the notation's reading order; a target holding an item is
 // its list's name and a value for each of its other parts.
 import { nodeText, t } from "@/i18n/t";
-import { setSlot } from "@/lang/edit";
-import type { Expr, Id, Kind, NodeId, Program, Stmt, Target } from "@/lang/types";
-import { allExprs, isEmptyExpr, isExpr, TARGET_PARTS, targetExprs, variableOf } from "@/lang/walk";
-import { emptyExpr, getNode, hasNode, keyOf } from "@/nodes/registry";
+import { setExpr, setSlot } from "@/lang/edit";
+import type { Expr, Id, Kind, NodeId, Program, Stmt } from "@/lang/types";
+import { allExprs, childSlots, isEmptyExpr, isExpr, isTarget, variableOf } from "@/lang/walk";
+import { getNode, keyOf, NODES } from "@/nodes/registry";
 import {
   generatedNotation,
   notationOf,
@@ -26,10 +26,13 @@ export const fieldKey = (field: Field) => `${field.slot}:${field.index ?? ""}:${
 
 type Bag = Record<string, unknown>;
 
-/** A form of a target other than a variable: an item (`nums[…]`), a key, or a field. */
-export type Form = Exclude<Target["kind"], "var">;
+/** A form of a target other than a variable, by its block's key: an item (`nums[…]`), a key. */
+export type Form = string;
 
-const FORMS = Object.keys(TARGET_PARTS).filter((kind): kind is Form => kind !== "var");
+/** The blocks of a target; `formsFor` keeps those offered after a variable's value. */
+const FORMS: readonly Form[] = [...NODES.values()]
+  .filter((def) => def.store !== undefined)
+  .map((def) => def.key);
 
 /**
  * The forms a target can take for a variable of `kind` (`editor.md`, Name fields): those whose
@@ -38,8 +41,8 @@ const FORMS = Object.keys(TARGET_PARTS).filter((kind): kind is Form => kind !== 
  */
 export function formsFor(kind: Kind | undefined): Form[] {
   if (kind === undefined) return [];
-  return FORMS.filter(
-    (form) => hasNode(form) && (getNode(form).menu ?? []).some((entry) => entry.on?.includes(kind)),
+  return FORMS.filter((form) =>
+    (getNode(form).menu ?? []).some((entry) => entry.on?.includes(kind)),
   );
 }
 
@@ -51,45 +54,53 @@ export function formOfKey(forms: readonly Form[], key: string): Form | undefined
 }
 
 /** A target of `form` holding the variable `name`, its other parts still to fill. */
-export function formTarget(form: Form, name: Id): Target {
+export function formTarget(form: Form, name: Id): Expr {
   const variable = variableExpr(name);
-  if (!variable) throw new Error(`${name} is no variable`);
-  const [held, ...others] = TARGET_PARTS[form].exprs;
-  const parts = Object.fromEntries(others.map((part) => [part, emptyExpr()]));
-  return { kind: form, ...(held ? { [held]: variable } : {}), ...parts } as unknown as Target;
+  const made = getNode(form).create() as Expr;
+  const [held] = childSlots(made);
+  if (!variable || !held) throw new Error(`${name} is no variable of a ${form}`);
+  return { ...made, [held.slot]: variable };
+}
+
+/** Whether a target is edited as a name alone: a variable, or still to fill. */
+export function isNamed(target: Expr): boolean {
+  return isEmptyExpr(target) || variableOf(target) !== undefined;
 }
 
 /**
  * The part of a target holding an item that names its variable (`list` of `nums[i]`), when the
- * target can be edited: its block is registered and that part is a variable.
+ * target can be edited: it is a target and that part is a variable.
  */
-export function namePart(target: Target): string | undefined {
-  if (target.kind === "var" || !hasNode(target.kind)) return undefined;
-  const [part] = TARGET_PARTS[target.kind].exprs;
-  const [held] = targetExprs(target);
-  return held && variableOf(held) !== undefined ? part : undefined;
+export function namePart(target: Expr): string | undefined {
+  if (isNamed(target) || !isTarget(target)) return undefined;
+  const [held] = childSlots(target);
+  return held && variableOf(held.expr) !== undefined ? held.slot : undefined;
 }
 
 /**
- * The pieces an editable target holding an item is edited as: the notation of the expression of
- * its shape (`{list}[{index}]`), its `namePart` the name field; none for any other target.
+ * The pieces an editable target holding an item is edited as: its notation (`{list}[{index}]`),
+ * its `namePart` the name field; none for any other target.
  */
-export function targetPieces(target: Target): Piece[] {
-  if (target.kind === "var" || namePart(target) === undefined) return [];
-  return templatePieces(notationOf({ id: "", ...target }));
+export function targetPieces(target: Expr): Piece[] {
+  return namePart(target) === undefined ? [] : templatePieces(notationOf(target));
 }
 
-/** The variable a target names: itself, or the variable its `namePart` holds. */
-function targetName(target: Target): string | undefined {
-  if (target.kind === "var") return target.name;
-  const [held] = targetExprs(target);
-  return namePart(target) !== undefined && held ? variableOf(held) : undefined;
+/** The variable a target names: itself, none yet (`""`), or the variable its `namePart` holds. */
+function targetName(target: Expr): string | undefined {
+  if (isEmptyExpr(target)) return "";
+  const own = variableOf(target);
+  if (own !== undefined) return own;
+  const [held] = childSlots(target);
+  return namePart(target) !== undefined && held ? variableOf(held.expr) : undefined;
 }
 
 /** The value fields of an editable target holding an item: its parts other than `namePart`. */
-function targetParts(target: Target): string[] {
+function targetParts(target: Expr): string[] {
   const name = namePart(target);
-  return name === undefined ? [] : TARGET_PARTS[target.kind].exprs.filter((part) => part !== name);
+  if (name === undefined) return [];
+  return childSlots(target)
+    .map((child) => child.slot)
+    .filter((part) => part !== name);
 }
 
 export const sameField = (a: Field | null, b: Field | null) =>
@@ -99,35 +110,40 @@ export const sameField = (a: Field | null, b: Field | null) =>
 export function nameOf(stmt: Stmt, slot: string): string | undefined {
   const value = (stmt as unknown as Bag)[slot];
   if (typeof value === "string") return value;
-  const target = value as Target | undefined;
-  return target ? targetName(target) : undefined;
+  return isExpr(value) ? targetName(value) : undefined;
 }
 
 /** The target `slot` of `stmt` holds, if it is a target slot. */
-function targetIn(stmt: Stmt, slot: string): Target | undefined {
+function targetIn(stmt: Stmt, slot: string): Expr | undefined {
   const role = getNode(keyOf(stmt)).slots.find((s) => s.name === slot)?.role;
-  return role === "target" ? ((stmt as unknown as Bag)[slot] as Target) : undefined;
+  const value = (stmt as unknown as Bag)[slot];
+  return role === "target" && isExpr(value) ? value : undefined;
 }
 
 /** The form an editable target in `slot` of `stmt` holds, if it holds one. */
 export function formIn(stmt: Stmt, slot: string): Form | undefined {
   const target = targetIn(stmt, slot);
-  return target && target.kind !== "var" && namePart(target) !== undefined
-    ? target.kind
-    : undefined;
+  return target && namePart(target) !== undefined ? keyOf(target) : undefined;
+}
+
+/** The program with the variable `name` as the target `slot` of `stmt`. */
+function setTargetName(program: Program, stmt: Stmt, slot: string, name: string): Program {
+  const variable = variableExpr(name);
+  if (!variable) throw new Error(`${name} is no variable`);
+  return setExpr(program, stmt.id, slot, variable);
 }
 
 /** The program with `name` in the name slot `slot` of `stmt`: a target becomes that variable. */
 export function setName(program: Program, stmt: Stmt, slot: string, name: string): Program {
   return targetIn(stmt, slot)
-    ? setSlot(program, stmt.id, slot, { kind: "var", name })
+    ? setTargetName(program, stmt, slot, name)
     : setSlot(program, stmt.id, slot, name);
 }
 
 /** The program with the target `slot` of `stmt` set back to the variable its form holds. */
 export function setVariable(program: Program, stmt: Stmt, slot: string): Program {
   const name = nameOf(stmt, slot);
-  return name === undefined ? program : setSlot(program, stmt.id, slot, { kind: "var", name });
+  return name === undefined || name === "" ? program : setTargetName(program, stmt, slot, name);
 }
 
 /**
@@ -136,12 +152,10 @@ export function setVariable(program: Program, stmt: Stmt, slot: string): Program
  */
 export function setForm(program: Program, stmt: Stmt, slot: string, form: Form, name: Id): Program {
   const target = targetIn(stmt, slot);
-  const part = target?.kind === form ? namePart(target) : undefined;
+  const part = target && keyOf(target) === form ? namePart(target) : undefined;
   const variable = variableExpr(name);
-  if (target && part !== undefined && variable) {
-    return setSlot(program, stmt.id, slot, { ...target, [part]: variable });
-  }
-  return setSlot(program, stmt.id, slot, formTarget(form, name));
+  if (target && part !== undefined && variable) return setExpr(program, target.id, part, variable);
+  return setExpr(program, stmt.id, slot, formTarget(form, name));
 }
 
 /** The first part of a target holding a form, as a field: where the keyboard goes once it is set. */
@@ -220,18 +234,20 @@ export function fieldsOf(stmt: Stmt): Field[] {
  */
 export function fieldLabel(stmt: Stmt, field: Field): string {
   const { key } = getNode(keyOf(stmt));
-  const held = (stmt as unknown as Bag)[field.slot] as Target | undefined;
+  const held = (stmt as unknown as Bag)[field.slot];
   return t("editor.fieldName", {
     label: nodeText(key, "label"),
     slot:
-      field.part !== undefined && held
-        ? nodeText(held.kind, "label")
+      field.part !== undefined && isExpr(held)
+        ? nodeText(keyOf(held), "label")
         : nodeText(key, `slot.${field.slot}`),
   });
 }
 
 /** The expression a value field holds. */
 export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
+  // A name field holds no value, though a target slot holds an expression.
+  if (field.role !== "expr") return undefined;
   const value = (stmt as unknown as Bag)[field.slot];
   const item =
     field.part !== undefined
@@ -244,9 +260,15 @@ export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
   return isExpr(item) ? item : undefined;
 }
 
-/** Where `setExpr` writes a value field: its slot, or the part of the target in it. */
-export function fieldPath(field: Field): string {
-  return field.part === undefined ? field.slot : `${field.slot}.${field.part}`;
+/**
+ * Where `setExpr` writes a value field: the node and its slot, the target in the field's slot for
+ * a part of that target.
+ */
+export function fieldPlace(stmt: Stmt, field: Field): { id: NodeId; slot: string } {
+  const target = field.part === undefined ? undefined : targetIn(stmt, field.slot);
+  return target && field.part !== undefined
+    ? { id: target.id, slot: field.part }
+    : { id: stmt.id, slot: field.slot };
 }
 
 /** Whether a field still has something to fill: an empty name or an input at any depth. */

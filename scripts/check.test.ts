@@ -162,6 +162,14 @@ describe("checkChallengeSchema", () => {
     ]);
   });
 
+  it("requires the solution in the current version, as the app reads it with no migrate()", () => {
+    const c = valid();
+    const old = { ...c.solution, version: 1 };
+    expect(checkChallengeSchema({ ...c, solution: old }, "demo").problems).toEqual([
+      "solution.version must be 2",
+    ]);
+  });
+
   it("requires ja texts only when asked", () => {
     expect(checkChallengeSchema(valid(), "demo", { requireJa: true }).problems).toEqual(
       expect.arrayContaining([expect.stringContaining("title must be { en, ja? }")]),

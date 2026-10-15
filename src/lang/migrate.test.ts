@@ -3,6 +3,8 @@
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/nodes/testing";
 import { MigrateError, migrate } from "./migrate";
+import type { Stmt } from "./types";
+import { validate } from "./validate";
 
 const { assign, print, num, float, str, bool, not, bin, v, for_, ret } = ast;
 
@@ -10,8 +12,13 @@ function json(value: unknown): unknown {
   return JSON.parse(JSON.stringify(value));
 }
 
+/** A value as stored JSON, its fields open to a test's own. */
+function asStored(value: unknown): Record<string, unknown> {
+  return json(value) as Record<string, unknown>;
+}
+
 describe("migrate", () => {
-  it("accepts a version 1 program unchanged", () => {
+  it("accepts a version 2 program unchanged", () => {
     const p = program(
       [assign("x", num(1)), for_("i", num(0), num(3), [print(bin("+", v("x"), v("i")))])],
       {
@@ -34,10 +41,77 @@ describe("migrate", () => {
     );
   });
 
+  it("migrates a version 1 program: each target the expression of its kind with a fresh id", () => {
+    let at = 0;
+    const old = (target: unknown, value: unknown) => ({
+      id: `s000000000${(at += 1)}s`,
+      kind: "assign",
+      target,
+      value,
+    });
+    const one = num(1);
+    const v1 = {
+      ...asStored(program([])),
+      version: 1,
+      main: [
+        old({ kind: "var", name: "x", id: "s0000000001s" }, one),
+        {
+          ...asStored(for_("i", num(0), num(3), [])),
+          id: "l0000000000l",
+          body: [old({ kind: "index", list: v("xs"), index: v("i") }, num(2))],
+        },
+      ],
+      functions: [
+        {
+          id: "f0000000000f",
+          name: "f",
+          params: [],
+          body: [old({ kind: "var", name: "" }, num(3))],
+        },
+      ],
+    };
+    const held = JSON.stringify(v1);
+    const migrated = migrate(json(v1));
+    expect(migrated.version).toBe(2);
+    const [set, loop] = migrated.main as [Stmt, Extract<Stmt, { kind: "for" }>];
+    const item = (loop.body[0] as Extract<Stmt, { kind: "assign" }>).target;
+    expect((set as Extract<Stmt, { kind: "assign" }>).target).toMatchObject({
+      kind: "var",
+      name: "x",
+    });
+    expect(item).toMatchObject({ kind: "index", list: { kind: "var", name: "xs" } });
+    const unnamed = migrated.functions[0]!.body[0] as Extract<Stmt, { kind: "assign" }>;
+    expect(unnamed.target.kind).toBe("empty");
+    for (const target of [
+      (set as Extract<Stmt, { kind: "assign" }>).target,
+      item,
+      unnamed.target,
+    ]) {
+      expect(held).not.toContain(target.id);
+    }
+    expect(validate(migrated).filter((d) => d.code === "E_DUPLICATE_ID")).toEqual([]);
+  });
+
+  it("refuses a version 1 target whose kind no registered block has", () => {
+    const keyed = {
+      ...asStored(program([])),
+      version: 1,
+      main: [
+        {
+          id: "s0000000000s",
+          kind: "assign",
+          target: { kind: "key", dict: v("d"), key: str("a") },
+          value: num(1),
+        },
+      ],
+    };
+    expect(() => migrate(keyed)).toThrow(/^main\[0\]\.target\.kind: unknown kind "key"/);
+  });
+
   it("rejects an unsupported version with the path", () => {
-    expect(() => migrate({ ...program([]), version: 2 })).toThrow(MigrateError);
-    expect(() => migrate({ ...program([]), version: 2 })).toThrow(
-      /^version: unsupported version 2/,
+    expect(() => migrate({ ...program([]), version: 3 })).toThrow(MigrateError);
+    expect(() => migrate({ ...program([]), version: 3 })).toThrow(
+      /^version: unsupported version 3/,
     );
     expect(() => migrate("nope")).toThrow(/expected a program object/);
   });
@@ -126,12 +200,12 @@ describe("migrate", () => {
       main: Array<Record<string, unknown>>;
     };
     badTarget.main[0]!.target = "x";
-    expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target: expected a target/);
-    badTarget.main[0]!.target = { kind: "slice" };
-    expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target: expected a target/);
-    badTarget.main[0]!.target = { kind: "var", name: 3 };
+    expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target: expected an expression/);
+    delete badTarget.main[0]!.target;
+    expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target: expected an expression/);
+    badTarget.main[0]!.target = { id: "t0000000000t", kind: "var", name: 3 };
     expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target\.name: expected a name/);
-    badTarget.main[0]!.target = { kind: "index", list: v("xs") };
+    badTarget.main[0]!.target = { id: "t0000000000t", kind: "index", list: v("xs") };
     expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target\.index: expected an expression/);
   });
 

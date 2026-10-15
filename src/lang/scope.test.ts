@@ -10,9 +10,7 @@ describe("scope", () => {
     const value = bin("+", v("a"), num(1));
     expect(assignedValue(assign("a", value))).toBe(value);
     const nine = num(9);
-    expect(assignedValue(ast.assignTo({ kind: "index", list: v("xs"), index: num(0) }, nine))).toBe(
-      nine,
-    );
+    expect(assignedValue(ast.assignTo(ast.item(v("xs"), num(0)), nine))).toBe(nine);
     expect(assignedValue(print(v("a")))).toBeUndefined();
     expect(assignedValue(for_("i", num(0), num(3), []))).toBeUndefined();
   });

@@ -24,7 +24,7 @@
   ],
   "takeaway": { "en": "A **while** loop kept going until its condition became false." },
   "solution": {
-    "version": 1,
+    "version": 2,
     "title": "Countdown",
     "challengeId": "countdown",
     "inputs": [{ "name": "n", "kind": "number" }],
@@ -34,7 +34,7 @@
       {
         "id": "cnt-init-001",
         "kind": "assign",
-        "target": { "kind": "var", "name": "k" },
+        "target": { "id": "cnt-tgt-0001", "kind": "var", "name": "k" },
         "value": { "id": "cnt-nvar-001", "kind": "var", "name": "n" }
       },
       {
@@ -56,7 +56,7 @@
           {
             "id": "cnt-decr-001",
             "kind": "assign",
-            "target": { "kind": "var", "name": "k" },
+            "target": { "id": "cnt-tgt-0002", "kind": "var", "name": "k" },
             "value": {
               "id": "cnt-mins-001",
               "kind": "binop",

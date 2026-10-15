@@ -2,14 +2,26 @@
 // and whether a place lies inside a loop or a function.
 // Registry-driven: slots, `loop`, and regions, never a kind.
 import { getNode, keyOf } from "@/nodes/registry";
-import type { Expr, Id, NodeId, Place, Program, Stmt, Target } from "./types";
-import { childSlots, regionsOf } from "./walk";
+import type { Expr, Id, NodeId, Place, Program, Stmt } from "./types";
+import { childSlots, isExpr, regionsOf, variableOf } from "./walk";
 
 type Bag = Record<string, unknown>;
 
 export type Declared = { name: Id; role: "id" | "target" };
 
-/** Names a statement assigns in its own region: its variable targets and its loop variables. */
+/**
+ * The variables a statement's binding target slots hold (`x` of `x = …`): each is declared
+ * there, not read (`language.md`, Scope).
+ */
+export function boundVariables(stmt: Stmt): Expr[] {
+  const bag = stmt as unknown as Bag;
+  return getNode(keyOf(stmt))
+    .slots.filter((slot) => slot.role === "target" && slot.binds)
+    .map((slot) => bag[slot.name])
+    .filter((value): value is Expr => isExpr(value) && variableOf(value) !== undefined);
+}
+
+/** Names a statement assigns in its own region: its bound variables and its loop variables. */
 export function declaredBy(stmt: Stmt): Declared[] {
   const bag = stmt as unknown as Bag;
   const names: Declared[] = [];
@@ -18,20 +30,18 @@ export function declaredBy(stmt: Stmt): Declared[] {
     if (slot.role === "id" && typeof value === "string" && value !== "") {
       names.push({ name: value, role: "id" });
     }
-    if (slot.role === "target" && value && typeof value === "object") {
-      const target = value as Target;
-      if (target.kind === "var" && target.name !== "") {
-        names.push({ name: target.name, role: "target" });
-      }
-    }
+  }
+  for (const variable of boundVariables(stmt)) {
+    const name = variableOf(variable);
+    if (name) names.push({ name, role: "target" });
   }
   return names;
 }
 
-/** The expression a statement with a target assigns: its expression slot (`x = <value>`). */
+/** The expression a statement with a binding target assigns: its expression slot (`x = <value>`). */
 export function assignedValue(stmt: Stmt): Expr | undefined {
   const { slots } = getNode(keyOf(stmt));
-  if (!slots.some((slot) => slot.role === "target")) return undefined;
+  if (!slots.some((slot) => slot.role === "target" && slot.binds)) return undefined;
   const slot = slots.find((candidate) => candidate.role === "expr");
   return childSlots(stmt).find((child) => child.slot === slot?.name)?.expr;
 }

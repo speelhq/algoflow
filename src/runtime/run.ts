@@ -50,6 +50,11 @@ export function run(program: Program, inputs: Readonly<Record<Id, Data>>, seed: 
     set(name, value) {
       top().vars.set(name, value);
     },
+    *store(target, value, at) {
+      const def = getNode(keyOf(target));
+      if (!def.store) throw new Error(`${def.key} is no target`);
+      yield* def.store(target, value, ctx, at);
+    },
     *call(fn, args, nodeId) {
       const def = functions.get(fn);
       if (!def) throw new Error(`unknown function ${fn}`);

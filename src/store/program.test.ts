@@ -75,7 +75,7 @@ describe("program store", () => {
     expect(restore("bare").main).toEqual([]);
     localStorage.setItem(programKey("bare"), JSON.stringify({ version: 2 }));
     expect(restore("bare").main).toEqual([]);
-    localStorage.setItem(programKey("bare"), JSON.stringify({ version: 1, main: [{}] }));
+    localStorage.setItem(programKey("bare"), JSON.stringify({ version: 2, main: [{}] }));
     expect(restore("bare").main).toEqual([]);
   });
 

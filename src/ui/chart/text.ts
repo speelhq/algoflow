@@ -5,12 +5,18 @@
 // value is written by the `assign` block's notation.
 import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
-import { isRecord } from "@/lang/record";
-import type { Data, Expr, Heap, Node, NodeId, Target, Value } from "@/lang/types";
-import { conditionOf, isEmptyExpr, isExpr, paramArg, targetExprs, variableOf } from "@/lang/walk";
-import { emptyExpr, getNode, hasNode, keyOf } from "@/nodes/registry";
+import type { Data, Expr, Heap, Node, NodeId, Value } from "@/lang/types";
+import {
+  childSlots,
+  conditionOf,
+  isEmptyExpr,
+  isExpr,
+  isTarget,
+  paramArg,
+  variableOf,
+} from "@/lang/walk";
+import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import type { Generated, NodeDef, Side } from "@/nodes/types";
-import { writeTarget } from "@/python/emit";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
 import { str, writeValue } from "@/runtime/values";
 
@@ -174,7 +180,7 @@ export type Held =
   | { role: "expr"; expr: Expr | undefined; side: Side; binds: number | undefined }
   | { role: "exprs"; items: Expr[] }
   | { role: "id"; name: string }
-  | { role: "target"; target: Target | undefined }
+  | { role: "target"; target: Expr | undefined }
   | { role: "text"; text: string };
 
 /** What the placeholder `name` of `node`'s notation or template holds. */
@@ -200,7 +206,7 @@ export function placeholderValue(node: Node, name: string): Held | undefined {
     case "id":
       return { role: "id", name: typeof value === "string" ? value : "" };
     case "target":
-      return { role: "target", target: isRecord(value) ? (value as Target) : undefined };
+      return { role: "target", target: isExpr(value) ? value : undefined };
     case "text":
       return { role: "text", text: textOf(node, def, name) };
     case "body":
@@ -255,28 +261,25 @@ export function exprText(expr: Expr, writing: Writing = {}): string {
   return joinParts(exprParts(expr, writing));
 }
 
-/** A target reads as the expression of the same shape once that block exists (`index`, `key`, `field`). */
-function targetParts(target: Target): Part[] {
-  const { kind, ...rest } = target;
-  if (kind === "var") return [{ text: target.name, variable: true }];
-  if (!hasNode(kind)) return [{ text: writeTarget(target, (expr) => exprText(expr)) }];
+/** A target, written as the expression it is (`nums[2]`); any other expression there, likewise. */
+function targetParts(target: Expr): Part[] {
+  if (variableOf(target) !== undefined || !isTarget(target)) return exprParts(target);
   // Each part after the variable carries the expression it draws, so a click on it opens its
   // own value line (`editor.md`, Name fields).
-  const shape = { id: "", kind, ...rest } as Expr;
-  const [held] = targetExprs(target);
-  return templateParts(notationOf(shape), (name) => {
-    const placed = placeholderValue(shape, name);
+  const [held] = childSlots(target);
+  return templateParts(notationOf(target), (name) => {
+    const placed = placeholderValue(target, name);
     if (placed?.role !== "expr" || !placed.expr) return [];
     const parts = operandParts(placed.expr, placed, {});
     const root = placed.expr.id;
-    return placed.expr === held
+    return placed.expr === held?.expr
       ? parts
       : parts.map((part) => ({ ...part, hole: part.hole ?? root }));
   });
 }
 
 /** A target as the chart writes it: a variable, an item (`nums[2]`), or a key (`counts["a"]`). */
-export function targetText(target: Target): string {
+export function targetText(target: Expr): string {
   return joinParts(targetParts(target));
 }
 
@@ -286,16 +289,13 @@ function drawsPlaceholder(node: Node, def: NodeDef, name: string): boolean {
   const value = (node as unknown as Bag)[name];
   switch (slot?.role) {
     case "expr":
+    case "target":
       return isEmptyExpr(value);
     case "exprs":
       // A list with no item is empty only where the slot is required.
       return Array.isArray(value) && value.length === 0 && slot.required === true;
     case "id":
       return value === "";
-    case "target":
-      return (
-        (value as Target | undefined)?.kind === "var" && (value as { name: string }).name === ""
-      );
     default:
       return false;
   }

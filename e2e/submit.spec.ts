@@ -116,7 +116,7 @@ test("a test that ends in an error shows its message in place of Output", async 
   const divide = {
     id: "div-asgn-001",
     kind: "assign",
-    target: { kind: "var", name: "x" },
+    target: { id: "sub-tgt-0001", kind: "var", name: "x" },
     value: {
       id: "div-binp-001",
       kind: "binop",

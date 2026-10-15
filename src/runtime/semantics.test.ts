@@ -73,7 +73,7 @@ describe("values and the run", () => {
 
   it("a list index is int, else E_TYPE; negative from the end; out of range E_INDEX", () => {
     const write = (index: ReturnType<typeof num>) => {
-      const stmt = assignTo({ kind: "index", list: v("xs"), index }, num(0));
+      const stmt = assignTo(ast.item(v("xs"), index), num(0));
       const made = withInputs({ xs: [1, 2] }, [stmt]);
       return runAll(made.program, made.inputs);
     };
@@ -100,20 +100,10 @@ describe("values and the run", () => {
     }
   });
 
-  it("dict keys are int or str, else E_TYPE (write path)", () => {
-    const write = (key: ReturnType<typeof num>) => {
-      const made = withInputs({ d: {} }, [assignTo({ kind: "key", dict: v("d"), key }, num(0))]);
-      return runAll(made.program, made.inputs);
-    };
-    expect(varData(write(str("k")), "d")).toEqual({ k: 0 });
-    expect(varData(write(num(3)), "d")).toEqual({ "$int:3": 0 });
-    expect(write(float(1.5)).done).toMatchObject({ type: "error", error: { code: "E_TYPE" } });
-  });
-
   it("assignment copies the reference", () => {
     const made = withInputs({ xs: [1] }, [
       assign("ys", v("xs")),
-      assignTo({ kind: "index", list: v("ys"), index: num(0) }, num(9)),
+      assignTo(ast.item(v("ys"), num(0)), num(9)),
     ]);
     const result = runAll(made.program, made.inputs);
     expect(varData(result, "xs")).toEqual([9]);
@@ -122,7 +112,7 @@ describe("values and the run", () => {
       program([
         assign("a", list(num(1), num(2))),
         assign("b", v("a")),
-        assignTo({ kind: "index", list: v("b"), index: num(1) }, num(5)),
+        assignTo(ast.item(v("b"), num(1)), num(5)),
         assign("seen", item(v("a"), num(1))),
       ]),
     );

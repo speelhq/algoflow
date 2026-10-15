@@ -3,7 +3,7 @@
 import { getNode, keyOf } from "@/nodes/registry";
 import { newId } from "./id";
 import { assignedValue, declaredBy } from "./scope";
-import type { Expr, FunctionDef, Id, NodeId, Place, Program, Stmt, Target } from "./types";
+import type { Expr, FunctionDef, Id, NodeId, Place, Program, Stmt } from "./types";
 import {
   allExprs,
   isExpr,
@@ -13,8 +13,6 @@ import {
   programIds,
   programStmts,
   regionsOf,
-  TARGET_PARTS,
-  targetExprs,
 } from "./walk";
 
 type Bag = Record<string, unknown>;
@@ -71,21 +69,6 @@ function freshExpr(expr: Expr, program: Program, replaced?: Expr): Expr {
   const copy = clone(expr);
   claim(copy, takenIds(program, replaced ? [replaced] : []));
   return copy;
-}
-
-/**
- * A target entering the program, each expression copied on its own and made fresh as
- * `freshExpr` makes one; ids of `replaced`, the target it takes the place of, may stay.
- */
-function freshTarget(target: Target, program: Program, replaced: Target | undefined): Target {
-  const taken = takenIds(program, replaced ? targetExprs(replaced) : []);
-  const copy: Bag = { ...target };
-  for (const name of TARGET_PARTS[target.kind].exprs) {
-    const expr = clone(copy[name] as Expr);
-    claim(expr, taken);
-    copy[name] = expr;
-  }
-  return copy as Target;
 }
 
 // ---------------------------------------------------------------- locating
@@ -178,31 +161,22 @@ export function duplicateStmt(program: Program, id: NodeId): Program {
 
 // ---------------------------------------------------------------- slots
 
-/** Sets a non-expression slot (`id`, `text`, or `target`) of a statement or expression. */
-export function setSlot(
-  program: Program,
-  id: NodeId,
-  slot: string,
-  value: string | Target,
-): Program {
+/** Sets a name or literal slot (`id` or `text`) of a statement or expression. */
+export function setSlot(program: Program, id: NodeId, slot: string, value: string): Program {
   const next = clone(program);
   const node = locateNode(next, id);
   if (!node) throw new EditError(`no node ${id}`);
   const spec = getNode(keyOf(node)).slots.find((s) => s.name === slot);
-  if (!spec || spec.role === "expr" || spec.role === "exprs" || spec.role === "body") {
+  if (spec?.role !== "id" && spec?.role !== "text") {
     throw new EditError(`node ${id} has no settable slot ${slot}`);
   }
-  const bag = node as unknown as Bag;
-  bag[slot] =
-    typeof value === "string"
-      ? value
-      : freshTarget(value, next, spec.role === "target" ? (bag[slot] as Target) : undefined);
+  (node as unknown as Bag)[slot] = value;
   return next;
 }
 
 /**
- * Sets an expression slot. For `exprs` slots `index` selects the item (appending
- * past the end); a target's expression is addressed as `target.<field>`, e.g. `target.index`.
+ * Sets an expression or target slot. For `exprs` slots `index` selects the item (appending
+ * past the end).
  */
 export function setExpr(
   program: Program,
@@ -214,23 +188,16 @@ export function setExpr(
   const next = clone(program);
   const node = locateNode(next, id);
   if (!node) throw new EditError(`no node ${id}`);
-  const [slotName = "", field] = slot.split(".");
-  const spec = getNode(keyOf(node)).slots.find((s) => s.name === slotName);
+  const spec = getNode(keyOf(node)).slots.find((s) => s.name === slot);
   const bag = node as unknown as Bag;
   const old = (value: unknown) => (isExpr(value) ? value : undefined);
-  if (spec?.role === "expr" && field === undefined) {
-    bag[slotName] = freshExpr(expr, next, old(bag[slotName]));
-  } else if (spec?.role === "exprs" && field === undefined) {
-    const items = (bag[slotName] as Expr[] | undefined) ?? [];
+  if (spec?.role === "expr" || spec?.role === "target") {
+    bag[slot] = freshExpr(expr, next, old(bag[slot]));
+  } else if (spec?.role === "exprs") {
+    const items = (bag[slot] as Expr[] | undefined) ?? [];
     const at = index === undefined ? items.length : Math.max(0, Math.min(index, items.length));
     items.splice(at, at < items.length ? 1 : 0, freshExpr(expr, next, old(items[at])));
-    bag[slotName] = items;
-  } else if (spec?.role === "target" && field !== undefined) {
-    const target = bag[slotName] as Bag | undefined;
-    if (!target || target.kind === "var" || !(field in target)) {
-      throw new EditError(`target of ${id} has no expression field ${field}`);
-    }
-    target[field] = freshExpr(expr, next, old(target[field]));
+    bag[slot] = items;
   } else {
     throw new EditError(`node ${id} has no expression slot ${slot}`);
   }
@@ -288,7 +255,7 @@ export function setStmtName(program: Program, id: NodeId, name: string): Program
   return next;
 }
 
-/** Renames a variable or function everywhere it occurs (`id` slots, targets, declarations). */
+/** Renames a variable or function everywhere it occurs (`id` slots and declarations). */
 export function renameName(program: Program, from: Id, to: Id): Program {
   const next = clone(program);
   const swap = (name: string) => (name === from ? to : name);
@@ -302,9 +269,6 @@ export function renameName(program: Program, from: Id, to: Id): Program {
     for (const slot of getNode(keyOf(node)).slots) {
       if (slot.role === "id" && typeof bag[slot.name] === "string") {
         bag[slot.name] = swap(bag[slot.name] as string);
-      } else if (slot.role === "target") {
-        const target = bag[slot.name] as Target | undefined;
-        if (target?.kind === "var") target.name = swap(target.name);
       }
     }
   };
@@ -364,7 +328,7 @@ export function hoistAssign(program: Program, frameId: NodeId, name: Id): Progra
   const assign: Stmt = {
     id: newId(),
     kind: "assign",
-    target: { kind: "var", name },
+    target: { id: newId(), kind: "var", name },
     value: defaultFor(inner, name),
   };
   region.splice(index, 0, assign);

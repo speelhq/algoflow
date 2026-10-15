@@ -44,7 +44,7 @@
   ],
   "takeaway": { "en": "Nested **if** blocks tested the divisible-by-15 case before 3 and 5." },
   "solution": {
-    "version": 1,
+    "version": 2,
     "title": "FizzBuzz",
     "challengeId": "fizzbuzz",
     "inputs": [{ "name": "n", "kind": "number" }],

@@ -186,7 +186,7 @@ test("Run with a diagnostic leads to its node instead of running", async ({ page
   const assign = {
     id: "asg-empty-01",
     kind: "assign",
-    target: { kind: "var", name: "x" },
+    target: { id: "run-tgt-0001", kind: "var", name: "x" },
     value: { id: "val-empty-01", kind: "empty" },
   };
   await seedProgram(page, "fizzbuzz", programWith([assign]));
@@ -218,7 +218,7 @@ test("a runtime error outlines its node and says its message, and playback stops
   const divide = {
     id: "asg-divz-001",
     kind: "assign",
-    target: { kind: "var", name: "x" },
+    target: { id: "run-tgt-0002", kind: "var", name: "x" },
     value: {
       id: "div-divz-001",
       kind: "binop",
