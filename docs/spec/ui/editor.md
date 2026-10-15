@@ -124,7 +124,8 @@ whole name first and, after a value, the entries for its kind first; Enter
 or a click chooses the highlighted match, and ↑ and ↓ move the highlight. A
 space or any key of the key table (Backspace and keys) ends the word: when it
 names a variable or an entry exactly, that is chosen and the key then
-applies; otherwise the key is not taken and the word stays to be corrected.
+applies; otherwise, or when the line refuses that choice, the key is not
+taken and the word stays to be corrected.
 Tab chooses a word that names one exactly before it moves on. A word that
 matches nothing is underlined, and the explanation line names the closest
 variable or entry, one that differs by at most one letter in three, and at
@@ -246,8 +247,14 @@ Backspace removes it only when no input after the first holds a value
 
 Keys typed in a value line insert what the chart writes; each entry names
 its keys (`keys`, `blocks.md`, Menu entries), and a key two entries name
-inserts the one that applies at the caret: `[` is `Empty list` where a value
-is expected and `Item at a position` after one:
+inserts, of the entries that apply at the caret, the first the slot keeps
+(Targets), the entry that fills an input before the one that takes a value,
+a selected value counting as both. Typing any refused key again as if the
+caret were after the selected value was rejected: a selected `0` then `.`
+would give `0.`, which replacing a selected value avoids (Value list). So
+`[` is `Empty list` where a value is expected and in place of a selected
+value, and `Item at a position` after a value and on a target's selected
+value, as the slot keeps no list:
 
 | Typed                   | Inserts                                          |
 | ----------------------- | ------------------------------------------------ |
@@ -298,8 +305,10 @@ stored, so none is ever left unclosed.
 
 A `target` slot is a value line that keeps a target (`language.md`,
 Statements): a key or a choice is taken only when the line's value stays a
-target or an input still to fill, and its list offers only the rows that
-keep one; a key refused so shows `editor.notTarget` on the explanation line.
+target or an input still to fill, and its list leaves out only the rows
+whose choice would leave neither, a row refused for another reason listed
+and refused as in a value line; a key that would leave neither shows
+`editor.notTarget` on the explanation line.
 Inside a target's own inputs (the position of `nums[…]`) the line takes any
 value. So `nums[j]` is typed as the chart writes it, and `[` after a
 variable of any kind makes an item of it, a parameter's (`heap[i]`) among
@@ -320,8 +329,9 @@ target's inputs the lists are a value line's, `This problem` not among them.
 In a target's line, Enter or a click that chooses a row and leaves the
 target with no input still to fill moves the keyboard to the next slot, as
 choosing a name in a name field does, so `total`, Enter, and the value are
-typed in turn; `[` typed after a name, or on the target's selected
-variable, makes its item. Staying
+typed in turn; `[` typed after a name makes its item, and so does `[` on
+the target's selected value, the entry the slot keeps of the two `[`
+names (Backspace and keys). Staying
 in the line was rejected: a target is a name far more often than an item,
 and a second Enter there would close the editor before its value.
 
