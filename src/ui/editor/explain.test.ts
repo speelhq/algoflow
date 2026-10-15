@@ -17,6 +17,7 @@ const ctx: LineContext = {
   ]),
   scope: { functions: [] },
   functions: [],
+  target: null,
 };
 
 function keys(text: string, settled = true): Line {

@@ -8,7 +8,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNod
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { getChallenge } from "@/challenges";
 import { nodeText, t } from "@/i18n/t";
-import { duplicateStmt, insertItem, removeItem, removeStmt, setExpr } from "@/lang/edit";
+import { duplicateStmt, insertItem, removeItem, removeStmt, setExpr, setSlot } from "@/lang/edit";
 import { chartOf, variableKinds } from "@/lang/kinds";
 import { visibleAt } from "@/lang/scope";
 import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
@@ -18,42 +18,31 @@ import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import { parseScope } from "@/python/parse";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
-import { joinParts, placeholderValue, slotParts } from "@/ui/chart/text";
+import { placeholderValue, slotParts } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics } from "./diagnostics";
 import { apply } from "./edits";
 import { EditorList } from "./EditorList";
-import { explainLine, explainVariable, helpParts, type Explanation } from "./explain";
+import { explainLine, explainName, helpParts, type Explanation } from "./explain";
 import {
   editedLines,
   fieldKey,
   fieldLabel,
-  fieldPlace,
   fieldsOf,
-  firstPart,
-  formIn,
-  formOfKey,
-  formsFor,
-  isNamed,
   nameOf,
-  namePart,
   sameField,
-  setForm,
-  setName,
-  setVariable,
   startField,
-  targetPieces,
-  valueOf,
+  targetSlot,
   wordsAfter,
   type Field,
 } from "./fields";
 import { callableFunctions, lineTakes, matches, openLine, setText, type LineContext } from "./line";
 import { NameOfNode } from "./NameOfNode";
-import { nameChars, type FormOf, type NameRow } from "./names";
+import { chartNames, nameChars, type NameRow } from "./names";
+import { offersAll } from "./list";
 import { nameList, shownNameRow, valueList } from "./rows";
 import {
-  chooseRow,
   clickInLine,
   commit,
   focusField,
@@ -61,6 +50,7 @@ import {
   highlightRow,
   leaveName,
   openSession,
+  pickRow,
   settleWord,
   shownHighlight,
   showAll,
@@ -101,15 +91,30 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   const chart = chartOf(program, stmt.id);
   const kinds = variableKinds(program, chart);
-  const ctx: LineContext = useMemo(
-    () => ({
-      variables: visibleAt(program, stmt.id) ?? [],
+  // The names the problem expects, which a name list and a binding target's list offer first.
+  const asked = useMemo(
+    () => Object.keys(getChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {}),
+    [program.challengeId],
+  );
+  const named = useMemo(() => chartNames(program, chart, asked), [program, chart, asked]);
+  // The focused target slot's line keeps a target and offers names (`editor.md`, Targets).
+  const target = focus ? targetSlot(stmt, focus) : undefined;
+  const binds = target ? target.binds === true : undefined;
+  const ctx: LineContext = useMemo(() => {
+    const variables = visibleAt(program, stmt.id) ?? [];
+    return {
+      variables,
       kinds,
       scope: parseScope(program),
       functions: callableFunctions(program),
-    }),
-    [program, stmt.id, kinds],
-  );
+      target:
+        binds === undefined
+          ? null
+          : binds
+            ? { ...named, binds }
+            : { asked: [], names: variables, binds },
+    };
+  }, [program, stmt.id, kinds, binds, named]);
   const diagnostics = editorDiagnostics(program, stmt.id, led);
 
   // ------------------------------------------------------------ steps
@@ -121,8 +126,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const run = (step: Step): Session => {
     for (const { field, root } of step.edits) {
       const at = `${stmt.id}:${fieldKey(field)}`;
-      const { id, slot } = fieldPlace(current() ?? stmt, field);
-      apply((p) => setExpr(p, id, slot, root, field.index), at);
+      apply((p) => setExpr(p, stmt.id, field.slot, root, field.index), at);
     }
     setSession(step.session);
     return step.session;
@@ -179,12 +183,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     const left = run(result);
     const { after } = result;
     if (after === "close") closeEditor();
-    else if (after === "variable") {
-      const slot = left.focus?.slot;
-      if (slot === undefined) return;
-      apply((p) => setVariable(p, stmt, slot));
-      enter(left, { slot, role: "target" }, null);
-    } else if (after && "go" in after) go(left, after.go, left.focus);
+    else if (after && "go" in after) go(left, after.go, left.focus);
     else if (after && left.focus) addItem(left, left.focus.slot, after.addItem);
   };
 
@@ -230,30 +229,10 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   // ------------------------------------------------------------ names
 
-  const asked = Object.keys(getChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {});
-  // A target can be set to a form of a variable visible here (`editor.md`, Name fields).
-  const forms: FormOf[] =
-    focus?.role === "target"
-      ? ctx.variables.flatMap((name) => formsFor(kinds.get(name)).map((form) => ({ form, name })))
-      : [];
-  const names = nameList(program, asked, session.typed, kinds, forms);
+  const names = nameList(named, session.typed, kinds);
 
   const chooseName = (field: Field, row: NameRow) => {
-    if (row.kind === "form") {
-      apply((p) => setForm(p, stmt, field.slot, row.form, row.name));
-      const now = current();
-      const part = now ? firstPart(now, field.slot) : undefined;
-      if (part) enter(leaveName(session), part, null);
-      return;
-    }
-    // A name the list offers the target's form of keeps that form and its other parts.
-    const form = formIn(stmt, field.slot);
-    const keeps = forms.some((each) => each.form === form && each.name === row.name);
-    apply((p) =>
-      form && keeps
-        ? setForm(p, stmt, field.slot, form, row.name)
-        : setName(p, stmt, field.slot, row.name),
-    );
+    apply((p) => setSlot(p, stmt.id, field.slot, row.name));
     go(leaveName(session), 1, field);
   };
 
@@ -277,16 +256,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         event.preventDefault();
         go(session, event.shiftKey ? -1 : 1, field);
         return;
-      default: {
-        // A form's key after a name the list offers that form of sets it (`nums[`).
-        const name = session.typed ?? nameOf(stmt, field.slot);
-        const offered = forms.filter((each) => each.name === name).map((each) => each.form);
-        const form = formOfKey(offered, event.key);
-        if (name === undefined || !form) return;
-        event.preventDefault();
-        chooseName(field, { kind: "form", form, name });
+      default:
         return;
-      }
     }
   };
 
@@ -295,44 +266,28 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const widget = (name: string): ReactNode => {
     const held = placeholderValue(stmt, name);
     switch (held?.role) {
-      case "id":
-      case "target": {
+      case "id": {
         const shownName = nameOf(stmt, name);
-        const field: Field = { slot: name, role: held.role };
+        const field: Field = { slot: name, role: "id" };
         const on = sameField(focus, field);
-        const nameField =
-          shownName === undefined ? null : (
-            <NameField
-              key={name}
-              slot={name}
-              label={fieldLabel(stmt, field)}
-              name={shownName}
-              typed={on ? session.typed : null}
-              on={on}
-              register={register(field)}
-              onFocus={() => {
-                setFocused(field);
-                if (!sameField(focus, field)) enter(session, field, null);
-              }}
-              onBlur={() => setSession((s) => leaveName(s))}
-              onType={(text) => setSession((s) => typeName(s, nameChars(text)))}
-              onKey={(event) => onNameKey(event, field, names.rows)}
-            />
-          );
-        if (held.role !== "target" || !held.target || isNamed(held.target)) return nameField;
-        // A target holding an item: its list's name, then a value line for each other part; one
-        // the editor cannot edit (its list no variable) is drawn as the chart draws it.
-        const pieces = targetPieces(held.target);
-        if (pieces.length === 0) return <span key={name}>{joinParts(slotParts(stmt, name))}</span>;
-        const listPart = namePart(held.target);
-        return pieces.map((piece, i) => {
-          // oxlint-disable-next-line react/no-array-index-key -- a notation's pieces keep their order
-          if ("words" in piece) return <span key={`${name}w${i}`}>{piece.words.trim()}</span>;
-          if (piece.name === listPart) return nameField;
-          const part: Field = { slot: name, role: "expr", part: piece.name };
-          const value = valueOf(stmt, part);
-          return value ? lineWidget(part, value) : null;
-        });
+        return shownName === undefined ? null : (
+          <NameField
+            key={name}
+            slot={name}
+            label={fieldLabel(stmt, field)}
+            name={shownName}
+            typed={on ? session.typed : null}
+            on={on}
+            register={register(field)}
+            onFocus={() => {
+              setFocused(field);
+              if (!sameField(focus, field)) enter(session, field, null);
+            }}
+            onBlur={() => setSession((s) => leaveName(s))}
+            onType={(text) => setSession((s) => typeName(s, nameChars(text)))}
+            onKey={(event) => onNameKey(event, field, names.rows)}
+          />
+        );
       }
       case "expr":
         return held.expr ? (
@@ -389,7 +344,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   let list: ReactNode = null;
   let explanation: Explanation | undefined;
-  if (focus && (focus.role === "id" || focus.role === "target")) {
+  if (focus?.role === "id") {
     const shown = shownNameRow(session, names.rows);
     const row = shown === null ? undefined : names.rows[shown];
     list = (
@@ -404,23 +359,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         }}
       />
     );
-    explanation =
-      row?.kind === "form"
-        ? { name: nodeText(row.form, "label"), parts: helpParts(nodeText(row.form, "help")) }
-        : row
-          ? {
-              name: row.name,
-              variable: true,
-              parts: [
-                {
-                  text:
-                    row.kind === "new"
-                      ? t("editor.explain.newVariable", { name: row.name })
-                      : explainVariable(program, stmt.id, row.name),
-                },
-              ],
-            }
-          : { name: "", parts: [{ text: t("editor.explain.name") }] };
+    explanation = row
+      ? explainName(program, stmt.id, row.name, row.kind === "new")
+      : { name: "", parts: [{ text: t("editor.explain.name") }] };
   } else if (focus?.role === "expr" && line) {
     const { rows, sections } = values;
     const shown = shownHighlight(session, rows.length);
@@ -432,9 +373,13 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         onHighlight={(index) => setSession((s) => highlightRow(s, index))}
         onChoose={(index) => {
           const row = rows[index];
-          if (row) run(chooseRow(session, row, ctx));
+          if (!row) return;
+          const picked = pickRow(session, row, ctx);
+          const left = run(picked);
+          const { after } = picked;
+          if (typeof after === "object" && "go" in after) go(left, after.go, left.focus);
         }}
-        {...(line.word === "" && !session.switching && !session.all
+        {...(line.word === "" && !session.switching && !session.all && offersAll(line, ctx)
           ? { onShowAll: () => setSession((s) => showAll(s)) }
           : {})}
       />

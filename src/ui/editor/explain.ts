@@ -65,6 +65,14 @@ export function explainVariable(program: Program, at: NodeId, name: Id): string 
     : t("editor.explain.variablePlain", { statement });
 }
 
+/** A name a list offers: a variable of the chart, or a new one it makes. */
+export function explainName(program: Program, at: NodeId, name: Id, isNew: boolean): Explanation {
+  const text = isNew
+    ? t("editor.explain.newVariable", { name })
+    : explainVariable(program, at, name);
+  return { name, variable: true, parts: [{ text }] };
+}
+
 /** A help followed, when keys insert what it explains, by how to type them. */
 function typedHelp(help: string, keys: string | undefined): Part[] {
   return helpParts(keys === undefined ? help : `${help} ${t("editor.typeKeys", { keys })}`);
@@ -74,11 +82,8 @@ function typedHelp(help: string, keys: string | undefined): Part[] {
 function explainRow(row: Row, program: Program, at: NodeId): Explanation {
   switch (row.kind) {
     case "variable":
-      return {
-        name: row.name,
-        variable: true,
-        parts: [{ text: explainVariable(program, at, row.name) }],
-      };
+    case "new":
+      return explainName(program, at, row.name, row.kind === "new");
     case "entry":
       return { name: row.entry.label, parts: typedHelp(row.entry.help, row.entry.menu.keys) };
     case "brackets":

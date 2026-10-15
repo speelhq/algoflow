@@ -1,21 +1,34 @@
 // The list under a value line: the groups chosen by what is before the caret, in one
 // order everywhere, or the rows a typed word matches; `Show all` lists every entry that can be
-// chosen there. Reads the entries' `group` and `on` only.
+// chosen there. A target's line lists the rows that keep a target, and where its whole value is
+// to fill, names (`editor.md`, Targets). Reads the entries' `group` and `on` only.
 import type { Kind } from "@/lang/types";
 import type { MenuGroup } from "@/nodes/types";
 import { allEntries, GROUPS, takesValue } from "./entries";
-import { atInput, kindBefore, matches, type Line, type LineContext, type Row } from "./line";
+import {
+  atInput,
+  keptRows,
+  kindBefore,
+  matches,
+  namesTarget,
+  wholeTargetRows,
+  type Line,
+  type LineContext,
+  type Row,
+} from "./line";
 
-export type ListGroup = "variables" | MenuGroup | "functions";
-const LIST_GROUPS: readonly ListGroup[] = ["variables", ...GROUPS, "functions"];
+export type ListGroup = "problem" | "variables" | "new" | MenuGroup | "functions";
+const LIST_GROUPS: readonly ListGroup[] = ["problem", "variables", "new", ...GROUPS, "functions"];
 
 export type Section = { group: ListGroup; rows: Row[] };
 
-/** The group a row is listed under. */
-function groupOf(row: Row): ListGroup {
+/** The group a row is listed under: among a target's names, one the problem expects under `This problem`. */
+function groupOf(row: Row, asked: readonly string[]): ListGroup {
   switch (row.kind) {
     case "variable":
-      return "variables";
+      return asked.includes(row.name) ? "problem" : "variables";
+    case "new":
+      return "new";
     case "entry":
       return row.entry.menu.group;
     case "brackets":
@@ -25,10 +38,10 @@ function groupOf(row: Row): ListGroup {
   }
 }
 
-function sections(rows: readonly Row[]): Section[] {
+function sections(rows: readonly Row[], asked: readonly string[]): Section[] {
   return LIST_GROUPS.map((group) => ({
     group,
-    rows: rows.filter((row) => groupOf(row) === group),
+    rows: rows.filter((row) => groupOf(row, asked) === group),
   })).filter((section) => section.rows.length > 0);
 }
 
@@ -59,18 +72,28 @@ function after(kind: Kind | undefined, all: boolean): Row[] {
 
 /** The list's sections at the caret, or the matches of the word typed, in their rank. */
 export function listSections(line: Line, ctx: LineContext, all = false): Section[] {
+  // The problem's names head a target's own list only, never the lists inside it.
+  const asked = ctx.target && namesTarget(line, ctx) ? ctx.target.asked : [];
   if (line.word !== "") {
     // Matches keep their rank; a heading starts wherever the group changes.
     const out: Section[] = [];
     for (const row of matches(line, ctx)) {
-      const group = groupOf(row);
+      const group = groupOf(row, asked);
       const last = out.at(-1);
       if (last?.group === group) last.rows.push(row);
       else out.push({ group, rows: [row] });
     }
     return out;
   }
-  return sections(atInput(line) ? expected(ctx, all) : after(kindBefore(line, ctx), all));
+  const rows =
+    wholeTargetRows(line, ctx) ??
+    keptRows(line, atInput(line) ? expected(ctx, all) : after(kindBefore(line, ctx), all), ctx);
+  return sections(rows, asked);
+}
+
+/** Whether the list ends with `Show all`: not over a target's names, which it would list again. */
+export function offersAll(line: Line, ctx: LineContext): boolean {
+  return wholeTargetRows(line, ctx) === undefined;
 }
 
 /** The rows of the sections in order, as ↑ and ↓ walk them. */

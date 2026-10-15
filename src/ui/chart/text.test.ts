@@ -147,19 +147,11 @@ describe("notation", () => {
     expect(notationText(assignTo(item(v("nums"), v("i")), num(0)))).toBe("nums[i] ← 0");
   });
 
-  it("an expression that is no target, in a target slot, is written whole", () => {
-    expect(notationText(assignTo(bin("+", v("a"), num(1)), num(2)))).toBe("a + 1 ← 2");
-  });
-
-  it("a target's part after its variable opens its own value line when clicked", () => {
-    const position = bin("+", v("i"), num(1));
-    const parts = notationParts(assignTo(item(v("nums"), position), num(0)));
-    expect(parts.find((part) => part.text === "nums")?.hole).toBeUndefined();
-    expect(parts.filter((part) => part.hole === position.id).map((part) => part.text)).toEqual([
-      "i",
-      " + 1",
-    ]);
-    expect(parts.find((part) => part.text === "]")?.hole).toBeUndefined();
+  it("a target is written as the expression it is, its inputs still to fill as `…`", () => {
+    const parts = notationParts(assignTo(item(v("nums"), empty()), num(0)));
+    expect(joinParts(parts)).toBe("nums[…] ← 0");
+    expect(parts.find((part) => part.text === "nums")).toMatchObject({ variable: true });
+    expect(parts.filter((part) => part.hole !== undefined)).toHaveLength(1);
   });
 
   it("marks variables, and an input still to fill at any depth", () => {

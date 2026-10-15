@@ -1,74 +1,68 @@
-// The list under a name field: the names of the problem's expected variables under
-// `This problem`, the program's other variables under `Variables`, each kept while one of its
-// words begins with the text typed, a typed name neither holds offered as a new variable, and in
-// a target each form of a variable given (`Item at a position`).
+// The names a name field and a binding target's line offer (`editor.md`, Name fields; Targets):
+// the problem's expected variables under `This problem`, the chart's other variables under
+// `Variables`, each kept while one of its words begins with the text typed, and a typed name
+// none of them is offered as a new variable.
 import { declaredBy } from "@/lang/scope";
-import { NAME_PATTERN, RESERVED, type Id, type Program } from "@/lang/types";
-import { programStmts } from "@/lang/walk";
-import type { Form } from "./fields";
-import { matchesName } from "./line";
+import type { Id, NodeId, Program } from "@/lang/types";
+import { isValidName } from "@/lang/validate";
+import { allStmts } from "@/lang/walk";
 
-/** Every variable name the program has: inputs, parameters, and assigned names, in program order. */
-function programNames(program: Program): Id[] {
-  const names = new Set<Id>(program.inputs.map((input) => input.name));
-  for (const fn of program.functions) for (const param of fn.params) names.add(param);
-  for (const { stmt } of programStmts(program)) {
-    for (const { name } of declaredBy(stmt)) names.add(name);
-  }
-  return [...names];
+/** The words of a name: split at spaces, `_`, and `-`. */
+function wordsOf(name: string): string[] {
+  return name.toLowerCase().split(/[\s_-]+/);
 }
 
-/** A name, a new variable, or a form of the variable `name` (`Item at a position`). */
-export type NameRow =
-  | { kind: "name"; name: Id }
-  | { kind: "new"; name: Id }
-  | { kind: "form"; form: Form; name: Id };
-export type NameSection = { group: "problem" | "variables" | "new" | "items"; rows: NameRow[] };
+/** Whether a typed word matches a name: the name, or one of its words, starts with it. */
+export function matchesName(name: string, word: string): boolean {
+  const w = word.toLowerCase();
+  return wordsOf(name).some((part) => part.startsWith(w)) || name.toLowerCase().startsWith(w);
+}
 
-/** A form a target can be set to: `form` of the variable `name`. */
-export type FormOf = { form: Form; name: Id };
+/** The names a chart's list offers: the problem's expected ones first, then the chart's others. */
+export type ChartNames = { asked: readonly Id[]; names: readonly Id[] };
 
 /**
- * The sections of the list for the text typed; `asked` are the problem's expected names, and
- * `forms` the forms of variables the field can be set to (none in an `id` slot).
+ * In `main` the problem's expected names (`asked`), then the inputs and the names `main` assigns;
+ * in a function its parameters and the names its body assigns; each in program order.
  */
-export function nameSections(
+export function chartNames(
   program: Program,
+  chart: "main" | NodeId,
   asked: readonly Id[],
-  typed: string,
-  forms: readonly FormOf[],
-): NameSection[] {
-  const problem = [...new Set(asked)];
-  const others = programNames(program).filter((name) => !problem.includes(name));
+): ChartNames {
+  const fn = program.functions.find((candidate) => candidate.id === chart);
+  const problem = fn ? [] : [...new Set(asked)];
+  const names = new Set<Id>(fn ? fn.params : program.inputs.map((input) => input.name));
+  for (const stmt of allStmts(fn ? fn.body : program.main)) {
+    for (const { name } of declaredBy(stmt)) names.add(name);
+  }
+  return { asked: problem, names: [...names].filter((name) => !problem.includes(name)) };
+}
+
+/** Whether a typed name is offered as a new variable: a name that none of `known` is. */
+export function isNewName(typed: string, known: readonly Id[]): boolean {
+  return typed !== "" && !known.includes(typed) && isValidName(typed);
+}
+
+/** A name, or a new variable. */
+export type NameRow = { kind: "name"; name: Id } | { kind: "new"; name: Id };
+export type NameSection = { group: "problem" | "variables" | "new"; rows: NameRow[] };
+
+/** The sections of a name field's list for the text typed. */
+export function nameSections({ asked, names }: ChartNames, typed: string): NameSection[] {
   // A whole name comes first.
-  const whole = (names: Id[]) =>
-    names.toSorted((a, b) => Number(b === typed) - Number(a === typed));
+  const kept = (list: readonly Id[]): NameRow[] =>
+    list
+      .filter((name) => matchesName(name, typed))
+      .toSorted((a, b) => Number(b === typed) - Number(a === typed))
+      .map((name) => ({ kind: "name", name }));
   const sections: NameSection[] = [
-    {
-      group: "problem",
-      rows: whole(problem.filter((n) => matchesName(n, typed))).map((name) => ({
-        kind: "name",
-        name,
-      })),
-    },
-    {
-      group: "variables",
-      rows: whole(others.filter((n) => matchesName(n, typed))).map((name) => ({
-        kind: "name",
-        name,
-      })),
-    },
+    { group: "problem", rows: kept(asked) },
+    { group: "variables", rows: kept(names) },
   ];
-  const known = problem.includes(typed) || others.includes(typed);
-  if (typed !== "" && !known && NAME_PATTERN.test(typed) && !RESERVED.has(typed)) {
+  if (isNewName(typed, [...asked, ...names])) {
     sections.push({ group: "new", rows: [{ kind: "new", name: typed }] });
   }
-  sections.push({
-    group: "items",
-    rows: forms
-      .filter(({ name }) => matchesName(name, typed))
-      .map(({ form, name }) => ({ kind: "form", form, name })),
-  });
   return sections.filter((section) => section.rows.length > 0);
 }
 

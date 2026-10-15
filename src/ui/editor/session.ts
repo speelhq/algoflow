@@ -3,7 +3,7 @@
 // switched. Every change is a pure transition from one session to the next, returning the values
 // it writes, so a handler that makes several changes chains them on what each one returned.
 import type { Expr, NodeId, Stmt } from "@/lang/types";
-import { isEmptyExpr } from "@/lang/walk";
+import { allExprs, isEmptyExpr } from "@/lang/walk";
 import { sameField, valueOf, type Field } from "./fields";
 import {
   atEnd,
@@ -66,7 +66,7 @@ export function follow(session: Session, stmt: Stmt): Session {
   if (!line) return session;
   const root = focus ? valueOf(stmt, focus) : undefined;
   if (root && JSON.stringify(root) === JSON.stringify(line.root)) return session;
-  // A field the statement no longer has (a target's part, after an undo) leaves the keyboard.
+  // A field the statement no longer has (an item removed, after an undo) leaves the keyboard.
   return { ...session, line: root ? openLine(root) : null, focus: root ? focus : null };
 }
 
@@ -156,11 +156,8 @@ export function chooseRow(session: Session, row: Row, ctx: LineContext): Step {
   return commit(session, choose(line, row, ctx).line);
 }
 
-/**
- * What a key in a value line leaves to the editor: closing it, another field, a new item, or
- * the target set back to its variable.
- */
-export type After = "close" | { go: 1 | -1 } | { addItem: number } | "variable";
+/** What a key in a value line leaves to the editor: closing it, another field, or a new item. */
+export type After = "close" | { go: 1 | -1 } | { addItem: number };
 
 /** A key pressed in the focused value line; `taken` is false when the line leaves it alone. */
 export type KeyStep = Step & { taken: boolean; after?: After };
@@ -169,8 +166,21 @@ const taken = (step: Step, after?: After): KeyStep =>
   after === undefined ? { ...step, taken: true } : { ...step, taken: true, after };
 
 /**
+ * A row chosen by Enter or a click. In a target's line, a choice that leaves the target with no
+ * input still to fill moves on to the next field, as a name field's does (`editor.md`, Targets).
+ */
+export function pickRow(session: Session, row: Row, ctx: LineContext): KeyStep {
+  const { line, switching } = session;
+  if (!line || switching) return taken(chooseRow(session, row, ctx));
+  const chosen = choose(line, row, ctx);
+  const { root } = chosen.line;
+  const whole = chosen.taken && ctx.target !== null && ![...allExprs(root)].some(isEmptyExpr);
+  return taken(commit(session, chosen.line), whole ? { go: 1 } : undefined);
+}
+
+/**
  * A key the focused value line takes; `rows` is the value list shown under it, and `next` the
- * words the notation writes after the field (`]` after an item's position).
+ * words the notation writes after the field (`)` after the last value of `print(…)`).
  */
 export function valueKey(
   session: Session,
@@ -202,20 +212,14 @@ export function valueKey(
     }
     case "Enter": {
       const row = shown === null ? undefined : rows[shown];
-      if (row) return taken(chooseRow(session, row, ctx));
+      if (row) return pickRow(session, row, ctx);
       if (line.word !== "") return taken(commit(session, settle(line, ctx)));
       return taken(still(session), "close");
     }
-    case "Backspace": {
-      const removed = backspace(line);
-      // At an empty part of a target, with nothing typed, it sets the target back to its variable.
-      if (!removed.taken && focus.part !== undefined && isEmptyExpr(line.root)) {
-        return taken(still(session), "variable");
-      }
-      return taken(commit(session, removed.line));
-    }
+    case "Backspace":
+      return taken(commit(session, backspace(line, ctx).line));
     case "Delete":
-      return taken(line.selected ? commit(session, backspace(line).line) : still(session));
+      return taken(line.selected ? commit(session, backspace(line, ctx).line) : still(session));
     default: {
       if (key.key.length !== 1) return left;
       const typed = type(line, key.key, ctx);
@@ -247,7 +251,7 @@ export function textEnded(session: Session, key: TextEnd, ctx: LineContext): Key
   // Backspace removes the text only while its field is open and empty.
   const open = line.text === undefined ? undefined : find(line.root, line.text);
   if (key === "Backspace" && open && textOf(open) === "") {
-    return taken(chain(ended, (next) => commit(next, backspace(next.line ?? line).line)));
+    return taken(chain(ended, (next) => commit(next, backspace(next.line ?? line, ctx).line)));
   }
   if (key !== "Tab" && key !== "ShiftTab") return taken(ended);
   const step = key === "Tab" ? 1 : -1;

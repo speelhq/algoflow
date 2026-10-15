@@ -6,15 +6,7 @@
 import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Node, NodeId, Value } from "@/lang/types";
-import {
-  childSlots,
-  conditionOf,
-  isEmptyExpr,
-  isExpr,
-  isTarget,
-  paramArg,
-  variableOf,
-} from "@/lang/walk";
+import { conditionOf, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/walk";
 import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import type { Generated, NodeDef, Side } from "@/nodes/types";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
@@ -51,8 +43,7 @@ export function blankTemplate(template: string): string {
 /**
  * A run of a node's text: the template's own words, or what a slot holds (`slot` names the
  * statement's slot it belongs to). `variable` marks a variable's name, `empty` the placeholder
- * of an input still to fill, and `hole` the expression a click on the run opens: that input, or a
- * part of a target holding a form (the position of `nums[0]`).
+ * of an input still to fill, and `hole` the input a click on the run opens.
  */
 export type Part = {
   text: string;
@@ -172,15 +163,15 @@ function operandParts(
 }
 
 /**
- * What a placeholder of a node's notation or template holds: an expression slot or a builtin's
- * parameter (its input, and the side it is on), a list of values, a name, a target, or a literal
- * field as its block writes it. Undefined when the placeholder holds nothing drawn (a body).
+ * What a placeholder of a node's notation or template holds: an expression slot, a target slot,
+ * or a builtin's parameter (its input, and the side it is on), a list of values, a name, or a
+ * literal field as its block writes it. Undefined when the placeholder holds nothing drawn (a
+ * body).
  */
 export type Held =
   | { role: "expr"; expr: Expr | undefined; side: Side; binds: number | undefined }
   | { role: "exprs"; items: Expr[] }
   | { role: "id"; name: string }
-  | { role: "target"; target: Expr | undefined }
   | { role: "text"; text: string };
 
 /** What the placeholder `name` of `node`'s notation or template holds. */
@@ -195,8 +186,10 @@ export function placeholderValue(node: Node, name: string): Held | undefined {
   }
   const value = (node as unknown as Bag)[name];
   switch (slot.role) {
-    case "expr": {
-      const first = def.slots.find((s) => s.role === "expr");
+    // A target is written as the expression it is (`language.md`, Statements).
+    case "expr":
+    case "target": {
+      const first = def.slots.find((s) => s.role === "expr" || s.role === "target");
       const side = slot === first ? "left" : "right";
       const expr = isExpr(value) ? value : undefined;
       return { role: "expr", expr, side, binds: bindsAt(node, name) };
@@ -205,8 +198,6 @@ export function placeholderValue(node: Node, name: string): Held | undefined {
       return { role: "exprs", items: Array.isArray(value) ? value.filter(isExpr) : [] };
     case "id":
       return { role: "id", name: typeof value === "string" ? value : "" };
-    case "target":
-      return { role: "target", target: isExpr(value) ? value : undefined };
     case "text":
       return { role: "text", text: textOf(node, def, name) };
     case "body":
@@ -261,28 +252,6 @@ export function exprText(expr: Expr, writing: Writing = {}): string {
   return joinParts(exprParts(expr, writing));
 }
 
-/** A target, written as the expression it is (`nums[2]`); any other expression there, likewise. */
-function targetParts(target: Expr): Part[] {
-  if (variableOf(target) !== undefined || !isTarget(target)) return exprParts(target);
-  // Each part after the variable carries the expression it draws, so a click on it opens its
-  // own value line (`editor.md`, Name fields).
-  const [held] = childSlots(target);
-  return templateParts(notationOf(target), (name) => {
-    const placed = placeholderValue(target, name);
-    if (placed?.role !== "expr" || !placed.expr) return [];
-    const parts = operandParts(placed.expr, placed, {});
-    const root = placed.expr.id;
-    return placed.expr === held?.expr
-      ? parts
-      : parts.map((part) => ({ ...part, hole: part.hole ?? root }));
-  });
-}
-
-/** A target as the chart writes it: a variable, an item (`nums[2]`), or a key (`counts["a"]`). */
-export function targetText(target: Expr): string {
-  return joinParts(targetParts(target));
-}
-
 /** Whether a slot is drawn as the placeholder: an empty expression, an empty name, or no item. */
 function drawsPlaceholder(node: Node, def: NodeDef, name: string): boolean {
   const slot = def.slots.find((s) => s.name === name);
@@ -313,8 +282,6 @@ function stmtSlotParts(node: Node, def: NodeDef, name: string): Part[] {
         return listParts(held.items, (item) => exprParts(item));
       case "id":
         return [{ text: held.name, variable: true }];
-      case "target":
-        return held.target ? targetParts(held.target) : [];
       case "text":
         return [{ text: held.text }];
       default:
@@ -403,7 +370,7 @@ const ASSIGN = getNode("assign").create();
  */
 export function assignmentParts(name: string, value: string): Part[] {
   return templateParts(notationOf(ASSIGN), (placeholderName) =>
-    placeholderValue(ASSIGN, placeholderName)?.role === "target"
+    getNode(keyOf(ASSIGN)).slots.find((slot) => slot.name === placeholderName)?.role === "target"
       ? [{ text: name, variable: true }]
       : [{ text: value }],
   );

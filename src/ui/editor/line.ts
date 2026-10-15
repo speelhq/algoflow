@@ -4,13 +4,13 @@
 // Blocks are made by the parser (a variable, a number, a sign, a call) or by an entry's
 // block (`create()` with its preset), and read through their slots, their notation (the caret
 // moves in reading order, and a call ends with its bracket), and `precedence`, so this file
-// names no block kind.
-import { errorText } from "@/i18n/t";
+// names no block kind. A target slot's line keeps a target (`editor.md`, Targets).
+import { errorText, t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
 import { exprKind } from "@/lang/kinds";
 import type { Expr, Id, NodeId, Program } from "@/lang/types";
 import { refusedDefinitions } from "@/lang/validate";
-import { allExprs, isEmptyExpr, variableOf } from "@/lang/walk";
+import { allExprs, isEmptyExpr, isTarget, variableOf } from "@/lang/walk";
 import { emptyExpr, getNode, keyOf } from "@/nodes/registry";
 import { isParseError, NO_DEFINITIONS, parse, type ParseScope } from "@/python/parse";
 import { levelAssociativity } from "@/python/precedence";
@@ -24,6 +24,7 @@ import {
   templatePieces,
 } from "@/ui/chart/text";
 import { allEntries, makeEntry, takesValue, type Entry } from "./entries";
+import { isNewName, matchesName, type ChartNames } from "./names";
 
 type Bag = Record<string, unknown>;
 
@@ -49,17 +50,29 @@ export type Line = {
 
 export type LineFunction = { name: Id; params: readonly Id[] };
 
+/**
+ * A target slot's line: the names offered where the whole target is to fill, the problem's
+ * expected ones (`asked`) first, and whether a name typed that none is makes a new variable.
+ */
+export type TargetLine = ChartNames & { binds: boolean };
+
 export type LineContext = {
   /** The variables visible at the statement, the latest first. */
   variables: readonly Id[];
   kinds: Kinds;
   scope: ParseScope;
   functions: readonly LineFunction[];
+  /** The target slot the line edits, or null for a slot that takes any value. */
+  target: TargetLine | null;
 };
 
-/** A choice of the list: a variable, an entry, the brackets, or a function of the program. */
+/**
+ * A choice of the list: a variable, a new variable named by the word typed, an entry, the
+ * brackets, or a function of the program.
+ */
 export type Row =
   | { kind: "variable"; name: Id }
+  | { kind: "new"; name: Id }
   | { kind: "entry"; entry: Entry }
   | { kind: "brackets" }
   | { kind: "function"; fn: LineFunction };
@@ -320,6 +333,21 @@ function cleared(line: Line): Line {
 const done = (line: Line): Outcome => ({ line, taken: true });
 const refused = (line: Line): Outcome => ({ line, taken: false });
 
+/**
+ * `outcome` where the line's slot keeps its value: any value, or in a target slot a target or an
+ * input still to fill; else the line before it, refused with the reason.
+ */
+function inSlot(line: Line, outcome: Outcome, ctx: LineContext): Outcome {
+  const { root } = outcome.line;
+  if (!outcome.taken || ctx.target === null || isEmptyExpr(root) || isTarget(root)) return outcome;
+  return refused({ ...line, refused: t("editor.notTarget") });
+}
+
+/** Whether the caret is at the whole value, still to fill. */
+function fillsWhole(line: Line): boolean {
+  return !line.selected && "at" in line.caret && line.caret.at === line.root.id;
+}
+
 // ---------------------------------------------------------------- entries
 
 /** The first input of `made` still to fill, in reading order, other than `placed`; else after it. */
@@ -382,8 +410,12 @@ export function textOf(expr: Expr): string | undefined {
   return typeof held === "string" ? held : undefined;
 }
 
-/** Chooses a row of the list at the caret. */
+/** Chooses a row of the list at the caret, as the line's slot keeps it. */
 export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
+  return inSlot(line, chooseRow(line, row, ctx), ctx);
+}
+
+function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
   let base: Line = { ...line, word: "", refused: undefined, pending: undefined };
   if (row.kind === "entry" && takesValue(row.entry) && !atInput(base)) {
     return takeValue(base, row.entry);
@@ -391,7 +423,8 @@ export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
   if (base.selected) base = cleared(base);
   if (!("at" in base.caret)) return refused(line);
   switch (row.kind) {
-    case "variable": {
+    case "variable":
+    case "new": {
       const made = variableExpr(row.name);
       return made ? fill(base, made) : refused(line);
     }
@@ -410,20 +443,10 @@ export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
 
 // ---------------------------------------------------------------- words
 
-/** The words of a name: split at spaces, `_`, and `-`. */
-function wordsOf(name: string): string[] {
-  return name.toLowerCase().split(/[\s_-]+/);
-}
-
-/** Whether a typed word matches a name: the name, or one of its words, starts with it. */
-export function matchesName(name: string, word: string): boolean {
-  const w = word.toLowerCase();
-  return wordsOf(name).some((part) => part.startsWith(w)) || name.toLowerCase().startsWith(w);
-}
-
 function rowName(row: Row): string {
   switch (row.kind) {
     case "variable":
+    case "new":
       return row.name;
     case "entry":
       return row.entry.label;
@@ -440,8 +463,38 @@ function namesExactly(row: Row, word: string): boolean {
   return rowName(row).toLowerCase() === word.toLowerCase();
 }
 
+/**
+ * The names offered where a target slot's whole value is to fill (`editor.md`, Targets), and in a
+ * slot that binds the word typed as a new variable when it names none and is a name.
+ */
+function targetNames(word: string, target: TargetLine): Row[] {
+  const names = [...target.asked, ...target.names];
+  const rows = names.map((name): Row => ({ kind: "variable", name }));
+  if (target.binds && isNewName(word, names)) rows.push({ kind: "new", name: word });
+  return rows;
+}
+
+/** The names a target's line offers where its whole value is to fill; undefined elsewhere. */
+export function wholeTargetRows(line: Line, ctx: LineContext): Row[] | undefined {
+  return ctx.target && fillsWhole(line) ? targetNames(line.word, ctx.target) : undefined;
+}
+
+/** The rows of `rows` the line's slot keeps when chosen: in a target slot, those leaving a target. */
+export function keptRows(line: Line, rows: readonly Row[], ctx: LineContext): Row[] {
+  return ctx.target === null ? [...rows] : rows.filter((row) => choose(line, row, ctx).taken);
+}
+
+/**
+ * Whether a word typed names the target's names: where the whole target is to fill, or in place
+ * of its selected value.
+ */
+export function namesTarget(line: Line, ctx: LineContext): boolean {
+  return ctx.target !== null && (fillsWhole(line) || line.selected);
+}
+
 /** The rows a word can name at the caret: where a value is expected, or after one. */
 export function wordRows(line: Line, ctx: LineContext): Row[] {
+  if (ctx.target && namesTarget(line, ctx)) return targetNames(line.word, ctx.target);
   if (atInput(line) || (line.selected && line.word !== "")) {
     return [
       ...ctx.variables.map((name): Row => ({ kind: "variable", name })),
@@ -451,9 +504,10 @@ export function wordRows(line: Line, ctx: LineContext): Row[] {
       ...ctx.functions.map((fn): Row => ({ kind: "function", fn })),
     ];
   }
-  return allEntries()
+  const after = allEntries()
     .filter(takesValue)
     .map((entry): Row => ({ kind: "entry", entry }));
+  return keptRows(line, after, ctx);
 }
 
 /** The rows matching the word typed: a whole name first, then, after a value, its kind's. */
@@ -466,12 +520,15 @@ export function matches(line: Line, ctx: LineContext): Row[] {
       matchesName(rowName(row), word) ||
       (row.kind === "entry" && (row.entry.menu.keys ?? "").startsWith(word)),
   );
+  // A new variable comes last: a name the program has is the likelier one meant.
   const rank = (row: Row) =>
-    namesExactly(row, word)
-      ? 0
-      : kind !== undefined && row.kind === "entry" && row.entry.menu.on?.includes(kind)
-        ? 1
-        : 2;
+    row.kind === "new"
+      ? 3
+      : namesExactly(row, word)
+        ? 0
+        : kind !== undefined && row.kind === "entry" && row.entry.menu.on?.includes(kind)
+          ? 1
+          : 2;
   return found
     .map((row, index) => ({ row, index }))
     .toSorted((a, b) => rank(a.row) - rank(b.row) || a.index - b.index)
@@ -528,8 +585,19 @@ export function lineTakes(
   return (!event.ctrlKey && !event.metaKey) || event.getModifierState("AltGraph");
 }
 
-/** One key typed in the line. */
+/**
+ * One key typed in the line, as the line's slot keeps it. A key two entries name inserts the one
+ * the slot keeps: on a target's selected variable, `[` makes its item rather than a list.
+ */
 export function type(line: Line, key: string, ctx: LineContext): Outcome {
+  const typed = inSlot(line, typeKey(line, key, ctx), ctx);
+  if (typed.taken || !line.selected || ctx.target === null) return typed;
+  const after: Line = { ...line, selected: false, caret: endOf(line.root) };
+  const taken = inSlot(after, typeKey(after, key, ctx), ctx);
+  return taken.taken ? taken : typed;
+}
+
+function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
   if (key.length !== 1) return refused(line);
   let current: Line = { ...line, refused: undefined };
   if (/[A-Za-z_]/.test(key) || (current.word !== "" && /[0-9]/.test(key))) {
@@ -657,8 +725,12 @@ function enclosing(
 
 // ---------------------------------------------------------------- removing and moving
 
-/** Backspace removes what is before the caret. */
-export function backspace(line: Line): Outcome {
+/** Backspace removes what is before the caret, as the line's slot keeps it. */
+export function backspace(line: Line, ctx: LineContext): Outcome {
+  return inSlot(line, removeBefore(line), ctx);
+}
+
+function removeBefore(line: Line): Outcome {
   const current: Line = { ...line, refused: undefined, pending: undefined };
   if (current.word !== "") return done({ ...current, word: current.word.slice(0, -1) });
   if (current.selected) return done(cleared(current));
@@ -685,7 +757,7 @@ export function backspace(line: Line): Outcome {
       // An operator ends in an input, and a list in its last item: what is before the caret ends it.
       if (precedenceOf(last) !== undefined || isSequence(last)) {
         const end = own.at(-1);
-        return end ? backspace({ ...current, caret: endOf(end) }) : refused(line);
+        return end ? removeBefore({ ...current, caret: endOf(end) }) : refused(line);
       }
       // A call ends in its bracket; removing it would lose the value of an input after the first.
       if (own.slice(1).some((input) => !isEmptyExpr(input))) return move(current, -1);

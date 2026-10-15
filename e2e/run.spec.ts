@@ -194,7 +194,8 @@ test("Run with a diagnostic leads to its node instead of running", async ({ page
   await page.getByRole("button", { name: "▶ Run" }).click();
   await expect(page.getByTestId("node-editor").getByRole("alert")).toContainText("is empty");
   // Once the slot is filled the message is gone.
-  await page.getByTestId("node-editor").locator("[data-value-line]").click();
+  // The value's line, after the target's.
+  await page.getByTestId("node-editor").locator("[data-value-line]").last().click();
   await page.keyboard.type("1");
   await expect(page.getByTestId("node-editor").getByRole("alert")).toHaveCount(0);
   await expect(page.locator('[data-chart-node="asg-empty-01"]')).toHaveAttribute(
