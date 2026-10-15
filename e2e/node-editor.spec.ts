@@ -305,6 +305,51 @@ test("an item of a variable of no known kind is set by keys alone; no other valu
   await expect(page.getByTestId("variables")).toContainText("grid ← [[1, 9], [3, 4]]");
 });
 
+test("a swap of two items and one of two variables are typed as the chart writes them and run", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  const id = "play-swapplaces1";
+  await seedProgram(page, id, { ...programWith([]), title: "Swaps" });
+  await seedPlayground(page, { [id]: { edited: 0 } });
+  await page.goto(`/#/play/${id}`);
+
+  for (const [index, name, value] of [
+    [0, "nums", "[1,2,3]"],
+    [1, "x", "1"],
+    [2, "y", "2"],
+  ] as const) {
+    await insert(page, `main/main/${index}`, "assign");
+    await keys(page, name);
+    await page.keyboard.press("Enter");
+    await keys(page, value);
+    await page.keyboard.press("Enter");
+  }
+
+  await insert(page, "main/main/3", "swap");
+  await keys(page, "nums[0]");
+  await page.keyboard.press("Tab");
+  await keys(page, "nums[2]");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("swap(nums[0], nums[2])");
+
+  // A variable completes the first place, so Enter moves on to the second.
+  await insert(page, "main/main/4", "swap");
+  await keys(page, "x");
+  await page.keyboard.press("Enter");
+  await keys(page, "y");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("swap(x, y)");
+
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "▶ Run" }).click();
+  await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
+  const variables = page.getByTestId("variables");
+  await expect(variables).toContainText("nums ← [3, 2, 1]");
+  await expect(variables).toContainText("x ← 2");
+  await expect(variables).toContainText("y ← 1");
+});
+
 test("the editor stays where it is while its list changes, within the canvas", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 520 });
   await seedProgress(page, {});
