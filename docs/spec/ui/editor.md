@@ -71,8 +71,8 @@ with `Duplicate` and `Delete` as icon buttons beside it and, when the node
 calls a function or constructs a class, `Open <name>`, which shows that
 function's or class's chart (`chart.md`, Charts and the path bar) or, for a module's, opens its
 Module page (`modules.md`, Operations); the block's notation with its slots
-editable in place (a `for`'s init and check, `i ← 1` and `i < n + 1?`): `id` and `target` slots as name fields (Name fields),
-`expr` slots as value lines (Value line), an optional `expr` slot left
+editable in place (a `for`'s init and check, `i ← 1` and `i < n + 1?`): `id` slots as name fields (Name fields),
+`expr` and `target` slots as value lines (Value line; Targets), an optional `expr` slot left
 empty as `+ value` (`editor.addValue`), which adds its value line, `exprs`
 slots as value lines separated by commas, each with a remove button
 (`editor.removeValue`), followed by `+ value`, which adds one, `body` slots
@@ -89,9 +89,7 @@ there takes the keyboard or announces a popup.
 
 A field of the editor's notation is named, for assistive technology, by
 the block's label and the slot's name (`node.<key>.slot.<slot>`, `nodes.md`,
-Catalog keys): `Set variable, value`; the position of an item in a target
-by the item's label in place of the slot's (`Set variable, Item at a
-position`), as the slot's name is already the list's field. The symbols before a field (`←`,
+Catalog keys): `Set variable, value`. The symbols before a field (`←`,
 `print(`) name nothing a screen reader can say.
 
 A loop's editor edits the variable and the bounds (`for`), the list
@@ -283,7 +281,7 @@ end removed first, so `[` then `]` makes an empty list; a `,` acts on the
 innermost call or list around the caret. With the caret after a field's
 whole value, a key that begins the words the notation writes after that
 field, and that the line does not take, moves the keyboard to the next
-field: `]` after an item's position in a target goes on to its value.
+field: `)` after the last value of `print(…)` goes on.
 Backspace at an item still to fill
 of a list, other than its first, removes that item and puts the caret at the
 end of the item before it; after a list it removes from the end of its last
@@ -296,9 +294,40 @@ comparison; every operator has a key where Python has one, so the
 `Python` tab later shows keys the learner has typed. Brackets are not
 stored, so none is ever left unclosed.
 
+## Targets
+
+A `target` slot is a value line that keeps a target (`language.md`,
+Statements): a key or a choice is taken only when the line's value stays a
+target or an input still to fill, and its list offers only the rows that
+keep one; a key refused so shows `editor.notTarget` on the explanation line.
+Inside a target's own inputs (the position of `nums[…]`) the line takes any
+value. So `nums[j]` is typed as the chart writes it, and `[` after a
+variable of any kind makes an item of it, a parameter's (`heap[i]`) among
+them. A name field offering an item form of a variable was rejected: it
+repeated what a value line does after a value, and offered the form only
+for a variable whose kind is told, so a parameter never got one.
+
+Where the whole target is still to fill, the list of a slot that `binds`
+(`nodes.md`, The block definition) holds the names a name field offers
+(Name fields), `This problem` first, and a typed name that neither holds
+and that Identifiers allows (`language.md`) as `New variable <name>`, which
+the word names exactly; the list of a slot that does not bind holds the
+variables visible at the node. Either list of names ends with no `Show all`,
+as every name it could list is in it. After the target's variable the list
+offers the entries that keep a target (`Item at a position`); inside the
+target's inputs the lists are a value line's, `This problem` not among them.
+
+In a target's line, Enter or a click that chooses a row and leaves the
+target with no input still to fill moves the keyboard to the next slot, as
+choosing a name in a name field does, so `total`, Enter, and the value are
+typed in turn; `[` typed after a name, or on the target's selected
+variable, makes its item. Staying
+in the line was rejected: a target is a name far more often than an item,
+and a second Enter there would close the editor before its value.
+
 ## Name fields
 
-An `id` or `target` slot is a name field with a list below it. In `main`
+An `id` slot is a name field with a list below it. In `main`
 the list holds the names of the `expect.variables` of the challenge's first
 test under `This problem`, in that order, then main's other variables under
 `Variables`: the inputs and the names assigned in `main`, in program order;
@@ -323,24 +352,6 @@ to `total`.
 
 A name field keeps only the characters a name may hold (`language.md`,
 Identifiers).
-
-In a `target` slot the name list also offers, for a list variable,
-`Item at a position` (`<list>[…] ← …`), and for a dict and an
-object variable the key and field forms likewise, as a target is far more
-often a variable than an item or a field. A form is offered for a variable
-whose kind its block's entry is offered after (`nodes.md`, Menu entries).
-
-A target holding a form is edited as its block's notation writes it: its
-variable a name field and each other part a value line (`nums[…] ← …`). A
-name chosen there whose same form the list offers replaces the variable and
-keeps the other parts; any other name, a new one among them, sets the target
-to that name alone, as `total[i]` of a number is no target. In a `target`
-slot, a key that inserts a form's entry after a value (`[`, Backspace and
-keys), typed after a name whose form the list offers, sets the target to
-that form of it and moves the keyboard to its first part, so `nums[j] ← …`
-is typed as the chart writes it; Backspace at an empty part, nothing typed
-in it, sets the target back to its variable and moves the keyboard to the
-name field.
 
 ## Node names
 
@@ -385,5 +396,5 @@ operation in every language.
 
 The tests of `src/ui/editor` cover the block menu's entries, order, disabled
 entries, search, and the functions offered; a value line's typing, keys,
-choosing, Backspace, moving, and list; the name list and what a name field
-keeps; and the explanation line.
+choosing, Backspace, moving, and list; what a target's line takes and
+lists; the name list and what a name field keeps; and the explanation line.

@@ -248,7 +248,7 @@ to it.
 | Tab, Shift+Tab               | next, previous field of a value line, then slot (`editor.md`, Value list) |
 | ↑, ↓                         | move the highlight in the editor's list (`editor.md`, Value list) |
 | ←, →                         | previous, next value or input of a value line (`editor.md`, Value list) |
-| Enter                        | choose the highlighted entry; in a name field not typed in, the next slot (`editor.md`, Name fields); else close the editor |
+| Enter                        | choose the highlighted entry, and in a target's line, when it leaves no input to fill, go to the next slot (`editor.md`, Targets); in a name field not typed in, the next slot (`editor.md`, Name fields); else close the editor |
 
 ## Messages
 
