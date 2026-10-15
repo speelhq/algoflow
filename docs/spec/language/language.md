@@ -25,7 +25,7 @@ tuple id type self math random round sorted
 
 ```ts
 export type Program = {
-  version: 1;
+  version: 2;
   title: string;
   challengeId?: string;
   inputs: InputDecl[]; // empty in Playground (`scope.md`, Curriculum)
@@ -140,8 +140,8 @@ would not show.
 ```ts
 type S = { id: NodeId; name?: string }; // Statement names
 export type Stmt =
-  | (S & { kind: "assign"; target: Target; value: Expr })
-  | (S & { kind: "delete"; target: IndexTarget | KeyTarget })
+  | (S & { kind: "assign"; target: Expr; value: Expr })
+  | (S & { kind: "delete"; target: Expr })
   | (S & { kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
   | (S & { kind: "for"; var: Id; start: Expr; stop: Expr; body: Stmt[] })
   | (S & { kind: "foreach"; var: Id; list: Expr; body: Stmt[] })
@@ -152,13 +152,16 @@ export type Stmt =
   | (S & { kind: "return"; value?: Expr })
   | (S & { kind: "expr"; expr: Expr })
   | (S & { kind: "swap"; list: Expr; i: Expr; j: Expr });
-
-export type Target = VarTarget | IndexTarget | KeyTarget | FieldTarget;
-export type VarTarget = { kind: "var"; name: Id };
-export type IndexTarget = { kind: "index"; list: Expr; index: Expr };
-export type KeyTarget = { kind: "key"; dict: Expr; key: Expr };
-export type FieldTarget = { kind: "field"; obj: Expr; field: Id };
 ```
+
+A target is an expression that names where a value is stored: a `var`, an
+`index`, a `key`, or a `field`, each a block that declares `store`
+(`nodes.md`, The block definition). A `target` slot holds one, or `empty`
+while unfilled (Expressions); any other expression there is `E_NOT_TARGET`.
+A target type of its own was rejected: Python reads a target as an
+expression in store position (`nums[j] = …`), and a second type repeats in
+the emitter, the chart, and every traversal each rule the expression already
+has.
 
 ## Expressions
 
@@ -294,6 +297,11 @@ there is none.
 A name is visible from its first `assign` (or `for`/`foreach` variable, or
 parameter) to the end of its region and in nested regions.
 
+A `target` slot that `binds` (`nodes.md`, The block definition), as
+`assign`'s does, declares the variable its target is, which it does not
+read. An item, a key, or a field there, and every target of a slot that does
+not bind (`delete`), reads its expressions before the value is stored.
+
 A name first assigned inside `then`, `else`, or a loop body and referenced
 after that frame → `E_DECLARE_FIRST`; the fix inserts
 `name = <default of the same type>` before the frame.
@@ -337,6 +345,7 @@ run after every edit and before every run.
 | `E_ARITY`          | wrong argument count                                        | `name`, `expected`, `got` |
 | `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`                    |
 | `E_EMPTY_SLOT`     | required slot empty (prevents execution)                    | `slot`                    |
+| `E_NOT_TARGET`     | a `target` slot holding no target (Statements)              | `slot`                    |
 | `E_DEFAULT`        | a field default that Semantics, Objects does not allow      | `field`                   |
 | `E_DUPLICATE_ID`   | two nodes share an id (Program)                             |                           |
 
@@ -380,6 +389,12 @@ edit, and at once when the browser hides the page; export writes
 `<title>.algoflow.json` with the modules the program uses embedded
 (`modules.md`, Operations); import validates and migrates by `version`
 (`src/lang/migrate.ts`).
+
+`migrate()` reads versions 1 and 2 and returns version 2. A version-1
+target `{ kind, ...parts }` becomes the expression of that kind with those
+parts and an id the program does not hold, and a variable target with no
+name becomes `empty`; a target whose kind no registered block has is
+refused as an unknown kind.
 
 The value stored under `algoflow:program:<id>` is the `Program` JSON
 itself; loading passes it through `migrate()` and treats a rejected value as

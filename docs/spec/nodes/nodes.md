@@ -32,6 +32,7 @@ export type NodeDef = {
   text?(node: Stmt | Expr, slot: string): string; // Node text
   kind?(node: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
   declares?: Kind; // the kind of the variable its `id` slot names (`language.md`, Kinds)
+  store?(node: Expr, value: Value, ctx: RunContext, at: NodeId): Generator<Event, void, void>; // a target's write (`interpreter.md`, Blocks)
   menu?: MenuEntry[]; // the entries of the value list (Menu entries)
   chart?:
     | { branch: { cond: string; yes: string; no: string } }
@@ -51,6 +52,7 @@ export type Slot = {
   role: "expr" | "exprs" | "id" | "body" | "target" | "text";
   required?: boolean;
   atom?: true; // its input binds as an atom (Node text)
+  binds?: true; // a `target` slot that declares the variable its target is (`language.md`, Scope)
 };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
 export type MenuEntry = {
@@ -68,10 +70,11 @@ such as `n?` would have to be stripped wherever a parameter is looked up by
 the name its notation writes.
 
 Slot roles: `expr` one expression; `exprs` an ordered list; `id` a name;
-`body` a statement region; `target` an assignment target; `text` a literal
-field of an expression (`num.value`, `str.value`, an operator), which no
-statement has: a statement's literal text would be a comment, which a
-node's name replaces (`editor.md`, Node names).
+`body` a statement region; `target` one target (`language.md`, Statements),
+which the emitter and the chart write as the expression it is; `text` a
+literal field of an expression (`num.value`, `str.value`, an operator),
+which no statement has: a statement's literal text would be a comment,
+which a node's name replaces (`editor.md`, Node names).
 
 A builtin or method takes from as many arguments as it has parameters not
 marked `optional` to as many as it has parameters; `E_ARITY` gives as

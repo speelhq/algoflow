@@ -79,6 +79,7 @@ a check already enforces. A changed statement's reason changes with it.
 | event           | one record produced by the interpreter (`interpreter.md`)                       |
 | step            | one call to `Runner.next()`; a visible step is one the driver stops on (`interpreter.md`, Steps and batches) |
 | ref             | a location in the state: variable, list index, dict key, object field           |
+| target          | an expression that names where a value is stored: a variable, an item, a key, or a field (`language.md`, Statements) |
 | view            | rendering of one variable in the `Result` tab (`views.md`)                      |
 | panel           | the left region of a page, holding the `Problem`, `Result`, and `Python` tabs   |
 | canvas          | the right region of a page: the path bar, the chart, the narration line, and the run bar (`pages.md`, Page layout) |

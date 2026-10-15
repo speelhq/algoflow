@@ -144,6 +144,7 @@ export type RunContext = {
   exec(body: Stmt[]): Generator<Event, Signal, void>; // emits `enter` per statement (Events)
   get(name: Id, nodeId: NodeId): Value;               // current frame
   set(name: Id, value: Value): void;
+  store(target: Expr, value: Value, at: NodeId): Generator<Event, void, void>; // the target's block's `store`
   call(fn: Id, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
   fail(nodeId: NodeId, code: RuntimeCode, params?: Record<string, string | number>): never;
   valueError(node: Expr, value: Value): never; // E_VALUE (Errors)
@@ -152,6 +153,11 @@ export type RunContext = {
   print(line: string): void;
 };
 ```
+
+`store` evaluates the target's expressions after the value, the container
+before its position or key as Python does, and writes the value; its
+`write` event and its errors carry `at`, the statement whose effect the
+write is (Events).
 
 ## Modules
 
