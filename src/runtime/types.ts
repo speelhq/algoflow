@@ -39,8 +39,8 @@ export type RuntimeError = {
 export type Event =
   | { type: "enter"; nodeId: NodeId }
   | { type: "read"; nodeId: NodeId; refs: Ref[] }
-  | { type: "write"; nodeId: NodeId; ref: Ref; value: Value }
-  | { type: "swap"; nodeId: NodeId; a: Ref; b: Ref }
+  /** `from`: where a `swap` read the value it writes (`interpreter.md`, Events). */
+  | { type: "write"; nodeId: NodeId; ref: Ref; value: Value; from?: Ref }
   | { type: "compare"; nodeId: NodeId; result: boolean }
   | { type: "loop"; nodeId: NodeId; var?: Id; value?: Value }
   | { type: "call"; nodeId: NodeId; fn: Id; args: Value[] }

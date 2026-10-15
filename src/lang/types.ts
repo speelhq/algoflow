@@ -63,7 +63,7 @@ export type Stmt =
   | (S & { kind: "print"; args: Expr[] })
   | (S & { kind: "return"; value?: Expr })
   | (S & { kind: "expr"; expr: Expr })
-  | (S & { kind: "swap"; list: Expr; i: Expr; j: Expr });
+  | (S & { kind: "swap"; a: Expr; b: Expr });
 export type StmtKind = Stmt["kind"];
 
 // ---------------------------------------------------------------- Expressions

@@ -15,10 +15,11 @@ import { clamp } from "@/lib/utils";
 import { getBlock, keyOf } from "@/blocks/registry";
 import { outcomeOf } from "@/runtime/outcome";
 import { run as startRunner } from "@/runtime/run";
-import type { Done, Event, Runner, State } from "@/runtime/types";
+import type { Done, Runner, State } from "@/runtime/types";
 import { inBatches } from "./batches";
 import { useLayout } from "./layout";
 import { useProgram } from "./program";
+import type { StepEvent } from "./steps";
 
 export type Status = "idle" | "paused" | "playing" | "done" | "error";
 
@@ -33,7 +34,7 @@ export type RunState = {
   outcome: Done | null;
   /** The visible step of each `print`; `prints[i]` produced line `i` of the output. */
   prints: number[];
-  lastEvent: Event | null;
+  lastEvent: StepEvent | null;
   /** Which pass a `loop` event starts, counted since its loop was entered; else null. */
   pass: number | null;
   /** The statement to highlight (owner of `lastEvent`, or of the error). */
@@ -86,7 +87,7 @@ type Findings = {
 };
 type Projection = {
   step: number;
-  lastEvent: Event | null;
+  lastEvent: StepEvent | null;
   verdicts: Record<NodeId, boolean>;
   taken: Record<NodeId, true>;
   /** `loop` events per loop since its last `enter`. */
@@ -160,7 +161,7 @@ function snapshot(): State | null {
 }
 
 /** Feeds one event into the projection (no store update). */
-function apply(event: Event): void {
+function apply(event: StepEvent): void {
   const p = projection;
   p.step += 1;
   p.lastEvent = event;

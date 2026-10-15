@@ -8,6 +8,7 @@ import type { Data, Program } from "@/lang/types";
 import { ast, program, tid, withInputs } from "@/blocks/testing";
 import { run } from "@/runtime/run";
 import type { Event } from "@/runtime/types";
+import type { Exchange } from "@/store/steps";
 import {
   narrate,
   narrateDifference,
@@ -139,7 +140,7 @@ describe("narrate", () => {
     const ctx = { program: p, state, frame: 0, pass: null };
     const read: Event = { type: "read", nodeId: "none", refs: [{ heap: 1, index: 2 }] };
     expect(say(narrate(read, ctx))).toBe("Read nums[2]: 5");
-    const swap: Event = {
+    const swap: Exchange = {
       type: "swap",
       nodeId: "none",
       a: { heap: 1, index: 1 },

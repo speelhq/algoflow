@@ -2,14 +2,14 @@
 // and the layout: the taken path, the ✓ / ✗ marks, the current node, and the breakpoint.
 // Chart nodes are matched to statements through `owner` and `role`, never through a kind.
 import type { NodeId } from "@/lang/types";
-import type { Event } from "@/runtime/types";
+import type { StepEvent } from "@/store/steps";
 import type { ChartLayout, ChartNode } from "./layout";
 
 export type RunView = {
   /** The run finished (`done`): `End` is on the taken path. */
   finished: boolean;
   activeId: NodeId | null;
-  lastEvent: Event | null;
+  lastEvent: StepEvent | null;
   taken: Record<NodeId, true>;
   verdicts: Record<NodeId, boolean>;
   breakpoint: NodeId | null;
