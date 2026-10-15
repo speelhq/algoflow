@@ -4,7 +4,7 @@ import type { Expr, Kind } from "@/lang/types";
 import { ast, program } from "@/blocks/testing";
 import { unparse } from "@/python/emit";
 import { exprText } from "@/ui/chart/text";
-import { allEntries } from "./entries";
+import { allEntries, takesValue } from "./entries";
 import {
   backspace,
   callableFunctions,
@@ -635,6 +635,49 @@ describe("a target's line (editor.md, Targets)", () => {
     expect(py(type(selected, "[", binding).line)).toBe("nums[...]");
     // In any other slot it replaces the selected value with a list.
     expect(py(type(selected, "[", ctx).line)).toBe("[...]");
+  });
+
+  it("tries no key again but one two entries name: `.` after a selected `0` is refused anywhere", () => {
+    const zero = openLine(ast.num(0));
+    expect(zero.selected).toBe(true);
+    expect(type(zero, ".", ctx).taken).toBe(false);
+    expect(type(zero, ".", binding).taken).toBe(false);
+  });
+
+  it("inside the target's item lists a value line's rows, a chained comparison refused", () => {
+    const inside = typed("nums[i<n", binding);
+    expect(groups(inside, false, binding)).toEqual(groups(keys("nums[i<n"), false, ctx));
+    expect(groups(inside, false, binding).map(([group]) => group)).toContain("compare");
+    const chained = choose(inside, entry("binop.lt"), binding);
+    expect(chained.taken).toBe(false);
+    expect(chained.line.refused).toBe("Write a < b < c as a < b and b < c");
+    // A word naming the refused entry stays to be corrected, as in a value line.
+    for (const context of [binding, ctx]) {
+      const word = type(raw("nums[i<n in"), " ", context);
+      expect(word.taken).toBe(false);
+      expect(word.line.word).toBe("in");
+      expect(word.line.refused).toBe("Write a < b < c as a < b and b < c");
+    }
+  });
+
+  it("after the target's whole value lists only the entries whose block is a target", () => {
+    // Each value with its kind: an item has none (`blocks.md`, Kinds), nor has a parameter here.
+    for (const [text, context, kind] of [
+      ["nums", binding, "list"],
+      ["heap", reading, undefined],
+      ["nums[0]", binding, undefined],
+      ["n", binding, "number"],
+    ] as const) {
+      const line = typed(text, context);
+      const targets = allEntries().filter(
+        (each) =>
+          takesValue(each) &&
+          each.def.store !== undefined &&
+          (kind === undefined || each.menu.on?.includes(kind)),
+      );
+      const listed = groups(line, false, context).flatMap(([, labels]) => labels);
+      expect(listed, text).toEqual(targets.map((each) => each.label));
+    }
   });
 
   it("after the target's variable lists only the entries that keep a target", () => {
