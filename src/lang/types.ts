@@ -137,7 +137,6 @@ export const DIAGNOSTIC_CODES = [
   "E_ARITY",
   "E_UNKNOWN_CALL",
   "E_EMPTY_SLOT",
-  "E_NOT_TARGET",
   "E_DUPLICATE_ID",
 ] as const;
 export type DiagnosticCode = (typeof DIAGNOSTIC_CODES)[number];

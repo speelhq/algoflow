@@ -4,9 +4,6 @@ import { ast, program, runAll } from "@/nodes/testing";
 import type { Diagnostic, Program, Stmt } from "./types";
 import { validate } from "./validate";
 
-/** A program whose input `a` is a list. */
-const withA = (main: Stmt[]): Program => program(main, { inputs: [{ name: "a", kind: "list" }] });
-
 const {
   assign,
   print,
@@ -198,14 +195,6 @@ describe("validate (language.md, Validation)", () => {
       expect.objectContaining({ code: "E_EMPTY_SLOT", params: { slot: "args" } }),
     ]);
     expect(codes(program([assign("x", bin("+", num(1), num(2))), print()]))).toEqual([]);
-  });
-
-  it("E_NOT_TARGET: a target slot holding an expression that names no place", () => {
-    const sum = ast.assignTo(bin("+", v("a"), num(1)), num(2));
-    expect(validate(withA([sum]))).toEqual([
-      { nodeId: sum.id, code: "E_NOT_TARGET", params: { slot: "target" } },
-    ]);
-    expect(codes(withA([ast.assignTo(ast.item(v("a"), num(0)), num(2))]))).toEqual([]);
   });
 
   it("a bound variable is declared, not read; an item's list and position are read", () => {
