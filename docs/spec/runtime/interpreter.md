@@ -20,8 +20,8 @@ export type Runner = {
   draws(): number[]; // every random result in order
 };
 export type Done =
-  | { type: "done"; steps: number; loops: number }
-  | { type: "error"; error: RuntimeError; steps: number };
+  | { type: "done"; events: number; loops: number }
+  | { type: "error"; error: RuntimeError; events: number };
 export type State = { frames: Frame[]; heap: Heap };
 export type Frame = { fn: Id | "main"; module?: Id; callNodeId?: NodeId; vars: Map<Id, Value> }; // Modules
 export type RuntimeError = {
@@ -33,7 +33,7 @@ export type RuntimeError = {
 
 `Runner.next()` resumes the program generator once; every yielded value is
 one event. Frames form a stack owned by the runner; `call` pushes a frame,
-emits `call`, executes the body, emits `return`, and pops. `E_STEP_LIMIT` is
+emits `call`, executes the body, emits `return`, and pops. `E_EVENT_LIMIT` is
 returned by the `next()` after the 1,000,000th event; `E_RECURSION` when a
 call would make the stack deeper than 200 frames.
 
@@ -77,9 +77,9 @@ whether an expression is evaluated or a `swap` reads its places, and for
 `write` is emitted for `assign`, `swap`, `append` (new index), `insert`,
 `pop` (removed index and value), `delete`, and each field set by `new`. A
 `swap`'s `write` carries in `from` the place its value was read from, by
-which the driver tells an exchange (Steps and batches); the runner emits no
-event of its own for an exchange, so its events stay Python's, one effect
-each.
+which the driver tells an exchange (Steps and batches). The runner emits the
+facts of the run in Python's order and no event of its own for an exchange:
+how its events are shown is the driver's.
 
 `compare` is emitted for every comparison `binop` (`== != < <= > >=` and
 `in`), with its result; the operator and the operands are the node's. The
@@ -101,7 +101,7 @@ the same id, and every call ends in its `return`.
 `loop` is emitted at the start of each iteration of `for`, `foreach`, and
 `while` (after the `while` compare).
 
-`Done.loops` counts `loop` events; `Done.steps` counts all events.
+`Done.loops` counts `loop` events; `Done.events` counts all events.
 
 ## Errors
 
@@ -121,7 +121,7 @@ Runtime error codes:
 | `E_POP_EMPTY`  | `pop` on an empty list |                           |
 | `E_ARITY`      | `new` with more arguments than fields             | `name`, `expected`, `got` |
 | `E_RECURSION`  | a call deeper than 200 frames (Runner)            |                           |
-| `E_STEP_LIMIT` | the 1,000,000th event (Runner)                    |                           |
+| `E_EVENT_LIMIT`| the 1,000,000th event (Runner)                    |                           |
 
 `E_TYPE` params `left` and `right` are the type names of the operands
 (`int`, `float`, `str`, `bool`, `none`, `list`, `dict`, or the class name);
@@ -210,7 +210,7 @@ which the slide would hide. The exchange is the driver's, not an event of
 the runner's, because only the event after the first write tells it, and
 the runner cannot know that event before it has run the code that makes
 it. `src/store/steps.ts` reads a runner one visible step at a time, for the
-pre-run, Step, Seek, and Skip alike, so every count of steps agrees.
+pre-run, Step, Seek, and Skip alike, so every count of visible steps agrees.
 
 To tell an exchange the driver reads the event after a `write` that carries
 `from`; when that event is no partner, the write's step is published with
@@ -249,7 +249,7 @@ shown.
 
 ### Controls
 
-Step: `next()` until the next visible step.
+Step: the next visible step.
 
 Play: one Step every `1000 / speed` ms, speed one of 1, 4, and 15 (`Slow`,
 `Normal`, `Fast`, `run.md`, Run bar). A slider of 1 to 50 steps a second
@@ -274,17 +274,18 @@ beside the five statuses because a sixth would make every test of `status`
 in the screens three-way; a control taking over the runner would restart
 the pre-run or leave a Seek at a step the position bar does not show.
 
-Step over: `next()` repeatedly, in batches, until the frame count is at
-most its value before the first `next()` and the run is at a visible step,
-or the run ends. Expanding a call inline in the caller's chart was
+Step over: visible steps, in batches, until the frame count of a step's
+state is at most that of the step it started from, or the run ends. A
+step's state is the one it publishes (Steps and batches), not the runner's,
+which can be one call deeper after a write read past. Expanding a call inline in the caller's chart was
 rejected: the flowchart loses legibility one level down, and a function
 would have two places to be edited.
 
 The driver holds at most one breakpoint, a statement's `NodeId`, from its
 setting until Stop. Play, Step over, and Skip pause at a visible `enter` of
 that node and, when it is a loop, at each of its `loop` events (the run is
-then at the loop's check); Step and Seek ignore it. Skip: `next()`
-repeatedly, in batches and without publishing the intervening steps, until
+then at the loop's check); Step and Seek ignore it. Skip: visible steps,
+in batches and without publishing the intervening ones, until
 such a pause or the end of the run. `Next pass`, a run to the next `loop`
 event, was rejected: in bubble sort it stops at every inner pass, while the
 instructive unit is one outer pass, and it cannot say which loop is meant.
@@ -311,8 +312,8 @@ started by `Watch this case` opened, `run.md`, Submission, until Stop).
 After an error `lastEvent` is none at step `total`. The driver keeps `taken`
 and `verdicts` per frame: a `call` starts the called frame's empty, and a
 `return` gives back the caller's as they were. A published `state` is a copy of the frames'
-variables and of the heap: a later step does not change it. `Done.steps`
-counts every event, visible or not.
+variables and of the heap: a later step does not change it. `Done.events`
+counts every event, whatever the steps that show it.
 
 `state` is refreshed while playing because the `Result` tab follows every
 step, the fastest speed included. `taken` and `pass` are kept by the

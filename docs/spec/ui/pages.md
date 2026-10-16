@@ -259,9 +259,6 @@ whose text takes the code's params (`language.md`, Validation;
 A message writes its `op` parameter as the label of that block
 (`block.<op>.label`, `interpreter.md`, Errors).
 
-A number a message names (`run.endless`'s step limit) is written as the
-current locale writes numbers (`1,000,000`).
-
 A message, a help, and an explanation say that a variable gets or has a
 value, never that it is created: a variable has no form of its own for its
 first value (`blocks.md`, Node text).

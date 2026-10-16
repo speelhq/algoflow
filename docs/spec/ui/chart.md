@@ -140,7 +140,7 @@ scale and resetting it to 100 %. Fitting never enlarges, as a chart of
 three nodes fitted to 960 px would draw its text larger than anything else
 on the page.
 
-The chart highlights the statement containing an event's `nodeId`
+The chart highlights the statement containing the `nodeId` of the step's event
 (expressions have no node of their own); an error highlights the statement
 containing the failing node.
 

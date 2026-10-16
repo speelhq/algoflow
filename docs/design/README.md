@@ -45,7 +45,9 @@ in the file.
 
 ## Where the spec deviates from the artboards
 
-- `Accepted.png` shows placeholders for the counts of steps and loops, because
+- `Accepted.png` labels the count of the work done `Steps`; it is `Events`
+  (`run.md`, Submission), as `step` names only what the position bar counts.
+- `Accepted.png` shows placeholders for the counts of events and loops, because
   `heap-pop` has no challenge file; the same holds for any artboard of a problem
   that does not exist yet.
 - `heap.py` on `PythonFiles.png` and the `heap_pop` chart on `Module.png` are

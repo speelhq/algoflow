@@ -27,9 +27,13 @@ bar `step k of N`, which can be dragged to any step (`interpreter.md`, Controls)
 three choices `Slow`, `Normal`, and `Fast`, and `■ Stop`. Playback starts
 playing at the remembered speed (`Normal` at first, persisted under
 `algoflow:layout`); `▶ Watch this case` (Submission) starts paused. A run
-whose pre-run ends in `E_STEP_LIMIT` reports it (`run.endless`) before
-playback. `Stop` returns to build mode; once the run has ended, in `done` or
-`error`, clicking a node also returns to build mode and opens that node's
+whose pre-run ends in `E_EVENT_LIMIT` reports it before playback:
+`run.endless` says that the run was stopped before it reached its end,
+followed by the error's message (`pages.md`, Messages), which holds the
+hint, so the catalog holds the hint once. A notice that the run never
+reached its end was rejected: a run that is only long would send the
+learner looking for a loop that does not end. `Stop` returns to build mode;
+once the run has ended, in `done` or `error`, clicking a node also returns to build mode and opens that node's
 editor. `Run` and `Play` are one button, serving one intention, so the
 button pressed to start is the one that pauses; the controls are too long
 to float over the chart's corner without covering a loop's back edge. A
@@ -92,7 +96,8 @@ which serves instructors, not learners.
 ## Narration
 
 While running, the narration line, one line between the chart and the run
-bar, describes the last event in one sentence (`run.narrate.*`): `enter` →
+bar, describes the event of the step (`lastEvent`) in one sentence
+(`run.narrate.*`): `enter` →
 `Checking i % 3 = 0` for a condition and
 `Running total ← total + i`, its notation, otherwise; `read` → `Read nums[2]: 5`, or for
 several items `Read 3 items of nums`; `compare` → the comparison as the
@@ -176,7 +181,7 @@ cause. A sentence classing the difference as a missing line, an extra line,
 or a different value has no rule behind it: `1, 2, 3` against `2, 4, 6`
 reads as an extra `1`.
 
-An accepted submission shows `Accepted`, one `✓` chip per case, the steps
+An accepted submission shows `Accepted`, one `✓` chip per case, the events
 and loops of the first case, every event counted (`Done`), a module's
 included, `What you used` (the challenge's `takeaway`, `challenges.md`,
 Schema), `Move to module <name>` when the challenge names a module
@@ -189,8 +194,10 @@ plan's start; once every problem of the plan is solved, the next row of its
 section) or, after the last problem of a plan with every problem solved,
 `Plan complete` with `Back to Problems`; the problem becomes solved
 (`challenges.md`, Progress). The count is the work done, not the visible
-steps of the position bar, so `dijkstra-heap` shows fewer steps than
-`dijkstra-grid` though each heap call is one visible step. `Next problem`
+steps of the position bar, so `dijkstra-heap` shows fewer events than
+`dijkstra-grid` though each heap call is one visible step; it is named
+`Events`, as `step` names only what the position bar counts (`README.md`,
+Terms). `Next problem`
 counts round from the plan's start, as a skipped problem is one the plan
 still asks for, and `Plan complete` returns the choice to the learner,
 where the next row after the last `course` problem would put a trainee into
