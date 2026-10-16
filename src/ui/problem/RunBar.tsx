@@ -1,9 +1,8 @@
 // The run bar at the foot of the canvas: `▶ Run` in build mode; while running one play
 // button in its place (`Pause`, `Play`, or `Replay` at the last step), Back, Step, Skip,
 // the position bar `step k of N`, which seeks to any step, the three speeds, and Stop. A
-// pre-run that hit the step limit is reported above it.
-import { formatNumber, t } from "@/i18n/t";
-import { EVENT_LIMIT } from "@/runtime/run";
+// pre-run that hit the event limit is reported above it, with the error's own hint.
+import { errorText, t } from "@/i18n/t";
 import { SPEED_NAMES, SPEEDS, useLayout } from "@/store/layout";
 import { inRun, useMode } from "@/store/mode";
 import { useRun } from "@/store/run";
@@ -77,17 +76,18 @@ export function RunBar() {
   const mode = useMode();
   const runMode = inRun(mode);
   const ended = mode === "ended";
-  const endless = outcome?.type === "error" && outcome.error.code === "E_EVENT_LIMIT";
+  const limitError =
+    outcome?.type === "error" && outcome.error.code === "E_EVENT_LIMIT" ? outcome.error : null;
 
   return (
     <div className="shrink-0 border-t bg-background" data-testid="run-bar">
-      {runMode && endless && (
+      {runMode && limitError && (
         <p
           role="alert"
           className="border-b bg-destructive/10 px-4 py-2 text-sm text-destructive"
           data-testid="endless"
         >
-          {t("run.endless", { limit: formatNumber(EVENT_LIMIT) })}
+          {t("run.endless", { message: errorText(limitError) })}
         </p>
       )}
       <div className="flex h-14 items-center gap-2 px-4">

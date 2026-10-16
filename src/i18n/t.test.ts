@@ -1,14 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { flatten } from "./flatten";
-import {
-  errorText,
-  formatNumber,
-  getLocale,
-  interpolate,
-  setLocale,
-  t,
-  type MessageKey,
-} from "./t";
+import { errorText, getLocale, interpolate, setLocale, t, type MessageKey } from "./t";
 
 describe("t", () => {
   afterEach(() => {
@@ -21,10 +13,10 @@ describe("t", () => {
     expect(t("block.for.label")).toBe("For loop");
   });
 
-  it("writes a number as the locale does, as the step limit's message shows it", () => {
-    expect(formatNumber(1_000_000)).toBe("1,000,000");
-    expect(t("run.endless", { limit: formatNumber(1_000_000) })).toContain(
-      "stopped after 1,000,000 steps",
+  it("the endless notice holds the error's hint once, with no number", () => {
+    const message = errorText({ code: "E_EVENT_LIMIT", params: {} });
+    expect(t("run.endless", { message })).toBe(
+      "This run was stopped before it reached its end. The loop does not seem to end; check its condition.",
     );
   });
 

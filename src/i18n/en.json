@@ -135,7 +135,7 @@
     "wrong": "Wrong Answer",
     "passedCount": "{k} of {n} cases passed",
     "watch": "▶ Watch this case",
-    "stepsLoops": "Steps {steps} · Loops {loops} (first case)",
+    "eventsLoops": "Events {events} · Loops {loops} (first case)",
     "whatYouUsed": "What you used",
     "seePython": "See your program as Python",
     "compare": "Compare with the solution",
@@ -489,7 +489,7 @@
     "positionLabel": "Position",
     "speed": "Speed",
     "breakpoint": "breakpoint",
-    "endless": "This run never reached its end: it stopped after {limit} steps. A loop does not seem to end; check its condition.",
+    "endless": "This run was stopped before it reached its end. {message}.",
     "narrate": {
       "enter": "Running {notation}",
       "check": "Checking {condition}",
