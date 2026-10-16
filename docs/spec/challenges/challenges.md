@@ -120,7 +120,7 @@ an entry appears on the first submission, hint, or shown solution, `solved`
 is set by an accepted submission and never cleared, `hints` is the number of
 hints revealed (`pages.md`, Problem tab), and `solution` whether the
 solution was shown (same). A shown solution makes the problem `attempted`,
-as a hint does: both used it. Step counts are not stored to compare
+as a hint does: both used it. Event counts are not stored to compare
 problems: that would infer a relation between problems and store one more
 field.
 

@@ -33,7 +33,7 @@ card without a transition; the slide alone tells an exchange from two
 writes.
 
 Views are drawn with CSS transforms keyed by index and re-render only the
-variables changed by the last event. The aim of 32 ms per drawn step is not
+variables changed by the last step. The aim of 32 ms per drawn step is not
 a requirement and owes no test: a frame-time assertion on CI hardware is
 either too loose to mean anything or unreliable.
 

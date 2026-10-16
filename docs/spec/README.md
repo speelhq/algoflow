@@ -77,8 +77,8 @@ a check already enforces. A changed statement's reason changes with it.
 | value line      | the one-line editor of an expression slot (`editor.md`, Value line)             |
 | notation        | a block's text on its node, the same in every locale (`blocks.md`, Node text)    |
 | connector       | the `+` insertion point on an edge                                              |
-| event           | one record produced by the interpreter (`interpreter.md`)                       |
-| step            | one call to `Runner.next()`; a visible step is one the driver stops on (`interpreter.md`, Steps and batches) |
+| event           | one record the runner emits (`interpreter.md`, Events); `Done` counts them      |
+| step            | a visible step: what the driver stops on and the position bar counts, an event, an exchange of two writes, a module call, or the call that fails (`interpreter.md`, Steps and batches); on screen `step` names nothing else |
 | ref             | a location in the state: variable, list index, dict key, object field           |
 | target          | an expression that names where a value is stored: a variable, an item, a key, or a field (`language.md`, Statements) |
 | view            | rendering of one variable in the `Result` tab (`views.md`)                      |
