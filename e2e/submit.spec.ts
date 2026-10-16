@@ -56,7 +56,9 @@ test("FizzBuzz from the list to Accepted, Python, and the next problem", async (
     "✓ n ← 1",
     "✓ n ← 3",
   ]);
-  await expect(page.getByTestId("steps-loops")).toHaveText(/^Steps \d+ · Loops 15 \(first case\)$/);
+  await expect(page.getByTestId("events-loops")).toHaveText(
+    /^Events \d+ · Loops 15 \(first case\)$/,
+  );
   await expect(page.getByTestId("submission")).toContainText("What you used");
   await expect(page.getByTestId("output-row")).toHaveCount(0);
 

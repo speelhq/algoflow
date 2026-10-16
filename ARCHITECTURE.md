@@ -43,8 +43,9 @@ core runs under Vitest and in `scripts/check.ts` without a browser.
   through it.
 - `src/runtime` — `run()` returns a `Runner` whose `next()` yields one
   event, or `Done` at the end (`docs/spec/runtime/interpreter.md`). Events
-  are the contract the UI consumes for highlights and step counts, and a run
-  is deterministic.
+  are the facts of a run, in Python's order, and a run is deterministic; the
+  driver groups them into the visible steps the UI shows (`src/store/steps.ts`),
+  and `Done` counts the events.
 - `src/python` — `emit()` produces the Python file plus a NodeId → line map;
   `parse()` turns typed expression text back into `Expr`; `unparse(parse(s))`
   is a fixed point (`docs/spec/runtime/parser.md`). Emitted Python is the behavioural reference, not

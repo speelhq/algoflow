@@ -251,4 +251,8 @@ test("a run that never ends reports it before playback", async ({ page }) => {
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "▶ Run" }).click();
   await expect(page.getByTestId("endless")).toBeVisible({ timeout: 30_000 });
+  // The error's own hint, and no count the position bar would contradict.
+  await expect(page.getByTestId("endless")).toHaveText(
+    "This run was stopped before it reached its end. The loop does not seem to end; check its condition.",
+  );
 });

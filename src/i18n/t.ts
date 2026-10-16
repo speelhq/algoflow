@@ -50,11 +50,6 @@ export function t(key: MessageKey, params?: Params): string {
   return interpolate(text, params);
 }
 
-/** A number as the current locale writes it (`1,000,000`). */
-export function formatNumber(value: number): string {
-  return new Intl.NumberFormat(current).format(value);
-}
-
 /** The prefix of every catalog key of a block, through which the key check names them. */
 export function blockPrefix(key: string): string {
   return `block.${key}.`;
