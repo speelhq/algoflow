@@ -9,7 +9,7 @@ describe("finish and outcomeOf", () => {
   it("finish returns the Done of the run", () => {
     const runner = run(program([assign("x", num(2))]), {}, 1);
     const done = finish(runner);
-    expect(done).toEqual({ type: "done", steps: 2, loops: 0 });
+    expect(done).toEqual({ type: "done", events: 2, loops: 0 });
   });
 
   it("next() after the end returns the same Done, after done and after an error", () => {

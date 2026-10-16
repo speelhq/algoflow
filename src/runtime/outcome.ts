@@ -16,7 +16,7 @@ export function isDone(next: Event | Done): next is Done {
   return next.type === "done" || next.type === "error";
 }
 
-/** Calls `next()` until the run ends, at the latest at the step limit. */
+/** Calls `next()` until the run ends, at the latest at the event limit. */
 export function finish(runner: Runner): Done {
   for (;;) {
     const next = runner.next();

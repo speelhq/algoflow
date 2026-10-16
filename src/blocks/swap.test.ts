@@ -33,7 +33,7 @@ describe("swap (blocks.md)", () => {
       { type: "write", nodeId: stmt.id, ref: first, value: { t: "int", v: 3 }, from: third },
       { type: "write", nodeId: stmt.id, ref: third, value: { t: "int", v: 1 }, from: first },
     ]);
-    expect(result.done).toEqual({ type: "done", steps: 5, loops: 0 });
+    expect(result.done).toEqual({ type: "done", events: 5, loops: 0 });
   });
 
   it("exchanges two variables, whose reads emit nothing", () => {

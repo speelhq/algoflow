@@ -9,8 +9,8 @@ export type Runner = {
 };
 
 export type Done =
-  | { type: "done"; steps: number; loops: number }
-  | { type: "error"; error: RuntimeError; steps: number };
+  | { type: "done"; events: number; loops: number }
+  | { type: "error"; error: RuntimeError; events: number };
 
 export type State = { frames: Frame[]; heap: Heap };
 export type Frame = { fn: Id | "main"; callNodeId?: NodeId; vars: Map<Id, Value> };
@@ -26,7 +26,7 @@ export const RUNTIME_CODES = [
   "E_DIV_ZERO",
   "E_POP_EMPTY",
   "E_RECURSION",
-  "E_STEP_LIMIT",
+  "E_EVENT_LIMIT",
 ] as const;
 export type RuntimeCode = (typeof RUNTIME_CODES)[number];
 

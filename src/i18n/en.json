@@ -537,6 +537,6 @@
     "E_DIV_ZERO": "Cannot divide by zero",
     "E_POP_EMPTY": "The list is empty, nothing to pop",
     "E_RECURSION": "Function calls are nested too deeply; check the stopping condition",
-    "E_STEP_LIMIT": "The loop does not seem to end; check its condition"
+    "E_EVENT_LIMIT": "The loop does not seem to end; check its condition"
   }
 }

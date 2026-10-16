@@ -123,7 +123,7 @@ describe("run store", () => {
       busy: false,
       step: 0,
       total: 10,
-      outcome: { type: "done", steps: 10, loops: 3 },
+      outcome: { type: "done", events: 10, loops: 3 },
       prints: [4, 7, 10],
       lastEvent: null,
       stdout: [],
@@ -154,7 +154,7 @@ describe("run store", () => {
       outcome: {
         type: "error",
         error: { nodeId: div.id, code: "E_DIV_ZERO", params: {} },
-        steps: 1,
+        events: 1,
       },
     });
     run().stepOnce();
@@ -175,14 +175,14 @@ describe("run store", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("a pre-run that never ends reports E_STEP_LIMIT with the failing step as total", async () => {
+  it("a pre-run that never ends reports E_EVENT_LIMIT with the failing step as total", async () => {
     vi.useRealTimers();
     useProgram.setState({ program: program([while_(ast.bool(true), [])]) });
     await run().run();
     const { total, outcome } = run();
     run().stop();
     expect(total).toBe(1_000_001);
-    expect(outcome).toMatchObject({ type: "error", error: { code: "E_STEP_LIMIT" } });
+    expect(outcome).toMatchObject({ type: "error", error: { code: "E_EVENT_LIMIT" } });
   }, 60_000);
 
   it("a program with diagnostics never starts", async () => {
