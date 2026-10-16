@@ -39,7 +39,7 @@ describe("for (blocks.md)", () => {
       value: { t: "int", v: 0 },
     });
     expect(varData(result, "x")).toBe(1);
-    expect(result.done).toEqual({ type: "done", steps: 7, loops: 2 });
+    expect(result.done).toEqual({ type: "done", events: 7, loops: 2 });
   });
 
   it("bounds are evaluated once; the variable stays visible after the loop", () => {

@@ -3,7 +3,7 @@
 // the position bar `step k of N`, which seeks to any step, the three speeds, and Stop. A
 // pre-run that hit the step limit is reported above it.
 import { formatNumber, t } from "@/i18n/t";
-import { STEP_LIMIT } from "@/runtime/run";
+import { EVENT_LIMIT } from "@/runtime/run";
 import { SPEED_NAMES, SPEEDS, useLayout } from "@/store/layout";
 import { inRun, useMode } from "@/store/mode";
 import { useRun } from "@/store/run";
@@ -77,7 +77,7 @@ export function RunBar() {
   const mode = useMode();
   const runMode = inRun(mode);
   const ended = mode === "ended";
-  const endless = outcome?.type === "error" && outcome.error.code === "E_STEP_LIMIT";
+  const endless = outcome?.type === "error" && outcome.error.code === "E_EVENT_LIMIT";
 
   return (
     <div className="shrink-0 border-t bg-background" data-testid="run-bar">
@@ -87,7 +87,7 @@ export function RunBar() {
           className="border-b bg-destructive/10 px-4 py-2 text-sm text-destructive"
           data-testid="endless"
         >
-          {t("run.endless", { limit: formatNumber(STEP_LIMIT) })}
+          {t("run.endless", { limit: formatNumber(EVENT_LIMIT) })}
         </p>
       )}
       <div className="flex h-14 items-center gap-2 px-4">

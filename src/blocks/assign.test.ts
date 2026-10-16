@@ -26,7 +26,7 @@ describe("assign (blocks.md)", () => {
       value: { t: "int", v: 5 },
     });
     expect(varData(result, "x")).toBe(5);
-    expect(result.done).toEqual({ type: "done", steps: 2, loops: 0 });
+    expect(result.done).toEqual({ type: "done", events: 2, loops: 0 });
   });
 });
 

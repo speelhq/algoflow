@@ -10,7 +10,7 @@ import { setValueAt, valueAt } from "./refs";
 import { typeName } from "./values";
 import type { Done, Event, Frame, Runner, RuntimeCode } from "./types";
 
-export const STEP_LIMIT = 1_000_000;
+export const EVENT_LIMIT = 1_000_000;
 const CALL_DEPTH_LIMIT = 200;
 
 export function run(program: Program, inputs: Readonly<Record<Id, Data>>, seed: number): Runner {
@@ -113,7 +113,7 @@ export function run(program: Program, inputs: Readonly<Record<Id, Data>>, seed: 
   }
 
   const main = ctx.exec(program.main);
-  let steps = 0;
+  let events = 0;
   let loops = 0;
   let lastNodeId: NodeId = program.main[0]?.id ?? "";
   let finished: Done | undefined;
@@ -121,28 +121,28 @@ export function run(program: Program, inputs: Readonly<Record<Id, Data>>, seed: 
   return {
     next() {
       if (finished) return finished;
-      if (steps >= STEP_LIMIT) {
+      if (events >= EVENT_LIMIT) {
         finished = {
           type: "error",
-          error: { nodeId: lastNodeId, code: "E_STEP_LIMIT", params: {} },
-          steps,
+          error: { nodeId: lastNodeId, code: "E_EVENT_LIMIT", params: {} },
+          events,
         };
         return finished;
       }
       try {
         const result = main.next();
         if (result.done) {
-          finished = { type: "done", steps, loops };
+          finished = { type: "done", events, loops };
           return finished;
         }
         const event: Event = result.value;
-        steps += 1;
+        events += 1;
         if (event.type === "loop") loops += 1;
         lastNodeId = event.nodeId;
         return event;
       } catch (error) {
         if (error instanceof RuntimeFailure) {
-          finished = { type: "error", error: error.error, steps };
+          finished = { type: "error", error: error.error, events };
           return finished;
         }
         throw error;

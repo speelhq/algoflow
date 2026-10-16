@@ -166,15 +166,15 @@ describe("narrate", () => {
   });
 
   it("the end of the run, an error, and the step Watch this case opens at", () => {
-    expect(say(narrateEnd({ type: "done", steps: 124, loops: 3 }, 124))).toBe(
+    expect(say(narrateEnd({ type: "done", events: 124, loops: 3 }, 124))).toBe(
       "Finished in 124 steps",
     );
     const error = { nodeId: "x", code: "E_INDEX" as const, params: { index: 5, length: 3 } };
-    expect(say(narrateEnd({ type: "error", error, steps: 8 }, 9))).toBe(
+    expect(say(narrateEnd({ type: "error", error, events: 8 }, 9))).toBe(
       "Item 5 does not exist (length 3)",
     );
     const value = { nodeId: "x", code: "E_VALUE" as const, params: { op: "unop", type: "str" } };
-    expect(say(narrateEnd({ type: "error", error: value, steps: 2 }, 3))).toBe(
+    expect(say(narrateEnd({ type: "error", error: value, events: 2 }, 3))).toBe(
       "Negate cannot be used on str",
     );
     expect(say(narrateDifference({ line: 1 }))).toBe("This printed line 1");
@@ -190,11 +190,11 @@ describe("narrate", () => {
       first = runner.next();
     }
     const state = runner.state();
-    const done = { type: "done", steps: 2, loops: 0 } as const;
+    const done = { type: "done", events: 2, loops: 0 } as const;
     const error = {
       type: "error",
       error: { nodeId: "x", code: "E_INDEX", params: { index: 5, length: 3 } },
-      steps: 2,
+      events: 2,
     } as const;
     const at = (position: Partial<Position>) => {
       const line = narratePosition(

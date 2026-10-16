@@ -2,7 +2,7 @@
 // the run of language.md, the params a runtime error carries, and the event rules.
 import { describe, expect, it } from "vitest";
 import { ast, evalExpr, eventTypes, program, runAll, varData, withInputs } from "@/blocks/testing";
-import { run, STEP_LIMIT } from "./run";
+import { run, EVENT_LIMIT } from "./run";
 import { floatRepr, strRepr } from "./values";
 
 const {
@@ -120,17 +120,17 @@ describe("values and the run", () => {
     expect(varData(built, "seen")).toBe(5);
   });
 
-  it("a run stops with E_STEP_LIMIT after 1,000,000 events", () => {
+  it("a run stops with E_EVENT_LIMIT after 1,000,000 events", () => {
     const runner = run(program([while_(bool(true), [])]), {}, 1);
     let last;
-    for (let i = 0; i < STEP_LIMIT + 5; i += 1) {
+    for (let i = 0; i < EVENT_LIMIT + 5; i += 1) {
       last = runner.next();
       if (last.type === "error" || last.type === "done") break;
     }
     expect(last).toMatchObject({
       type: "error",
-      error: { code: "E_STEP_LIMIT" },
-      steps: STEP_LIMIT,
+      error: { code: "E_EVENT_LIMIT" },
+      events: EVENT_LIMIT,
     });
   });
 });
@@ -188,11 +188,11 @@ describe("event rules", () => {
     ]);
   });
 
-  it("steps counts all events and loops counts loop events", () => {
+  it("events counts all events and loops counts loop events", () => {
     const result = runAll(
       program([for_("i", num(0), num(3), [exprStmt(bin("<", v("i"), num(1)))])]),
     );
-    expect(result.done).toEqual({ type: "done", steps: 1 + 3 * 3, loops: 3 });
+    expect(result.done).toEqual({ type: "done", events: 1 + 3 * 3, loops: 3 });
   });
 
   it("the same program, inputs, and seed produce the same event sequence", () => {
