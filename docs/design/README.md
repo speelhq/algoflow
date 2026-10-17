@@ -10,7 +10,8 @@ cannot follow, is an issue labelled `decision`, with a proposal, of the
 release that builds the screen: filed when that release is planned
 (`/milestone`) or when its work finds it, never earlier: planning a release
 finds every screen it builds without an artboard, so an issue filed before
-then would only repeat the spec and go stale. A session never draws or changes an artboard.
+then would only repeat the spec and go stale. A session draws the artboard
+in its Claude Design file once the developer decides the issue.
 
 ## Claude Design file "AlgoFlow Screens"
 
