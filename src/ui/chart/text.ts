@@ -1,6 +1,6 @@
 // A node's text as runs: its block's `notation()` with the block's slots filled in, the same in
-// every locale; a variable is drawn bold in its own colour, and an input still to fill as the
-// placeholder. Operators are parenthesised as the emitter does. Reads slot roles, `params`,
+// every locale; a variable is drawn bold in its own color, and an input still to fill as the
+// placeholder. Operators are parenthesized as the emitter does. Reads slot roles, `params`,
 // `notation`, `text`, `chart`, and `precedence` only, never a kind; a variable shown with its
 // value is written by the `assign` block's notation.
 import { t } from "@/i18n/t";

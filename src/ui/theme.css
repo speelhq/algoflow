@@ -4,7 +4,7 @@
 @import "@fontsource-variable/geist";
 
 /* `dark:` applies only under `.dark`, which the app never sets, so the primitives' dark styles
-   stay off whatever the system's colour scheme. */
+   stay off whatever the system's color scheme. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

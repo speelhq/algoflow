@@ -16,7 +16,7 @@ export type RunView = {
 };
 
 export type Paint = {
-  /** Chart node ids drawn in the taken-path colour. */
+  /** Chart node ids drawn in the taken-path color. */
   nodes: Set<string>;
   edges: Set<string>;
   /** Diamond chart node id → ✓ (true) or ✗ (false). */
@@ -57,7 +57,7 @@ export function paint(chart: ChartLayout, view: RunView): Paint {
     const to = byId.get(edge.to);
     if (!from || !to || !nodes.has(from.id) || !nodes.has(to.id)) continue;
     const verdict = from.owner === null ? undefined : view.verdicts[from.owner];
-    // A labelled edge follows its diamond's mark; once a loop's mark is cleared on leaving
+    // A labeled edge follows its diamond's mark; once a loop's mark is cleared on leaving
     // it (control is elsewhere), its `No` edge is taken when what it leads to is: what follows
     // the loop, or its exit, unless a jump on the path is what reached the exit.
     const left = verdict === undefined && from.owner !== null && from.owner !== view.activeId;

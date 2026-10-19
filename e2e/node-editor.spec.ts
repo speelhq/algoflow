@@ -138,7 +138,7 @@ test("the editor opens on the node's right inside the canvas, the chart scrolled
   await seedProgress(page, {});
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
-  // The rightmost node: the centred chart leaves no room for the editor beside it.
+  // The rightmost node: the centered chart leaves no room for the editor beside it.
   const node = page.locator('[data-chart-node="fzb-prfb-001"]');
   await node.click({ position: { x: 8, y: 8 } });
   await expect(editor(page)).toBeVisible();

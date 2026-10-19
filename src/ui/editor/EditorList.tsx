@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 export type ListItem = {
   key: string;
   label: string;
-  /** Drawn as a variable: a bold word in the variable colour. */
+  /** Drawn as a variable: a bold word in the variable color. */
   variable?: boolean;
   /** Before the name, in its own column (`×`). */
   symbol?: string;

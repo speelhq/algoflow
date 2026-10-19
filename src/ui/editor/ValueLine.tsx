@@ -1,5 +1,5 @@
 // A value line drawn as the chart writes its expression: variables as bold words in
-// their colour, an operator as its symbol, an input still to fill as an empty field, the
+// their color, an operator as its symbol, an input still to fill as an empty field, the
 // brackets the chart draws and those opened and not closed, the caret, and the word being
 // typed. Keys go to `onKey`; clicks name the expression clicked.
 import { forwardRef, useState, type KeyboardEvent, type ReactNode } from "react";

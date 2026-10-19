@@ -1,5 +1,5 @@
 // The emitted code with line numbers; keywords, strings, numbers, and comments are
-// coloured. Hovering a line outlines its node, clicking it selects the node, the selected
+// colored. Hovering a line outlines its node, clicking it selects the node, the selected
 // node's lines are highlighted, and while running the current statement's line is too.
 import { useEffect, useMemo, useRef } from "react";
 import { caseInputs } from "@/challenges/cases";
@@ -15,7 +15,7 @@ import { Button } from "@/ui/primitives/button";
 import { highlight, type Token } from "@/ui/python/highlight";
 import { lineOwners, linesOf } from "@/ui/python/lines";
 
-const COLOUR: Record<Token["kind"], string> = {
+const COLOR: Record<Token["kind"], string> = {
   keyword: "text-code-keyword",
   string: "text-code-string",
   number: "text-code-number",
@@ -114,7 +114,7 @@ export function PythonTab() {
               <pre className="whitespace-pre">
                 {tokens.map((token, j) => (
                   // oxlint-disable-next-line react/no-array-index-key -- tokens are positional
-                  <span key={j} className={COLOUR[token.kind]} data-token={token.kind}>
+                  <span key={j} className={COLOR[token.kind]} data-token={token.kind}>
                     {token.text}
                   </span>
                 ))}

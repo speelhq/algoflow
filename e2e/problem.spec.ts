@@ -73,7 +73,7 @@ test.describe("Problem page", () => {
 });
 
 test.describe("Python tab", () => {
-  test("shows the stored program as numbered, coloured lines and selects a node on click", async ({
+  test("shows the stored program as numbered, colored lines and selects a node on click", async ({
     page,
   }) => {
     await seedProgress(page, {});
