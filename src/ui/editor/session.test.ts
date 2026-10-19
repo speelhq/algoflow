@@ -18,7 +18,7 @@ import {
   textEnded,
   valueKey,
   type Session,
-  type Step,
+  type Transition,
 } from "./session";
 
 const { assign, assignTo, print, num, bin, v, empty } = ast;
@@ -32,12 +32,12 @@ const ctx: LineContext = {
 };
 
 /** Each key of `keys` pressed in turn, every press on the session the one before left. */
-const press = (session: Session, keys: string): Step => {
-  let step: Step = { session, edits: [] };
+const press = (session: Session, keys: string): Transition => {
+  let transition: Transition = { session, edits: [] };
   for (const key of keys) {
-    step = chain(step, (s) => valueKey(s, { key, shiftKey: false }, [], ctx, ""));
+    transition = chain(transition, (s) => valueKey(s, { key, shiftKey: false }, [], ctx, ""));
   }
-  return step;
+  return transition;
 };
 
 describe("editor session", () => {
@@ -145,10 +145,10 @@ describe("editor session", () => {
     // `Text` opens an empty field, as the learner chooses it.
     const editing = chooseRow(openSession(stmt, field, null), { kind: "entry", entry: text }, ctx);
     expect(editing.session.line?.text).toBeDefined();
-    const step = textEnded(editing.session, "Backspace", ctx);
-    expect(step.session.line?.root.kind).toBe("empty");
-    expect(step.session.line?.text).toBeUndefined();
-    expect(step.edits.at(-1)?.root.kind).toBe("empty");
+    const transition = textEnded(editing.session, "Backspace", ctx);
+    expect(transition.session.line?.root.kind).toBe("empty");
+    expect(transition.session.line?.text).toBeUndefined();
+    expect(transition.edits.at(-1)?.root.kind).toBe("empty");
     // Once the field has ended, Backspace from it removes nothing more.
     const ended = textEnded(editing.session, "Enter", ctx).session;
     expect(textEnded(ended, "Backspace", ctx).session.line?.root.kind).toBe("str");
@@ -175,7 +175,7 @@ describe("editor session", () => {
     expect(follow(openSession(two, second, null), one)).toMatchObject({ focus: null, line: null });
   });
 
-  it("↓ and ↑ wrap round the list, and `chain` keeps both steps' values in order", () => {
+  it("↓ and ↑ wrap round the list, and `chain` keeps both transitions' values in order", () => {
     const session = openSession(print(empty()), null, null);
     expect(stepHighlight(session, 3, null, 1).highlight).toBe(0);
     expect(stepHighlight(session, 3, null, -1).highlight).toBe(2);

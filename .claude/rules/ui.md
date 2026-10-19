@@ -16,7 +16,7 @@ pull request can't review or diff them.
 - oxlint's `react/set-state-in-effect` rejects `setState` inside an effect.
   Adjust the state during render instead.
 - Don't add React Testing Library. Unit tests cover the stores, `t()`,
-  script logic, and the editor's behavior as pure session steps
+  script logic, and the editor's behavior as pure session transitions
   (`src/ui/editor/session.ts`), and Playwright exercises the components end
   to end, so a DOM testing library would be a second, slower way to test
   the same things.

@@ -60,7 +60,7 @@ import {
   valueKey,
   type Click,
   type Session,
-  type Step,
+  type Transition,
 } from "./session";
 import { AddValue, NameField, ValueItems } from "./slots";
 import { ValueLine } from "./ValueLine";
@@ -117,19 +117,19 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   }, [program, stmt.id, kinds, binds, named]);
   const diagnostics = editorDiagnostics(program, stmt.id, led);
 
-  // ------------------------------------------------------------ steps
+  // ------------------------------------------------------------ transitions
 
   /** The statement as the program holds it now, after the edits applied so far. */
   const current = () => nodesById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
 
-  /** Writes a step's values into the program and keeps the session it leaves. */
-  const run = (step: Step): Session => {
-    for (const { field, root } of step.edits) {
+  /** Writes a transition's values into the program and keeps the session it leaves. */
+  const run = (transition: Transition): Session => {
+    for (const { field, root } of transition.edits) {
       const at = `${stmt.id}:${fieldKey(field)}`;
       apply((p) => setExpr(p, stmt.id, field.slot, root, field.index), at);
     }
-    setSession(step.session);
-    return step.session;
+    setSession(transition.session);
+    return transition.session;
   };
 
   /** Moves the keyboard to `field` from `from`; a word naming a row exactly is chosen first. */
