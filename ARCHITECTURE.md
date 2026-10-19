@@ -101,7 +101,7 @@ without a browser.
   narration are plain strings from `src/ui/chart/text.ts` and
   `src/ui/run/narrate.ts`, and `text.ts` is the only code that splits a
   notation into its pieces. The node editor's state is a session that
-  changes only through pure steps (`src/ui/editor/session.ts`). A
+  changes only through pure transitions (`src/ui/editor/session.ts`). A
   variable's view is chosen by the type of its value alone, never by block
   or challenge (`docs/spec/ui/views.md`).
 - `challenges/<id>.json`: one file per challenge. `scripts/check.ts` runs

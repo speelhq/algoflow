@@ -37,12 +37,12 @@ export type Session = {
 export type Edit = { field: Field; root: Expr };
 
 /** A transition's result: the next session and the values it writes, in order. */
-export type Step = { session: Session; edits: Edit[] };
+export type Transition = { session: Session; edits: Edit[] };
 
-const still = (session: Session): Step => ({ session, edits: [] });
+const still = (session: Session): Transition => ({ session, edits: [] });
 
-/** Two steps in turn: `next` runs on the session the first one left. */
-export function chain(first: Step, next: (session: Session) => Step): Step {
+/** Two transitions in turn: `next` runs on the session the first one left. */
+export function chain(first: Transition, next: (session: Session) => Transition): Transition {
   const second = next(first.session);
   return { session: second.session, edits: [...first.edits, ...second.edits] };
 }
@@ -74,7 +74,7 @@ export function follow(session: Session, stmt: Stmt): Session {
  * The line becomes `next`, and its value is written when it changed. The line always holds the
  * focused field's value, so the line before is what `next` is compared with.
  */
-export function commit(session: Session, next: Line): Step {
+export function commit(session: Session, next: Line): Transition {
   const { focus, line } = session;
   if (!focus) return still(session);
   const changed = !line || JSON.stringify(line.root) !== JSON.stringify(next.root);
@@ -85,7 +85,7 @@ export function commit(session: Session, next: Line): Step {
 }
 
 /** A word that names a row exactly is chosen, as when the line is left. */
-export function settleWord(session: Session, ctx: LineContext): Step {
+export function settleWord(session: Session, ctx: LineContext): Transition {
   const { line } = session;
   return line && line.word !== "" ? commit(session, settle(line, ctx)) : still(session);
 }
@@ -147,7 +147,7 @@ export function stepHighlight(
 }
 
 /** A row of the value list chosen: the operator switched to it, or the row put in the line. */
-export function chooseRow(session: Session, row: Row, ctx: LineContext): Step {
+export function chooseRow(session: Session, row: Row, ctx: LineContext): Transition {
   const { line, switching } = session;
   if (!line) return still(session);
   if (switching && row.kind === "entry") {
@@ -160,16 +160,16 @@ export function chooseRow(session: Session, row: Row, ctx: LineContext): Step {
 export type After = "close" | { go: 1 | -1 } | { addItem: number };
 
 /** A key pressed in the focused value line; `taken` is false when the line leaves it alone. */
-export type KeyStep = Step & { taken: boolean; after?: After };
+export type KeyTransition = Transition & { taken: boolean; after?: After };
 
-const taken = (step: Step, after?: After): KeyStep =>
-  after === undefined ? { ...step, taken: true } : { ...step, taken: true, after };
+const taken = (transition: Transition, after?: After): KeyTransition =>
+  after === undefined ? { ...transition, taken: true } : { ...transition, taken: true, after };
 
 /**
  * A row chosen by Enter or a click. In a target's line, a choice that leaves the target with no
  * input still to fill moves on to the next field, as a name field's does (`editor.md`, Targets).
  */
-export function pickRow(session: Session, row: Row, ctx: LineContext): KeyStep {
+export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransition {
   const { line, switching } = session;
   if (!line || switching) return taken(chooseRow(session, row, ctx));
   const chosen = choose(line, row, ctx);
@@ -188,9 +188,9 @@ export function valueKey(
   rows: readonly Row[],
   ctx: LineContext,
   next: string,
-): KeyStep {
+): KeyTransition {
   const { line, focus } = session;
-  const left: KeyStep = { ...still(session), taken: false };
+  const left: KeyTransition = { ...still(session), taken: false };
   if (!line || !focus) return left;
   const shown = shownHighlight(session, rows.length);
   switch (key.key) {
@@ -244,7 +244,7 @@ export type TextEnd = "Enter" | "Tab" | "ShiftTab" | "Backspace" | "blur";
  * The text field inside the line ended: the caret goes after it, Tab moves on, and Backspace,
  * typed in the field once it is empty, removes the text.
  */
-export function textEnded(session: Session, key: TextEnd, ctx: LineContext): KeyStep {
+export function textEnded(session: Session, key: TextEnd, ctx: LineContext): KeyTransition {
   const { line } = session;
   if (!line) return { ...still(session), taken: false };
   const ended = commit(session, endText(line));
