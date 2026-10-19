@@ -60,10 +60,9 @@ GitHub UI.
    until the developer moves it to a later release or it is closed.
 2. With a clean working tree, run `git fetch origin main` and
    `git switch --detach origin/main`, and note the commit
-   (`git rev-parse HEAD`). Run `pnpm install --frozen-lockfile`,
-   `pnpm lint`, `pnpm format --check`, `pnpm test`, `pnpm check`,
-   `pnpm build`, and `pnpm test:e2e` there, walk through the exit criterion
-   in the running app, and keep the output.
+   (`git rev-parse HEAD`). Run `pnpm install --frozen-lockfile` and each
+   check of the `verify` job in `.github/workflows/ci.yml` there, walk
+   through the exit criterion in the running app, and keep the output.
 3. After approval, tag that same commit
    (`git tag -a <vX.Y.Z> <commit> -m "<vX.Y.Z>"`, then
    `git push origin <vX.Y.Z>`), publish a GitHub release of the tag titled
