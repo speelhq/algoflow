@@ -136,8 +136,7 @@ Write commit messages in Conventional Commits form:
 - no trailers, including `Co-Authored-By`
 
 In CI, `pnpm commits` checks the type, the scope, the subject's length,
-trailers, and fixup commits left unfolded. Don't mention Claude, the
-session, or the prompt in a commit message.
+trailers, and fixup commits left unfolded.
 
 Title a pull request in the same form as a commit subject. Open its body
 with one sentence on what it does, then fill in the sections of
