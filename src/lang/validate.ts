@@ -96,9 +96,9 @@ class Collector {
 
   /**
    * Walks one region. `visible` gains the names assigned directly in it; `inner`
-   * maps names first assigned inside an earlier nested frame of this region to
-   * that frame's id. Returns every name first assigned anywhere inside
-   * the region, so an enclosing region can attribute it to this frame.
+   * maps names first assigned inside an earlier compound statement of this region
+   * to that statement's id. Returns every name first assigned anywhere inside
+   * the region, so an enclosing region can attribute it to its compound statement.
    */
   private region(stmts: Stmt[], visible: Set<Id>, inner: Map<Id, NodeId>, scope: Scope): Set<Id> {
     const declared = new Set<Id>();
@@ -142,9 +142,9 @@ class Collector {
       if (bound.has(expr)) continue;
       const name = variableOf(expr);
       if (name === undefined || name === "" || visible.has(name)) continue;
-      const frame = inner.get(name);
-      if (frame === undefined) this.report(stmt.id, "E_UNDEFINED", { name });
-      else this.report(stmt.id, "E_DECLARE_FIRST", { name, frame }, "hoistAssign");
+      const compound = inner.get(name);
+      if (compound === undefined) this.report(stmt.id, "E_UNDEFINED", { name });
+      else this.report(stmt.id, "E_DECLARE_FIRST", { name, compound }, "hoistAssign");
     }
   }
 

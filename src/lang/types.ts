@@ -151,7 +151,7 @@ export type Diagnostic = {
 
 // ---------------------------------------------------------------- Edits
 
-/** A statement position. `parent` is a frame or function id, or "main". */
+/** A statement position. `parent` is a compound statement's or a function's id, or "main". */
 export type Place = {
   parent: NodeId | "main";
   slot: "main" | "body" | "then" | "else";

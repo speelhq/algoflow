@@ -87,7 +87,7 @@ class Writer {
     for (const pyLine of pyLines) {
       if (typeof pyLine === "string") {
         if (first) {
-          this.mark(stmt.id); // A frame maps to its header; `else:` is unmapped
+          this.mark(stmt.id); // A compound statement maps to its header; `else:` is unmapped
           if (named !== undefined) this.map[stmt.id] = { start: named, end: named + 1 };
           first = false;
         }

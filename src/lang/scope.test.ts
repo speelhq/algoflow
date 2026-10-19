@@ -37,7 +37,7 @@ describe("scope", () => {
     expect(visibleAt(p, after.id)).toEqual(["i", "n"]);
   });
 
-  it("a name first assigned inside a frame is not visible after it", () => {
+  it("a name first assigned inside a compound statement is not visible after it", () => {
     const inside = assign("y", num(1));
     const branch = if_(v("c"), [inside]);
     const after = print(v("y"));

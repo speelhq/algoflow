@@ -12,13 +12,13 @@ const SOH = String.fromCharCode(1);
 const DEL = String.fromCharCode(127);
 
 describe("emit (emitter.md)", () => {
-  it("1-based inclusive lines; a frame maps to its header; else: is unmapped", () => {
+  it("1-based inclusive lines; a compound statement maps to its header; else: is unmapped", () => {
     const inner = assign("x", num(1));
-    const frame = if_(bin("<", v("a"), v("b")), [inner], [assign("x", num(2))]);
+    const branch = if_(bin("<", v("a"), v("b")), [inner], [assign("x", num(2))]);
     const after = print(v("x"));
-    const { code, map } = emit(program([frame, after]), {});
+    const { code, map } = emit(program([branch, after]), {});
     expect(code).toBe("if a < b:\n    x = 1\nelse:\n    x = 2\nprint(x)\n");
-    expect(map[frame.id]).toEqual({ start: 1, end: 1 });
+    expect(map[branch.id]).toEqual({ start: 1, end: 1 });
     expect(map[inner.id]).toEqual({ start: 2, end: 2 });
     expect(map[after.id]).toEqual({ start: 5, end: 5 });
     expect(Object.values(map).some((m) => m.start === 3)).toBe(false);

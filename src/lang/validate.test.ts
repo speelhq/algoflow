@@ -39,30 +39,30 @@ describe("validate (language.md, Validation)", () => {
     expect(codes(program([assign("x", bin("+", v("x"), num(1)))]))).toEqual(["E_UNDEFINED"]);
   });
 
-  it("E_DECLARE_FIRST: first assigned inside a frame and read after it, with the hoist fix", () => {
-    const frame = if_(v("c"), [assign("x", num(1))]);
+  it("E_DECLARE_FIRST: first assigned inside a compound statement and read after it, with the hoist fix", () => {
+    const branch = if_(v("c"), [assign("x", num(1))]);
     const use = print(v("x"));
-    expect(validate(withInput([frame, use]))).toEqual([
+    expect(validate(withInput([branch, use]))).toEqual([
       {
         nodeId: use.id,
         code: "E_DECLARE_FIRST",
-        params: { name: "x", frame: frame.id },
+        params: { name: "x", compound: branch.id },
         fix: "hoistAssign",
       },
     ]);
-    expect(codes(withInput([assign("x", num(0)), frame, use]))).toEqual([]);
+    expect(codes(withInput([assign("x", num(0)), branch, use]))).toEqual([]);
     const loop = for_("i", num(0), num(3), [assign("y", v("i"))]);
     expect(codes(program([loop, print(v("y"))]))).toEqual(["E_DECLARE_FIRST"]);
   });
 
-  it("E_DECLARE_FIRST: a name assigned two frames deep points at the outermost frame", () => {
+  it("E_DECLARE_FIRST: a name assigned two compound statements deep points at the outermost one", () => {
     const outer = if_(v("c"), [if_(v("c"), [assign("x", num(1))])]);
     const use = print(v("x"));
     expect(validate(withInput([outer, use]))).toEqual([
       {
         nodeId: use.id,
         code: "E_DECLARE_FIRST",
-        params: { name: "x", frame: outer.id },
+        params: { name: "x", compound: outer.id },
         fix: "hoistAssign",
       },
     ]);
