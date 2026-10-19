@@ -1,4 +1,4 @@
-// Keywords, strings, numbers, and comments are coloured, and nothing else.
+// Keywords, strings, numbers, and comments are colored, and nothing else.
 import { describe, expect, it } from "vitest";
 import { highlight } from "./highlight";
 

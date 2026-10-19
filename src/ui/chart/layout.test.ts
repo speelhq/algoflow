@@ -161,7 +161,7 @@ function flows(stmt: Stmt): boolean {
 }
 
 const byId = (chart: ChartLayout) => new Map(chart.nodes.map((node) => [node.id, node]));
-const centre = (node: ChartNode) => node.x + node.w / 2;
+const center = (node: ChartNode) => node.x + node.w / 2;
 
 function rectsOverlap(a: ChartNode, b: ChartNode, inflate: number): boolean {
   return (
@@ -300,21 +300,21 @@ describe.each([
           if (!d || !yes || !no) throw new Error(`branch ${stmt.id}`);
           expect(d.shape).toBe("diamond");
           expect(yes.points[0]).toEqual({ x: d.x + d.w, y: d.y + d.h / 2 }); // Yes leaves by the right vertex
-          expect(no.points[0]).toEqual({ x: centre(d), y: d.y + d.h }); // No by the bottom vertex
+          expect(no.points[0]).toEqual({ x: center(d), y: d.y + d.h }); // No by the bottom vertex
           const yesTo = nodes.get(yes.to);
           const noTo = nodes.get(no.to);
-          if (yesTo?.role !== "merge") expect(centre(yesTo ?? d)).toBeGreaterThan(d.x + d.w);
-          if (noTo?.role !== "merge") expect(centre(noTo ?? d)).toBe(centre(d));
+          if (yesTo?.role !== "merge") expect(center(yesTo ?? d)).toBeGreaterThan(d.x + d.w);
+          if (noTo?.role !== "merge") expect(center(noTo ?? d)).toBe(center(d));
           const merge = nodes.get(`${stmt.id}:merge`);
           if (merge) {
-            expect(centre(merge)).toBe(centre(d));
+            expect(center(merge)).toBe(center(d));
             for (const node of under) expect(node.y + node.h).toBeLessThan(merge.y);
             const bare =
               regionsOf(stmt).find((region) => region.slot === shape.branch.no)?.stmts.length === 0;
             if (bare)
               expect(no).toMatchObject({
                 to: merge.id,
-                points: [no.points[0], { x: centre(d), y: merge.y }],
+                points: [no.points[0], { x: center(d), y: merge.y }],
               });
           }
           continue;
@@ -324,12 +324,12 @@ describe.each([
         const junction = nodes.get(`${stmt.id}:junction`);
         if (!d || !junction) throw new Error(`loop ${stmt.id}`);
         expect(d.shape).toBe("diamond");
-        expect(centre(junction)).toBe(centre(d));
+        expect(center(junction)).toBe(center(d));
         expect(junction.y).toBeLessThan(d.y);
         const [yes] = out(d.id, "yes");
         const [no] = out(d.id, "no");
         if (!yes || !no) throw new Error(`loop ${stmt.id} edges`);
-        expect(yes.points[0]).toEqual({ x: centre(d), y: d.y + d.h }); // Yes leads down into the body
+        expect(yes.points[0]).toEqual({ x: center(d), y: d.y + d.h }); // Yes leads down into the body
         expect(no.points[0]).toEqual({ x: d.x + d.w, y: d.y + d.h / 2 }); // No leaves to the right
         const bottom = Math.max(d.y + d.h, ...under.map((node) => node.y + node.h));
         expect(Math.max(...no.points.map((point) => point.y))).toBeGreaterThan(bottom);
@@ -338,14 +338,14 @@ describe.each([
         for (const back of backs) {
           const lane = Math.min(...back.points.map((point) => point.x));
           for (const node of [d, ...under]) expect(lane).toBeLessThan(node.x);
-          expect(back.points.at(-1)).toEqual({ x: centre(junction), y: junction.y });
+          expect(back.points.at(-1)).toEqual({ x: center(junction), y: junction.y });
         }
         if (counted) {
           const init = nodes.get(`${stmt.id}:init`);
           const step = nodes.get(`${stmt.id}:step`);
           if (!init || !step) throw new Error(`counted ${stmt.id}`);
           expect([init.generated, d.generated, step.generated]).toEqual([true, true, true]);
-          expect([centre(init), centre(step)]).toEqual([centre(d), centre(d)]);
+          expect([center(init), center(step)]).toEqual([center(d), center(d)]);
           expect(init.y + init.h).toBeLessThan(junction.y);
           for (const node of under) expect(node.y + node.h).toBeLessThan(step.y);
           expect(backs.map((edge) => edge.from)).toEqual([step.id]);

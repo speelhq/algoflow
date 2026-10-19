@@ -42,7 +42,7 @@ export function useNodeDrag(node: ChartNode, enabled: boolean) {
 }
 
 /**
- * A connector as a drop target: a circle centred on the edge's anchor, where the `+` is drawn
+ * A connector as a drop target: a circle centered on the edge's anchor, where the `+` is drawn
  * (the box of the `+` and its label is not), accepting nothing while `disabled`.
  */
 export function DropZone(props: { edge: ChartEdge; disabled: boolean; children: ReactNode }) {

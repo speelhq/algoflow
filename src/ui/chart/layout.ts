@@ -42,7 +42,7 @@ export type ChartNode = {
     | "exit"
     | "next";
   shape: Shape;
-  /** Drawn grey, not selectable on its own. */
+  /** Drawn gray, not selectable on its own. */
   generated: boolean;
   text: string;
   /** What the node draws without its name, shown on hover where it shows its name instead. */
@@ -56,7 +56,7 @@ export type ChartNode = {
   h: number;
 };
 export type ChartEdge = {
-  /** `<from>><to>`, with `:<label>` when labelled. */
+  /** `<from>><to>`, with `:<label>` when labeled. */
   id: string;
   from: string;
   to: string;

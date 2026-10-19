@@ -42,7 +42,7 @@ describe("currentNode", () => {
 });
 
 describe("paint", () => {
-  it("draws the path of the current pass, a labelled edge by its diamond's mark", () => {
+  it("draws the path of the current pass, a labeled edge by its diamond's mark", () => {
     const p = paint(
       chart,
       view({
@@ -53,8 +53,8 @@ describe("paint", () => {
     expect(p.nodes.has("start")).toBe(true);
     expect(p.nodes.has(branch.id)).toBe(true);
     expect(p.nodes.has("end")).toBe(false);
-    const labelled = chart.edges.filter((edge) => edge.from === branch.id);
-    const taken = labelled.filter((edge) => p.edges.has(edge.id)).map((edge) => edge.label);
+    const labeled = chart.edges.filter((edge) => edge.from === branch.id);
+    const taken = labeled.filter((edge) => p.edges.has(edge.id)).map((edge) => edge.label);
     expect(taken).toEqual(["yes"]);
     expect(p.marks.get(branch.id)).toBe(true);
     expect(p.marks.get(nodeOf(loop.id, "check") ?? "")).toBe(true);

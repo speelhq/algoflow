@@ -31,7 +31,7 @@ export function dataToPython(data: Data): string {
 // ---------------------------------------------------------------- expression context
 
 /** `text`, the text of `child`, in parentheses where the operator table needs them under `parent`. */
-function parenthesise(child: Expr, text: string, parent: number, side: Side): string {
+function parenthesize(child: Expr, text: string, parent: number, side: Side): string {
   const own = getBlock(keyOf(child)).precedence?.(child) ?? PRECEDENCE.atom;
   return needsParens(own, parent, side) ? `(${text})` : text;
 }
@@ -41,7 +41,7 @@ const ctx: EmitContext = {
     return getBlock(keyOf(expr)).python(expr, ctx) as string;
   },
   operand(expr: Expr, parent: number, side) {
-    return parenthesise(expr, ctx.expr(expr), parent, side);
+    return parenthesize(expr, ctx.expr(expr), parent, side);
   },
   slot(node, name) {
     const expr = (node as unknown as Record<string, Expr>)[name];

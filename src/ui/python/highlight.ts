@@ -1,4 +1,4 @@
-// The Python tab colours keywords, strings, numbers, and comments, and nothing else.
+// The Python tab colors keywords, strings, numbers, and comments, and nothing else.
 // One emitted line at a time: the emitter writes no string that spans lines.
 import { PYTHON_KEYWORDS } from "@/lang/types";
 

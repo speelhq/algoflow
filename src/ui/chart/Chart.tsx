@@ -1,5 +1,5 @@
 // The flowchart as SVG from `layout()`. Shapes come from `ChartNode.shape`
-// and never from a block kind; generated nodes are grey. An HTML layer over the SVG,
+// and never from a block kind; generated nodes are gray. An HTML layer over the SVG,
 // under the same scale, holds the parts a learner interacts with (the Input nodes' menus,
 // the connectors, the editor) and a diagnostic's card beside its node.
 import {
@@ -46,7 +46,7 @@ type Props = {
   };
   /** The run drawn on the chart. */
   paint?: Paint;
-  /** The current node is where the run failed: it is outlined in the error colour. */
+  /** The current node is where the run failed: it is outlined in the error color. */
   failed?: boolean;
   /** The editor anchored to the selected node; absent while nothing is edited. */
   editor?: ReactNode;
@@ -303,7 +303,7 @@ export function Chart(props: Props) {
   const scale = zoom ?? fitScale(region, chart.width + 2 * PAD);
   const width = (chart.width + 2 * PAD) * scale;
   const height = (chart.height + 2 * PAD) * scale;
-  // The chart is centred; while an editor is open, room for it is added on the node's right
+  // The chart is centered; while an editor is open, room for it is added on the node's right
   // where the canvas has none, and the canvas scrolls to show it.
   const offset = Math.max(0, (region - width) / 2);
   const editorEnd = edited

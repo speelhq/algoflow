@@ -275,7 +275,7 @@ export const EXPRESSION_FIXTURE: Case[] = [
   "(2 ** 3) ** 2",
   "-2 ** 2",
   "(-2) ** 2",
-  // normalisation of spacing, quotes, and redundant parentheses
+  // normalization of spacing, quotes, and redundant parentheses
   ["'s'", '"s"'],
   ["'it\\'s'", '"it\'s"'],
   ["a+b", "a + b"],

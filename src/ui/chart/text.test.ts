@@ -114,7 +114,7 @@ describe("notation", () => {
     expect(exprText(expr("random.randint(1, 6)"))).toBe("randint(1, 6)");
   });
 
-  it("parenthesises operators among themselves exactly where the emitter would", () => {
+  it("parenthesizes operators among themselves exactly where the emitter would", () => {
     expect(exprText(expr("(a + b) * c"))).toBe("(a + b) × c");
     expect(exprText(expr("a + b * c"))).toBe("a + b × c");
     expect(exprText(expr("a - (b - c)"))).toBe("a − (b − c)");
