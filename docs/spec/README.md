@@ -38,16 +38,20 @@ mandatory; "may" marks an option. A new statement states one rule that one
 test can establish. A statement names no release, schedule, or status, and
 records no history.
 
-A statement refers to another by its heading, and by its file as well when
-the heading is in another file: (`language.md`, Scope); a reference to a
-whole file names the file alone. A handle that the
-code, the tests, and the specification share, such as an error code, a
-block key, a message key, or a function or type name, stands alone. An
+A statement refers to another by its heading, and by its file as well when the
+heading is in another file: (`language.md`, Scope); a reference to a whole
+file names the file alone. A comma separates a heading from the heading it
+sits under (`language.md`, Semantics, Lists), and a semicolon separates two
+references (`views.md`; `run.md`, Narration). A reference inside a sentence
+also takes a comma after its heading, because nothing else marks where a
+heading of several words ends: as `pages.md`, Values on one line, states. A
+handle that the code, the tests, and the specification share, such as an error
+code, a block key, a message key, or a function or type name, stands alone. An
 issue, a pull request, or a review finding that points at a statement quotes
 its sentence and names its file and heading. Statements carry no numbers: a
-quoted sentence reads on its own, and a handle finds the statement, the
-code, and the tests in one search, where a numbering would have to be kept
-in step with all three.
+quoted sentence reads on its own, and a handle finds the statement, the code,
+and the tests in one search, where a numbering would have to be kept in step
+with all three.
 
 Each file opens with the code and the tests it governs. A file whose
 statements carry a test obligation of their own ends with `Verification`,
