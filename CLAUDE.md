@@ -143,18 +143,19 @@ Title a pull request in the same form as a commit subject. Open its body
 with one sentence on what it does, then fill in the sections of
 `.github/pull_request_template.md`.
 
-`main` accepts only rebase merges, after CI passes, so every commit you
-push ends up on `main`. A commit that a later commit undoes would then
-mislead `git blame` and `git bisect`. Before you push, make the unpushed
-commits final:
+`main` accepts only rebase merges, after CI passes, so every commit of a
+pull request ends up on `main`. A commit that a later commit undoes would
+then mislead `git blame` and `git bisect`. Keep the branch's commits final:
 
 - Fold each fix into the commit it fixes: run `git commit --fixup <sha>`,
   then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash --keep-base origin/main`.
 - Drop a commit that a later one withdraws, together with that later
   commit.
 
-Once a commit is pushed, rewrite it only to rebase onto `main`, and push
-the result with `git push --force-with-lease`.
+Until the pull request is open, only you use the branch, so do this to
+pushed commits too and push the result with `git push --force-with-lease`.
+Once the pull request is open, rewrite its commits only to rebase onto
+`main`.
 
 ## Tooling notes
 
