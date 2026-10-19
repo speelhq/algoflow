@@ -11,57 +11,80 @@ pnpm commits <base>..<head>   # each commit's message, as CI checks a pull reque
 pnpm test:e2e · pnpm screenshots   # after build; screenshots rewrites e2e/screenshots/
 ```
 
-Run `pnpm lint` and the relevant `pnpm test <path>` after each set of edits;
-`pnpm check` passes on every pull request. Report output, not a summary.
+After each set of edits, run `pnpm lint` and the tests for the code you
+changed (`pnpm test <path>`). Every pull request must pass `pnpm check` and
+the other checks CI runs (`.github/workflows/ci.yml`).
+
+When you report a result, show the command output rather than describing
+it, so the developer can see what happened without running the command
+again.
 
 ## Sources of truth
 
-`docs/spec/` states what must be (its `README.md` says how it is written);
-the code states what is; the open milestone, its issues, and the open pull
-requests say what is next. No handoff file: it would repeat them and drift.
-Before changing an area, read the spec its file in `.claude/rules/` names.
+`docs/spec/` states what must be true of the app and its code, and
+`docs/spec/README.md` explains how the spec is written. Each file in
+`.claude/rules/` names the spec for one area of the code. Read that spec
+before you change the area.
+
+To find what to work on next, read the open milestone, its issues, and the
+open pull requests. Don't write a handoff file for the next session,
+because it would repeat what GitHub already records and fall out of date.
 
 ## Judgment
 
-A plan and every judgement are made from files the session reads itself.
-An agent may locate code, run a reproduction, or report review candidates
-(`/issue`, Review); nothing it returns is used before the session checks it
-against the files. An agent reads excerpts, and its summary looks like
-a reading of the whole code.
+Make plans and decisions from files you have read yourself. Use an agent
+only to find code, run a reproduction, or list review candidates
+(`/issue`, Review), and check what it returns against the files before you
+rely on it, because an agent reads excerpts. Its summary can still sound as
+if it had read all of the code.
 
-Where the spec or an artboard has a better option, propose it: the current
-choice and its reason, the alternative, and why it is better; nothing is
-built on a proposal before the developer decides. A task that conflicts
-with the spec stops and reports the conflict with a proposal, which spares
-the developer from finding the better option alone.
+When the spec or an artboard has a better option, propose it to the
+developer: what is done now and why, the alternative, and why it is better.
+Build nothing that depends on a proposal until the developer decides. If a
+task conflicts with the spec, stop and report the conflict together with a
+proposal, so the developer doesn't have to work out the options alone.
 
-A finding, from a review or noticed in passing, is fixed in the change,
-dropped with its reason, or filed as an issue; until then it is a task of
-the session. A fault the change introduced is fixed in that change, or the
-change waits for the decision its fix needs. A finding kept only in a
-conversation is lost, and a change that defers its own fault ships it.
+Settle every finding, whether it came from a review or you noticed it
+while working: fix it in the current change if the task covers it, drop it
+with a reason, or file an issue. Until then it is part of your task, because a
+finding that exists only in the conversation is lost when the session
+ends. Fix a fault your own change introduced in that same change. If the
+fix needs a decision first, hold the change until the decision is made
+rather than shipping it with the fault.
 
-A change takes none of these shapes: an optional parameter or default that
-silently changes a result; hidden state or a side map; a second copy of a
-rule or a lookup; a helper kept on an old model to spare test changes; a
-branch left for a removed case; positional coupling; a renamed concept left
-under its old name; a fix at a symptom whose structural cause it leaves,
-unless it records where and why that structure is changed. Each hides
-a rule or a value where the next reader does not look.
+Keep every change free of the following patterns. Each one hides a rule or
+a value where the next reader won't look for it:
+
+- an optional parameter or default that silently changes a result
+- hidden state or a side map
+- a second copy of a rule or a lookup
+- a helper kept on an old data model so that tests don't have to change
+- a branch left in for a case that no longer exists
+- positional coupling
+- a renamed concept still called by its old name somewhere
+- a fix to a symptom that leaves its structural cause in place, unless you
+  record where and why that structure should change
 
 ## Working style
 
-Targeted edits over rewrites. Stay within the task; settle each finding as
-Judgement states. Batch independent reads. One line before starting; a
-standalone recap at the end (changed files, evidence, remaining work). A
-turn does not end on a plan, a question, or a status report while the next
-step is an edit, a test run, or a commit; it ends on a proposal, a conflict
-with the spec, or a step that needs the user's permission (`git push`,
-`rm`, a GitHub write), and names what is ready and what waits. When
-compacting keep: changed files, the current issue and its Done when, open
-findings and proposals, test commands, decisions not yet in `docs/spec/`.
+Make targeted edits rather than rewriting files, and stay within the task.
+Before you start, say in one line what you are going to do. When you
+finish, write a recap that makes sense on its own: the files you changed,
+the evidence that the change works, and what remains.
 
-Skills: `/issue`, `/milestone`, `/add-block`, `/add-challenge`.
+Keep going while the next step is an edit, a test run, or a commit. Don't
+stop there to present a plan, ask a question, or report status. Stop when
+you have a proposal for the developer, a conflict with the spec, or a step
+that needs permission (`git push`, `rm`, or a write to GitHub), and say
+what is ready and what is waiting.
+
+When compacting, keep:
+
+- the changed files
+- the current issue and its Done when section
+- open findings and proposals
+- the test commands
+- any decision not yet recorded in `docs/spec/`
 
 ## Writing
 
@@ -80,35 +103,52 @@ commit message, pull request, and issue this way:
 
 ## Issues and commits
 
-One issue is one pull request from `main`, of at most about 1,500 changed
-lines, that leaves `main` releasable; a larger one is split first. An
-issue is filed from its kind's template in `.github/ISSUE_TEMPLATE/`
-(`.claude/rules/github.md`).
+An issue becomes one pull request from `main`. Keep it to about 1,500
+changed lines at most, and leave `main` releasable when it merges. Split a
+larger issue before you start it. File each issue from the template for
+its kind in `.github/ISSUE_TEMPLATE/` (`.claude/rules/github.md`).
 
-Commit one vertical slice at a time, when `pnpm lint && pnpm test` passes;
-a cross-cutting type, event, or spec change goes first, alone. Conventional
-Commits, an imperative subject under 50 characters, scope a folder of
-`src/` or `scripts`, `docs`, `ci`; a body only when the reason is not
-evident; no trailers; never mention Claude, the session, or the prompt (CI
-runs `pnpm commits`). Before a push the unpushed commits are made final: a
-fix of an earlier one is folded into it (`git commit --fixup <sha>`, then
-`GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash --keep-base origin/main`),
-and a commit a later one withdraws is dropped with it. A pushed commit is
-rewritten only to rebase onto `main`, with `git push --force-with-lease`.
-`main` takes rebase merges only, after CI, so every commit lands on
-`main`, where one that a later one undoes misleads `git blame` and
-`git bisect`.
+Commit one vertical slice at a time, once `pnpm lint && pnpm test` passes.
+Commit a cross-cutting change to a type, an event, or the spec first, on
+its own.
+
+Write commit messages in Conventional Commits form:
+
+- an imperative subject under 50 characters
+- a scope that is a folder of `src/`, or `scripts`, `docs`, or `ci`
+- a body only when the reason isn't evident from the subject
+- no trailers, including `Co-Authored-By`
+
+In CI, `pnpm commits` checks the type, the scope, the subject's length,
+trailers, and fixup commits left unfolded. Don't mention Claude, the
+session, or the prompt in a commit message.
+
+`main` accepts only rebase merges, after CI passes, so every commit you
+push ends up on `main`. A commit that a later commit undoes would then
+mislead `git blame` and `git bisect`. Before you push, make the unpushed
+commits final:
+
+- Fold each fix into the commit it fixes: run `git commit --fixup <sha>`,
+  then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash --keep-base origin/main`.
+- Drop a commit that a later one withdraws, together with that later
+  commit.
+
+Once a commit is pushed, rewrite it only to rebase onto `main`, and push
+the result with `git push --force-with-lease`.
 
 ## Tooling notes
 
-- `pnpm lint` fails on a warning: fix it, turn its rule off in
-  `.oxlintrc.json` beside the reason, or exempt one line with
-  `// oxlint-disable-next-line <rule> -- <reason>`. `no-base-to-string`
-  rejects `String(unknown)`.
-- Hooks: oxfmt runs on every file written inside the repository (it skips
-  `docs/`; format a file written by a script with `pnpm format`), so re-read
-  a file before a follow-up Edit; `pnpm lint` runs before `git commit`. In
-  Markdown oxfmt unindents a list item's line that continues a code span:
-  keep each code span on one line.
-- Multi-line edit scripts: write them to the scratchpad and run the file;
-  a heredoc passed to the Bash tool turns `\\` into `\`.
+- `pnpm lint` treats every warning as an error. Fix the code, turn the rule
+  off in `.oxlintrc.json` with the reason beside it, or disable it for one
+  line with `// oxlint-disable-next-line <rule> -- <reason>`. The
+  `no-base-to-string` rule rejects `String(unknown)`.
+- A hook runs oxfmt on every file you write in the repository, except under
+  `docs/`. It can change the file after your edit, so re-read the file
+  before you edit it again. Files that a script writes aren't formatted, so
+  run `pnpm format` on them.
+- A hook runs `pnpm lint` before each `git commit` and blocks the commit if
+  lint fails.
+- In Markdown, oxfmt unindents a list item's continuation line that falls
+  inside a code span, so keep each code span on one line.
+- Write a multi-line edit script to a file in the scratchpad and run that
+  file. A heredoc passed to the Bash tool turns `\\` into `\`.

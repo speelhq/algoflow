@@ -8,10 +8,10 @@ paths:
 
 # The language core
 
-Before changing these folders, read `docs/spec/language/language.md`,
-`docs/spec/blocks/blocks.md`, and `docs/spec/runtime/` (`interpreter.md`,
-`emitter.md`, `parser.md`), whole.
+Before you change these folders, read all of
+`docs/spec/language/language.md`, `docs/spec/blocks/blocks.md`, and
+`docs/spec/runtime/` (`interpreter.md`, `emitter.md`, `parser.md`).
 
-- A block is added with `/add-block`.
-- Where a Semantics rule is tested is stated in `language.md`, Semantics; a
-  block's test obligations are in `blocks.md`, Verification.
+- Add a block with `/add-block`.
+- `language.md`, Semantics, says where each Semantics rule is tested, and
+  `blocks.md`, Verification, lists the tests each block needs.
