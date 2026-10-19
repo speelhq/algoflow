@@ -1,22 +1,25 @@
 # Design artboards
 
-One PNG for each current artboard, exported at the size of the artboard.
-An artboard shows the appearance of a screen and the spec (`docs/spec/ui/`)
-states its behaviour; where they differ the spec is the decision, and a
-better option than either is proposed
-(`CLAUDE.md`, Judgment). A screen or a state of one that the spec
-describes and no artboard draws, or a difference from its artboard the code
-cannot follow, is an issue labelled `decision`, with a proposal, of the
-release that builds the screen: filed when that release is planned
-(`/milestone`) or when its work finds it, never earlier: planning a release
-finds every screen it builds without an artboard, so an issue filed before
-then would only repeat the spec and go stale. A session draws the artboard
-in its Claude Design file once the developer decides the issue.
+This folder holds one PNG for each current artboard, exported at the
+artboard's size. An artboard shows how a screen looks, and the spec
+(`docs/spec/ui/`) states how it behaves. Where they differ, the spec is the
+decision, and a session proposes any option better than either
+(`CLAUDE.md`, Judgment).
+
+A screen, or a state of one, that the spec describes and no artboard draws
+becomes an issue labeled `decision`, with a proposal, in the release that
+builds the screen. So does a difference from its artboard that the code
+can't follow. The issue is filed when that release is planned
+(`/milestone`) or when its work finds the gap, and never earlier. Planning a
+release finds every screen it builds that has no artboard, so an issue
+filed before then would only repeat the spec and go stale. A session draws
+the artboard in its Claude Design file once the developer decides the
+issue.
 
 ## Claude Design file "AlgoFlow Screens"
 
-Twenty-three artboards of 1280 × 800. Each PNG has the name of its artboard
-in the file.
+The file holds twenty-three artboards of 1280 × 800. Each PNG is named
+after its artboard in the file.
 
 | File | Artboard title | Spec (`docs/spec/`) |
 | --- | --- | --- |
@@ -46,53 +49,55 @@ in the file.
 
 ## Where the spec deviates from the artboards
 
-- `Accepted.png` labels the count of the work done `Steps`; it is `Events`
-  (`run.md`, Submission), as `step` names only what the position bar counts.
-- `Accepted.png` shows placeholders for the counts of events and loops, because
-  `heap-pop` has no challenge file; the same holds for any artboard of a problem
-  that does not exist yet.
+- `Accepted.png` labels the count of the work done `Steps`. The spec labels
+  it `Events` (`run.md`, Submission), because `step` names only what the
+  position bar counts.
+- `Accepted.png` shows placeholders for the counts of events and loops,
+  because `heap-pop` has no challenge file yet. Any artboard of a problem
+  that doesn't exist yet does the same.
 - `heap.py` on `PythonFiles.png` and the `heap_pop` chart on `Module.png` are
   drafts derived from the `heap` module (`modules.md`, Built-in modules),
   not emitted code.
-- `Main.png` names the first problem `Hello`; its challenge file is
+- `Main.png` names the first problem `Hello`. Its challenge file is
   `tutorial`, and the title is the one in that file.
 - `Main.png` notes that the page scrolls on to `Build a Tiny Neural
-  Network` and `More problems`; the spec has three plans, and every problem
-  is in one (`scope.md`, Curriculum).
-- `BuildEdit.png` and `EditValue.png` draw the node editor as high as its
-  list; while a list is shown the editor is 480 px high, its list scrolling
-  within it (`editor.md`, Node editor).
-- `Main.png` sets the row that `Continue` leads to on a coloured ground,
-  which `pages.md`, Problems page does not state; every row is drawn alike.
+  Network` and `More problems`. The spec has three plans, and every problem
+  is in one of them (`scope.md`, Curriculum).
+- `BuildEdit.png` and `EditValue.png` draw the node editor as tall as its
+  list. While a list is shown, the editor is 480 px tall and its list
+  scrolls inside it (`editor.md`, Node editor).
+- `Main.png` puts the row that `Continue` leads to on a colored background,
+  which `pages.md`, Problems page doesn't state. Every row is drawn alike.
 - `Run.png` and `Wrong.png` fold the `Output` and `Expected` columns to
-  `… n more`; the `Result` tab shows every line (`pages.md`, Result tab),
-  and only the `Example` of the `Problem` tab folds (`pages.md`, Problem
+  `… n more`. The `Result` tab shows every line (`pages.md`, Result tab),
+  and only the `Example` in the `Problem` tab folds (`pages.md`, Problem
   tab).
-- The grey sentences under the rows of `Run.png` and `Wrong.png` annotate
-  the artboards and are not part of the screen.
-- Every artboard that shows a node, a value, or the narration writes the
+- The gray sentences under the rows of `Run.png` and `Wrong.png` annotate
+  the artboards and aren't part of the screen.
+- Every artboard that shows a node, a value, or the narration uses the
   notation the blocks had before `blocks.md`, Node text set it
-  (`Set i to 1`, `(remainder of i divided by 15) = 0?`, `n = 15`); the node
-  text is the spec's until the artboards are drawn again.
-- The artboards use a hand-drawn typeface to mark them as drafts; the
+  (`Set i to 1`, `(remainder of i divided by 15) = 0?`, `n = 15`). The node
+  text in the spec applies until the artboards are drawn again.
+- The artboards use a hand-drawn typeface to mark them as drafts. The
   application uses the typeface of `src/ui/theme.css`.
 
 ## Exporting
 
-An artboard is one file of its Claude Design file. It is rendered alone in a
-browser at the size the file declares for it and captured as a PNG under the
-name of the artboard. The Claude Design files remain the working copies, and
-a changed artboard is exported again in the pull request that changes the
-spec it affects. An artboard that a later artboard or the spec has replaced
-has no PNG, because a PNG in the repository is read as the source of a
-screen. The words are Claude Design's own, artboard and its file, so
-`canvas` names the page's region that holds the chart.
+Each artboard is one file in its Claude Design file. To export it, render
+it alone in a browser at the size the file declares for it, and capture it
+as a PNG named after the artboard. The Claude Design files stay the working
+copies. When an artboard changes, export it again in the pull request that
+changes the spec it affects. An artboard that a later artboard or the spec
+has replaced has no PNG, because a PNG in the repository is read as the
+source of a screen. The words "artboard" and "file" are Claude Design's
+own, which leaves `canvas` free to name the page's region that holds the
+chart.
 
 | Claude Design file | Holds                                         |
 | ------------------ | --------------------------------------------- |
 | [AlgoFlow Screens](https://claude.ai/artifact/SD2jKu4HfkPTh4CoeS7Tpe) | the twenty-three artboards above |
 | [AlgoFlow Redesign](https://claude.ai/artifact/D91141RiyMCW4XLsyJk8E5) | the flowchart and loop-notation studies; no exported artboard |
 
-The files open only for their owner and the people they are shared with.
-The links sit here, beside the export procedure, because whoever exports
-again needs them, and a link reveals nothing to anyone without access.
+Only a file's owner and the people it is shared with can open it. The
+links are kept here, next to the export steps, because whoever exports
+again needs them, and a link shows nothing to anyone without access.
