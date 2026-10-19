@@ -80,7 +80,7 @@ others miss.
 
 ## 5. Finish
 
-1. Make the unpushed commits final (`CLAUDE.md`, Issues and commits).
+1. Make the branch's commits final (`CLAUDE.md`, Issues and commits).
 2. Run these and keep their output: `pnpm lint`, `pnpm format --check`,
    `pnpm test`, `pnpm check`, `pnpm build`, `pnpm test:e2e`, and
    `pnpm commits origin/main..HEAD`.
