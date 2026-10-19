@@ -81,9 +81,8 @@ others miss.
 ## 5. Finish
 
 1. Make the branch's commits final (`CLAUDE.md`, Issues and commits).
-2. Run these and keep their output: `pnpm lint`, `pnpm format --check`,
-   `pnpm test`, `pnpm check`, `pnpm build`, `pnpm test:e2e`, and
-   `pnpm commits origin/main..HEAD`.
+2. Run each check that `.github/workflows/ci.yml` runs, and keep its
+   output. Run its commits check as `pnpm commits origin/main..HEAD`.
 3. After approval, push and open one pull request against `main`. Title it
    as a commit subject, and write its body from
    `.github/pull_request_template.md` (`CLAUDE.md`, Issues and commits):

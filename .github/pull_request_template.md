@@ -19,9 +19,8 @@
 
 ## Testing
 
-<!-- Paste the output of `pnpm lint`, `pnpm test <path>`, `pnpm check`, and
-     any other command that applies, so a reviewer can check the result
-     without running them. -->
+<!-- Paste the output of each check that `.github/workflows/ci.yml` runs,
+     so a reviewer can check the result without running them. -->
 
 ## Screenshots
 
