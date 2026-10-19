@@ -1,6 +1,7 @@
 ---
 name: Task
 about: Work to do, rather than a problem to decide or fix
+labels: task
 ---
 
 ## Summary
