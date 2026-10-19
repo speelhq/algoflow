@@ -12,10 +12,10 @@ A milestone is a release named `vX.Y.Z`. Its description states the goal
 and the exit criterion. Until the plan below splits it into issues, the
 description also holds the scope, in a paragraph that starts with
 `Scope:`, and the split replaces that paragraph with a pointer to the
-issues. The issues wait for the plan because issues written months ahead
-would describe screens whose artboards aren't settled. Replacing the
-paragraph keeps the scope in one place and shows that the split is done. A
-release closes when its exit criterion holds on `main`, which is then
+issues, because replacing the paragraph keeps the scope in one place and
+shows that the split is done. The issues wait for the plan because issues
+written months ahead would describe screens whose artboards aren't settled.
+A release closes when its exit criterion holds on `main`, which is then
 tagged `vX.Y.Z` with a GitHub release.
 
 Plan and judge only from files you have read yourself (`CLAUDE.md`,

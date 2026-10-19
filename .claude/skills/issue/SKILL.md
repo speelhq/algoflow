@@ -30,9 +30,9 @@ Judgment).
 ## 2. Decide
 
 1. If the issue is too large for one pull request (`CLAUDE.md`, Issues and
-   commits), propose a split and wait. A pull request that stands alone is
-   never stacked or retargeted, is reviewed while it is small, and can be
-   released as soon as it merges.
+   commits), propose a split and wait, because a pull request that stands
+   alone is never stacked or retargeted, is reviewed while it is small, and
+   can be released as soon as it merges.
 2. If the work would change an approach, the spec, or an artboard, or it
    conflicts with the spec, propose and wait (`CLAUDE.md`, Judgment).
    Handle a screen state that no artboard draws, or a difference from the
