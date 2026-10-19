@@ -6,11 +6,13 @@ paths:
 
 # The end-to-end tests
 
-The specs they check are in `docs/spec/ui/`; the screenshot suite is stated in `pages.md`,
-Verification.
+The specs these tests check are in `docs/spec/ui/`, and `pages.md`,
+Verification, describes the screenshot suite.
 
-- The suite runs against `dist/`, so build first.
-- The tests load a finished program through storage (the restore path of
-  `docs/spec/challenges/challenges.md`, Opening and bundling). Building each through the
-  `+` menu would make every test of running or submitting depend on the editor, which the
-  editing tests cover, and a development-only hook for loading would be UI no test covers.
+- The suite runs against `dist/`, so run `pnpm build` first.
+- The tests load a finished program through storage (the restore path in
+  `docs/spec/challenges/challenges.md`, Opening and bundling). Don't build
+  the programs through the `+` menu instead: every test of running or
+  submitting would then depend on the editor, which the editing tests
+  already cover. A development-only hook for loading would add UI that no
+  test covers.

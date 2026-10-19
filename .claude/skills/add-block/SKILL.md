@@ -7,25 +7,26 @@ allowed-tools: Bash(pnpm test *) Bash(pnpm lint)
 
 Add the block described in $ARGUMENTS.
 
-1. Read `docs/spec/blocks/blocks.md` and find the block's row; read the
-   Semantics heading of `docs/spec/language/language.md` that names the
-   block, if one does. A block with no row is a choice the spec does not
-   cover: propose the row (`CLAUDE.md`, Judgment) and wait; once agreed,
-   the row, with its reason where `docs/spec/README.md`, Reasons asks for one, is
-   committed before any code.
+1. Read `docs/spec/blocks/blocks.md` and find the block's row. If a
+   Semantics heading in `docs/spec/language/language.md` names the block,
+   read it too. If the block has no row, the spec doesn't cover it yet:
+   propose the row (`CLAUDE.md`, Judgment) and wait. Once the developer
+   agrees, commit the row before any code, with its reason where
+   `docs/spec/README.md`, Reasons, asks for one.
 2. Read `src/blocks/registry.ts` and one existing block of the same shape.
-3. Create `src/blocks/<key>.ts` exporting the block's `BlockDef` with the fields
-   of `blocks.md`, The block definition, that the block needs. Its `notation()`
-   equals the row's notation column, and the emitted Python equals the row's
-   Python column, exactly.
-4. Add `block.<key>.label`, `block.<key>.help`, and a `block.<key>.slot.<slot>`
-   per slot the editor shows to `src/i18n/en.json`, and to `ja.json` if that
-   file exists (`blocks.md`, Catalog keys); a named menu entry adds
-   `block.<key>.<name>.label` and `.help`.
+3. Create `src/blocks/<key>.ts`, exporting the block's `BlockDef` with the
+   fields from `blocks.md`, The block definition, that the block needs. Its
+   `notation()` must equal the row's notation column, and the Python it
+   emits must equal the row's Python column, exactly.
+4. Add `block.<key>.label`, `block.<key>.help`, and one
+   `block.<key>.slot.<slot>` for each slot the editor shows to
+   `src/i18n/en.json`, and to `ja.json` if that file exists (`blocks.md`,
+   Catalog keys). A named menu entry also needs `block.<key>.<name>.label`
+   and `.help`.
 5. Register the block in `src/blocks/registry.ts`.
-6. Add the tests of `blocks.md`, Verification: the exact emitted Python text,
-   the interpreter's event sequence and result, one test per Semantics rule
-   under the block's heading, and one test per error code the block can
-   raise.
+6. Add the tests that `blocks.md`, Verification, requires: the exact
+   emitted Python, the interpreter's event sequence and result, one test
+   for each Semantics rule under the block's heading, and one test for each
+   error code the block can raise.
 7. Run `pnpm test src/blocks src/python src/runtime` and `pnpm lint`.
-8. Recap: key, emitted Python, test files.
+8. End with a recap: the key, the emitted Python, and the test files.

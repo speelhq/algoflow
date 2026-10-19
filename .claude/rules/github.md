@@ -6,13 +6,20 @@ paths:
 
 # Issues and pull requests
 
-- An issue's body takes the sections of its kind's template (its `about` line says when the
-  kind applies), since no tool applies a template; it takes the template's label, and the
-  release that takes it as its milestone, if any. A section that does not apply says `None`
-  and why, as an omitted one reads like a forgotten one.
-- A problem's title states the problem as a fact; a task's title names the work. The title
-  and the Summary state it in words, and the Spec section quotes each statement with its
-  file and heading.
-- A problem idea is an issue labelled `challenge` that names the study plan it joins, with
-  no milestone until a release takes it.
-- A pull request's body follows `.github/pull_request_template.md` (`/issue`, Finish).
+- Give an issue's body the sections of its kind's template. The template's
+  `about` line says when that kind applies, and no tool applies the
+  template for you.
+- Give the issue the template's label, and the milestone of the release
+  that takes it, if any.
+- Under a section that doesn't apply, write `None` and why, because a
+  missing section looks forgotten.
+- Title a problem to decide or fix as a statement of fact ("The run bar has
+  no Step over"). Title a task with the work it names ("Rename getChallenge
+  to findChallenge"). Write the title and the Summary in plain words, not
+  in code or quotes.
+- In the Spec section, quote each statement with its file and heading.
+- Record an idea for a learner's problem as an issue labeled `challenge`
+  that names the study plan it joins. It gets no milestone until a release
+  takes it.
+- Write a pull request's body from `.github/pull_request_template.md`
+  (`/issue`, Finish).

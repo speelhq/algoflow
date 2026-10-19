@@ -14,14 +14,18 @@ paths:
 
 # Tooling
 
-`scripts/check.ts` implements `docs/spec/challenges/challenges.md`, Checks, the CPython check
-of `docs/spec/runtime/interpreter.md`, and the checks of `docs/spec/ui/pages.md`, Catalogs;
-read them before changing it.
+`scripts/check.ts` implements three parts of the spec. Read them before you
+change it:
 
-- `@types/node` stays on the major of `.node-version`: types from a later major accept APIs
-  that CI's Node lacks while every check passes.
-- `pnpm lint` type-checks (`--type-check`) and `pnpm build` does not, so each type is
-  checked once.
-- `pnpm check` is one script that runs the i18n check itself: pnpm appends command-line
-  arguments to the end of a script, so a chained second script would receive
-  `challenges/x.json`.
+- `docs/spec/challenges/challenges.md`, Checks
+- the CPython check in `docs/spec/runtime/interpreter.md`
+- the checks in `docs/spec/ui/pages.md`, Catalogs
+
+- Keep `@types/node` on the major version in `.node-version`. Types from a
+  later major accept APIs that CI's Node lacks, and every check would
+  still pass.
+- `pnpm lint` type-checks (`--type-check`) and `pnpm build` doesn't, so
+  each type is checked once.
+- Keep `pnpm check` a single script that runs the i18n check itself. pnpm
+  appends command-line arguments to the end of a script, so a second,
+  chained script would receive `challenges/x.json`.
