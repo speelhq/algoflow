@@ -1,89 +1,109 @@
 # Architecture
 
-AlgoFlow is a block-based algorithm learning tool that runs entirely in the
-browser (`docs/spec/scope/`). Its blocks are a fixed Python subset; functions and classes
-can be moved into modules and reused across programs (`docs/spec/modules/`).
+AlgoFlow is a block-based tool for learning algorithms, and it runs entirely
+in the browser (`docs/spec/scope/`). Its blocks cover a fixed subset of
+Python. Functions and classes can be moved into modules and reused across
+programs (`docs/spec/modules/`).
 
 ## Fixed choices
 
-- TypeScript 7 (its Go compiler is the `tsc` binary), Oxlint with
-  `oxlint-tsgolint`, and Oxfmt; never ESLint, Prettier, or a TypeScript
-  earlier than 7.
-- shadcn/ui on Base UI (not Radix), dnd-kit, and Zustand.
-- No graph, flow, or editor library: the chart is laid out from the
-  `Program` by the application and never positioned by hand (`docs/spec/ui/chart.md`), which
-  leaves nothing for a library of freely placed nodes and edges to do.
-- `src/lang`, `src/runtime`, `src/python`, and `src/blocks` import only each
-  other: through `@/` across folders and `./` within one, never `../`; tests
-  may add `vitest` and `@/i18n` (`.oxlintrc.json`).
-- One block per file in `src/blocks/`; nothing else branches on block kind
-  or name (`docs/spec/blocks/`): every consumer reads a block's
-  declarations, so a block added later works in the menu, the chart, and
-  the editor with no other change.
-- Every user-visible string comes from `src/i18n/en.json`, so Japanese is
-  one more catalog of the same keys.
-- `int` and `float` are distinct values; lists, dicts, and objects reside
+These choices are settled. Change one only through a proposal to the
+developer (`CLAUDE.md`, Judgment).
+
+- Use TypeScript 7, whose Go compiler is the `tsc` binary, with Oxlint
+  (`oxlint-tsgolint`) and Oxfmt. Don't add ESLint or Prettier, and don't use a
+  TypeScript earlier than 7.
+- The app uses shadcn/ui on Base UI (not Radix), dnd-kit, and Zustand.
+- Don't add a graph, flow, or editor library. The app lays the chart out
+  from the `Program` and nothing is positioned by hand
+  (`docs/spec/ui/chart.md`), so a library for freely placed nodes and edges
+  would have nothing to do.
+- `src/lang`, `src/runtime`, `src/python`, and `src/blocks` import only from
+  one another: through `@/` across folders and `./` within one, never
+  `../`. Their tests may also import `vitest` and `@/i18n`. `.oxlintrc.json`
+  enforces this.
+- Each block lives in its own file in `src/blocks/`, and no other code
+  branches on a block's kind or name (`docs/spec/blocks/`). Every consumer
+  reads the block's declarations instead, so a new block works in the menu,
+  the chart, and the editor with no other change.
+- Every user-visible string comes from `src/i18n/en.json`, so adding
+  Japanese means adding one more catalog with the same keys.
+- `int` and `float` are distinct values, and lists, dicts, and objects live
   on the heap (`docs/spec/language/`).
 
 ## Code map
 
-Data flows one way, and nothing below `src/store` depends on React, so the
-core runs under Vitest and in `scripts/check.ts` without a browser.
+Each layer depends only on the layers below it: `src/ui` on `src/store`,
+and `src/store` on the core (`src/lang`, `src/blocks`, `src/runtime`,
+`src/python`, `src/challenges`, and `src/i18n`). Nothing below `src/store`
+depends on React, so the core runs under Vitest and in `scripts/check.ts`
+without a browser.
 
-- `src/lang` — the `Program` AST (`types.ts`), `validate()` → `Diagnostic[]`
-  run after every edit and before every run, pure edit functions returning a
-  new `Program` (`edit.ts`), and `Data` ⇄ `Value`/heap conversion
-  (`data.ts`). A `Program` is never mutated in place: `validate()`,
-  `refusedDefinitions()`, and `nodesById()` are memoized per `Program` object,
-  and the undo history holds earlier programs.
-- `src/blocks` — one `BlockDef` per block owning its slots, `create()`, `run`
-  (interpreter behaviour), `python()` (exact emitted text), and `chart`
-  (`docs/spec/blocks/`). `registry.ts` is the only registry; the interpreter,
-  the emitter, the chart, the block menu, and the node editor dispatch
-  through it.
-- `src/runtime` — `run()` returns a `Runner` whose `next()` yields one
-  event, or `Done` at the end (`docs/spec/runtime/interpreter.md`). Events
-  are the facts of a run, in Python's order, and a run is deterministic; the
-  driver groups them into the visible steps the UI shows (`src/store/steps.ts`),
-  and `Done` counts the events.
-- `src/python` — `emit()` produces the Python file plus a NodeId → line map;
-  `parse()` turns typed expression text back into `Expr`; `unparse(parse(s))`
-  is a fixed point (`docs/spec/runtime/parser.md`). Emitted Python is the behavioural reference, not
-  the interpreter.
-- `src/challenges` — the schema types (`types.ts`), the bundled challenges
-  and plans (`index.ts`, `plans.ts`), the judge shared with
-  `scripts/check.ts` (`judge.ts`), the `Result` rows (`rows.ts`), and a
-  plan's button and the next problem (`next.ts`).
-- `src/store` — Zustand stores: `program` (the open program, its undo
-  history, and its persistence), `playground` (the Playground programs'
-  index), `editor` (the hovered and the selected node), `run` (the
-  pre-running, timer-driven driver), `tests` (submission verdicts), `progress`
-  (per-problem status under `algoflow:progress`), and `layout` (panel width,
-  collapse, and playback speed under `algoflow:layout`); `mode.ts` derives
-  the page's mode (build, solution, running, ended) from `run` and `editor`,
-  and every check of what the page allows reads it; `batches.ts` is the one
-  loop that works through a run in batches; `steps.ts` reads a run one
-  visible step at a time, an exchange of two places as one; `open.ts` is the one way a
-  page's program is opened; `storage.ts` holds every read and write
-  of `localStorage`.
-- `src/ui/primitives` — shadcn components generated on Base UI, regenerated
-  as `.claude/rules/ui.md` states; `src/lib/utils.ts` holds `cn()` and `clamp()`.
-- `src/ui/app` — the page shell. Routes are parsed by hand (`route.ts`): four
-  hash routes with at most one parameter are one function and one
-  `hashchange` listener, read through `useSyncExternalStore`; a router
-  would bring nested layouts, loaders, and history modes that a
-  hash-addressed single page does not use. The listener opens a route's
-  program before it tells React, so a page never draws with the program of
-  the page before. The panel's resize handle is `ResizeHandle.tsx`, as
-  `react-resizable-panels` works in percentages where the spec states
-  pixels.
-- `src/ui` — React. The chart is an SVG flowchart with computed layout
-  (`src/ui/chart/layout.ts`); node text and narration are plain
-  strings from `src/ui/chart/text.ts` and `src/ui/run/narrate.ts`, and
-  `text.ts` holds the one reading of a notation; the node editor's state is
-  a session that changes only through pure steps
-  (`src/ui/editor/session.ts`); variable views are chosen by value type only
-  (`docs/spec/ui/views.md`), never by block or challenge.
-- `challenges/<id>.json` — one file per challenge, checked by
-  `scripts/check.ts`, which runs every solution in the interpreter and in
-  CPython and compares both (`docs/spec/challenges/`).
+- `src/lang`: the `Program` AST (`types.ts`), `validate()`, pure edit
+  functions that return a new `Program` (`edit.ts`), and the conversion
+  between `Data` and `Value`, which places lists, dicts, and objects on the
+  heap (`data.ts`). `validate()` returns `Diagnostic[]` and runs after every
+  edit and before every run. Never change a `Program` in place:
+  `validate()`, `refusedDefinitions()`, and `nodesById()` are memoized per
+  `Program` object, and the undo history keeps earlier programs.
+- `src/blocks`: one `BlockDef` per block. It owns the block's slots,
+  `create()`, `run` (what the interpreter does), `python()` (the exact
+  Python it emits), and `chart` (`docs/spec/blocks/`). `registry.ts` is the
+  only registry, and the interpreter, the emitter, the chart, the block
+  menu, and the node editor all reach blocks through it.
+- `src/runtime`: `run()` returns a `Runner` whose `next()` returns one event
+  at a time, then `Done`, which counts the events
+  (`docs/spec/runtime/interpreter.md`). Each event records one thing the run
+  did, in the order Python would do it, and a run is deterministic. The
+  driver groups events into the visible steps the UI shows
+  (`src/store/steps.ts`).
+- `src/python`: `emit()` produces the Python file and a map from each
+  `NodeId` to its line. `parse()` turns typed expression text back into an
+  `Expr`, and `unparse(parse(s))` is a fixed point
+  (`docs/spec/runtime/parser.md`). The emitted Python, not the interpreter,
+  is the reference for how a program behaves.
+- `src/challenges`: the challenge schema, the bundled challenges and study
+  plans, and the judge (`judge.ts`), which `scripts/check.ts` also uses.
+- `src/store`: the Zustand stores, and the modules that work with them.
+  - `program`: the open program, its undo history, and its persistence.
+  - `playground`: the index of Playground programs.
+  - `editor`: the hovered and the selected node.
+  - `run`: the driver, which runs ahead and then plays back on a timer.
+  - `tests`: the submission verdicts.
+  - `progress`: each problem's status.
+  - `layout`: the panel width, collapse, and playback speed.
+
+  Each module below is the only place for its rule, so change the rule
+  there:
+  - `mode.ts` derives the page's mode (build, solution, running, ended)
+    from `run` and `editor`, and every check of what the page allows reads
+    it.
+  - `batches.ts` is the one loop that works through a run in batches.
+  - `steps.ts` reads a run one visible step at a time and groups the two
+    writes of a swap into one step.
+  - `open.ts` is the one way to open a page's program.
+  - `storage.ts` holds every read and write of `localStorage`.
+
+- `src/ui/primitives`: shadcn components generated on Base UI. Regenerate
+  them as `.claude/rules/ui.md` describes. `src/lib/utils.ts` holds `cn()`
+  and `clamp()`.
+- `src/ui/app`: the page shell. `route.ts` parses the four hash routes by
+  hand, each with at most one parameter, in one function with one
+  `hashchange` listener that React reads through `useSyncExternalStore`. A
+  router library would bring nested layouts, loaders, and history modes
+  that a single page addressed by its hash doesn't use. The listener opens
+  a route's program before it notifies React, so a page never renders with
+  the previous page's program. The panel's resize handle is the app's own
+  `ResizeHandle.tsx` rather than `react-resizable-panels`, which works in
+  percentages where the spec gives sizes in pixels.
+- The rest of `src/ui`: React components. The chart is an SVG flowchart
+  with a computed layout (`src/ui/chart/layout.ts`). Node text and
+  narration are plain strings from `src/ui/chart/text.ts` and
+  `src/ui/run/narrate.ts`, and `text.ts` is the only code that splits a
+  notation into its pieces. The node editor's state is a session that
+  changes only through pure steps (`src/ui/editor/session.ts`). A
+  variable's view is chosen by the type of its value alone, never by block
+  or challenge (`docs/spec/ui/views.md`).
+- `challenges/<id>.json`: one file per challenge. `scripts/check.ts` runs
+  every solution in both the interpreter and CPython and compares the
+  results (`docs/spec/challenges/`).
