@@ -38,7 +38,7 @@ export type BlockDef = {
   chart?:
     | { branch: { cond: string; yes: string; no: string } }
     | { check: { cond: string; body: string } }
-    | { counted: { body: string; init: string; check: string; step: string } }
+    | { counted: { body: string; init: string; check: string; update: string } }
     | { jump: "exit" | "next" }; // Chart shape
 };
 export type Param = { name: string; optional?: true }; // `name` as the notation writes it
@@ -293,7 +293,7 @@ the emitter.
 
 The texts of a counted loop's generated nodes, with `{slot}` placeholders:
 
-| key       | init                    | check                     | step                 |
+| key       | init                    | check                     | update               |
 | --------- | ----------------------- | ------------------------- | -------------------- |
 | `for`     | `{var} ← {start}`       | `{var} < {stop}`          | `{var} ← {var} + 1`  |
 | `foreach` | `First item of {list}`  | `{list} has another item` | `{var} ← next item` |
@@ -301,12 +301,12 @@ The texts of a counted loop's generated nodes, with `{slot}` placeholders:
 A check is drawn the way every diamond asks its condition (`chart.md`,
 Shapes: `i < n + 1?`), so a diamond's `?` follows one rule.
 
-The texts of `for` are notation, declared by the block and the same in
-every locale. Those of `foreach` hold words, because its steps have no
-expression to write (Python keeps the position hidden). They are its
-catalog keys `block.foreach.init`, `check`, and `step`, translated, and
-they are the only node texts in words. A counted loop's own notation names
-it in the block menu and the editor (`for`'s notation is its init).
+The texts of `for` are notation, declared by the block and the same in every
+locale. Those of `foreach` hold words, because its generated nodes have no
+expression to write (Python keeps the position hidden). They are its catalog
+keys `block.foreach.init`, `check`, and `update`, translated, and they are the
+only node texts in words. A counted loop's own notation names it in the block
+menu and the editor (`for`'s notation is its init).
 
 ## Menu entries
 

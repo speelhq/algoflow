@@ -79,7 +79,7 @@ When a statement changes, its reason changes with it.
 | program         | one `Program` AST (`language.md`)                                               |
 | block           | a `BlockDef` in `src/blocks/` and its entry in the block menu (`blocks.md`)     |
 | node            | chart rendering of one statement (a box, a diamond, or a terminal)              |
-| generated node  | a node the chart draws for a loop's init, check, or step. The node belongs to the loop. |
+| generated node  | a node the chart draws for a loop's init, check, or update. The node belongs to the loop. |
 | `Node`, `NodeId` | in the code, a statement or an expression of a program (`language.md`, Statements; Expressions), and the id it carries. A function and a class carry a `NodeId` too (`language.md`, Program), and a statement's node on the chart carries its statement's `NodeId`. |
 | region          | an ordered list of statements inside a branch or loop, or at top level          |
 | compound statement | a branch or a loop, as Python names it: a statement that holds a region in a slot of role `body` (`blocks.md`, The block definition) |
