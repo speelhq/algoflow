@@ -36,60 +36,62 @@ export type Topic = "output" | "variables" | "loops" | "conditions" | "lists" | 
 
 ## Checks
 
-For every challenge `scripts/check.ts` checks the schema, the `edge`, `ja`,
-and input-value rules below, validates (`language.md`) `solution` with the
-built-in modules (`modules.md`, Built-in modules), and runs it on every test in the
-interpreter against `expect` (Judging). What the hints name, in their order
-(Hints), is reviewed, not checked. The check, not `validate()`, checks input
-names: an input has no NodeId to attach a diagnostic to, and no edit
-changes it.
+For every challenge, `scripts/check.ts` checks the schema and the `edge`,
+`ja`, and input-value rules below. It validates `solution` as `language.md`
+states, with the built-in modules (`modules.md`, Built-in modules), and runs
+it on every test in the interpreter against `expect` (Judging). What the hints
+name, in their order (Hints), is reviewed, not checked. The check, not
+`validate()`, checks input names, because an input has no NodeId to attach a
+diagnostic to, and no edit changes it.
 
-A `solution` is written in the version `migrate()` returns (`language.md`,
-Storage): the application bundles a challenge file as it is, with no
-`migrate()`, so an older version would reach the chart unmigrated.
+A `solution` is written in the version that `migrate()` returns
+(`language.md`, Storage), because the application bundles a challenge file
+as it is, with no `migrate()`, so an older version would reach the chart
+unmigrated.
 
 Every challenge has at least one test with `edge: true`, a boundary case
 such as an empty list, zero, or a single item. It is a flag, not a name
-beginning with `edge:`: a test has no shown name (cases are shown by their
-inputs), and a name would need a Japanese text.
+that begins with `edge:`, because a test has no shown name (cases are shown
+by their inputs), and a name would need a Japanese text.
 
-Every value of a test's `inputs` is one the blocks write: its Python text
-(`emitter.md`) parses (`parser.md`), so that `Open in Playground` makes it
-an assignment (`pages.md`, Help and `⋯`).
+Every value of a test's `inputs` is one that the blocks write: its Python
+text (`emitter.md`) parses (`parser.md`), so that `Open in Playground`
+makes it an assignment (`pages.md`, Help and `⋯`).
 
 Every `Localized` text of a challenge, a plan, and a built-in module has its
 `ja` text (`scope.md`, Product).
 
-`scripts/check.ts` fails on a `ja` text of a challenge, a plan, or a
-built-in module that holds a word the glossary avoids, compared as
-`pages.md`, Catalogs states, naming the file, the field, and the word.
+`scripts/check.ts` fails on a `ja` text of a challenge, a plan, or a built-in
+module that holds a word the glossary avoids, compared as `pages.md`,
+Catalogs, states, and it names the file, the field, and the word.
 
-Every challenge is in exactly one plan, once: `scripts/check.ts` fails on a
-plan member with no challenge file, a member listed twice, a challenge in
-two plans, and a challenge in no plan. A problem in no plan would need a
-section, an order, and a `Next problem` rule of its own; a problem no plan
+Every challenge is in exactly one plan, once. `scripts/check.ts` fails on a
+plan member with no challenge file, a member listed twice, a challenge in two
+plans, and a challenge in no plan. A problem in no plan would need a section,
+an order, and a `Next problem` rule of its own, so a problem that no plan
 takes yet waits as a `challenge` issue.
 
 `plans.json` lists a plan once the file of its first member in `scope.md`,
-Curriculum, exists, with the members whose files exist, in that order;
-`scripts/check.ts` rejects a plan with no problems, which would draw an
-inert card (`0 of 0 solved`, `Start` with no destination). Membership and
-order are not checked against the curriculum by code: its table copied into
-`scripts/` would be a second copy, and `plans.json` as the authority would
-take the curriculum out of the spec.
+Curriculum, exists, with the members whose files exist, in that order.
+`scripts/check.ts` rejects a plan with no problems, because such a plan would
+draw a card that reads `0 of 0 solved` and has a `Start` with no destination.
+No code checks membership and order against the curriculum, because the
+curriculum's table copied into `scripts/` would be a second copy, and
+`plans.json` as the authority would take the curriculum out of the spec.
 
 ## Modules and definitions
 
-`module` names the learner module the challenge's functions and classes
-belong to; the Accepted card then offers `Move to module <name>` (`run.md`,
-Submission).
+`module` names the learner module that the challenge's functions and
+classes belong to. The Accepted card then offers `Move to module <name>`
+(`run.md`, Submission).
 
-`defines` lists names the submission must define in the program or in a
-learner module; a name resolving to a built-in module is refused (`run.md`,
-Submission), and `scripts/check.ts` requires `solution` to define every
-listed name itself. The built-in module lets a learner who skipped a
-problem start anywhere with blocks that stay inspectable, but in a problem
-that asks for the definition it would pass without anything being built.
+`defines` lists names that the submission must define in the program or in a
+learner module. A listed name that resolves to a built-in module is refused
+(`run.md`, Submission), because in a problem that asks for the definition, the
+built-in module would pass without anything being built. The built-in module
+still lets a learner who skipped a problem start anywhere, with blocks that
+stay inspectable. `scripts/check.ts` requires `solution` to define every
+listed name itself.
 
 ## Hints
 
@@ -114,65 +116,68 @@ The plans and their members are those of `scope.md`, Curriculum.
 
 ## Progress
 
-Progress persists under `localStorage` `algoflow:progress` as
-`Record<id, { status: "attempted" | "solved"; hints: number; solution: boolean }>`:
-an entry appears on the first submission, hint, or shown solution, `solved`
-is set by an accepted submission and never cleared, `hints` is the number of
-hints revealed (`pages.md`, Problem tab), and `solution` whether the
-solution was shown (same). A shown solution makes the problem `attempted`,
-as a hint does: both used it. Event counts are not stored to compare
-problems: that would infer a relation between problems and store one more
-field.
+Progress persists under the `localStorage` key `algoflow:progress` as
+`Record<id, { status: "attempted" | "solved"; hints: number; solution: boolean }>`.
+An entry appears on the first submission, hint, or shown solution. An
+accepted submission sets `solved`, and nothing clears it. `hints` is the
+number of hints revealed (`pages.md`, Problem tab), and `solution` says
+whether the solution was shown (same). A shown solution makes the problem
+`attempted`, as a hint does, because in both cases the learner used help.
+Event counts aren't stored to compare problems, because that would infer a
+relation between problems and store one more field.
 
-A tab that records progress writes the stored record joined with its own,
-entry by entry: every entry of either, `solved` over `attempted`, the larger
-`hints`, and `solution` once either holds it.
+A browser tab that records progress writes the stored record joined with its
+own, entry by entry: every entry of either, `solved` over `attempted`, the
+larger `hints`, and `solution` once either holds it.
 
-A tab reads `algoflow:progress` again on the window's `storage` event for
-that key and joins it with its own record. Writing back the record a tab
+A browser tab reads `algoflow:progress` again on the window's `storage` event
+for that key and joins it with its own record. Writing back the record a tab
 read at load would erase what another tab recorded since, a solved problem
-included; every field only grows, so a join loses nothing and needs no time
-stamp, while the `storage` event alone would still lose an entry written
-before it arrives.
+included. Every field only grows, so a join loses nothing and needs no
+timestamp, while the `storage` event alone would still lose an entry written
+before the event arrives.
 
 ## Judging
 
 A test passes when every `expect.variables` entry equals the final
 main-level variable and `expect.stdout` equals `stdout()` line by line.
-Equality: ints exactly; floats within absolute 1e-6; strings, booleans,
-none exactly; lists element-wise; dicts by key set and values; objects by
-class, field set, and field values, identity ignored.
+Equality compares ints exactly, floats within an absolute 1e-6, and
+strings, booleans, and none exactly. It compares lists element by element,
+dicts by key set and values, and objects by class, field set, and field
+values, not by identity.
 
 A runtime error fails the test and is shown in its row.
 
 An accepted submission requires every test to pass.
 
-Run (`run.md`, Run bar) drives one runner with the inputs of the chosen case
-(`chart.md`, Input nodes) and judges that case at the end of the run
-(`pages.md`, Result tab); Submit (`run.md`, Submission) judges every test on
-its own runner in batches (`interpreter.md`, Driver) without affecting the
-driver; both use the modules the program uses (`modules.md`, Resolution),
-and every verdict comes from `src/challenges/judge.ts`, the rule
+Run (`run.md`, Run bar) drives one runner with the inputs of the chosen
+case (`chart.md`, Input nodes), and judges that case at the end of the run
+(`pages.md`, Result tab). Submit (`run.md`, Submission) judges every test on
+its own runner in batches (`interpreter.md`, Driver), without affecting the
+driver. Both use the modules the program uses (`modules.md`, Resolution),
+and every verdict comes from `src/challenges/judge.ts`, the rule that
 `scripts/check.ts` applies. Submit has runners of its own because judging
 through the driver would discard the learner's position.
 
 ## Opening and bundling
 
 Opening a problem restores its program from `localStorage` (`language.md`,
-Storage) or creates one with an empty `main`, with `challengeId` and
-`inputs` set; opening discards any runner (`interpreter.md`, Controls)
-and selects the first test's inputs for the Input nodes (`chart.md`, Input
-nodes).
+Storage), or creates one with an empty `main`, with `challengeId` and
+`inputs` set. Opening also discards any runner (`interpreter.md`,
+Controls) and selects the first test's inputs for the Input nodes
+(`chart.md`, Input nodes).
 
 The browser bundles `challenges/*.json` and `plans.json` at build time
-(`import.meta.glob` in `src/challenges/index.ts`); `scripts/check.ts` reads
-the files from disk. The schema types live in `src/challenges/types.ts`.
+(`import.meta.glob` in `src/challenges/index.ts`), and `scripts/check.ts`
+reads the files from disk. The schema types live in
+`src/challenges/types.ts`.
 
 ## Course plan (`course`)
 
-Inputs are `name: default`. Expectations are `expect.variables` unless
-`stdout` is stated. In the `edge tests` columns an entry written `edge: …`
-is a test with `edge: true`, and the text following it is descriptive only.
+Inputs are written `name: default`, and expectations are
+`expect.variables` unless `stdout` is stated. In the `edge tests`
+columns, an entry written `edge: …` is a test with `edge: true`, and the
+text after it only describes the test.
 
 | id             | difficulty, topics          | inputs                                 | expectation                                  | edge tests                                            |
 | -------------- | --------------------------- | -------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
@@ -191,14 +196,15 @@ is a test with `edge: true`, and the text following it is descriptive only.
 | reverse-list   | easy, lists                 | `nums: [1, 2, 3, 4]`                   | `nums = [4, 3, 2, 1]` in place with `swap`   | `edge: empty`; `edge: one`; odd length                |
 
 The tutorial prints two values, `print("Hello,", name)`, not
-`"Hello, " + name`, which would make its first action combine a text, an
-operator, and a variable before any problem introduces operators.
+`"Hello, " + name`, because that would make its first action combine a
+text, an operator, and a variable before any problem introduces
+operators.
 
 ## Data-structure plan (`structures`)
 
-Heap items are compared with `<`; a list item is compared by its item 0
-(`modules.md`, Built-in modules). `heap-push` and `heap-pop` carry
-`module: heap`; the later problems call `heap_push` and `heap_pop` from the
+Heap items are compared with `<`, and a list item is compared by its item
+0 (`modules.md`, Built-in modules). `heap-push` and `heap-pop` carry
+`module: heap`. The later problems call `heap_push` and `heap_pop` from the
 learner's `heap` module or the built-in one (`language.md`, Scope).
 
 | id             | difficulty, topics      | inputs                                            | expectation                                                                                                              | edge tests                                              |
@@ -221,5 +227,5 @@ learner's `heap` module or the built-in one (`language.md`, Scope).
 
 ## Verification
 
-`pnpm check` passes: every challenge, every test in both engines, the plans,
-and the built-in modules (`modules.md`, Built-in modules).
+`pnpm check` passes for every challenge, every test in both engines, the
+plans, and the built-in modules (`modules.md`, Built-in modules).
