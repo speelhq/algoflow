@@ -114,7 +114,8 @@ its own.
 
 Write commit messages in Conventional Commits form:
 
-- an imperative subject under 50 characters
+- an imperative subject under 50 characters that names the concrete
+  change, such as `fix(ui): keep the spaces a text holds`
 - a scope that is a folder of `src/`, or `scripts`, `docs`, or `ci`
 - a body only when the reason isn't evident from the subject
 - no trailers, including `Co-Authored-By`
@@ -122,6 +123,10 @@ Write commit messages in Conventional Commits form:
 In CI, `pnpm commits` checks the type, the scope, the subject's length,
 trailers, and fixup commits left unfolded. Don't mention Claude, the
 session, or the prompt in a commit message.
+
+Title a pull request in the same form as a commit subject. Open its body
+with one sentence on what it does, then fill in the sections of
+`.github/pull_request_template.md`.
 
 `main` accepts only rebase merges, after CI passes, so every commit you
 push ends up on `main`. A commit that a later commit undoes would then

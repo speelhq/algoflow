@@ -83,16 +83,17 @@ others miss.
 2. Run these and keep their output: `pnpm lint`, `pnpm format --check`,
    `pnpm test`, `pnpm check`, `pnpm build`, `pnpm test:e2e`, and
    `pnpm commits origin/main..HEAD`.
-3. After approval, push and open one pull request against `main`. Write its
-   body from `.github/pull_request_template.md`:
-   - What
+3. After approval, push and open one pull request against `main`. Title it
+   as a commit subject, and write its body from
+   `.github/pull_request_template.md` (`CLAUDE.md`, Issues and commits):
+   - one sentence on what the pull request does
+   - What changes: a bold label and a sentence per change, in the terms of
+     the spec
    - Why: the statements, the issue, and the milestone
-   - Closes: `Closes #$ARGUMENTS`, because GitHub closes an issue on merge
-     only when the body names it
-   - Verification: the command output, pasted, because pasted output is
-     evidence and a ticked checklist is only a claim
-   - Screenshots, when a screen changes
+   - Closes: `Closes #$ARGUMENTS`
+   - Testing: the output of the commands in step 2, pasted
+   - Screenshots: the images if a screen changes, otherwise `None`
    - Notes: deviations, open proposals, and the issue for each finding left
-     for later
+     for later, otherwise `None`
 4. End with a recap: the pull request, the Done when section with its
    evidence, every finding with its outcome, and the open proposals.

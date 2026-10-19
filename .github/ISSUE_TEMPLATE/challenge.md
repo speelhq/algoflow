@@ -1,40 +1,46 @@
 ---
 name: Challenge
-about: A problem idea, kept until a release takes it
+about: An idea for new problems, kept until a release takes it
 labels: challenge
 ---
 
 ## Summary
 
-<!-- One paragraph: what the problems practise and why a learner needs it,
-     in words. -->
+<!-- In one paragraph of plain words, say what the problems practice and
+     why a learner needs that practice.
+     Example: The last three problems of the `course` plan. Two more sorts
+     use the cases of `bubble-sort`, and `reverse-list` reverses a list in
+     place with `swap`. -->
 
 ## Problems
 
-<!-- One row per problem, in the form of the tables in
+<!-- Add one row per problem, in the columns of the tables in
      docs/spec/challenges/challenges.md: id, difficulty and topics, inputs,
      expectation, and edge tests. -->
 
 ## Plan
 
-<!-- The study plan the problems join, new or existing, and where in its
-     order; every problem is in one plan. -->
+<!-- Name the study plan the problems join, new or existing, and where they
+     go in its order. Every problem belongs to exactly one plan.
+     Example: `course`, after `bubble-sort`, in this order. `reverse-list`
+     ends the plan. -->
 
 ## Blocks needed
 
-<!-- Each block or module function a solution needs that is not registered,
-     with its statement quoted, or `no statement yet`; `None` when every one
-     is. -->
+<!-- List each block or module function a solution needs that isn't
+     registered yet, with its spec statement quoted, or `no statement yet`.
+     Write `None` if every one is registered. -->
 
 ## Spec
 
-<!-- Each statement the problems rely on (a block, a module, a plan),
-     quoted, with its file and heading; `None` with a reason when the
-     problems need nothing the spec does not state. -->
+<!-- Quote each statement the problems rely on (a block, a module, or a
+     plan), with its file and heading. Write `None` and the reason if the
+     problems need nothing the spec doesn't state. -->
 
 ## Done when
 
-<!-- Every block it needs is specified, then registered; each problem's
-     file passes pnpm check; the curriculum of docs/spec/scope/scope.md,
-     the table of docs/spec/challenges/challenges.md, and the plan it joins
-     list it. -->
+<!-- State the condition that closes the issue. Include these: every block
+     the problems need is specified and then registered, each problem's
+     file passes `pnpm check`, and the curriculum in
+     docs/spec/scope/scope.md, the table in
+     docs/spec/challenges/challenges.md, and the plan list each problem. -->
