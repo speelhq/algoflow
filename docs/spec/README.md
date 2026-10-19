@@ -82,6 +82,7 @@ When a statement changes, its reason changes with it.
 | generated node  | a node the chart draws for a loop's init, check, or step. The node belongs to the loop. |
 | `Node`, `NodeId` | in the code, a statement or an expression of a program (`language.md`, Statements; Expressions), and the id it carries. A function and a class carry a `NodeId` too (`language.md`, Program), and a statement's node on the chart carries its statement's `NodeId`. |
 | region          | an ordered list of statements inside a branch or loop, or at top level          |
+| compound statement | a branch or a loop, as Python names it: a statement that holds a region in a slot of role `body` (`blocks.md`, The block definition) |
 | slot            | one editable field of a block                                                   |
 | value line      | the one-line editor of an expression slot (`editor.md`, Value line)             |
 | notation        | a block's text on its node, the same in every locale (`blocks.md`, Node text)    |

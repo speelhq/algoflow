@@ -4,8 +4,9 @@ Code: `src/python/emit.ts`, `strings.ts`, `precedence.ts`. Tests:
 `emit.test.ts`, with the expression fixture `fixtures/expressions.ts`.
 
 `emit(program, inputs: Record<Id, Data>, modules: Module[]): { code: string; map: Record<NodeId, { start: number; end: number }>; modules }`
-returns the program's file and its line map, with 1-based inclusive lines.
-A frame maps to its header line, and `else:` has no entry in the map.
+returns the program's file and its line map, with 1-based inclusive lines. A
+compound statement maps to its header line, and `else:` has no entry in the
+map.
 
 Python is the only generated language. JavaScript, considered with Dart,
 has no int/float distinction, makes `-7 % 2` equal `-1`, has no `//`, and

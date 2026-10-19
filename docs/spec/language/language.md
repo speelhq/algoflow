@@ -309,8 +309,9 @@ doesn't bind (`delete`, `swap`), reads its expressions before the value is
 stored.
 
 A name first assigned inside `then`, `else`, or a loop body and referenced
-after that frame gives `E_DECLARE_FIRST`. `hoistAssign` fixes it by
-inserting `name = <default of the same type>` before the frame.
+after that compound statement gives `E_DECLARE_FIRST`. `hoistAssign` fixes it
+by inserting `name = <default of the same type>` before the compound
+statement.
 
 Functions see only their parameters and body. Field defaults see nothing.
 
@@ -318,9 +319,9 @@ A `for` or `foreach` variable is assigned by the loop statement in the
 region that contains the loop, so it stays visible after the loop. The
 bounds and the iterated list are read before the variable exists.
 
-`hoistAssign` takes the default from the first assignment to the name
-inside the frame: `num` → `0` (or `0.0` when float), `str` → `""`, `bool` →
-`False`, `list` → `[]`, `dict` → `{}`, and any other value → `None`.
+`hoistAssign` takes the default from the first assignment to the name inside
+the compound statement: `num` → `0` (or `0.0` when float), `str` → `""`,
+`bool` → `False`, `list` → `[]`, `dict` → `{}`, and any other value → `None`.
 
 A variable can't take the name of a function, a class, a builtin, or a module
 function or class the program uses (below) (`E_DUPLICATE_NAME`), because the
@@ -345,7 +346,7 @@ every edit and before every run.
 | Code               | Condition                                                   | params                    |
 | ------------------ | ----------------------------------------------------------- | ------------------------- |
 | `E_UNDEFINED`      | a name not visible (Scope)                                  | `name`                    |
-| `E_DECLARE_FIRST`  | a name first assigned in a frame and read after it (Scope)  | `name`, `frame`           |
+| `E_DECLARE_FIRST`  | a name first assigned in a compound statement and read after it (Scope) | `name`, `compound` |
 | `E_BAD_NAME`       | a name that breaks Identifiers                              | `name`                    |
 | `E_DUPLICATE_NAME` | a name taken twice (Program; Scope)                         | `name`                    |
 | `E_BREAK_OUTSIDE`  | `break`/`continue` outside a loop                           |                           |
@@ -368,16 +369,16 @@ Every edit keeps node ids unique.
 
 A statement position is
 `Place = { parent: NodeId | "main"; slot: "main" | "body" | "then" | "else"; index: number }`
-(`parent` is `"main"`, a function id, or a frame id). `insertStmt` and
-`moveStmt` take one.
+(`parent` is `"main"`, a function id, or a compound statement's id).
+`insertStmt` and `moveStmt` take one.
 
 `moveStmt` counts `index` in the target region after the moved statement
 has been removed, because the drop indicator is computed on the list
 without the dragged card.
 
-`hoistAssign(program, frame, name)` takes the id of the frame before which
-it inserts the assignment, which is the `frame` that `E_DECLARE_FIRST`
-reports.
+`hoistAssign(program, compound, name)` takes the id of the compound statement
+before which it inserts the assignment, which is the `compound` that
+`E_DECLARE_FIRST` reports.
 
 The other edits address nodes by id. `setExpr` takes an item index for
 `exprs` slots.
