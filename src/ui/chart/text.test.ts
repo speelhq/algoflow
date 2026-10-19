@@ -205,11 +205,11 @@ describe("diamonds and generated nodes", () => {
 
   it("a counted loop's generated nodes carry the loop's own slots", () => {
     const loop = for_("i", num(1), bin("+", v("n"), num(1)), []);
-    const drawn = (part: "init" | "check" | "step") => joinParts(generatedParts(loop, part));
+    const drawn = (part: "init" | "check" | "update") => joinParts(generatedParts(loop, part));
     expect(drawn("init")).toBe("i ← 1");
     // The check is asked as every diamond asks its condition.
     expect(drawn("check")).toBe("i < n + 1?");
-    expect(drawn("step")).toBe("i ← i + 1");
+    expect(drawn("update")).toBe("i ← i + 1");
     expect(notationText(loop)).toBe("i ← 1");
   });
 

@@ -166,8 +166,8 @@ describe("registry", () => {
   it("a counted loop's generated texts name only its own slots, and its notation is its init", () => {
     for (const def of BLOCKS.values()) {
       if (!def.chart || !("counted" in def.chart)) continue;
-      const { init, check, step } = def.chart.counted;
-      const named = [init, check, step].flatMap((text) =>
+      const { init, check, update } = def.chart.counted;
+      const named = [init, check, update].flatMap((text) =>
         [...text.matchAll(/\{(\w+)\}/g)].map((found) => found[1]),
       );
       const slots = def.slots.map((slot) => slot.name);

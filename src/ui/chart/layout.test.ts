@@ -200,7 +200,7 @@ describe.each([
         const shape = getBlock(keyOf(stmt)).chart;
         const ids =
           shape && "counted" in shape
-            ? ["init", "check", "step"].map((r) => `${stmt.id}:${r}`)
+            ? ["init", "check", "update"].map((r) => `${stmt.id}:${r}`)
             : [stmt.id];
         for (const id of ids) expect(nodes.get(id)?.owner, id).toBe(stmt.id);
       }
@@ -342,13 +342,13 @@ describe.each([
         }
         if (counted) {
           const init = nodes.get(`${stmt.id}:init`);
-          const step = nodes.get(`${stmt.id}:step`);
-          if (!init || !step) throw new Error(`counted ${stmt.id}`);
-          expect([init.generated, d.generated, step.generated]).toEqual([true, true, true]);
-          expect([center(init), center(step)]).toEqual([center(d), center(d)]);
+          const update = nodes.get(`${stmt.id}:update`);
+          if (!init || !update) throw new Error(`counted ${stmt.id}`);
+          expect([init.generated, d.generated, update.generated]).toEqual([true, true, true]);
+          expect([center(init), center(update)]).toEqual([center(d), center(d)]);
           expect(init.y + init.h).toBeLessThan(junction.y);
-          for (const node of under) expect(node.y + node.h).toBeLessThan(step.y);
-          expect(backs.map((edge) => edge.from)).toEqual([step.id]);
+          for (const node of under) expect(node.y + node.h).toBeLessThan(update.y);
+          expect(backs.map((edge) => edge.from)).toEqual([update.id]);
         }
         const next = nodes.get(`${stmt.id}:next`);
         if (next) expect(backs.map((edge) => edge.from)).toEqual([next.id]);
@@ -402,14 +402,14 @@ describe("layout of jumps", () => {
   const jumpsOf = (chart: ChartLayout, id: string) =>
     chart.edges.filter((edge) => edge.from === id);
 
-  it("in a for, break leads past the loop and continue to its step", () => {
+  it("in a for, break leads past the loop and continue to its update", () => {
     const stop = brk();
     const skip = cont();
     const loop = for_("i", num(0), num(9), [if_(lt("i", 2), [skip], [stop])]);
     const after = print(str("after"));
     const chart = layout(program([loop, after]), { inputs: {}, measure: estimatedWidth });
     expect(jumpsOf(chart, stop.id).map((edge) => edge.to)).toEqual([`${loop.id}:exit`]);
-    expect(jumpsOf(chart, skip.id).map((edge) => edge.to)).toEqual([`${loop.id}:step`]);
+    expect(jumpsOf(chart, skip.id).map((edge) => edge.to)).toEqual([`${loop.id}:update`]);
     const no = chart.edges.find((edge) => edge.from === `${loop.id}:check` && edge.label === "no");
     expect(no?.to).toBe(`${loop.id}:exit`);
     expect(jumpsOf(chart, `${loop.id}:exit`)).toMatchObject([

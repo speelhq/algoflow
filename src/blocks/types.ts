@@ -149,10 +149,10 @@ export type ChartShape =
   | { jump: "exit" | "next" };
 
 /** A counted loop's body slot, and the texts of its generated nodes with `{slot}` placeholders. */
-export type Counted = { body: string; init: string; check: string; step: string };
+export type Counted = { body: string; init: string; check: string; update: string };
 
 /** A counted loop's generated nodes. */
-export type Generated = "init" | "check" | "step";
+export type Generated = "init" | "check" | "update";
 
 // ---------------------------------------------------------------- BlockDef
 
