@@ -36,6 +36,6 @@ labels: decision
 ## Done when
 
 <!-- State the condition that closes the issue. Include these: the spec
-     states the choice, with its reason where docs/spec/README.md, Reasons
+     states the choice, with its reason where docs/spec/README.md, Reasons,
      asks for one. For a screen that no artboard shows, the artboard is
      also exported to docs/design/ and listed in its README. -->

@@ -23,22 +23,22 @@ after its artboard in the file.
 
 | File | Artboard title | Spec (`docs/spec/`) |
 | --- | --- | --- |
-| `Main.png` | 1 Problems: one section per plan | `pages.md`, Pages and routes, Problems page |
-| `BuildEmpty.png` | 2 Build: first launch, an empty chart | `pages.md`, Page layout, Problem tab, First launch; `chart.md`, Editing on the chart |
+| `Main.png` | 1 Problems: one section per plan | `pages.md`, Pages and routes; Problems page |
+| `BuildEmpty.png` | 2 Build: first launch, an empty chart | `pages.md`, Page layout; Problem tab; First launch; `chart.md`, Editing on the chart |
 | `BuildMenu.png` | 3 Build: the + menu lists statements only | `editor.md`, Block menu; `chart.md`, Shapes |
-| `BuildEdit.png` | 4 Build: editing a block, choosing a variable | `editor.md`, Node editor, Name fields, Node names |
-| `EditValue.png` | 4B Build: where a value is expected | `editor.md`, Value line, Value list |
-| `EditTyping.png` | 4C Build: typing, and the text becomes blocks | `editor.md`, Value line, Backspace and keys |
-| `EditNumber.png` | 4D Build: after a number, and a named check | `editor.md`, Value list, Node names, Explanation line |
+| `BuildEdit.png` | 4 Build: editing a block, choosing a variable | `editor.md`, Node editor; Name fields; Node names |
+| `EditValue.png` | 4B Build: where a value is expected | `editor.md`, Value line; Value list |
+| `EditTyping.png` | 4C Build: typing, and the text becomes blocks | `editor.md`, Value line; Backspace and keys |
+| `EditNumber.png` | 4D Build: after a number, and a named check | `editor.md`, Value list; Node names; Explanation line |
 | `EditList.png` | 4E Build: after a list, what can be done with it | `editor.md`, Value list; `blocks.md`, Menu entries |
 | `EditCheck.png` | 4F Build: an unnamed check, then And or Or | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Node text |
-| `EditItem.png` | 4G Build: set one item of a list | `editor.md`, Value list, Name fields, Explanation line |
-| `Run.png` | 5 Run: the moment on the chart, the state in Result | `run.md`, Run bar, Path and marks, Narration; `pages.md`, Result tab |
+| `EditItem.png` | 4G Build: set one item of a list | `editor.md`, Value list; Name fields; Explanation line |
+| `Run.png` | 5 Run: the moment on the chart, the state in Result | `run.md`, Run bar; Path and marks; Narration; `pages.md`, Result tab |
 | `Wrong.png` | 6 Submit: Wrong Answer, and a way to the cause | `run.md`, Submission |
 | `Accepted.png` | 7 Submit: Accepted, with what comes next | `run.md`, Submission |
 | `Solution.png` | 8 Solution: read-only in the canvas | `pages.md`, Problem tab |
 | `FunctionRun.png` | 9 Run inside functions: the path bar is the call stack | `run.md`, Call stack |
-| `Module.png` | 10 Module page: run one function, keep cases, Test | `modules.md`, Resolution, Pages, Cases |
+| `Module.png` | 10 Module page: run one function, keep cases, Test | `modules.md`, Resolution; Pages; Cases |
 | `PythonChart.png` | 11 Python tab: a line and its block | `pages.md`, Python tab |
 | `PythonFiles.png` | 12 Python tab: a program that uses a module | `pages.md`, Python tab; `emitter.md` |
 | `Playground.png` | 13 Playground: many programs, the last edited first | `pages.md`, Playground page |
@@ -67,7 +67,7 @@ after its artboard in the file.
   list. While a list is shown, the editor is 480 px tall and its list
   scrolls inside it (`editor.md`, Node editor).
 - `Main.png` puts the row that `Continue` leads to on a colored background,
-  which `pages.md`, Problems page doesn't state. Every row is drawn alike.
+  which `pages.md`, Problems page, doesn't state. Every row is drawn alike.
 - `Run.png` and `Wrong.png` fold the `Output` and `Expected` columns to
   `… n more`. The `Result` tab shows every line (`pages.md`, Result tab),
   and only the `Example` in the `Problem` tab folds (`pages.md`, Problem
@@ -75,7 +75,7 @@ after its artboard in the file.
 - The gray sentences under the rows of `Run.png` and `Wrong.png` annotate
   the artboards and aren't part of the screen.
 - Every artboard that shows a node, a value, or the narration uses the
-  notation the blocks had before `blocks.md`, Node text set it
+  notation the blocks had before `blocks.md`, Node text, set it
   (`Set i to 1`, `(remainder of i divided by 15) = 0?`, `n = 15`). The node
   text in the spec applies until the artboards are drawn again.
 - The artboards use a hand-drawn typeface to mark them as drafts. The
@@ -90,7 +90,7 @@ copies. When an artboard changes, export it again in the pull request that
 changes the spec it affects. An artboard that a later artboard or the spec
 has replaced has no PNG, because a PNG in the repository is read as the
 source of a screen. The words "artboard" and "file" are Claude Design's
-own, which leaves `canvas` free to name the page's region that holds the
+own, which leaves `canvas` free to name the page's part that holds the
 chart.
 
 | Claude Design file | Holds                                         |
