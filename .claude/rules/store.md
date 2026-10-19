@@ -8,10 +8,10 @@ paths:
 Before you change a store, read the spec it implements:
 
 - `run.ts` and `batches.ts`: `docs/spec/runtime/interpreter.md`, Driver.
-- `program.ts` and `playground.ts`: `docs/spec/language/language.md`, Edits
-  and Storage.
+- `program.ts` and `playground.ts`: `docs/spec/language/language.md`, Edits;
+  Storage.
 - `progress.ts` and `tests.ts`: `docs/spec/challenges/challenges.md`,
-  Progress and Judging.
+  Progress; Judging.
 - `layout.ts`: `docs/spec/ui/pages.md`.
 
 When you change a store or its tests:
