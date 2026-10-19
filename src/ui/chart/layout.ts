@@ -25,7 +25,7 @@ import {
 export type Point = { x: number; y: number };
 export type Shape = "terminal" | "input" | "box" | "diamond" | "junction";
 export type ChartNode = {
-  /** A statement's id, `<id>:init|check|step|junction|merge`, `start`, `end`, or `input:<name>`. */
+  /** A statement's id, `<id>:init|check|update|junction|merge`, `start`, `end`, or `input:<name>`. */
   id: string;
   /** The statement a click selects and a step highlights; null for terminals and inputs. */
   owner: NodeId | null;
@@ -36,7 +36,7 @@ export type ChartNode = {
     | "stmt"
     | "init"
     | "check"
-    | "step"
+    | "update"
     | "junction"
     | "merge"
     | "exit"
@@ -270,7 +270,7 @@ class Builder {
             ? 0
             : Math.max(96, width + 32);
     const w = 2 * Math.ceil(padded / 2);
-    const generated = role === "init" || role === "check" || role === "step";
+    const generated = role === "init" || role === "check" || role === "update";
     const parts = lines.flatMap((line, index) => {
       let dx = (w - (lineWidths[index] ?? 0)) / 2;
       const dy = (index - (lines.length - 1) / 2) * LINE;
@@ -450,7 +450,7 @@ class Builder {
   /**
    * `check` and `counted`: a junction above the diamond, Yes down into the body, a back
    * edge up the left lane, No down the right lane and on past the loop. A counted loop adds
-   * its generated init before the junction and its step after the body.
+   * its generated init before the junction and its update after the body.
    */
   private loop(stmt: Stmt, slot: string, counted: boolean): Frag {
     const frag = emptyFrag();
@@ -499,23 +499,23 @@ class Builder {
     let tail = this.enter(yesStub, body, { x: 0, y: yBody }, frag, stmt.id, slot as Slot);
     let bottom = yBody + body.height;
     let half = d.w / 2;
-    let step: ChartNode | null = null;
+    let update: ChartNode | null = null;
 
     if (counted) {
-      const yStep = body.entry === null ? yBody : bottom + GAP_Y;
-      step = this.node(
-        `${stmt.id}:step`,
+      const yUpdate = body.entry === null ? yBody : bottom + GAP_Y;
+      update = this.node(
+        `${stmt.id}:update`,
         stmt.id,
-        "step",
+        "update",
         "box",
-        generatedParts(stmt, "step"),
-        yStep,
+        generatedParts(stmt, "update"),
+        yUpdate,
       );
-      frag.nodes.push(step);
-      if (tail) frag.edges.push(edge(tail, step.id, [{ x: 0, y: yStep }]));
-      tail = { from: step.id, points: [{ x: 0, y: yStep + step.h }], place: null };
-      bottom = yStep + step.h;
-      half = Math.max(half, step.w / 2);
+      frag.nodes.push(update);
+      if (tail) frag.edges.push(edge(tail, update.id, [{ x: 0, y: yUpdate }]));
+      tail = { from: update.id, points: [{ x: 0, y: yUpdate + update.h }], place: null };
+      bottom = yUpdate + update.h;
+      half = Math.max(half, update.w / 2);
     }
 
     const yTurn = bottom + GAP_Y / 2;
@@ -531,18 +531,18 @@ class Builder {
     ];
     const toLane = (escape: Stub, x: number) => escape.points.push({ x, y: last(escape.points).y });
 
-    if (step) {
-      // The next pass of a counted loop starts at its step.
-      const yStep = step.y + step.h / 2;
+    if (update) {
+      // The next pass of a counted loop starts at its update.
+      const yUpdate = update.y + update.h / 2;
       for (const escape of nexts) {
         toLane(escape, xNext);
         frag.edges.push(
           edge(
             escape,
-            step.id,
+            update.id,
             [
-              { x: xNext, y: yStep },
-              { x: step.w / 2, y: yStep },
+              { x: xNext, y: yUpdate },
+              { x: update.w / 2, y: yUpdate },
             ],
             {
               anchor: "start",

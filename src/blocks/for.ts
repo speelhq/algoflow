@@ -12,7 +12,7 @@ const COUNTED: Counted = {
   body: "body",
   init: "{var} ← {start}",
   check: "{var} < {stop}",
-  step: "{var} ← {var} + 1",
+  update: "{var} ← {var} + 1",
 };
 
 export const forStmt = defineStmt<"for">({
