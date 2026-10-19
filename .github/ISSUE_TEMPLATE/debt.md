@@ -1,25 +1,33 @@
 ---
 name: Debt
-about: One fact recorded in two places
+about: The same fact is recorded in two places
 labels: debt
 ---
 
 ## Summary
 
-<!-- One paragraph: which fact is duplicated, and what a change to it costs
-     today, in words. -->
+<!-- In one paragraph of plain words, say which fact is recorded twice and
+     what a change to it costs today.
+     Example: The Problem page and the Playground program page each build
+     the top bar, the panel, and the canvas themselves. The Module page
+     would be a third copy, so a change to the page frame would be made
+     three times. -->
 
 ## Copies
 
-<!-- Each place the fact is recorded, one per line, with file and line and what
-     that copy does differently. -->
+<!-- List each place that records the fact, one per line, with its file
+     and line and what that copy does differently.
+     Example: `src/ui/problem/ProblemPage.tsx`: the top bar, `Panel`,
+     `Canvas`, and `usePageKeys()`. -->
 
 ## Spec
 
-<!-- Each statement the copies implement, quoted, with its file and heading.
-     `None` with a reason when the fact is not in the spec. -->
+<!-- Quote each statement the copies implement, with its file and heading.
+     Write `None` and the reason if the spec doesn't state the fact. -->
 
 ## Done when
 
-<!-- The condition that closes the issue: one definition, and the modules
-     that use it. -->
+<!-- State the condition that closes the issue: one definition, and the
+     modules that use it.
+     Example: One page frame takes what differs between the pages and
+     serves the Problem, Playground program, and Module pages. -->

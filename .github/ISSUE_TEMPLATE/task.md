@@ -1,22 +1,30 @@
 ---
 name: Task
-about: Work to do rather than a problem to decide or fix
+about: Work to do, rather than a problem to decide or fix
 ---
 
 ## Summary
 
-<!-- One paragraph: the work and why it is needed, in words. -->
+<!-- In one paragraph of plain words, say what the work is and why it is
+     needed.
+     Example: `getChallenge(id)` returns `undefined` for an unknown id. In
+     this code a `get` function throws and a `find` function returns
+     `undefined`, so rename it to `findChallenge` to match what it does. -->
 
 ## Steps
 
-<!-- What is done, in order, and what each step produces. -->
+<!-- List the steps in order, and what each one produces.
+     Example: 1. Rename `getChallenge` to `findChallenge` and every use of
+     it, in one commit. 2. Run `pnpm lint` and `pnpm test`. -->
 
 ## Spec
 
-<!-- Each statement the work satisfies, quoted, with its file and heading.
-     `None` with a reason when no statement applies. -->
+<!-- Quote each statement the work satisfies, with its file and heading.
+     Write `None` and the reason if no statement applies. -->
 
 ## Done when
 
-<!-- The condition that closes the issue: what the work produces and where
-     it is stored. -->
+<!-- State the condition that closes the issue: what the work produces and
+     where it is stored.
+     Example: No `getChallenge` remains, and `pnpm lint` and `pnpm test`
+     pass. -->
