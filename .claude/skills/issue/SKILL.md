@@ -1,6 +1,6 @@
 ---
 name: issue
-description: Work one GitHub issue into one pull request against main - read its spec, propose where a better option exists, spec-first commits, the author's review, a spec review and /code-review as candidates, every finding settled. Use when asked to work on, fix, implement, or continue an issue.
+description: Work one GitHub issue into one pull request against main - read its spec, propose any change of approach or spec, commit the spec first, review the change yourself and with a spec review and /code-review, and settle every finding. Use when asked to work on, fix, implement, or continue an issue.
 argument-hint: <issue number>
 ---
 
@@ -20,7 +20,8 @@ Judgment).
 1. Read the issue. If the issue has no milestone, stop: it waits
    until a release takes it. Read the milestone's description for the
    release's exit criterion, and the descriptions of the later open
-   milestones. Their scope isn't due yet, so leave it alone.
+   milestones. Their scope isn't due yet: don't build it in this issue, but
+   you may shape the design so that it can take that scope.
 2. Read `docs/spec/README.md`, and the whole spec file of every statement
    the issue quotes.
 3. For a screen, read `docs/design/README.md` and the screen's artboard.
@@ -32,8 +33,8 @@ Judgment).
    commits), propose a split and wait. A pull request that stands alone is
    never stacked or retargeted, is reviewed while it is small, and can be
    released as soon as it merges.
-2. If the spec or an artboard has a better option, or the work conflicts
-   with the spec, propose and wait (`CLAUDE.md`, Judgment).
+2. If the work would change an approach, the spec, or an artboard, or it
+   conflicts with the spec, propose and wait (`CLAUDE.md`, Judgment).
    Handle a screen state that no artboard draws, or a difference from the
    artboard that the code can't follow, as `docs/design/README.md`
    describes, and don't build it until that is settled.
