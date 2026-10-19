@@ -68,12 +68,14 @@ brought (Operations) when the page was opened with them. After a run,
 
 ## Pages
 
-The Modules page (`#/modules`) has one row per module, learner modules first
-in name order. A row shows the name or title, the number of functions and
-classes, and `Built-in` on a built-in module. The page has `New module…`,
-which prompts for the name, and `Import…` (Operations). Each learner module's
-row has `Export` and `Delete` (Operations). The rows have the form of
-`pages.md`, Playground page.
+The Modules page (`#/modules`) has one row per module: learner modules first,
+then built-in modules, each in name order. The page orders built-in modules by
+name, not by title, because a title differs by locale, so the rows would move
+when the language changes. A row shows the name or title, the number of
+functions and classes, and `Built-in` on a built-in module. The page has
+`New module…`, which prompts for the name, and `Import…` (Operations). Each
+learner module's row has `Export` and `Delete` (Operations). The rows have the
+form of `pages.md`, Playground page.
 
 The Module page (`#/m/<name>`, and `#/m/<name>/<fn>` to show that
 function) has three parts. The top bar holds `← Modules`, the name, undo,
