@@ -46,9 +46,9 @@ export function editorDiagnostics(
 /** Applies a diagnostic's fix; only the fixes validation names exist. */
 function applyFix(diagnostic: Diagnostic): void {
   if (diagnostic.fix !== "hoistAssign") return;
-  const { frame, name } = diagnostic.params;
-  if (typeof frame === "string" && typeof name === "string") {
-    apply((program) => hoistAssign(program, frame, name));
+  const { compound, name } = diagnostic.params;
+  if (typeof compound === "string" && typeof name === "string") {
+    apply((program) => hoistAssign(program, compound, name));
   }
 }
 

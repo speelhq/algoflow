@@ -316,10 +316,10 @@ function defaultFor(stmts: Stmt[], name: Id): Expr {
   return none();
 }
 
-/** Inserts `name = <default>` immediately before the frame `frameId`. */
-export function hoistAssign(program: Program, frameId: NodeId, name: Id): Program {
+/** Inserts `name = <default>` immediately before the compound statement `compound`. */
+export function hoistAssign(program: Program, compound: NodeId, name: Id): Program {
   const next = clone(program);
-  const { stmt, region, index } = getStmt(next, frameId);
+  const { stmt, region, index } = getStmt(next, compound);
   const inner = regionsOf(stmt).flatMap((r) => r.stmts);
   const assign: Stmt = {
     id: newId(),

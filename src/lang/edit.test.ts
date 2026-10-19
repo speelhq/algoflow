@@ -102,7 +102,7 @@ describe("edit", () => {
     expect(idsUnique(into)).toBe(true);
   });
 
-  it("removeStmt removes a frame with its contents; a missing id throws", () => {
+  it("removeStmt removes a compound statement with its contents; a missing id throws", () => {
     const { p, loop, inner } = sample();
     const next = removeStmt(p, loop.id);
     expect(lines(next)).toEqual(["x = 1", "print(x)"]);
@@ -231,17 +231,17 @@ describe("edit", () => {
     expect(() => removeFunction(p, "nope00000000")).toThrow(/no function/);
   });
 
-  it("hoistAssign inserts `name = <default of the same type>` before the frame", () => {
-    const frame = if_(v("c"), [assign("x", num(1))], [assign("s", str("a"))]);
-    const { program: p, inputs } = withInputs({ c: 1 }, [frame, print(v("x"))]);
+  it("hoistAssign inserts `name = <default of the same type>` before the compound statement", () => {
+    const branch = if_(v("c"), [assign("x", num(1))], [assign("s", str("a"))]);
+    const { program: p, inputs } = withInputs({ c: 1 }, [branch, print(v("x"))]);
     expect(validate(p).map((d) => d.code)).toEqual(["E_DECLARE_FIRST"]);
-    const fixed = hoistAssign(p, frame.id, "x");
+    const fixed = hoistAssign(p, branch.id, "x");
     expect(lines(fixed, inputs)[1]).toBe("x = 0");
     expect(validate(fixed)).toEqual([]);
-    expect(lines(hoistAssign(p, frame.id, "s"), inputs)[1]).toBe('s = ""');
+    expect(lines(hoistAssign(p, branch.id, "s"), inputs)[1]).toBe('s = ""');
     const floatFrame = if_(v("c"), [assign("y", ast.float(1.5))]);
     const floats = withInputs({ c: 1 }, [floatFrame]);
     expect(lines(hoistAssign(floats.program, floatFrame.id, "y"), inputs)[1]).toBe("y = 0.0");
-    expect(lines(hoistAssign(p, frame.id, "unknown"), inputs)[1]).toBe("unknown = None");
+    expect(lines(hoistAssign(p, branch.id, "unknown"), inputs)[1]).toBe("unknown = None");
   });
 });
