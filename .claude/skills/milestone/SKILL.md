@@ -39,9 +39,9 @@ GitHub UI.
 4. Check that every screen the release builds, and every state of one (an
    open menu, a card, a dialog), has its artboard in `docs/design/`. File
    each missing one as a `decision` issue of this release, as
-   `docs/design/README.md` describes. Propose any option better than the
-   spec or an artboard (`CLAUDE.md`, Judgment) before work starts on an
-   issue that depends on it.
+   `docs/design/README.md` describes. Propose any change to an approach,
+   the spec, or an artboard (`CLAUDE.md`, Judgment) before work starts on
+   an issue that depends on it.
 5. While the description has a paragraph that starts with `Scope:`, split
    it into issues: one for each part a person can see working, each sized
    for one pull request (`CLAUDE.md`, Issues and commits). Give each issue

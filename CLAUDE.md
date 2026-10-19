@@ -32,17 +32,32 @@ because it would repeat what GitHub already records and fall out of date.
 
 ## Judgment
 
+When a decision involves a tradeoff, weigh what is best for the learner
+first, what keeps the design consistent as a whole second, and what is
+cheapest to build third. Weigh review findings the same way. The spec, the
+issues, and past decisions serve the first two, so they can change. When
+you find something better, propose the change instead of working around
+them.
+
+Before you fix a problem where it shows up, check whether its cause lies
+elsewhere and whether the same problem exists in other places. If a fix
+needs a special case or an exception, question the design before you add
+it. Change only what the task needs, and settle anything you find outside
+it as a finding (below). Don't add generality or complexity that no
+planned work needs.
+
 Make plans and decisions from files you have read yourself. Use an agent
 only to find code, run a reproduction, or list review candidates
 (`/issue`, Review), and check what it returns against the files before you
 rely on it, because an agent reads excerpts. Its summary can still sound as
 if it had read all of the code.
 
-When the spec or an artboard has a better option, propose it to the
-developer: what is done now and why, the alternative, and why it is better.
-Build nothing that depends on a proposal until the developer decides. If a
-task conflicts with the spec, stop and report the conflict together with a
-proposal, so the developer doesn't have to work out the options alone.
+Leave decisions that change an approach, the spec, or an artboard to the
+developer, and propose them instead: what is done now and why, the
+alternatives, and the one you recommend and why. Build nothing that
+depends on a proposal until the developer decides. If a task conflicts
+with the spec, stop and report the conflict together with a proposal, so
+the developer doesn't have to work out the options alone.
 
 Settle every finding, whether it came from a review or you noticed it
 while working: fix it in the current change if the task covers it, drop it
@@ -67,10 +82,10 @@ a value where the next reader won't look for it:
 
 ## Working style
 
-Make targeted edits rather than rewriting files, and stay within the task.
-Before you start, say in one line what you are going to do. When you
-finish, write a recap that makes sense on its own: the files you changed,
-the evidence that the change works, and what remains.
+Make targeted edits rather than rewriting files. Before you start, say in
+one line what you are going to do. When you finish, write a recap that
+makes sense on its own: the files you changed, the evidence that the
+change works, and what remains.
 
 Keep going while the next step is an edit, a test run, or a commit. Don't
 stop there to present a plan, ask a question, or report status. Stop when
