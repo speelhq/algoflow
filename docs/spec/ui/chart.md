@@ -63,7 +63,7 @@ Node shapes come from the block's `chart` field (`blocks.md`, Chart shape):
 | absent   | a rounded box with the block's notation (`blocks.md`, Node text)                                                                                                                                                          |
 | `branch` | a diamond with the condition; the `yes` region to the right joined by a `Yes` edge, the `no` region below joined by a `No` edge, both merging below; an empty `no` region is a bare `No` edge                            |
 | `check`  | a diamond with the condition; `Yes` leads down into the body, whose last node returns by a back edge to a junction above the diamond; `No` leads on past the loop                                                        |
-| `counted`| three generated nodes around the body: `i ← start`, the diamond `i < stop?`, and `i ← i + 1` (texts of the block's `counted`, `blocks.md`, Chart shape), drawn grey; the body and the back edge as for `check` |
+| `counted`| three generated nodes around the body: `i ← start`, the diamond `i < stop?`, and `i ← i + 1` (texts of the block's `counted`, `blocks.md`, Chart shape), drawn gray; the body and the back edge as for `check` |
 | `jump`   | a box with the notation whose edge leaves by the right and runs down a lane inside the extent of the innermost loop around it, in place of an edge to the next node: for `exit` past the loop, joining its `No` lane; for `next` into its next pass, at the step node of a `counted` loop and at the start of the back edge of a `check` loop; the edge carries the connector after it (Editing on the chart); outside every loop, a box as for an absent `chart` |
 
 The `counted` form was chosen over the loop-limit pair of JIS X 0121 and
