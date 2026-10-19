@@ -24,11 +24,14 @@ two surround classes and functions.
 import random
 from heap import heap_push, heap_pop
 
+
 class Value:
     ...
 
+
 def backward(root):
     ...
+
 
 nums = [5, 3, 1, 4, 2]
 n = len(nums)
