@@ -49,8 +49,8 @@ planned work needs.
 Make plans and decisions from files you have read yourself. Use an agent
 only to find code, run a reproduction, or list review candidates
 (`/issue`, Review), and check what it returns against the files before you
-rely on it, because an agent reads excerpts. Its summary can still sound as
-if it had read all of the code.
+rely on it, because an agent reads excerpts, and its summary can still
+sound as if it had read all of the code.
 
 Leave decisions that change an approach, the spec, or an artboard to the
 developer, and propose them instead: what is done now and why, the
@@ -143,8 +143,9 @@ with one sentence on what it does, then fill in the sections of
 `.github/pull_request_template.md`.
 
 `main` accepts only rebase merges, after CI passes, so every commit of a
-pull request ends up on `main`. A commit that a later commit undoes would
-then mislead `git blame` and `git bisect`. Keep the branch's commits final:
+pull request ends up on `main`. There, a commit that a later commit undoes
+would mislead `git blame` and `git bisect`, so keep the branch's commits
+final:
 
 - Fold each fix into the commit it fixes: run `git commit --fixup <sha>`,
   then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash --keep-base origin/main`.
