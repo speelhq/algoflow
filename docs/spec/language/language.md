@@ -44,12 +44,12 @@ export type Id = string;
 `NodeId` values are unique within a program.
 
 Function names, class names, and input names are unique within a program
-and do not collide with each other.
+and don't collide with each other.
 
-An input declares its name and kind only; its value comes from the chosen
-case (`challenges.md`, Schema). A value in the program would be a second
-copy of one case, shown by the chart and the `Python` tab while Run used
-another.
+An input declares only its name and kind, and its value comes from the chosen
+case (`challenges.md`, Schema), because a value in the program would be a
+second copy of one case, which the chart and the `Python` tab would show while
+Run used another case.
 
 ## Data
 
@@ -67,39 +67,41 @@ export type Data =
   | { [key: string]: Data }; // dict; int keys are written "$int:3"
 ```
 
-`toValue(data, heap)` allocates heap entries for lists, dicts, and objects;
-`toData(value, heap)` is its inverse and numbers objects `$id` in
-first-reach order. `toValue` allocates one object per distinct `$id`, so
-references shared within one value, or across the values converted with
-one heap, remain shared, and a cycle ends in `{ $cls, $id }`. A repeated
-object is written again in full under its `$id`, not as a reference node,
-so two `Data` values compare as they are.
+`toValue(data, heap)` allocates heap entries for lists, dicts, and
+objects. `toData(value, heap)` is its inverse, and it numbers objects with
+`$id` in the order it first reaches them. `toValue` allocates one object
+per distinct `$id`, so references shared within one value, or across the
+values converted with one heap, stay shared. A cycle ends in
+`{ $cls, $id }`. A repeated object is written again in full under its
+`$id`, not as a reference node, so two `Data` values can be compared as
+they are.
 
 The `Data` of a program or challenge file is canonical: every number is
-finite, an integral number lies in the int range (Run-time values), an
-integral float is written `{ $float: n }`, and a `$int:` key is an integer
-in that range written as Python writes it: `$int:0`, never `$int:-0`. The
-two would name one int, as `-0` and `0` do in Python, and a second spelling
-of a key either misses a lookup CPython makes or does not convert back to
-itself.
+finite, and an integral number lies in the int range (Run-time values). In
+canonical `Data`, an integral float is written `{ $float: n }`, and a `$int:`
+key is an integer in that range, written as Python writes it: `$int:0`, never
+`$int:-0`, because those two would name one int, as `-0` and `0` do in Python,
+and a second spelling of a key either misses a lookup that CPython makes or
+doesn't convert back to itself.
 
-`migrate()` rejects, with the path of the fault, a field its block would
-not make (`fieldsError`, `blocks.md`) and a class field default that is not
-canonical `Data`. The split follows where a fault is fixed:
-`validate()` reports what an edit can produce, which the learner fixes on
-its node, while a fault only a hand edit makes (an unknown kind, a missing
-field, a literal its block would not make, a `Data` value that is not
-canonical) has no node to fix it on, so `migrate()` refuses it and
+`migrate()` rejects a field that its block wouldn't make (`fieldsError`,
+`blocks.md`) and a class field default that isn't canonical `Data`, and it
+reports the path of the fault. `migrate()` and `validate()` split faults by
+where they are fixed. `validate()` reports what an edit can produce, which the
+learner fixes on its node. A fault that only a hand edit makes (an unknown
+kind, a missing field, a literal its block wouldn't make, or a `Data` value
+that isn't canonical) has no node to fix it on. So `migrate()` refuses it, and
 `validate()` never reads a literal field.
 
 While no registered block constructs an object (`new`), a program holds no
-class and `Data` no object: `migrate()` rejects a class and an input of the
-kind `object`, and `pnpm check` rejects a `$cls` in a challenge file and a
-class name in its `defines`, each with the path of the fault. Until then
-only a hand-written file holds a class or an object, and reading one would
-take code for identity, cycles, constructors, and field defaults that no
-learner reaches; refusing it, rather than reading what can be read, keeps a
-`$cls` record from passing as a dict.
+class and `Data` holds no object. Until such a block exists, `migrate()`
+rejects a class and an input of the kind `object`, and `pnpm check` rejects
+a `$cls` in a challenge file and a class name in its `defines`. Each
+rejection reports the path of the fault. Until then, only a hand-written
+file holds a class or an object. `migrate()` and `pnpm check` refuse it
+rather than read what they can, because reading it would need code for
+identity, cycles, constructors, and field defaults that no learner reaches,
+and refusing it keeps a `$cls` record from passing as a dict.
 
 ## Run-time values
 
@@ -123,17 +125,17 @@ export type Heap = Map<HeapId, HeapEntry>;
 
 `int` and `float` are distinct.
 
-An `int` is an integer of magnitude at most 2^53 − 1: 2^53 is also what
-2^53 + 1 rounds to in a double, so an `int` of 2^53 could be a wrong one
-that looks right (`9007199254740991 + 2`). A literal or a `Data` number
-beyond it is refused (`parser.md`; Data above), not run as a `float`:
-CPython runs the emitted `raw` as the exact int, so the chart, the `Python`
-tab, and the run would show three numbers with no message, and
+An `int` is an integer of magnitude at most 2^53 − 1, because a double rounds
+2^53 + 1 to 2^53, so an `int` of 2^53 could be a wrong value that looks right
+(`9007199254740991 + 2`). A literal or a `Data` number beyond that range is
+refused (`parser.md`; Data above), not run as a `float`, because CPython runs
+the emitted `raw` as the exact int, so the chart, the `Python` tab, and the
+run would show three different numbers with no message, and because
 `JSON.parse` rounds a `Data` number before any check sees it.
 
 An operation whose result is an integer outside that range gives a
-`float`, a difference from Python the learner can see, where a wrong `int`
-would not show.
+`float`, because the learner can see this difference from Python, while a
+wrong `int` wouldn't show.
 
 ## Statements
 
@@ -155,14 +157,14 @@ export type Stmt =
 ```
 
 A target is an expression that names where a value is stored: a `var`, an
-`index`, a `key`, or a `field`, each a block that declares `locate`
-(`blocks.md`, The block definition). A `target` slot holds one, or `empty`
-while unfilled (Expressions); `migrate()` refuses any other expression
-there, which no edit makes (`editor.md`, Targets).
-A target type of its own was rejected: Python reads a target as an
-expression in store position (`nums[j] = …`), and a second type repeats in
-the emitter, the chart, and every traversal each rule the expression already
-has.
+`index`, a `key`, or a `field`. Each of these is a block that declares
+`locate` (`blocks.md`, The block definition). A `target` slot holds one
+target, or `empty` while it is unfilled (Expressions). `migrate()` refuses
+any other expression there, and no edit makes one (`editor.md`, Targets).
+A separate target type was rejected, because Python reads a target as an
+expression in store position (`nums[j] = …`), and a second type would
+repeat each rule of the expression in the emitter, the chart, and every
+traversal.
 
 ## Expressions
 
@@ -204,20 +206,21 @@ export type BinOp =
   | "in";
 ```
 
-`num.raw` is the literal's source text and is what the emitter writes;
-`float` is true when `raw` contains `.`, `e`, or `E`.
+`num.raw` is the literal's source text, and the emitter writes it. `float`
+is true when `raw` contains `.`, `e`, or `E`.
 
-An unfilled required expression slot holds `{ kind: "empty" }`: `create()`
+An unfilled required expression slot holds `{ kind: "empty" }`. `create()`
 fills required slots with it, `validate` reports `E_EMPTY_SLOT` with the
 slot name, and the emitter writes `...` for it. It is never executed.
-`Expr | null` was rejected: it would spread null checks through every block
-and the emitter, where an `empty` kind keeps `Expr` a closed union.
+`Expr | null` was rejected, because it would spread null checks through
+every block and the emitter, while an `empty` kind keeps `Expr` a closed
+union.
 
 ## Semantics
 
 Each rule has a test with its example, in the test of the block its
-heading names; the rules under Values and the run in
-`src/runtime/semantics.test.ts`.
+heading names. `src/runtime/semantics.test.ts` tests the rules under Values
+and the run.
 
 ### Operators (`binop`)
 
@@ -234,9 +237,10 @@ heading names; the rules under Values and the run in
 | `and` / `or` short-circuit and return the deciding operand | `0 or 5 → 5` |
 | `in`: list membership by `==`; dict key membership; `str` substring | `"bc" in "abcd" → True` |
 
-`==` takes a `bool` as Python does although arithmetic and ordering refuse
-one (`interpreter.md`, Errors): `==` and `in` never fail, so a stricter `==`
-would answer differently from the emitted Python with no message.
+`==` accepts a `bool` as Python does, although arithmetic and ordering
+refuse one (`interpreter.md`, Errors). `==` and `in` never fail, so a
+stricter `==` would answer differently from the emitted Python with no
+message.
 
 ### Loops (`for`, `foreach`)
 
@@ -245,10 +249,10 @@ would answer differently from the emitted Python with no message.
 | `for` iterates `start … stop-1`, bounds evaluated once, `int` only else `E_TYPE` | |
 | `foreach` visits `list[0]`, `list[1]`, … and reads the list's length before each pass, as Python does, so changing the list inside the loop changes the passes | appending in the body adds a pass |
 
-`foreach` reads the live list, not a snapshot, which would run a body that
-changes the list differently from the emitted Python with no sign of it;
-every other difference from Python is stricter and ends in an error (a
-`bool` is not a number, recursion stops at 200, `E_DECLARE_FIRST`).
+`foreach` reads the live list, not a snapshot, because a snapshot would run a
+body that changes the list differently from the emitted Python, with no sign
+of it. Every other difference from Python is stricter and ends in an error (a
+`bool` isn't a number, recursion stops at 200, `E_DECLARE_FIRST`).
 
 ### Lists (`swap`, `method:copy`)
 
@@ -265,10 +269,10 @@ every other difference from Python is stricter and ends in an error (a
 | `print` joins args with one space using Python `str()`: `True`, `None`, `2.0`, `[1, 2]`, `{'a': 1}`, `Value(data=2.0, grad=0.0, prev=[], op='')` | |
 | `randint(a, b)` (inclusive, `int`) draws from mulberry32 seeded per run | |
 | `randint(a, b)` with `a > b` → `E_EMPTY_RANGE` | `randint(5, 1)` |
-| `randint(a, b)` with a bound that is no `int` → `E_TYPE` | `randint(1.0, 2)` |
+| `randint(a, b)` with a bound that isn't an `int` → `E_TYPE` | `randint(1.0, 2)` |
 
-A bound of `1.0` is refused too: CPython 3.12 and later, which `pnpm check`
-requires, raise `TypeError` for any `float` bound.
+A bound of `1.0` is refused too, because CPython 3.12 and later, which
+`pnpm check` requires, raise `TypeError` for any `float` bound.
 
 ### Objects (`new`, `field`)
 
@@ -276,12 +280,12 @@ requires, raise `TypeError` for any `float` bound.
 | --- | --- |
 | `new C(args)` sets every field to a fresh copy of its default, then assigns args in field order; too many args → `E_ARITY` | |
 | `o.f` without field `f` → `E_FIELD` | |
-| `v.f` where `v` is no object → `E_FIELD`, with the type name of `v` as `cls` | `n.x` with `n = 3` |
+| `v.f` where `v` isn't an object → `E_FIELD`, with the type name of `v` as `cls` | `n.x` with `n = 3` |
 | a field default is a number, string, boolean, `null`, `[]`, or `{}` | |
 
-A value that is no object fails with `E_FIELD`, not `E_TYPE`: the fault is a
-field it does not have, and `E_TYPE` would name a second operand where
-there is none.
+A value that isn't an object fails with `E_FIELD`, not `E_TYPE`, because the
+fault is a field it doesn't have, and `E_TYPE` would name a second operand
+where there is none.
 
 ### Values and the run (`src/runtime`)
 
@@ -299,59 +303,62 @@ A name is visible from its first `assign` (or `for`/`foreach` variable, or
 parameter) to the end of its region and in nested regions.
 
 A `target` slot that `binds` (`blocks.md`, The block definition), as
-`assign`'s does, declares the variable its target is, which it does not
-read. An item, a key, or a field there, and every target of a slot that does
-not bind (`delete`, `swap`), reads its expressions before the value is stored.
+`assign`'s does, declares the variable its target is and doesn't read it.
+An item, a key, or a field in that slot, and every target of a slot that
+doesn't bind (`delete`, `swap`), reads its expressions before the value is
+stored.
 
 A name first assigned inside `then`, `else`, or a loop body and referenced
-after that frame → `E_DECLARE_FIRST`; the fix inserts
-`name = <default of the same type>` before the frame.
+after that frame gives `E_DECLARE_FIRST`. `hoistAssign` fixes it by
+inserting `name = <default of the same type>` before the frame.
 
 Functions see only their parameters and body. Field defaults see nothing.
 
 A `for` or `foreach` variable is assigned by the loop statement in the
-region that contains the loop, so it remains visible after the loop; bounds
-and the iterated list are read before the variable exists.
+region that contains the loop, so it stays visible after the loop. The
+bounds and the iterated list are read before the variable exists.
 
 `hoistAssign` takes the default from the first assignment to the name
 inside the frame: `num` → `0` (or `0.0` when float), `str` → `""`, `bool` →
-`False`, `list` → `[]`, `dict` → `{}`; any other value → `None`.
+`False`, `list` → `[]`, `dict` → `{}`, and any other value → `None`.
 
-A variable may not take the name of a function, a class, a builtin, or a
-module function or class the program uses (below) (`E_DUPLICATE_NAME`); the
-parameters of one function are distinct; a function may not take a
-builtin's name, whose registry key would shadow it. `count = 0` beside
-`def count()` runs in the interpreter, which resolves calls by name, but
-fails in CPython.
+A variable can't take the name of a function, a class, a builtin, or a module
+function or class the program uses (below) (`E_DUPLICATE_NAME`), because the
+interpreter, which resolves calls by name, runs such a program and CPython
+doesn't: `count = 0` beside `def count()` fails in CPython. The parameters of
+one function are distinct. A function can't take a builtin's name, because the
+builtin's registry key would shadow the function.
 
 A `call` or `new` resolves its name in this order: a function or class of
-the program, a learner module, a built-in module, a builtin of `blocks.md`;
-a program definition shadows every module, and a learner module shadows a
-built-in module of the same name (`modules.md`, Schema); a name defined by
-two modules the program both uses is `E_DUPLICATE_NAME` on the call.
+the program, a learner module, a built-in module, then a builtin of
+`blocks.md`. A program definition shadows every module, and a learner
+module shadows a built-in module of the same name (`modules.md`, Schema). A
+name that two modules used by the program both define gives
+`E_DUPLICATE_NAME` on the call.
 
 ## Validation
 
-`validate(program): Diagnostic[]`, `Diagnostic = { nodeId, code, params, fix?: "hoistAssign" }`,
-run after every edit and before every run.
+`validate(program): Diagnostic[]`, where
+`Diagnostic = { nodeId, code, params, fix?: "hoistAssign" }`, runs after
+every edit and before every run.
 
 | Code               | Condition                                                   | params                    |
 | ------------------ | ----------------------------------------------------------- | ------------------------- |
 | `E_UNDEFINED`      | a name not visible (Scope)                                  | `name`                    |
 | `E_DECLARE_FIRST`  | a name first assigned in a frame and read after it (Scope)  | `name`, `frame`           |
 | `E_BAD_NAME`       | a name that breaks Identifiers                              | `name`                    |
-| `E_DUPLICATE_NAME` | a name taken twice (Program, Scope)                         | `name`                    |
+| `E_DUPLICATE_NAME` | a name taken twice (Program; Scope)                         | `name`                    |
 | `E_BREAK_OUTSIDE`  | `break`/`continue` outside a loop                           |                           |
 | `E_RETURN_OUTSIDE` | `return` in `main`                                          |                           |
 | `E_ARITY`          | wrong argument count                                        | `name`, `expected`, `got` |
 | `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`                    |
 | `E_EMPTY_SLOT`     | required slot empty (prevents execution)                    | `slot`                    |
-| `E_DEFAULT`        | a field default that Semantics, Objects does not allow      | `field`                   |
+| `E_DEFAULT`        | a field default that Semantics, Objects doesn't allow       | `field`                   |
 | `E_DUPLICATE_ID`   | two nodes share an id (Program)                             |                           |
 
 ## Edits
 
-`edit.ts` exports pure functions returning a new `Program`: `insertStmt`,
+`edit.ts` exports pure functions that return a new `Program`: `insertStmt`,
 `moveStmt`, `removeStmt`, `duplicateStmt`, `setSlot`, `setExpr`,
 `insertItem` and `removeItem` (an item of an `exprs` slot), `renameName`,
 `setStmtName`, `addFunction`, `removeFunction`, `addClass`, `removeClass`,
@@ -361,85 +368,85 @@ Every edit keeps node ids unique.
 
 A statement position is
 `Place = { parent: NodeId | "main"; slot: "main" | "body" | "then" | "else"; index: number }`
-(`parent` is `"main"`, a function id, or a frame id); `insertStmt` and
+(`parent` is `"main"`, a function id, or a frame id). `insertStmt` and
 `moveStmt` take one.
 
 `moveStmt` counts `index` in the target region after the moved statement
-has been removed, as the drop indicator is computed on the list without the
-dragged card.
+has been removed, because the drop indicator is computed on the list
+without the dragged card.
 
 `hoistAssign(program, frame, name)` takes the id of the frame before which
-it inserts the assignment, as `E_DECLARE_FIRST` reports it.
+it inserts the assignment, which is the `frame` that `E_DECLARE_FIRST`
+reports.
 
-The other edits address nodes by id; `setExpr` takes an item index for
+The other edits address nodes by id. `setExpr` takes an item index for
 `exprs` slots.
 
-History keeps the last 100 programs for undo and redo; consecutive changes
-typed into one field of the node editor form one entry, and opening a
-program starts an empty history. A typed value changes the chart with
-every key: an entry per key would spend the 100 entries on one word, and an
-entry made only on leaving the field would keep the chart behind the
+History keeps the last 100 programs for undo and redo, and opening a
+program starts an empty history. Consecutive changes typed into one field
+of the node editor form one entry, because a typed value changes the chart
+with every key. An entry per key would spend the 100 entries on one word,
+and an entry made only on leaving the field would keep the chart behind the
 editor.
 
 ## Storage
 
-Programs persist to `localStorage` key
+Programs persist to the `localStorage` key
 `algoflow:program:<challengeId | playground id>` 500 ms after the last
-edit, and at once when the browser hides the page; export writes
-`<title>.algoflow.json` with the modules the program uses embedded
-(`modules.md`, Operations); import validates and migrates by `version`
+edit, and at once when the browser hides the page. Export writes
+`<title>.algoflow.json`, with the modules the program uses embedded
+(`modules.md`, Operations). Import validates and migrates by `version`
 (`src/lang/migrate.ts`).
 
 `migrate()` reads versions 1 and 2 and returns version 2. A version-1
-target `{ kind, ...parts }` becomes the expression of that kind with those
-parts and an id the program does not hold, and a variable target with no
-name becomes `empty`; a target whose kind no registered block has is
-refused as an unknown kind.
+target `{ kind, ...parts }` becomes the expression of that kind, with those
+parts and an id the program doesn't hold. A variable target with no name
+becomes `empty`. A target whose kind no registered block has is refused as
+an unknown kind.
 
 The value stored under `algoflow:program:<id>` is the `Program` JSON
-itself; loading passes it through `migrate()` and treats a rejected value as
-absent, so opening a problem then creates its program (`challenges.md`,
-Opening and bundling). A zustand `persist` wrapper was rejected: it does
-not suit one key per program, and `migrate()` must check whatever storage
-returns.
+itself. Loading passes it through `migrate()` and treats a rejected value
+as absent, so opening a problem then creates its program
+(`challenges.md`, Opening and bundling). A zustand `persist` wrapper was
+rejected, because it doesn't suit one key per program, and `migrate()` must
+check whatever storage returns.
 
 A restored program takes the `challengeId` and `inputs` of its challenge,
 and a Playground program has neither.
 
-A Playground program's id is `play-` followed by a NodeId;
-`algoflow:playground` holds `Record<id, { edited: number }>`, the time of
-each Playground program's last save in milliseconds since the epoch, and
-lists exactly the Playground programs in storage. The time is kept here,
-not in `Program`, which would carry a storage concern into every export and
-challenge file; the `play-` prefix keeps a Playground id from reading as a
+A Playground program's id is `play-` followed by a NodeId.
+`algoflow:playground` holds `Record<id, { edited: number }>`: the time of each
+Playground program's last save, in milliseconds since the epoch. The record
+lists exactly the Playground programs in storage. The time is kept here, not
+in `Program`, because `Program` would then carry that time into every export
+and challenge file. The `play-` prefix keeps a Playground id from reading as a
 challenge id.
 
 ## Statement names
 
 A statement's `name` is the learner's name for its node (`editor.md`, Node
-names): one line of text, stored with each run of spaces as one space,
-trimmed, and absent when empty; `setStmtName` and `migrate()` store it so,
-and `setStmtName` makes each line break a space.
+names). It is one line of text, stored trimmed and with each run of spaces
+as one space, and it is absent when empty. `setStmtName` and `migrate()`
+store it this way, and `setStmtName` turns each line break into a space.
 
-`migrate()` rejects a statement's name that is not one line of text.
+`migrate()` rejects a statement's name that isn't one line of text.
 
 A statement's name changes neither validation nor execution.
 
 ## Kinds
 
 A kind is what the value list and the name list (`editor.md`, Value list;
-Name fields) know of a
-value before the program runs: `number`, `text`, `truefalse`, `none`,
-`list`, `dict`, or `object`.
+Name fields) know of a value before the program runs: `number`, `text`,
+`truefalse`, `none`, `list`, `dict`, or `object`.
 
 An expression's kind comes from its block's `kind` (`blocks.md`), given the
-kinds of the expressions inside it; an expression whose kind cannot be told
-has none.
+kinds of the expressions inside it. An expression whose kind can't be
+determined has none.
 
-A variable's kind is its input's declared kind, else that of the value of
-its first assignment in program order, else the kind its loop block
-declares (`declares`, `blocks.md`: `number` for a `for` variable); a
-parameter and a `foreach` variable have none.
+A variable's kind is its input's declared kind. Without one, it is the kind
+of the value of its first assignment in program order. Without that, it is
+the kind its loop block declares (`declares`, `blocks.md`: `number` for a
+`for` variable). A parameter and a `foreach` variable have no kind.
 
 ## Verification
 
