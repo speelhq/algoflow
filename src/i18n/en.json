@@ -465,7 +465,6 @@
       "variable": "A {kind} variable. It first gets a value in: {statement}.",
       "variablePlain": "A variable. It first gets a value in: {statement}.",
       "input": "A {kind} input of the problem.",
-      "inputPlain": "An input of the problem.",
       "parameter": "A parameter: the value a call hands to this function.",
       "newVariable": "Choosing it makes a new variable {name}, which gets its value here.",
       "name": "The variable this block sets. Choose one below, or type a new name."

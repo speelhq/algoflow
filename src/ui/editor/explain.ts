@@ -50,11 +50,8 @@ export function explainVariable(program: Program, at: NodeId, name: Id): string 
   const chart = chartOf(program, at);
   const fn = program.functions.find((candidate) => candidate.id === chart);
   const kind = variableKinds(program, chart).get(name);
-  if (!fn && program.inputs.some((input) => input.name === name)) {
-    return kind
-      ? t("editor.explain.input", { kind: kindName(kind) })
-      : t("editor.explain.inputPlain");
-  }
+  const input = fn ? undefined : program.inputs.find((candidate) => candidate.name === name);
+  if (input) return t("editor.explain.input", { kind: kindName(input.kind) });
   if (fn?.params.includes(name)) return t("editor.explain.parameter");
   const setter = firstSetters(program, chart).get(name);
   if (!setter) return t("editor.explain.newVariable", { name });
