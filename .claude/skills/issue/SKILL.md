@@ -12,7 +12,7 @@ the pull request, push the branch after making its commits final
 (`CLAUDE.md`, Issues and commits); the next `/issue $ARGUMENTS` continues it.
 
 Plan and judge from the files this session reads itself (`CLAUDE.md`,
-Judgement).
+Judgment).
 
 ## 1. Read
 
@@ -32,7 +32,7 @@ Judgement).
    never stacked or retargeted, is reviewed while it is small, and lets any
    merge be released.
 2. Where the spec or an artboard has a better option, and on a conflict with
-   the spec, propose and wait (`CLAUDE.md`, Judgement). A screen state no
+   the spec, propose and wait (`CLAUDE.md`, Judgment). A screen state no
    artboard draws, or a difference from its artboard the code cannot follow,
    is handled as `docs/design/README.md` states and is not built before it
    is settled.
@@ -61,7 +61,7 @@ reads first so that no candidate steers the reading; the narrow spec brief
 keeps preferences out; and each review finds what the others do not.
 
 1. Read `git diff origin/main...HEAD` whole, against the issue's Done when,
-   every statement it touches, and the shapes `CLAUDE.md`, Judgement
+   every statement it touches, and the shapes `CLAUDE.md`, Judgment
    forbids, before any candidate arrives.
 2. Then, in one message, start both candidate reviews:
    - a subagent given the diff range, the statements the issue quotes, and
@@ -70,7 +70,7 @@ keeps preferences out; and each review finds what the others do not.
      quoted with its file and heading, `file:line`, and a concrete scenario;
    - `/code-review` on the branch, which reports defects.
 3. Check every candidate against the files.
-4. Settle every finding (`CLAUDE.md`, Judgement); a filed one takes its
+4. Settle every finding (`CLAUDE.md`, Judgment); a filed one takes its
    template's sections and label (`CLAUDE.md`, Issues and commits).
 
 ## 5. Finish

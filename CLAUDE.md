@@ -21,7 +21,7 @@ the code states what is; the open milestone, its issues, and the open pull
 requests say what is next. No handoff file: it would repeat them and drift.
 Before changing an area, read the spec its file in `.claude/rules/` names.
 
-## Judgement
+## Judgment
 
 A plan and every judgement are made from files the session reads itself.
 An agent may locate code, run a reproduction, or report review candidates
@@ -62,6 +62,21 @@ compacting keep: changed files, the current issue and its Done when, open
 findings and proposals, test commands, decisions not yet in `docs/spec/`.
 
 Skills: `/issue`, `/milestone`, `/add-block`, `/add-challenge`.
+
+## Writing
+
+People and agents act on what these files say, so write every document,
+commit message, pull request, and issue this way:
+
+- Put one idea in each sentence, with a concrete subject and an active
+  verb.
+- Give a reason with "because" or "so", next to the rule it explains.
+- Use a list for items a reader scans, such as steps, options, or fields,
+  and prose for a rule and its reason.
+- Use plain words. Avoid aphorisms, invented phrases, and emphasis in
+  capitals.
+- Spell in American English, as the code's identifiers do (`Localized`,
+  `color`).
 
 ## Issues and commits
 

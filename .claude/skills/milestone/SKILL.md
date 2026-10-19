@@ -18,7 +18,7 @@ settled, and replacing the paragraph keeps the scope in one place and marks
 the split.
 
 Plan and judge from the files this session reads itself (`CLAUDE.md`,
-Judgement).
+Judgment).
 
 Each GitHub write (an issue, a milestone change, a tag, a release) waits for
 approval (`CLAUDE.md`, Working style). Read and write GitHub with whichever
@@ -40,7 +40,7 @@ session gives the text to write.
    that the release builds has its artboard in `docs/design/`; each missing
    one is filed as a `decision` issue of this release, as
    `docs/design/README.md` states. A better option than the spec or an
-   artboard is proposed (`CLAUDE.md`, Judgement) before any issue that
+   artboard is proposed (`CLAUDE.md`, Judgment) before any issue that
    depends on it is worked.
 5. While the description has a paragraph starting `Scope:`, split it: one
    issue per part a person can see working, each sized for one pull request

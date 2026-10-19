@@ -10,7 +10,7 @@ Add the block described in $ARGUMENTS.
 1. Read `docs/spec/blocks/blocks.md` and find the block's row; read the
    Semantics heading of `docs/spec/language/language.md` that names the
    block, if one does. A block with no row is a choice the spec does not
-   cover: propose the row (`CLAUDE.md`, Judgement) and wait; once agreed,
+   cover: propose the row (`CLAUDE.md`, Judgment) and wait; once agreed,
    the row, with its reason where `docs/spec/README.md`, Reasons asks for one, is
    committed before any code.
 2. Read `src/blocks/registry.ts` and one existing block of the same shape.

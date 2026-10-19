@@ -4,7 +4,7 @@ One PNG for each current artboard, exported at the size of the artboard.
 An artboard shows the appearance of a screen and the spec (`docs/spec/ui/`)
 states its behaviour; where they differ the spec is the decision, and a
 better option than either is proposed
-(`CLAUDE.md`, Judgement). A screen or a state of one that the spec
+(`CLAUDE.md`, Judgment). A screen or a state of one that the spec
 describes and no artboard draws, or a difference from its artboard the code
 cannot follow, is an issue labelled `decision`, with a proposal, of the
 release that builds the screen: filed when that release is planned
