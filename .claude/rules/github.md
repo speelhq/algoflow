@@ -15,8 +15,10 @@ paths:
   missing section looks forgotten.
 - Title a problem to decide or fix as a statement of fact ("The run bar has
   no Step over"). Title a task with the work it names ("Rename getChallenge
-  to findChallenge"). Write the title and the Summary in plain words, not
-  in code or quotes.
+  to findChallenge"). Write the title in plain words, without code
+  formatting or quotes. Write the Summary so that a reader understands it
+  without reading the source. In the Summary, format as code only the names,
+  values, and expressions that the issue is about, and quote nothing.
 - In the Spec section, quote each statement with its file and heading.
 - Record an idea for a learner's problem as an issue labeled `challenge`
   that names the study plan it joins. It gets no milestone until a release
