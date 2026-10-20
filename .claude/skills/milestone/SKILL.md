@@ -34,7 +34,7 @@ GitHub UI.
    Read the descriptions of the later open milestones too: their scope
    isn't due yet.
 3. Read `docs/spec/README.md`, the whole spec file of every statement that
-   the scope and the open issues quote, and, for a screen,
+   the scope and the open issues cite, and, for a screen,
    `docs/design/README.md` and the screen's artboard.
 4. Check that every screen the release builds, and every state of one (an
    open menu, a card, a dialog), has its artboard in `docs/design/`. File
@@ -46,12 +46,14 @@ GitHub UI.
    it into issues: one for each part a person can see working, each sized
    for one pull request (`CLAUDE.md`, Issues and commits). Give each issue
    the sections of `.github/ISSUE_TEMPLATE/task.md` (or `challenge.md` for
-   problems), the part's statements quoted under Spec, and its share of the
+   problems), the part's statements cited under Spec, and its share of the
    exit criterion under Done when. File a choice that the scope needs first
-   as a `decision` issue. Check that every item of `Scope` is in exactly
-   one issue, then replace the paragraph with
-   `Split into the issues of this milestone.`
-6. End with a recap: the issues in the order to work them, the decisions
+   as a `decision` issue. End the Summary of each issue that waits on
+   another issue, such as a `decision` issue from this step or step 4,
+   with the line `Waits on #n.` (`.claude/rules/github.md`). Check that
+   every item of `Scope` is in exactly one issue, then replace the
+   paragraph with `Split into the issues of this milestone.`
+6. End with a recap: the issues in the order to work them, the issues
    they wait on, and the open proposals.
 
 ## Close
