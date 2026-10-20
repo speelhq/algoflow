@@ -8,6 +8,8 @@ labels: debt
 
 <!-- In one paragraph of plain words, say which fact is recorded twice and
      what a change to it costs today.
+     If the work waits on open issues or pull requests, add one line after
+     the paragraph, such as `Waits on #34 and #47.`
      Example: The Problem page and the Playground program page each build
      the top bar, the panel, and the canvas themselves. The Module page
      would be a third copy, so a change to the page frame would be made
@@ -15,19 +17,21 @@ labels: debt
 
 ## Copies
 
-<!-- List each place that records the fact, one per line, with its file
-     and line and what that copy does differently.
+<!-- List each place that records the fact, one per line, with its
+     function or component and its file, and what that copy does
+     differently.
      Example: `src/ui/problem/ProblemPage.tsx`: the top bar, `Panel`,
      `Canvas`, and `usePageKeys()`. -->
 
 ## Spec
 
-<!-- Quote each statement the copies implement, with its file and heading.
+<!-- Cite each statement the copies implement by its file and heading.
      Write `None` and the reason if the spec doesn't state the fact. -->
 
 ## Done when
 
-<!-- State the condition that closes the issue: one definition, and the
-     modules that use it.
-     Example: One page frame takes what differs between the pages and
-     serves the Problem, Playground program, and Module pages. -->
+<!-- List the conditions that close the issue, one per item. Name the
+     one definition and the modules that use it.
+     Example:
+     - One page frame takes what differs between the pages.
+     - The Problem, Playground program, and Module pages use it. -->

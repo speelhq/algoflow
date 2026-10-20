@@ -8,6 +8,8 @@ labels: challenge
 
 <!-- In one paragraph of plain words, say what the problems practice and
      why a learner needs that practice.
+     If the work waits on open issues or pull requests, add one line after
+     the paragraph, such as `Waits on #34 and #47.`
      Example: The last three problems of the `course` plan. Two more sorts
      use the cases of `bubble-sort`, and `reverse-list` reverses a list in
      place with `swap`. -->
@@ -28,19 +30,20 @@ labels: challenge
 ## Blocks needed
 
 <!-- List each block or module function a solution needs that isn't
-     registered yet, with its spec statement quoted, or `no statement yet`.
+     registered yet, with the file and heading of its statement, or
+     `no statement yet`.
      Write `None` if every one is registered. -->
 
 ## Spec
 
-<!-- Quote each statement the problems rely on (a block, a module, or a
-     plan), with its file and heading. Write `None` and the reason if the
+<!-- Cite each statement the problems rely on (a block, a module, or a
+     plan) by its file and heading. Write `None` and the reason if the
      problems need nothing the spec doesn't state. -->
 
 ## Done when
 
-<!-- State the condition that closes the issue. Include these: every block
-     the problems need is specified and then registered, each problem's
-     file passes `pnpm check`, and the curriculum in
-     docs/spec/scope/scope.md, the table in
+<!-- List the conditions that close the issue, one per item. Include
+     these: every block the problems need is specified and then
+     registered, each problem's file passes `pnpm check`, and the
+     curriculum in docs/spec/scope/scope.md, the table in
      docs/spec/challenges/challenges.md, and the plan list each problem. -->
