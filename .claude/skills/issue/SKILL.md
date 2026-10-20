@@ -23,9 +23,18 @@ Judgment).
    milestones. Their scope isn't due yet: don't build it in this issue, but
    you may shape the design so that it can take that scope.
 2. Read `docs/spec/README.md`, and the whole spec file of every statement
-   the issue quotes.
+   the issue cites.
 3. For a screen, read `docs/design/README.md` and the screen's artboard.
 4. Read every source file and test the change touches, in full.
+5. Check that every name, path, and statement the issue treats as existing
+   is still in the files, and propose an edit of the issue for each one
+   that changed. Leave out what the issue says the work creates.
+6. If the issue's `Waits on` line names an issue or a pull request that is
+   closed, merged or not, propose removing it from the line. When an issue
+   closed as not planned, propose how this issue goes on without it
+   instead.
+7. When an edit of the issue is approved, make it in the body and add a
+   comment that says what changed (`.claude/rules/github.md`).
 
 ## 2. Decide
 
@@ -38,7 +47,8 @@ Judgment).
    Handle a screen state that no artboard draws, or a difference from the
    artboard that the code can't follow, as `docs/design/README.md`
    describes, and don't build it until that is settled.
-3. If the issue's Spec waits on an open `decision` issue, wait for it.
+3. If the issue's `Waits on` line names an open issue or pull request,
+   wait for it.
 4. Propose a choice the spec doesn't cover as a statement, with its reason
    where `docs/spec/README.md`, Reasons, asks for one.
 
@@ -67,11 +77,12 @@ others miss.
    when section, every statement it touches, and the patterns that `CLAUDE.md`,
    Judgment, says to avoid. Do this before any candidate arrives.
 2. Then start both candidate reviews in one message:
-   - A subagent given the diff range, the statements the issue quotes, and
-     the later milestones' scope. It reports only a statement the diff
-     violates or behavior that no statement requires, each with the
-     statement quoted with its file and heading, `file:line`, and a
-     concrete scenario.
+   - A subagent given the diff range, the file and heading of each
+     statement the issue cites, the parts it quotes, and the later
+     milestones' scope. The subagent reads each cited statement in the
+     spec. It reports only a statement the diff violates or behavior that
+     no statement requires, each with the statement quoted with its file
+     and heading, `file:line`, and a concrete scenario.
    - `/code-review` on the branch, which reports defects.
 3. Check every candidate against the files.
 4. Settle every finding (`CLAUDE.md`, Judgment). When you file one as an
