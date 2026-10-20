@@ -10,9 +10,9 @@ labels: perf
      or too large, and under what conditions.
      If the work waits on open issues or pull requests, add one line after
      the paragraph, such as `Waits on #34 and #47.`
-     Example: A run of a sorting problem takes tens of thousands of steps,
-     and none of the costs that grow with a run's length has been
-     measured. -->
+     Example: A run of a sorting program on a long list, such as 200
+     items, takes tens of thousands of steps, and none of the costs that
+     grow with a run's length has been measured. -->
 
 ## Cost
 
@@ -22,7 +22,7 @@ labels: perf
      source and what it applies to.
      Example: A backward Seek (`seek()` in `src/store/run.ts`) starts a new
      runner and advances it to the step, so pressing Back n times from
-     step n costs n(n−1)/2 events in all. -->
+     step n costs n(n−1)/2 steps in all, each of at least one event. -->
 
 ## Spec
 

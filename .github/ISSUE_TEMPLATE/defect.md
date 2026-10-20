@@ -11,7 +11,7 @@ labels: defect
      If the work waits on open issues or pull requests, add one line after
      the paragraph, such as `Waits on #34 and #47.`
      Example: A list `xs` whose item `xs[0]` is `xs` makes `xs == xs` and
-     `print(xs)` recurse until the browser's stack overflows. CPython
+     `print(xs)` recurse until the JavaScript stack overflows. CPython
      answers `True` and prints `[[...]]`. -->
 
 ## Observed
