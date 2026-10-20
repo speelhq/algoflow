@@ -51,11 +51,17 @@ heading, because nothing else marks where a heading of several words ends: as
 `pages.md`, Values on one line, states. A reference to a whole file names the
 file alone. A handle that the code, the tests, and the spec share, such as an
 error code, a block key, a message key, or a function or type name, is cited
-alone. An issue, a pull request, or a review finding that points at a
-statement quotes its sentence and names its file and heading. Statements carry
-no numbers, because a quoted sentence reads on its own and a handle finds the
-statement, the code, and the tests in one search, while numbers would have to
-be kept in step with all three.
+alone. A pull request or a review finding that points at a statement quotes
+its sentence and names its file and heading. An issue cites each statement it
+rests on by its file and heading, because an issue waits while the spec
+changes, and a quote would be a copy that goes stale. It quotes only the part
+of a statement that a defect contradicts, the statements and recorded reasons
+that constrain a decision, and the statements that the work changes, because a
+reader decides or checks from those words, and a heading alone doesn't find a
+part inside a table row. Statements carry no numbers, because a quoted
+sentence reads on its own and a handle finds the statement, the code, and the
+tests in one search, while numbers would have to be kept in step with all
+three.
 
 Each file opens with the code and the tests it governs. A file whose
 statements carry a test obligation of their own ends with a `Verification`
