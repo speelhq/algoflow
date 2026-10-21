@@ -122,7 +122,7 @@ describe("notation", () => {
     expect(exprText(expr("a < b and b < c"))).toBe("a < b and b < c");
   });
 
-  it("brackets no call and no input of one, and every operator as the emitter does", () => {
+  it("parenthesizes no call and no input of one, and every operator as the emitter does", () => {
     expect(exprText(expr("i % 15 == 0"))).toBe("i % 15 = 0");
     expect(exprText(expr("(i + 1) % 3"))).toBe("(i + 1) % 3");
     expect(exprText(expr("abs(i % 3)"))).toBe("abs(i % 3)");

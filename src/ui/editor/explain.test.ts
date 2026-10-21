@@ -72,7 +72,7 @@ describe("explanation line", () => {
     const explained = explainLine(keys("total+"), ctx, undefined, p, target.id);
     expect(shown(explained)).toEqual(["Add", "total + …"]);
     expect(explained?.parts.find((part) => part.underline)?.text).toBe("…");
-    // An input is bracketed as the chart brackets it.
+    // An input is parenthesized as the chart parenthesizes it.
     expect(shown(explainLine(keys("(i+n)//"), ctx, undefined, p, target.id))).toEqual([
       "Whole-number quotient",
       "(i + n) // …",

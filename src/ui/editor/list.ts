@@ -32,7 +32,7 @@ function groupOf(row: Row, asked: readonly string[]): ListGroup {
       return "new";
     case "entry":
       return row.entry.menu.group;
-    case "brackets":
+    case "parentheses":
       return "calculate";
     case "function":
       return "functions";
@@ -49,12 +49,12 @@ function sections(rows: readonly Row[], asked: readonly string[]): Section[] {
 /** The rows offered where a value is expected; with `all`, every entry too. */
 function expected(ctx: LineContext, all: boolean): Row[] {
   const offered = allEntries().filter((entry) => all || !takesValue(entry));
-  // The brackets follow the calculations offered where a value is expected.
+  // The parentheses follow the calculations offered where a value is expected.
   const last = offered.findLastIndex(
     (entry) => entry.menu.group === "calculate" && !takesValue(entry),
   );
   const entries = offered.map((entry): Row => ({ kind: "entry", entry }));
-  entries.splice(last + 1, 0, { kind: "brackets" });
+  entries.splice(last + 1, 0, { kind: "parentheses" });
   return [
     ...ctx.variables.map((name): Row => ({ kind: "variable", name })),
     ...entries,

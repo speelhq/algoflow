@@ -1,6 +1,6 @@
 // A value line drawn as the chart writes its expression: variables as bold words in
 // their color, an operator as its symbol, an input still to fill as an empty field, the
-// brackets the chart draws and those opened and not closed, the caret, and the word being
+// parentheses the chart draws and those opened and not closed, the caret, and the word being
 // typed. Keys go to `onKey`; clicks name the expression clicked.
 import { forwardRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { t } from "@/i18n/t";
@@ -9,7 +9,7 @@ import { isEmptyExpr, variableOf } from "@/lang/walk";
 import { cn } from "@/lib/utils";
 import type { Side } from "@/blocks/types";
 import {
-  bracketed,
+  parenthesized,
   notationOf,
   exprText,
   placeholderValue,
@@ -130,10 +130,10 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
     );
   };
 
-  /** An expression; `placed` says how its parent places it, for its brackets. */
+  /** An expression; `placed` says how its parent places it, for its parentheses. */
   const draw = (expr: Expr, placed?: { binds: number | undefined; side: Side }): ReactNode => {
     const open = line?.open.includes(expr.id) ?? false;
-    const brackets = (placed !== undefined && bracketed(expr, placed)) || open;
+    const parentheses = (placed !== undefined && parenthesized(expr, placed)) || open;
     let body: ReactNode;
     if (isEmptyExpr(expr)) body = field(expr);
     else if (inputs(expr).length === 0) body = leaf(expr);
@@ -141,10 +141,10 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
     const after = caret && "after" in caret && caret.after === expr.id && !line?.selected;
     return (
       <span key={expr.id} className="inline">
-        {brackets && <span className="text-muted-foreground">(</span>}
+        {parentheses && <span className="text-muted-foreground">(</span>}
         {body}
         {after && open && word}
-        {brackets && <span className="text-muted-foreground">)</span>}
+        {parentheses && <span className="text-muted-foreground">)</span>}
         {after && !open && word}
       </span>
     );

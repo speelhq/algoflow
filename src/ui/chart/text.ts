@@ -119,13 +119,13 @@ export function notationOf(node: Node): string {
   return getBlock(keyOf(node)).notation(node);
 }
 
-/** Whether an expression's notation ends with `bracket`: a call's `)`, a list's or an item's `]`. */
-export function closedBy(expr: Expr, bracket: ")" | "]"): boolean {
+/** Whether an expression's notation ends with `closer`: a call's `)`, a list's or an item's `]`. */
+export function closedBy(expr: Expr, closer: ")" | "]"): boolean {
   const last = templatePieces(notationOf(expr)).at(-1);
-  return last !== undefined && "words" in last && last.words.endsWith(bracket);
+  return last !== undefined && "words" in last && last.words.endsWith(closer);
 }
 
-/** Whether an expression is a call: its notation ends with its own bracket (`abs({x})`). */
+/** Whether an expression is a call: its notation ends with its own parenthesis (`abs({x})`). */
 export function isCall(expr: Expr): boolean {
   return closedBy(expr, ")");
 }
@@ -142,13 +142,16 @@ export function bindsAt(node: Node, slot: string): number | undefined {
   return own ?? (def.slots.find((s) => s.name === slot)?.atom ? PRECEDENCE.atom : undefined);
 }
 
-/** Whether `child`, the input `held` places, is put in brackets: as the emitter does. */
-export function bracketed(child: Expr, held: { binds: number | undefined; side: Side }): boolean {
+/** Whether `child`, the input `held` places, is put in parentheses: as the emitter does. */
+export function parenthesized(
+  child: Expr,
+  held: { binds: number | undefined; side: Side },
+): boolean {
   const own = precedenceOf(child);
   return own !== undefined && held.binds !== undefined && needsParens(own, held.binds, held.side);
 }
 
-function inBrackets(parts: Part[]): Part[] {
+function inParentheses(parts: Part[]): Part[] {
   return [{ text: "(" }, ...parts, { text: ")" }];
 }
 
@@ -159,7 +162,7 @@ function operandParts(
   writing: Writing,
 ): Part[] {
   const parts = exprParts(child, writing);
-  return bracketed(child, held) ? inBrackets(parts) : parts;
+  return parenthesized(child, held) ? inParentheses(parts) : parts;
 }
 
 /**

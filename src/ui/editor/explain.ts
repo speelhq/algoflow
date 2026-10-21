@@ -5,7 +5,7 @@ import { chartOf, firstSetters, variableKinds } from "@/lang/kinds";
 import type { Expr, Id, Kind, NodeId, Program } from "@/lang/types";
 import { isEmptyExpr } from "@/lang/walk";
 import {
-  bracketed,
+  parenthesized,
   notationOf,
   exprText,
   placeholder,
@@ -17,7 +17,7 @@ import {
 } from "@/ui/chart/text";
 import { labelOf } from "./entries";
 import {
-  BRACKETS_KEY,
+  PARENTHESES_KEY,
   find,
   matches,
   parentOf,
@@ -83,10 +83,10 @@ function explainRow(row: Row, program: Program, at: NodeId): Explanation {
       return explainName(program, at, row.name, row.kind === "new");
     case "entry":
       return { name: row.entry.label, parts: typedHelp(row.entry.help, row.entry.menu.keys) };
-    case "brackets":
+    case "parentheses":
       return {
-        name: t("editor.brackets"),
-        parts: typedHelp(t("editor.bracketsHelp"), BRACKETS_KEY),
+        name: t("editor.parentheses"),
+        parts: typedHelp(t("editor.parenthesesHelp"), PARENTHESES_KEY),
       };
     case "function":
       return { name: functionLabel(row.fn), parts: [{ text: t("editor.ownFunction") }] };
@@ -155,7 +155,7 @@ function operationParts(operation: Expr, current: Expr): Part[] {
     switch (held?.role) {
       case "expr":
         if (!held.expr) return [];
-        return bracketed(held.expr, held)
+        return parenthesized(held.expr, held)
           ? [{ text: "(" }, written(held.expr), { text: ")" }]
           : [written(held.expr)];
       case "exprs":
