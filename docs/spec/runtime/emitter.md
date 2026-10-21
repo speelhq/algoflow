@@ -65,7 +65,7 @@ text. The emitter indents a block by one level, writes `pass` for an empty
 block, and records the line map while flattening. Blocks receive
 `EmitContext = { expr(e): string; operand(e, precedence, side): string; slot(node, name): string; block(stmts): PyLine }`.
 `operand` applies the parentheses rule above. `slot` writes the input of a
-slot, bracketed as an atom when the slot declares `atom` (`blocks.md`,
+slot, parenthesized as an atom when the slot declares `atom` (`blocks.md`,
 Node text). A target is written as the expression it is (`language.md`,
 Statements). An `empty` expression emits `...`.
 
