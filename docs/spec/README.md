@@ -1,8 +1,16 @@
 # Specification
 
+The spec states what must be true of AlgoFlow and of its code. The code,
+the tests, the issues, and the skills cite it. `CLAUDE.md`, Sources of
+truth, asks whoever changes an area to read the area's file first.
+This file says how the spec is organized and written: which file holds
+which area, which language the spec uses, what a statement is and how one
+refers to another, how a file is laid out, when a statement carries a
+reason, which terms every file uses, and which commitments the spec keeps.
+
 ## Files
 
-The spec has one folder per area, and each folder holds that area's files.
+The spec has one folder per area, and each folder holds that area's files:
 
 | Folder        | File             | Defines                                                         |
 | ------------- | ---------------- | --------------------------------------------------------------- |
@@ -22,63 +30,156 @@ The spec has one folder per area, and each folder holds that area's files.
 
 ## Language of the specification
 
-All of the spec is in English: its text, identifiers, sentences, and example
-strings. English (`en.json` and the `en` fields) is the development locale.
-Japanese is a translation. It exists only in `src/i18n/ja.json`, in the
-glossary `src/i18n/glossary.json` (`ui/pages.md`, Catalogs), and in the `ja`
-fields of challenge, plan, and module files. The spec refers to a Japanese
-text by its key, and to a glossary word by its English term. Labels quoted in
-`ui/` are `en.json` texts, and `ja.json` holds the same keys with Japanese
-texts (`ui/pages.md`, Catalogs). A sentence that lists what the screen shows
-quotes a control's label in full, with its symbol (`▶ Run`), and any other
-sentence names the control without its symbol (`Run`).
+This section states which language the spec uses and how it writes a
+label.
+
+### English and Japanese
+
+The spec uses English for its text, its identifiers, its sentences, and
+its example strings. English is the development locale: `en.json` and the
+`en` fields hold it.
+
+Japanese is a translation of the English. It exists in three places only:
+
+- `src/i18n/ja.json`
+- the glossary `src/i18n/glossary.json` (`pages.md`, Catalogs)
+- the `ja` fields of challenge, plan, and module files
+
+The spec refers to a Japanese text by its key, and to a glossary word by
+its English term.
+
+### Labels
+
+When a `ui/` file quotes a label, it quotes an `en.json` text. `ja.json`
+holds the same key with the Japanese text (`pages.md`, Catalogs).
+
+The spec writes a control's label in one of two ways:
+
+- When a sentence lists what the screen shows, it writes the label in
+  full, with its symbol. For example: `▶ Run`.
+- Any other sentence names the control without its symbol. For example:
+  `Run`.
 
 ## Statements
 
-A statement is a paragraph or a table row under a heading. Statements use
-the present indicative ("The emitter writes 4-space indentation"), and they
-are mandatory. "May" marks an option. A new statement states one rule that
-one test can establish. A statement names no release, schedule, or status,
-and it records no history. Statements follow `CLAUDE.md`, Writing, except
-that a statement is a paragraph or a table row, never a list item.
+A statement is a paragraph, a list item, or a table row under a heading.
+Every statement has these properties:
 
-A statement refers to another by its heading. When the heading is in another
-file, the reference names the file too: (`language.md`, Scope). A comma
-separates a heading from the heading it sits under (`language.md`, Semantics,
-Lists), and a semicolon separates two references (`views.md`; `run.md`,
-Narration). A reference inside a sentence also takes a comma after its
-heading, because nothing else marks where a heading of several words ends: as
-`pages.md`, Values on one line, states. A reference to a whole file names the
-file alone. A handle that the code, the tests, and the spec share, such as an
-error code, a block key, a message key, or a function or type name, is cited
-alone. A pull request or a review finding that points at a statement quotes
-its sentence and names its file and heading. An issue cites each statement it
-rests on by its file and heading, because an issue waits while the spec
-changes, and a quote would be a copy that goes stale. It quotes only the part
-of a statement that a defect contradicts, the statements and recorded reasons
-that constrain a decision, and the statements that the work changes, because a
-reader decides or checks from those words, and a heading alone doesn't find a
-part inside a table row. Statements carry no numbers, because a quoted
-sentence reads on its own and a handle finds the statement, the code, and the
-tests in one search, while numbers would have to be kept in step with all
-three.
+- It is in the present indicative. For example: "The emitter writes
+  4-space indentation".
+- It is mandatory. The word "may" marks an option.
+- A new statement states one rule that one test can establish.
+- It names no release, schedule, or status, and it records no history.
+- It follows `CLAUDE.md`, Writing.
 
-Each file opens with the code and the tests it governs. A file whose
-statements carry a test obligation of their own ends with a `Verification`
-section, which states only those obligations.
+### Form
+
+A paragraph holds one rule with its exceptions.
+
+These are parallel statements:
+
+- the cases of a rule
+- the fields of a record
+- the controls of a bar
+- the steps of a procedure
+
+Parallel statements are a list or a table, because a reader scans
+parallel items and reads a rule as prose.
+
+An example follows its rule as a sentence or a code block of its own,
+because an example inside a sentence makes the reader hold the rule open
+while reading the example. A parenthesis holds only a reference or a key.
+
+Statements carry no numbers, because a quoted sentence reads on its own,
+and a handle (References) finds the statement, the code, and the tests in
+one search. A number would make the spec's writer keep it in step with
+all three.
+
+### References
+
+A statement refers to another statement in one of three forms:
+
+- When both are in one file: by the other statement's heading.
+- When the other statement is in another file: by its file and its
+  heading. For example: (`language.md`, Scope).
+- When it refers to a whole file: by the file alone.
+
+A paragraph refers to a statement once, in the first sentence that rests
+on it.
+
+The spec punctuates a reference in three ways:
+
+- A comma separates a heading from the heading it sits under. For
+  example: (`language.md`, Semantics, Lists).
+- A semicolon separates two references. For example: (`views.md`;
+  `run.md`, Narration).
+- A reference inside a sentence takes a comma after its heading, because
+  nothing else marks where a heading of several words ends. For example:
+  as `pages.md`, Values on one line, states.
+
+A handle is a name that the code, the tests, and the spec share. For
+example: an error code, a block key, a message key, or a function or type
+name. The spec, and every document that cites it, refers to a handle by the
+handle alone.
+
+### Citations from outside the spec
+
+When a pull request or a review finding cites a statement, it quotes the
+statement's sentence and names its file and heading.
+
+An issue cites each statement it rests on by its file and heading, because
+an issue waits while the spec changes, and a quote would be a copy that
+goes stale.
+
+An issue quotes only three things, because a reader decides or checks
+from the quoted words, and a heading alone doesn't find a part inside a
+table row:
+
+- the part of a statement that a defect contradicts
+- the statements and recorded reasons that constrain a decision
+- the statements that the work changes
+
+## File layout
+
+Each file opens with one paragraph. The paragraph says what the area is
+and what the file states, and then names the code and the tests that the
+file governs.
+
+A `##` section states one part of the area and opens with what that part
+is for.
+
+When a part has several pieces, its section splits into `###` sections,
+one per piece, under its `##` heading, so every citation of that heading
+by the code, the tests, and the issues stays valid.
+
+When a file's statements carry test obligations of their own, the file
+ends with a `Verification` section. That section states only those
+obligations.
 
 ## Reasons
 
-A statement carries a reason only in two cases: when a reader would
-otherwise plausibly change it to an alternative that was rejected, or when
-it rests on a constraint that the code, the configuration, and the
-statement don't show. The reason names that alternative or constraint. It
-stands in the statement's paragraph, or, for a table row, after the table
-with the row named. A reason doesn't restate the statement, tell how the
-statement came about, or defend what a test or a check already enforces.
+A statement carries a reason in two cases only:
+
+- A reader would otherwise plausibly change the statement to an
+  alternative that was rejected. The reason names that alternative.
+- The statement rests on a constraint that the code, the configuration,
+  and the statement itself don't show. The reason names that constraint.
+
+The reason follows the statement it explains, in the same sentence or the
+next, and ends the paragraph. For a table row, the reason stands after
+the table and names the row.
+
+A reason does none of these:
+
+- restate the statement
+- tell how the statement came about
+- defend what a test or a check already enforces
+
 When a statement changes, its reason changes with it.
 
 ## Terms
+
+The spec uses these terms:
 
 | Term            | Definition                                                                      |
 | --------------- | ------------------------------------------------------------------------------- |
@@ -112,6 +213,8 @@ When a statement changes, its reason changes with it.
 
 ## Commitments
 
-The spec keeps three commitments: one small block language that is a
-subset of Python, views chosen by value type only, and the generated Python
-as the reference for behavior.
+The spec keeps three commitments:
+
+- the block language is small, and it is a subset of Python
+- the type of a value alone chooses its view
+- the generated Python is the reference for behavior
