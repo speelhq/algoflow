@@ -240,12 +240,12 @@ Python's, the same in every locale.
 Operators are parenthesized as the emitter parenthesizes them
 (`emitter.md`). An input whose slot declares `atom` (the list of an item)
 binds as an atom, as Python binds the value an item is taken from, so an
-operation there is bracketed (`(a + b)[0]`). The emitter, the chart, and
+operation there is parenthesized (`(a + b)[0]`). The emitter, the chart, and
 the value line read that one declaration. Comparison and arithmetic keep
 the symbols a learner knows from school (`=`, `≠`, `≤`, `×`, `÷`). An
 operation that school has no symbol for is written with Python's symbol
 (`%`, `//`, `**`) and named in words in the value list. An operation
-written in words was rejected, because it needs brackets of its own
+written in words was rejected, because it needs parentheses of its own
 (`(remainder of i divided by 15) = 0`), carries one language's word order
 into every translation, and is a second notation that the learner gives up
 for Python.

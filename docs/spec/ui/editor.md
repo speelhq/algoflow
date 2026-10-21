@@ -169,14 +169,14 @@ Where a value is expected, it holds `Variables` (the variables visible at the
 node, most recently assigned first, each with its kind, `language.md`, Kinds),
 `Values` (the entries of group `values`: `Text`, `True`, `False`, `None`,
 `Empty list`, `Empty dict`), `Conditions` (`Not`), `Calculate`
-(`Random whole number`, then `( )`, a pair of brackets, labeled
-`editor.brackets`), and `Your functions` (the program's own functions as
+(`Random whole number`, then `( )`, a pair of parentheses, labeled
+`editor.parentheses`), and `Your functions` (the program's own functions as
 calls, each labeled `name(…)`, or `name()` with no parameter, and explained by
 `editor.ownFunction`, and last `Modules ▸`, which opens one group per module
 listing its functions as calls, as the block menu's does). After a value, it
 holds the entries whose `on` holds the kind of the expression before the
 caret, which is the largest operation with a precedence that ends at the caret
-within the innermost brackets (`blocks.md`, Menu entries): `Calculate` for a
+within the innermost parentheses (`blocks.md`, Menu entries): `Calculate` for a
 number, `Conditions` for a true/false value, `Items` for a list, a dict, or an
 object, and `Compare` and `Convert` for every kind. An entry with a symbol
 shows it before its name (`× Multiply`). After a value of no known kind, every
@@ -196,7 +196,7 @@ definition).
 An entry chosen after a value takes that value as its first input. An entry
 whose block has a precedence (an operator) stands between the value before the
 caret and the next one, and binds by the precedence of `emitter.md` within the
-innermost brackets. Any other entry takes the expression before the caret
+innermost parentheses. Any other entry takes the expression before the caret
 whose kind chose the list, so `i < n` followed by `As text` gives
 `str(i < n)`, except an entry whose first input binds as an atom
 (`Item at a position`, `blocks.md`, Node text), which takes the value just
@@ -207,18 +207,19 @@ of them. Tab and Shift+Tab move between the fields of the line and, past its
 last or first field, to the next or previous slot of the notation. Pressing →
 at the end of an operation's last input leaves the operation. While no word is
 typed, ← and → move the caret to the previous or next value or input, and
-brackets left behind close. A click on a value puts the caret after it, and on
-an input at it. A slot entered by Tab, or open when the editor opens, has its
-value selected: a value typed (a digit, a word, a `-` sign, or a bracket)
-replaces it, Backspace removes it, and a key that names an entry after a value
-takes it as its first input (`n` selected, `*` gives `n × …`). An entry that
-takes a value, chosen where a value is expected, fills the input with its
-operation, and the caret moves to its first input. A call of a function with
-no parameter, a variable, or a value fills the input it is chosen for. A value
-is built left to right, as it is typed and read, because choosing `abs` first
-would make the learner build the value again inside it. An entry with no
-precedence takes the expression the list was chosen for, because the list
-offered `As text` after `i < n` for the comparison, and applying it to `n`
+parentheses left behind close. A click on a value puts the caret after it,
+and on an input at it. A slot entered by Tab, or open when the editor opens,
+has its value selected: a value typed (a digit, a word, a `-` sign, a
+parenthesis, or a bracket) replaces it, Backspace removes it, and a key that
+names an entry after a value takes it as its first input (`n` selected, `*`
+gives `n × …`). An entry that takes a value, chosen where a value is
+expected, fills the input with its operation, and the caret moves to its
+first input. A call of a function with no parameter, a variable, or a value
+fills the input it is chosen for. A value is built left to right, as it is
+typed and read, because choosing `abs` first would make the learner build
+the value again inside it. An entry with no precedence takes the expression
+the list was chosen for, because the list offered `As text` after `i < n`
+for the comparison, and applying it to `n`
 alone would fail when run. A selected value is replaced by what is typed
 because a slot reached by Tab already holds one, `0` in a new `for`, which a
 caret after it would extend (`01`).
@@ -261,7 +262,7 @@ selected value, because the slot keeps no list:
 | `-`                     | `−`; at an empty input, the sign of what follows |
 | `*` `/`                 | `×` `÷`                                          |
 | `==` `!=` `<=` `>=`     | `=` `≠` `≤` `≥`                                  |
-| `(`                     | a pair of brackets, the caret inside them; after a call's name, the call's own |
+| `(`                     | a pair of parentheses, the caret inside them; after a call's name, the call's own |
 | `[` `,` `]`             | a list's pair of brackets; `,` between its items; `]` leaves it; after a value, `[` an item of it (`nums[…]`) |
 | `,` in a call           | the call's next input                            |
 | `,` in an `exprs` slot  | the next value of the slot (Node editor)         |
@@ -272,11 +273,11 @@ A single `=` inserts nothing, because it is Python's assignment, so it is
 never read as a comparison. A comparison typed after a comparison is refused,
 and the explanation line shows the message of `E_PARSE_CHAIN`. At an input
 still to fill, a key that inserts an operation after a value inserts nothing,
-except `-`, and `(` opens brackets only at such an input. `)` leaves the
+except `-`, and `(` opens parentheses only at such an input. `)` leaves the
 innermost call around the caret when no pair is open or the call begins inside
 the innermost open pair, and otherwise closes that pair, so `2*(abs(i)-1)`
 keeps both. A `,` after the last input a call holds is refused, because inside
-a call's brackets a `,` separates its arguments, as in Python, never the
+a call's parentheses a `,` separates its arguments, as in Python, never the
 values around the call. `[` at an input still to fill inserts a list with one
 item to fill and puts the caret at it. After a value, `[` inserts an item of
 that value at a position to fill (`Item at a position`), binding to the value
@@ -294,8 +295,8 @@ the end of its last item, because removing the list there would lose the items
 typed before. After an empty list, it removes the list. `**` and `//`, typed
 as two keys, become one operator that binds by its own precedence: `2*3**2`
 multiplies 2 by 3 to the power of 2. Every operator has a key where Python has
-one, so the `Python` tab later shows keys the learner has typed. Brackets
-aren't stored, so none is ever left unclosed.
+one, so the `Python` tab later shows keys the learner has typed.
+Parentheses aren't stored, so none is ever left unclosed.
 
 ## Targets
 
@@ -383,12 +384,12 @@ highlights or the caret is in:
 | What it explains | What the line shows |
 | --- | --- |
 | an entry | its name and its help (`blocks.md`, Catalog keys), followed, when keys insert it, by how to type them (`editor.typeKeys`: `Type %.`) |
-| the brackets | their label with `editor.bracketsHelp`, and how to type them |
+| the parentheses | their label with `editor.parenthesesHelp`, and how to type them |
 | an input of the problem | its kind (`editor.explain.input`) |
 | a parameter | `editor.explain.parameter` |
 | a name set nowhere yet | that choosing it makes a new variable that gets its value there (`editor.explain.newVariable`) |
 | any other variable | its name with its kind and the statement that first gives it a value (`A number variable. It first gets a value in: i ← 1.`, `editor.explain.variablePlain` when it has no kind) |
-| inside an operation's input | the operation's name (the entry offered after the kind of its first input, `Join with another list` for `+` after a list) and its notation with every input as its value, bracketed as the chart brackets it, an empty one as `…`, and the input the caret is in underlined (`dp[…]`, its `…` underlined) |
+| inside an operation's input | the operation's name (the entry offered after the kind of its first input, `Join with another list` for `+` after a list) and its notation with every input as its value, parenthesized as the chart parenthesizes it, an empty one as `…`, and the input the caret is in underlined (`dp[…]`, its `…` underlined) |
 | a refused key | its message (Backspace and keys) |
 | a word that matches nothing | the closest name (Value line), or `editor.nothingLike` when none is close |
 | a name field with nothing highlighted | `editor.explain.name` |
