@@ -1,9 +1,9 @@
 // The value line: one expression edited as a line, with a caret at
-// an input still to fill or after a value, the brackets opened and not yet closed, the word
+// an input still to fill or after a value, the parentheses opened and not yet closed, the word
 // being typed, and the first key of a two-key operator. Every change is a new `Line`.
 // Blocks are made by the parser (a variable, a number, a sign, a call) or by an entry's
 // block (`create()` with its preset), and read through their slots, their notation (the caret
-// moves in reading order, and a call ends with its bracket), and `precedence`, so this file
+// moves in reading order, and a call ends with its parenthesis), and `precedence`, so this file
 // names no block kind. A target slot's line keeps a target (`editor.md`, Targets).
 import { errorText, t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
@@ -36,7 +36,7 @@ export type Line = {
   caret: Caret;
   /** The whole value is selected: a value typed replaces it, an operator's key takes it. */
   selected: boolean;
-  /** The brackets opened and not yet closed, innermost last, by the expression they hold. */
+  /** The parentheses opened and not yet closed, innermost last, by the expression they hold. */
   open: readonly NodeId[];
   /** The word being typed at the caret. */
   word: string;
@@ -68,13 +68,13 @@ export type LineContext = {
 
 /**
  * A choice of the list: a variable, a new variable named by the word typed, an entry, the
- * brackets, or a function of the program.
+ * parentheses, or a function of the program.
  */
 export type Row =
   | { kind: "variable"; name: Id }
   | { kind: "new"; name: Id }
   | { kind: "entry"; entry: Entry }
-  | { kind: "brackets" }
+  | { kind: "parentheses" }
   | { kind: "function"; fn: LineFunction };
 
 /** What a key or a choice did: `move` leaves the line for the next or previous slot or item. */
@@ -134,7 +134,7 @@ function replaceIn(root: Expr, id: NodeId, by: Expr): Expr {
   return mapInputs(root, (input) => replaceIn(input, id, by));
 }
 
-/** The line with expression `id` replaced; a bracket that held it holds what replaces it. */
+/** The line with expression `id` replaced; a parenthesis that held it holds what replaces it. */
 function replace(line: Line, id: NodeId, by: Expr): Line {
   return {
     ...line,
@@ -169,7 +169,8 @@ export function stops(expr: Expr): Caret[] {
   const own = inputs(expr);
   if (own.length === 0) return [{ after: expr.id }];
   const inner = own.flatMap(stops);
-  // An operation with no precedence ends with its own text (a call's bracket): a stop of its own.
+  // An operation with no precedence ends with its own text (a call's parenthesis): a stop of
+  // its own.
   return precedenceOf(expr) === undefined ? [...inner, { after: expr.id }] : inner;
 }
 
@@ -195,7 +196,7 @@ function within(root: Expr, group: NodeId, id: NodeId): boolean {
   return held !== undefined && find(held, id) !== undefined;
 }
 
-/** Brackets the caret has left behind close; after the value they hold, it is still inside them. */
+/** Parentheses the caret has left behind close; after the value they hold, it is still inside. */
 function closeBehind(line: Line): Line {
   const { caret } = line;
   const open = line.open.filter((group) =>
@@ -204,7 +205,7 @@ function closeBehind(line: Line): Line {
   return { ...line, open };
 }
 
-/** The caret is after the whole value, with no word typed, no bracket open, and nothing selected. */
+/** The caret is after the whole value: no word typed, no open parenthesis, nothing selected. */
 export function atEnd(line: Line): boolean {
   const { caret, root } = line;
   return (
@@ -229,7 +230,7 @@ function lastValue(line: Line): Expr | undefined {
 
 /**
  * Where an operator of `level` inserted after `value` binds: it takes the largest
- * operation ending at the caret that binds tighter, within the innermost open brackets.
+ * operation ending at the caret that binds tighter, within the innermost open parentheses.
  * `chain` when it would chain a comparison.
  */
 function bindAt(line: Line, value: Expr, level: number): Expr | "chain" {
@@ -435,7 +436,7 @@ function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
       const made = callExpr(row.fn, ctx.scope);
       return made ? fill(base, made) : refused(line);
     }
-    case "brackets":
+    case "parentheses":
       return done({ ...base, open: [...base.open, base.caret.at] });
     case "entry": {
       const made = makeEntry(row.entry);
@@ -455,7 +456,7 @@ function rowName(row: Row): string {
       return row.entry.label;
     case "function":
       return row.fn.name;
-    case "brackets":
+    case "parentheses":
       return "";
   }
 }
@@ -557,8 +558,8 @@ export function settle(line: Line, ctx: LineContext): Line {
 
 // ---------------------------------------------------------------- typing
 
-/** The key that opens a pair of brackets, or a call's own after its name. */
-export const BRACKETS_KEY = "(";
+/** The key that opens a pair of parentheses, or a call's own after its name. */
+export const PARENTHESES_KEY = "(";
 
 /** The keys that end a word. */
 const ENDS_WORD = /^[-+*/%<>=!(),[\]]$/;
@@ -614,8 +615,9 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
     const exact = exactRow(current, ctx);
     if (!exact) return refused(line);
     const chosen = choose(current, exact, ctx);
-    // A call's `(` is the bracket the call already has.
-    if (!chosen.taken || key === " " || (key === BRACKETS_KEY && makesCall(exact))) return chosen;
+    // A call's `(` is the parenthesis the call already has.
+    if (!chosen.taken || key === " " || (key === PARENTHESES_KEY && makesCall(exact)))
+      return chosen;
     current = chosen.line;
   }
   if (key === " ") return done(current);
@@ -628,7 +630,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
   if (/[0-9.]/.test(key)) return typeDigit(current, key);
   const value = !atInput(current);
   switch (key) {
-    case BRACKETS_KEY: {
+    case PARENTHESES_KEY: {
       const base = current.selected ? cleared(current) : current;
       return "at" in base.caret
         ? done({ ...base, open: [...base.open, base.caret.at] })
@@ -637,7 +639,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
     case ")": {
       const group = current.open.at(-1);
       const held = group === undefined ? undefined : find(current.root, group);
-      // A call begun inside the innermost brackets closes before them.
+      // A call begun inside the innermost parentheses closes before them.
       const around = enclosing(current, isCall);
       if (around && (group === undefined || (held && find(held, around.parent.id)))) {
         return done({ ...current, caret: { after: around.parent.id } });
@@ -772,7 +774,7 @@ function removeBefore(line: Line): Outcome {
         const end = own.at(-1);
         return end ? removeBefore({ ...current, caret: endOf(end) }) : refused(line);
       }
-      // A call ends in its bracket; removing it would lose the value of an input after the first.
+      // A call ends in its parenthesis; removing it would lose the value of a later input.
       if (own.slice(1).some((input) => !isEmptyExpr(input))) return move(current, -1);
       const next = replace(current, last.id, first);
       return done({ ...next, caret: endOf(first) });

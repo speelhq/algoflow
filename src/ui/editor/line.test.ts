@@ -146,7 +146,7 @@ describe("typing", () => {
     expect(keys("not ok and ok").root).toMatchObject({ op: "and", left: { op: "not" } });
   });
 
-  it("brackets group what is inside them and are not stored", () => {
+  it("parentheses group what is inside them and are not stored", () => {
     const line = keys("(i+1)*2");
     expect(py(line)).toBe("(i + 1) * 2");
     expect(line.open).toEqual([]);
@@ -154,7 +154,7 @@ describe("typing", () => {
     expect(py(keys("2*(i+1"))).toBe("2 * (i + 1)");
   });
 
-  it("a click inside an open bracket keeps it open; a call's ( is its own and ) leaves it", () => {
+  it("a click inside an open parenthesis keeps it open; a call's ( is its own and ) leaves it", () => {
     const opened = raw("i*(5");
     const clicked = clickAt(opened, (opened.root as Extract<Expr, { kind: "binop" }>).right.id);
     expect(clicked.open).toHaveLength(1);
@@ -172,7 +172,7 @@ describe("typing", () => {
     expect(type(raw("randint(i"), "(", ctx).taken).toBe(false);
   });
 
-  it("`)` closes a call begun inside brackets before the brackets", () => {
+  it("`)` closes a call begun inside parentheses before the parentheses", () => {
     expect(py(keys("2*(abs(i)-1)"))).toBe("2 * (abs(i) - 1)");
     expect(py(keys("(abs(i)+1)*2"))).toBe("(abs(i) + 1) * 2");
     expect(py(keys("(min(i,n))*2"))).toBe("min(i, n) * 2");
@@ -309,7 +309,7 @@ describe("choosing", () => {
     expect(py(choose(keys("total+i"), entry("call:str"), ctx).line)).toBe("str(total + i)");
     expect(py(choose(keys("i<n"), entry("call:str"), ctx).line)).toBe("str(i < n)");
     expect(py(choose(keys("total+i"), entry("binop.mul"), ctx).line)).toBe("total + i * ...");
-    // Brackets typed first limit it to a part.
+    // Parentheses typed first limit it to a part.
     expect(py(choose(keys("total+(i"), entry("call:str"), ctx).line)).toBe("total + str(i)");
   });
 
@@ -399,7 +399,7 @@ describe("Backspace and moving", () => {
     expect(py(back(after, 3))).toBe("i");
   });
 
-  it("after a call's bracket it removes the call and keeps its first input", () => {
+  it("after a call's parenthesis it removes the call and keeps its first input", () => {
     const line = choose(keys("i"), entry("call:str"), ctx).line;
     expect(py(back(line))).toBe("i");
     const inside = keys("12", choose(empty(), entry("call:abs"), ctx).line);

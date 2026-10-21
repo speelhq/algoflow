@@ -41,8 +41,12 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
       };
     case "function":
       return { key: `f:${row.fn.name}`, label: functionLabel(row.fn) };
-    case "brackets":
-      return { key: "brackets", label: t("editor.brackets"), symbol: t("editor.bracketsGlyph") };
+    case "parentheses":
+      return {
+        key: "parentheses",
+        label: t("editor.parentheses"),
+        symbol: t("editor.parenthesesGlyph"),
+      };
   }
 }
 

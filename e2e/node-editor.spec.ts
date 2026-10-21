@@ -103,7 +103,7 @@ test("the list follows what is before the caret, and a choice after a value take
   await expect(list).not.toContainText("Random whole number");
   await list.locator('[data-row="e:call:str"]').click();
   await expect(chart(page)).toContainText("total ← str(n)");
-  // Backspace after the call's bracket keeps its first input.
+  // Backspace after the call's parenthesis keeps its first input.
   await page.keyboard.press("Backspace");
   await expect(chart(page)).toContainText("total ← n");
 });

@@ -122,8 +122,8 @@ describe("editor session", () => {
     );
     expect(pickRow(atPosition, total, targetCtx).after).toEqual({ go: 1 });
     // A choice that leaves an input to fill, or one the target refuses, keeps the keyboard.
-    const brackets = pickRow(openSession(stmt, field, null), { kind: "brackets" }, targetCtx);
-    expect(brackets.after).toBeUndefined();
+    const parentheses = pickRow(openSession(stmt, field, null), { kind: "parentheses" }, targetCtx);
+    expect(parentheses.after).toBeUndefined();
     const text = allEntries().find((entry) => entry.id === "str");
     if (!text) throw new Error("no Text");
     const named = openSession(assignTo(v("x"), num(1)), field, null);

@@ -95,7 +95,7 @@ describe("call resolution", () => {
       params: { name: "nope" },
     });
     expect(err("1 + nope(1)", scope)).toMatchObject({ code: "E_UNKNOWN_CALL", position: 4 });
-    // The name's token, whatever stands between it and the bracket.
+    // The name's token, whatever stands between it and the parenthesis.
     expect(err("1 + nope (1)", scope)).toMatchObject({ code: "E_UNKNOWN_CALL", position: 4 });
   });
 

@@ -10,7 +10,7 @@ describe("assign (blocks.md)", () => {
   it("emits `<target> = <value>`", () => {
     expect(lines([assign("x", bin("+", num(1), num(2)))])).toEqual(["x = 1 + 2"]);
     expect(lines([assignTo(ast.item(v("xs"), num(0)), num(9))])).toEqual(["xs[0] = 9"]);
-    // An item target is written by its block, its list bracketed as its slot declares.
+    // An item target is written by its block, its list parenthesized as its slot declares.
     const sum = bin("+", v("a"), v("b"));
     expect(lines([assignTo(ast.item(sum, num(0)), num(9))])).toEqual(["(a + b)[0] = 9"]);
   });
