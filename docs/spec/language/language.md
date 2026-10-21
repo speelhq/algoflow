@@ -1,15 +1,22 @@
 # Language
 
+This file states the program model: how a program is stored as an AST,
+how its values are written in files and held during a run, what each
+statement and expression means, which names are visible where, which
+faults validation reports, how a program is edited, and where it
+persists.
+
 Code: `src/lang/`: types `types.ts`, validation `validate.ts`, edits
 `edit.ts`, data conversion `data.ts`, import `migrate.ts`, traversal
 `walk.ts`, scope `scope.ts`, kinds `kinds.ts`. Tests: beside each file.
 
 ## Identifiers
 
-A variable, function, parameter, or field name matches
-`/^[a-z_][a-z0-9_]*$/`.
+Identifiers are the names in a program. A name has one of two forms:
 
-A class name matches `/^[A-Z][A-Za-z0-9]*$/`.
+- A variable, function, parameter, or field name matches
+  `/^[a-z_][a-z0-9_]*$/`.
+- A class name matches `/^[A-Z][A-Za-z0-9]*$/`.
 
 No name is in `RESERVED`:
 
@@ -22,6 +29,8 @@ tuple id type self math random round sorted
 ```
 
 ## Program
+
+A program is one `Program` value:
 
 ```ts
 export type Program = {
@@ -41,19 +50,20 @@ export type NodeId = string; // 12-char nanoid
 export type Id = string;
 ```
 
-`NodeId` values are unique within a program.
+Within a program, `NodeId` values are unique. Function names, class names,
+and input names are unique within a program, and they don't collide with
+each other.
 
-Function names, class names, and input names are unique within a program
-and don't collide with each other.
-
-An input declares only its name and kind, and its value comes from the chosen
-case (`challenges.md`, Schema), because a value in the program would be a
-second copy of one case, which the chart and the `Python` tab would show while
-Run used another case.
+An input declares only its name and its kind. Its value comes from the
+chosen case (`challenges.md`, Schema), because a value in the program
+would be a second copy of one case. The chart and the `Python` tab would
+then show that copy while Run used another case.
 
 ## Data
 
-`Data` is the JSON form used in program and challenge files.
+`Data` is the JSON form in which program files and challenge files write
+a value. A run works on `Value`s instead (Run-time values), and
+`toValue()` and `toData()` convert between the two.
 
 ```ts
 export type Data =
@@ -67,43 +77,80 @@ export type Data =
   | { [key: string]: Data }; // dict; int keys are written "$int:3"
 ```
 
-`toValue(data, heap)` allocates heap entries for lists, dicts, and
-objects. `toData(value, heap)` is its inverse, and it numbers objects with
-`$id` in the order it first reaches them. `toValue` allocates one object
-per distinct `$id`, so references shared within one value, or across the
-values converted with one heap, stay shared. A cycle ends in
-`{ $cls, $id }`. A repeated object is written again in full under its
-`$id`, not as a reference node, so two `Data` values can be compared as
-they are.
+### Converting to and from values
 
-The `Data` of a program or challenge file is canonical: every number is
-finite, and an integral number lies in the int range (Run-time values). In
-canonical `Data`, an integral float is written `{ $float: n }`, and a `$int:`
-key is an integer in that range, written as Python writes it: `$int:0`, never
-`$int:-0`, because those two would name one int, as `-0` and `0` do in Python,
-and a second spelling of a key either misses a lookup that CPython makes or
-doesn't convert back to itself.
+`toValue(data, heap)` turns `Data` into a `Value`, and allocates a heap
+entry for every list, dict, and object it meets. `toData(value, heap)`
+does the reverse.
 
-`migrate()` rejects a field that its block wouldn't make (`fieldsError`,
-`blocks.md`) and a class field default that isn't canonical `Data`, and it
-reports the path of the fault. `migrate()` and `validate()` split faults by
-where they are fixed. `validate()` reports what an edit can produce, which the
-learner fixes on its node. A fault that only a hand edit makes (an unknown
-kind, a missing field, a literal its block wouldn't make, or a `Data` value
-that isn't canonical) has no node to fix it on. So `migrate()` refuses it, and
-`validate()` never reads a literal field.
+`toData()` gives each object a `$id`, and it numbers objects in the order
+it first reaches them. `toValue()` allocates one object per distinct
+`$id`. So two references to one object, inside one value or across the
+values that `toValue()` converts with one heap, still point at one object
+after `toValue()`.
 
-While no registered block constructs an object (`new`), a program holds no
-class and `Data` holds no object. Until such a block exists, `migrate()`
-rejects a class and an input of the kind `object`, and `pnpm check` rejects
-a `$cls` in a challenge file and a class name in its `defines`. Each
-rejection reports the path of the fault. Until then, only a hand-written
-file holds a class or an object. `migrate()` and `pnpm check` refuse it
-rather than read what they can, because reading it would need code for
-identity, cycles, constructors, and field defaults that no learner reaches,
-and refusing it keeps a `$cls` record from passing as a dict.
+When an object refers back to itself through a cycle, `toData()` writes
+the inner reference as `{ $cls, $id }` and nothing more.
+
+When an object appears twice, `toData()` writes it in full both times,
+under the same `$id`, rather than as a reference, so two `Data` values can
+be compared as they stand.
+
+### Canonical form
+
+Every program file and challenge file holds `Data` in canonical form:
+
+- Every number is finite.
+- Every integral number lies in the int range (Run-time values).
+- An integral float is written `{ $float: n }`.
+- An `$int:` key is an integer in that range, spelled as Python spells
+  it.
+
+`$int:-0` is rejected because `-0` and `0` are one int in Python, so with
+both spellings a key could miss a lookup that CPython makes, or fail to
+convert back to itself. `$int:0` is canonical, and `$int:-0` is not.
+
+### Faults that `migrate()` rejects
+
+`migrate()` reads a stored or imported program (Storage). It rejects a
+field that the node's block wouldn't make (`fieldsError`, `blocks.md`) and
+a class field default that isn't canonical `Data`, and it reports the path
+of the fault.
+
+`migrate()` and `validate()` catch different faults, depending on who
+fixes the fault and where. `validate()` reports the faults that an edit
+can produce, and the learner fixes each of those on its node. Some faults
+can only come from editing the file by hand:
+
+- an unknown kind
+- a missing field
+- a literal that the node's block wouldn't make
+- a `Data` value that isn't canonical
+
+There is no node to fix those faults on, so `migrate()` rejects the file
+instead, and `validate()` never reads a literal field.
+
+### Classes and objects before `new` exists
+
+A program holds no class and `Data` holds no object, because no
+registered block constructs an object yet. Until a `new` block exists:
+
+- `migrate()` rejects a class, and an input of the kind `object`.
+- `pnpm check` rejects a `$cls` in a challenge file, and a class name in
+  its `defines`.
+
+`migrate()` and `pnpm check` each report the path of the fault.
+
+Until then, only a hand-written file can hold a class or an object.
+`migrate()` and `pnpm check` reject such a file rather than read what they
+can, because reading it would need code for identity, cycles,
+constructors, and field defaults that no learner reaches. Rejecting it
+also keeps a `$cls` record from passing as a dict.
 
 ## Run-time values
+
+During a run, a value is a `Value`, and every list, dict, and object lives
+on the heap:
 
 ```ts
 export type Value =
@@ -125,19 +172,27 @@ export type Heap = Map<HeapId, HeapEntry>;
 
 `int` and `float` are distinct.
 
-An `int` is an integer of magnitude at most 2^53 − 1, because a double rounds
-2^53 + 1 to 2^53, so an `int` of 2^53 could be a wrong value that looks right
-(`9007199254740991 + 2`). A literal or a `Data` number beyond that range is
-refused (`parser.md`; Data above), not run as a `float`, because CPython runs
-the emitted `raw` as the exact int, so the chart, the `Python` tab, and the
-run would show three different numbers with no message, and because
-`JSON.parse` rounds a `Data` number before any check sees it.
+### Int range
 
-An operation whose result is an integer outside that range gives a
-`float`, because the learner can see this difference from Python, while a
-wrong `int` wouldn't show.
+An `int` is an integer of magnitude at most 2^53 − 1, because a double
+rounds 2^53 + 1 to 2^53, so an `int` of 2^53 could be a wrong value that
+looks right. `9007199254740991 + 2` is such a value.
+
+A literal or a `Data` number beyond that range is rejected (`parser.md`;
+Data), not run as a `float`, for two reasons:
+
+- CPython runs the emitted `raw` as the exact int, so the chart, the
+  `Python` tab, and the run would show three different numbers with no
+  message.
+- `JSON.parse` rounds a `Data` number before any check sees it.
+
+When an operation's result is an integer outside that range, the
+operation gives a `float`, because the learner can see this difference
+from Python, while a wrong `int` wouldn't show.
 
 ## Statements
+
+A statement is one of these kinds:
 
 ```ts
 type S = { id: NodeId; name?: string }; // Statement names
@@ -156,17 +211,24 @@ export type Stmt =
   | (S & { kind: "swap"; a: Expr; b: Expr });
 ```
 
+### Targets
+
 A target is an expression that names where a value is stored: a `var`, an
 `index`, a `key`, or a `field`. Each of these is a block that declares
-`locate` (`blocks.md`, The block definition). A `target` slot holds one
-target, or `empty` while it is unfilled (Expressions). `migrate()` refuses
-any other expression there, and no edit makes one (`editor.md`, Targets).
-A separate target type was rejected, because Python reads a target as an
-expression in store position (`nums[j] = …`), and a second type would
-repeat each rule of the expression in the emitter, the chart, and every
-traversal.
+`locate` (`blocks.md`, The block definition).
+
+A `target` slot holds one target, or `empty` while it is unfilled
+(Expressions). `migrate()` rejects any other expression in a `target`
+slot. No edit puts any other expression there (`editor.md`, Targets).
+
+A separate target type was rejected because Python reads a target as an
+expression in store position, and because a second type would repeat each
+rule of the expression in the emitter, the chart, and every traversal.
+`nums[j] = …` is such a target.
 
 ## Expressions
+
+An expression is one of these kinds:
 
 ```ts
 type E = { id: NodeId };
@@ -206,21 +268,29 @@ export type BinOp =
   | "in";
 ```
 
-`num.raw` is the literal's source text, and the emitter writes it. `float`
-is true when `raw` contains `.`, `e`, or `E`.
+`num.raw` is the literal's source text, and the emitter writes it. When
+`raw` contains `.`, `e`, or `E`, `float` is true.
 
-An unfilled required expression slot holds `{ kind: "empty" }`. `create()`
-fills required slots with it, `validate` reports `E_EMPTY_SLOT` with the
-slot name, and the emitter writes `...` for it. It is never executed.
-`Expr | null` was rejected, because it would spread null checks through
+### Empty slots
+
+An unfilled required expression slot holds `{ kind: "empty" }`. Each
+consumer handles it in its own way:
+
+- `create()` fills every required slot with it.
+- `validate()` reports it as `E_EMPTY_SLOT` with the slot's name.
+- The emitter writes `...` for it.
+- The interpreter never executes it.
+
+`Expr | null` was rejected because it would spread null checks through
 every block and the emitter, while an `empty` kind keeps `Expr` a closed
 union.
 
 ## Semantics
 
-Each rule has a test with its example, in the test of the block its
-heading names. `src/runtime/semantics.test.ts` tests the rules under Values
-and the run.
+This section states what each operation does at run time. Each heading
+names the block whose test holds one test per rule under it, with the
+rule's example. `src/runtime/semantics.test.ts` tests
+the rules under Values and the run.
 
 ### Operators (`binop`)
 
@@ -237,10 +307,10 @@ and the run.
 | `and` / `or` short-circuit and return the deciding operand | `0 or 5 → 5` |
 | `in`: list membership by `==`; dict key membership; `str` substring | `"bc" in "abcd" → True` |
 
-`==` accepts a `bool` as Python does, although arithmetic and ordering
-refuse one (`interpreter.md`, Errors). `==` and `in` never fail, so a
-stricter `==` would answer differently from the emitted Python with no
-message.
+`==` accepts a `bool`, as Python does, although arithmetic and ordering
+refuse one (`interpreter.md`, Errors). It accepts one because `==` and
+`in` never fail, so a stricter `==` would answer differently from the
+emitted Python with no message.
 
 ### Loops (`for`, `foreach`)
 
@@ -249,10 +319,16 @@ message.
 | `for` iterates `start … stop-1`, bounds evaluated once, `int` only else `E_TYPE` | |
 | `foreach` visits `list[0]`, `list[1]`, … and reads the list's length before each pass, as Python does, so changing the list inside the loop changes the passes | appending in the body adds a pass |
 
-`foreach` reads the live list, not a snapshot, because a snapshot would run a
-body that changes the list differently from the emitted Python, with no sign
-of it. Every other difference from Python is stricter and ends in an error (a
-`bool` isn't a number, recursion stops at 200, `E_DECLARE_FIRST`).
+`foreach` reads the live list, not a snapshot, because a snapshot would
+run a body that changes the list differently from the emitted Python, with
+no sign of it.
+
+Every other difference from Python is stricter and ends in an error:
+
+- A `bool` isn't a number.
+- Recursion stops at 200.
+- A name that is first assigned inside a compound statement and read
+  after it gives `E_DECLARE_FIRST` (Scope).
 
 ### Lists (`swap`, `method:copy`)
 
@@ -271,8 +347,8 @@ of it. Every other difference from Python is stricter and ends in an error (a
 | `randint(a, b)` with `a > b` → `E_EMPTY_RANGE` | `randint(5, 1)` |
 | `randint(a, b)` with a bound that isn't an `int` → `E_TYPE` | `randint(1.0, 2)` |
 
-A bound of `1.0` is refused too, because CPython 3.12 and later, which
-`pnpm check` requires, raise `TypeError` for any `float` bound.
+A bound of `1.0` is rejected too, because CPython 3.12 and later raise
+`TypeError` for any `float` bound, and `pnpm check` requires that version.
 
 ### Objects (`new`, `field`)
 
@@ -283,8 +359,8 @@ A bound of `1.0` is refused too, because CPython 3.12 and later, which
 | `v.f` where `v` isn't an object → `E_FIELD`, with the type name of `v` as `cls` | `n.x` with `n = 3` |
 | a field default is a number, string, boolean, `null`, `[]`, or `{}` | |
 
-A value that isn't an object fails with `E_FIELD`, not `E_TYPE`, because the
-fault is a field it doesn't have, and `E_TYPE` would name a second operand
+A value that isn't an object fails with `E_FIELD`, not `E_TYPE`, because
+the fault is a field it doesn't have. `E_TYPE` would name a second operand
 where there is none.
 
 ### Values and the run (`src/runtime`)
@@ -299,49 +375,93 @@ where there is none.
 
 ## Scope
 
-A name is visible from its first `assign` (or `for`/`foreach` variable, or
-parameter) to the end of its region and in nested regions.
+Scope states where a name becomes visible, which names a definition can't
+take, and how a call finds what it names.
 
-A `target` slot that `binds` (`blocks.md`, The block definition), as
-`assign`'s does, declares the variable its target is and doesn't read it.
-An item, a key, or a field in that slot, and every target of a slot that
-doesn't bind (`delete`, `swap`), reads its expressions before the value is
-stored.
+### Visibility
 
-A name first assigned inside `then`, `else`, or a loop body and referenced
-after that compound statement gives `E_DECLARE_FIRST`. `hoistAssign` fixes it
-by inserting `name = <default of the same type>` before the compound
-statement.
+A name becomes visible at one of three places:
 
-Functions see only their parameters and body. Field defaults see nothing.
+- its first `assign`
+- the `for` or `foreach` that introduces it as its variable
+- the function that takes it as a parameter
 
-A `for` or `foreach` variable is assigned by the loop statement in the
-region that contains the loop, so it stays visible after the loop. The
-bounds and the iterated list are read before the variable exists.
+It stays visible to the end of its region and in the regions inside it.
 
-`hoistAssign` takes the default from the first assignment to the name inside
-the compound statement: `num` → `0` (or `0.0` when float), `str` → `""`,
-`bool` → `False`, `list` → `[]`, `dict` → `{}`, and any other value → `None`.
+A `target` slot that `binds` (`blocks.md`, The block definition) declares
+the variable that its target names, and it doesn't read that variable.
+`assign`'s slot binds; `delete`'s and `swap`'s slots don't.
 
-A variable can't take the name of a function, a class, a builtin, or a module
-function or class the program uses (below) (`E_DUPLICATE_NAME`), because the
-interpreter, which resolves calls by name, runs such a program and CPython
-doesn't: `count = 0` beside `def count()` fails in CPython. The parameters of
-one function are distinct. A function can't take a builtin's name, because the
-builtin's registry key would shadow the function.
+Two kinds of target read their expressions before the value is stored:
 
-A `call` or `new` resolves its name in this order: a function or class of
-the program, a learner module, a built-in module, then a builtin of
-`blocks.md`. A program definition shadows every module, and a learner
-module shadows a built-in module of the same name (`modules.md`, Schema). A
-name that two modules used by the program both define gives
-`E_DUPLICATE_NAME` on the call.
+- an item, a key, or a field in a binding slot
+- every target of a slot that doesn't bind
+
+A `for` or `foreach` variable is assigned by the loop statement itself, in
+the region that contains the loop, so it stays visible after the loop.
+
+The loop reads its bounds, or the iterated list, before the variable
+exists.
+
+A function sees only its parameters and its body.
+
+A field default sees nothing.
+
+### Declaring a name before a compound statement
+
+A name that is first assigned inside `then`, `else`, or a loop body, and
+read after that compound statement, gives `E_DECLARE_FIRST`.
+
+`hoistAssign` fixes it by inserting `name = <default of the same type>`
+before the compound statement, and it takes the default from the first
+assignment to the name inside that statement:
+
+- `num` → `0`, or `0.0` when the number is a float
+- `str` → `""`
+- `bool` → `False`
+- `list` → `[]`
+- `dict` → `{}`
+- any other value → `None`
+
+### Names a definition can't take
+
+A variable can't take a name that one of these holds (Resolving a call;
+`E_DUPLICATE_NAME`):
+
+- a function of the program
+- a class of the program
+- a builtin
+- a function or class of a module that the program uses
+
+A variable can't take those names because the interpreter resolves calls
+by name and runs such a program, while CPython doesn't. `count = 0` beside
+`def count()` fails in CPython.
+
+The parameters of one function are distinct.
+
+A function can't take a builtin's name, because the builtin's registry key
+would shadow the function.
+
+### Resolving a call
+
+A `call` or a `new` resolves its name in this order:
+
+1. a function or class of the program
+2. a learner module
+3. a built-in module
+4. a builtin of `blocks.md`
+
+So a program definition shadows every module, and a learner module shadows
+a built-in module of the same name (`modules.md`, Schema).
+
+When two modules that the program uses both define a name, a call of that
+name gives `E_DUPLICATE_NAME`.
 
 ## Validation
 
-`validate(program): Diagnostic[]`, where
-`Diagnostic = { nodeId, code, params, fix?: "hoistAssign" }`, runs after
-every edit and before every run.
+`validate(program): Diagnostic[]` runs after every edit and before every
+run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
+`validate()` reports these codes:
 
 | Code               | Condition                                                   | params                    |
 | ------------------ | ----------------------------------------------------------- | ------------------------- |
@@ -361,97 +481,132 @@ every edit and before every run.
 
 `edit.ts` exports pure functions that return a new `Program`: `insertStmt`,
 `moveStmt`, `removeStmt`, `duplicateStmt`, `setSlot`, `setExpr`,
-`insertItem` and `removeItem` (an item of an `exprs` slot), `renameName`,
-`setStmtName`, `addFunction`, `removeFunction`, `addClass`, `removeClass`,
-`setFields`, `setParams`, and `hoistAssign`.
+`insertItem`, `removeItem`, `renameName`, `setStmtName`, `addFunction`,
+`removeFunction`, `addClass`, `removeClass`, `setFields`, `setParams`, and
+`hoistAssign`. `insertItem` and `removeItem` add and remove an item of an
+`exprs` slot.
 
 Every edit keeps node ids unique.
 
-A statement position is
-`Place = { parent: NodeId | "main"; slot: "main" | "body" | "then" | "else"; index: number }`
-(`parent` is `"main"`, a function id, or a compound statement's id).
-`insertStmt` and `moveStmt` take one.
+### Statement positions
 
-`moveStmt` counts `index` in the target region after the moved statement
-has been removed, because the drop indicator is computed on the list
-without the dragged card.
+`insertStmt` and `moveStmt` take a statement position,
+`Place = { parent: NodeId | "main"; slot: "main" | "body" | "then" | "else"; index: number }`.
+Its `parent` is `"main"`, a function id, or a compound statement's id.
 
-`hoistAssign(program, compound, name)` takes the id of the compound statement
-before which it inserts the assignment, which is the `compound` that
-`E_DECLARE_FIRST` reports.
+`moveStmt` counts `index` in the destination region after it has removed
+the moved statement, because the chart computes the drop indicator
+on the list without the dragged node.
 
-The other edits address nodes by id. `setExpr` takes an item index for
-`exprs` slots.
+`hoistAssign(program, compound, name)` takes `compound`, the id of a
+compound statement, and inserts the assignment before that statement.
+That id is the `compound` that `E_DECLARE_FIRST` reports.
 
-History keeps the last 100 programs for undo and redo, and opening a
-program starts an empty history. Consecutive changes typed into one field
-of the node editor form one entry, because a typed value changes the chart
-with every key. An entry per key would spend the 100 entries on one word,
-and an entry made only on leaving the field would keep the chart behind the
-editor.
+The other edits address nodes by id. `setExpr` takes an item index for an
+`exprs` slot.
+
+### History
+
+History keeps the last 100 programs for undo and redo. Opening a program
+starts an empty history.
+
+Consecutive changes that the learner types into one field of the node
+editor form one entry, because a typed value changes the chart with every
+key. Two alternatives were rejected:
+
+- An entry per key would spend the 100 entries on one word.
+- An entry made only on leaving the field would keep the chart behind the
+  editor.
 
 ## Storage
 
-Programs persist to the `localStorage` key
-`algoflow:program:<challengeId | playground id>` 500 ms after the last
-edit, and at once when the browser hides the page. Export writes
-`<title>.algoflow.json`, with the modules the program uses embedded
-(`modules.md`, Operations). Import validates and migrates by `version`
-(`src/lang/migrate.ts`).
+A program persists in the browser, and the learner can export it as a
+file and import it again.
 
-`migrate()` reads versions 1 and 2 and returns version 2. A version-1
-target `{ kind, ...parts }` becomes the expression of that kind, with those
-parts and an id the program doesn't hold. A variable target with no name
-becomes `empty`. A target whose kind no registered block has is refused as
-an unknown kind.
+### Where a program is stored
 
-The value stored under `algoflow:program:<id>` is the `Program` JSON
-itself. Loading passes it through `migrate()` and treats a rejected value
-as absent, so opening a problem then creates its program
-(`challenges.md`, Opening and bundling). A zustand `persist` wrapper was
-rejected, because it doesn't suit one key per program, and `migrate()` must
-check whatever storage returns.
+A program persists to the `localStorage` key
+`algoflow:program:<challengeId | playground id>`. The application saves
+it 500 ms after the last edit, and at once when the browser hides the
+page. The key holds the `Program` JSON itself.
 
-A restored program takes the `challengeId` and `inputs` of its challenge,
-and a Playground program has neither.
+When the application loads a program, it passes the stored value through
+`migrate()` and treats a rejected value as absent, so opening a problem
+then creates its program (`challenges.md`, Opening and bundling).
 
-A Playground program's id is `play-` followed by a NodeId.
-`algoflow:playground` holds `Record<id, { edited: number }>`: the time of each
-Playground program's last save, in milliseconds since the epoch. The record
-lists exactly the Playground programs in storage. The time is kept here, not
-in `Program`, because `Program` would then carry that time into every export
-and challenge file. The `play-` prefix keeps a Playground id from reading as a
-challenge id.
+A Zustand `persist` wrapper was rejected because it doesn't suit one key
+per program, and because `migrate()` must check whatever storage returns.
+
+A loaded program takes the `challengeId` and the `inputs` of its
+challenge. A Playground program has neither.
+
+### Export and import
+
+When the learner exports a program, the application writes
+`<title>.algoflow.json` and embeds the modules the program uses
+(`modules.md`, Operations). When the learner imports a file, `migrate()`
+checks it and migrates it by `version` (`src/lang/migrate.ts`).
+
+`migrate()` reads versions 1 and 2 and returns version 2. Three rules
+apply to the targets it reads:
+
+- A version-1 target `{ kind, ...parts }` becomes the expression of that
+  kind, with those parts and a new id that the program doesn't hold.
+- A variable target with no name becomes `empty`.
+- When no registered block has the target's kind, `migrate()` rejects the
+  target as an unknown kind.
+
+### Playground programs
+
+A Playground program's id is `play-` followed by a `NodeId`, so a
+Playground id can't read as a challenge id.
+
+`algoflow:playground` holds `Record<id, { edited: number }>`: the time of
+each Playground program's last save, in milliseconds since the epoch. The
+record lists exactly the Playground programs in storage.
+
+The time is kept in this record, not in `Program`, because `Program`
+would then carry it into every export and challenge file.
 
 ## Statement names
 
-A statement's `name` is the learner's name for its node (`editor.md`, Node
-names). It is one line of text, stored trimmed and with each run of spaces
-as one space, and it is absent when empty. `setStmtName` and `migrate()`
-store it this way, and `setStmtName` turns each line break into a space.
+A statement's `name` is the learner's own name for its node (`editor.md`,
+Node names). It is one line of text. `setStmtName` and `migrate()` both
+store a name the same way:
 
-`migrate()` rejects a statement's name that isn't one line of text.
+- trimmed
+- with each run of spaces as one space
+- absent, when the result is empty
+
+`setStmtName` also turns each line break into a space. `migrate()`
+rejects a name that isn't one line of text.
 
 A statement's name changes neither validation nor execution.
 
 ## Kinds
 
 A kind is what the value list and the name list (`editor.md`, Value list;
-Name fields) know of a value before the program runs: `number`, `text`,
-`truefalse`, `none`, `list`, `dict`, or `object`.
+Name fields) know of a value before the program runs. The kinds are
+`number`, `text`, `truefalse`, `none`, `list`, `dict`, and `object`.
 
-An expression's kind comes from its block's `kind` (`blocks.md`), given the
-kinds of the expressions inside it. An expression whose kind can't be
+A block's `kind` (`blocks.md`) gives an expression's kind from the kinds
+of the expressions inside it. An expression whose kind can't be
 determined has none.
 
-A variable's kind is its input's declared kind. Without one, it is the kind
-of the value of its first assignment in program order. Without that, it is
-the kind its loop block declares (`declares`, `blocks.md`: `number` for a
-`for` variable). A parameter and a `foreach` variable have no kind.
+A variable's kind is found in this order:
+
+1. the kind its input declares
+2. the kind of the value of its first assignment, in program order
+3. the kind its loop block declares (`declares`, `blocks.md`)
+
+A `for` variable's block declares `number`. A parameter and a `foreach`
+variable have no kind.
 
 ## Verification
 
-The tests of `src/lang` give every validation code a failing and a passing
-case, show that every edit keeps node ids unique, and show that `migrate()`
-accepts each supported version and rejects a malformed program with the
-path of the fault.
+The tests of `src/lang` show three things:
+
+- Every validation code has a failing and a passing case.
+- Every edit keeps node ids unique.
+- `migrate()` accepts each supported version and rejects a malformed
+  program with the path of the fault.
