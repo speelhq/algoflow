@@ -1,16 +1,28 @@
 # Interpreter
 
+The interpreter runs a program in the browser. Its runner executes the
+program and emits one event for each thing the run does. Its driver
+reads those events as the visible steps the screens show, answers the
+controls of the run bar, and publishes the state the screens draw. This
+file states the runner's interface, the events, the runtime errors, what
+a block's `run` receives, how a module function runs, the driver, and
+the check that holds the interpreter to CPython.
+
 Code: the runner `src/runtime/`; the driver `src/store/run.ts` with
 `src/store/steps.ts` and `src/store/batches.ts`; the CPython check
 `scripts/check.ts` with `scripts/lib/cpython.ts` and
-`scripts/lib/agreement.ts`. Tests: beside each file, and the rules of
-`language.md`'s Semantics as that section states.
+`scripts/lib/agreement.ts`. Tests: beside each file, and the tests of the
+Semantics rules, where `language.md`, Semantics, places them.
 
 ## Runner
 
+The runner executes one program and gives out its events one call at a
+time.
+
 `run(program, inputs: Record<Id, Data>, seed: number, modules: Module[]): Runner`
-executes a program with no diagnostics. `modules` lists the modules the
-program uses (`modules.md`, Resolution), empty when it uses none.
+executes a program that has no diagnostics. `modules` lists the modules
+the program uses (`modules.md`, Resolution). When the program uses none,
+`modules` is empty.
 
 ```ts
 export type Runner = {
@@ -31,22 +43,37 @@ export type RuntimeError = {
 };
 ```
 
-`Runner.next()` resumes the program generator once, and every yielded value
-is one event. Frames form a stack that the runner owns. A call pushes a
-frame, emits `call`, executes the body, emits `return`, and pops the frame.
-`next()` returns `E_EVENT_LIMIT` when called after the 1,000,000th event,
-and `E_RECURSION` when a call would make the stack deeper than 200 frames.
+Each call of `next()` resumes the program's generator once, and each
+value the generator yields is one event.
+
+The runner owns the stack of frames. For each call, the runner does
+these in order:
+
+1. pushes a frame
+2. emits `call`
+3. executes the body
+4. emits `return`
+5. pops the frame
+
+`next()` ends the run with an error at two limits:
+
+- After the 1,000,000th event, `next()` returns `E_EVENT_LIMIT`.
+- When a call would make the stack deeper than 200 frames, `next()`
+  returns `E_RECURSION`.
 
 Once `next()` has returned a `Done`, every later call returns that same
-`Done` and emits no event, after `done` and after an error alike, so no
-caller guards the end of a run. Forbidding the call was rejected, because
-it would put that guard in every caller, with nothing to catch a caller
-that forgot it.
+`Done` and emits no event. This holds after `done` and after an error
+alike, so no caller has to guard the end of a run. Forbidding the later
+call was rejected because the guard would then sit in every caller, and
+nothing would catch a caller that forgot it.
 
-The same program, inputs, seed, and modules produce the same event
-sequence.
+Two runs of one program with the same inputs, seed, and modules emit the
+same event sequence.
 
 ## Events
+
+An event records one thing the run did. The runner emits the events in
+the order Python does those things.
 
 ```ts
 export type Event =
@@ -65,50 +92,95 @@ export type Ref =
   | { heap: HeapId; field: Id };
 ```
 
-Each statement emits one `enter`, then the events of its expressions
-(`read`, `compare`, `call`/`return`), then its effect (`write`, `print`,
-`loop`). A `swap` statement's events follow Python's order (`language.md`,
-Semantics, Lists): the events of reading `b`, then `a`, then of finding
-`a` again and its `write`, then of finding `b` again and its `write`.
+`Done` counts the run:
 
-`read` is emitted for reading an item, a key, or a field (`read`, Blocks),
-whether an expression is evaluated or a `swap` reads its places, and for
-`in` on a list, with one ref per compared element. Variable reads emit
-nothing.
+- `events`: every event, whether or not a visible step shows it
+- `loops`: the `loop` events
 
-`write` is emitted for `assign`, `swap`, `append` (the new index),
-`insert`, `pop` (the removed index and value), `delete`, and each field
-that `new` sets. A `swap`'s `write` carries in `from` the place its value
-was read from, and the driver uses it to recognize an exchange (Steps and
-batches). The runner emits the facts of the run in Python's order. It emits
-no event of its own for an exchange, because the driver decides how an
-exchange's events are shown.
+### The order of a statement's events
 
-`compare` is emitted for every comparison `binop` (`== != < <= > >=` and
-`in`), with its result. The operator and the operands are the node's. The
-event doesn't carry the operand values, because alone (`3` and `0` of
-`i % 15 == 0`) they hide where the 3 came from, while the narration writes
-the comparison as the chart does, with each variable replaced by its value
-(`run.md`, Narration).
+A statement emits its events in this order:
 
-After `if` and `while` evaluate their condition, they emit a `compare` with
-the condition's id and its truth value (`language.md`, Semantics, Values and
-the run), unless the last event of evaluating the condition is a `compare`
-with that id. So each check of a diamond ends in one `compare` of its whole
-condition. `if` and `while` emit this `compare` because the driver can't infer
-that truth from the region entered next: no statement enters an empty region,
-and a loop's exit enters whatever follows it. Only the last event counts,
-because a call inside the condition can reach the same diamond in another
-frame, with a `compare` of the same id, and every call ends in its `return`.
+1. its `enter`
+2. the events of its expressions: `read`, `compare`, and `call` with its
+   `return`
+3. the events of its effect: `write`, `print`, or `loop`
 
-`loop` is emitted at the start of each iteration of `for`, `foreach`, and
-`while` (after the `while` compare).
+A `swap` emits the events of its two places in Python's order
+(`language.md`, Semantics, Lists):
 
-`Done.loops` counts `loop` events, and `Done.events` counts all events.
+1. the events of reading `b`
+2. the events of reading `a`
+3. the events of finding `a` again, then its `write`
+4. the events of finding `b` again, then its `write`
+
+### `read`
+
+A `read` is emitted in two cases:
+
+- The context's `read` (Blocks) emits one when it reads an item, a key,
+  or a field, whether the runner evaluates an expression or a `swap`
+  reads its places.
+- `in` on a list emits one, with one ref for each item the `in`
+  compares.
+
+Reading a variable emits no event.
+
+### `write`
+
+These blocks emit `write`, directly or through the context's `store`:
+
+- `assign`
+- `swap`
+- `append`, with the new index
+- `insert`
+- `pop`, with the removed index and value
+- `delete`
+- `new`, one `write` for each field it sets
+
+The `write` of a `swap` carries in `from` the place where the `swap` read
+the value it writes, so the driver can recognize an exchange (Steps and
+batches).
+
+The runner emits no event of its own for an exchange, because the driver
+decides how an exchange's events are shown.
+
+### `compare`
+
+Each comparison `binop` emits `compare`, with the comparison's
+result. The comparisons are `== != < <= > >=` and `in`. The
+operator and the operands are those of the event's node.
+
+The event doesn't carry the operand values, because the values alone
+hide where they came from, and the narration instead writes the
+comparison as the chart does, with each variable replaced by its value
+(`run.md`, Narration). For example, the `3` and `0` of `i % 15 == 0`
+don't show where the 3 came from.
+
+When `if` or `while` has evaluated its condition, it emits a `compare`
+that carries the condition's id and the condition's truth value
+(`language.md`, Semantics, Values and the run). When the last event of
+evaluating the condition is already a `compare` with that id, it emits
+none. So, either way, each check of a diamond ends in one `compare` of
+its whole condition.
+
+`if` and `while` emit this `compare` because the driver can't infer the
+truth value from the region the run enters next: an empty region holds
+no statement for the run to enter, and a loop's exit enters whatever
+follows the loop. The last event alone decides, because a call inside
+the condition can reach the same diamond in another frame and emit a
+`compare` with the same id, and every call ends in its `return`.
+
+### `loop`
+
+`for`, `foreach`, and `while` emit `loop` at the start of each pass.
+
+In a `while`, the `loop` follows the `compare` of its check.
 
 ## Errors
 
-Runtime error codes:
+A runtime error ends the run with a code and its params. This table
+lists the codes, what raises each, and its params:
 
 | Code           | Raised by              | params                    |
 | -------------- | ---------------------- | ------------------------- |
@@ -126,23 +198,31 @@ Runtime error codes:
 | `E_RECURSION`  | a call deeper than 200 frames (Runner)            |                           |
 | `E_EVENT_LIMIT`| the 1,000,000th event (Runner)                    |                           |
 
-`E_TYPE`'s params `left` and `right` are the type names of the operands
-(`int`, `float`, `str`, `bool`, `none`, `list`, `dict`, or the class name).
-A `bool` isn't a number for arithmetic, ordering, a list index, or `sum`,
-because block programs never need Python's reading of `True` as `1`
-there.
+The params hold:
 
-`E_VALUE` and `E_NUMBER_TEXT` carry as `op` the registry key of the failing
-expression (`keyOf`), and `E_VALUE` carries as `type` the type name of the
-value. `E_VALUE` is separate from `E_TYPE` because `E_TYPE` names two
-operand types, which fits an operator but would name neither the operation
-nor the fault of `abs("x")` (`abs and str …`). `op` is written as the
-block's label, so the message follows the locale, and no block spells a
-message key.
+- `left` and `right`, of `E_TYPE`: the type names of the two operands,
+  `int`, `float`, `str`, `bool`, `none`, `list`, `dict`, or the class name
+- `op`, of `E_VALUE` and `E_NUMBER_TEXT`: the registry key of the failing
+  expression (`keyOf`)
+- `type`, of `E_VALUE`: the type name of the value
+
+A `bool` isn't a number for arithmetic, ordering, a list index, or `sum`,
+because no block program needs Python's reading of `True` as `1` in
+those places.
+
+`E_VALUE` is a code of its own, not an `E_TYPE`, because `E_TYPE` names
+two operand types, which fits an operator but names neither the
+operation nor the fault. For example, for `abs("x")` an `E_TYPE` message
+would read `abs and str …`.
+
+A message writes `op` as the block's label, so the message follows the
+locale, and no block spells a message key.
 
 ## Blocks
 
-Blocks implement their behavior as generators (`run`, `blocks.md`):
+A block implements its behavior as a generator, its `run` (`blocks.md`,
+The block definition). These are the types of `run` and of the context
+the runner gives it:
 
 ```ts
 export type Signal =
@@ -167,145 +247,234 @@ export type RunContext = {
 };
 ```
 
-`locate` evaluates the target's expressions, the container before its
-position or key as Python does, and gives the target's place as a `Ref`.
-`locate`'s errors carry `at`. `read` locates the target and reads the value
-there, with `E_UNDEFINED` for a variable never assigned, and emits a `read`
-with the target's id for a place that isn't a variable (Events). `store`
-locates the target after the value, saves the value, and emits its
-`write`, which carries `at`, the statement whose effect the write is
-(Events). `read` and `save` read and write by the `Ref` variant (a variable
-of the current frame, a list's item, a dict's key), not by block, so a
-variable, an item, and the places of a `swap` share one rule for where a
-value is and when its read is emitted.
+The context finds a target's place with `locate` and uses that place in
+`read` and `store`:
+
+- `locate` evaluates the target's expressions as Python does, the
+  container first and then its position or key, and gives the target's
+  place as a `Ref`. For example, a `Ref` names a variable of the current
+  frame, a list's item, or a dict's key. An error that `locate` raises
+  has `at` as its `nodeId`.
+- `read` locates the target and reads the value at that place. For a
+  variable never assigned, it raises `E_UNDEFINED`. For a place that
+  isn't a variable, it emits a `read` with the target's id (Events).
+- `store` locates the target after the block has evaluated the value,
+  saves the value, and emits its `write`. The `write` carries `at`, the
+  statement that makes the write (Events).
+
+`read` reads a place, and `save` writes one, by its `Ref` variant, not
+by the block that found it, so a variable, an item, and the places of a
+`swap` share one rule for where a value is and when the runner emits its
+`read`.
 
 ## Modules
 
-A call resolved to a module function (`language.md`, Scope) runs as a call
-of a program function does, and its frame has `module` set to the module
-name.
+This section states how a call into a module runs, and how a run starts
+at a module function instead of `main`.
 
-Inside a module frame, a `call` or `new` resolves within that module
+A call that resolves to a module function (`language.md`, Scope) runs as
+a call of a program function runs. Its frame has `module` set to the
+module's name.
+
+Inside a module frame, a `call` or a `new` resolves within that module
 (`modules.md`, Resolution).
 
 `run` accepts an entry `{ fn: Id; args: Data[] }` in place of `main`. With
-an entry, the named function of the program or module is the first frame,
-and `done` carries `value: Data`, the function's return value, and
-`args: Data[]`, the arguments as they are after the run (`modules.md`,
-Resolution; Cases).
+an entry:
+
+- The named function of the program or of the module is the first frame.
+- `done` carries `value: Data`, the function's return value, and
+  `args: Data[]`, the arguments as they are after the run (`modules.md`,
+  Resolution; Cases).
 
 ## Driver
 
+The driver runs a program for the screens. It reads a runner's events as
+visible steps, works through them in batches, answers the controls of the
+run bar, and publishes the state the screens draw.
+
 ### Steps and batches
 
-A visible step is an event emitted while no module frame is on the stack, the
-`return` event of a call into a module, or an exchange of two writes (below).
-So a module call is one visible step. In a program's run, a module function is
-a block, such as taking the minimum of a heap, narrated by its returned value,
-and `Open <name>` shows its inside (`modules.md`, Operations). A function the
-learner is still building belongs to the program, and the run steps into it
-until `Move to module…`.
+A visible step is one of these:
 
-Two `write` events in a row, each carrying in `from` the place the other
-writes, are one visible step, an exchange. Its event is
-`{ type: "swap"; nodeId: NodeId; a: Ref; b: Ref }`, where `a` and `b` are the
-places the two writes write (`views.md`; `run.md`, Narration). A `swap` whose
-places are found again elsewhere (`swap(i, nums[i])`), or whose second place
-is found again with an event of its own, shows each `write` as its own step,
-because one `swap` step there would follow a step that shows the first write
-alone, which the slide would hide. The exchange belongs to the driver, not to
-the runner, because only the event after the first write reveals it, and the
-runner can't know that event before it has run the code that makes it.
-`src/store/steps.ts` reads a runner one visible step at a time, for the
-pre-run, Step, Seek, and Skip alike, so every count of visible steps agrees.
+- an event emitted while no module frame is on the stack, other than a
+  write of an exchange
+- the `return` event of a call into a module
+- an exchange of two writes
+- the call of `next()` that fails
 
-To recognize an exchange, the driver reads the event after a `write` that
-carries `from`. When that event isn't the write's partner, the write's step
-is published with the state copied before the driver read on, so a frame
-that a call in the second place pushes isn't shown before its `call`. The
-copy is taken only for a step the driver publishes (Step, Play, the step a
-Seek reaches, the last step of a batch), because a Seek through a long run
+So a module call is one visible step. In a program's run, a module
+function is a block. For example, taking the minimum of a heap is such a
+block.
+
+In a program's run, the narration shows a module call by its returned
+value.
+
+`Open <name>` shows the function's inside (`modules.md`, Operations).
+
+The run steps into a function the learner is still building, because
+the function belongs to the program until the learner moves it with
+`Move to module…`.
+
+Two `write` events in a row form an exchange when each carries in `from`
+the place the other writes.
+
+The event of an exchange is `{ type: "swap"; nodeId: NodeId; a: Ref; b: Ref }`,
+where `a` and `b` are the places the two writes write (`views.md`;
+`run.md`, Narration).
+
+The driver shows each `write` of a `swap` as a step of its own in two
+cases:
+
+- when the `swap` finds its places again elsewhere. For example:
+  `swap(i, nums[i])`.
+- when the `swap` emits an event while it finds the second place again.
+
+The driver shows the writes apart there, because one `swap` step would
+follow a step that already shows the first write alone, and the slide
+would hide that step.
+
+The exchange belongs to the driver, not to the runner, because only the
+event after the first write reveals the exchange, and the runner can't
+know that event before it has run the code that makes it.
+
+`src/store/steps.ts` reads a runner one visible step at a time, and the
+pre-run, Step, Seek, and Skip all read through it, so every count of
+visible steps agrees.
+
+To recognize an exchange, the driver reads the event after a `write`
+that carries `from`. When the driver will publish the write's step, it
+copies the state before it reads that event. When that event isn't the
+other write of an exchange, the driver publishes the write's step with
+that copy, so a frame that a call in the second place pushes isn't shown
+before its `call`.
+
+The driver takes that copy only for a step it publishes:
+
+- a Step
+- a step of Play
+- the step a Seek reaches
+- the last step of a batch
+
+The driver copies for no other step, because a Seek through a long run
 would otherwise copy the heap at every `swap`.
 
-The driver works through runners in batches of 20,000 visible steps (one
-call of `next()`, or two for an exchange), with `setTimeout(0)` between
-batches. At the heaviest work measured, about 0.65 µs a call, a batch takes
-about 13 ms, which is under one frame. A batch bounded by time was
-rejected, because it would never yield under the tests' fake timers, which
-stop `performance.now`. A batch bounded by time becomes the better choice
-once a block makes one call far more costly.
+The driver works through runners in batches of 20,000 visible steps,
+with `setTimeout(0)` between batches, because a visible step costs one
+call of `next()`, or two for an exchange, and a call costs about 0.65 µs
+at the heaviest work measured, so a batch takes about 13 ms, under one
+display frame.
 
-Run first advances a separate runner to its end in batches. From it, Run
-records `total`, the number of visible steps the runner produced however it
-ended (after an error, the failing step is step `total`); `outcome`, how it
-ended; and `prints`, the visible step of each `print`. Then Run creates the
-shown runner at step 0, and the separate runner is discarded. Knowing the end
-before playing tells the learner at once that a loop never ends (playback at
-the fastest speed would show it only after eighteen hours), gives the position
-bar its length, and lets a wrong answer open at the step that printed the
-first wrong line.
+A batch bounded by time was rejected because it would never yield under
+the tests' fake timers, which stop `performance.now`. Once a block makes
+one call far more costly, a batch bounded by time becomes the better
+choice.
 
-A run of a case takes the test's seed (`challenges.md`, Schema). A run with
-no test, a Playground program's, takes seed 1, as a test without a
-seed does.
+Run first advances a separate runner to its end in batches. This run is
+the pre-run. From the pre-run, Run records:
 
-A run of no step is `done` at once. A finished run is `done` on reaching
-step `total`, where the driver makes one more call of `next()` so that the
-runner's frames have unwound. A failed run is in `error` at step `total`.
-The call that fails is a step of its own, so a failed run's `total` is its
-visible steps plus one, and the position bar's last position is where its
-error is shown.
+- `total`: the number of visible steps the runner produced, however the
+  run ended. After an error, the failing step is step `total`.
+- `outcome`: how the run ended.
+- `prints`: the visible step of each `print`.
+
+Run then creates the shown runner at step 0 and discards the separate
+runner.
+
+Run finds the end before it plays, because knowing the end does three
+things:
+
+- It tells the learner at once that a loop never ends, because playback
+  at the fastest speed would show that only after eighteen hours.
+- It gives the position bar its length.
+- It lets `Watch this case` open the run at the step that printed the
+  first differing line.
+
+A run's seed depends on its test (`challenges.md`, Schema):
+
+- A run of a case takes its test's seed, or seed 1 when the test has
+  none.
+- A run with no test takes seed 1 too. A Playground program's run is a
+  run with no test.
+
+At its end, a run is `done` or in `error`:
+
+- A run of no step is `done` at once.
+- A finished run is `done` when it reaches step `total`. There the
+  driver calls `next()` once more, so that the runner's frames have
+  unwound.
+- A failed run is in `error` at step `total`.
+
+The call of `next()` that fails is a step of its own, so a failed run's
+`total` is one more than its steps with an event, and the position bar's
+last position shows the error.
 
 ### Controls
 
-Step: the next visible step.
+The driver answers these controls:
 
-Play: one Step every `1000 / speed` ms, where speed is 1, 4, or 15
-(`Slow`, `Normal`, `Fast`; `run.md`, Run bar). A slider of 1 to 50 steps a
-second was rejected, because a beginner has no use for the number: `Slow`
-follows each step, `Normal` watches a loop go round, `Fast` reaches a later
-point while the chart still moves, and `Skip` and the position bar jump
-further.
+- Step: the next visible step.
+- Play: one Step every `1000 / speed` ms, where speed is 1, 4, or 15 for
+  `Slow`, `Normal`, and `Fast` (`run.md`, Run bar).
+- Seek(k): a new runner advanced to visible step `k` in batches. The
+  driver rebuilds `state`, `stdout`, and `verdicts` from every event the
+  runner passes. When `k` is at or after the current step, Seek continues
+  the shown runner instead of starting a new one, because the shown
+  runner reaches the same position as a new one would (Runner).
+- Back: Seek(`step - 1`). While a Seek to `k` is in progress, Back is
+  Seek(`k - 1`).
+- Step over: visible steps, in batches, until the frame count of a step's
+  state is at most that of the step it started from, or until the run
+  ends. A step's state is the state the step would publish (Steps and
+  batches), not the runner's, because the runner's state can be one call
+  deeper after the driver has read past a write.
+- Skip: visible steps, in batches and without publishing the steps in
+  between, until a pause at the breakpoint or the end of the run.
+- Stop: discards the runner.
 
-Seek(k): a new runner advanced to visible step `k` in batches, rebuilding
-`state`, `stdout`, and `verdicts` from every event it passes. When `k` is
-at or after the current step, the driver continues the current runner
-instead of a new one, and the two reach the same position (Runner).
+For Play, a slider of 1 to 50 steps a second was rejected because a
+beginner has no use for the number:
 
-Back: Seek(`step - 1`), and Seek(`k - 1`) while a Seek to `k` is in
-progress.
+- At `Slow`, the learner follows each step.
+- At `Normal`, the learner watches a loop go round.
+- At `Fast`, the learner reaches a later point while the chart still
+  moves.
+- With Skip and the position bar, the learner jumps further.
 
-Stop: discard the runner.
+While the pre-run, a Seek, or a Skip works through its batches, `busy`
+is true.
 
-While the pre-run, a Seek, or a Skip works through its batches, `busy` is
-true, and the play button, Step, and Play do nothing, because a control that
-took over the runner would restart the pre-run, or leave a Seek at a step the
-position bar doesn't show. During a Skip, though, the play button reads
-`❚❚ Pause` and cancels the Skip. `busy` stands beside the five statuses,
-because a sixth status would make every test of `status` in the screens
+While `busy` is true, the play button, Step, and Play do nothing. During
+a Skip, though, the play button reads `❚❚ Pause` and cancels the Skip.
+These controls do nothing then, because a control that took over the
+runner would restart the pre-run, or leave a Seek at a step the position
+bar doesn't show.
+
+`busy` is a field of its own, not a sixth value of `status`, because a
+sixth status would make every test of `status` in the screens
 three-way.
 
-Step over: visible steps, in batches, until the frame count of a step's
-state is at most that of the step it started from, or until the run ends.
-A step's state is the one it publishes (Steps and batches), not the
-runner's, which can be one call deeper after the driver has read past a
-write. Expanding a call inline in the caller's chart was rejected, because
-the flowchart becomes hard to read one level down, and a function would
-have two places to be edited.
+A call shows in the called function's own chart (`run.md`, Call stack).
+Expanding a call inline in the caller's chart was rejected because the
+flowchart becomes hard to read one level down, and the learner would
+have two places to edit a function.
 
-The driver holds at most one breakpoint, a statement's `NodeId`, from when it
-is set until Stop. Play, Step over, and Skip pause at a visible `enter` of
-that node and, when it is a loop, at each of its `loop` events (the run is
-then at the loop's check). Step and Seek ignore the breakpoint. Skip: visible
-steps, in batches and without publishing the ones in between, until such a
-pause or the end of the run. `Next pass`, a run to the next `loop` event, was
-rejected, because in bubble sort it stops at every inner pass, not once per
-outer pass, and it can't say which loop is meant. A breakpoint says it by
-location: an outer pass on the outer loop, the next output on a `print`.
+The driver holds at most one breakpoint, a statement's `NodeId`, from
+when it is set until Stop.
+
+Play, Step over, and Skip pause at a visible `enter` of the breakpoint's
+node. When the node is a loop, they also pause at each of its `loop`
+events, where the run is at the loop's check. Step and Seek ignore the
+breakpoint. `Next pass`, a run to the next `loop` event, was rejected
+because in bubble sort it stops at every inner pass, not once per outer
+pass, and it can't say which loop is meant. A breakpoint says by its
+location where the run pauses. For example: a breakpoint on the outer
+loop pauses once per outer pass, and one on a `print` pauses at the next
+output.
 
 ### Published state
 
-The driver publishes the fields of this table.
+The driver publishes these fields:
 
 | Field | Description |
 | --- | --- |
@@ -328,40 +497,66 @@ The driver publishes the fields of this table.
 | `verdict` | the chosen case's result (`challenges.md`, Judging), only while the run is at step `total` |
 | `difference` | `{ step, line? }`, the step at which a run started by `Watch this case` opened (`run.md`, Submission), until Stop |
 
-After an error, `lastEvent` is none at step `total`. The driver keeps
-`taken` and `verdicts` per frame: a `call` starts them empty for the called
-frame, and a `return` gives back the caller's as they were. A published
-`state` is a copy of the frames' variables and of the heap, so a later step
-doesn't change it. `Done.events` counts every event, whatever steps show
-it.
+After an error, `lastEvent` is none at step `total`.
 
-`state` is refreshed while playing because the `Result` tab follows every
-step, the fastest speed included. The driver updates `taken` and `pass` from
-every visible step it passes, because neither can be rebuilt from `lastEvent`
-after a Seek. `Watch this case` is a run option, not a step passed in, because
-only the driver's own pre-run knows where the differing line was printed. A
-shallow copy of `state` would share the runner's maps and change at the next
-step, so a screen could neither compare two states nor memoize on one. Values
-are immutable records, so a copy one level deep is enough.
+The driver keeps `taken` and `verdicts` per frame:
+
+- A `call` starts them empty for the called frame.
+- A `return` gives back the caller's as they were.
+
+A published `state` is a copy of the frames' variables and of the heap,
+so a later step doesn't change it. A shallow copy would share the
+runner's maps and change at the next step, so a screen could neither
+compare two states nor memoize on one.
+
+A copy one level deep is enough, because values are immutable records.
+
+The driver refreshes `state` while playing because the `Result` tab
+follows every step, the fastest speed included.
+
+The driver updates `taken` and `pass` from every visible step it passes,
+because neither can be rebuilt from `lastEvent` after a Seek.
+
+`Watch this case` is an option of Run, not a step that the caller passes
+to Run, because only the driver's own pre-run knows where the first
+differing line was printed.
 
 ## CPython check
 
-For each challenge and test, the check runs the interpreter on `solution`,
-emits Python, writes a script, runs `python3`, and compares the result with
-the interpreter's by the judge's equality (`challenges.md`, Judging). The
-script has three parts: (1) a shim that replaces `random.randint` with a
-function that returns `draws()` in order and raises when they run out, (2) the
-emitted code with the test's inputs, and (3) an epilogue that prints one JSON
-line, `{"stdout": [...], "vars": {...}}`, by the `toData` rules. The check
-writes each module the solution uses (`emitter.md`) as `<name>.py` beside the
-script. The check also emits every built-in module (`modules.md`, Built-in
-modules) alone and compiles it with `python3 -m py_compile`. The epilogue
-writes Python's values as `Data` itself, so the one equality rule used for
-expectations compares both engines.
+The check holds the interpreter to CPython on every test of every
+challenge. For each test, the check:
+
+1. runs the interpreter on `solution`
+2. emits Python and writes a script
+3. runs the script with `python3`
+4. compares CPython's result with the interpreter's by the judge's
+   equality (`challenges.md`, Judging)
+
+The script has three parts, in this order:
+
+1. a shim: `random.randint` returns the runner's `draws()` in order and
+   raises when they run out
+2. the emitted code with the test's inputs
+3. an epilogue that prints one JSON line,
+   `{"stdout": [...], "vars": {...}}`, by the `toData` rules
+
+The epilogue writes Python's values as `Data` itself, so the one
+equality rule that judges an expectation also compares the two engines.
+
+The check writes each module the solution uses (`emitter.md`) as
+`<name>.py` beside the script.
+
+The check also emits every built-in module (`modules.md`, Built-in
+modules) on its own and compiles it with `python3 -m py_compile`.
 
 ## Verification
 
-The tests of `src/runtime` cover the Semantics rules under Values and the
-run (`language.md`). Each runtime error code is tested with the rule or the
-block that raises it. The tests of `src/runtime` and `src/store/run.ts`
-cover determinism and every statement of Driver.
+Tests cover:
+
+- the rules of `language.md`, Semantics, Values and the run, in the
+  tests of `src/runtime`
+- each runtime error code, with the rule or the block that raises it
+- the same event sequence for the same program, inputs, seed, and
+  modules (Runner), in the tests of `src/runtime` and `src/store/run.ts`
+- every statement of Driver, in the tests of `src/runtime` and
+  `src/store/run.ts`
