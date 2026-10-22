@@ -1,25 +1,61 @@
 # Emitter
 
+The emitter writes a program as a Python file, together with the file's
+line map. This file states the emitter's interface, why Python is the
+only language it writes, the layout of the file, where the emitter
+writes parentheses and how it writes a literal, what a block's
+`python()` returns and receives, and how the emitter writes a module's
+file.
+
 Code: `src/python/emit.ts`, `strings.ts`, `precedence.ts`. Tests:
 `emit.test.ts`, with the expression fixture `fixtures/expressions.ts`.
 
+## Interface
+
+`emit` returns the program's file, its line map, and the modules'
+files (Modules):
+
 `emit(program, inputs: Record<Id, Data>, modules: Module[]): { code: string; map: Record<NodeId, { start: number; end: number }>; modules }`
-returns the program's file and its line map, with 1-based inclusive lines. A
-compound statement maps to its header line, and `else:` has no entry in the
-map.
 
-Python is the only generated language. JavaScript, considered with Dart,
-has no int/float distinction, makes `-7 % 2` equal `-1`, has no `//`, and
-tests indices with `in` on an array, so its output would differ from the
-chart or wrap arithmetic in helpers that a learner can't read. A second
-language would first need a narrower block language or those helpers.
+The map's lines are 1-based and inclusive. A compound statement maps to
+its header line, and `else:` has no entry in the map.
 
-The file holds these sections, in order: the `import` lines followed by one
-`from <name> import a, b` line per module the program uses (`modules.md`,
-Resolution), with modules in name order and names in first-use order; the
-classes; the functions; and one section that holds the inputs and then `main`. A
-section appears only if it isn't empty. One blank line separates sections, and
-two surround classes and functions.
+## The generated language
+
+Python is the only language the emitter writes. JavaScript, which was
+considered together with Dart, differs from Python in these ways:
+
+- It has no distinction between `int` and `float`.
+- It makes `-7 % 2` equal `-1`.
+- It has no `//`.
+- Its `in` on an array tests indices.
+
+So a JavaScript file would either differ from the chart or wrap
+arithmetic in helpers that a learner can't read. A second language would
+first need a narrower block language or those helpers.
+
+## File layout
+
+The file holds these sections, in this order:
+
+1. the `import` lines, then one `from <name> import a, b` line for each
+   module the program uses (`modules.md`, Resolution)
+2. the classes
+3. the functions
+4. one section that holds the inputs and then `main`
+
+A section appears only if it isn't empty.
+
+Two blank lines separate a class or a function from what is next to it,
+and one blank line separates any other two sections.
+
+The `from` lines follow the order of the modules' names, and each line
+lists its names in the order the program first uses them.
+
+The emitter writes each input as an assignment of its value in
+`inputs`, in the order the inputs are declared.
+
+For example:
 
 ```python
 import random
@@ -43,47 +79,108 @@ for i in range(n - 1):
 print(nums)
 ```
 
-Inputs are emitted as assignments of their values in `inputs`, in
-declaration order.
+The `...` bodies stand for code the example leaves out.
 
-Each emitted file uses 4-space indentation, has no trailing whitespace,
-and ends with one newline.
+Each emitted file:
 
-The emitter writes parentheses only when a child's precedence is lower than
-its parent's, or equal on the right of a left-associative operator. `**` is
-right-associative. Comparisons and `in` are non-associative, so an equal
-child on either side is parenthesized. Precedence, from low to high: `or`,
-`and`, `not`, comparisons and `in`, `+ -`, `* / // %`, unary `-`, `**`.
+- uses 4-space indentation
+- has no trailing whitespace
+- ends with one newline
 
-`num` emits `raw`. `str` emits double quotes, with `\\ \" \n \t \r`
-escaped and any other control character written as `\xNN`. `bool` emits
-`True` or `False`, and `none` emits `None`.
+## Expressions
 
-A statement block's `python()` returns `PyLine[]`, where
-`PyLine = string | { block: Stmt[] }`, and an expression block's returns
-text. The emitter indents a block by one level, writes `pass` for an empty
-block, and records the line map while flattening. Blocks receive
+This section states where the emitter writes parentheses and how it
+writes a literal and an `empty` expression.
+
+The emitter writes an `empty` expression as `...`.
+
+### Parentheses
+
+The emitter writes parentheses around a child expression only when the
+child's precedence is lower than its parent's, or equal on a side the
+parent's operator doesn't associate to. That side is:
+
+- the right of a left-associative operator
+- the left of `**`, which is right-associative
+- either side of a comparison or `in`, which are non-associative
+
+The precedence levels, from low to high:
+
+1. `or`
+2. `and`
+3. `not`
+4. comparisons and `in`
+5. `+ -`
+6. `* / // %`
+7. unary `-`
+8. `**`
+
+### Literals
+
+The emitter writes each literal as its Python text:
+
+- `num`: its `raw` text
+- `str`: its text in double quotes, with `\\ \" \n \t \r` escaped and
+  any other control character written as `\xNN`
+- `bool`: `True` or `False`
+- `none`: `None`
+
+## Blocks
+
+This section states what a block's `python()` returns and receives, and
+how the emitter writes a target and a named statement.
+
+A block writes its own Python with `python()`:
+
+- A statement block's `python()` returns `PyLine[]`, where
+  `PyLine = string | { block: Stmt[] }`.
+- An expression block's `python()` returns text.
+
+The emitter flattens the lines: it indents each `{ block }` entry by one
+level, writes `pass` for an empty one, and records the line map as it
+goes.
+
+A block's `python()` receives this context:
 `EmitContext = { expr(e): string; operand(e, precedence, side): string; slot(node, name): string; block(stmts): PyLine }`.
-`operand` applies the parentheses rule above. `slot` writes the input of a
-slot, parenthesized as an atom when the slot declares `atom` (`blocks.md`,
-Node text). A target is written as the expression it is (`language.md`,
-Statements). An `empty` expression emits `...`.
 
-A statement with a name (`language.md`, Statement names) is preceded by the
-comment line `# <name>` at its indentation, and its map entry starts at
-that line.
+- `operand` writes `e` as the child on `side` of a parent at
+  `precedence`, and applies the parentheses rule (Parentheses).
+- `slot` writes the input of a slot. When the slot declares `atom`
+  (`blocks.md`, Node text), `slot` writes the input as an atom, so `slot`
+  parenthesizes an operation in the input.
+
+The emitter writes a target as the expression it is (`language.md`,
+Statements, Targets).
+
+Before a statement with a name (`language.md`, Statement names), the
+emitter writes the comment line `# <name>` at the statement's
+indentation, and the statement's map entry starts at that line.
+
+## Modules
+
+This section states the modules `emit` receives and returns, how the
+emitter lays out a module's file, and how it writes a call of a module
+function.
 
 The `modules` argument lists the modules the program uses (`modules.md`,
-Resolution), empty when it uses none. The returned `modules` is
-`Array<{ name: Id; code: string; map: Record<NodeId, { start: number; end: number }> }>`,
-with one entry per module, each laid out as above without inputs or
-`main`. `emit(module)` produces a module's file alone, with its `map`.
-Inlining a module's functions into `main.py` was rejected, because the
+Resolution). When the program uses no module, the argument is empty.
+
+The returned `modules` holds one entry for each module:
+`Array<{ name: Id; code: string; map: Record<NodeId, { start: number; end: number }> }>`.
+Inlining a module's functions into `main.py` was rejected because the
 `Python` tab would then show one program where the chart shows a program
-and a module. Calls stay unqualified (`heap_push(h, x)`), because
+and a module.
+
+The emitter lays out a module's file as it lays out the program's file
+(File layout), without inputs or `main`.
+
+`emit(module)` writes a module's file alone, with its `map`.
+
+The emitter writes a call of a module function unqualified. For
+example: `heap_push(h, x)`. A qualified call was rejected because
 `heap.push(h, x)` would collide with the parser's method syntax.
 
 ## Verification
 
-A fixture of 200 expressions emits the expected text under the
-parentheses rule.
+A fixture of 200 expressions checks that the emitter writes each of them
+as the expected text under the parentheses rule (Parentheses).
