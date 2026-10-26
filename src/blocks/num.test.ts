@@ -19,7 +19,7 @@ describe("num (blocks.md)", () => {
   });
 });
 
-describe("notation (blocks.md, Node text)", () => {
+describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
     expect(notation(num(3))).toBe("{value}");
   });

@@ -23,7 +23,7 @@ describe("builtin max (blocks.md)", () => {
   });
 });
 
-describe("notation (blocks.md, Node text)", () => {
+describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
     expect(notation(call("max", num(1), num(2)))).toBe("max({a}, {b})");
   });

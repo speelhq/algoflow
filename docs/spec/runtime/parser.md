@@ -47,18 +47,19 @@ In a stored program, `migrate()` rejects an int literal outside the int
 range, or a float literal beyond the largest float, by the parser's own
 rule (`language.md`, Data, Faults that `migrate()` rejects).
 
-A construct whose block isn't in the registry gives `E_PARSE_SYNTAX` at
-its token, so the registry alone determines what the language accepts.
-For example: `[1, 2]` and `xs[i]` parse only while their blocks are
-registered. The parser rejects such a construct at its token because a
-grammar-legal form whose block isn't registered would otherwise fail
-later, in `unparse`, `validate`, or `run`, with an unknown-block error
+A construct whose block definition isn't in the registry gives
+`E_PARSE_SYNTAX` at its token, so the registry alone determines what the
+language accepts. For example: `[1, 2]` and `xs[i]` parse only while
+their block definitions are registered. The parser rejects such a
+construct at its token because a grammar-legal form whose block
+definition isn't registered would otherwise fail later, in `unparse`,
+`validate`, or `run`, with an error that names an unknown block definition
 instead of a diagnostic.
 
 The parser reads no Python statement, for three reasons:
 
 - A learner who can type Python doesn't need blocks.
-- The `Python` tab (`pages.md`, Panel, Python tab) is the way from chart
+- The `Python` tab (`pages.md`, Panel, Python tab) is the way from blocks
   to text.
 - The block language is a strict subset of Python, so most pasted
   Python would fail without a clear diagnostic.

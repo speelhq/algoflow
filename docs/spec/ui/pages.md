@@ -24,7 +24,7 @@ The application has six pages, each addressed by a hash route:
 - Module: `#/m/<name>` (`modules.md`, Pages)
 
 A Playground program is the Problem page without the `Problem` tab, the
-Input nodes, and `Submit` (`scope.md`, Curriculum, Playground
+Input chart nodes, and `Submit` (`scope.md`, Curriculum, Playground
 programs).
 
 A Playground program's top bar differs from the Problem page's in four
@@ -58,8 +58,8 @@ Every page sets the browser tab title to `<title> — AlgoFlow`, where
 The application shows the Problems page for:
 
 - a hash that names no page
-- a Problem route whose id names no challenge
-- a Playground program route whose id isn't listed in
+- a Problem route whose challenge id names no challenge
+- a Playground program route whose Playground id isn't listed in
   `algoflow:playground` (`language.md`, Storage)
 
 ## Page layout
@@ -136,7 +136,7 @@ The Problem page, during a run, looks like this:
 Help is a dialog, opened from `⋯` or the header's `?`. It holds the
 keyboard table (Keyboard), because the table has no other place.
 
-Help also holds three lines that describe the loop: build the chart,
+Help also holds three lines that describe the loop: build the program,
 run it on one input, submit. It doesn't hold the problem's description,
 because that would mean nothing on the Problems page, which has no
 problem open.
@@ -151,7 +151,7 @@ program and opens it. The new program takes the problem's title,
 because the Problem page never shows its program's own title.
 
 Each input becomes an assignment of the chosen case's value
-(`chart.md`, Input nodes) at the top of `main`, in the form that
+(`chart.md`, Input chart nodes) at the top of `main`, in the form that
 `emitter.md` writes inputs in.
 
 ## Problems page
@@ -159,7 +159,7 @@ Each input becomes an assignment of the chosen case's value
 The Problems page lists every problem by study plan, and a row opens
 the Problem page. A problem row shows:
 
-- a status mark: `✓` solved, `•` attempted, or blank
+- a status icon: `✓` solved, `•` attempted, or blank
 - the title
 - the difficulty: `Easy`, `Medium`, or `Hard`
 - the topic tags
@@ -187,7 +187,7 @@ A plan's button depends on the plan's progress entries
   `Continue: <title>`, where `<title>` is the first unsolved problem
 - once every problem is solved: no button
 
-A problem's progress entry sets its status mark, and a plan's
+A problem's progress entry sets its status icon, and a plan's
 `n of m solved` counts its solved problems.
 
 Topics are fixed (`problems.topic.<key>`):
@@ -291,7 +291,7 @@ The application records that the solution was shown (`challenges.md`,
 Progress).
 
 `Run` and `Submit` act on the learner's program. While the solution is
-shown, either one first returns the canvas to the learner's chart,
+shown, either one first returns the canvas to the learner's program,
 because a run under the solution's chart would put the highlight, the
 marks, and the narration on a chart other than the one running.
 
@@ -321,8 +321,8 @@ shouldn't hold.
 
 The `Result` tab shows one case. It holds:
 
-- the case selector, which shows the same choice as the Input nodes
-  (`chart.md`, Input nodes), with `✓ Submit` (`run.md`, Submission)
+- the case selector, which shows the same choice as the Input chart nodes
+  (`chart.md`, Input chart nodes), with `✓ Submit` (`run.md`, Submission)
   beside it on a Problem page
 - `Variables`: the variables of the shown frame (`run.md`, Call stack),
   with one view each (`views.md`)
@@ -339,7 +339,7 @@ expected value. When the program never gave the variable a value, its
 value is blank.
 
 When the run ends on one of the challenge's tests, the tab shows that
-test's verdict (`challenges.md`, Judging), and it marks the first
+test's verdict (`challenges.md`, Judging), and it highlights the first
 output row that differs, or else the first variable row that differs.
 
 After a submission, the tab adds what `run.md`, Submission, states.
@@ -359,15 +359,15 @@ The tab colors keywords, strings, numbers, and comments, and nothing
 else.
 
 The tab writes the inputs with the values of the chosen case
-(`chart.md`, Input nodes).
+(`chart.md`, Input chart nodes).
 
 Python text appears nowhere else.
 
-The tab's lines and the chart's nodes are linked:
+The tab's lines and the chart nodes are linked:
 
-- Hovering a line outlines its node.
-- Selecting a node highlights its lines.
-- Clicking a line selects its node and, for a line inside a function,
+- Hovering a line outlines its chart node.
+- Selecting a block highlights its lines.
+- Clicking a line selects its block and, for a line inside a function,
   shows that function's chart (`chart.md`, Charts and the path bar).
 - While running, the line of the current statement is highlighted.
 
@@ -376,9 +376,9 @@ The tab's lines and the chart's nodes are linked:
 When the program uses modules, a file row switches among `main.py` and
 one `<name>.py` per module (`emitter.md`). A module's file:
 
-- in a program's tab: is read-only, has no links to the chart's nodes,
+- in a program's tab: is read-only, has no links to the chart nodes,
   and carries `Open module <name>` (`modules.md`, Operations)
-- on a Module page: is the shown file, with every link to its nodes
+- on a Module page: is the shown file, with every link to its chart nodes
 
 ## First launch
 
@@ -399,7 +399,7 @@ A Problem page and a Playground program answer these keys:
 
 | Keys                         | Action                              |
 | ---------------------------- | ----------------------------------- |
-| Delete, Backspace            | remove selected node, unless typing in the editor |
+| Delete, Backspace            | remove selected block, unless typing in the editor |
 | Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z | undo, redo                          |
 | Ctrl/Cmd+D                   | duplicate                           |
 | Ctrl/Cmd+Enter               | the play button (`run.md`, Run bar): Run, Pause, Play, Replay |
@@ -420,12 +420,12 @@ parse, and runtime code has the key `error.<code>` in `en.json`, and
 that key's text takes the code's params (`language.md`, Validation;
 `parser.md`; `interpreter.md`, Errors).
 
-A message writes its `op` parameter as the label of the block that
-`op` names (`block.<op>.label`; `interpreter.md`, Errors).
+A message writes its `op` parameter as the label of the block definition
+that `op` names (`block.<op>.label`; `interpreter.md`, Errors).
 
 A message, a `help` text, and an explanation say that a variable gets
 or has a value, never that it is created, because a variable has no
-form of its own for its first value (`blocks.md`, Node text).
+form of its own for its first value (`blocks.md`, Notation).
 
 ## Catalogs
 
@@ -507,20 +507,20 @@ would match a whole namespace.
 
 The check doesn't report a key left behind when a member leaves a
 family whose template literal remains, or when a named menu entry, a
-slot's name, or a generated node's text leaves a registered block.
-Those leftovers aren't reported, because a family's members are a
-type, which the check doesn't read without the type checker, and
-naming a block's keys one by one would copy `blocks.md`, Catalog keys,
-into the check, beside the code that builds them.
+slot's name, or a generated chart node's text leaves a registered block
+definition. Those leftovers aren't reported, because a family's members
+are a type, which the check doesn't read without the type checker, and
+naming a block definition's keys one by one would copy `blocks.md`,
+Catalog keys, into the check, beside the code that builds them.
 
-The check does report a removed block's keys.
+The check does report a removed block definition's keys.
 
 `pnpm check` fails on a key that one locale holds and the other doesn't.
 
 ### Japanese
 
 The Japanese locale writes a label, a menu entry, a button, and a
-`foreach`'s generated nodes in plain form or as a noun, the way a
+`foreach`'s generated chart nodes in plain form or as a noun, the way a
 command is named. For example: `余り`, `値を入れる`. It writes `help` texts,
 explanations, messages, and the narration in polite form, because they
 are spoken to the learner.
@@ -604,8 +604,8 @@ its language and the browser chooses fonts for it.
 
 ## Values on one line
 
-A value written on one line is written as the blocks write it. Such
-a value stands in an Input node, a case label, the case menu,
+A value written on one line is written as a block's notation writes it.
+Such a value stands in an Input chart node, a case label, the case menu,
 `Example`, the narration, a `Result` row, and `Variables`. The forms:
 
 - a number as Python's `str()` writes it: `3`, `2.0`
@@ -619,11 +619,11 @@ by `, `.
 
 A variable shown with its value or its view (`views.md`) in
 `Variables`, a `Result` row, a case label, the case menu, an Input
-node, or `Example` is written as an assignment writes it. For example:
-`n ← 15`.
+chart node, or `Example` is written as an assignment writes it. For
+example: `n ← 15`.
 
 The variables of a case label and of the case menu are separated by
-`, ` in every locale, as items are (`blocks.md`, Node text). For
+`, ` in every locale, as items are (`blocks.md`, Notation). For
 example: `a ← 3, b ← 9`.
 
 The narration states a variable and its value in a sentence (`run.md`,

@@ -1,10 +1,10 @@
 # Modules
 
 A module is a named set of functions and classes that lives outside any
-program, so the learner defines a block once and uses it in many
-programs. This file states how a module is stored, how a program finds a
-module's functions, the Modules and Module pages, the operations on a
-module, a module's cases, where modules persist, and the built-in
+program, so the learner defines a function or class once and uses it in
+many programs. This file states how a module is stored, how a program
+finds a module's functions, the Modules and Module pages, the operations
+on a module, a module's cases, where modules persist, and the built-in
 modules.
 
 Code: types `src/modules/types.ts`, resolution `src/modules/resolve.ts`,
@@ -47,8 +47,8 @@ single flat collection.
 
 Module names are unique among learner modules, and unique among built-in
 modules. A learner module with a built-in module's name shadows it
-(`language.md`, Scope), so a block the learner rebuilt is used under its
-name, and no problem has to say which one to use.
+(`language.md`, Scope), so a function the learner rebuilt is used under
+its name, and no problem has to say which one to use.
 
 Built-in modules are read-only.
 
@@ -79,10 +79,10 @@ lifted.
 
 A module has no `main`. Its page runs one function at a time
 (`interpreter.md`, Modules). The shown function's parameters are Input
-nodes in the form of `chart.md`, Input nodes. Their menu lists that
-function's cases (Cases). When `Open <name>` (Operations) opened the page,
-they hold the arguments it brought. After a run, `End` shows the returned
-value.
+chart nodes in the form of `chart.md`, Input chart nodes. Their menu lists
+that function's cases (Cases). When `Open <name>` (Operations) opened the
+page, they hold the arguments it brought. After a run, `End` shows the
+returned value.
 
 ## Pages
 
@@ -120,9 +120,9 @@ A learner module's canvas carries the band
 `Your module. Changes reach every program that uses it.` Edits persist
 under Storage, with the timing of `language.md`, Storage.
 
-A built-in module's charts are read-only. Its editors offer no editing,
-`Duplicate`, or `Delete`, and `▾` offers no `Add`. Its top bar has
-`Clone` (Operations).
+A built-in module's charts and field tables are read-only. Its editors
+offer no editing, `Duplicate`, or `Delete`, and `▾` offers no `Add`. Its
+top bar has `Clone` (Operations).
 
 ## Operations
 
@@ -169,7 +169,7 @@ names are new, keeps existing ones unchanged, and reports
 
 ### `Open <name>`
 
-`Open <name>` on a module function or class (`editor.md`, Node editor;
+`Open <name>` on a module function or class (`editor.md`, Block editor;
 `run.md`, Errors) opens its Module page in the browser window named
 `algoflow-module`, so a second `Open <name>` reuses that tab. When the
 Module page finds `algoflow:handoff`, it saves its pending edits,
@@ -185,16 +185,17 @@ The function's arguments come with it:
 
 `Open <name>` writes them with the module and function names under the
 `localStorage` key `algoflow:handoff`. The Module page reads the key
-once, removes it, and sets the Input nodes' values from it (Resolution).
+once, removes it, and sets the Input chart nodes' values from it
+(Resolution).
 
 Opening the function in a second browser tab leaves the program as it
 was, a paused run included, and runs the one function with that call's
 arguments, so a bug in `heap_pop` shows up sooner than in hundreds of
 steps of `dijkstra`.
 
-Showing the module's chart within the program page was rejected because
-the program page would then need a second mode, where an edit changes a
-module that every program using it shares.
+Showing a module's charts and field tables within the program page was
+rejected because the program page would then need a second mode, where an
+edit changes a module that every program using it shares.
 
 The second window is a tab, because two tiled windows would each be
 narrower than 1280 px (`scope.md`, Product).

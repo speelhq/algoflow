@@ -16,13 +16,13 @@ The spec has one folder per area, and each folder holds that area's files:
 | ------------- | ---------------- | --------------------------------------------------------------- |
 | `scope/`      | `scope.md`       | product scope, the learner, curriculum, acceptance              |
 | `language/`   | `language.md`    | AST types, data model, semantics, validation, edits, kinds      |
-| `blocks/`     | `blocks.md`      | every block: slots, Python output, notation, chart, menu entries |
+| `blocks/`     | `blocks.md`      | every block definition: slots, Python output, notation, chart, menu entries |
 | `runtime/`    | `interpreter.md` | runner, events, runtime errors, driver, CPython check           |
 |               | `emitter.md`     | the Python emitter                                              |
 |               | `parser.md`      | the expression parser                                           |
 | `ui/`         | `pages.md`       | pages, panel, first launch, keyboard, messages and i18n         |
 |               | `chart.md`       | the chart                                                       |
-|               | `editor.md`      | the block menu, the node editor, value lines                    |
+|               | `editor.md`      | the block menu, the block editor, value lines                   |
 |               | `run.md`         | running and submission                                          |
 |               | `views.md`       | the views of the `Result` tab                                   |
 | `challenges/` | `challenges.md`  | challenge schema, study plans, every built-in challenge         |
@@ -201,15 +201,24 @@ The spec uses these terms:
 | Term            | Definition                                                                      |
 | --------------- | ------------------------------------------------------------------------------- |
 | program         | one `Program` AST (`language.md`)                                               |
-| block           | a `BlockDef` in `src/blocks/` and its entry in the block menu (`blocks.md`)     |
-| node            | chart rendering of one statement (a box, a diamond, or a terminal)              |
-| generated node  | a node the chart draws for a loop's init, check, or update. The node belongs to the loop. |
-| `Node`, `NodeId` | in the code, a statement or an expression of a program (`language.md`, Statements; Expressions), and the id it carries. A function and a class carry a `NodeId` too (`language.md`, Program), and a statement's node on the chart carries its statement's `NodeId`. |
+| node            | a block, a function, or a class: anything that carries a `NodeId` (`language.md`, Program) |
+| block           | a statement or an expression that the learner places, made from a block definition (`language.md`, Statements; Expressions). A function is not a block. |
+| block definition | the kind that blocks are made from: a `BlockDef` in `src/blocks/` and its entry in the block menu (`blocks.md`) |
+| routine         | `main` or a function: a unit with its own statements and variables              |
 | region          | an ordered list of statements inside a branch or loop, or at top level          |
 | compound statement | a branch or a loop, as Python names it: a statement that holds a region in a slot of role `body` (`blocks.md`, The block definition) |
 | slot            | one editable field of a block                                                   |
 | value line      | the one-line editor of an expression slot (`editor.md`, Value line)             |
-| notation        | a block's text on its node, the same in every locale (`blocks.md`, Node text)    |
+| notation        | a block's text, the same in every locale (`blocks.md`, Notation)                |
+| chart           | the flowchart of one routine, which the canvas draws. The canvas draws a class as a field table, which is not a chart. |
+| chart node      | a thing that the chart draws and joins with edges: a terminal, an Input chart node, the box or the diamond of a statement block, a generated chart node, or a junction |
+| Input chart node | the chart node that shows one input with its value, where the learner chooses the case (`chart.md`, Input chart nodes) |
+| generated chart node | a chart node the chart draws for a loop's init, check, or update. It belongs to the loop block. |
+| owner           | the node that a chart node belongs to, whose `NodeId` the chart node carries: a statement block, and for a generated chart node its loop |
+| edge            | a line between two chart nodes, with a `Yes` or `No` label after a diamond      |
+| shape           | the form of a chart node: terminal, input, box, diamond, or junction (`chart.md`, Shapes) |
+| mark            | the `✓` or `✗` that a diamond shows after its check (`run.md`, Path and marks)   |
+| icon            | a small figure, a character or an SVG, that the screen draws for a thing: a mark, a problem's status, a button's face |
 | connector       | the `+` insertion point on an edge                                              |
 | event           | one record the runner emits (`interpreter.md`, Events). `Done` counts them.     |
 | step            | a visible step, which the driver stops on and the position bar counts: an event, an exchange of two writes, a module call, or the call that fails (`interpreter.md`, Steps and batches). On screen, `step` names nothing else. |
@@ -217,9 +226,9 @@ The spec uses these terms:
 | target          | an expression that names where a value is stored: a variable, an item, a key, or a field (`language.md`, Statements) |
 | view            | rendering of one variable in the `Result` tab (`views.md`)                      |
 | panel           | the left part of a page, holding the `Problem`, `Result`, and `Python` tabs   |
-| canvas          | the right part of a page: the path bar, the chart, the narration line, and the run bar (`pages.md`, Page layout) |
+| canvas          | the right part of a page: the path bar, the chart or field table, the narration line, and the run bar (`pages.md`, Page layout) |
 | run bar         | the bar at the foot of the canvas holding `▶ Run` and, while running, the run's controls (`run.md`, Run bar) |
-| path bar        | the line above the chart that names the chart shown and, while running, the call stack |
+| path bar        | the line above the chart that names the chart or field table shown and, while running, the call stack |
 | case            | one set of inputs with its expectation: a challenge test, or a module function's saved run (`modules.md`, Cases) |
 | challenge       | a JSON file in `challenges/` (`challenges.md`), shown to learners as a problem  |
 | study plan      | a named ordered subset of the challenges (`challenges/plans.json`)              |
@@ -227,6 +236,16 @@ The spec uses these terms:
 | built-in module | a module shipped as `modules/<name>.json`                                       |
 | learner module  | a module the learner created or copied, kept by the module store (`modules.md`, Storage) |
 | artboard        | one screen drawn in Claude Design, exported to `docs/design/`                   |
+
+Three words keep one meaning each, because each names more than one
+thing otherwise:
+
+- "node" alone is a block, a function, or a class. What the chart draws is
+  always a "chart node".
+- "block" alone is a placed statement or expression. A kind is always a
+  "block definition".
+- "id" is never alone. It is a node id, a chart node id, a heap id, or a
+  storage id (a challenge id or a Playground id).
 
 ## Commitments
 

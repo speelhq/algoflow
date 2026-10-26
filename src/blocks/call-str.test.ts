@@ -21,7 +21,7 @@ describe("builtin str (blocks.md)", () => {
   });
 });
 
-describe("notation (blocks.md, Node text)", () => {
+describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
     expect(notation(call("str", num(1)))).toBe("str({x})");
   });

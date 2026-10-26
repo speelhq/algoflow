@@ -94,7 +94,7 @@ export const ast = {
     value ? { id: tid(), kind: "return", value } : { id: tid(), kind: "return" },
 };
 
-/** The notation its block writes `node` in (`blocks.md`, Node text). */
+/** The notation its block writes `node` in (`blocks.md`, Notation). */
 export function notation(node: Expr | Stmt): string {
   return getBlock(keyOf(node)).notation(node);
 }

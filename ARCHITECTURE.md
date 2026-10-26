@@ -16,16 +16,17 @@ developer (`CLAUDE.md`, Judgment).
 - The app uses shadcn/ui on Base UI (not Radix), dnd-kit, and Zustand.
 - Don't add a graph, flow, or editor library. The app lays the chart out
   from the `Program` and nothing is positioned by hand
-  (`docs/spec/ui/chart.md`), so a library for freely placed nodes and edges
-  would have nothing to do.
+  (`docs/spec/ui/chart.md`), so a library for freely placed chart nodes and
+  edges would have nothing to do.
 - `src/lang`, `src/runtime`, `src/python`, and `src/blocks` import only from
   one another: through `@/` across folders and `./` within one, never
   `../`. Their tests may also import `vitest` and `@/i18n`. `.oxlintrc.json`
   enforces this.
-- Each block lives in its own file in `src/blocks/`, and no other code
-  branches on a block's kind or name (`docs/spec/blocks/`). Every consumer
-  reads the block's declarations instead, so a new block works in the menu,
-  the chart, and the editor with no other change.
+- Each block definition lives in its own file in `src/blocks/`, and no
+  other code branches on a block's kind or name (`docs/spec/blocks/`).
+  Every consumer reads the block definition's declarations instead, so a
+  new block definition works in the menu, the chart, and the editor with
+  no other change.
 - Every user-visible string comes from `src/i18n/en.json`, so adding
   Japanese means adding one more catalog with the same keys.
 - `int` and `float` are distinct values, and lists, dicts, and objects live
@@ -46,11 +47,11 @@ without a browser.
   edit and before every run. Never change a `Program` in place:
   `validate()`, `refusedDefinitions()`, and `nodesById()` are memoized per
   `Program` object, and the undo history keeps earlier programs.
-- `src/blocks`: one `BlockDef` per block. It owns the block's slots,
+- `src/blocks`: one block definition (`BlockDef`) per file. It owns its slots,
   `create()`, `run` (what the interpreter does), `python()` (the exact
   Python it emits), and `chart` (`docs/spec/blocks/`). `registry.ts` is the
   only registry, and the interpreter, the emitter, the chart, the block
-  menu, and the node editor all reach blocks through it.
+  menu, and the block editor all reach block definitions through it.
 - `src/runtime`: `run()` returns a `Runner` whose `next()` returns one event
   at a time, then `Done`, which counts the events
   (`docs/spec/runtime/interpreter.md`). Each event records one thing the run
@@ -97,10 +98,10 @@ without a browser.
   `ResizeHandle.tsx` rather than `react-resizable-panels`, which works in
   percentages where the spec gives sizes in pixels.
 - The rest of `src/ui`: React components. The chart is an SVG flowchart
-  with a computed layout (`src/ui/chart/layout.ts`). Node text and
-  narration are plain strings from `src/ui/chart/text.ts` and
+  with a computed layout (`src/ui/chart/layout.ts`). Chart node text and
+  the narration are plain strings from `src/ui/chart/text.ts` and
   `src/ui/run/narrate.ts`, and `text.ts` is the only code that splits a
-  notation into its pieces. The node editor's state is a session that
+  notation into its pieces. The block editor's state is a session that
   changes only through pure transitions (`src/ui/editor/session.ts`). A
   variable's view is chosen by the type of its value alone, never by block
   or challenge (`docs/spec/ui/views.md`).
