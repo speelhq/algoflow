@@ -1,7 +1,7 @@
 // The interpreter. Blocks own their semantics; this file
 // owns frames, dispatch, counting, limits, and the Runner contract.
 import { inputValue, toValue } from "@/lang/data";
-import type { Data, Expr, Heap, Id, NodeId, Program, Stmt, Value } from "@/lang/types";
+import type { Data, Expr, Heap, Name, NodeId, Program, Stmt, Value } from "@/lang/types";
 import { getBlock, keyOf } from "@/blocks/registry";
 import type { ExprRunner, RunContext, Signal, StmtRunner } from "@/blocks/types";
 import { RuntimeFailure } from "./errors";
@@ -13,7 +13,7 @@ import type { Done, Event, Frame, Runner, RuntimeCode } from "./types";
 export const EVENT_LIMIT = 1_000_000;
 const CALL_DEPTH_LIMIT = 200;
 
-export function run(program: Program, inputs: Readonly<Record<Id, Data>>, seed: number): Runner {
+export function run(program: Program, inputs: Readonly<Record<Name, Data>>, seed: number): Runner {
   const heap: Heap = new Map();
   const frames: Frame[] = [{ fn: "main", vars: new Map() }];
   const random = createRandom(seed);
@@ -76,7 +76,7 @@ export function run(program: Program, inputs: Readonly<Record<Id, Data>>, seed: 
         throw new Error(`${fn} takes ${def.params.length} arguments, given ${args.length}`);
       // The stack holds at most CALL_DEPTH_LIMIT frames, `main` included.
       if (frames.length >= CALL_DEPTH_LIMIT) ctx.fail(nodeId, "E_RECURSION");
-      const vars = new Map<Id, Value>();
+      const vars = new Map<Name, Value>();
       for (const [i, param] of def.params.entries()) {
         const arg = args[i];
         if (arg) vars.set(param, arg);

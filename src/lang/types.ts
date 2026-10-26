@@ -2,7 +2,7 @@
 // No third-party imports.
 
 export type NodeId = string; // 12 characters from the nanoid alphabet (id.ts)
-export type Id = string;
+export type Name = string;
 
 // ---------------------------------------------------------------- Program
 
@@ -17,8 +17,8 @@ export type Program = {
   main: Stmt[];
 };
 /** An input of the program: its name and kind; its value comes from the chosen case. */
-export type InputDecl = { name: Id; kind: Kind };
-export type FunctionDef = { id: NodeId; name: Id; params: Id[]; body: Stmt[] };
+export type InputDecl = { name: Name; kind: Kind };
+export type FunctionDef = { id: NodeId; name: Name; params: Name[]; body: Stmt[] };
 
 // ---------------------------------------------------------------- Data (JSON form)
 
@@ -55,8 +55,8 @@ export type Stmt =
   | (S & { kind: "assign"; target: Expr; value: Expr })
   | (S & { kind: "delete"; target: Expr })
   | (S & { kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
-  | (S & { kind: "for"; var: Id; start: Expr; stop: Expr; body: Stmt[] })
-  | (S & { kind: "foreach"; var: Id; list: Expr; body: Stmt[] })
+  | (S & { kind: "for"; var: Name; start: Expr; stop: Expr; body: Stmt[] })
+  | (S & { kind: "foreach"; var: Name; list: Expr; body: Stmt[] })
   | (S & { kind: "while"; cond: Expr; body: Stmt[] })
   | (S & { kind: "break" })
   | (S & { kind: "continue" })
@@ -75,15 +75,15 @@ export type Expr =
   | (E & { kind: "str"; value: string })
   | (E & { kind: "bool"; value: boolean })
   | (E & { kind: "none" })
-  | (E & { kind: "var"; name: Id })
+  | (E & { kind: "var"; name: Name })
   | (E & { kind: "binop"; op: BinOp; left: Expr; right: Expr })
   | (E & { kind: "unop"; op: "neg" | "not"; operand: Expr })
   | (E & { kind: "index"; list: Expr; index: Expr })
   | (E & { kind: "key"; dict: Expr; key: Expr })
   | (E & { kind: "list"; items: Expr[] })
   | (E & { kind: "dict"; entries: Array<{ key: Expr; value: Expr }> })
-  | (E & { kind: "call"; fn: Id; args: Expr[] })
-  | (E & { kind: "method"; obj: Expr; name: Id; args: Expr[] });
+  | (E & { kind: "call"; fn: Name; args: Expr[] })
+  | (E & { kind: "method"; obj: Expr; name: Name; args: Expr[] });
 export type ExprKind = Expr["kind"];
 export type BinOp =
   | "+"

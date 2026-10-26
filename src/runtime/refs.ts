@@ -1,11 +1,11 @@
 // A place in the state, as a `Ref`: the value there, its write, and whether two refs name one
 // place. Read and written by the ref's variant, not by the block that found it.
-import type { Heap, Id, Value } from "@/lang/types";
+import type { Heap, Name, Value } from "@/lang/types";
 import type { Ref } from "./types";
 import { entryOf } from "./values";
 
 /** The value at `ref`, a variable read in `vars`; undefined when the place holds none. */
-export function valueAt(ref: Ref, vars: ReadonlyMap<Id, Value>, heap: Heap): Value | undefined {
+export function valueAt(ref: Ref, vars: ReadonlyMap<Name, Value>, heap: Heap): Value | undefined {
   if ("var" in ref) return vars.get(ref.var);
   const entry = heap.get(ref.heap);
   if ("index" in ref) return entry?.kind === "list" ? entry.items[ref.index] : undefined;
@@ -13,7 +13,7 @@ export function valueAt(ref: Ref, vars: ReadonlyMap<Id, Value>, heap: Heap): Val
 }
 
 /** Writes `value` at `ref`, a variable in `vars`. */
-export function setValueAt(ref: Ref, value: Value, vars: Map<Id, Value>, heap: Heap): void {
+export function setValueAt(ref: Ref, value: Value, vars: Map<Name, Value>, heap: Heap): void {
   if ("var" in ref) {
     vars.set(ref.var, value);
     return;

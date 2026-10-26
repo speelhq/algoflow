@@ -14,7 +14,7 @@ import {
 import { find } from "./line";
 
 /** One editable slot of the notation: a name, a value or a target, or an item of a list of values. */
-export type Field = { slot: string; role: "id" | "expr"; index?: number };
+export type Field = { slot: string; role: "name" | "expr"; index?: number };
 
 export const fieldKey = (field: Field) => `${field.slot}:${field.index ?? ""}`;
 
@@ -23,7 +23,7 @@ type Bag = Record<string, unknown>;
 export const sameField = (a: Field | null, b: Field | null) =>
   a !== null && b !== null && fieldKey(a) === fieldKey(b);
 
-/** The name in an `id` slot. */
+/** The name in a `name` slot. */
 export function nameOf(stmt: Stmt, slot: string): string | undefined {
   const value = (stmt as unknown as Bag)[slot];
   return typeof value === "string" ? value : undefined;
@@ -83,7 +83,7 @@ export function fieldsOf(stmt: Stmt): Field[] {
     if ("words" in piece || again) continue;
     const held = placeholderValue(stmt, piece.name);
     const slot = piece.name;
-    if (held?.role === "id") out.push({ slot, role: "id" });
+    if (held?.role === "name") out.push({ slot, role: "name" });
     else if (held?.role === "expr" && held.expr) out.push({ slot, role: "expr" });
     else if (held?.role === "exprs") {
       held.items.forEach((_, index) => out.push({ slot, role: "expr", index }));
@@ -111,7 +111,7 @@ export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
 
 /** Whether a field still has something to fill: an empty name or an input at any depth. */
 function toFill(stmt: Stmt, field: Field): boolean {
-  if (field.role === "id") return nameOf(stmt, field.slot) === "";
+  if (field.role === "name") return nameOf(stmt, field.slot) === "";
   const value = valueOf(stmt, field);
   return value !== undefined && [...allExprs(value)].some(isEmptyExpr);
 }

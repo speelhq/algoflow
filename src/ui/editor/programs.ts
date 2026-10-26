@@ -4,7 +4,7 @@
 import { caseInputs } from "@/challenges/cases";
 import { inputValue } from "@/lang/data";
 import { migrate } from "@/lang/migrate";
-import type { Data, Id, Program, Stmt } from "@/lang/types";
+import type { Data, Name, Program, Stmt } from "@/lang/types";
 import { getBlock } from "@/blocks/registry";
 import { isParseError, parseData } from "@/python/parse";
 import { createPlaygroundProgram, useProgram } from "@/store/program";
@@ -16,7 +16,7 @@ import { variableExpr } from "./line";
  * An input as the emitter writes it: `name = <value>`. A value the blocks cannot write throws,
  * a caller's error: `pnpm check` refuses a challenge input that is one.
  */
-function inputAssignment(name: Id, data: Data): Stmt {
+function inputAssignment(name: Name, data: Data): Stmt {
   const value = parseData(data);
   if (isParseError(value))
     throw new Error(`no block writes the value of input ${name}: ${JSON.stringify(data)}`);
@@ -30,7 +30,7 @@ function inputAssignment(name: Id, data: Data): Stmt {
 export function playgroundCopy(
   program: Program,
   title: string,
-  inputs: Readonly<Record<Id, Data>>,
+  inputs: Readonly<Record<Name, Data>>,
 ): Program {
   const assignments = program.inputs.map(({ name }) =>
     inputAssignment(name, inputValue(inputs, name)),

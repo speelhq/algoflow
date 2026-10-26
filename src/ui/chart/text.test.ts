@@ -70,7 +70,7 @@ describe("templatePieces and placeholderValue", () => {
     expect(placeholderValue(call("max", left), "b")).toBeUndefined();
     expect(placeholderValue(print(left), "args")).toEqual({ role: "exprs", items: [left] });
     expect(placeholderValue(for_("i", num(0), num(3), []), "var")).toEqual({
-      role: "id",
+      role: "name",
       name: "i",
     });
     expect(placeholderValue(for_("i", num(0), num(3), []), "body")).toBeUndefined();

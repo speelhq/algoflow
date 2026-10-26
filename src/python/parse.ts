@@ -1,12 +1,12 @@
 // Typed expression text → Expr. No third-party imports.
 import { newId } from "@/lang/id";
-import type { BinOp, Data, Expr, Id, Program } from "@/lang/types";
+import type { BinOp, Data, Expr, Name, Program } from "@/lang/types";
 import { builtinKey, builtinOf, methodKey, BLOCKS, hasBlock, keyOf } from "@/blocks/registry";
 import { dataToPython } from "./emit";
 import { NUMBER, numberLiteral } from "./number";
 import { BINOPS, PRECEDENCE, binopsAt, isBinOp } from "./precedence";
 
-export type ParseScope = { functions: Id[] };
+export type ParseScope = { functions: Name[] };
 
 /** The scope of a text that names no function of a program: a number, a value, a sign. */
 export const NO_DEFINITIONS: ParseScope = { functions: [] };

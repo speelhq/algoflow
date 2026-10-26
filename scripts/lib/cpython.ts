@@ -5,7 +5,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Data, Id } from "@/lang/types";
+import type { Data, Name } from "@/lang/types";
 import { BLOCKS } from "@/blocks/registry";
 
 const PYTHON = process.env.PYTHON ?? "python3";
@@ -54,16 +54,16 @@ _vars = {name: _to_data(_ns[name]) for name in __NAMES__ if name in _ns}
 sys.stdout.write(json.dumps({"stdout": _lines, "vars": _vars}) + "\\n")
 `;
 
-export function buildScript(code: string, draws: number[], names: Id[]): string {
+export function buildScript(code: string, draws: number[], names: Name[]): string {
   return HARNESS.replace("__DRAWS__", JSON.stringify(draws))
     .replace("__SHIMS__", JSON.stringify(randomShims()))
     .replace("__CODE__", JSON.stringify(code))
     .replace("__NAMES__", JSON.stringify(names));
 }
 
-export type PythonResult = { stdout: string[]; vars: Record<Id, Data> } | { error: string };
+export type PythonResult = { stdout: string[]; vars: Record<Name, Data> } | { error: string };
 
-export function runPython(code: string, draws: number[], names: Id[]): PythonResult {
+export function runPython(code: string, draws: number[], names: Name[]): PythonResult {
   const dir = mkdtempSync(join(tmpdir(), "algoflow-check-"));
   const file = join(dir, "harness.py");
   try {
@@ -75,7 +75,7 @@ export function runPython(code: string, draws: number[], names: Id[]): PythonRes
     }
     const last = result.stdout.trim().split("\n").at(-1) ?? "";
     try {
-      return JSON.parse(last) as { stdout: string[]; vars: Record<Id, Data> };
+      return JSON.parse(last) as { stdout: string[]; vars: Record<Name, Data> };
     } catch {
       return { error: `unreadable epilogue: ${last.slice(0, 120)}` };
     }

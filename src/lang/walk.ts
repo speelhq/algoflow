@@ -25,7 +25,7 @@ export function isTarget(expr: Expr): boolean {
 export function variableOf(expr: Expr): string | undefined {
   const { slots } = getBlock(keyOf(expr));
   const [slot] = slots;
-  if (slots.length !== 1 || slot?.role !== "id") return undefined;
+  if (slots.length !== 1 || slot?.role !== "name") return undefined;
   const name = (expr as unknown as Bag)[slot.name];
   return typeof name === "string" ? name : undefined;
 }

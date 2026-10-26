@@ -1,5 +1,5 @@
 // Program → Python text plus the NodeId → line map. No third-party imports.
-import type { Data, Expr, FunctionDef, Id, NodeId, Program, Stmt } from "@/lang/types";
+import type { Data, Expr, FunctionDef, Name, NodeId, Program, Stmt } from "@/lang/types";
 import { dataKey, floatOf, inputValue, isFloatData } from "@/lang/data";
 import { programExprs } from "@/lang/walk";
 import { getBlock, keyOf } from "@/blocks/registry";
@@ -126,7 +126,7 @@ function importsOf(program: Program): string[] {
 type Section = { kind: "imports" | "function" | "main"; write: (w: Writer) => void };
 
 /** One blank line between sections, two around functions; `inputs` values the inputs. */
-export function emit(program: Program, inputs: Readonly<Record<Id, Data>>): Emitted {
+export function emit(program: Program, inputs: Readonly<Record<Name, Data>>): Emitted {
   const writer = new Writer();
   const sections: Section[] = [];
 
