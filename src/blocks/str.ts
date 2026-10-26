@@ -1,4 +1,4 @@
-// The `str` block: emitted double-quoted, with escapes.
+// The `str` block definition: emitted double-quoted, with escapes.
 import { newId } from "@/lang/id";
 import { pyString } from "@/python/strings";
 import { defineExpr } from "./types";

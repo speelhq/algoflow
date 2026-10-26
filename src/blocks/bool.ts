@@ -1,4 +1,4 @@
-// The `bool` block
+// The `bool` block definition
 import { newId } from "@/lang/id";
 import { defineExpr } from "./types";
 

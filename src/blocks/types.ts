@@ -1,4 +1,4 @@
-// BlockDef plus the runner and emitter contracts blocks implement.
+// BlockDef plus the runner and emitter contracts that block definitions implement.
 import type {
   Expr,
   ExprKind,

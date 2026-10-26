@@ -1,4 +1,4 @@
-// The `expr` block: an expression evaluated for its effect (method statements wrap one).
+// The `expr` block definition: an expression evaluated for its effect (method statements wrap one).
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 import { emptyExpr } from "./empty";

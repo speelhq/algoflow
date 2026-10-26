@@ -69,7 +69,7 @@ export function checkChallengeSchema(
   if (json.module !== undefined && !isName(json.module))
     problems.push("module must be a valid name");
   const defines: string[] = [];
-  // A class name is refused: no registered block constructs an object.
+  // A class name is refused: no registered block definition constructs an object.
   if (Array.isArray(json.defines) && json.defines.every(isName)) defines.push(...json.defines);
   else if (json.defines !== undefined) problems.push("defines must be an array of function names");
 

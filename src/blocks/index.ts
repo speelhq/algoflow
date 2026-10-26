@@ -1,4 +1,4 @@
-// The `index` block: `nums[i]`, one item of a list found by its position, read with its `read`
+// The `index` block definition: `nums[i]`, one item of a list found by its position, read with its `read`
 // event, and as a target its place.
 import { newId } from "@/lang/id";
 import { asList, listIndex } from "@/runtime/access";

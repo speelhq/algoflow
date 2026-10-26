@@ -1,4 +1,4 @@
-// The `if` block: `if <cond>:` … `else:` (else omitted when empty; empty region → pass).
+// The `if` block definition: `if <cond>:` … `else:` (else omitted when empty; empty region → pass).
 import { newId } from "@/lang/id";
 import { decide } from "@/runtime/condition";
 import { defineStmt } from "./types";

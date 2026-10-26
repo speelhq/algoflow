@@ -1,4 +1,4 @@
-// The `for` block: bounds evaluated once, ints only; a `loop` event per iteration.
+// The `for` block definition: bounds evaluated once, ints only; a `loop` event per iteration.
 import { newId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { typeName } from "@/runtime/values";

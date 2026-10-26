@@ -1,4 +1,4 @@
-// The `print` block: joins the `str()` forms with one space; its `print` event follows
+// The `print` block definition: joins the `str()` forms with one space; its `print` event follows
 // the events of its expressions.
 import { newId } from "@/lang/id";
 import type { Value } from "@/lang/types";

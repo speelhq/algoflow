@@ -1,4 +1,4 @@
-// The `var` block: reading a variable emits no event; as a target its place is the variable.
+// The `var` block definition: reading a variable emits no event; as a target its place is the variable.
 import { newId } from "@/lang/id";
 import { defineExpr } from "./types";
 

@@ -289,7 +289,7 @@ class Parser {
         this.take();
         const name = this.take();
         if (name.type !== "name") fail("E_PARSE_SYNTAX", name.pos);
-        // A field read has no block: no registered block constructs an object.
+        // A field read has no block definition: none constructs an object.
         if (!this.isOp("(")) fail("E_PARSE_SYNTAX", name.pos);
         this.take();
         const args = this.args(")");

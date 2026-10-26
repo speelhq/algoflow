@@ -1,4 +1,4 @@
-// The `list` block: `[a, b]`, its items evaluated in order into a new list on the heap.
+// The `list` block definition: `[a, b]`, its items evaluated in order into a new list on the heap.
 import { alloc } from "@/lang/data";
 import { newId } from "@/lang/id";
 import type { Value } from "@/lang/types";

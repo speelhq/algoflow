@@ -57,7 +57,7 @@ describe("parse", () => {
   });
 
   it("reports grammar forms whose block is not registered yet as E_PARSE_SYNTAX at their token", () => {
-    // field and dict have no registered block, so the registry says no.
+    // field and dict have no registered block definition, so the registry says no.
     expect(err("p.x")).toEqual({ code: "E_PARSE_SYNTAX", position: 2 });
     expect(err("1 + {}")).toEqual({ code: "E_PARSE_SYNTAX", position: 4 });
   });

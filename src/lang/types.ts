@@ -11,7 +11,7 @@ export type Program = {
   title: string;
   challengeId?: string;
   inputs: InputDecl[]; // empty in a Playground program
-  /** Empty: no registered block constructs an object, so `migrate()` refuses a class. */
+  /** Empty: no registered block definition constructs an object, so `migrate()` refuses a class. */
   classes: [];
   functions: FunctionDef[];
   main: Stmt[];
