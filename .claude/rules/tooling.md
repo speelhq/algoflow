@@ -14,12 +14,13 @@ paths:
 
 # Tooling
 
-`scripts/check.ts` implements three parts of the spec. Read them before you
+`scripts/check.ts` implements four parts of the spec. Read them before you
 change it:
 
 - `docs/spec/challenges/challenges.md`, Checks
 - the CPython check in `docs/spec/runtime/interpreter.md`
 - the checks in `docs/spec/ui/pages.md`, Catalogs
+- the reference check in `docs/spec/README.md`, References
 
 When you change the tooling:
 
