@@ -164,9 +164,10 @@ describe("checkChallengeSchema", () => {
 
   it("requires the solution in the current version, as the app reads it with no migrate()", () => {
     const c = valid();
-    const old = { ...c.solution, version: 1 };
+    const old = { ...c.solution, version: 2 };
     expect(checkChallengeSchema({ ...c, solution: old }, "demo").problems).toEqual([
-      "solution.version must be 2",
+      "solution.version must be 1",
+      "solution: version: unsupported version 2",
     ]);
   });
 

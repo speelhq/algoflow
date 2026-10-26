@@ -7,7 +7,7 @@ export type Name = string;
 // ---------------------------------------------------------------- Program
 
 export type Program = {
-  version: 2;
+  version: 1;
   title: string;
   challengeId?: string;
   inputs: InputDecl[]; // empty in a Playground program

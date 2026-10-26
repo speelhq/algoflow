@@ -20,7 +20,7 @@ export function programKey(id: string): string {
 }
 
 export function emptyProgram(title = ""): Program {
-  return { version: 2, title, inputs: [], classes: [], functions: [], main: [] };
+  return { version: 1, title, inputs: [], classes: [], functions: [], main: [] };
 }
 
 /** The stored value is the raw Program JSON; anything migrate() rejects is ignored. */

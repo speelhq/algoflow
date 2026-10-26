@@ -1,10 +1,9 @@
-// Import validates and migrates by `version`: a version-1 program has its targets turned into
-// expressions, then every version is checked as version 2. It refuses what no edit could make: a
+// Import validates a program of the current `version`. It refuses what no edit could make: a
 // wrong shape, an unknown kind, a bad id, a literal field its block would not write, a class,
 // which no registered block constructs. What editing reaches is validate()'s job.
 import { getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
 import { stmtName } from "./edit";
-import { isNodeId, newId } from "./id";
+import { isNodeId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
 import { isRecord } from "./record";
 import { isEmptyExpr, isTarget } from "./walk";
@@ -20,7 +19,7 @@ export class MigrateError extends Error {
 }
 
 /** The version `migrate()` returns, which a program file of this build is written in. */
-export const CURRENT_VERSION = 2;
+export const CURRENT_VERSION = 1;
 
 function expectArray(value: unknown, path: string): unknown[] {
   if (!Array.isArray(value)) throw new MigrateError(path, "expected an array");
@@ -148,56 +147,10 @@ function checkProgram(json: Record<string, unknown>): Program {
   return json as unknown as Program;
 }
 
-/** Every string under an `id` key of a JSON value: the ids a migrated node must not take. */
-function heldIds(value: unknown, ids: Set<string>): Set<string> {
-  if (Array.isArray(value)) for (const item of value) heldIds(item, ids);
-  else if (isRecord(value)) {
-    if (typeof value.id === "string") ids.add(value.id);
-    for (const item of Object.values(value)) heldIds(item, ids);
-  }
-  return ids;
-}
-
-/**
- * A version-1 program as version 2 (`language.md`, Storage), in place: each target
- * `{ kind, ...parts }` the expression of that kind with a fresh id, and a variable target with no
- * name `empty`. A value that is no target is left for the check to refuse.
- */
-function fromV1(json: Record<string, unknown>): void {
-  const taken = heldIds(json, new Set());
-  const freshId = (): string => {
-    let id = newId();
-    while (taken.has(id)) id = newId();
-    taken.add(id);
-    return id;
-  };
-  const upgrade = (stmts: unknown): void => {
-    if (!Array.isArray(stmts)) return;
-    for (const stmt of stmts) {
-      if (!isRecord(stmt) || typeof stmt.kind !== "string" || !hasBlockDef(stmt.kind)) continue;
-      for (const slot of getBlockDef(stmt.kind).slots) {
-        const value = stmt[slot.name];
-        if (slot.role === "body") upgrade(value);
-        if (slot.role !== "target" || !isRecord(value) || typeof value.kind !== "string") continue;
-        stmt[slot.name] =
-          value.kind === "var" && value.name === ""
-            ? { id: freshId(), kind: "empty" }
-            : { ...value, id: freshId() };
-      }
-    }
-  };
-  upgrade(json.main);
-  if (Array.isArray(json.functions)) {
-    for (const fn of json.functions) if (isRecord(fn)) upgrade(fn.body);
-  }
-  json.version = CURRENT_VERSION;
-}
-
 export function migrate(json: unknown): Program {
   if (!isRecord(json)) throw new MigrateError("", "expected a program object");
   const version = json.version;
-  if (version === 1) fromV1(json);
-  else if (version !== CURRENT_VERSION) {
+  if (version !== CURRENT_VERSION) {
     throw new MigrateError("version", `unsupported version ${String(version)}`);
   }
   return checkProgram(json);
