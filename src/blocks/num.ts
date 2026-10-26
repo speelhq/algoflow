@@ -9,12 +9,12 @@ export const num = defineExpr<"num">({
   category: "basic",
   slots: [{ name: "value", role: "text", required: true }],
   create: () => ({ id: newId(), kind: "num", value: 0, float: false, raw: "0" }),
-  zeroLike: (node) => ({
+  zeroLike: (block) => ({
     id: newId(),
     kind: "num",
     value: 0,
-    float: node.kind === "num" && node.float,
-    raw: node.kind === "num" && node.float ? "0.0" : "0",
+    float: block.kind === "num" && block.float,
+    raw: block.kind === "num" && block.float ? "0.0" : "0",
   }),
   fieldsError: (fields) => {
     const literal = typeof fields.raw === "string" ? numberLiteral(fields.raw) : undefined;
@@ -26,11 +26,11 @@ export const num = defineExpr<"num">({
       ? undefined
       : { field: "float", message: "expected whether raw writes a float" };
   },
-  *run(node) {
-    return makeNumber(node.value, node.float);
+  *run(block) {
+    return makeNumber(block.value, block.float);
   },
-  python: (node) => node.raw,
+  python: (block) => block.raw,
   notation: () => "{value}",
-  text: (node) => node.raw, // the literal as typed
+  text: (block) => block.raw, // the literal as typed
   kind: () => "number",
 });

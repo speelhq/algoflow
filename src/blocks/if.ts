@@ -20,14 +20,14 @@ export const ifStmt = defineStmt<"if">({
     then: [],
     else: [],
   }),
-  *run(node, ctx) {
-    const yes = yield* decide(node.cond, ctx);
-    return yield* ctx.exec(yes ? node.then : node.else);
+  *run(block, ctx) {
+    const yes = yield* decide(block.cond, ctx);
+    return yield* ctx.exec(yes ? block.then : block.else);
   },
-  python: (node, ctx) => [
-    `if ${ctx.expr(node.cond)}:`,
-    ctx.region(node.then),
-    ...(node.else.length > 0 ? ["else:", ctx.region(node.else)] : []),
+  python: (block, ctx) => [
+    `if ${ctx.expr(block.cond)}:`,
+    ctx.region(block.then),
+    ...(block.else.length > 0 ? ["else:", ctx.region(block.else)] : []),
   ],
   notation: () => "{cond}",
 });

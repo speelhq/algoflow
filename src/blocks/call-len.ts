@@ -12,7 +12,7 @@ export const len = defineBuiltin({
   params: [{ name: "a" }],
   kind: () => "number",
   menu: [{ name: "", group: "items", on: ["list", "text", "dict"] }],
-  evaluate([a = { t: "none" }], node, ctx) {
+  evaluate([a = { t: "none" }], block, ctx) {
     switch (a.t) {
       case "str":
         // oxlint-disable-next-line no-misused-spread -- Python counts code points, as the spread does
@@ -21,7 +21,7 @@ export const len = defineBuiltin({
       case "dict":
         return { t: "int", v: countOf(entryOf(ctx.heap, a.ref)) };
       default:
-        return ctx.valueError(node, a);
+        return ctx.valueError(block, a);
     }
   },
 });

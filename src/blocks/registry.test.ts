@@ -69,9 +69,9 @@ describe("registry", () => {
 
   it("binop writes school symbols, and Python's where school has none", () => {
     const binop = BLOCK_DEFS.get("binop");
-    const node = (op: string) => ({ id: "b", kind: "binop", op }) as never;
+    const block = (op: string) => ({ id: "b", kind: "binop", op }) as never;
     const school = ["+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">="];
-    expect(school.map((op) => binop?.text?.(node(op), "op"))).toEqual([
+    expect(school.map((op) => binop?.text?.(block(op), "op"))).toEqual([
       "+",
       "−",
       "×",
@@ -84,7 +84,7 @@ describe("registry", () => {
       "≥",
     ]);
     const python = ["%", "//", "**", "and", "or", "in"];
-    expect(python.map((op) => binop?.text?.(node(op), "op"))).toEqual(python);
+    expect(python.map((op) => binop?.text?.(block(op), "op"))).toEqual(python);
   });
 
   it("expression blocks declare the value list's entries in the table's order", () => {

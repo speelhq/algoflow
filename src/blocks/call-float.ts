@@ -9,7 +9,7 @@ export const floatCall = defineBuiltin({
   params: [{ name: "x" }],
   kind: () => "number",
   menu: [{ name: "", group: "convert", on: ["number", "text"] }],
-  evaluate([x = { t: "none" }], node, ctx) {
+  evaluate([x = { t: "none" }], block, ctx) {
     switch (x.t) {
       case "int":
       case "float":
@@ -18,9 +18,9 @@ export const floatCall = defineBuiltin({
         return { t: "float", v: x.v ? 1 : 0 };
       case "str":
         if (NUMBER.test(x.v)) return { t: "float", v: Number(x.v.trim()) };
-        return ctx.textError(node, x.v);
+        return ctx.textError(block, x.v);
       default:
-        return ctx.valueError(node, x);
+        return ctx.valueError(block, x);
     }
   },
 });

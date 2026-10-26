@@ -10,10 +10,10 @@ export const exprStmt = defineStmt<"expr">({
   hidden: true,
   slots: [{ name: "expr", role: "expr", required: true }],
   create: () => ({ id: newId(), kind: "expr", expr: emptyExpr() }),
-  *run(node, ctx) {
-    yield* ctx.eval(node.expr);
+  *run(block, ctx) {
+    yield* ctx.eval(block.expr);
     return undefined;
   },
-  python: (node, ctx) => [ctx.expr(node.expr)],
+  python: (block, ctx) => [ctx.expr(block.expr)],
   notation: () => "{expr}",
 });

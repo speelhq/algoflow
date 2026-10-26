@@ -10,13 +10,13 @@ export const sum = defineBuiltin({
   params: [{ name: "a" }],
   kind: () => "number",
   menu: [{ name: "", group: "items", on: ["list"] }],
-  evaluate([a = { t: "none" }], node, ctx) {
-    if (a.t !== "list") return ctx.valueError(node, a);
-    const { items } = asList(a, node.id, ctx, a);
+  evaluate([a = { t: "none" }], block, ctx) {
+    if (a.t !== "list") return ctx.valueError(block, a);
+    const { items } = asList(a, block.id, ctx, a);
     let total: NumberValue = { t: "int", v: 0 };
     let compensation = 0;
     for (const item of items) {
-      if (!isNumber(item)) return typeError(node.id, total, item, ctx);
+      if (!isNumber(item)) return typeError(block.id, total, item, ctx);
       if (total.t === "int") {
         total =
           item.t === "int"

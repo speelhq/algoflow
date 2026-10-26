@@ -11,10 +11,10 @@ export const str = defineExpr<"str">({
   fieldsError: (fields) =>
     typeof fields.value === "string" ? undefined : { field: "value", message: "expected a text" },
   zeroLike: () => ({ id: newId(), kind: "str", value: "" }),
-  *run(node) {
-    return { t: "str", v: node.value };
+  *run(block) {
+    return { t: "str", v: block.value };
   },
-  python: (node) => pyString(node.value),
+  python: (block) => pyString(block.value),
   notation: () => '"{value}"',
   kind: () => "text",
   menu: [{ name: "", group: "values" }],

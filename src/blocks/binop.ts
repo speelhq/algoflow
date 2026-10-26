@@ -24,13 +24,13 @@ type Binop = Extract<Expr, { kind: "binop" }>;
 /** The kinds `<`, `≤`, `>`, and `≥` order. */
 const ORDERED = ["number", "text"] as const;
 
-function arithmetic(node: Binop, l: Value, r: Value, ctx: RunContext): Value {
-  if (node.op === "+" && l.t === "str" && r.t === "str") return { t: "str", v: l.v + r.v };
-  if (!isNumber(l) || !isNumber(r)) return typeError(node.id, l, r, ctx);
+function arithmetic(block: Binop, l: Value, r: Value, ctx: RunContext): Value {
+  if (block.op === "+" && l.t === "str" && r.t === "str") return { t: "str", v: l.v + r.v };
+  if (!isNumber(l) || !isNumber(r)) return typeError(block.id, l, r, ctx);
   const float = l.t === "float" || r.t === "float";
   const a = l.v;
   const b = r.v;
-  switch (node.op) {
+  switch (block.op) {
     case "+":
       return makeNumber(a + b, float);
     case "-":
@@ -38,31 +38,31 @@ function arithmetic(node: Binop, l: Value, r: Value, ctx: RunContext): Value {
     case "*":
       return makeNumber(a * b, float);
     case "/":
-      if (b === 0) return ctx.fail(node.id, "E_DIV_ZERO");
+      if (b === 0) return ctx.fail(block.id, "E_DIV_ZERO");
       return { t: "float", v: a / b };
     case "//":
-      if (b === 0) return ctx.fail(node.id, "E_DIV_ZERO");
+      if (b === 0) return ctx.fail(block.id, "E_DIV_ZERO");
       return float ? { t: "float", v: floatFloorDiv(a, b) } : makeNumber(Math.floor(a / b), false);
     case "%":
-      if (b === 0) return ctx.fail(node.id, "E_DIV_ZERO");
+      if (b === 0) return ctx.fail(block.id, "E_DIV_ZERO");
       return float
         ? { t: "float", v: floatMod(a, b) }
         : makeNumber(a - b * Math.floor(a / b), false);
     case "**":
-      if (a === 0 && b < 0) return ctx.fail(node.id, "E_DIV_ZERO");
+      if (a === 0 && b < 0) return ctx.fail(block.id, "E_DIV_ZERO");
       if (float || b < 0) return { t: "float", v: a ** b };
       return makeNumber(a ** b, false);
     default:
-      return typeError(node.id, l, r, ctx);
+      return typeError(block.id, l, r, ctx);
   }
 }
 
-function ordered(node: Binop, l: Value, r: Value, ctx: RunContext): boolean {
-  if (node.op === "==") return equals(l, r, ctx.heap);
-  if (node.op === "!=") return !equals(l, r, ctx.heap);
+function ordered(block: Binop, l: Value, r: Value, ctx: RunContext): boolean {
+  if (block.op === "==") return equals(l, r, ctx.heap);
+  if (block.op === "!=") return !equals(l, r, ctx.heap);
   const c = compare(l, r);
-  if (c === undefined) return typeError(node.id, l, r, ctx);
-  switch (node.op) {
+  if (c === undefined) return typeError(block.id, l, r, ctx);
+  switch (block.op) {
     case "<":
       return c < 0;
     case "<=":
@@ -72,13 +72,13 @@ function ordered(node: Binop, l: Value, r: Value, ctx: RunContext): boolean {
     case ">=":
       return c >= 0;
     default:
-      return typeError(node.id, l, r, ctx);
+      return typeError(block.id, l, r, ctx);
   }
 }
 
 /** One ref per compared list element. */
 function* membership(
-  node: Binop,
+  block: Binop,
   l: Value,
   r: Value,
   ctx: RunContext,
@@ -95,20 +95,20 @@ function* membership(
         break;
       }
     }
-    if (refs.length > 0) yield { type: "read", nodeId: node.id, refs };
+    if (refs.length > 0) yield { type: "read", nodeId: block.id, refs };
     return found;
   }
   if (r.t === "dict") {
     const key = dictKey(l);
-    if (key === undefined) return typeError(node.id, l, r, ctx);
+    if (key === undefined) return typeError(block.id, l, r, ctx);
     const entry = entryOf(ctx.heap, r.ref);
     return entry.kind === "dict" && entry.entries.has(key);
   }
   if (r.t === "str") {
-    if (l.t !== "str") return typeError(node.id, l, r, ctx);
+    if (l.t !== "str") return typeError(block.id, l, r, ctx);
     return r.v.includes(l.v);
   }
-  return typeError(node.id, l, r, ctx);
+  return typeError(block.id, l, r, ctx);
 }
 
 export const binop = defineExpr<"binop">({
@@ -119,47 +119,47 @@ export const binop = defineExpr<"binop">({
     { name: "left", role: "expr", required: true },
     { name: "right", role: "expr", required: true },
   ],
-  precedence: (node) => binopPrecedence((node as Binop).op),
+  precedence: (block) => binopPrecedence((block as Binop).op),
   create: () => ({ id: newId(), kind: "binop", op: "+", left: emptyExpr(), right: emptyExpr() }),
   fieldsError: (fields) =>
     typeof fields.op === "string" && isBinOp(fields.op)
       ? undefined
       : { field: "op", message: "expected a known operator" },
-  *run(node, ctx) {
-    if (node.op === "and" || node.op === "or") {
+  *run(block, ctx) {
+    if (block.op === "and" || block.op === "or") {
       // Short-circuit, returning the deciding operand
-      const left = yield* ctx.eval(node.left);
-      const decided = node.op === "and" ? !truthy(left, ctx.heap) : truthy(left, ctx.heap);
+      const left = yield* ctx.eval(block.left);
+      const decided = block.op === "and" ? !truthy(left, ctx.heap) : truthy(left, ctx.heap);
       if (decided) return left;
-      return yield* ctx.eval(node.right);
+      return yield* ctx.eval(block.right);
     }
-    const left = yield* ctx.eval(node.left);
-    const right = yield* ctx.eval(node.right);
-    if (isComparison(node.op)) {
+    const left = yield* ctx.eval(block.left);
+    const right = yield* ctx.eval(block.right);
+    if (isComparison(block.op)) {
       const result =
-        node.op === "in"
-          ? yield* membership(node, left, right, ctx)
-          : ordered(node, left, right, ctx);
-      yield { type: "compare", nodeId: node.id, result };
+        block.op === "in"
+          ? yield* membership(block, left, right, ctx)
+          : ordered(block, left, right, ctx);
+      yield { type: "compare", nodeId: block.id, result };
       return { t: "bool", v: result };
     }
-    return arithmetic(node, left, right, ctx);
+    return arithmetic(block, left, right, ctx);
   },
-  python: (node, ctx) => {
-    const precedence = binopPrecedence(node.op);
-    return `${ctx.operand(node.left, precedence, "left")} ${node.op} ${ctx.operand(node.right, precedence, "right")}`;
+  python: (block, ctx) => {
+    const precedence = binopPrecedence(block.op);
+    return `${ctx.operand(block.left, precedence, "left")} ${block.op} ${ctx.operand(block.right, precedence, "right")}`;
   },
   notation: () => "{left} {op} {right}",
   // The symbols taught at school, and Python's where school has none (`%`, `//`, `**`, `in`).
-  text: (node, slot) => (slot === "op" ? (CANVAS_OPS[node.op] ?? node.op) : ""),
-  kind: (node, kindOf) => {
-    if (isComparison(node.op)) return "truefalse";
-    const left = kindOf(node.left);
-    const right = kindOf(node.right);
+  text: (block, slot) => (slot === "op" ? (CANVAS_OPS[block.op] ?? block.op) : ""),
+  kind: (block, kindOf) => {
+    if (isComparison(block.op)) return "truefalse";
+    const left = kindOf(block.left);
+    const right = kindOf(block.right);
     const same = left !== undefined && left === right ? left : undefined;
-    if (node.op === "and" || node.op === "or") return same;
-    if (node.op === "+") return same === "truefalse" ? undefined : same;
-    if (node.op === "*") {
+    if (block.op === "and" || block.op === "or") return same;
+    if (block.op === "+") return same === "truefalse" ? undefined : same;
+    if (block.op === "*") {
       const repeated = [left, right].find((kind) => kind === "list" || kind === "text");
       if (repeated) return repeated;
     }

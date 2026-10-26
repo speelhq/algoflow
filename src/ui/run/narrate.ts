@@ -4,7 +4,7 @@
 import { keyValue, toData } from "@/lang/data";
 import { errorKey, errorParams, t, type MessageKey, type Params } from "@/i18n/t";
 import type { Data, Expr, Heap, Program } from "@/lang/types";
-import { conditionOf, diamondConditions, isExpr, nodesById, variableOf } from "@/lang/walk";
+import { conditionOf, diamondConditions, isExpr, blocksById, variableOf } from "@/lang/walk";
 import { isParseError, parseData } from "@/python/parse";
 import { valueAt } from "@/runtime/refs";
 import type { Done, Frame, Ref, State } from "@/runtime/types";
@@ -39,7 +39,7 @@ function literal(data: Data): Expr {
 }
 
 /**
- * A location as the nodes write it (`nums[2]`, `counts["a"]`), its list or dict named by the
+ * A location as the blocks write it (`nums[2]`, `counts["a"]`), its list or dict named by the
  * variable of the frame that holds it.
  */
 function refText(ref: Ref, frame: Frame | undefined, heap: Heap): string {
@@ -73,16 +73,16 @@ function questionText(expr: Expr, frame: Frame | undefined, heap: Heap): string 
 export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
   const { heap } = ctx.state;
   const frame = ctx.state.frames[ctx.frame];
-  const node = nodesById(ctx.program).get(event.nodeId);
+  const block = blocksById(ctx.program).get(event.nodeId);
   switch (event.type) {
     case "enter": {
-      if (!node) return { key: "run.narrate.enter", params: { notation: "" } };
-      const condition = conditionOf(node);
+      if (!block) return { key: "run.narrate.enter", params: { notation: "" } };
+      const condition = conditionOf(block);
       return condition
         ? { key: "run.narrate.check", params: { condition: exprText(condition.expr) } }
         : {
             key: "run.narrate.enter",
-            params: { notation: notationText(node) },
+            params: { notation: notationText(block) },
           };
     }
     case "read": {
@@ -104,7 +104,7 @@ export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
       };
     }
     case "compare": {
-      const expr = node && isExpr(node) ? node : undefined;
+      const expr = block && isExpr(block) ? block : undefined;
       // A diamond's whole condition is its question and the edge taken; any other, its value.
       if (diamondConditions(ctx.program).has(event.nodeId)) {
         const condition = expr ? questionText(expr, frame, heap) : "";

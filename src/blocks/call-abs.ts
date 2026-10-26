@@ -8,8 +8,8 @@ export const abs = defineBuiltin({
   params: [{ name: "x" }],
   kind: () => "number",
   menu: [{ name: "", group: "calculate", on: ["number"] }],
-  evaluate([x = { t: "none" }], node, ctx) {
-    if (!isNumber(x)) return ctx.valueError(node, x);
+  evaluate([x = { t: "none" }], block, ctx) {
+    if (!isNumber(x)) return ctx.valueError(block, x);
     return makeNumber(Math.abs(x.v), x.t === "float");
   },
 });
