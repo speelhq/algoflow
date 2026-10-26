@@ -28,15 +28,15 @@ export type Challenge = {
   tests: Test[]; // ≥ 3
   hints: Localized[]; // exactly 3 (Hints)
   takeaway?: Localized; // one sentence shown as `What you used` (`run.md`, Submission)
-  module?: Id; // Modules and definitions
-  defines?: Id[]; // Modules and definitions
+  module?: Name; // Modules and definitions
+  defines?: Name[]; // Modules and definitions
   solution: Program; // inputs identical to `inputs`
 };
 export type Test = {
-  inputs: Record<Id, Data>; // every input, a value of its kind (`language.md`, Kinds); shown by these values
+  inputs: Record<Name, Data>; // every input, a value of its kind (`language.md`, Kinds); shown by these values
   edge?: boolean; // Checks
   seed?: number; // default 1
-  expect: { variables?: Record<Id, Data>; stdout?: string[] }; // ≥ 1
+  expect: { variables?: Record<Name, Data>; stdout?: string[] }; // ≥ 1
 };
 export type Localized = { en: string; ja?: string }; // ja: Checks
 export type Topic = "output" | "variables" | "loops" | "conditions" | "lists" | "searching"

@@ -202,7 +202,7 @@ The spec uses these terms:
 | --------------- | ------------------------------------------------------------------------------- |
 | program         | one `Program` AST (`language.md`)                                               |
 | node            | a block, a function, or a class: anything that carries a `NodeId` (`language.md`, Program) |
-| block           | a statement or an expression that the learner places, made from a block definition (`language.md`, Statements; Expressions). A function is not a block. |
+| block           | a statement or an expression that the learner places, made from a block definition. It is a `Block` (`Stmt` or `Expr`) in the code (`language.md`, Statements; Expressions). A function is not a block. |
 | block definition | the kind that blocks are made from: a `BlockDef` in `src/blocks/` and its entry in the block menu (`blocks.md`) |
 | routine         | `main` or a function: a unit with its own statements and variables              |
 | region          | an ordered list of statements inside a branch or loop, or at top level          |

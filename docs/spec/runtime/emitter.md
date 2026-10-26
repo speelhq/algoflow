@@ -15,7 +15,7 @@ Code: `src/python/emit.ts`, `strings.ts`, `precedence.ts`. Tests:
 `emit` returns the program's file, its line map, and the modules'
 files (Modules):
 
-`emit(program, inputs: Record<Id, Data>, modules: Module[]): { code: string; map: Record<NodeId, { start: number; end: number }>; modules }`
+`emit(program, inputs: Record<Name, Data>, modules: Module[]): { code: string; map: Record<NodeId, { start: number; end: number }>; modules }`
 
 The map's lines are 1-based and inclusive. A compound statement maps to
 its header line, and `else:` has no entry in the map.
@@ -135,15 +135,15 @@ receives, and how the emitter writes a target and a named statement.
 A block definition writes the Python of its blocks with `python()`:
 
 - A statement block definition's `python()` returns `PyLine[]`, where
-  `PyLine = string | { block: Stmt[] }`.
+  `PyLine = string | { region: Stmt[] }`.
 - An expression block definition's `python()` returns text.
 
-The emitter flattens the lines: it indents each `{ block }` entry by one
+The emitter flattens the lines: it indents each `{ region }` entry by one
 level, writes `pass` for an empty one, and records the line map as it
 goes.
 
 A block definition's `python()` receives this context:
-`EmitContext = { expr(e): string; operand(e, precedence, side): string; slot(node, name): string; block(stmts): PyLine }`.
+`EmitContext = { expr(e): string; operand(e, precedence, side): string; slot(block, name): string; region(stmts): PyLine }`.
 
 - `operand` writes `e` as the child on `side` of a parent at
   `precedence`, and applies the parentheses rule (Parentheses).
@@ -168,7 +168,7 @@ The `modules` argument lists the modules the program uses (`modules.md`,
 Resolution). When the program uses no module, the argument is empty.
 
 The returned `modules` holds one entry for each module:
-`Array<{ name: Id; code: string; map: Record<NodeId, { start: number; end: number }> }>`.
+`Array<{ name: Name; code: string; map: Record<NodeId, { start: number; end: number }> }>`.
 Inlining a module's functions into `main.py` was rejected because the
 `Python` tab would then show one program where the canvas and the path
 bar show a program and a module.

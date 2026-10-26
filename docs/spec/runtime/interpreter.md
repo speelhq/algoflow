@@ -19,7 +19,7 @@ Semantics rules, where `language.md`, Semantics, places them.
 The runner executes one program and gives out its events one call at a
 time.
 
-`run(program, inputs: Record<Id, Data>, seed: number, modules: Module[]): Runner`
+`run(program, inputs: Record<Name, Data>, seed: number, modules: Module[]): Runner`
 executes a program that has no diagnostics. `modules` lists the modules
 the program uses (`modules.md`, Resolution). When the program uses none,
 `modules` is empty.
@@ -35,7 +35,7 @@ export type Done =
   | { type: "done"; events: number; loops: number }
   | { type: "error"; error: RuntimeError; events: number };
 export type State = { frames: Frame[]; heap: Heap };
-export type Frame = { fn: Id | "main"; module?: Id; callNodeId?: NodeId; vars: Map<Id, Value> }; // Modules
+export type Frame = { fn: Name | "main"; module?: Name; callNodeId?: NodeId; vars: Map<Name, Value> }; // Modules
 export type RuntimeError = {
   nodeId: NodeId;
   code: RuntimeCode;
@@ -81,15 +81,15 @@ export type Event =
   | { type: "read"; nodeId: NodeId; refs: Ref[] }
   | { type: "write"; nodeId: NodeId; ref: Ref; value: Value; from?: Ref } // `from`: `swap`
   | { type: "compare"; nodeId: NodeId; result: boolean }
-  | { type: "loop"; nodeId: NodeId; var?: Id; value?: Value }
-  | { type: "call"; nodeId: NodeId; fn: Id; args: Value[] }
-  | { type: "return"; nodeId: NodeId; fn: Id; value: Value }
+  | { type: "loop"; nodeId: NodeId; var?: Name; value?: Value }
+  | { type: "call"; nodeId: NodeId; fn: Name; args: Value[] }
+  | { type: "return"; nodeId: NodeId; fn: Name; value: Value }
   | { type: "print"; nodeId: NodeId; text: string };
 export type Ref =
-  | { var: Id }
+  | { var: Name }
   | { heap: HeapId; index: number }
   | { heap: HeapId; key: string }
-  | { heap: HeapId; field: Id };
+  | { heap: HeapId; field: Name };
 ```
 
 `Done` counts the run:
@@ -230,8 +230,8 @@ context the runner gives it:
 ```ts
 export type Signal =
   | undefined | { kind: "break" } | { kind: "continue" } | { kind: "return"; value: Value };
-export type StmtRunner = (node: Stmt, ctx: RunContext) => Generator<Event, Signal, void>;
-export type ExprRunner = (node: Expr, ctx: RunContext) => Generator<Event, Value, void>;
+export type StmtRunner = (block: Stmt, ctx: RunContext) => Generator<Event, Signal, void>;
+export type ExprRunner = (block: Expr, ctx: RunContext) => Generator<Event, Value, void>;
 export type RunContext = {
   program: Program;
   heap: Heap;
@@ -241,10 +241,10 @@ export type RunContext = {
   read(target: Expr, at: NodeId): Generator<Event, { ref: Ref; value: Value }, void>;
   save(ref: Ref, value: Value): void;
   store(target: Expr, value: Value, at: NodeId): Generator<Event, void, void>; // locate, save, its `write`
-  call(fn: Id, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
+  call(fn: Name, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
   fail(nodeId: NodeId, code: RuntimeCode, params?: Record<string, string | number>): never;
-  valueError(node: Expr, value: Value): never; // E_VALUE (Errors)
-  textError(node: Expr, text: string): never;  // E_NUMBER_TEXT (Errors)
+  valueError(block: Expr, value: Value): never; // E_VALUE (Errors)
+  textError(block: Expr, text: string): never;  // E_NUMBER_TEXT (Errors)
   random: { int(a: number, b: number): number };
   print(line: string): void;
 };
@@ -282,7 +282,7 @@ module's name.
 Inside a module frame, a `call` or a `new` resolves within that module
 (`modules.md`, Resolution).
 
-`run` accepts an entry `{ fn: Id; args: Data[] }` in place of `main`. With
+`run` accepts an entry `{ fn: Name; args: Data[] }` in place of `main`. With
 an entry:
 
 - The named function of the program or of the module is the first frame.
