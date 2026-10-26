@@ -49,8 +49,8 @@ export type Heap = Map<HeapId, HeapEntry>;
 
 // ---------------------------------------------------------------- Statements
 
-/** `name`: the learner's name for the node, one trimmed line, absent when empty. */
-type S = { id: NodeId; name?: string };
+/** `caption`: the learner's text for the statement, one trimmed line, absent when empty. */
+type S = { id: NodeId; caption?: string };
 export type Stmt =
   | (S & { kind: "assign"; target: Expr; value: Expr })
   | (S & { kind: "delete"; target: Expr })

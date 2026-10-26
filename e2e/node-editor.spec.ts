@@ -116,14 +116,14 @@ test("a typed word that names nothing is underlined with the closest name", asyn
   await expect(editor(page).getByTestId("explanation")).toContainText("Did you mean n?");
 });
 
-test("naming a node shows the name on it and as a comment in Python", async ({ page }) => {
+test("a caption shows on its chart node and as a comment in Python", async ({ page }) => {
   await seedProgress(page, {});
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-chart-node="fzb-if15-001"]').click({ position: { x: 20, y: 30 } });
-  await editor(page).getByTestId("node-name").fill("Is i a multiple of 15?");
+  await editor(page).getByTestId("caption").fill("Is i a multiple of 15?");
   await expect(chart(page)).toContainText("Is i a multiple of 15?");
-  // The node draws its name in place of its condition, which its hover title keeps.
+  // The chart node draws the caption in place of its condition, which its hover title keeps.
   const node = page.locator('[data-chart-node="fzb-if15-001"]');
   await expect(node.locator("text", { hasText: "i % 15 = 0?" })).toHaveCount(0);
   await expect(node.locator("title")).toHaveText("i % 15 = 0?");

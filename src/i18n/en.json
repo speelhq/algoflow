@@ -427,8 +427,8 @@
     "fix": {
       "hoistAssign": "Give {name} a value before it"
     },
-    "name": "Name",
-    "nameHint": "optional",
+    "caption": "Caption",
+    "captionHint": "optional",
     "typeHint": "type or choose",
     "typeKeys": "Type `{keys}`.",
     "fieldName": "{label}, {slot}",

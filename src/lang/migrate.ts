@@ -2,7 +2,7 @@
 // wrong shape, an unknown kind, a bad id, a literal field its block would not write, a class,
 // which no registered block constructs. What editing reaches is validate()'s job.
 import { getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
-import { stmtName } from "./edit";
+import { normalizeCaption } from "./edit";
 import { isNodeId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
 import { isRecord } from "./record";
@@ -94,14 +94,14 @@ function checkStmts(value: unknown, path: string): void {
     if (!isRecord(stmt)) throw new MigrateError(at, "expected a statement");
     expectNodeId(stmt.id, `${at}.id`);
     const kind = expectString(stmt.kind, `${at}.kind`);
-    if ("name" in stmt) {
-      if (typeof stmt.name !== "string" || /[\n\r]/.test(stmt.name)) {
-        throw new MigrateError(`${at}.name`, "expected one line of text");
+    if ("caption" in stmt) {
+      if (typeof stmt.caption !== "string" || /[\n\r]/.test(stmt.caption)) {
+        throw new MigrateError(`${at}.caption`, "expected one line of text");
       }
-      // A name is stored as an edit stores it (one line, its spaces collapsed), absent when empty.
-      const name = stmtName(stmt.name);
-      if (name === "") delete stmt.name;
-      else stmt.name = name;
+      // A caption is stored as an edit stores it (one line, its spaces collapsed), absent when empty.
+      const caption = normalizeCaption(stmt.caption);
+      if (caption === "") delete stmt.caption;
+      else stmt.caption = caption;
     }
     if (!hasBlockDef(kind) || getBlockDef(kind).shape !== "stmt") {
       throw new MigrateError(`${at}.kind`, `unknown kind "${kind}"`);

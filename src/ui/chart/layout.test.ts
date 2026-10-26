@@ -502,23 +502,23 @@ describe("layout texts", () => {
     expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // a Return leads to End
   });
 
-  it("a named node shows its name alone, with what it would draw unnamed as the title", () => {
-    const named = { ...print(v("x")), name: "Show x" };
-    const unfinished = { ...print(ast.empty()), name: "Show y" };
-    const loop = { ...for_("i", num(0), num(3), []), name: "Three times" };
-    const check = { ...if_(bin("<", v("x"), num(2)), []), name: "Small?" };
-    const chart = layout(program([assign("x", num(1)), named, unfinished, loop, check]), {
+  it("a block with a caption shows it alone, with what it would draw otherwise as the title", () => {
+    const captioned = { ...print(v("x")), caption: "Show x" };
+    const unfinished = { ...print(ast.empty()), caption: "Show y" };
+    const loop = { ...for_("i", num(0), num(3), []), caption: "Three times" };
+    const check = { ...if_(bin("<", v("x"), num(2)), []), caption: "Small?" };
+    const chart = layout(program([assign("x", num(1)), captioned, unfinished, loop, check]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
     });
     const node = (id: string) => chart.nodes.find((n) => n.id === id);
-    expect(node(named.id)).toMatchObject({ text: "Show x", title: "print(x)" });
+    expect(node(captioned.id)).toMatchObject({ text: "Show x", title: "print(x)" });
     expect(node(unfinished.id)).toMatchObject({ text: "print(…)" });
     expect(node(unfinished.id)?.title).toBeUndefined();
     expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times", title: "i < 3?" });
     expect(node(`${loop.id}:init`)?.text).toBe("i ← 0");
-    const startless = { ...for_("k", ast.empty(), num(3), []), name: "Counting" };
+    const startless = { ...for_("k", ast.empty(), num(3), []), caption: "Counting" };
     const unfinishedLoop = layout(program([startless]), {
       routine: "main",
       inputs: {},

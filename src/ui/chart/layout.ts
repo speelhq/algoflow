@@ -45,7 +45,7 @@ export type ChartNode = {
   /** Drawn gray, not selectable on its own. */
   generated: boolean;
   text: string;
-  /** What the node draws without its name, shown on hover where it shows its name instead. */
+  /** What the chart node draws without its caption, shown on hover where it shows its caption instead. */
   title?: string;
   /** The text in runs, each at `dx` from the node's left with width `w`; a slot's run names it. */
   parts: PlacedPart[];
@@ -285,10 +285,10 @@ class Builder {
   }
 
   /**
-   * A statement's node: its name alone when it has one and no input is still to fill, with
-   * `parts`, what it draws without its name, as the title; otherwise `parts`.
+   * A statement's chart node: its caption alone when it has one and no input is still to fill,
+   * with `parts`, what it draws without its caption, as the title; otherwise `parts`.
    */
-  private named(
+  private captioned(
     stmt: Stmt,
     id: string,
     role: ChartNode["role"],
@@ -296,10 +296,10 @@ class Builder {
     parts: Part[],
     y: number,
   ): ChartNode {
-    if (stmt.name === undefined || hasInputToFill(stmt)) {
+    if (stmt.caption === undefined || hasInputToFill(stmt)) {
       return this.node(id, stmt.id, role, shape, parts, y);
     }
-    const node = this.node(id, stmt.id, role, shape, [{ text: stmt.name }], y);
+    const node = this.node(id, stmt.id, role, shape, [{ text: stmt.caption }], y);
     return { ...node, title: joinParts(parts) };
   }
 
@@ -364,7 +364,7 @@ class Builder {
   /** A box; `leaves` names where its edge goes when it is not to the next node. */
   private box(stmt: Stmt, leaves: Leave | null): Frag {
     const parts = notationParts(stmt);
-    const node = this.named(stmt, stmt.id, "stmt", "box", parts, 0);
+    const node = this.captioned(stmt, stmt.id, "stmt", "box", parts, 0);
     const half = node.w / 2;
     return {
       left: half,
@@ -382,7 +382,7 @@ class Builder {
   }
 
   private diamond(stmt: Stmt, y: number): ChartNode {
-    return this.named(stmt, stmt.id, "stmt", "diamond", questionParts(stmt), y);
+    return this.captioned(stmt, stmt.id, "stmt", "diamond", questionParts(stmt), y);
   }
 
   /** `branch`: Yes to the right, No below on the axis, both merging below. */
@@ -480,7 +480,14 @@ class Builder {
 
     y += JOIN;
     const d = counted
-      ? this.named(stmt, `${stmt.id}:check`, "check", "diamond", generatedParts(stmt, "check"), y)
+      ? this.captioned(
+          stmt,
+          `${stmt.id}:check`,
+          "check",
+          "diamond",
+          generatedParts(stmt, "check"),
+          y,
+        )
       : this.diamond(stmt, y);
     frag.nodes.push(d);
     frag.edges.push(
