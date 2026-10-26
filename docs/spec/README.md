@@ -122,6 +122,23 @@ example: an error code, a block key, a message key, or a function or type
 name. The spec, and every document that cites it, refers to a handle by the
 handle alone.
 
+A reference names a heading without the handles in parentheses that end
+it. For example: (`language.md`, Semantics, Lists) names the heading
+Lists (`swap`, `method:copy`).
+
+A heading in a reference ends at a comma, a semicolon, a colon, a
+period, a closing parenthesis, or the end of a table cell or a line.
+
+`pnpm check` fails on a reference to a heading that the cited file
+doesn't hold. It reads two forms as references:
+
+- in a Markdown or TypeScript file, a spec file's name followed by a
+  comma and a word that begins with a capital letter. Each heading after
+  a further comma sits under the one before it, and a heading after a
+  semicolon is in the same file.
+- in a spec file's prose, outside code, a parenthesis that opens with a
+  capital letter, as a reference to a heading of that file.
+
 ### Citations from outside the spec
 
 When a pull request or a review finding cites a statement, it quotes the

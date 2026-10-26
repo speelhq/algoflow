@@ -485,7 +485,7 @@ no kind for the same reason.
 Each block has these tests:
 
 - one that asserts its exact notation and its exact Python text
-  (Statements and the tables after it)
+  (Statements, and the tables after it)
 - one that asserts its event sequence and result
 - one per rule filed under it in the Semantics of `language.md`
 - where it can fail, one error case
