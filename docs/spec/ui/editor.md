@@ -74,17 +74,17 @@ the explanation line (Explanation line). The name field has `Duplicate` and
 constructs a class, `Open <name>`, which shows that function's chart or class's
 field table (`chart.md`, Charts and the path bar) or, for a module's, opens its
 Module page (`modules.md`, Operations). The notation has its slots editable in
-place (a `for`'s init and check, `i ← 1` and `i < n + 1?`): `id` slots as name
-fields (Name fields), `expr` and `target` slots as value lines (Value line;
-Targets), an optional `expr` slot left empty as `+ value` (`editor.addValue`),
-which adds its value line, `exprs` slots as value lines separated by commas,
-each with a remove button (`editor.removeValue`), followed by `+ value`, which
-adds one, and `body` slots not shown. A separator divides each of the name
-field, the notation, and the list from the next. The slot clicked on the chart
-node, or a first slot still to fill, takes the keyboard when the editor opens.
-Otherwise, the keyboard stays with the chart, so Delete removes the block
-(`chart.md`, Editing on the chart). An edit applies at once. Esc or a press
-outside the editor closes it.
+place (a `for`'s init and check, `i ← 1` and `i < n + 1?`): `name` slots as
+name fields (Name fields), `expr` and `target` slots as value lines (Value
+line; Targets), an optional `expr` slot left empty as `+ value`
+(`editor.addValue`), which adds its value line, `exprs` slots as value lines
+separated by commas, each with a remove button (`editor.removeValue`),
+followed by `+ value`, which adds one, and `body` slots not shown. A separator
+divides each of the name field, the notation, and the list from the next.
+The slot clicked on the chart node, or a first slot still to fill, takes the
+keyboard when the editor opens. Otherwise, the keyboard stays with the chart,
+so Delete removes the block (`chart.md`, Editing on the chart). An edit
+applies at once. Esc or a press outside the editor closes it.
 
 The editor is placed by its chart node without a control on the chart node:
 nothing there takes the keyboard or announces a popup.
@@ -336,7 +336,7 @@ names (Backspace and keys).
 
 ## Name fields
 
-An `id` slot is a name field with a list below it. In `main`, the list holds
+A `name` slot is a name field with a list below it. In `main`, the list holds
 the names of the `expect.variables` of the challenge's first test under
 `This problem`, in that order, then main's other variables under `Variables`:
 the inputs and the names assigned in `main`, in program order. In a function,
