@@ -124,7 +124,7 @@ export type ExprRunner = (node: Expr, ctx: RunContext) => Generator<Event, Value
 
 // ---------------------------------------------------------------- emitter
 
-export type PyLine = string | { block: Stmt[] };
+export type PyLine = string | { region: Stmt[] };
 export type Side = "left" | "right";
 export type EmitContext = {
   expr(expr: Expr): string;
@@ -132,7 +132,7 @@ export type EmitContext = {
   operand(expr: Expr, precedence: number, side: Side): string;
   /** The input in slot `name` of `node`, parenthesized as an atom where the slot declares one. */
   slot(node: Stmt | Expr, name: string): string;
-  block(stmts: Stmt[]): PyLine;
+  region(stmts: Stmt[]): PyLine;
 };
 
 // ---------------------------------------------------------------- chart shape

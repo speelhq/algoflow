@@ -56,7 +56,7 @@ export const forStmt = defineStmt<"for">({
   },
   python: (node, ctx) => [
     `for ${node.var} in range(${isZero(node.start) ? "" : `${ctx.expr(node.start)}, `}${ctx.expr(node.stop)}):`,
-    ctx.block(node.body),
+    ctx.region(node.body),
   ],
   // Its init names it in the block menu and the editor.
   notation: () => COUNTED.init,
