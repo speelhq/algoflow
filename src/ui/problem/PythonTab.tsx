@@ -1,6 +1,6 @@
 // The emitted code with line numbers; keywords, strings, numbers, and comments are
-// colored. Hovering a line outlines its node, clicking it selects the node, the selected
-// node's lines are highlighted, and while running the current statement's line is too.
+// colored. Hovering a line outlines its chart node, clicking it selects its block, the selected
+// block's lines are highlighted, and while running the current statement's line is too.
 import { useEffect, useMemo, useRef } from "react";
 import { caseInputs } from "@/challenges/cases";
 import { t } from "@/i18n/t";

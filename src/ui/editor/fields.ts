@@ -1,4 +1,4 @@
-// The fields of a statement's notation in the node editor: each name slot, each value or target
+// The fields of a statement's notation in the block editor: each name slot, each value or target
 // slot, and each item of a list of values, in the notation's reading order.
 import { blockText, t } from "@/i18n/t";
 import type { Expr, NodeId, Stmt } from "@/lang/types";
@@ -117,7 +117,7 @@ function toFill(stmt: Stmt, field: Field): boolean {
 }
 
 /**
- * The field that takes the keyboard when the editor opens: the slot clicked on the node (the
+ * The field that takes the keyboard when the editor opens: the slot clicked on the chart node (the
  * item holding the input clicked, when one was), else the first field still to fill, else none.
  */
 export function startField(

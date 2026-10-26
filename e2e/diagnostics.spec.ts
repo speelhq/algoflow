@@ -1,4 +1,4 @@
-// A node with a diagnostic shows a red dot; hovering shows the message and its fix.
+// A chart node with a diagnostic shows a red dot; hovering shows the message and its fix.
 import { expect, test } from "./fixtures";
 import { programWith, seedProgram, seedProgress } from "./seed";
 
@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await seedProgress(page, {});
 });
 
-test("hovering a flagged node shows its message, and the fix applies", async ({ page }) => {
+test("hovering a flagged chart node shows its message, and the fix applies", async ({ page }) => {
   const loop = {
     id: "dgn-loop-001",
     kind: "for",

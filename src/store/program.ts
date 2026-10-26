@@ -138,7 +138,7 @@ export const useProgram = create<ProgramState>()((set, get) => {
     },
     edit: (next, field) => {
       const { program, past } = get();
-      // An edit that changes nothing (a drop where the node already is) is no history entry.
+      // An edit that changes nothing (a drop where the block already is) is no history entry.
       if (next === program || JSON.stringify(next) === JSON.stringify(program)) return;
       const joins = field !== undefined && field === lastField && past.length > 0;
       lastField = field;

@@ -1,4 +1,4 @@
-// The chart, its Input nodes, zoom, path bar, and the solution.
+// The chart, its Input chart nodes, zoom, path bar, and the solution.
 import { expect, test } from "./fixtures";
 import { seedProgram, seedProgress, solutionOf } from "./seed";
 
@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await seedProgress(page, {});
 });
 
-test("an empty main draws Start, the Input node, and End under a path bar of main", async ({
+test("an empty main draws Start, the Input chart node, and End under a path bar of main", async ({
   page,
 }) => {
   await page.goto("/#/p/tutorial");
@@ -18,7 +18,7 @@ test("an empty main draws Start, the Input node, and End under a path bar of mai
   await expect(page.getByTestId("path-segment")).toHaveText("main");
 });
 
-test("FizzBuzz draws its loop's generated nodes, diamonds as questions, and Yes/No edges", async ({
+test("FizzBuzz draws its loop's generated chart nodes, diamonds as questions, and Yes/No edges", async ({
   page,
 }) => {
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
@@ -31,7 +31,9 @@ test("FizzBuzz draws its loop's generated nodes, diamonds as questions, and Yes/
   await expect(chart.locator("text", { hasText: /^No$/ })).toHaveCount(4);
 });
 
-test("clicking a node selects its statement and highlights its Python lines", async ({ page }) => {
+test("clicking a chart node selects its statement and highlights its Python lines", async ({
+  page,
+}) => {
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-chart-node="fzb-prfz-001"]').click();
@@ -45,7 +47,7 @@ test("clicking a node selects its statement and highlights its Python lines", as
   );
 });
 
-test("an Input node lists the cases and choosing one sets it", async ({ page }) => {
+test("an Input chart node lists the cases and choosing one sets it", async ({ page }) => {
   await page.goto("/#/p/fizzbuzz");
   await page.getByTestId("input-chart-node").click();
   await page.getByRole("menuitem", { name: "n ← 3" }).click();

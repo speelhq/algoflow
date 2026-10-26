@@ -1,4 +1,4 @@
-// layout() places every node of every challenge solution without overlap; loops and branches
+// layout() places every chart node of every challenge solution without overlap; loops and branches
 // take their shapes. Synthetic programs cover the nestings no challenge has yet.
 import { caseInputs } from "@/challenges/cases";
 import { describe, expect, it } from "vitest";
@@ -149,7 +149,7 @@ const lay = (c: Case, measure: Measure): ChartLayout =>
     measure,
   });
 
-/** A Return, or a jump (every jump of these cases is inside a loop): no edge to the next node. */
+/** A Return, or a jump (every jump of these cases is inside a loop): no edge to the next chart node. */
 const leaves = (stmt: Stmt): boolean => {
   const def = getBlockDef(keyOf(stmt));
   return def.requires === "function" || (def.chart !== undefined && "jump" in def.chart);
@@ -178,7 +178,7 @@ function rectsOverlap(a: ChartNode, b: ChartNode, inflate: number): boolean {
   );
 }
 
-/** An axis-parallel segment meets the interior of `node` shrunk by 1 px. */
+/** An axis-parallel segment meets the interior of `node` (a chart node) shrunk by 1 px. */
 function crosses(a: { x: number; y: number }, b: { x: number; y: number }, node: ChartNode) {
   if (node.w === 0) return false;
   const [x0, x1] = [Math.min(a.x, b.x), Math.max(a.x, b.x)];
@@ -444,7 +444,7 @@ describe("layout of jumps", () => {
     expect(back).toMatchObject({ from: `${loop.id}:next`, to: `${loop.id}:junction` });
   });
 
-  it("a jump outside every loop is an ordinary box with an edge to the next node", () => {
+  it("a jump outside every loop is an ordinary box with an edge to the next chart node", () => {
     const stop = brk();
     const chart = layout(program([stop, print(num(1))]), {
       routine: "main",
@@ -457,7 +457,7 @@ describe("layout of jumps", () => {
 });
 
 describe("layout texts", () => {
-  it("main: Start, one Input node per input with the chosen values, the statements, End", () => {
+  it("main: Start, one Input chart node per input with the chosen values, the statements, End", () => {
     const sum = CHALLENGES.find((challenge) => challenge.id === "sum-to-n");
     if (!sum) throw new Error("sum-to-n missing");
     const chart = layout(sum.solution, {
