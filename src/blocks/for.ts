@@ -22,7 +22,7 @@ export const forStmt = defineStmt<"for">({
   chart: { counted: COUNTED },
   declares: "number",
   slots: [
-    { name: "var", role: "id", required: true },
+    { name: "var", role: "name", required: true },
     { name: "start", role: "expr", required: true },
     { name: "stop", role: "expr", required: true },
     { name: "body", role: "body" },

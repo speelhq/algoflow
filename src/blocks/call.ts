@@ -7,7 +7,7 @@ export const call = defineExpr<"call">({
   key: "call",
   category: "function",
   slots: [
-    { name: "fn", role: "id", required: true },
+    { name: "fn", role: "name", required: true },
     { name: "args", role: "exprs" },
   ],
   create: () => ({ id: newId(), kind: "call", fn: "", args: [] }),

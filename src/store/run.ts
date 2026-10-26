@@ -8,7 +8,7 @@ import { caseInputs, caseOf } from "@/challenges/cases";
 import { judge, type TestResult } from "@/challenges/judge";
 import { firstDifference, watchStep, type WatchStep } from "@/challenges/rows";
 import { seedOf, type Test } from "@/challenges/types";
-import type { Data, Id, NodeId, Program } from "@/lang/types";
+import type { Data, Name, NodeId, Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
 import { bodyStmts, diamondConditions, nodesById, ownerStmts } from "@/lang/walk";
 import { clamp } from "@/lib/utils";
@@ -73,7 +73,7 @@ export type Difference = WatchStep;
 
 type Origin = {
   program: Program;
-  inputs: Readonly<Record<Id, Data>>;
+  inputs: Readonly<Record<Name, Data>>;
   seed: number;
   test: Test | undefined;
 };

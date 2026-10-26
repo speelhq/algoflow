@@ -185,8 +185,8 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
             </button>,
           );
           return;
-        case "id":
-          pieces.push(<span key={`id:${piece.name}`}>{held.name}</span>);
+        case "name":
+          pieces.push(<span key={`name:${piece.name}`}>{held.name}</span>);
           return;
         default:
           return;

@@ -1,15 +1,15 @@
 // The rows of the `Result` tab for one case, and the first one that differs; the judge passes a
 // finished run exactly when none differs (`judge.ts`).
 import { dataEquals } from "@/lang/data";
-import type { Data, Id } from "@/lang/types";
+import type { Data, Name } from "@/lang/types";
 import type { Test } from "./types";
 
 /** `Output` beside `Expected`, aligned by position; a side with no such line is absent. */
 export type OutputRow = { line: number; actual?: string; expected?: string; differs: boolean };
 /** One expected variable; `actual` is absent when the program never created it. */
-export type VariableRow = { name: Id; actual?: Data; expected: Data; differs: boolean };
+export type VariableRow = { name: Name; actual?: Data; expected: Data; differs: boolean };
 export type Rows = { output: OutputRow[]; variables: VariableRow[] };
-export type FirstDifference = { kind: "output"; line: number } | { kind: "variable"; name: Id };
+export type FirstDifference = { kind: "output"; line: number } | { kind: "variable"; name: Name };
 /** `line` (1-based) when a `print` produced the differing line; absent at the end of the run. */
 export type WatchStep = { step: number; line?: number };
 
@@ -20,7 +20,7 @@ export type WatchStep = { step: number; line?: number };
  */
 export function resultRows(
   expect: Test["expect"] | undefined,
-  actual: { stdout: string[]; vars: Record<Id, Data> },
+  actual: { stdout: string[]; vars: Record<Name, Data> },
 ): Rows {
   const lines = expect?.stdout;
   const output: OutputRow[] = [];

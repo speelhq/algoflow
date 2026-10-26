@@ -2,12 +2,12 @@
 // and whether a place lies inside a loop or a function.
 // Registry-driven: slots, `loop`, and regions, never a kind.
 import { getBlock, keyOf } from "@/blocks/registry";
-import type { Expr, Id, NodeId, Place, Program, Stmt } from "./types";
+import type { Expr, Name, NodeId, Place, Program, Stmt } from "./types";
 import { childSlots, isExpr, regionsOf, variableOf } from "./walk";
 
 type Bag = Record<string, unknown>;
 
-export type Declared = { name: Id; role: "id" | "target" };
+export type Declared = { name: Name; role: "name" | "target" };
 
 /**
  * The variables a statement's binding target slots hold (`x` of `x = …`): each is declared
@@ -27,8 +27,8 @@ export function declaredBy(stmt: Stmt): Declared[] {
   const names: Declared[] = [];
   for (const slot of getBlock(keyOf(stmt)).slots) {
     const value = bag[slot.name];
-    if (slot.role === "id" && typeof value === "string" && value !== "") {
-      names.push({ name: value, role: "id" });
+    if (slot.role === "name" && typeof value === "string" && value !== "") {
+      names.push({ name: value, role: "name" });
     }
   }
   for (const variable of boundVariables(stmt)) {
@@ -47,7 +47,7 @@ export function assignedValue(stmt: Stmt): Expr | undefined {
 }
 
 /** `names` with `latest` moved to the front, in their order. */
-function bump(names: Id[], latest: Id[]): Id[] {
+function bump(names: Name[], latest: Name[]): Name[] {
   return [...latest, ...names.filter((name) => !latest.includes(name))];
 }
 
@@ -56,8 +56,8 @@ function bump(names: Id[], latest: Id[]): Id[] {
  * what was assigned before it in its region and the regions around it, the loop variables
  * of the loops around it, and the inputs or parameters. Undefined for an unknown id.
  */
-export function visibleAt(program: Program, id: NodeId): Id[] | undefined {
-  const walk = (stmts: Stmt[], visible: Id[]): Id[] | undefined => {
+export function visibleAt(program: Program, id: NodeId): Name[] | undefined {
+  const walk = (stmts: Stmt[], visible: Name[]): Name[] | undefined => {
     let names = visible;
     for (const stmt of stmts) {
       if (stmt.id === id) return names;

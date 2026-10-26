@@ -2,7 +2,7 @@
 // operator is switched, the other operators of its group), and the name list of a name field.
 import { t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
-import type { Id } from "@/lang/types";
+import type { Name } from "@/lang/types";
 import type { ListItem, ListSection } from "./EditorList";
 import { allEntries, entryOf } from "./entries";
 import { functionLabel } from "./explain";
@@ -12,7 +12,7 @@ import { nameSections, type ChartNames, type NameRow, type NameSection } from ".
 import type { Session } from "./session";
 
 /** A variable's kind as the lists name it. */
-function kindName(kinds: Kinds, name: Id): string | undefined {
+function kindName(kinds: Kinds, name: Name): string | undefined {
   const kind = kinds.get(name);
   return kind ? t(`editor.kind.${kind}`) : undefined;
 }

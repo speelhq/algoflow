@@ -8,7 +8,7 @@ import {
   RESERVED,
   type Diagnostic,
   type Expr,
-  type Id,
+  type Name,
   type NodeId,
   type Program,
   type Stmt,
@@ -34,7 +34,7 @@ class Collector {
   /** Functions whose own name a diagnostic refuses: no call can name them. */
   readonly refusedDefinitions = new Set<NodeId>();
   /** Functions: names a variable may not shadow (they would call a different thing in CPython). */
-  private readonly callables = new Set<Id>();
+  private readonly callables = new Set<Name>();
 
   constructor(private readonly program: Program) {}
 
@@ -60,21 +60,21 @@ class Collector {
   // ------------------------------------------------------------ declarations
 
   /** Reports the name of a function; the definition is then one no call can name. */
-  private refuseName(nodeId: NodeId, code: "E_BAD_NAME" | "E_DUPLICATE_NAME", name: Id): void {
+  private refuseName(nodeId: NodeId, code: "E_BAD_NAME" | "E_DUPLICATE_NAME", name: Name): void {
     this.report(nodeId, code, { name });
     this.refusedDefinitions.add(nodeId);
   }
 
   declarations(): void {
-    const taken = new Set<Id>(this.program.inputs.map((input) => input.name));
-    const claim = (name: Id, nodeId: NodeId) => {
+    const taken = new Set<Name>(this.program.inputs.map((input) => input.name));
+    const claim = (name: Name, nodeId: NodeId) => {
       if (taken.has(name) || isBuiltinName(name)) this.refuseName(nodeId, "E_DUPLICATE_NAME", name);
       taken.add(name);
       this.callables.add(name);
     };
     for (const fn of this.program.functions) {
       if (!isValidName(fn.name)) this.refuseName(fn.id, "E_BAD_NAME", fn.name);
-      const params = new Set<Id>();
+      const params = new Set<Name>();
       for (const param of fn.params) {
         if (!isValidName(param)) this.report(fn.id, "E_BAD_NAME", { name: param });
         if (params.has(param)) this.report(fn.id, "E_DUPLICATE_NAME", { name: param });
@@ -100,8 +100,13 @@ class Collector {
    * to that statement's id. Returns every name first assigned anywhere inside
    * the region, so an enclosing region can attribute it to its compound statement.
    */
-  private region(stmts: Stmt[], visible: Set<Id>, inner: Map<Id, NodeId>, scope: Scope): Set<Id> {
-    const declared = new Set<Id>();
+  private region(
+    stmts: Stmt[],
+    visible: Set<Name>,
+    inner: Map<Name, NodeId>,
+    scope: Scope,
+  ): Set<Name> {
+    const declared = new Set<Name>();
     for (const stmt of stmts) {
       const def = getBlock(keyOf(stmt));
       this.slots(stmt, def);
@@ -136,7 +141,7 @@ class Collector {
     return declared;
   }
 
-  private reads(stmt: Stmt, visible: Set<Id>, inner: Map<Id, NodeId>): void {
+  private reads(stmt: Stmt, visible: Set<Name>, inner: Map<Name, NodeId>): void {
     const bound = new Set(boundVariables(stmt));
     for (const expr of stmtExprs(stmt)) {
       if (bound.has(expr)) continue;
@@ -217,7 +222,7 @@ function isEmptySlot(slot: Slot, value: unknown): boolean {
     case "expr":
     case "target":
       return value === undefined || value === null;
-    case "id":
+    case "name":
       return typeof value !== "string" || value === "";
     case "text":
       return value === undefined || value === "";

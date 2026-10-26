@@ -174,7 +174,7 @@ function operandParts(
 export type Held =
   | { role: "expr"; expr: Expr | undefined; side: Side; binds: number | undefined }
   | { role: "exprs"; items: Expr[] }
-  | { role: "id"; name: string }
+  | { role: "name"; name: string }
   | { role: "text"; text: string };
 
 /** What the placeholder `name` of `node`'s notation or template holds. */
@@ -199,8 +199,8 @@ export function placeholderValue(node: Node, name: string): Held | undefined {
     }
     case "exprs":
       return { role: "exprs", items: Array.isArray(value) ? value.filter(isExpr) : [] };
-    case "id":
-      return { role: "id", name: typeof value === "string" ? value : "" };
+    case "name":
+      return { role: "name", name: typeof value === "string" ? value : "" };
     case "text":
       return { role: "text", text: textOf(node, def, name) };
     case "body":
@@ -223,7 +223,7 @@ export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
         return held.expr ? operandParts(held.expr, held, writing) : [];
       case "exprs":
         return listParts(held.items, (item) => exprParts(item, writing));
-      case "id":
+      case "name":
         return [{ text: held.name }];
       case "text":
         return [{ text: held.text }];
@@ -266,7 +266,7 @@ function drawsPlaceholder(node: Node, def: BlockDef, name: string): boolean {
     case "exprs":
       // A list with no item is empty only where the slot is required.
       return Array.isArray(value) && value.length === 0 && slot.required === true;
-    case "id":
+    case "name":
       return value === "";
     default:
       return false;
@@ -283,7 +283,7 @@ function stmtSlotParts(node: Node, def: BlockDef, name: string): Part[] {
         return held.expr ? operandParts(held.expr, held, {}) : [];
       case "exprs":
         return listParts(held.items, (item) => exprParts(item));
-      case "id":
+      case "name":
         return [{ text: held.name, variable: true }];
       case "text":
         return [{ text: held.text }];

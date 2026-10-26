@@ -8,7 +8,7 @@
 import { errorText, t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
 import { exprKind } from "@/lang/kinds";
-import type { Expr, Id, NodeId, Program } from "@/lang/types";
+import type { Expr, Name, NodeId, Program } from "@/lang/types";
 import { refusedDefinitions } from "@/lang/validate";
 import { allExprs, isEmptyExpr, isTarget, variableOf } from "@/lang/walk";
 import { emptyExpr, getBlock, keyOf } from "@/blocks/registry";
@@ -48,7 +48,7 @@ export type Line = {
   text?: NodeId;
 };
 
-export type LineFunction = { name: Id; params: readonly Id[] };
+export type LineFunction = { name: Name; params: readonly Name[] };
 
 /**
  * A target slot's line: the names offered where the whole target is to fill, the problem's
@@ -58,7 +58,7 @@ export type TargetLine = ChartNames & { binds: boolean };
 
 export type LineContext = {
   /** The variables visible at the statement, the latest first. */
-  variables: readonly Id[];
+  variables: readonly Name[];
   kinds: Kinds;
   scope: ParseScope;
   functions: readonly LineFunction[];
@@ -71,8 +71,8 @@ export type LineContext = {
  * parentheses, or a function of the program.
  */
 export type Row =
-  | { kind: "variable"; name: Id }
-  | { kind: "new"; name: Id }
+  | { kind: "variable"; name: Name }
+  | { kind: "new"; name: Name }
   | { kind: "entry"; entry: Entry }
   | { kind: "parentheses" }
   | { kind: "function"; fn: LineFunction };
@@ -289,7 +289,7 @@ function isNumber(expr: Expr): boolean {
 }
 
 /** `name` as a variable. */
-export function variableExpr(name: Id): Expr | undefined {
+export function variableExpr(name: Name): Expr | undefined {
   const made = parsed(name, NO_DEFINITIONS);
   return made && variableOf(made) === name ? made : undefined;
 }
