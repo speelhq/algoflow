@@ -27,7 +27,7 @@ export function exprKind(expr: Expr, variables: Kinds): Kind | undefined {
 }
 
 /** `main`, or the function whose body holds statement `id`. */
-export function chartOf(program: Program, id: NodeId): "main" | NodeId {
+export function routineOf(program: Program, id: NodeId): "main" | NodeId {
   for (const fn of program.functions) {
     for (const stmt of allStmts(fn.body)) if (stmt.id === id) return fn.id;
   }
@@ -38,15 +38,15 @@ type Scope = { kinds: Map<Name, Kind>; setters: Map<Name, Stmt> };
 
 const memo = new WeakMap<Program, Map<string, Scope>>();
 
-function scope(program: Program, chart: "main" | NodeId): Scope {
-  let charts = memo.get(program);
-  if (!charts) {
-    charts = new Map();
-    memo.set(program, charts);
+function scope(program: Program, routine: "main" | NodeId): Scope {
+  let routines = memo.get(program);
+  if (!routines) {
+    routines = new Map();
+    memo.set(program, routines);
   }
-  const known = charts.get(chart);
+  const known = routines.get(routine);
   if (known) return known;
-  const fn = program.functions.find((candidate) => candidate.id === chart);
+  const fn = program.functions.find((candidate) => candidate.id === routine);
   const kinds = new Map<Name, Kind>();
   const setters = new Map<Name, Stmt>();
   const assigned = new Set<Name>();
@@ -73,16 +73,16 @@ function scope(program: Program, chart: "main" | NodeId): Scope {
     }
   }
   const made = { kinds, setters };
-  charts.set(chart, made);
+  routines.set(routine, made);
   return made;
 }
 
 /** The kinds of the variables of `main` or of one function, by its id. */
-export function variableKinds(program: Program, chart: "main" | NodeId): Kinds {
-  return scope(program, chart).kinds;
+export function variableKinds(program: Program, routine: "main" | NodeId): Kinds {
+  return scope(program, routine).kinds;
 }
 
 /** The statement that first sets each variable of `main` or of one function. */
-export function firstSetters(program: Program, chart: "main" | NodeId): ReadonlyMap<Name, Stmt> {
-  return scope(program, chart).setters;
+export function firstSetters(program: Program, routine: "main" | NodeId): ReadonlyMap<Name, Stmt> {
+  return scope(program, routine).setters;
 }

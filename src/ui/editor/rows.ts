@@ -8,7 +8,7 @@ import { allEntries, entryOf } from "./entries";
 import { functionLabel } from "./explain";
 import { find, type LineContext, type Row } from "./line";
 import { listRows, listSections, type ListGroup } from "./list";
-import { nameSections, type ChartNames, type NameRow, type NameSection } from "./names";
+import { nameSections, type RoutineNames, type NameRow, type NameSection } from "./names";
 import type { Session } from "./session";
 
 /** A variable's kind as the lists name it. */
@@ -109,7 +109,7 @@ function nameItem(row: NameRow, kinds: Kinds): ListItem {
 
 /** The rows of a name field's list for the name typed, and its sections as drawn. */
 export function nameList(
-  names: ChartNames,
+  names: RoutineNames,
   typed: string | null,
   kinds: Kinds,
 ): { rows: NameRow[]; sections: ListSection[] } {

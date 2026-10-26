@@ -10,7 +10,11 @@ const yes = print(str("zero"));
 const branch = if_(bin("==", v("i"), num(0)), [yes], [print(v("i"))]);
 const loop = for_("i", num(0), num(3), [branch]);
 const after = print(str("done"));
-const chart = layout(program([loop, after]), { inputs: {}, measure: estimatedWidth });
+const chart = layout(program([loop, after]), {
+  routine: "main",
+  inputs: {},
+  measure: estimatedWidth,
+});
 
 const nodeOf = (owner: string, role: string) =>
   chart.nodes.find((node) => node.owner === owner && node.role === role)?.id;
@@ -74,7 +78,11 @@ describe("paint", () => {
   it("takes a loop's No edge into a following loop's junction once control is there", () => {
     const first = for_("i", num(0), num(2), [print(v("i"))]);
     const second = for_("j", num(0), num(2), [print(v("j"))]);
-    const twice = layout(program([first, second]), { inputs: {}, measure: estimatedWidth });
+    const twice = layout(program([first, second]), {
+      routine: "main",
+      inputs: {},
+      measure: estimatedWidth,
+    });
     const check = twice.nodes.find((node) => node.owner === first.id && node.role === "check");
     const no = twice.edges.find((edge) => edge.from === check?.id && edge.label === "no");
     const at = (activeId: string) =>
@@ -88,7 +96,11 @@ describe("paint", () => {
     const stop = ast.brk();
     const jumpy = for_("i", num(0), num(3), [if_(bin("==", v("i"), num(1)), [stop])]);
     const next = print(str("done"));
-    const drawn = layout(program([jumpy, next]), { inputs: {}, measure: estimatedWidth });
+    const drawn = layout(program([jumpy, next]), {
+      routine: "main",
+      inputs: {},
+      measure: estimatedWidth,
+    });
     const check = drawn.nodes.find((node) => node.owner === jumpy.id && node.role === "check");
     const no = drawn.edges.find((edge) => edge.from === check?.id && edge.label === "no");
     const jump = drawn.edges.find((edge) => edge.from === stop.id);

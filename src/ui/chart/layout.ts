@@ -78,8 +78,8 @@ export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: numbe
 /** The width of `text` in px as the chart draws it; a variable is drawn bold. */
 export type Measure = (text: string, shape: Shape, bold?: boolean) => number;
 export type LayoutOptions = {
-  /** `main` (default) or a function's id. */
-  chart?: "main" | NodeId;
+  /** `main` or a function's id. */
+  routine: "main" | NodeId;
   /** The values the Input nodes show: the chosen case's. */
   inputs: Readonly<Record<Name, Data>>;
   measure: Measure;
@@ -614,7 +614,7 @@ class Builder {
 /** The chart of `main` or of one function, every node and edge placed. */
 export function layout(program: Program, opts: LayoutOptions): ChartLayout {
   const builder = new Builder(program, opts.measure);
-  const fn = program.functions.find((candidate) => candidate.id === opts.chart);
+  const fn = program.functions.find((candidate) => candidate.id === opts.routine);
   const frag = emptyFrag();
 
   const startText = fn

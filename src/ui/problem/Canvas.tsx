@@ -153,7 +153,13 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
   // The chosen case is the open program's; a challenge's solution declares the same inputs.
   const chart = useMemo(
     () =>
-      fonts ? layout(program, { inputs: caseInputs(mine, caseIndex), measure: measureText }) : null,
+      fonts
+        ? layout(program, {
+            routine: "main",
+            inputs: caseInputs(mine, caseIndex),
+            measure: measureText,
+          })
+        : null,
     [program, mine, caseIndex, fonts],
   );
   const cases = useMemo(

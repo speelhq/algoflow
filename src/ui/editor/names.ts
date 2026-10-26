@@ -19,18 +19,18 @@ export function matchesName(name: string, word: string): boolean {
 }
 
 /** The names a chart's list offers: the problem's expected ones first, then the chart's others. */
-export type ChartNames = { asked: readonly Name[]; names: readonly Name[] };
+export type RoutineNames = { asked: readonly Name[]; names: readonly Name[] };
 
 /**
  * In `main` the problem's expected names (`asked`), then the inputs and the names `main` assigns;
  * in a function its parameters and the names its body assigns; each in program order.
  */
-export function chartNames(
+export function routineNames(
   program: Program,
-  chart: "main" | NodeId,
+  routine: "main" | NodeId,
   asked: readonly Name[],
-): ChartNames {
-  const fn = program.functions.find((candidate) => candidate.id === chart);
+): RoutineNames {
+  const fn = program.functions.find((candidate) => candidate.id === routine);
   const problem = fn ? [] : [...new Set(asked)];
   const names = new Set<Name>(fn ? fn.params : program.inputs.map((input) => input.name));
   for (const stmt of allStmts(fn ? fn.body : program.main)) {
@@ -49,7 +49,7 @@ export type NameRow = { kind: "name"; name: Name } | { kind: "new"; name: Name }
 export type NameSection = { group: "problem" | "variables" | "new"; rows: NameRow[] };
 
 /** The sections of a name field's list for the text typed. */
-export function nameSections({ asked, names }: ChartNames, typed: string): NameSection[] {
+export function nameSections({ asked, names }: RoutineNames, typed: string): NameSection[] {
   // A whole name comes first.
   const kept = (list: readonly Name[]): NameRow[] =>
     list

@@ -1,7 +1,7 @@
 // The explanation line at the foot of the editor: what the list highlights or the caret
 // is in, as a name and runs of text; undefined leaves the block's help.
 import { t } from "@/i18n/t";
-import { chartOf, firstSetters, variableKinds } from "@/lang/kinds";
+import { routineOf, firstSetters, variableKinds } from "@/lang/kinds";
 import type { Expr, Name, Kind, NodeId, Program } from "@/lang/types";
 import { isEmptyExpr } from "@/lang/walk";
 import {
@@ -45,15 +45,15 @@ export function helpParts(text: string): Part[] {
 
 const kindName = (kind: Kind) => t(`editor.kind.${kind}`);
 
-/** A variable of the chart that holds statement `at`: its kind and where it is first set. */
+/** A variable of the routine that holds statement `at`: its kind and where it is first set. */
 export function explainVariable(program: Program, at: NodeId, name: Name): string {
-  const chart = chartOf(program, at);
-  const fn = program.functions.find((candidate) => candidate.id === chart);
-  const kind = variableKinds(program, chart).get(name);
+  const routine = routineOf(program, at);
+  const fn = program.functions.find((candidate) => candidate.id === routine);
+  const kind = variableKinds(program, routine).get(name);
   const input = fn ? undefined : program.inputs.find((candidate) => candidate.name === name);
   if (input) return t("editor.explain.input", { kind: kindName(input.kind) });
   if (fn?.params.includes(name)) return t("editor.explain.parameter");
-  const setter = firstSetters(program, chart).get(name);
+  const setter = firstSetters(program, routine).get(name);
   if (!setter) return t("editor.explain.newVariable", { name });
   // A counted loop's notation is its init, where its variable first gets a value.
   const statement = notationText(setter);
