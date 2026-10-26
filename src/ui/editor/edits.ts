@@ -1,5 +1,5 @@
 // Every edit the page makes goes through `apply`: only in build mode on the learner's own
-// chart, as one history entry (or one per typed field), selecting what it creates.
+// program, as one history entry (or one per typed field), selecting what it creates.
 import { EditError, insertStmt } from "@/lang/edit";
 import type { Place, Program, Stmt } from "@/lang/types";
 import { useEditor } from "@/store/editor";

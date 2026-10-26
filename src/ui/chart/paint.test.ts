@@ -1,4 +1,4 @@
-// The taken path, marks, current node, and breakpoint drawn while running.
+// The taken path, marks, current chart node, and breakpoint drawn while running.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/blocks/testing";
 import { estimatedWidth, layout } from "./layout";
@@ -39,7 +39,7 @@ describe("currentNode", () => {
     expect(currentNode(chart, pass)).toBe(nodeOf(loop.id, "check"));
   });
 
-  it("is the statement's own node otherwise, and none before the first step", () => {
+  it("is the statement's own chart node otherwise, and none before the first step", () => {
     expect(currentNode(chart, view({ activeId: branch.id }))).toBe(branch.id);
     expect(currentNode(chart, view({}))).toBeNull();
   });

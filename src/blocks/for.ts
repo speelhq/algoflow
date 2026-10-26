@@ -7,7 +7,7 @@ import { emptyExpr } from "./empty";
 
 const isZero = (expr: Expr) => expr.kind === "num" && !expr.float && expr.value === 0;
 
-/** The generated nodes in the order a `for` runs them, written in the notation. */
+/** The generated chart nodes in the order a `for` runs them, written in the notation. */
 const COUNTED: Counted = {
   body: "body",
   init: "{var} ← {start}",

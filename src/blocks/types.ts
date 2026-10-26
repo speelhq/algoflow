@@ -138,8 +138,8 @@ export type EmitContext = {
 // ---------------------------------------------------------------- chart shape
 
 /**
- * How the chart draws a block: the slot of the condition its diamond asks and its body regions
- * by slot name (a branch, a checked loop, a counted loop with the texts of its generated nodes),
+ * How the chart draws a block definition's blocks: the slot of the condition its diamond asks and its body regions
+ * by slot name (a branch, a checked loop, a counted loop with the texts of its generated chart nodes),
  * or where its edge jumps to (out of the innermost loop, or into its next pass).
  */
 export type ChartShape =
@@ -148,10 +148,10 @@ export type ChartShape =
   | { counted: Counted }
   | { jump: "exit" | "next" };
 
-/** A counted loop's body slot, and the texts of its generated nodes with `{slot}` placeholders. */
+/** A counted loop's body slot, and the texts of its generated chart nodes with `{slot}` placeholders. */
 export type Counted = { body: string; init: string; check: string; update: string };
 
-/** A counted loop's generated nodes. */
+/** A counted loop's generated chart nodes. */
 export type Generated = "init" | "check" | "update";
 
 // ---------------------------------------------------------------- BlockDef

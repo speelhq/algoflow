@@ -116,7 +116,7 @@ test.describe("running FizzBuzz", () => {
       "aria-pressed",
       "true",
     );
-    // The narration sits between the chart and the run bar, over no node.
+    // The narration sits between the chart and the run bar, over no chart node.
     const line = await page.getByTestId("narration").boundingBox();
     const chart = await page.getByTestId("chart-scroll").boundingBox();
     const bar = await page.getByTestId("run-bar").boundingBox();
@@ -205,7 +205,7 @@ test("Run with a diagnostic leads to its node instead of running", async ({ page
   await expect(page.getByTestId("position")).toHaveCount(0);
 });
 
-test("a runtime error outlines its node and says its message, and playback stops", async ({
+test("a runtime error outlines its chart node and says its message, and playback stops", async ({
   page,
 }) => {
   await seedProgress(page, {});

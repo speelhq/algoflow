@@ -1,7 +1,7 @@
 // The page's Run. With diagnostics present it does not start: it selects the
 // first diagnostic's statement and shows its message. Run acts on the learner's
-// program, so a shown solution gives way to the learner's chart first. The play button's action,
-// and what a click on a node does in each mode.
+// program, so a shown solution gives way to the learner's program first. The play button's action,
+// and what a click on a chart node does in each mode.
 import { validate } from "@/lang/validate";
 import type { NodeId } from "@/lang/types";
 import { ownersById } from "@/lang/walk";
@@ -68,7 +68,7 @@ export function startSubmit(): void {
 }
 
 /**
- * A click on a statement's node, with the slot and the input clicked: while running it sets or
+ * A click on a statement's chart node, with the slot and the input clicked: while running it sets or
  * clears the breakpoint, pausing first; once the run has ended it returns to build mode and
  * selects; in build mode it selects; on the shown solution it does nothing.
  */

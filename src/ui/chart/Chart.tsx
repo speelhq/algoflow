@@ -1,7 +1,7 @@
 // The flowchart as SVG from `layout()`. Shapes come from `ChartNode.shape`
-// and never from a block kind; generated nodes are gray. An HTML layer over the SVG,
-// under the same scale, holds the parts a learner interacts with (the Input nodes' menus,
-// the connectors, the editor) and a diagnostic's card beside its node.
+// and never from a block kind; generated chart nodes are gray. An HTML layer over the SVG,
+// under the same scale, holds the parts a learner interacts with (the Input chart nodes' menus,
+// the connectors, the editor) and a diagnostic's card beside its chart node.
 import {
   useCallback,
   useEffect,
@@ -37,22 +37,22 @@ type Props = {
   /** The statement outlined as selected, and the one outlined from a Python line. */
   selectedId?: NodeId | null;
   hoveredId?: NodeId | null;
-  /** A click on a statement's node (or a generated node of it), with the slot and input clicked. */
+  /** A click on a statement's chart node (or a generated chart node of it), with the slot and input clicked. */
   onSelect?: (owner: NodeId, slot?: string, hole?: NodeId) => void;
-  /** The cases an Input node's menu lists, and what choosing one does; absent while read-only. */
+  /** The cases an Input chart node's menu lists, and what choosing one does; absent while read-only. */
   cases?: {
     labels: string[];
     choose: (index: number) => void;
   };
   /** The run drawn on the chart. */
   paint?: Paint;
-  /** The current node is where the run failed: it is outlined in the error color. */
+  /** The current chart node is where the run failed: it is outlined in the error color. */
   failed?: boolean;
-  /** The editor anchored to the selected node; absent while nothing is edited. */
+  /** The editor anchored to the selected chart node; absent while nothing is edited. */
   editor?: ReactNode;
   /** What sits on an edge that carries a place (the `+` connector); absent while read-only. */
   connector?: (edge: ChartEdge & { place: NonNullable<ChartEdge["place"]> }) => ReactNode;
-  /** Dragging a node onto a connector; absent while read-only. */
+  /** Dragging a chart node onto a connector; absent while read-only. */
   moves?: Moves;
   /** Statements with a diagnostic to mark with a red dot, and what hovering one shows. */
   flags?: { owners: ReadonlySet<NodeId>; card: (owner: NodeId) => ReactNode };
@@ -108,7 +108,7 @@ function Mark({ node, mark }: { node: ChartNode; mark: boolean }) {
   );
 }
 
-/** The breakpoint: a dot at the node's left, its word above the node's corner. */
+/** The breakpoint: a dot at the chart node's left, its word above the chart node's corner. */
 function Breakpoint({ node }: { node: ChartNode }) {
   return (
     <g data-testid="breakpoint">
@@ -220,7 +220,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
   );
 }
 
-/** Clicking an Input node lists the problem's cases; choosing one sets every Input node. */
+/** Clicking an Input chart node lists the problem's cases; choosing one sets every Input chart node. */
 function InputMenu(props: { label: string; cases: NonNullable<Props["cases"]> }) {
   const { label, cases } = props;
   return (
@@ -303,7 +303,7 @@ export function Chart(props: Props) {
   const scale = zoom ?? fitScale(region, chart.width + 2 * PAD);
   const width = (chart.width + 2 * PAD) * scale;
   const height = (chart.height + 2 * PAD) * scale;
-  // The chart is centered; while an editor is open, room for it is added on the node's right
+  // The chart is centered; while an editor is open, room for it is added on the chart node's right
   // where the canvas has none, and the canvas scrolls to show it.
   const offset = Math.max(0, (region - width) / 2);
   const editorEnd = edited
@@ -317,7 +317,7 @@ export function Chart(props: Props) {
     if (short > 0) element.scrollLeft += short;
   }, [editorEnd, region]);
 
-  // One delegated listener: a click on any part of a node selects the statement it belongs to.
+  // One delegated listener: a click on any part of a chart node selects the statement it belongs to.
   const svg = useRef<SVGSVGElement>(null);
   useEffect(() => {
     const element = svg.current;
@@ -332,7 +332,7 @@ export function Chart(props: Props) {
     return () => element.removeEventListener("click", click);
   }, [onSelect]);
 
-  // The current node is scrolled into view.
+  // The current chart node is scrolled into view.
   const current = paint?.current ?? null;
   useEffect(() => {
     if (current === null) return;
@@ -340,7 +340,7 @@ export function Chart(props: Props) {
     node?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [current]);
 
-  // The node with a diagnostic under the pointer shows its card until the pointer leaves both.
+  // The chart node with a diagnostic under the pointer shows its card until the pointer leaves both.
   const [flagHover, setFlagHover] = useState<NodeId | null>(null);
   const leave = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hold = useCallback((owner: NodeId | null) => {
@@ -370,7 +370,7 @@ export function Chart(props: Props) {
       ? nodeFor(chart.nodes, flagHover)
       : undefined;
 
-  // The node that carries each flagged statement's dot.
+  // The chart node that carries each flagged statement's dot.
   const flaggedNodes = useMemo(
     () =>
       new Set([...(flags?.owners ?? [])].flatMap((owner) => nodeFor(chart.nodes, owner)?.id ?? [])),

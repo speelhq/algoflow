@@ -1,4 +1,4 @@
-// Node text as the chart writes it; a value as the blocks write it.
+// Notation as the chart writes it; a value as the blocks write it.
 import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
 import { ast, withInputs } from "@/blocks/testing";
@@ -194,7 +194,7 @@ describe("notation", () => {
   });
 });
 
-describe("diamonds and generated nodes", () => {
+describe("diamonds and generated chart nodes", () => {
   it("a diamond is its condition followed by ?, or the placeholder without it", () => {
     expect(joinParts(questionParts(if_(expr("i % 15 == 0"), [])))).toBe("i % 15 = 0?");
     expect(joinParts(questionParts(if_(expr("abs(x) < 3"), [])))).toBe("abs(x) < 3?");
@@ -203,7 +203,7 @@ describe("diamonds and generated nodes", () => {
     expect(questionParts(if_(v("ok"), [])).map((part) => part.slot)).toEqual(["cond", undefined]);
   });
 
-  it("a counted loop's generated nodes carry the loop's own slots", () => {
+  it("a counted loop's generated chart nodes carry the loop's own slots", () => {
     const loop = for_("i", num(1), bin("+", v("n"), num(1)), []);
     const drawn = (part: "init" | "check" | "update") => joinParts(generatedParts(loop, part));
     expect(drawn("init")).toBe("i ← 1");

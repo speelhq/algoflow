@@ -92,7 +92,7 @@ describe("for (blocks.md)", () => {
     });
   });
 
-  it("a counted loop over `body`, its generated nodes written in the notation", () => {
+  it("a counted loop over `body`, its generated chart nodes written in the notation", () => {
     expect(forStmt.chart).toEqual({
       counted: {
         body: "body",

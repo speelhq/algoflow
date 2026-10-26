@@ -1,5 +1,5 @@
 // The names a name field and a binding target's line offer (`editor.md`, Name fields; Targets):
-// the problem's expected variables under `This problem`, the chart's other variables under
+// the problem's expected variables under `This problem`, the routine's other variables under
 // `Variables`, each kept while one of its words begins with the text typed, and a typed name
 // none of them is offered as a new variable.
 import { declaredBy } from "@/lang/scope";
@@ -18,7 +18,7 @@ export function matchesName(name: string, word: string): boolean {
   return wordsOf(name).some((part) => part.startsWith(w)) || name.toLowerCase().startsWith(w);
 }
 
-/** The names a chart's list offers: the problem's expected ones first, then the chart's others. */
+/** The names a routine's list offers: the problem's expected ones first, then the routine's others. */
 export type RoutineNames = { asked: readonly Name[]; names: readonly Name[] };
 
 /**

@@ -1,4 +1,4 @@
-// The node editor: a popover beside the selected node holding the node's name field
+// The block editor: a popover beside the selected block's chart node holding its caption field
 // with `Duplicate` and `Delete`, the block's notation with its slots editable in place (names
 // as name fields, values as value lines, lists of values with add and remove), the list of
 // the focused slot, and the explanation line. Reads slot roles, never a kind. The editing state
@@ -484,7 +484,7 @@ export function BlockEditor({ id }: { id: NodeId }) {
   const hole = useEditor((s) => s.hole);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
-  // The node's box, which the editor is placed beside; it is no control of its own.
+  // The chart node's box, which the editor is placed beside; it is no control of its own.
   const [anchor, setAnchor] = useState<Element | null>(null);
   const block = blocksById(program).get(id);
   if (!block || !("kind" in block) || getBlockDef(keyOf(block)).shape !== "stmt") return null;
@@ -498,7 +498,7 @@ export function BlockEditor({ id }: { id: NodeId }) {
       }}
     >
       <div ref={setAnchor} className="pointer-events-none size-full" aria-hidden />
-      {/* On the node's right, where the chart makes room, and inside the canvas, so the
+      {/* On the chart node's right, where the chart makes room, and inside the canvas, so the
           panel's statement stays readable; it moves only down or up to fit. */}
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Positioner

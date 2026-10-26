@@ -1,4 +1,4 @@
-// The node editor's editing session: the field that has the keyboard, its value line, the name
+// The block editor's editing session: the field that has the keyboard, its value line, the name
 // being typed, the list's highlight, whether the list shows every entry, and the operator being
 // switched. Every change is a pure transition from one session to the next, returning the values
 // it writes, so a handler that makes several changes chains them on what each one returned.

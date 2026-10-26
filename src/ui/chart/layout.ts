@@ -47,7 +47,7 @@ export type ChartNode = {
   text: string;
   /** What the chart node draws without its caption, shown on hover where it shows its caption instead. */
   title?: string;
-  /** The text in runs, each at `dx` from the node's left with width `w`; a slot's run names it. */
+  /** The text in runs, each at `dx` from the chart node's left with width `w`; a slot's run names it. */
   parts: PlacedPart[];
   /** Top-left corner; a junction is a point (`w = h = 0`). */
   x: number;
@@ -69,10 +69,10 @@ export type ChartEdge = {
   anchor: Point;
   /** A loop's return to its junction. */
   back?: boolean;
-  /** A `Return` node's edge to `End`. */
+  /** A `Return` chart node's edge to `End`. */
   jump?: boolean;
 };
-/** A run at `dx` from the node's left with width `w`, `dy` from its middle (a second line). */
+/** A run at `dx` from the chart node's left with width `w`, `dy` from its middle (a second line). */
 export type PlacedPart = Part & { dx: number; dy: number; w: number };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
 /** The width of `text` in px as the chart draws it; a variable is drawn bold. */
@@ -80,7 +80,7 @@ export type Measure = (text: string, shape: Shape, bold?: boolean) => number;
 export type LayoutOptions = {
   /** `main` or a function's id. */
   routine: "main" | NodeId;
-  /** The values the Input nodes show: the chosen case's. */
+  /** The values the Input chart nodes show: the chosen case's. */
   inputs: Readonly<Record<Name, Data>>;
   measure: Measure;
 };
@@ -148,7 +148,7 @@ type Frag = {
   height: number;
   nodes: ChartNode[];
   edges: ChartEdge[];
-  /** The node an incoming edge ends on, at the fragment's (0, 0); null for an empty region. */
+  /** The chart node an incoming edge ends on, at the fragment's (0, 0); null for an empty region. */
   entry: string | null;
   /** Falls through to whatever follows; null when nothing does (a `Return`). */
   out: Stub | null;
@@ -195,7 +195,7 @@ function shift(frag: Frag, dx: number, dy: number): Frag {
 
 /**
  * The middle of the first or last vertical run; of the first segment when there is none, and
- * for `start` (a flow leaving sideways, whose vertical run is far from its node).
+ * for `start` (a flow leaving sideways, whose vertical run is far from its chart node).
  */
 function anchorOf(points: Point[], which: "first" | "last" | "start"): Point {
   const runs: Array<[Point, Point]> = [];
@@ -361,7 +361,7 @@ class Builder {
       : this.loop(stmt, chart.counted.body, true);
   }
 
-  /** A box; `leaves` names where its edge goes when it is not to the next node. */
+  /** A box; `leaves` names where its edge goes when it is not to the next chart node. */
   private box(stmt: Stmt, leaves: Leave | null): Frag {
     const parts = notationParts(stmt);
     const node = this.captioned(stmt, stmt.id, "stmt", "box", parts, 0);
@@ -374,7 +374,7 @@ class Builder {
       edges: [],
       entry: node.id,
       out: leaves ? null : { from: node.id, points: [{ x: 0, y: node.h }], place: null },
-      // A Return's or a jump's edge leaves by the node's right side.
+      // A Return's or a jump's edge leaves by the chart node's right side.
       escapes: leaves
         ? [{ from: node.id, points: [{ x: half, y: node.h / 2 }], place: null, to: leaves }]
         : [],
@@ -618,7 +618,7 @@ class Builder {
   }
 }
 
-/** The chart of `main` or of one function, every node and edge placed. */
+/** The chart of `main` or of one function, every chart node and edge placed. */
 export function layout(program: Program, opts: LayoutOptions): ChartLayout {
   const builder = new Builder(program, opts.measure);
   const fn = program.functions.find((candidate) => candidate.id === opts.routine);

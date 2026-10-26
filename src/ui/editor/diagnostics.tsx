@@ -1,4 +1,4 @@
-// The diagnostics a node shows, and a diagnostic's message with the button applying its fix.
+// The diagnostics a chart node shows, and a diagnostic's message with the button applying its fix.
 import { errorText, t } from "@/i18n/t";
 import { hoistAssign } from "@/lang/edit";
 import type { Diagnostic, NodeId, Program } from "@/lang/types";
@@ -7,7 +7,7 @@ import { ownersById } from "@/lang/walk";
 import { Button } from "@/ui/primitives/button";
 import { apply } from "./edits";
 
-/** The diagnostics nodes show, by statement: no empty slot, whose placeholder is its mark. */
+/** The diagnostics chart nodes show, by statement: no empty slot, whose placeholder already shows it. */
 export function flaggedStatements(program: Program): Map<NodeId, Diagnostic[]> {
   const owners = ownersById(program);
   const flagged = new Map<NodeId, Diagnostic[]>();
@@ -29,7 +29,7 @@ function sameDiagnostic(a: Diagnostic, b: Diagnostic): boolean {
 }
 
 /**
- * The diagnostics statement `id`'s editor shows: those its node shows, and first the one Run led
+ * The diagnostics statement `id`'s editor shows: those its chart node shows, and first the one Run led
  * to, while the program still has it.
  */
 export function editorDiagnostics(
