@@ -53,14 +53,10 @@
     "solved": "{n} of {m} solved",
     "start": "Start",
     "continue": "Continue: {title} ▶",
-    "mark": {
-      "solved": "✓",
-      "attempted": "•"
-    },
     "status": {
-      "solved": "Solved",
-      "attempted": "Attempted",
-      "untouched": "Not started"
+      "solved": { "label": "Solved", "icon": "✓" },
+      "attempted": { "label": "Attempted", "icon": "•" },
+      "untouched": { "label": "Not started" }
     },
     "difficulty": {
       "easy": "Easy",

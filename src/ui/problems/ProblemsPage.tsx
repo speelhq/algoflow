@@ -1,4 +1,4 @@
-// One section per study plan, in plan order; the status marks and plan counts come from
+// One section per study plan, in plan order; the status icons and plan counts come from
 // progress.
 import { challengesOf, getChallenge, PLANS, type Challenge, type Plan } from "@/challenges";
 import { planAction, type Status } from "@/challenges/next";
@@ -56,15 +56,15 @@ function PlanSection({ plan, entries }: { plan: Plan; entries: Progress }) {
       </div>
       <ul className="mt-1">
         {challengesOf(plan).map((challenge) => (
-          <ProblemRow key={challenge.id} challenge={challenge} mark={status(challenge.id)} />
+          <ProblemRow key={challenge.id} challenge={challenge} status={status(challenge.id)} />
         ))}
       </ul>
     </section>
   );
 }
 
-/** Status mark, title, difficulty, topic tags; the row opens the Problem page. */
-function ProblemRow({ challenge, mark }: { challenge: Challenge; mark: ReturnType<Status> }) {
+/** Status icon, title, difficulty, topic tags; the row opens the Problem page. */
+function ProblemRow({ challenge, status }: { challenge: Challenge; status: ReturnType<Status> }) {
   return (
     <li className="border-b">
       <a
@@ -74,14 +74,14 @@ function ProblemRow({ challenge, mark }: { challenge: Challenge; mark: ReturnTyp
       >
         <span
           role="img"
-          aria-label={t(`problems.status.${mark ?? "untouched"}`)}
+          aria-label={t(`problems.status.${status ?? "untouched"}.label`)}
           className={cn(
             "flex size-6 items-center justify-center rounded-full border text-sm",
-            mark === "solved" && "border-solved bg-solved text-solved-foreground",
-            mark === "attempted" && "border-attempted text-attempted",
+            status === "solved" && "border-solved bg-solved text-solved-foreground",
+            status === "attempted" && "border-attempted text-attempted",
           )}
         >
-          {mark ? t(`problems.mark.${mark}`) : ""}
+          {status ? t(`problems.status.${status}.icon`) : ""}
         </span>
         <span>{localized(challenge.title)}</span>
         <span className="text-sm text-muted-foreground">
