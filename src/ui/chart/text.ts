@@ -7,7 +7,7 @@ import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Node, NodeId, Value } from "@/lang/types";
 import { conditionOf, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/walk";
-import { emptyExpr, getBlock, keyOf } from "@/blocks/registry";
+import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
 import type { Generated, BlockDef, Side } from "@/blocks/types";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
 import { str, writeValue } from "@/runtime/values";
@@ -116,7 +116,7 @@ const plain = (part: Part) => !part.variable && !part.empty && !part.underline;
 
 /** A node's notation (`blocks.md`, Notation). */
 export function notationOf(node: Node): string {
-  return getBlock(keyOf(node)).notation(node);
+  return getBlockDef(keyOf(node)).notation(node);
 }
 
 /** Whether an expression's notation ends with `closer`: a call's `)`, a list's or an item's `]`. */
@@ -130,14 +130,14 @@ export function isCall(expr: Expr): boolean {
   return closedBy(expr, ")");
 }
 
-const precedenceOf = (expr: Expr) => getBlock(keyOf(expr)).precedence?.(expr);
+const precedenceOf = (expr: Expr) => getBlockDef(keyOf(expr)).precedence?.(expr);
 
 /**
  * The precedence the input in slot `slot` of `node` binds at: the node's own, as an operator's
  * inputs do, else an atom's where the slot declares one (the list of an item), else none.
  */
 export function bindsAt(node: Node, slot: string): number | undefined {
-  const def = getBlock(keyOf(node));
+  const def = getBlockDef(keyOf(node));
   const own = def.shape === "expr" ? def.precedence?.(node as Expr) : undefined;
   return own ?? (def.slots.find((s) => s.name === slot)?.atom ? PRECEDENCE.atom : undefined);
 }
@@ -179,7 +179,7 @@ export type Held =
 
 /** What the placeholder `name` of `node`'s notation or template holds. */
 export function placeholderValue(node: Node, name: string): Held | undefined {
-  const def = getBlock(keyOf(node));
+  const def = getBlockDef(keyOf(node));
   const slot = def.slots.find((s) => s.name === name);
   if (!slot) {
     // A builtin's notation names its parameters (`{a}`, `{b}`).
@@ -296,18 +296,18 @@ function stmtSlotParts(node: Node, def: BlockDef, name: string): Part[] {
 
 /** What one slot of a statement holds, as the chart writes it. */
 export function slotParts(node: Node, slot: string): Part[] {
-  return stmtSlotParts(node, getBlock(keyOf(node)), slot);
+  return stmtSlotParts(node, getBlockDef(keyOf(node)), slot);
 }
 
 /** A statement's notation, or a generated node's text, as parts, one or more per slot. */
 function stmtParts(notation: string, node: Node): Part[] {
-  const def = getBlock(keyOf(node));
+  const def = getBlockDef(keyOf(node));
   return templateParts(notation, (name) => stmtSlotParts(node, def, name));
 }
 
 /** A node's notation as parts: an expression as the chart writes it, a statement by its slots. */
 export function notationParts(node: Node): Part[] {
-  const def = getBlock(keyOf(node));
+  const def = getBlockDef(keyOf(node));
   return def.shape === "expr" ? exprParts(node as Expr) : stmtParts(def.notation(node), node);
 }
 
@@ -318,7 +318,7 @@ export function notationText(node: Node): string {
 
 /** Whether a statement has an input still to fill in any of its slots, at any depth. */
 export function hasInputToFill(node: Node): boolean {
-  const def = getBlock(keyOf(node));
+  const def = getBlockDef(keyOf(node));
   return def.slots.some((slot) => stmtSlotParts(node, def, slot.name).some((part) => part.empty));
 }
 
@@ -327,7 +327,7 @@ export function hasInputToFill(node: Node): boolean {
  * check asked as every diamond asks its condition (`chart.condition`); none for another block.
  */
 export function generatedNotation(node: Node, part: Generated): string | undefined {
-  const chart = getBlock(keyOf(node)).chart;
+  const chart = getBlockDef(keyOf(node)).chart;
   if (!chart || !("counted" in chart)) return undefined;
   const text = chart.counted[part];
   if (part !== "check") return text;
@@ -365,7 +365,7 @@ export function dataText(data: Data): string {
 }
 
 /** The block whose notation writes a variable with its value. */
-const ASSIGN = getBlock("assign").create();
+const ASSIGN = getBlockDef("assign").create();
 
 /**
  * A variable shown with its value, written as an assignment writes it (`n ← 15`): its name in
@@ -373,7 +373,8 @@ const ASSIGN = getBlock("assign").create();
  */
 export function assignmentParts(name: string, value: string): Part[] {
   return templateParts(notationOf(ASSIGN), (placeholderName) =>
-    getBlock(keyOf(ASSIGN)).slots.find((slot) => slot.name === placeholderName)?.role === "target"
+    getBlockDef(keyOf(ASSIGN)).slots.find((slot) => slot.name === placeholderName)?.role ===
+    "target"
       ? [{ text: name, variable: true }]
       : [{ text: value }],
   );

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
-import { BLOCKS } from "@/blocks/registry";
+import { BLOCK_DEFS } from "@/blocks/registry";
 import { mulberry32 } from "@/runtime/random";
 import { unparse } from "./emit";
 import { isParseError, NO_DEFINITIONS, parse, type ParseError, type ParseScope } from "./parse";
@@ -140,7 +140,7 @@ describe("errors carry a position", () => {
 
 // ---------------------------------------------------------------- property test
 
-const BUILTINS = [...BLOCKS.values()].filter((def) => def.key.startsWith("call:"));
+const BUILTINS = [...BLOCK_DEFS.values()].filter((def) => def.key.startsWith("call:"));
 const NAMES = ["a", "b", "c", "n", "total", "xs"];
 const RAWS = ["0", "1", "2", "42", "1.5", "2.0", "1e3", "0.25"];
 const STRINGS = ["", "a", "a b", 'say "hi"', "line\n", "tab\t", "back\\slash", "it's"];

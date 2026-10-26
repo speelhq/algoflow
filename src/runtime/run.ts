@@ -2,7 +2,7 @@
 // owns frames, dispatch, counting, limits, and the Runner contract.
 import { inputValue, toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Name, NodeId, Program, Stmt, Value } from "@/lang/types";
-import { getBlock, keyOf } from "@/blocks/registry";
+import { getBlockDef, keyOf } from "@/blocks/registry";
 import type { ExprRunner, RunContext, Signal, StmtRunner } from "@/blocks/types";
 import { RuntimeFailure } from "./errors";
 import { createRandom } from "./random";
@@ -30,20 +30,20 @@ export function run(program: Program, inputs: Readonly<Record<Name, Data>>, seed
     program,
     heap,
     *eval(expr: Expr) {
-      const def = getBlock(keyOf(expr));
+      const def = getBlockDef(keyOf(expr));
       return yield* (def.run as ExprRunner)(expr, ctx);
     },
     *exec(body: Stmt[]) {
       for (const stmt of body) {
         yield { type: "enter", nodeId: stmt.id };
-        const def = getBlock(keyOf(stmt));
+        const def = getBlockDef(keyOf(stmt));
         const signal: Signal = yield* (def.run as StmtRunner)(stmt, ctx);
         if (signal) return signal;
       }
       return undefined;
     },
     *locate(target, at) {
-      const def = getBlock(keyOf(target));
+      const def = getBlockDef(keyOf(target));
       if (!def.locate) throw new Error(`${def.key} is no target`);
       return yield* def.locate(target, ctx, at);
     },

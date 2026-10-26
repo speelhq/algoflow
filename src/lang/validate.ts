@@ -1,7 +1,7 @@
 // Every validation code, run after every edit and before every run: scope rules,
 // names, empty slots, and field defaults.
 // Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
-import { builtinKey, getBlock, hasBlock, keyOf } from "@/blocks/registry";
+import { builtinKey, getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
 import { expectedArgs, type BlockDef, type Slot } from "@/blocks/types";
 import {
   NAME_PATTERN,
@@ -24,7 +24,7 @@ export function isValidName(name: string): boolean {
 
 /** A builtin call key (`abs`, `randint`, …) may not be redefined. */
 function isBuiltinName(name: string): boolean {
-  return hasBlock(builtinKey(name));
+  return hasBlockDef(builtinKey(name));
 }
 
 type Scope = { loop: number; inFunction: boolean };
@@ -108,7 +108,7 @@ class Collector {
   ): Set<Name> {
     const declared = new Set<Name>();
     for (const stmt of stmts) {
-      const def = getBlock(keyOf(stmt));
+      const def = getBlockDef(keyOf(stmt));
       this.slots(stmt, def);
       this.calls(stmt);
       this.reads(stmt, visible, inner);
@@ -168,7 +168,7 @@ class Collector {
           this.report(stmt.id, "E_EMPTY_SLOT", { slot });
           continue;
         }
-        this.requiredSlots(expr, getBlock(keyOf(expr)), stmt.id);
+        this.requiredSlots(expr, getBlockDef(keyOf(expr)), stmt.id);
         visit(expr);
       }
     };
@@ -188,7 +188,7 @@ class Collector {
 
   private calls(stmt: Stmt): void {
     for (const expr of stmtExprs(stmt)) {
-      const def = getBlock(keyOf(expr));
+      const def = getBlockDef(keyOf(expr));
       const callee = def.callee?.(expr);
       if (!callee) continue;
       switch (callee.family) {

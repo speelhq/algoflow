@@ -12,7 +12,7 @@ import type { Data, Name, NodeId, Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
 import { bodyStmts, diamondConditions, nodesById, ownerStmts } from "@/lang/walk";
 import { clamp } from "@/lib/utils";
-import { getBlock, keyOf } from "@/blocks/registry";
+import { getBlockDef, keyOf } from "@/blocks/registry";
 import { outcomeOf } from "@/runtime/outcome";
 import { run as startRunner } from "@/runtime/run";
 import type { Done, Runner, State } from "@/runtime/types";
@@ -182,7 +182,7 @@ function loopBodies(program: Program, all: Map<NodeId, NodeId[]>): Map<NodeId, S
   const found = new Map<NodeId, Set<NodeId>>();
   for (const [id, inside] of all) {
     const node = nodes.get(id);
-    if (node && getBlock(keyOf(node)).loop) found.set(id, new Set(inside));
+    if (node && getBlockDef(keyOf(node)).loop) found.set(id, new Set(inside));
   }
   return found;
 }

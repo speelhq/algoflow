@@ -7,7 +7,7 @@ import { parseSync, Visitor, type Expression, type TemplateLiteral } from "oxc-p
 import { ERROR_CODES } from "@/i18n/codes";
 import { flatten } from "@/i18n/flatten";
 import { errorKey, blockPrefix } from "@/i18n/t";
-import { BLOCKS } from "@/blocks/registry";
+import { BLOCK_DEFS } from "@/blocks/registry";
 import { lineOf, lineStarts } from "./lines";
 
 export type Source = { file: string; text: string };
@@ -86,7 +86,7 @@ export function scan(source: Source): Scan {
 
 /** Whether `key` is one the code builds from data: a registered block's, or an error code's. */
 function builtFromData(): (key: string) => boolean {
-  const prefixes = [...BLOCKS.keys()].map(blockPrefix);
+  const prefixes = [...BLOCK_DEFS.keys()].map(blockPrefix);
   const errors = new Set<string>(ERROR_CODES.map(errorKey));
   return (key) => errors.has(key) || prefixes.some((prefix) => key.startsWith(prefix));
 }
