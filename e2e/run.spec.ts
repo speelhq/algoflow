@@ -133,7 +133,7 @@ test.describe("running FizzBuzz", () => {
     await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
     await page.locator('[data-chart-node="fzb-if15-001"] tspan[data-slot="cond"]').first().click();
     await expect(page.getByTestId("position")).toHaveCount(0);
-    await expect(page.getByTestId("node-editor").locator("[data-value-line]")).toBeFocused();
+    await expect(page.getByTestId("block-editor").locator("[data-value-line]")).toBeFocused();
   });
 
   test("Esc clears the breakpoint first, then stops", async ({ page }) => {
@@ -152,7 +152,7 @@ test("while running, the case and the solution stay put", async ({ page }) => {
   await page.goto("/#/p/fizzbuzz");
   await runPaused(page);
   await expect(page.getByTestId("case-select")).toBeDisabled();
-  await expect(page.getByTestId("input-node")).toHaveCount(0);
+  await expect(page.getByTestId("input-chart-node")).toHaveCount(0);
   await page.getByTestId("tab-problem").click();
   await expect(page.getByRole("button", { name: "Show solution" })).toBeDisabled();
   await page.getByRole("button", { name: "■ Stop" }).click();
@@ -162,7 +162,7 @@ test("while running, the case and the solution stay put", async ({ page }) => {
 test("reopening a problem selects its first case again", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/fizzbuzz");
-  await page.getByTestId("input-node").click();
+  await page.getByTestId("input-chart-node").click();
   await page.getByRole("menuitem", { name: "n ← 3" }).click();
   await expect(page.getByTestId("chart")).toContainText("Input n ← 3");
   await page.getByRole("link", { name: "← Problems" }).click();
@@ -192,12 +192,12 @@ test("Run with a diagnostic leads to its node instead of running", async ({ page
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "▶ Run" }).click();
-  await expect(page.getByTestId("node-editor").getByRole("alert")).toContainText("is empty");
+  await expect(page.getByTestId("block-editor").getByRole("alert")).toContainText("is empty");
   // Once the slot is filled the message is gone.
   // The value's line, after the target's.
-  await page.getByTestId("node-editor").locator("[data-value-line]").last().click();
+  await page.getByTestId("block-editor").locator("[data-value-line]").last().click();
   await page.keyboard.type("1");
-  await expect(page.getByTestId("node-editor").getByRole("alert")).toHaveCount(0);
+  await expect(page.getByTestId("block-editor").getByRole("alert")).toHaveCount(0);
   await expect(page.locator('[data-chart-node="asg-empty-01"]')).toHaveAttribute(
     "data-selected",
     "true",

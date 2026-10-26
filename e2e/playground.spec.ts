@@ -16,7 +16,7 @@ test("New opens an empty program that keeps its title and is listed", async ({ p
   await expect(page.getByRole("button", { name: "✓ Submit" })).toHaveCount(0);
   await expect(page.getByTestId("tab-problem")).toHaveCount(0);
   await expect(page.getByTestId("tab-result")).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByTestId("input-node")).toHaveCount(0);
+  await expect(page.getByTestId("input-chart-node")).toHaveCount(0);
   await page.getByTestId("program-title").fill("Squares");
   await expect(page).toHaveTitle("Squares — AlgoFlow");
   await page.reload();

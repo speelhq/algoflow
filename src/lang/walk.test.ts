@@ -1,7 +1,7 @@
 // Every node maps to the statement that contains it.
 import { describe, expect, it } from "vitest";
 import { ast, program, tid } from "@/blocks/testing";
-import { bodyStmts, conditionOf, diamondConditions, ownerStmts, paramArg } from "./walk";
+import { bodyStmts, conditionOf, diamondConditions, ownersById, paramArg } from "./walk";
 
 const { assign, num, bin, v, if_, for_, while_, print, ret, call } = ast;
 
@@ -18,7 +18,7 @@ describe("paramArg", () => {
   });
 });
 
-describe("ownerStmts", () => {
+describe("ownersById", () => {
   it("maps expressions to their statement and statements and functions to themselves", () => {
     const cond = bin("==", v("n"), num(1));
     const inner = print(v("n"));
@@ -26,7 +26,7 @@ describe("ownerStmts", () => {
     const body = ret(bin("+", v("a"), num(1)));
     const fn = { id: tid(), name: "inc", params: ["a"], body: [body] };
     const p = program([assign("n", num(1)), branch], { functions: [fn] });
-    const owners = ownerStmts(p);
+    const owners = ownersById(p);
 
     expect(owners.get(cond.id)).toBe(branch.id);
     expect(owners.get(cond.kind === "binop" ? cond.left.id : "")).toBe(branch.id);

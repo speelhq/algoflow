@@ -134,7 +134,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
       ref={setRef}
       {...listeners}
       data-chart-node={node.id}
-      data-node-id={node.owner ?? undefined}
+      data-owner={node.owner ?? undefined}
       data-selected={outline === "selected" || undefined}
       data-taken={taken || undefined}
       data-current={current ?? undefined}
@@ -324,7 +324,7 @@ export function Chart(props: Props) {
     if (!element || !onSelect) return;
     const click = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target : null;
-      const owner = target?.closest<SVGGElement>("[data-node-id]")?.dataset.nodeId;
+      const owner = target?.closest<SVGGElement>("[data-owner]")?.dataset.owner;
       const part = target?.closest<SVGElement>("[data-slot]");
       if (owner) onSelect(owner, part?.dataset.slot, part?.dataset.hole);
     };
@@ -354,7 +354,7 @@ export function Chart(props: Props) {
     if (!element || !flags) return;
     const over = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target : null;
-      const owner = target?.closest<SVGGElement>("[data-node-id]")?.dataset.nodeId;
+      const owner = target?.closest<SVGGElement>("[data-owner]")?.dataset.owner;
       hold(owner && flags.owners.has(owner) ? owner : null);
     };
     const out = () => hold(null);
