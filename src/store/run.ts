@@ -43,7 +43,7 @@ export type RunState = {
   /** The index of the frame shown; it follows the running frame. */
   frame: number;
   stdout: string[];
-  /** The last check result per diamond, by statement id (✓ / ✗). */
+  /** The last check result per diamond, by node id (✓ / ✗). */
   marks: Record<NodeId, boolean>;
   /** The statements entered in the current pass (the taken path). */
   taken: Record<NodeId, true>;

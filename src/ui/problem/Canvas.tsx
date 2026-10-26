@@ -1,5 +1,5 @@
 // The canvas: the solution band when the solution is shown, the path bar, the chart, while
-// running the narration line, and the run bar. The Input nodes show the chosen case and list
+// running the narration line, and the run bar. The Input chart nodes show the chosen case and list
 // every case.
 import { useCallback, useMemo } from "react";
 import type { Challenge } from "@/challenges";

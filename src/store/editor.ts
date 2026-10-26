@@ -14,15 +14,15 @@ export function tabsOf(challenge: boolean): readonly [PanelTab, ...PanelTab[]] {
 export type EditorState = {
   tab: PanelTab;
   selectedId: NodeId | null;
-  /** The slot the editor opens focused on: the one clicked on the node. */
+  /** The slot the editor opens focused on: the one clicked on the chart node. */
   slot: string | null;
-  /** The input still to fill clicked on the node, inside that slot. */
+  /** The input still to fill clicked on the chart node, inside that slot. */
   hole: NodeId | null;
   /** The selected node's editor is open; a press outside it closes it and keeps the selection. */
   editing: boolean;
   hoveredId: NodeId | null;
   solution: boolean;
-  /** Shown beside its node until the selection changes. */
+  /** Shown beside its chart node until the selection changes. */
   diagnostic: Diagnostic | null;
   setTab: (tab: PanelTab) => void;
   /** Selects a node and opens its editor, on `slot` (and `hole`) when clicked; `edit: false` only selects. */

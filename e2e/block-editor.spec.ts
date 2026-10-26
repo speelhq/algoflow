@@ -1,4 +1,4 @@
-// Editing: build FizzBuzz from an empty chart through the + menu and the node editors, by
+// Editing: build FizzBuzz from an empty chart through the + menu and the block editors, by
 // typing and choosing in value lines, and submit it to Accepted.
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
@@ -132,13 +132,13 @@ test("a caption shows on its chart node and as a comment in Python", async ({ pa
   await expect(page.getByTestId("python-code")).toContainText("    # Is i a multiple of 15?");
 });
 
-test("the editor opens on the node's right inside the canvas, the chart scrolled to make room", async ({
+test("the editor opens on the chart node's right inside the canvas, the chart scrolled to make room", async ({
   page,
 }) => {
   await seedProgress(page, {});
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
-  // The rightmost node: the centered chart leaves no room for the editor beside it.
+  // The rightmost chart node: the centered chart leaves no room for the editor beside it.
   const node = page.locator('[data-chart-node="fzb-prfb-001"]');
   await node.click({ position: { x: 8, y: 8 } });
   await expect(editor(page)).toBeVisible();
@@ -155,13 +155,13 @@ test("the editor opens on the node's right inside the canvas, the chart scrolled
     .toBe("ok");
 });
 
-test("the editor is placed by its node without a control on it", async ({ page }) => {
+test("the editor is placed by its chart node without a control on it", async ({ page }) => {
   await seedProgress(page, {});
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-chart-node="fzb-prfz-001"]').click({ position: { x: 8, y: 20 } });
   await expect(editor(page)).toBeVisible();
-  // Nothing under the node is focusable or announces a popup, apart from the popup's focus guards.
+  // Nothing under the chart node is focusable or announces a popup, apart from the popup's focus guards.
   await expect(
     page
       .getByTestId("editor-anchor")

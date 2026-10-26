@@ -26,7 +26,7 @@ test.beforeEach(async ({ page }) => {
   await seedProgress(page, {});
 });
 
-test("Delete removes the selected node, and undo and redo walk it back", async ({ page }) => {
+test("Delete removes the selected block, and undo and redo walk it back", async ({ page }) => {
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   const undo = page.getByRole("button", { name: "Undo" });
@@ -64,7 +64,7 @@ test("undo, redo, and duplicate act while a value line has the keyboard", async 
   await expect(chart.locator("text", { hasText: "print(1)" })).toHaveCount(2);
 });
 
-test("Ctrl+D duplicates the selected node, and Esc clears the selection", async ({ page }) => {
+test("Ctrl+D duplicates the selected block, and Esc clears the selection", async ({ page }) => {
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await node(page, "fzb-prfz-001").click({ position: { x: 8, y: 20 } });
@@ -77,7 +77,7 @@ test("Ctrl+D duplicates the selected node, and Esc clears the selection", async 
   await expect(page.locator("[data-selected]")).toHaveCount(0);
 });
 
-test("a node dragged onto another connector moves there", async ({ page }) => {
+test("a block dragged onto another connector moves there", async ({ page }) => {
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   // The tab is chosen first: dnd-kit stops every click for 50 ms after a drop.

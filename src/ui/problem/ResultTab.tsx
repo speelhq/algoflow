@@ -1,5 +1,5 @@
 // The `Result` tab for one case: the case selector (the same choice as the Input
-// nodes) with `Submit` beside it, the variables of the shown frame, and `Output` beside
+// chart nodes) with `Submit` beside it, the variables of the shown frame, and `Output` beside
 // `Expected`; the
 // chosen case's verdict and its first differing row once the run has ended there.
 // Before any run: the selector, the chosen case's `Expected`, and `result.empty`.

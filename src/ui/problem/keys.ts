@@ -1,7 +1,7 @@
 // The page's keyboard table: Ctrl/Cmd+Enter is the play button; in run mode → steps, ← goes
 // back, Ctrl/Cmd+→ skips; Esc clears the breakpoint while running, else stops a run, else clears
 // the selection; Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z undo and redo, Ctrl/Cmd+D duplicates the
-// selected node, and Delete and Backspace remove it. Shift+→ (Step over) is not bound: the
+// selected block, and Delete and Backspace remove it. Shift+→ (Step over) is not bound: the
 // driver has no Step over. A key goes to the page only when nothing focused owns it.
 import { useEffect } from "react";
 import { duplicateStmt, removeStmt } from "@/lang/edit";

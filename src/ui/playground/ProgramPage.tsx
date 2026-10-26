@@ -1,4 +1,4 @@
-// A Playground program: the Problem page without the `Problem` tab, the Input nodes, and
+// A Playground program: the Problem page without the `Problem` tab, the Input chart nodes, and
 // Submit; its top bar has `← Playground`, an editable title, and `Export` before undo. Its
 // route has opened the program before it draws (`route.ts`).
 import { t } from "@/i18n/t";

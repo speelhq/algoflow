@@ -1,4 +1,4 @@
-// Dragging a node onto a connector: the nodes of statements are draggable, the connectors are
+// Dragging a chart node onto a connector: the chart nodes of statements are draggable, the connectors are
 // drop targets, and the page decides whether a drop applies (`onMove` returns the reason a
 // drop is refused). A refused drop shows its reason beside the connector for a moment.
 import {
@@ -28,7 +28,7 @@ export type Moves = {
 type Dragged = { owner: NodeId; text: string };
 type Refusal = { edge: string; text: string };
 
-/** The listeners that make a node draggable, and the ref they need; inert when disabled. */
+/** The listeners that make a chart node draggable, and the ref they need; inert when disabled. */
 export function useNodeDrag(node: ChartNode, enabled: boolean) {
   const { setNodeRef, listeners } = useDraggable({
     id: node.id,
@@ -70,7 +70,7 @@ export function DropZone(props: { edge: ChartEdge; disabled: boolean; children: 
 const placeOf = (data: unknown): Place | undefined =>
   data && typeof data === "object" && "place" in data ? (data.place as Place) : undefined;
 
-/** The drag context of one chart, with the ghost of the dragged node and a refusal's note. */
+/** The drag context of one chart, with the ghost of the dragged chart node and a refusal's note. */
 export function ChartDrag(props: {
   moves: Moves | undefined;
   edges: readonly ChartEdge[];

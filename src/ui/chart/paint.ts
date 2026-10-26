@@ -1,5 +1,5 @@
 // What the chart draws while running, derived from the driver state
-// and the layout: the taken path, the ✓ / ✗ marks, the current node, and the breakpoint.
+// and the layout: the taken path, the ✓ / ✗ marks, the current chart node, and the breakpoint.
 // Chart nodes are matched to statements through `owner` and `role`, never through a kind.
 import type { NodeId } from "@/lang/types";
 import type { StepEvent } from "@/store/steps";
@@ -26,13 +26,13 @@ export type Paint = {
   breakpoint: string | null;
 };
 
-/** The node that stands for a statement: a counted loop's check, else its own node. */
+/** The chart node that stands for a statement: a counted loop's check, else its own chart node. */
 export function nodeFor(nodes: readonly ChartNode[], owner: NodeId): ChartNode | undefined {
   const own = nodes.filter((node) => node.owner === owner);
   return own.find((node) => node.role === "check") ?? own.find((node) => node.role === "stmt");
 }
 
-/** The current node: a counted loop's init on its `enter`, its check on its other events. */
+/** The current chart node: a counted loop's init on its `enter`, its check on its other events. */
 export function currentNode(chart: ChartLayout, view: RunView): string | null {
   if (view.activeId === null) return null;
   const owner = view.activeId;
