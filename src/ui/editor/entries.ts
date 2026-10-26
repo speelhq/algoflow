@@ -3,7 +3,7 @@
 import { exprKind, type Kinds } from "@/lang/kinds";
 import type { Expr } from "@/lang/types";
 import { childSlots } from "@/lang/walk";
-import { BLOCKS, getBlock, keyOf, type BlockDef } from "@/blocks/registry";
+import { BLOCK_DEFS, getBlockDef, keyOf, type BlockDef } from "@/blocks/registry";
 import type { MenuEntry, MenuGroup } from "@/blocks/types";
 import { blockText } from "@/i18n/t";
 import { isCall } from "@/ui/chart/text";
@@ -32,7 +32,7 @@ let cached: Entry[] | undefined;
 
 /** Every entry of the registered blocks, in registry order (the order of the value list). */
 export function allEntries(): Entry[] {
-  cached ??= [...BLOCKS.values()].flatMap((def) =>
+  cached ??= [...BLOCK_DEFS.values()].flatMap((def) =>
     (def.menu ?? []).map((menu) => ({
       id: base(def, menu),
       def,
@@ -77,7 +77,7 @@ export function entryOf(expr: Expr, kinds: Kinds): Entry | undefined {
 
 /** The label of what an expression is: its entry's, else its block's. */
 export function labelOf(expr: Expr, kinds: Kinds): string {
-  return entryOf(expr, kinds)?.label ?? blockText(getBlock(keyOf(expr)).key, "label");
+  return entryOf(expr, kinds)?.label ?? blockText(getBlockDef(keyOf(expr)).key, "label");
 }
 
 export const GROUPS: readonly MenuGroup[] = [

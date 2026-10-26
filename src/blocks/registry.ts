@@ -1,5 +1,5 @@
 // The only registry. The interpreter, the emitter, the parser, validation, the chart, the block
-// menu, and the node editor all dispatch through `getBlock(keyOf(node))`.
+// menu, and the node editor all dispatch through `getBlockDef(keyOf(node))`.
 import type { Node } from "@/lang/types";
 import { assign } from "./assign";
 import { binop } from "./binop";
@@ -70,27 +70,28 @@ const ALL: BlockDef[] = [
   call,
 ];
 
-export const BLOCKS: ReadonlyMap<string, BlockDef> = new Map(ALL.map((def) => [def.key, def]));
+export const BLOCK_DEFS: ReadonlyMap<string, BlockDef> = new Map(ALL.map((def) => [def.key, def]));
 
-export function hasBlock(key: string): boolean {
-  return BLOCKS.has(key);
+export function hasBlockDef(key: string): boolean {
+  return BLOCK_DEFS.has(key);
 }
 
-export function getBlock(key: string): BlockDef {
-  const def = BLOCKS.get(key);
-  if (!def) throw new Error(`unknown block "${key}"`);
+export function getBlockDef(key: string): BlockDef {
+  const def = BLOCK_DEFS.get(key);
+  if (!def) throw new Error(`unknown block definition "${key}"`);
   return def;
 }
 
 /** Registry key of an AST node: its kind, or `call:<fn>` / `method:<name>` for builtins. */
 export function keyOf(node: Node): string {
-  if (node.kind === "call") return BLOCKS.has(builtinKey(node.fn)) ? builtinKey(node.fn) : "call";
+  if (node.kind === "call")
+    return BLOCK_DEFS.has(builtinKey(node.fn)) ? builtinKey(node.fn) : "call";
   if (node.kind === "method") return methodKey(node.name);
   return node.kind;
 }
 
 /** Block menu entries of one category, in registration order. */
-export function menuBlocks(category: Category): BlockDef[] {
+export function menuBlockDefs(category: Category): BlockDef[] {
   return ALL.filter((def) => def.category === category && !def.hidden);
 }
 

@@ -15,7 +15,7 @@ import type {
 import { isDone } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Done, Event, State } from "@/runtime/types";
-import { getBlock, keyOf } from "./registry";
+import { getBlockDef, keyOf } from "./registry";
 
 let counter = 0;
 
@@ -96,7 +96,7 @@ export const ast = {
 
 /** The notation its block writes `node` in (`blocks.md`, Notation). */
 export function notation(node: Expr | Stmt): string {
-  return getBlock(keyOf(node)).notation(node);
+  return getBlockDef(keyOf(node)).notation(node);
 }
 
 export function program(

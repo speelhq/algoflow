@@ -6,7 +6,7 @@
 import { blockText, t } from "@/i18n/t";
 import { placeContext } from "@/lang/scope";
 import type { Place, Program, Stmt } from "@/lang/types";
-import { getBlock, menuBlocks } from "@/blocks/registry";
+import { getBlockDef, menuBlockDefs } from "@/blocks/registry";
 import { CATEGORIES, type Category } from "@/blocks/categories";
 import { parseScope } from "@/python/parse";
 import { blankTemplate } from "@/ui/chart/text";
@@ -32,7 +32,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
   const here = placeContext(program, place);
   const groups: BlockMenuGroup[] = [];
   for (const category of CATEGORIES) {
-    const entries = menuBlocks(category)
+    const entries = menuBlockDefs(category)
       .filter((def) => def.shape === "stmt")
       .map((def): BlockMenuEntry => {
         const missing =
@@ -67,7 +67,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
 function callStatement(program: Program, fn: LineFunction): Stmt {
   const call = callExpr(fn, parseScope(program));
   if (!call) throw new Error(`"${fn.name}" is no function of the program`);
-  const statement = getBlock("expr").create() as Extract<Stmt, { kind: "expr" }>;
+  const statement = getBlockDef("expr").create() as Extract<Stmt, { kind: "expr" }>;
   return { ...statement, expr: call };
 }
 
