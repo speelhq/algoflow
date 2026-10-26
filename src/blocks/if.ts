@@ -26,8 +26,8 @@ export const ifStmt = defineStmt<"if">({
   },
   python: (node, ctx) => [
     `if ${ctx.expr(node.cond)}:`,
-    ctx.block(node.then),
-    ...(node.else.length > 0 ? ["else:", ctx.block(node.else)] : []),
+    ctx.region(node.then),
+    ...(node.else.length > 0 ? ["else:", ctx.region(node.else)] : []),
   ],
   notation: () => "{cond}",
 });

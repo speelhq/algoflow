@@ -24,6 +24,6 @@ export const whileStmt = defineStmt<"while">({
     }
     return undefined;
   },
-  python: (node, ctx) => [`while ${ctx.expr(node.cond)}:`, ctx.block(node.body)],
+  python: (node, ctx) => [`while ${ctx.expr(node.cond)}:`, ctx.region(node.body)],
   notation: () => "{cond}",
 });
