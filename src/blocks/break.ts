@@ -1,4 +1,4 @@
-// The `break` block
+// The `break` block definition
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 

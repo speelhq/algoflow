@@ -1,4 +1,4 @@
-// The `num` block: `raw` is the source text; float when raw has `.`, `e`, or `E`.
+// The `num` block definition: `raw` is the source text; float when raw has `.`, `e`, or `E`.
 import { newId } from "@/lang/id";
 import { numberLiteral } from "@/python/number";
 import { makeNumber } from "@/runtime/values";

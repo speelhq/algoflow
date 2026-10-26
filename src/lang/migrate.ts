@@ -1,6 +1,6 @@
 // Import validates a program of the current `version`. It refuses what no edit could make: a
 // wrong shape, an unknown kind, a bad id, a literal field its block would not write, a class,
-// which no registered block constructs. What editing reaches is validate()'s job.
+// which no registered block definition constructs. What editing reaches is validate()'s job.
 import { getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
 import { normalizeCaption } from "./edit";
 import { isNodeId } from "./id";

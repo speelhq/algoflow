@@ -1,4 +1,4 @@
-// The `assign` block: `<target> = <value>`; the value is stored at its target's place.
+// The `assign` block definition: `<target> = <value>`; the value is stored at its target's place.
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 import { emptyExpr } from "./empty";

@@ -1,4 +1,4 @@
-// The `call` block: a user function call, positional with exact arity.
+// The `call` block definition: a user function call, positional with exact arity.
 import { newId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { defineExpr } from "./types";

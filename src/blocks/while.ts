@@ -1,4 +1,4 @@
-// The `while` block: a `loop` event after the compare of each iteration.
+// The `while` block definition: a `loop` event after the compare of each iteration.
 import { newId } from "@/lang/id";
 import { decide } from "@/runtime/condition";
 import { defineStmt } from "./types";

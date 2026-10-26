@@ -30,7 +30,7 @@ const made = (def: BlockDef, menu: MenuEntry): Expr => ({
 
 let cached: Entry[] | undefined;
 
-/** Every entry of the registered blocks, in registry order (the order of the value list). */
+/** Every entry of the registered block definitions, in registry order (the order of the value list). */
 export function allEntries(): Entry[] {
   cached ??= [...BLOCK_DEFS.values()].flatMap((def) =>
     (def.menu ?? []).map((menu) => ({

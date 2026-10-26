@@ -1,4 +1,4 @@
-// The `continue` block
+// The `continue` block definition
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 
