@@ -7,12 +7,12 @@ export const variable = defineExpr<"var">({
   category: "basic",
   slots: [{ name: "name", role: "name", required: true }],
   create: () => ({ id: newId(), kind: "var", name: "" }),
-  *run(node, ctx) {
-    return (yield* ctx.read(node, node.id)).value;
+  *run(block, ctx) {
+    return (yield* ctx.read(block, block.id)).value;
   },
-  *locate(node) {
-    return { var: node.name };
+  *locate(block) {
+    return { var: block.name };
   },
-  python: (node) => node.name,
+  python: (block) => block.name,
   notation: () => "{name}",
 });

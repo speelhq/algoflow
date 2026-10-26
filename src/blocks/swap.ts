@@ -12,22 +12,22 @@ export const swap = defineStmt<"swap">({
     { name: "b", role: "target", required: true },
   ],
   create: () => ({ id: newId(), kind: "swap", a: emptyExpr(), b: emptyExpr() }),
-  *run(node, ctx) {
+  *run(block, ctx) {
     // Python reads `b` then `a`, then finds `a` again and writes it, then `b`.
-    const second = yield* ctx.read(node.b, node.id);
-    const first = yield* ctx.read(node.a, node.id);
+    const second = yield* ctx.read(block.b, block.id);
+    const first = yield* ctx.read(block.a, block.id);
     for (const [target, read] of [
-      [node.a, second],
-      [node.b, first],
+      [block.a, second],
+      [block.b, first],
     ] as const) {
-      const ref = yield* ctx.locate(target, node.id);
+      const ref = yield* ctx.locate(target, block.id);
       ctx.save(ref, read.value);
-      yield { type: "write", nodeId: node.id, ref, value: read.value, from: read.ref };
+      yield { type: "write", nodeId: block.id, ref, value: read.value, from: read.ref };
     }
     return undefined;
   },
-  python: (node, ctx) => {
-    const [a, b] = [ctx.expr(node.a), ctx.expr(node.b)];
+  python: (block, ctx) => {
+    const [a, b] = [ctx.expr(block.a), ctx.expr(block.b)];
     return [`${a}, ${b} = ${b}, ${a}`];
   },
   notation: () => "swap({a}, {b})",

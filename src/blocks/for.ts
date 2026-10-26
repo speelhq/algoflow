@@ -35,28 +35,28 @@ export const forStmt = defineStmt<"for">({
     stop: emptyExpr(),
     body: [],
   }),
-  *run(node, ctx) {
-    const start = yield* ctx.eval(node.start);
-    const stop = yield* ctx.eval(node.stop);
+  *run(block, ctx) {
+    const start = yield* ctx.eval(block.start);
+    const stop = yield* ctx.eval(block.stop);
     if (start.t !== "int" || stop.t !== "int") {
-      return ctx.fail(node.id, "E_TYPE", {
+      return ctx.fail(block.id, "E_TYPE", {
         left: typeName(start),
         right: typeName(stop),
       });
     }
     for (let i = start.v; i < stop.v; i += 1) {
       const value = { t: "int", v: i } as const;
-      ctx.save({ var: node.var }, value);
-      yield { type: "loop", nodeId: node.id, var: node.var, value };
-      const signal = yield* ctx.exec(node.body);
+      ctx.save({ var: block.var }, value);
+      yield { type: "loop", nodeId: block.id, var: block.var, value };
+      const signal = yield* ctx.exec(block.body);
       if (signal?.kind === "break") break;
       if (signal?.kind === "return") return signal;
     }
     return undefined;
   },
-  python: (node, ctx) => [
-    `for ${node.var} in range(${isZero(node.start) ? "" : `${ctx.expr(node.start)}, `}${ctx.expr(node.stop)}):`,
-    ctx.region(node.body),
+  python: (block, ctx) => [
+    `for ${block.var} in range(${isZero(block.start) ? "" : `${ctx.expr(block.start)}, `}${ctx.expr(block.stop)}):`,
+    ctx.region(block.body),
   ],
   // Its init names it in the block menu and the editor.
   notation: () => COUNTED.init,

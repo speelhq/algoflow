@@ -77,7 +77,7 @@ describe("parse", () => {
     expect(ok("9007199254740993.0")).toMatchObject({ kind: "num", float: true });
   });
 
-  it("gives every node an id and no mark of how it was made", () => {
+  it("gives every block an id and no mark of how it was made", () => {
     const expr = ok("a + b");
     expect(expr.id).toHaveLength(12);
     expect(Object.keys(expr).toSorted()).toEqual(["id", "kind", "left", "op", "right"]);
@@ -207,7 +207,7 @@ function generator(seed: number) {
   return () => gen(4);
 }
 
-/** An expression with every node id removed, for comparing structure alone. */
+/** An expression with every block id removed, for comparing structure alone. */
 function withoutIds(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(withoutIds);
   if (typeof value !== "object" || value === null) return value;

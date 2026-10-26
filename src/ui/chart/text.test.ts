@@ -187,7 +187,7 @@ describe("notation", () => {
     expect(notationText(ret())).toBe("return");
   });
 
-  it("adds no capital to a node", () => {
+  it("adds no capital to a block", () => {
     expect(notationText(print(v("i")))).toBe("print(i)");
     expect(notationText(ast.brk())).toBe("break");
     expect(joinParts(questionParts(if_(bin("<", v("i"), v("n")), [])))).toBe("i < n?");
@@ -213,7 +213,7 @@ describe("diamonds and generated nodes", () => {
     expect(notationText(loop)).toBe("i ← 1");
   });
 
-  it("an Input node's name is a variable", () => {
+  it("an Input chart node's name is a variable", () => {
     expect(inputParts("n", 15)).toEqual([
       { text: "Input " },
       { text: "n", variable: true },

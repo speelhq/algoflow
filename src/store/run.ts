@@ -10,7 +10,7 @@ import { firstDifference, watchStep, type WatchStep } from "@/challenges/rows";
 import { seedOf, type Test } from "@/challenges/types";
 import type { Data, Name, NodeId, Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
-import { bodyStmts, diamondConditions, nodesById, ownerStmts } from "@/lang/walk";
+import { bodyStmts, diamondConditions, blocksById, ownerStmts } from "@/lang/walk";
 import { clamp } from "@/lib/utils";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import { outcomeOf } from "@/runtime/outcome";
@@ -178,11 +178,11 @@ function apply(event: StepEvent): void {
 
 /** The loops among the statements with bodies, found by the registry's `loop` flag. */
 function loopBodies(program: Program, all: Map<NodeId, NodeId[]>): Map<NodeId, Set<NodeId>> {
-  const nodes = nodesById(program);
+  const blocks = blocksById(program);
   const found = new Map<NodeId, Set<NodeId>>();
   for (const [id, inside] of all) {
-    const node = nodes.get(id);
-    if (node && getBlockDef(keyOf(node)).loop) found.set(id, new Set(inside));
+    const block = blocks.get(id);
+    if (block && getBlockDef(keyOf(block)).loop) found.set(id, new Set(inside));
   }
   return found;
 }

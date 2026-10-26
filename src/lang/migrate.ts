@@ -47,23 +47,23 @@ function expectNodeId(value: unknown, path: string): void {
   if (!isNodeId(value)) throw new MigrateError(path, "expected a 12-character node id");
 }
 
-/** A node's literal fields, as its block would write them. */
-function checkFields(node: Record<string, unknown>, path: string): void {
-  const fault = getBlockDef(keyOf(node as unknown as Expr)).fieldsError?.(node);
+/** A block's literal fields, as its block definition would write them. */
+function checkFields(block: Record<string, unknown>, path: string): void {
+  const fault = getBlockDef(keyOf(block as unknown as Expr)).fieldsError?.(block);
   if (fault) throw new MigrateError(`${path}.${fault.field}`, fault.message);
 }
 
 /**
- * The raw expression values of a node, by the registry's slot roles (no `isExpr` filtering);
+ * The raw expression values of a block, by the registry's slot roles (no `isExpr` filtering);
  * a required expression absent and a name that is no string are rejected here.
  */
 function rawChildren(
-  node: Record<string, unknown>,
+  block: Record<string, unknown>,
   path: string,
 ): Array<{ value: unknown; path: string }> {
   const out: Array<{ value: unknown; path: string }> = [];
-  for (const slot of getBlockDef(keyOf(node as unknown as Expr)).slots) {
-    const value = node[slot.name];
+  for (const slot of getBlockDef(keyOf(block as unknown as Expr)).slots) {
+    const value = block[slot.name];
     if (slot.role === "expr" || slot.role === "target") {
       if (value !== undefined || slot.required) out.push({ value, path: `${path}.${slot.name}` });
     } else if (slot.role === "name") {

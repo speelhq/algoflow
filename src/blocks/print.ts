@@ -11,14 +11,14 @@ export const print = defineStmt<"print">({
   category: "basic",
   slots: [{ name: "args", role: "exprs" }],
   create: () => ({ id: newId(), kind: "print", args: [emptyExpr()] }),
-  *run(node, ctx) {
+  *run(block, ctx) {
     const values: Value[] = [];
-    for (const arg of node.args) values.push(yield* ctx.eval(arg));
+    for (const arg of block.args) values.push(yield* ctx.eval(arg));
     const text = values.map((value) => str(value, ctx.heap)).join(" ");
     ctx.print(text); // before the yield, so `stdout()` is current once the event is seen
-    yield { type: "print", nodeId: node.id, text };
+    yield { type: "print", nodeId: block.id, text };
     return undefined;
   },
-  python: (node, ctx) => [`print(${node.args.map((arg) => ctx.expr(arg)).join(", ")})`],
+  python: (block, ctx) => [`print(${block.args.map((arg) => ctx.expr(arg)).join(", ")})`],
   notation: () => "print({args})",
 });

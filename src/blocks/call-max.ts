@@ -9,9 +9,9 @@ export const max = defineBuiltin({
   params: [{ name: "a" }, { name: "b" }],
   kind: ([first], kindOf) => (first ? kindOf(first) : undefined),
   menu: [{ name: "", group: "calculate", on: ["number", "text"] }],
-  evaluate([a = { t: "none" }, b = { t: "none" }], node, ctx) {
+  evaluate([a = { t: "none" }, b = { t: "none" }], block, ctx) {
     const c = compare(a, b);
-    if (c === undefined) return typeError(node.id, a, b, ctx);
+    if (c === undefined) return typeError(block.id, a, b, ctx);
     return c < 0 ? b : a;
   },
 });

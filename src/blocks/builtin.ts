@@ -25,7 +25,7 @@ export type BuiltinDef = {
   /** The call's kind, given its arguments. */
   kind?: (args: Expr[], kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
   menu?: readonly MenuEntry[];
-  evaluate(args: Value[], node: Extract<Expr, { kind: "call" }>, ctx: RunContext): Value;
+  evaluate(args: Value[], block: Extract<Expr, { kind: "call" }>, ctx: RunContext): Value;
 };
 
 export function defineBuiltin(def: BuiltinDef): BlockDef {
@@ -35,33 +35,33 @@ export function defineBuiltin(def: BuiltinDef): BlockDef {
     category: def.category,
     slots: [{ name: "args", role: "exprs", required: true }],
     params: def.params,
-    callee: (node) => ({
+    callee: (block) => ({
       name: def.name,
-      argc: node.kind === "call" ? node.args.length : 0,
+      argc: block.kind === "call" ? block.args.length : 0,
       family: "builtin",
     }),
     ...(def.module ? { aliases: [callee], imports: def.module } : {}),
     ...(def.menu ? { menu: def.menu.map((entry) => ({ ...entry, keys: def.name })) } : {}),
-    ...(def.kind ? { kind: (node, kindOf) => def.kind?.(node.args, kindOf) } : {}),
+    ...(def.kind ? { kind: (block, kindOf) => def.kind?.(block.args, kindOf) } : {}),
     create: () => ({
       id: newId(),
       kind: "call",
       fn: def.name,
       args: def.params.filter((param) => !param.optional).map(() => emptyExpr()),
     }),
-    *run(node, ctx) {
+    *run(block, ctx) {
       // Validation reports a wrong count before any run, as it does for a program function.
-      const expected = expectedArgs(def.params, node.args.length);
+      const expected = expectedArgs(def.params, block.args.length);
       if (expected !== undefined)
-        throw new Error(`${def.name} takes ${expected} arguments, given ${node.args.length}`);
+        throw new Error(`${def.name} takes ${expected} arguments, given ${block.args.length}`);
       const values: Value[] = [];
-      for (const arg of node.args) values.push(yield* ctx.eval(arg));
-      return def.evaluate(values, node, ctx);
+      for (const arg of block.args) values.push(yield* ctx.eval(arg));
+      return def.evaluate(values, block, ctx);
     },
-    python: (node, ctx) => `${callee}(${node.args.map((arg) => ctx.expr(arg)).join(", ")})`,
-    notation: (node) => {
+    python: (block, ctx) => `${callee}(${block.args.map((arg) => ctx.expr(arg)).join(", ")})`,
+    notation: (block) => {
       // An optional parameter is written only when its argument is given.
-      const given = def.params.filter((param, i) => !param.optional || i < node.args.length);
+      const given = def.params.filter((param, i) => !param.optional || i < block.args.length);
       return `${def.name}(${given.map((param) => `{${param.name}}`).join(", ")})`;
     },
   });

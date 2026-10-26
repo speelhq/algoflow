@@ -93,11 +93,11 @@ export function run(program: Program, inputs: Readonly<Record<Name, Data>>, seed
       throw new RuntimeFailure(nodeId, code, params);
     },
     // The operation is named by the expression's registry key; a message writes its label.
-    valueError(node, value) {
-      return ctx.fail(node.id, "E_VALUE", { op: keyOf(node), type: typeName(value) });
+    valueError(block, value) {
+      return ctx.fail(block.id, "E_VALUE", { op: keyOf(block), type: typeName(value) });
     },
-    textError(node, text) {
-      return ctx.fail(node.id, "E_NUMBER_TEXT", { op: keyOf(node), text });
+    textError(block, text) {
+      return ctx.fail(block.id, "E_NUMBER_TEXT", { op: keyOf(block), text });
     },
     random: {
       int: (a, b) => random.int(a, b),

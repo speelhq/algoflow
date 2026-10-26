@@ -1,6 +1,6 @@
 // The only registry. The interpreter, the emitter, the parser, validation, the chart, the block
-// menu, and the node editor all dispatch through `getBlockDef(keyOf(node))`.
-import type { Node } from "@/lang/types";
+// menu, and the block editor all dispatch through `getBlockDef(keyOf(block))`.
+import type { Block } from "@/lang/types";
 import { assign } from "./assign";
 import { binop } from "./binop";
 import { bool } from "./bool";
@@ -82,12 +82,12 @@ export function getBlockDef(key: string): BlockDef {
   return def;
 }
 
-/** Registry key of an AST node: its kind, or `call:<fn>` / `method:<name>` for builtins. */
-export function keyOf(node: Node): string {
-  if (node.kind === "call")
-    return BLOCK_DEFS.has(builtinKey(node.fn)) ? builtinKey(node.fn) : "call";
-  if (node.kind === "method") return methodKey(node.name);
-  return node.kind;
+/** Registry key of a block: its kind, or `call:<fn>` / `method:<name>` for builtins. */
+export function keyOf(block: Block): string {
+  if (block.kind === "call")
+    return BLOCK_DEFS.has(builtinKey(block.fn)) ? builtinKey(block.fn) : "call";
+  if (block.kind === "method") return methodKey(block.name);
+  return block.kind;
 }
 
 /** Block menu entries of one category, in registration order. */

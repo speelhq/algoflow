@@ -25,7 +25,7 @@ function clone<T>(value: T): T {
 
 // ---------------------------------------------------------------- ids
 
-/** Gives every node under `stmt` a fresh id (in place). */
+/** Gives every block under `stmt` a fresh id (in place). */
 function reIdStmt(stmt: Stmt): void {
   stmt.id = newId();
   for (const { expr } of childSlots(stmt)) reIdExpr(expr);
@@ -44,7 +44,7 @@ function takenIds(program: Program, replaced: readonly Expr[]): Set<NodeId> {
   return taken;
 }
 
-/** Whether a node entering the program, holding `ids`, reuses one of the `taken` ids. */
+/** Whether a block entering the program, holding `ids`, reuses one of the `taken` ids. */
 function reuses(ids: Iterable<NodeId>, taken: ReadonlySet<NodeId>): boolean {
   for (const id of ids) if (taken.has(id)) return true;
   return false;
@@ -106,15 +106,15 @@ function getRegion(program: Program, place: Place): Stmt[] {
   return region;
 }
 
-/** The statement or expression node with this id; throws when the program has none. */
-function getNode(program: Program, id: NodeId): Stmt | Expr {
+/** The statement or expression block with this id; throws when the program has none. */
+function getBlock(program: Program, id: NodeId): Stmt | Expr {
   for (const { stmt } of programStmts(program)) {
     if (stmt.id === id) return stmt;
     for (const { expr } of childSlots(stmt)) {
       for (const e of allExprs(expr)) if (e.id === id) return e;
     }
   }
-  throw new EditError(`no node ${id}`);
+  throw new EditError(`no block ${id}`);
 }
 
 function getStmt(program: Program, id: NodeId): StmtAt {
@@ -164,12 +164,12 @@ export function duplicateStmt(program: Program, id: NodeId): Program {
 /** Sets a name or literal slot (`id` or `text`) of a statement or expression. */
 export function setSlot(program: Program, id: NodeId, slot: string, value: string): Program {
   const next = clone(program);
-  const node = getNode(next, id);
-  const spec = getBlockDef(keyOf(node)).slots.find((s) => s.name === slot);
+  const block = getBlock(next, id);
+  const spec = getBlockDef(keyOf(block)).slots.find((s) => s.name === slot);
   if (spec?.role !== "name" && spec?.role !== "text") {
-    throw new EditError(`node ${id} has no settable slot ${slot}`);
+    throw new EditError(`block ${id} has no settable slot ${slot}`);
   }
-  (node as unknown as Bag)[slot] = value;
+  (block as unknown as Bag)[slot] = value;
   return next;
 }
 
@@ -185,9 +185,9 @@ export function setExpr(
   index?: number,
 ): Program {
   const next = clone(program);
-  const node = getNode(next, id);
-  const spec = getBlockDef(keyOf(node)).slots.find((s) => s.name === slot);
-  const bag = node as unknown as Bag;
+  const block = getBlock(next, id);
+  const spec = getBlockDef(keyOf(block)).slots.find((s) => s.name === slot);
+  const bag = block as unknown as Bag;
   const old = (value: unknown) => (isExpr(value) ? value : undefined);
   if (spec?.role === "expr" || spec?.role === "target") {
     bag[slot] = freshExpr(expr, next, old(bag[slot]));
@@ -197,7 +197,7 @@ export function setExpr(
     items.splice(at, at < items.length ? 1 : 0, freshExpr(expr, next, old(items[at])));
     bag[slot] = items;
   } else {
-    throw new EditError(`node ${id} has no expression slot ${slot}`);
+    throw new EditError(`block ${id} has no expression slot ${slot}`);
   }
   return next;
 }
@@ -211,11 +211,11 @@ export function insertItem(
   expr: Expr,
 ): Program {
   const next = clone(program);
-  const node = getNode(next, id);
-  const spec = getBlockDef(keyOf(node)).slots.find((s) => s.name === slot);
-  const items = (node as unknown as Bag)[slot];
+  const block = getBlock(next, id);
+  const spec = getBlockDef(keyOf(block)).slots.find((s) => s.name === slot);
+  const items = (block as unknown as Bag)[slot];
   if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index > items.length) {
-    throw new EditError(`node ${id} has no place ${index} in ${slot}`);
+    throw new EditError(`block ${id} has no place ${index} in ${slot}`);
   }
   items.splice(index, 0, freshExpr(expr, next));
   return next;
@@ -224,11 +224,11 @@ export function insertItem(
 /** Removes item `index` of an `exprs` slot. */
 export function removeItem(program: Program, id: NodeId, slot: string, index: number): Program {
   const next = clone(program);
-  const node = getNode(next, id);
-  const spec = getBlockDef(keyOf(node)).slots.find((s) => s.name === slot);
-  const items = (node as unknown as Bag)[slot];
+  const block = getBlock(next, id);
+  const spec = getBlockDef(keyOf(block)).slots.find((s) => s.name === slot);
+  const items = (block as unknown as Bag)[slot];
   if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index >= items.length) {
-    throw new EditError(`node ${id} has no item ${index} in ${slot}`);
+    throw new EditError(`block ${id} has no item ${index} in ${slot}`);
   }
   items.splice(index, 1);
   return next;
@@ -236,7 +236,7 @@ export function removeItem(program: Program, id: NodeId, slot: string, index: nu
 
 // ---------------------------------------------------------------- names
 
-/** A node's name as stored: each run of spaces and line breaks one space, trimmed. */
+/** A block's name as stored: each run of spaces and line breaks one space, trimmed. */
 export function stmtName(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
@@ -260,9 +260,9 @@ export function renameName(program: Program, from: Name, to: Name): Program {
     fn.name = swap(fn.name);
     fn.params = fn.params.map(swap);
   }
-  const renameIdSlots = (node: Stmt | Expr) => {
-    const bag = node as unknown as Bag;
-    for (const slot of getBlockDef(keyOf(node)).slots) {
+  const renameIdSlots = (block: Stmt | Expr) => {
+    const bag = block as unknown as Bag;
+    for (const slot of getBlockDef(keyOf(block)).slots) {
       if (slot.role === "name" && typeof bag[slot.name] === "string") {
         bag[slot.name] = swap(bag[slot.name] as string);
       }

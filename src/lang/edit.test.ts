@@ -145,7 +145,7 @@ describe("edit", () => {
     expect(() => setStmtName(p, "missing00000", "x")).toThrow(/no statement/);
   });
 
-  it("setExpr replaces an expression slot, an exprs item, or a nested expression node", () => {
+  it("setExpr replaces an expression slot, an exprs item, or a nested expression block", () => {
     const { p, a, inner, b } = sample();
     expect(lines(setExpr(p, a.id, "value", num(42)))[0]).toBe("x = 42");
     expect(lines(setExpr(p, b.id, "args", str("done"), 0))[3]).toBe('print("done")');

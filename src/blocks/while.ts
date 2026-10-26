@@ -14,16 +14,16 @@ export const whileStmt = defineStmt<"while">({
     { name: "body", role: "body" },
   ],
   create: () => ({ id: newId(), kind: "while", cond: emptyExpr(), body: [] }),
-  *run(node, ctx) {
+  *run(block, ctx) {
     for (;;) {
-      if (!(yield* decide(node.cond, ctx))) break;
-      yield { type: "loop", nodeId: node.id };
-      const signal = yield* ctx.exec(node.body);
+      if (!(yield* decide(block.cond, ctx))) break;
+      yield { type: "loop", nodeId: block.id };
+      const signal = yield* ctx.exec(block.body);
       if (signal?.kind === "break") break;
       if (signal?.kind === "return") return signal;
     }
     return undefined;
   },
-  python: (node, ctx) => [`while ${ctx.expr(node.cond)}:`, ctx.region(node.body)],
+  python: (block, ctx) => [`while ${ctx.expr(block.cond)}:`, ctx.region(block.body)],
   notation: () => "{cond}",
 });
