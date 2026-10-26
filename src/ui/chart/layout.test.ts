@@ -3,7 +3,7 @@
 import { caseInputs } from "@/challenges/cases";
 import { describe, expect, it } from "vitest";
 import { CHALLENGES } from "@/challenges";
-import type { Program, Stmt } from "@/lang/types";
+import type { NodeId, Program, Stmt } from "@/lang/types";
 import { allStmts, regionsOf } from "@/lang/walk";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import { ast, program, tid } from "@/blocks/testing";
@@ -117,29 +117,35 @@ const returning = fn("find", [
 ]);
 const bothReturn = fn("sign", [if_(lt("x", 0), [ret(num(-1))], [ret(num(1))])]);
 
-type Case = { name: string; program: Program; chart?: string };
+type Case = { name: string; program: Program; routine: "main" | NodeId };
 const CASES: Case[] = [
-  ...CHALLENGES.map((challenge) => ({ name: challenge.id, program: challenge.solution })),
-  ...SYNTHETIC.map(([name, p]) => ({ name, program: p })),
+  ...CHALLENGES.map((challenge) => ({
+    name: challenge.id,
+    program: challenge.solution,
+    routine: "main" as const,
+  })),
+  ...SYNTHETIC.map(([name, p]) => ({ name, program: p, routine: "main" as const })),
   {
     name: "returns in a loop in an if",
     program: program([], { functions: [returning] }),
-    chart: returning.id,
+    routine: returning.id,
   },
   {
     name: "both regions return",
     program: program([], { functions: [bothReturn] }),
-    chart: bothReturn.id,
+    routine: bothReturn.id,
   },
 ];
 
 const bodyOf = (c: Case): Stmt[] =>
-  c.chart ? (c.program.functions.find((f) => f.id === c.chart)?.body ?? []) : c.program.main;
+  c.routine === "main"
+    ? c.program.main
+    : (c.program.functions.find((f) => f.id === c.routine)?.body ?? []);
 
 const lay = (c: Case, measure: Measure): ChartLayout =>
   layout(c.program, {
+    routine: c.routine,
     inputs: caseInputs(c.program, 0),
-    ...(c.chart ? { chart: c.chart } : {}),
     measure,
   });
 
@@ -377,7 +383,7 @@ describe.each([
           );
         }
       };
-      expectRegion(c.chart ?? "main", c.chart ? "body" : "main", bodyOf(c));
+      expectRegion(c.routine, c.routine === "main" ? "main" : "body", bodyOf(c));
       for (const stmt of allStmts(bodyOf(c))) {
         for (const region of regionsOf(stmt)) expectRegion(stmt.id, region.slot, region.stmts);
       }
@@ -407,7 +413,11 @@ describe("layout of jumps", () => {
     const skip = cont();
     const loop = for_("i", num(0), num(9), [if_(lt("i", 2), [skip], [stop])]);
     const after = print(str("after"));
-    const chart = layout(program([loop, after]), { inputs: {}, measure: estimatedWidth });
+    const chart = layout(program([loop, after]), {
+      routine: "main",
+      inputs: {},
+      measure: estimatedWidth,
+    });
     expect(jumpsOf(chart, stop.id).map((edge) => edge.to)).toEqual([`${loop.id}:exit`]);
     expect(jumpsOf(chart, skip.id).map((edge) => edge.to)).toEqual([`${loop.id}:update`]);
     const no = chart.edges.find((edge) => edge.from === `${loop.id}:check` && edge.label === "no");
@@ -422,6 +432,7 @@ describe("layout of jumps", () => {
     const skip = cont();
     const loop = while_(lt("i", 9), [if_(lt("i", 2), [skip]), stop]);
     const chart = layout(program([assign("i", num(0)), loop]), {
+      routine: "main",
       inputs: {},
       measure: estimatedWidth,
     });
@@ -435,7 +446,11 @@ describe("layout of jumps", () => {
 
   it("a jump outside every loop is an ordinary box with an edge to the next node", () => {
     const stop = brk();
-    const chart = layout(program([stop, print(num(1))]), { inputs: {}, measure: estimatedWidth });
+    const chart = layout(program([stop, print(num(1))]), {
+      routine: "main",
+      inputs: {},
+      measure: estimatedWidth,
+    });
     expect(jumpsOf(chart, stop.id)).toHaveLength(1);
     expect(jumpsOf(chart, stop.id)[0]?.jump).toBeUndefined();
   });
@@ -445,10 +460,15 @@ describe("layout texts", () => {
   it("main: Start, one Input node per input with the chosen values, the statements, End", () => {
     const sum = CHALLENGES.find((challenge) => challenge.id === "sum-to-n");
     if (!sum) throw new Error("sum-to-n missing");
-    const chart = layout(sum.solution, { inputs: { n: 0 }, measure: estimatedWidth });
+    const chart = layout(sum.solution, {
+      routine: "main",
+      inputs: { n: 0 },
+      measure: estimatedWidth,
+    });
     expect(chart.nodes.slice(0, 2).map((node) => node.text)).toEqual(["Start", "Input n ← 0"]);
     expect(
       layout(sum.solution, {
+        routine: "main",
         inputs: caseInputs(sum.solution, 0),
         measure: estimatedWidth,
       }).nodes[1]?.text,
@@ -471,7 +491,7 @@ describe("layout texts", () => {
     const check = if_(bin("==", bin("%", v("x"), num(15)), num(0)), [ret(v("x"))]);
     const f = fn("f", [check, ret(num(0))]);
     const chart = layout(program([], { functions: [f], inputs: [{ name: "n", kind: "number" }] }), {
-      chart: f.id,
+      routine: f.id,
       inputs: {},
       measure: estimatedWidth,
     });
@@ -488,6 +508,7 @@ describe("layout texts", () => {
     const loop = { ...for_("i", num(0), num(3), []), name: "Three times" };
     const check = { ...if_(bin("<", v("x"), num(2)), []), name: "Small?" };
     const chart = layout(program([assign("x", num(1)), named, unfinished, loop, check]), {
+      routine: "main",
       inputs: {},
       measure: estimatedWidth,
     });
@@ -498,7 +519,11 @@ describe("layout texts", () => {
     expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times", title: "i < 3?" });
     expect(node(`${loop.id}:init`)?.text).toBe("i ← 0");
     const startless = { ...for_("k", ast.empty(), num(3), []), name: "Counting" };
-    const unfinishedLoop = layout(program([startless]), { inputs: {}, measure: estimatedWidth });
+    const unfinishedLoop = layout(program([startless]), {
+      routine: "main",
+      inputs: {},
+      measure: estimatedWidth,
+    });
     expect(unfinishedLoop.nodes.find((n) => n.id === `${startless.id}:check`)?.text).toBe("k < 3?");
     expect(node(check.id)).toMatchObject({ text: "Small?", title: "x < 2?" });
   });
@@ -508,7 +533,11 @@ describe("layout texts", () => {
     const divides = (by: number) => bin("==", bin("%", v("i"), num(by)), num(0));
     const check = if_(bin("and", divides(15), bin("<", v("i"), ast.empty())), []);
     const short = if_(divides(15), []);
-    const chart = layout(program([assign("i", num(1)), check, short]), { inputs: {}, measure });
+    const chart = layout(program([assign("i", num(1)), check, short]), {
+      routine: "main",
+      inputs: {},
+      measure,
+    });
     const lines = (id: string) => {
       const parts = chart.nodes.find((n) => n.id === id)?.parts ?? [];
       return [-LINE / 2, LINE / 2].map((dy) =>
@@ -528,7 +557,7 @@ describe("layout texts", () => {
   it("a variable's run is measured bold", () => {
     const measure: Measure = (text, _shape, bold) => text.length * (bold ? 10 : 5);
     const shown = print(v("abc"));
-    const chart = layout(program([shown]), { inputs: {}, measure });
+    const chart = layout(program([shown]), { routine: "main", inputs: {}, measure });
     const parts = chart.nodes.find((n) => n.id === shown.id)?.parts ?? [];
     expect(parts.map((part) => [part.text, part.w, part.variable])).toEqual([
       ["print(", 30, undefined],
@@ -538,7 +567,7 @@ describe("layout texts", () => {
   });
 
   it("an empty main offers its one connector between Start and End", () => {
-    const chart = layout(program([]), { inputs: {}, measure: estimatedWidth });
+    const chart = layout(program([]), { routine: "main", inputs: {}, measure: estimatedWidth });
     expect(chart.edges).toHaveLength(1);
     expect(chart.edges[0]).toMatchObject({
       from: "start",

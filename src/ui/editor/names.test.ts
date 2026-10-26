@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { CHALLENGES } from "@/challenges";
 import { ast, program } from "@/blocks/testing";
-import { chartNames, nameChars, nameSections } from "./names";
+import { routineNames, nameChars, nameSections } from "./names";
 
 const { assign, num, for_ } = ast;
 
@@ -15,12 +15,12 @@ describe("name list", () => {
       [assign("count", num(0)), for_("k", num(0), num(3), []), assign("total", num(1))],
       { inputs: [{ name: "n", kind: "number" }] },
     );
-    expect(shown(nameSections(chartNames(p, "main", ["total", "best"]), ""))).toEqual([
+    expect(shown(nameSections(routineNames(p, "main", ["total", "best"]), ""))).toEqual([
       ["problem", ["total", "best"]],
       ["variables", ["n", "count", "k"]],
     ]);
     const many = program(["a", "b", "c", "d", "e", "f", "g"].map((name) => assign(name, num(0))));
-    expect(nameSections(chartNames(many, "main", []), "")[0]?.rows).toHaveLength(7);
+    expect(nameSections(routineNames(many, "main", []), "")[0]?.rows).toHaveLength(7);
   });
 
   it("Sum to n: total under This problem; typing to offers New variable to", () => {
@@ -28,11 +28,11 @@ describe("name list", () => {
     if (!sum) throw new Error("sum-to-n missing");
     const asked = Object.keys(sum.tests[0]?.expect.variables ?? {});
     const p = program([], { inputs: [{ name: "n", kind: "number" }] });
-    expect(shown(nameSections(chartNames(p, "main", asked), ""))[0]).toEqual([
+    expect(shown(nameSections(routineNames(p, "main", asked), ""))[0]).toEqual([
       "problem",
       ["total"],
     ]);
-    expect(shown(nameSections(chartNames(p, "main", asked), "to"))).toEqual([
+    expect(shown(nameSections(routineNames(p, "main", asked), "to"))).toEqual([
       ["problem", ["total"]],
       ["new", ["to"]],
     ]);
@@ -40,20 +40,20 @@ describe("name list", () => {
 
   it("typing keeps the names one of whose words begins with it; a valid new name is offered", () => {
     const p = program([assign("max_len", num(0)), assign("lens", num(0))]);
-    expect(shown(nameSections(chartNames(p, "main", []), "le"))).toEqual([
+    expect(shown(nameSections(routineNames(p, "main", []), "le"))).toEqual([
       ["variables", ["max_len", "lens"]],
       ["new", ["le"]],
     ]);
-    expect(shown(nameSections(chartNames(p, "main", []), "lens"))).toEqual([
+    expect(shown(nameSections(routineNames(p, "main", []), "lens"))).toEqual([
       ["variables", ["lens"]],
     ]);
     // A whole name comes first.
     const both = program([assign("idx", num(0)), assign("i", num(0))]);
-    expect(shown(nameSections(chartNames(both, "main", []), "i"))).toEqual([
+    expect(shown(nameSections(routineNames(both, "main", []), "i"))).toEqual([
       ["variables", ["i", "idx"]],
     ]);
-    expect(shown(nameSections(chartNames(p, "main", []), "for"))).toEqual([]); // a keyword: no new name
-    expect(shown(nameSections(chartNames(p, "main", []), "len"))).toEqual([
+    expect(shown(nameSections(routineNames(p, "main", []), "for"))).toEqual([]); // a keyword: no new name
+    expect(shown(nameSections(routineNames(p, "main", []), "len"))).toEqual([
       ["variables", ["max_len", "lens"]],
     ]);
   });
@@ -66,8 +66,8 @@ describe("name list", () => {
       body: [assign("i", num(0))],
     };
     const p = program([assign("total", num(0))], { functions: [fn] });
-    expect(chartNames(p, fn.id, ["total"])).toEqual({ asked: [], names: ["heap", "x", "i"] });
-    expect(chartNames(p, "main", ["total"])).toEqual({ asked: ["total"], names: [] });
+    expect(routineNames(p, fn.id, ["total"])).toEqual({ asked: [], names: ["heap", "x", "i"] });
+    expect(routineNames(p, "main", ["total"])).toEqual({ asked: ["total"], names: [] });
   });
 
   it("a name field keeps only the characters a name may hold", () => {
