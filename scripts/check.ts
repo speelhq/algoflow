@@ -1,5 +1,5 @@
 // Schema, validation, interpreter, and CPython agreement for
-// every challenge (or the files given as arguments), then the i18n check.
+// every challenge (or the files given as arguments), then the i18n check and the reference check.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,6 +9,7 @@ import { runPython } from "./lib/cpython";
 import { repoFiles } from "./lib/files";
 import { checkI18n, formatReport } from "./lib/i18n-check";
 import { checkPlans } from "./lib/plans";
+import { checkReferences, formatReferences } from "./lib/references";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const PLANS_FILE = "plans.json";
@@ -77,4 +78,7 @@ const i18n = checkI18n({ root, files: repository, i18nDir: join(root, "src", "i1
 for (const line of formatReport(i18n)) console.log(line);
 const i18nFailed = i18n.unknown.length + i18n.unused.length + i18n.missing.length > 0;
 
-process.exit(failed > 0 || i18nFailed ? 1 : 0);
+const broken = checkReferences({ root, files: repository });
+for (const line of formatReferences(broken)) console.log(line);
+
+process.exit(failed > 0 || i18nFailed || broken.length > 0 ? 1 : 0);
