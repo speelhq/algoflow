@@ -1,7 +1,7 @@
 # Editor
 
 Code: `src/ui/editor` (the block menu `menu.ts` and `BlockMenu.tsx`, the
-block editor `NodeEditor.tsx` with its session `session.ts`, the value line
+block editor `BlockEditor.tsx` with its session `session.ts`, the value line
 `line.ts` and `ValueLine.tsx`, names `names.ts`, the explanation line
 `explain.ts`). Tests: beside each file, and `e2e/`.
 
@@ -67,9 +67,9 @@ chart up to make room below the chart node, as it is scrolled left, was
 rejected, because with an editor that high it would scroll for nearly every
 chart node and hide the statements above the one being built.
 
-From top to bottom, the editor holds the block's name field (Node names), the
+From top to bottom, the editor holds the block's caption field (Captions), the
 block's notation, the list of the focused slot (Value list; Name fields), and
-the explanation line (Explanation line). The name field has `Duplicate` and
+the explanation line (Explanation line). The caption field has `Duplicate` and
 `Delete` as icon buttons beside it and, when the block calls a function or
 constructs a class, `Open <name>`, which shows that function's chart or class's
 field table (`chart.md`, Charts and the path bar) or, for a module's, opens its
@@ -80,7 +80,7 @@ line; Targets), an optional `expr` slot left empty as `+ value`
 (`editor.addValue`), which adds its value line, `exprs` slots as value lines
 separated by commas, each with a remove button (`editor.removeValue`),
 followed by `+ value`, which adds one, and `body` slots not shown. A separator
-divides each of the name field, the notation, and the list from the next.
+divides each of the caption field, the notation, and the list from the next.
 The slot clicked on the chart node, or a first slot still to fill, takes the
 keyboard when the editor opens. Otherwise, the keyboard stays with the chart,
 so Delete removes the block (`chart.md`, Editing on the chart). An edit
@@ -362,22 +362,22 @@ with every key, because setting it with every key would give `t`, `to`, and
 A name field keeps only the characters a name may hold (`language.md`,
 Identifiers).
 
-## Node names
+## Captions
 
-Every statement block may carry a name in the learner's own words
-(`language.md`, Statement names), typed in the editor's name field
-(`editor.name`, placeholder `editor.nameHint`: `optional`), because a
-condition written in symbols doesn't say what it is for, and a name in the
-learner's words does. The application never translates the name and never
-asks for it. A named block's chart node shows the name alone, in place of
-its notation or its question, unless a slot of the block is still empty,
-when it shows its notation with the placeholder. A named counted loop shows
-its name on its check, and its other generated chart nodes keep their text.
-Hovering a named block's chart node shows what it draws without the name:
-its notation or its question, or, for a named counted loop, its check. The
-`Python` tab writes the name as a comment above the statement
-(`emitter.md`). A `comment` block definition was rejected, because it would
-draw Python's `#` on the chart.
+Every statement block may carry a caption in the learner's own words
+(`language.md`, Captions), typed in the editor's caption field
+(`editor.caption`, placeholder `editor.captionHint`: `optional`), because a
+condition written in symbols doesn't say what it is for, and a caption in the
+learner's words does. The application never translates the caption and never
+asks for it. A chart node whose block has a caption shows the caption
+alone, in place of its notation or its question, unless a slot of the block is
+still empty, when it shows its notation with the placeholder. A counted loop
+with a caption shows it on its check, and its other generated chart nodes keep
+their text. Hovering a chart node whose block has a caption shows what it
+draws without the caption: its notation or its question, or, for a counted
+loop, its check. The `Python` tab writes the caption as a comment above the
+statement (`emitter.md`). A `comment` block definition was rejected, because
+it would draw Python's `#` on the chart.
 
 ## Explanation line
 

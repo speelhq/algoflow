@@ -26,10 +26,10 @@ after its artboard in the file.
 | `Main.png` | 1 Problems: one section per plan | `pages.md`, Pages and routes; Problems page |
 | `BuildEmpty.png` | 2 Build: first launch, an empty chart | `pages.md`, Page layout; Problem tab; First launch; `chart.md`, Editing on the chart |
 | `BuildMenu.png` | 3 Build: the + menu lists statements only | `editor.md`, Block menu; `chart.md`, Shapes |
-| `BuildEdit.png` | 4 Build: editing a block, choosing a variable | `editor.md`, Block editor; Name fields; Node names |
+| `BuildEdit.png` | 4 Build: editing a block, choosing a variable | `editor.md`, Block editor; Name fields; Captions |
 | `EditValue.png` | 4B Build: where a value is expected | `editor.md`, Value line; Value list |
 | `EditTyping.png` | 4C Build: typing, and the text becomes blocks | `editor.md`, Value line; Backspace and keys |
-| `EditNumber.png` | 4D Build: after a number, and a named check | `editor.md`, Value list; Node names; Explanation line |
+| `EditNumber.png` | 4D Build: after a number, and a named check | `editor.md`, Value list; Captions; Explanation line |
 | `EditList.png` | 4E Build: after a list, what can be done with it | `editor.md`, Value list; `blocks.md`, Menu entries |
 | `EditCheck.png` | 4F Build: an unnamed check, then And or Or | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Notation |
 | `EditItem.png` | 4G Build: set one item of a list | `editor.md`, Value list; Name fields; Explanation line |
@@ -74,6 +74,10 @@ after its artboard in the file.
   tab).
 - The gray sentences under the rows of `Run.png` and `Wrong.png` annotate
   the artboards and aren't part of the screen.
+- `Solution.png` labels the band's buttons `Load into my chart` and
+  `Back to my chart`. The spec labels them `Load into my program` and
+  `Back to my program` (`pages.md`, Problem tab), because they act on the
+  learner's whole program, and a chart is the flowchart of one routine.
 - Every artboard that shows a chart node, a value, or the narration uses
   the notation the blocks had before `blocks.md`, Notation, set it
   (`Set i to 1`, `(remainder of i divided by 15) = 0?`, `n = 15`). The
