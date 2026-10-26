@@ -103,7 +103,7 @@ export type BinOp =
   | "or"
   | "in";
 
-export type Node = Stmt | Expr;
+export type Block = Stmt | Expr;
 
 /** What is known of a value before the program runs. */
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict";

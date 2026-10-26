@@ -13,12 +13,12 @@ export const list = defineExpr<"list">({
   slots: [{ name: "items", role: "exprs" }],
   create: empty,
   zeroLike: empty,
-  *run(node, ctx) {
+  *run(block, ctx) {
     const items: Value[] = [];
-    for (const item of node.items) items.push(yield* ctx.eval(item));
+    for (const item of block.items) items.push(yield* ctx.eval(item));
     return { t: "list", ref: alloc(ctx.heap, { kind: "list", items }) };
   },
-  python: (node, ctx) => `[${node.items.map((item) => ctx.expr(item)).join(", ")}]`,
+  python: (block, ctx) => `[${block.items.map((item) => ctx.expr(item)).join(", ")}]`,
   notation: () => "[{items}]",
   kind: () => "list",
   // `Empty list` names only a list with no item; one with items is named `List`.

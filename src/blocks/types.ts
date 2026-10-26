@@ -111,16 +111,16 @@ export type RunContext = {
   store(target: Expr, value: Value, at: NodeId): Generator<Event, void, void>;
   call(fn: Name, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
   fail(nodeId: NodeId, code: RuntimeCode, params?: Record<string, string | number>): never;
-  /** `E_VALUE`: the operation of `node` does not take a value of this type. */
-  valueError(node: Expr, value: Value): never;
-  /** `E_NUMBER_TEXT`: the operation of `node` cannot read this text as its number. */
-  textError(node: Expr, text: string): never;
+  /** `E_VALUE`: the operation of `block` does not take a value of this type. */
+  valueError(block: Expr, value: Value): never;
+  /** `E_NUMBER_TEXT`: the operation of `block` cannot read this text as its number. */
+  textError(block: Expr, text: string): never;
   random: { int(a: number, b: number): number };
   print(line: string): void;
 };
 
-export type StmtRunner = (node: Stmt, ctx: RunContext) => Generator<Event, Signal, void>;
-export type ExprRunner = (node: Expr, ctx: RunContext) => Generator<Event, Value, void>;
+export type StmtRunner = (block: Stmt, ctx: RunContext) => Generator<Event, Signal, void>;
+export type ExprRunner = (block: Expr, ctx: RunContext) => Generator<Event, Value, void>;
 
 // ---------------------------------------------------------------- emitter
 
@@ -130,8 +130,8 @@ export type EmitContext = {
   expr(expr: Expr): string;
   /** `expr` wrapped in parentheses when the operator table requires it under a parent of `precedence`. */
   operand(expr: Expr, precedence: number, side: Side): string;
-  /** The input in slot `name` of `node`, parenthesized as an atom where the slot declares one. */
-  slot(node: Stmt | Expr, name: string): string;
+  /** The input in slot `name` of `block`, parenthesized as an atom where the slot declares one. */
+  slot(block: Stmt | Expr, name: string): string;
   region(stmts: Stmt[]): PyLine;
 };
 
@@ -167,33 +167,33 @@ export type BlockDef = {
   aliases?: string[];
   imports?: "random";
   /** Precedence of this expression; undefined = atom. */
-  precedence?: (node: Expr) => number;
+  precedence?: (block: Expr) => number;
   /** Not in the block menu (`empty`, `expr`). */
   hidden?: boolean;
   /** For literal blocks: the zero-like literal of the same type. */
-  zeroLike?(node: Expr): Expr;
+  zeroLike?(block: Expr): Expr;
   /** For call-like expressions: what is called and with how many arguments. */
-  callee?(node: Expr): Callee;
+  callee?(block: Expr): Callee;
   /** Its body regions are loop bodies (`break` / `continue` allowed inside). */
   loop?: boolean;
   /** Where the statement may appear: inside a loop, or inside a function (validation). */
   requires?: "loop" | "function";
   create(): Stmt | Expr;
   run: StmtRunner | ExprRunner;
-  python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string;
-  /** The node's text with `{slot}` placeholders, the same in every locale (Notation). */
-  notation(node: Stmt | Expr): string;
+  python(block: Stmt | Expr, ctx: EmitContext): PyLine[] | string;
+  /** The block's notation with `{slot}` placeholders, the same in every locale (Notation). */
+  notation(block: Stmt | Expr): string;
   /**
-   * Which of a stored node's literal fields no edit could have written (an operator, a number's
+   * Which of a stored block's literal fields no edit could have written (an operator, a number's
    * text), and why; undefined when its block would make them.
    */
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined;
-  /** The notation's text of a `text` slot; default `String(node[slot])`. */
-  text?(node: Stmt | Expr, slot: string): string;
+  /** The notation's text of a `text` slot; default `String(block[slot])`. */
+  text?(block: Stmt | Expr, slot: string): string;
   /** How the chart draws the block's regions; absent = a box with the notation. */
   chart?: ChartShape;
   /** The kind of the expression, given the kinds of the expressions inside it. */
-  kind?: (node: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
+  kind?: (block: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
   /** The kind of the variable its `name` slot names. */
   declares?: Kind;
   /** The entries of the value list. */
@@ -202,7 +202,7 @@ export type BlockDef = {
    * A target's place: evaluates the target's expressions, the container before its position, and
    * gives the place, its errors at `at`. A block with `locate` is a target.
    */
-  locate?(node: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
+  locate?(block: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
 };
 
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
@@ -212,20 +212,20 @@ type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "ki
 
 type StmtDef<K extends StmtKind> = Omit<BlockDef, Generic> & {
   create(): StmtOf<K>;
-  run(node: StmtOf<K>, ctx: RunContext): Generator<Event, Signal, void>;
-  python(node: StmtOf<K>, ctx: EmitContext): PyLine[];
-  notation(node: StmtOf<K>): string;
-  text?(node: StmtOf<K>, slot: string): string;
+  run(block: StmtOf<K>, ctx: RunContext): Generator<Event, Signal, void>;
+  python(block: StmtOf<K>, ctx: EmitContext): PyLine[];
+  notation(block: StmtOf<K>): string;
+  text?(block: StmtOf<K>, slot: string): string;
 };
 
 type ExprDef<K extends ExprKind> = Omit<BlockDef, Generic> & {
   create(): ExprOf<K>;
-  run(node: ExprOf<K>, ctx: RunContext): Generator<Event, Value, void>;
-  python(node: ExprOf<K>, ctx: EmitContext): string;
-  notation(node: ExprOf<K>): string;
-  text?(node: ExprOf<K>, slot: string): string;
-  kind?(node: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
-  locate?(node: ExprOf<K>, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
+  run(block: ExprOf<K>, ctx: RunContext): Generator<Event, Value, void>;
+  python(block: ExprOf<K>, ctx: EmitContext): string;
+  notation(block: ExprOf<K>): string;
+  text?(block: ExprOf<K>, slot: string): string;
+  kind?(block: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
+  locate?(block: ExprOf<K>, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
 };
 
 export function defineStmt<K extends StmtKind>(def: StmtDef<K>): BlockDef {

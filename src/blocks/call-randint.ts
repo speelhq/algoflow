@@ -9,15 +9,15 @@ export const randomInt = defineBuiltin({
   kind: () => "number",
   menu: [{ name: "", group: "calculate" }],
   module: "random",
-  evaluate([a = { t: "none" }, b = { t: "none" }], node, ctx) {
+  evaluate([a = { t: "none" }, b = { t: "none" }], block, ctx) {
     if (a.t !== "int" || b.t !== "int") {
-      return ctx.fail(node.id, "E_TYPE", {
+      return ctx.fail(block.id, "E_TYPE", {
         left: typeName(a),
         right: typeName(b),
       });
     }
     // CPython raises ValueError("empty range") when a > b.
-    if (a.v > b.v) return ctx.fail(node.id, "E_EMPTY_RANGE", { a: a.v, b: b.v });
+    if (a.v > b.v) return ctx.fail(block.id, "E_EMPTY_RANGE", { a: a.v, b: b.v });
     return { t: "int", v: ctx.random.int(a.v, b.v) };
   },
 });

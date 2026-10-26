@@ -162,8 +162,8 @@ class Collector {
 
   private slots(stmt: Stmt, def: BlockDef): void {
     this.requiredSlots(stmt, def, stmt.id);
-    const visit = (node: Stmt | Expr) => {
-      for (const { slot, expr } of childSlots(node)) {
+    const visit = (block: Stmt | Expr) => {
+      for (const { slot, expr } of childSlots(block)) {
         if (isEmptyExpr(expr)) {
           this.report(stmt.id, "E_EMPTY_SLOT", { slot });
           continue;
@@ -175,8 +175,8 @@ class Collector {
     visit(stmt);
   }
 
-  private requiredSlots(node: Stmt | Expr, def: BlockDef, stmtId: NodeId): void {
-    const bag = node as unknown as Bag;
+  private requiredSlots(block: Stmt | Expr, def: BlockDef, stmtId: NodeId): void {
+    const bag = block as unknown as Bag;
     for (const slot of def.slots) {
       if (slot.required && isEmptySlot(slot, bag[slot.name])) {
         this.report(stmtId, "E_EMPTY_SLOT", { slot: slot.name });

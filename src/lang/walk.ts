@@ -1,6 +1,6 @@
 // Traversal driven by each block's slots, so no module lists block kinds.
 import { getBlockDef, keyOf } from "@/blocks/registry";
-import type { Expr, FunctionDef, Node, NodeId, Program, Stmt } from "./types";
+import type { Expr, FunctionDef, Block, NodeId, Program, Stmt } from "./types";
 
 type Bag = Record<string, unknown>;
 
@@ -32,11 +32,11 @@ export function variableOf(expr: Expr): string | undefined {
 
 /**
  * The argument a builtin's or method's parameter `name` takes, and its position among the
- * arguments; undefined when the node has no such parameter or that argument is not passed.
+ * arguments; undefined when the block has no such parameter or that argument is not passed.
  */
-export function paramArg(node: Node, name: string): { arg: Expr; index: number } | undefined {
-  const index = getBlockDef(keyOf(node)).params?.findIndex((param) => param.name === name) ?? -1;
-  const args = (node as unknown as Bag).args;
+export function paramArg(block: Block, name: string): { arg: Expr; index: number } | undefined {
+  const index = getBlockDef(keyOf(block)).params?.findIndex((param) => param.name === name) ?? -1;
+  const args = (block as unknown as Bag).args;
   const arg: unknown = index >= 0 && Array.isArray(args) ? args[index] : undefined;
   return isExpr(arg) ? { arg, index } : undefined;
 }
@@ -44,9 +44,9 @@ export function paramArg(node: Node, name: string): { arg: Expr; index: number }
 export type SlotExpr = { slot: string; expr: Expr; index?: number };
 
 /** Direct expression children with the slot each sits in; a target is one, as an `expr` is. */
-export function childSlots(node: Node): SlotExpr[] {
-  const def = getBlockDef(keyOf(node));
-  const bag = node as unknown as Bag;
+export function childSlots(block: Block): SlotExpr[] {
+  const def = getBlockDef(keyOf(block));
+  const bag = block as unknown as Bag;
   const out: SlotExpr[] = [];
   for (const slot of def.slots) {
     const value = bag[slot.name];
@@ -62,8 +62,8 @@ export function childSlots(node: Node): SlotExpr[] {
 }
 
 /** Direct expression children of a statement or expression, in slot order. */
-function childExprs(node: Node): Expr[] {
-  return childSlots(node).map((entry) => entry.expr);
+function childExprs(block: Block): Expr[] {
+  return childSlots(block).map((entry) => entry.expr);
 }
 
 /** Body regions of a statement, in slot order (empty for simple statements). */
@@ -120,8 +120,8 @@ export function* programExprs(program: Program): Generator<Expr, void, void> {
 }
 
 /**
- * The statement that contains each node. Expressions map to their statement,
- * statements and functions to themselves.
+ * The node that owns each block's diagnostics and selection. Expressions map to their
+ * statement; statements and functions map to themselves.
  */
 export function ownerStmts(program: Program): Map<NodeId, NodeId> {
   const owners = new Map<NodeId, NodeId>();
@@ -134,11 +134,11 @@ export function ownerStmts(program: Program): Map<NodeId, NodeId> {
 }
 
 /** The condition a diamond asks: the slot its block's `branch` or `check` names, and what it holds. */
-export function conditionOf(node: Node): SlotExpr | undefined {
-  const chart = getBlockDef(keyOf(node)).chart;
+export function conditionOf(block: Block): SlotExpr | undefined {
+  const chart = getBlockDef(keyOf(block)).chart;
   if (!chart || !("branch" in chart || "check" in chart)) return undefined;
   const slot = "branch" in chart ? chart.branch.cond : chart.check.cond;
-  const value = (node as unknown as Bag)[slot];
+  const value = (block as unknown as Bag)[slot];
   return isExpr(value) ? { slot, expr: value } : undefined;
 }
 
@@ -174,10 +174,10 @@ export function bodyStmts(program: Program): Map<NodeId, NodeId[]> {
   return bodies;
 }
 
-const indexes = new WeakMap<Program, Map<NodeId, Node>>();
+const indexes = new WeakMap<Program, Map<NodeId, Block>>();
 
 /** Every statement and expression of the program by id; one pass per Program object. */
-export function nodesById(program: Program): Map<NodeId, Node> {
+export function blocksById(program: Program): Map<NodeId, Block> {
   let index = indexes.get(program);
   if (!index) {
     index = new Map();

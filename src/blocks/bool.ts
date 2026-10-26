@@ -12,11 +12,11 @@ export const bool = defineExpr<"bool">({
       ? undefined
       : { field: "value", message: "expected true or false" },
   zeroLike: () => ({ id: newId(), kind: "bool", value: false }),
-  *run(node) {
-    return { t: "bool", v: node.value };
+  *run(block) {
+    return { t: "bool", v: block.value };
   },
-  python: (node) => (node.value ? "True" : "False"),
-  notation: (node) => (node.value ? "True" : "False"),
+  python: (block) => (block.value ? "True" : "False"),
+  notation: (block) => (block.value ? "True" : "False"),
   kind: () => "truefalse",
   menu: [
     { name: "true", group: "values", preset: { value: true } },

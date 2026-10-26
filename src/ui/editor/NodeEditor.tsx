@@ -12,7 +12,7 @@ import { duplicateStmt, insertItem, removeItem, removeStmt, setExpr, setSlot } f
 import { chartOf, variableKinds } from "@/lang/kinds";
 import { visibleAt } from "@/lang/scope";
 import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
-import { isExpr, nodesById } from "@/lang/walk";
+import { isExpr, blocksById } from "@/lang/walk";
 import { cn } from "@/lib/utils";
 import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
 import { parseScope } from "@/python/parse";
@@ -120,7 +120,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   // ------------------------------------------------------------ transitions
 
   /** The statement as the program holds it now, after the edits applied so far. */
-  const current = () => nodesById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
+  const current = () => blocksById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
 
   /** Writes a transition's values into the program and keeps the session it leaves. */
   const run = (transition: Transition): Session => {
@@ -152,12 +152,12 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   /** Adds a value to a slot: an optional value, or an item at `at` of a list (the end when null). */
   const addItem = (from: Session, slot: string, at: number | null) => {
     const empty = emptyExpr();
-    const itemsOf = (node: Stmt | undefined): unknown =>
-      node ? (node as unknown as Record<string, unknown>)[slot] : undefined;
+    const itemsOf = (block: Stmt | undefined): unknown =>
+      block ? (block as unknown as Record<string, unknown>)[slot] : undefined;
     const list = def.slots.find((s) => s.name === slot)?.role === "exprs";
     const added = (p: Program): Program => {
       if (!list) return setExpr(p, stmt.id, slot, empty);
-      const items = itemsOf(nodesById(p).get(stmt.id) as Stmt | undefined);
+      const items = itemsOf(blocksById(p).get(stmt.id) as Stmt | undefined);
       const end = Array.isArray(items) ? items.length : 0;
       return insertItem(p, stmt.id, slot, at ?? end, empty);
     };
@@ -486,8 +486,8 @@ export function NodeEditor({ id }: { id: NodeId }) {
   const closeEditor = useEditor((s) => s.closeEditor);
   // The node's box, which the editor is placed beside; it is no control of its own.
   const [anchor, setAnchor] = useState<Element | null>(null);
-  const node = nodesById(program).get(id);
-  if (!node || !("kind" in node) || getBlockDef(keyOf(node)).shape !== "stmt") return null;
+  const block = blocksById(program).get(id);
+  if (!block || !("kind" in block) || getBlockDef(keyOf(block)).shape !== "stmt") return null;
   return (
     <Popover
       open
@@ -521,7 +521,7 @@ export function NodeEditor({ id }: { id: NodeId }) {
           >
             <Body
               key={`${id}:${slot ?? ""}:${hole ?? ""}`}
-              stmt={node as Stmt}
+              stmt={block as Stmt}
               program={program}
               initial={{ slot, hole }}
             />

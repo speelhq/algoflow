@@ -16,8 +16,8 @@ export const empty = defineExpr<"empty">({
   hidden: true,
   slots: [],
   create: emptyExpr,
-  run(node): Generator<Event, Value, void> {
-    throw new Error(`empty slot ${node.id} cannot run`);
+  run(block): Generator<Event, Value, void> {
+    throw new Error(`empty slot ${block.id} cannot run`);
   },
   python: () => "...",
   notation: () => "…",

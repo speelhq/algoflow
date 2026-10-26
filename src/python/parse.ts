@@ -184,8 +184,8 @@ class Parser {
     this.i += 1;
   }
 
-  /** Every node must have a registered block; the registry is the arbiter of the language. */
-  private node(pos: number, expr: Expr): Expr {
+  /** Every block must have a registered block definition; the registry is the arbiter of the language. */
+  private block(pos: number, expr: Expr): Expr {
     if (!hasBlockDef(keyOf(expr))) fail("E_PARSE_SYNTAX", pos);
     return expr;
   }
@@ -201,7 +201,7 @@ class Parser {
     for (let op = this.binopAt(level); op !== undefined; op = this.binopAt(level)) {
       const pos = this.take().pos;
       const right = next();
-      left = this.node(pos, { id: newId(), kind: "binop", op, left, right });
+      left = this.block(pos, { id: newId(), kind: "binop", op, left, right });
     }
     return left;
   }
@@ -217,7 +217,7 @@ class Parser {
   private not(): Expr {
     if (this.isWord("not")) {
       const pos = this.take().pos;
-      return this.node(pos, { id: newId(), kind: "unop", op: "not", operand: this.not() });
+      return this.block(pos, { id: newId(), kind: "unop", op: "not", operand: this.not() });
     }
     return this.cmp();
   }
@@ -229,7 +229,7 @@ class Parser {
     const pos = this.take().pos;
     const right = this.arith();
     if (this.binopAt(PRECEDENCE.compare) !== undefined) fail("E_PARSE_CHAIN", this.peek().pos);
-    return this.node(pos, { id: newId(), kind: "binop", op, left, right });
+    return this.block(pos, { id: newId(), kind: "binop", op, left, right });
   }
 
   private arith(): Expr {
@@ -243,7 +243,7 @@ class Parser {
   private factor(): Expr {
     if (this.isOp("-")) {
       const pos = this.take().pos;
-      return this.node(pos, { id: newId(), kind: "unop", op: "neg", operand: this.factor() });
+      return this.block(pos, { id: newId(), kind: "unop", op: "neg", operand: this.factor() });
     }
     return this.power();
   }
@@ -253,7 +253,7 @@ class Parser {
     const op = this.binopAt(PRECEDENCE.power);
     if (op !== undefined) {
       const pos = this.take().pos;
-      return this.node(pos, { id: newId(), kind: "binop", op, left: base, right: this.factor() });
+      return this.block(pos, { id: newId(), kind: "binop", op, left: base, right: this.factor() });
     }
     return base;
   }
@@ -284,7 +284,7 @@ class Parser {
         const pos = this.take().pos;
         const index = this.or();
         this.expectOp("]");
-        expr = this.node(pos, { id: newId(), kind: "index", list: expr, index });
+        expr = this.block(pos, { id: newId(), kind: "index", list: expr, index });
       } else if (this.isOp(".")) {
         this.take();
         const name = this.take();
@@ -308,7 +308,7 @@ class Parser {
   private resolveCall(name: string, position: number, args: Expr[]): Expr {
     if (hasBlockDef(builtinKey(name))) return { id: newId(), kind: "call", fn: name, args };
     if (this.scope.functions.includes(name)) {
-      return this.node(position, { id: newId(), kind: "call", fn: name, args });
+      return this.block(position, { id: newId(), kind: "call", fn: name, args });
     }
     return fail("E_UNKNOWN_CALL", position, { name });
   }
@@ -349,7 +349,7 @@ class Parser {
           return inner;
         }
         if (token.text === "[") {
-          return this.node(token.pos, { id: newId(), kind: "list", items: this.args("]") });
+          return this.block(token.pos, { id: newId(), kind: "list", items: this.args("]") });
         }
         if (token.text === "{") return this.dict(token.pos);
         return fail("E_PARSE_SYNTAX", token.pos);
@@ -362,7 +362,7 @@ class Parser {
     const entries: Array<{ key: Expr; value: Expr }> = [];
     if (this.isOp("}")) {
       this.take();
-      return this.node(pos, { id: newId(), kind: "dict", entries });
+      return this.block(pos, { id: newId(), kind: "dict", entries });
     }
     for (;;) {
       const key = this.or();
@@ -374,7 +374,7 @@ class Parser {
         continue;
       }
       this.expectOp("}");
-      return this.node(pos, { id: newId(), kind: "dict", entries });
+      return this.block(pos, { id: newId(), kind: "dict", entries });
     }
   }
 }

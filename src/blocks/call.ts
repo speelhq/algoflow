@@ -11,15 +11,15 @@ export const call = defineExpr<"call">({
     { name: "args", role: "exprs" },
   ],
   create: () => ({ id: newId(), kind: "call", fn: "", args: [] }),
-  callee: (node) =>
-    node.kind === "call"
-      ? { name: node.fn, argc: node.args.length, family: "function" }
+  callee: (block) =>
+    block.kind === "call"
+      ? { name: block.fn, argc: block.args.length, family: "function" }
       : { name: "", argc: 0, family: "function" },
-  *run(node, ctx) {
+  *run(block, ctx) {
     const args: Value[] = [];
-    for (const arg of node.args) args.push(yield* ctx.eval(arg));
-    return yield* ctx.call(node.fn, args, node.id);
+    for (const arg of block.args) args.push(yield* ctx.eval(arg));
+    return yield* ctx.call(block.fn, args, block.id);
   },
-  python: (node, ctx) => `${node.fn}(${node.args.map((arg) => ctx.expr(arg)).join(", ")})`,
+  python: (block, ctx) => `${block.fn}(${block.args.map((arg) => ctx.expr(arg)).join(", ")})`,
   notation: () => "{fn}({args})",
 });
