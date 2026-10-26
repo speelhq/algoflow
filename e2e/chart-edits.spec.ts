@@ -33,7 +33,7 @@ test("Delete removes the selected node, and undo and redo walk it back", async (
   const redo = page.getByRole("button", { name: "Redo" });
   await expect(undo).toBeDisabled();
   await node(page, "fzb-prfz-001").click({ position: { x: 8, y: 20 } });
-  await expect(page.getByTestId("node-editor")).toBeVisible();
+  await expect(page.getByTestId("block-editor")).toBeVisible();
   await page.keyboard.press("Delete");
   await expect(node(page, "fzb-prfz-001")).toHaveCount(0);
   await page.keyboard.press("Control+z");
@@ -49,7 +49,7 @@ test("undo, redo, and duplicate act while a value line has the keyboard", async 
   await page.goto("/#/p/tutorial");
   await page.locator('[data-testid="connector"][data-place="main/main/0"]').click();
   await page.getByTestId("block-menu").locator('[data-entry="print"]').click();
-  const line = page.getByTestId("node-editor").locator("[data-value-line]");
+  const line = page.getByTestId("block-editor").locator("[data-value-line]");
   const chart = page.getByTestId("chart");
   await expect(line).toBeFocused();
   await page.keyboard.type("1");
@@ -73,7 +73,7 @@ test("Ctrl+D duplicates the selected node, and Esc clears the selection", async 
     2,
   );
   await page.keyboard.press("Escape");
-  await expect(page.getByTestId("node-editor")).toHaveCount(0);
+  await expect(page.getByTestId("block-editor")).toHaveCount(0);
   await expect(page.locator("[data-selected]")).toHaveCount(0);
 });
 
@@ -84,7 +84,7 @@ test("a node dragged onto another connector moves there", async ({ page }) => {
   await page.getByTestId("tab-python").click();
   await drag(page, "fzb-prnt-001", "main/main/0");
   // A drop opens no editor.
-  await expect(page.getByTestId("node-editor")).toHaveCount(0);
+  await expect(page.getByTestId("block-editor")).toHaveCount(0);
   await expect(page.getByTestId("python-line").nth(1)).toHaveText("2print(i)");
 });
 

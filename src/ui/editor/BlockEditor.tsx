@@ -404,8 +404,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
       // canvas lower than its fixed parts and a few rows, the editor scrolls within that height.
       className={cn("flex flex-col", list && "overflow-y-auto")}
       style={list ? { height: `min(${EDITOR_HEIGHT}px, var(--available-height))` } : undefined}
-      data-testid="node-editor"
-      data-node={stmt.id}
+      data-testid="block-editor"
+      data-block={stmt.id}
     >
       {diagnostics.length > 0 && (
         <div className="flex flex-col gap-2 p-2.5 pb-0">
@@ -478,7 +478,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 }
 
 /** The editor of statement `id`, anchored to the element it is rendered in. */
-export function NodeEditor({ id }: { id: NodeId }) {
+export function BlockEditor({ id }: { id: NodeId }) {
   const program = useProgram((s) => s.program);
   const slot = useEditor((s) => s.slot);
   const hole = useEditor((s) => s.hole);

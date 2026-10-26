@@ -10,7 +10,7 @@ import { firstDifference, watchStep, type WatchStep } from "@/challenges/rows";
 import { seedOf, type Test } from "@/challenges/types";
 import type { Data, Name, NodeId, Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
-import { bodyStmts, diamondConditions, blocksById, ownerStmts } from "@/lang/walk";
+import { bodyStmts, diamondConditions, blocksById, ownersById } from "@/lang/walk";
 import { clamp } from "@/lib/utils";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import { outcomeOf } from "@/runtime/outcome";
@@ -370,7 +370,7 @@ export const useRun = create<RunState>()((set, get) => {
       if (!made) return;
       origin = from;
       findings = made;
-      owners = ownerStmts(from.program);
+      owners = ownersById(from.program);
       conditions = diamondConditions(from.program);
       bodies = bodyStmts(from.program);
       loops = loopBodies(from.program, bodies);
