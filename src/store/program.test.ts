@@ -73,9 +73,9 @@ describe("program store", () => {
   it("ignores a stored value that migrate() rejects", () => {
     localStorage.setItem(programKey("bare"), "{not json");
     expect(restore("bare").main).toEqual([]);
-    localStorage.setItem(programKey("bare"), JSON.stringify({ version: 2 }));
+    localStorage.setItem(programKey("bare"), JSON.stringify({ version: 1 }));
     expect(restore("bare").main).toEqual([]);
-    localStorage.setItem(programKey("bare"), JSON.stringify({ version: 2, main: [{}] }));
+    localStorage.setItem(programKey("bare"), JSON.stringify({ version: 1, main: [{}] }));
     expect(restore("bare").main).toEqual([]);
   });
 

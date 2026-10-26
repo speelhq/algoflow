@@ -24,7 +24,7 @@
   ],
   "takeaway": { "en": "A **while** loop kept going until its condition became false." },
   "solution": {
-    "version": 2,
+    "version": 1,
     "title": "Countdown",
     "challengeId": "countdown",
     "inputs": [{ "name": "n", "kind": "number" }],
