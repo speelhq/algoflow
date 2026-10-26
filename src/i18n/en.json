@@ -15,8 +15,8 @@
       "close": "Close",
       "loop": {
         "build": "Build: add blocks to the chart under Start.",
-        "run": "Run: watch the chart work on one input, step by step, and compare its output with the expected one.",
-        "submit": "Submit: check every case; fix the chart until all of them pass."
+        "run": "Run: watch your program run on one input, step by step, and compare its output with the expected one.",
+        "submit": "Submit: check every case; fix your program until all of them pass."
       },
       "keysTitle": "Keyboard",
       "keysColumn": "Keys",
@@ -392,8 +392,8 @@
     "percent": "{n}%",
     "solution": "Solution",
     "readOnly": "read-only",
-    "backToMine": "Back to my chart",
-    "load": "Load into my chart",
+    "backToMine": "Back to my program",
+    "load": "Load into my program",
     "addFirst": "Add your first block",
     "connector": "Add a block here",
     "connectorGlyph": "+"
