@@ -18,14 +18,14 @@ A module is one JSON value:
 ```ts
 export type Module = {
   version: 1;
-  name: Id; // a name as `language.md`, Identifiers, allows; its Python file is <name>.py (`emitter.md`)
+  name: Name; // a name as `language.md`, Identifiers, allows; its Python file is <name>.py (`emitter.md`)
   title?: Localized; // built-in modules only; a learner module shows `name`
   classes: ClassDef[];
   functions: FunctionDef[];
   cases: Case[]; // Cases
 };
 export type Case = {
-  fn: Id; // a function of this module
+  fn: Name; // a function of this module
   args: Data[]; // one per parameter
   expect: { returns: Data; args: Data[] }; // the value returned, and the arguments after the run
 };
@@ -237,7 +237,7 @@ copies every case.
 
 `src/store/modules.ts` is the only reader and writer of learner modules.
 It persists them under the `localStorage` key `algoflow:modules`, as
-`Record<Id, Module>`, 500 ms after the last edit. It exposes `list()`,
+`Record<Name, Module>`, 500 ms after the last edit. It exposes `list()`,
 `get(name)`, `put(module)`, and `remove(name)`, and nothing else accesses
 the key.
 

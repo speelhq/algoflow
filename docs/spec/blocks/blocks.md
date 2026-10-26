@@ -25,22 +25,22 @@ export type BlockDef = {
   params?: Param[]; // builtin and method parameters in order (argument counts below)
   aliases?: string[]; // Python spellings the parser accepts (`parser.md`), e.g. "random.randint"
   imports?: "random"; // a builtin's module (Builtin calls)
-  precedence?(node: Expr): number; // `emitter.md`; undefined = atom
+  precedence?(block: Expr): number; // `emitter.md`; undefined = atom
   loop?: boolean; // its body regions are loop bodies
   requires?: "loop" | "function"; // where the statement may appear (E_BREAK_OUTSIDE, E_RETURN_OUTSIDE)
   hidden?: boolean; // not in the block menu (`empty`, `expr`)
-  zeroLike?(node: Expr): Expr; // a literal block's zero of the same type (`hoistAssign`)
-  callee?(node: Expr): Callee; // a call-like block's callee and argument count
+  zeroLike?(block: Expr): Expr; // a literal block's zero of the same type (`hoistAssign`)
+  callee?(block: Expr): Callee; // a call-like block's callee and argument count
   create(): Stmt | Expr; // required slots hold `empty` (`language.md`, Expressions)
   run: StmtRunner | ExprRunner; // `interpreter.md`, Block definitions
 
-  python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // `emitter.md`: stmt → lines, expr → text
-  notation(node: Stmt | Expr): string; // Notation
+  python(block: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // `emitter.md`: stmt → lines, expr → text
+  notation(block: Stmt | Expr): string; // Notation
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined; // `language.md`, Data
-  text?(node: Stmt | Expr, slot: string): string; // Notation
-  kind?(node: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
-  declares?: Kind; // the kind of the variable its `id` slot names (`language.md`, Kinds)
-  locate?(node: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>; // a target's place (`interpreter.md`, Block definitions)
+  text?(block: Stmt | Expr, slot: string): string; // Notation
+  kind?(block: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
+  declares?: Kind; // the kind of the variable its `name` slot names (`language.md`, Kinds)
+  locate?(block: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>; // a target's place (`interpreter.md`, Block definitions)
   menu?: MenuEntry[]; // the entries of the value list (Menu entries)
   chart?:
     | { branch: { cond: string; yes: string; no: string } }
@@ -51,13 +51,13 @@ export type BlockDef = {
 export type Param = { name: string; optional?: true }; // `name` as the notation writes it
 export type FieldFault = { field: string; message: string }; // a stored field no edit writes
 export type Callee = {
-  name: Id;
+  name: Name;
   argc: number;
   family: "builtin" | "function" | "class" | "method"; // builtin, method: arity from `params`
 };
 export type Slot = {
   name: string;
-  role: "expr" | "exprs" | "id" | "body" | "target" | "text";
+  role: "expr" | "exprs" | "name" | "body" | "target" | "text";
   required?: boolean;
   atom?: true; // its input binds as an atom (Notation)
   binds?: true; // a `target` slot that declares the variable its target is (`language.md`, Scope)
@@ -79,7 +79,7 @@ A slot has one of six roles:
 
 - `expr` holds one expression.
 - `exprs` holds an ordered list of expressions.
-- `id` holds a name.
+- `name` holds a name.
 - `body` holds a statement region.
 - `target` holds one target (`language.md`, Statements). The emitter and
   the chart write it as the expression it is.
@@ -255,7 +255,7 @@ literal. `__repr__` lists the fields in order, as `print` does
 
 The chart, the value line, the block menu, the explanation line, and the
 narration all write a block from its block definition's
-`notation(node)`: the text of the tables above, with `{slot}`
+`notation(block)`: the text of the tables above, with `{slot}`
 placeholders.
 
 A notation is the same in every locale, because the learner reads a block
@@ -266,7 +266,7 @@ the value list, the explanation line, and the narration.
 
 ### Text slots
 
-A `text` slot is written with `text(node, slot)`, which defaults to the
+A `text` slot is written with `text(block, slot)`, which defaults to the
 slot's string value.
 
 `num` writes `raw`.

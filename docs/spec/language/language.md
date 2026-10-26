@@ -42,12 +42,12 @@ export type Program = {
   functions: FunctionDef[];
   main: Stmt[];
 };
-export type InputDecl = { name: Id; kind: Kind };
-export type ClassDef = { id: NodeId; name: Id; fields: Field[] };
-export type Field = { name: Id; default: Data }; // Semantics, Objects
-export type FunctionDef = { id: NodeId; name: Id; params: Id[]; body: Stmt[] };
+export type InputDecl = { name: Name; kind: Kind };
+export type ClassDef = { id: NodeId; name: Name; fields: Field[] };
+export type Field = { name: Name; default: Data }; // Semantics, Objects
+export type FunctionDef = { id: NodeId; name: Name; params: Name[]; body: Stmt[] };
 export type NodeId = string; // 12-char nanoid
-export type Id = string;
+export type Name = string;
 ```
 
 Within a program, `NodeId` values are unique. Function names, class names,
@@ -167,7 +167,7 @@ export type HeapId = number;
 export type HeapEntry =
   | { kind: "list"; items: Value[] }
   | { kind: "dict"; entries: Map<string, Value> } // "i:3" for int 3, "s:ab" for str "ab"
-  | { kind: "obj"; cls: Id; fields: Map<Id, Value> };
+  | { kind: "obj"; cls: Name; fields: Map<Name, Value> };
 export type Heap = Map<HeapId, HeapEntry>;
 ```
 
@@ -201,8 +201,8 @@ export type Stmt =
   | (S & { kind: "assign"; target: Expr; value: Expr })
   | (S & { kind: "delete"; target: Expr })
   | (S & { kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
-  | (S & { kind: "for"; var: Id; start: Expr; stop: Expr; body: Stmt[] })
-  | (S & { kind: "foreach"; var: Id; list: Expr; body: Stmt[] })
+  | (S & { kind: "for"; var: Name; start: Expr; stop: Expr; body: Stmt[] })
+  | (S & { kind: "foreach"; var: Name; list: Expr; body: Stmt[] })
   | (S & { kind: "while"; cond: Expr; body: Stmt[] })
   | (S & { kind: "break" })
   | (S & { kind: "continue" })
@@ -239,17 +239,17 @@ export type Expr =
   | (E & { kind: "str"; value: string })
   | (E & { kind: "bool"; value: boolean })
   | (E & { kind: "none" })
-  | (E & { kind: "var"; name: Id })
+  | (E & { kind: "var"; name: Name })
   | (E & { kind: "binop"; op: BinOp; left: Expr; right: Expr })
   | (E & { kind: "unop"; op: "neg" | "not"; operand: Expr })
   | (E & { kind: "index"; list: Expr; index: Expr })
   | (E & { kind: "key"; dict: Expr; key: Expr })
-  | (E & { kind: "field"; obj: Expr; field: Id })
+  | (E & { kind: "field"; obj: Expr; field: Name })
   | (E & { kind: "list"; items: Expr[] })
   | (E & { kind: "dict"; entries: Array<{ key: Expr; value: Expr }> })
-  | (E & { kind: "new"; cls: Id; args: Expr[] })
-  | (E & { kind: "call"; fn: Id; args: Expr[] })
-  | (E & { kind: "method"; obj: Expr; name: Id; args: Expr[] });
+  | (E & { kind: "new"; cls: Name; args: Expr[] })
+  | (E & { kind: "call"; fn: Name; args: Expr[] })
+  | (E & { kind: "method"; obj: Expr; name: Name; args: Expr[] });
 export type BinOp =
   | "+"
   | "-"

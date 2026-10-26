@@ -45,7 +45,7 @@ without a browser.
   between `Data` and `Value`, which places lists, dicts, and objects on the
   heap (`data.ts`). `validate()` returns `Diagnostic[]` and runs after every
   edit and before every run. Never change a `Program` in place:
-  `validate()`, `refusedDefinitions()`, and `nodesById()` are memoized per
+  `validate()`, `refusedDefinitions()`, and `blocksById()` are memoized per
   `Program` object, and the undo history keeps earlier programs.
 - `src/blocks`: one block definition (`BlockDef`) per file. It owns its slots,
   `create()`, `run` (what the interpreter does), `python()` (the exact
