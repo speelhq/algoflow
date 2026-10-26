@@ -11,7 +11,7 @@ export type RunView = {
   activeId: NodeId | null;
   lastEvent: StepEvent | null;
   taken: Record<NodeId, true>;
-  verdicts: Record<NodeId, boolean>;
+  marks: Record<NodeId, boolean>;
   breakpoint: NodeId | null;
 };
 
@@ -56,22 +56,22 @@ export function paint(chart: ChartLayout, view: RunView): Paint {
     const from = byId.get(edge.from);
     const to = byId.get(edge.to);
     if (!from || !to || !nodes.has(from.id) || !nodes.has(to.id)) continue;
-    const verdict = from.owner === null ? undefined : view.verdicts[from.owner];
+    const mark = from.owner === null ? undefined : view.marks[from.owner];
     // A labeled edge follows its diamond's mark; once a loop's mark is cleared on leaving
     // it (control is elsewhere), its `No` edge is taken when what it leads to is: what follows
     // the loop, or its exit, unless a jump on the path is what reached the exit.
-    const left = verdict === undefined && from.owner !== null && from.owner !== view.activeId;
+    const left = mark === undefined && from.owner !== null && from.owner !== view.activeId;
     const jumped = (exit: ChartNode) =>
       chart.edges.some((other) => other.to === exit.id && !other.label && nodes.has(other.from));
     const past = to.owner !== from.owner || (to.role === "exit" && !jumped(to));
     const follows =
-      !edge.label || verdict === (edge.label === "yes") || (left && edge.label === "no" && past);
+      !edge.label || mark === (edge.label === "yes") || (left && edge.label === "no" && past);
     if (follows) edges.add(edge.id);
   }
   const marks = new Map<string, boolean>();
-  for (const [owner, verdict] of Object.entries(view.verdicts)) {
+  for (const [owner, mark] of Object.entries(view.marks)) {
     const node = nodeFor(chart.nodes, owner);
-    if (node?.shape === "diamond") marks.set(node.id, verdict);
+    if (node?.shape === "diamond") marks.set(node.id, mark);
   }
   const point = view.breakpoint === null ? undefined : nodeFor(chart.nodes, view.breakpoint);
   return { nodes, edges, marks, current: currentNode(chart, view), breakpoint: point?.id ?? null };

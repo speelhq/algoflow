@@ -70,7 +70,7 @@ type Shown = Pick<
   | "difference"
   | "activeId"
   | "taken"
-  | "verdicts"
+  | "marks"
   | "breakpoint"
 >;
 
@@ -93,7 +93,7 @@ function useRunPaint(
       difference: s.difference,
       activeId: s.activeId,
       taken: s.taken,
-      verdicts: s.verdicts,
+      marks: s.marks,
       breakpoint: s.breakpoint,
     })),
   );
@@ -104,7 +104,7 @@ function useRunPaint(
       activeId: run.activeId,
       lastEvent: run.lastEvent,
       taken: run.taken,
-      verdicts: run.verdicts,
+      marks: run.marks,
       breakpoint: run.breakpoint,
     });
     const told = narratePosition(run, program);

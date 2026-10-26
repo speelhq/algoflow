@@ -54,7 +54,7 @@ function position(s: RunState) {
     pass: s.pass,
     activeId: s.activeId,
     stdout: s.stdout,
-    verdicts: s.verdicts,
+    marks: s.marks,
     taken: s.taken,
     frame: s.frame,
     vars: s.state?.frames.map((frame) => [...frame.vars]),
@@ -96,7 +96,7 @@ describe("run store", () => {
       state: null,
       frame: 0,
       stdout: [],
-      verdicts: {},
+      marks: {},
       taken: {},
       breakpoint: null,
       caseIndex: 0,
@@ -344,7 +344,7 @@ describe("run store", () => {
       lastEvent: null,
       state: null,
       stdout: [],
-      verdicts: {},
+      marks: {},
       taken: {},
     });
     vi.advanceTimersByTime(1000);
@@ -514,18 +514,18 @@ describe("run store", () => {
     await paused();
     // enter for, loop, enter outer, compare, enter inner, compare, enter print, print, loop, enter outer, compare
     await run().seek(8);
-    expect(run().verdicts).toEqual({ [loop.id]: true, [outer.id]: true, [inner.id]: true });
+    expect(run().marks).toEqual({ [loop.id]: true, [outer.id]: true, [inner.id]: true });
     expect(Object.keys(run().taken)).toHaveLength(4);
     await run().seek(9);
     expect(run()).toMatchObject({
       pass: 2,
-      verdicts: { [loop.id]: true },
+      marks: { [loop.id]: true },
       taken: { [loop.id]: true },
     });
-    expect(Object.keys(run().verdicts)).toHaveLength(1);
+    expect(Object.keys(run().marks)).toHaveLength(1);
     expect(Object.keys(run().taken)).toHaveLength(1);
     await run().seek(11);
-    expect(run().verdicts).toEqual({ [loop.id]: true, [outer.id]: false });
+    expect(run().marks).toEqual({ [loop.id]: true, [outer.id]: false });
     expect(run().taken).toEqual({ [loop.id]: true, [outer.id]: true });
   });
 
@@ -539,11 +539,11 @@ describe("run store", () => {
     // enter, write, enter negated, compare(i < 1: true), compare(not: false), enter, write,
     // enter found, compare(found: true)
     await run().seek(4);
-    expect(run().verdicts).toEqual({});
+    expect(run().marks).toEqual({});
     await run().seek(5);
-    expect(run().verdicts).toEqual({ [negated.id]: false });
+    expect(run().marks).toEqual({ [negated.id]: false });
     await run().seek(9);
-    expect(run().verdicts).toEqual({ [negated.id]: false, [found.id]: true });
+    expect(run().marks).toEqual({ [negated.id]: false, [found.id]: true });
   });
 
   it("entering a diamond again clears its mark; a while shows its last check when it exits", async () => {
@@ -552,11 +552,11 @@ describe("run store", () => {
     await paused();
     // enter assign, write, enter while, compare(true), loop, enter assign, write, compare(false)
     await run().seek(3);
-    expect(run().verdicts).toEqual({});
+    expect(run().marks).toEqual({});
     await run().seek(5);
-    expect(run()).toMatchObject({ pass: 1, verdicts: { [loop.id]: true } });
+    expect(run()).toMatchObject({ pass: 1, marks: { [loop.id]: true } });
     await run().seek(8);
-    expect(run()).toMatchObject({ status: "done", verdicts: { [loop.id]: false } });
+    expect(run()).toMatchObject({ status: "done", marks: { [loop.id]: false } });
   });
 
   it("a for that ends loses its mark at the first statement after it", async () => {
@@ -566,9 +566,9 @@ describe("run store", () => {
     await paused();
     // enter for, loop, enter print, print, loop, enter print, print, enter after, print
     await run().seek(7);
-    expect(run().verdicts).toEqual({ [loop.id]: true });
+    expect(run().marks).toEqual({ [loop.id]: true });
     await run().seek(8);
-    expect(run()).toMatchObject({ activeId: after.id, verdicts: {} });
+    expect(run()).toMatchObject({ activeId: after.id, marks: {} });
   });
 
   it("a for left by break loses its mark too; a statement inside keeps it", async () => {
@@ -580,9 +580,9 @@ describe("run store", () => {
     // enter for, loop, enter if, compare(false), loop, enter if, compare(true), enter break,
     // enter after, print
     await run().seek(8);
-    expect(run().verdicts).toEqual({ [loop.id]: true, [exit.id]: true });
+    expect(run().marks).toEqual({ [loop.id]: true, [exit.id]: true });
     await run().seek(9);
-    expect(run().verdicts).toEqual({ [exit.id]: true });
+    expect(run().marks).toEqual({ [exit.id]: true });
   });
 
   // ------------------------------------------------------------ verdict

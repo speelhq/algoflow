@@ -44,7 +44,7 @@ export type RunState = {
   frame: number;
   stdout: string[];
   /** The last check result per diamond, by statement id (✓ / ✗). */
-  verdicts: Record<NodeId, boolean>;
+  marks: Record<NodeId, boolean>;
   /** The statements entered in the current pass (the taken path). */
   taken: Record<NodeId, true>;
   breakpoint: NodeId | null;
@@ -90,7 +90,7 @@ type Projection = {
   lastEvent: StepEvent | null;
   /** The state of the step when the reader read past its end (`Step`), else the runner's. */
   held: State | undefined;
-  verdicts: Record<NodeId, boolean>;
+  marks: Record<NodeId, boolean>;
   taken: Record<NodeId, true>;
   /** `loop` events per loop since its last `enter`. */
   passes: Map<NodeId, number>;
@@ -124,7 +124,7 @@ function freshProjection(): Projection {
     step: 0,
     lastEvent: null,
     held: undefined,
-    verdicts: {},
+    marks: {},
     taken: {},
     passes: new Map(),
   };
@@ -156,22 +156,22 @@ function apply(event: StepEvent): void {
   p.step += 1;
   p.lastEvent = event;
   if (event.type === "enter") {
-    delete p.verdicts[event.nodeId];
+    delete p.marks[event.nodeId];
     p.taken[event.nodeId] = true;
     p.passes.delete(event.nodeId);
     for (const [loop, inside] of loops) {
-      if (loop !== event.nodeId && !inside.has(event.nodeId)) delete p.verdicts[loop];
+      if (loop !== event.nodeId && !inside.has(event.nodeId)) delete p.marks[loop];
     }
   } else if (event.type === "compare") {
     const owner = conditions.get(event.nodeId);
-    if (owner !== undefined) p.verdicts[owner] = event.result;
+    if (owner !== undefined) p.marks[owner] = event.result;
   } else if (event.type === "loop") {
     // A new pass clears every mark in the loop's body; the loop's own check passed.
     for (const id of bodies.get(event.nodeId) ?? []) {
-      delete p.verdicts[id];
+      delete p.marks[id];
       delete p.taken[id];
     }
-    p.verdicts[event.nodeId] = true;
+    p.marks[event.nodeId] = true;
     p.passes.set(event.nodeId, (p.passes.get(event.nodeId) ?? 0) + 1);
   }
 }
@@ -300,7 +300,7 @@ export const useRun = create<RunState>()((set, get) => {
       state,
       frame: state ? state.frames.length - 1 : 0,
       stdout: runner?.stdout() ?? [],
-      verdicts: { ...p.verdicts },
+      marks: { ...p.marks },
       taken: { ...p.taken },
       breakpoint,
       verdict: ended ? (findings?.verdict ?? null) : null,
@@ -353,7 +353,7 @@ export const useRun = create<RunState>()((set, get) => {
     state: null,
     frame: 0,
     stdout: [],
-    verdicts: {},
+    marks: {},
     taken: {},
     breakpoint: null,
     caseIndex: 0,
