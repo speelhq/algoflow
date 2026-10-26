@@ -3,13 +3,13 @@
 import { judge } from "@/challenges/judge";
 import { resultRows, type Rows } from "@/challenges/rows";
 import { seedOf, type Challenge, type Test } from "@/challenges/types";
-import type { Id } from "@/lang/types";
+import type { Name } from "@/lang/types";
 import { emit } from "@/python/emit";
 import type { PythonResult } from "./cpython";
 import { execute } from "./interp";
 
 /** Runs emitted Python with the draws to replay, reporting the named variables of `main`. */
-export type PythonRunner = (code: string, draws: number[], names: Id[]) => PythonResult;
+export type PythonRunner = (code: string, draws: number[], names: Name[]) => PythonResult;
 
 /** What each differing row says: its line or variable, what was expected, and what came. */
 export function differences(rows: Rows): string[] {

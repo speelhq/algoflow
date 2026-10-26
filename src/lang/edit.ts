@@ -3,7 +3,7 @@
 import { getBlock, keyOf } from "@/blocks/registry";
 import { newId } from "./id";
 import { assignedValue, declaredBy } from "./scope";
-import type { Expr, FunctionDef, Id, NodeId, Place, Program, Stmt } from "./types";
+import type { Expr, FunctionDef, Name, NodeId, Place, Program, Stmt } from "./types";
 import {
   allExprs,
   isExpr,
@@ -166,7 +166,7 @@ export function setSlot(program: Program, id: NodeId, slot: string, value: strin
   const next = clone(program);
   const node = getNode(next, id);
   const spec = getBlock(keyOf(node)).slots.find((s) => s.name === slot);
-  if (spec?.role !== "id" && spec?.role !== "text") {
+  if (spec?.role !== "name" && spec?.role !== "text") {
     throw new EditError(`node ${id} has no settable slot ${slot}`);
   }
   (node as unknown as Bag)[slot] = value;
@@ -251,8 +251,8 @@ export function setStmtName(program: Program, id: NodeId, name: string): Program
   return next;
 }
 
-/** Renames a variable or function everywhere it occurs (`id` slots and declarations). */
-export function renameName(program: Program, from: Id, to: Id): Program {
+/** Renames a variable or function everywhere it occurs (`name` slots and declarations). */
+export function renameName(program: Program, from: Name, to: Name): Program {
   const next = clone(program);
   const swap = (name: string) => (name === from ? to : name);
   for (const input of next.inputs) input.name = swap(input.name);
@@ -263,7 +263,7 @@ export function renameName(program: Program, from: Id, to: Id): Program {
   const renameIdSlots = (node: Stmt | Expr) => {
     const bag = node as unknown as Bag;
     for (const slot of getBlock(keyOf(node)).slots) {
-      if (slot.role === "id" && typeof bag[slot.name] === "string") {
+      if (slot.role === "name" && typeof bag[slot.name] === "string") {
         bag[slot.name] = swap(bag[slot.name] as string);
       }
     }
@@ -278,7 +278,7 @@ export function renameName(program: Program, from: Id, to: Id): Program {
 
 // ---------------------------------------------------------------- functions
 
-export function addFunction(program: Program, name: Id, params: Id[] = []): Program {
+export function addFunction(program: Program, name: Name, params: Name[] = []): Program {
   const next = clone(program);
   const fn: FunctionDef = { id: newId(), name, params: [...params], body: [] };
   next.functions.push(fn);
@@ -294,7 +294,7 @@ export function removeFunction(program: Program, id: NodeId): Program {
 }
 
 /** Replaces the ordered parameters of a function. */
-export function setParams(program: Program, id: NodeId, params: Id[]): Program {
+export function setParams(program: Program, id: NodeId, params: Name[]): Program {
   const next = clone(program);
   const fn = next.functions.find((f) => f.id === id);
   if (!fn) throw new EditError(`no function ${id}`);
@@ -305,7 +305,7 @@ export function setParams(program: Program, id: NodeId, params: Id[]): Program {
 // ---------------------------------------------------------------- the E_DECLARE_FIRST fix
 
 /** The zero-like literal of the first value assigned to `name` inside `stmts`, else None. */
-function defaultFor(stmts: Stmt[], name: Id): Expr {
+function defaultFor(stmts: Stmt[], name: Name): Expr {
   const none = (): Expr => ({ id: newId(), kind: "none" });
   for (const stmt of allStmts(stmts)) {
     if (!declaredBy(stmt).some((declared) => declared.role === "target" && declared.name === name))
@@ -317,7 +317,7 @@ function defaultFor(stmts: Stmt[], name: Id): Expr {
 }
 
 /** Inserts `name = <default>` immediately before the compound statement `compound`. */
-export function hoistAssign(program: Program, compound: NodeId, name: Id): Program {
+export function hoistAssign(program: Program, compound: NodeId, name: Name): Program {
   const next = clone(program);
   const { stmt, region, index } = getStmt(next, compound);
   const inner = regionsOf(stmt).flatMap((r) => r.stmts);

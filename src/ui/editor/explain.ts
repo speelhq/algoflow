@@ -2,7 +2,7 @@
 // is in, as a name and runs of text; undefined leaves the block's help.
 import { t } from "@/i18n/t";
 import { chartOf, firstSetters, variableKinds } from "@/lang/kinds";
-import type { Expr, Id, Kind, NodeId, Program } from "@/lang/types";
+import type { Expr, Name, Kind, NodeId, Program } from "@/lang/types";
 import { isEmptyExpr } from "@/lang/walk";
 import {
   parenthesized,
@@ -46,7 +46,7 @@ export function helpParts(text: string): Part[] {
 const kindName = (kind: Kind) => t(`editor.kind.${kind}`);
 
 /** A variable of the chart that holds statement `at`: its kind and where it is first set. */
-export function explainVariable(program: Program, at: NodeId, name: Id): string {
+export function explainVariable(program: Program, at: NodeId, name: Name): string {
   const chart = chartOf(program, at);
   const fn = program.functions.find((candidate) => candidate.id === chart);
   const kind = variableKinds(program, chart).get(name);
@@ -63,7 +63,7 @@ export function explainVariable(program: Program, at: NodeId, name: Id): string 
 }
 
 /** A name a list offers: a variable of the chart, or a new one it makes. */
-export function explainName(program: Program, at: NodeId, name: Id, isNew: boolean): Explanation {
+export function explainName(program: Program, at: NodeId, name: Name, isNew: boolean): Explanation {
   const text = isNew
     ? t("editor.explain.newVariable", { name })
     : explainVariable(program, at, name);

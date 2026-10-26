@@ -4,7 +4,7 @@
 import { getBlock, keyOf } from "@/blocks/registry";
 import { isFloatData } from "./data";
 import { assignedValue, declaredBy } from "./scope";
-import type { Data, Expr, Id, Kind, NodeId, Program, Stmt } from "./types";
+import type { Data, Expr, Name, Kind, NodeId, Program, Stmt } from "./types";
 import { allStmts, variableOf } from "./walk";
 
 /** The kind of a value written as Data. */
@@ -17,7 +17,7 @@ export function dataKind(data: Data): Kind {
   return isFloatData(data) ? "number" : "dict";
 }
 
-export type Kinds = ReadonlyMap<Id, Kind>;
+export type Kinds = ReadonlyMap<Name, Kind>;
 
 /** The kind of `expr`, its variables' kinds being `variables`; undefined when it cannot be told. */
 export function exprKind(expr: Expr, variables: Kinds): Kind | undefined {
@@ -34,7 +34,7 @@ export function chartOf(program: Program, id: NodeId): "main" | NodeId {
   return "main";
 }
 
-type Scope = { kinds: Map<Id, Kind>; setters: Map<Id, Stmt> };
+type Scope = { kinds: Map<Name, Kind>; setters: Map<Name, Stmt> };
 
 const memo = new WeakMap<Program, Map<string, Scope>>();
 
@@ -47,9 +47,9 @@ function scope(program: Program, chart: "main" | NodeId): Scope {
   const known = charts.get(chart);
   if (known) return known;
   const fn = program.functions.find((candidate) => candidate.id === chart);
-  const kinds = new Map<Id, Kind>();
-  const setters = new Map<Id, Stmt>();
-  const assigned = new Set<Id>();
+  const kinds = new Map<Name, Kind>();
+  const setters = new Map<Name, Stmt>();
+  const assigned = new Set<Name>();
   if (!fn) {
     for (const input of program.inputs) {
       kinds.set(input.name, input.kind);
@@ -60,7 +60,7 @@ function scope(program: Program, chart: "main" | NodeId): Scope {
     const def = getBlock(keyOf(stmt));
     for (const { name, role } of declaredBy(stmt)) {
       if (!setters.has(name)) setters.set(name, stmt);
-      if (role === "id") {
+      if (role === "name") {
         // A loop's kind holds until an assignment says otherwise.
         if (!assigned.has(name) && !kinds.has(name) && def.declares) kinds.set(name, def.declares);
         continue;
@@ -83,6 +83,6 @@ export function variableKinds(program: Program, chart: "main" | NodeId): Kinds {
 }
 
 /** The statement that first sets each variable of `main` or of one function. */
-export function firstSetters(program: Program, chart: "main" | NodeId): ReadonlyMap<Id, Stmt> {
+export function firstSetters(program: Program, chart: "main" | NodeId): ReadonlyMap<Name, Stmt> {
   return scope(program, chart).setters;
 }

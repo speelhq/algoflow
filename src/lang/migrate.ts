@@ -66,7 +66,7 @@ function rawChildren(
     const value = node[slot.name];
     if (slot.role === "expr" || slot.role === "target") {
       if (value !== undefined || slot.required) out.push({ value, path: `${path}.${slot.name}` });
-    } else if (slot.role === "id") {
+    } else if (slot.role === "name") {
       expectName(value, `${path}.${slot.name}`);
     } else if (slot.role === "exprs") {
       expectArray(value, `${path}.${slot.name}`).forEach((item, i) =>

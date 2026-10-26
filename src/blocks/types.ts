@@ -3,7 +3,7 @@ import type {
   Expr,
   ExprKind,
   Heap,
-  Id,
+  Name,
   Kind,
   NodeId,
   Program,
@@ -14,11 +14,11 @@ import type {
 import type { Event, Ref, RuntimeCode } from "@/runtime/types";
 import type { Category } from "./categories";
 
-export type SlotRole = "expr" | "exprs" | "id" | "body" | "target" | "text";
+export type SlotRole = "expr" | "exprs" | "name" | "body" | "target" | "text";
 
 /** What a call-like expression invokes; `builtin` and `method` arity comes from `params`. */
 export type Callee = {
-  name: Id;
+  name: Name;
   argc: number;
   family: "builtin" | "function" | "method";
 };
@@ -109,7 +109,7 @@ export type RunContext = {
   save(ref: Ref, value: Value): void;
   /** Locates `target`, saves `value` there, and emits its `write`, which carries `at`. */
   store(target: Expr, value: Value, at: NodeId): Generator<Event, void, void>;
-  call(fn: Id, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
+  call(fn: Name, args: Value[], nodeId: NodeId): Generator<Event, Value, void>;
   fail(nodeId: NodeId, code: RuntimeCode, params?: Record<string, string | number>): never;
   /** `E_VALUE`: the operation of `node` does not take a value of this type. */
   valueError(node: Expr, value: Value): never;
@@ -194,7 +194,7 @@ export type BlockDef = {
   chart?: ChartShape;
   /** The kind of the expression, given the kinds of the expressions inside it. */
   kind?: (node: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
-  /** The kind of the variable its `id` slot names. */
+  /** The kind of the variable its `name` slot names. */
   declares?: Kind;
   /** The entries of the value list. */
   menu?: readonly MenuEntry[];

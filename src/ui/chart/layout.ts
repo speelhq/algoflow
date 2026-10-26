@@ -8,7 +8,7 @@
 // Reads `def.chart`, `def.requires`, and the regions of a statement, never a kind.
 import { t } from "@/i18n/t";
 import { inputValue } from "@/lang/data";
-import type { Data, Id, NodeId, Place, Program, Stmt } from "@/lang/types";
+import type { Data, Name, NodeId, Place, Program, Stmt } from "@/lang/types";
 import { regionsOf } from "@/lang/walk";
 import { getBlock, keyOf } from "@/blocks/registry";
 import {
@@ -81,7 +81,7 @@ export type LayoutOptions = {
   /** `main` (default) or a function's id. */
   chart?: "main" | NodeId;
   /** The values the Input nodes show: the chosen case's. */
-  inputs: Readonly<Record<Id, Data>>;
+  inputs: Readonly<Record<Name, Data>>;
   measure: Measure;
 };
 

@@ -3,7 +3,7 @@
 // `Variables`, each kept while one of its words begins with the text typed, and a typed name
 // none of them is offered as a new variable.
 import { declaredBy } from "@/lang/scope";
-import type { Id, NodeId, Program } from "@/lang/types";
+import type { Name, NodeId, Program } from "@/lang/types";
 import { isValidName } from "@/lang/validate";
 import { allStmts } from "@/lang/walk";
 
@@ -19,7 +19,7 @@ export function matchesName(name: string, word: string): boolean {
 }
 
 /** The names a chart's list offers: the problem's expected ones first, then the chart's others. */
-export type ChartNames = { asked: readonly Id[]; names: readonly Id[] };
+export type ChartNames = { asked: readonly Name[]; names: readonly Name[] };
 
 /**
  * In `main` the problem's expected names (`asked`), then the inputs and the names `main` assigns;
@@ -28,11 +28,11 @@ export type ChartNames = { asked: readonly Id[]; names: readonly Id[] };
 export function chartNames(
   program: Program,
   chart: "main" | NodeId,
-  asked: readonly Id[],
+  asked: readonly Name[],
 ): ChartNames {
   const fn = program.functions.find((candidate) => candidate.id === chart);
   const problem = fn ? [] : [...new Set(asked)];
-  const names = new Set<Id>(fn ? fn.params : program.inputs.map((input) => input.name));
+  const names = new Set<Name>(fn ? fn.params : program.inputs.map((input) => input.name));
   for (const stmt of allStmts(fn ? fn.body : program.main)) {
     for (const { name } of declaredBy(stmt)) names.add(name);
   }
@@ -40,18 +40,18 @@ export function chartNames(
 }
 
 /** Whether a typed name is offered as a new variable: a name that none of `known` is. */
-export function isNewName(typed: string, known: readonly Id[]): boolean {
+export function isNewName(typed: string, known: readonly Name[]): boolean {
   return typed !== "" && !known.includes(typed) && isValidName(typed);
 }
 
 /** A name, or a new variable. */
-export type NameRow = { kind: "name"; name: Id } | { kind: "new"; name: Id };
+export type NameRow = { kind: "name"; name: Name } | { kind: "new"; name: Name };
 export type NameSection = { group: "problem" | "variables" | "new"; rows: NameRow[] };
 
 /** The sections of a name field's list for the text typed. */
 export function nameSections({ asked, names }: ChartNames, typed: string): NameSection[] {
   // A whole name comes first.
-  const kept = (list: readonly Id[]): NameRow[] =>
+  const kept = (list: readonly Name[]): NameRow[] =>
     list
       .filter((name) => matchesName(name, typed))
       .toSorted((a, b) => Number(b === typed) - Number(a === typed))

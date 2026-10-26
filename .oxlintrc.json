@@ -21,7 +21,7 @@
     "require-yield": "off",
     // The spec names the regions of an `if` `then` and `else`.
     "unicorn/no-thenable": "off",
-    // `Id | "main"` and `NodeId | "main"` are written as in the spec, to document intent.
+    // `Name | "main"` and `NodeId | "main"` are written as in the spec, to document intent.
     "typescript/no-redundant-type-constituents": "off",
     // An assertion stands where something the type checker cannot follow establishes a value's
     // shape (the registry's slot list, a check after `JSON.parse`); stating each in the types

@@ -266,9 +266,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const widget = (name: string): ReactNode => {
     const held = placeholderValue(stmt, name);
     switch (held?.role) {
-      case "id": {
+      case "name": {
         const shownName = nameOf(stmt, name);
-        const field: Field = { slot: name, role: "id" };
+        const field: Field = { slot: name, role: "name" };
         const on = sameField(focus, field);
         return shownName === undefined ? null : (
           <NameField
@@ -344,7 +344,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   let list: ReactNode = null;
   let explanation: Explanation | undefined;
-  if (focus?.role === "id") {
+  if (focus?.role === "name") {
     const shown = shownNameRow(session, names.rows);
     const row = shown === null ? undefined : names.rows[shown];
     list = (
