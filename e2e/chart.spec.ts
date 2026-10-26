@@ -65,7 +65,7 @@ test("zoom steps and returns to 100 %", async ({ page }) => {
   await expect(zoom).toContainText("100%");
 });
 
-test("Show solution draws the solution read-only; Back to my chart returns", async ({ page }) => {
+test("Show solution draws the solution read-only; Back to my program returns", async ({ page }) => {
   await page.goto("/#/p/fizzbuzz");
   await expect(page.getByTestId("chart").locator("[data-chart-node]")).toHaveCount(3);
   await page.getByRole("button", { name: "Show solution" }).click();
@@ -73,7 +73,7 @@ test("Show solution draws the solution read-only; Back to my chart returns", asy
   await expect(page.getByTestId("connector")).toHaveCount(0);
   await expect(page.getByTestId("chart")).toContainText("i % 15 = 0?");
   await expect(page.getByTestId("input-chart-node")).toHaveCount(0);
-  await page.getByRole("button", { name: "Back to my chart" }).click();
+  await page.getByRole("button", { name: "Back to my program" }).click();
   await expect(page.getByTestId("solution-band")).toHaveCount(0);
   await expect(page.getByTestId("chart").locator("[data-chart-node]")).toHaveCount(3);
 });
@@ -88,12 +88,12 @@ test("opening another problem while a solution is shown draws that problem's cha
   await expect(page.getByTestId("chart")).toContainText("Input a ← 3");
 });
 
-test("Load into my chart replaces the program with the solution as one undoable edit", async ({
+test("Load into my program replaces the program with the solution as one undoable edit", async ({
   page,
 }) => {
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "Show solution" }).click();
-  await page.getByRole("button", { name: "Load into my chart" }).click();
+  await page.getByRole("button", { name: "Load into my program" }).click();
   await expect(page.getByTestId("solution-band")).toHaveCount(0);
   await expect(page.getByTestId("chart")).toContainText("i % 15 = 0?");
   await expect(page.getByTestId("connector").first()).toBeVisible();
