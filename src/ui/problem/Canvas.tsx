@@ -21,12 +21,12 @@ import { Connector } from "@/ui/editor/BlockMenu";
 import { apply } from "@/ui/editor/edits";
 import { accepts, tryMove } from "@/ui/editor/moves";
 import { DiagnosticMessage, flaggedStatements } from "@/ui/editor/diagnostics";
-import { NodeEditor } from "@/ui/editor/NodeEditor";
+import { BlockEditor } from "@/ui/editor/BlockEditor";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/primitives/button";
 import { narratePosition } from "@/ui/run/narrate";
 import { caseText } from "./caseText";
-import { clickNode } from "./actions";
+import { clickChartNode } from "./actions";
 import { RunBar } from "./RunBar";
 
 /** Leaves the solution and replaces the learner's program with it, as one undoable edit. */
@@ -216,14 +216,14 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
           chart={chart}
           selectedId={readOnly ? null : selectedId}
           hoveredId={solution ? null : hoveredId}
-          onSelect={clickNode}
+          onSelect={clickChartNode}
           cases={readOnly ? undefined : cases}
           paint={painted}
           failed={narrated?.error ?? false}
           connector={readOnly ? undefined : connector}
           moves={readOnly ? undefined : moves}
           flags={readOnly ? undefined : flags}
-          editor={readOnly || !selectedId || !editing ? undefined : <NodeEditor id={selectedId} />}
+          editor={readOnly || !selectedId || !editing ? undefined : <BlockEditor id={selectedId} />}
         />
       )}
       {inRun(mode) && <NarrationLine narration={narrated} />}

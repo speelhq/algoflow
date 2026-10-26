@@ -3,13 +3,13 @@ import { errorText, t } from "@/i18n/t";
 import { hoistAssign } from "@/lang/edit";
 import type { Diagnostic, NodeId, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
-import { ownerStmts } from "@/lang/walk";
+import { ownersById } from "@/lang/walk";
 import { Button } from "@/ui/primitives/button";
 import { apply } from "./edits";
 
 /** The diagnostics nodes show, by statement: no empty slot, whose placeholder is its mark. */
 export function flaggedStatements(program: Program): Map<NodeId, Diagnostic[]> {
-  const owners = ownerStmts(program);
+  const owners = ownersById(program);
   const flagged = new Map<NodeId, Diagnostic[]>();
   for (const d of validate(program)) {
     if (d.code === "E_EMPTY_SLOT") continue;
@@ -39,7 +39,7 @@ export function editorDiagnostics(
 ): Diagnostic[] {
   const shown = flaggedStatements(program).get(id) ?? [];
   const still = led ? validate(program).find((d) => sameDiagnostic(d, led)) : undefined;
-  const owner = still ? (ownerStmts(program).get(still.nodeId) ?? still.nodeId) : undefined;
+  const owner = still ? (ownersById(program).get(still.nodeId) ?? still.nodeId) : undefined;
   return still && owner === id && !shown.includes(still) ? [still, ...shown] : shown;
 }
 

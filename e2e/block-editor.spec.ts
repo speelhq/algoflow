@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { programWith, seedPlayground, seedProgram, seedProgress, solutionOf } from "./seed";
 
-const editor = (page: Page) => page.getByTestId("node-editor");
+const editor = (page: Page) => page.getByTestId("block-editor");
 const chart = (page: Page) => page.getByTestId("chart");
 
 /** Inserts the block `entry` at the connector of `place`, returning the new statement's id. */
@@ -13,7 +13,7 @@ async function insert(page: Page, place: string, entry: string): Promise<string>
   await page.locator(`[data-testid="connector"][data-place="${place}"]`).click();
   await page.getByTestId("block-menu").locator(`[data-entry="${entry}"]`).click();
   await expect(editor(page)).toBeVisible();
-  return (await editor(page).getAttribute("data-node")) ?? "";
+  return (await editor(page).getAttribute("data-block")) ?? "";
 }
 
 /** Types into whatever has the keyboard, one key at a time. */

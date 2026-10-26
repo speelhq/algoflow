@@ -4,7 +4,7 @@
 // and what a click on a node does in each mode.
 import { validate } from "@/lang/validate";
 import type { NodeId } from "@/lang/types";
-import { ownerStmts } from "@/lang/walk";
+import { ownersById } from "@/lang/walk";
 import { useEditor } from "@/store/editor";
 import { currentMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
@@ -18,7 +18,7 @@ function readyToRun(): boolean {
   editor.showSolution(false);
   const [first] = validate(program);
   if (!first) return true;
-  editor.lead(ownerStmts(program).get(first.nodeId) ?? first.nodeId, first);
+  editor.lead(ownersById(program).get(first.nodeId) ?? first.nodeId, first);
   return false;
 }
 
@@ -72,7 +72,7 @@ export function startSubmit(): void {
  * clears the breakpoint, pausing first; once the run has ended it returns to build mode and
  * selects; in build mode it selects; on the shown solution it does nothing.
  */
-export function clickNode(owner: NodeId, slot?: string, hole?: NodeId): void {
+export function clickChartNode(owner: NodeId, slot?: string, hole?: NodeId): void {
   const run = useRun.getState();
   switch (currentMode()) {
     case "running":

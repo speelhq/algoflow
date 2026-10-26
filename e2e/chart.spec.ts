@@ -47,7 +47,7 @@ test("clicking a node selects its statement and highlights its Python lines", as
 
 test("an Input node lists the cases and choosing one sets it", async ({ page }) => {
   await page.goto("/#/p/fizzbuzz");
-  await page.getByTestId("input-node").click();
+  await page.getByTestId("input-chart-node").click();
   await page.getByRole("menuitem", { name: "n ← 3" }).click();
   await expect(page.getByTestId("chart")).toContainText("Input n ← 3");
 });
@@ -72,7 +72,7 @@ test("Show solution draws the solution read-only; Back to my chart returns", asy
   await expect(page.getByTestId("solution-band")).toContainText("Solution");
   await expect(page.getByTestId("connector")).toHaveCount(0);
   await expect(page.getByTestId("chart")).toContainText("i % 15 = 0?");
-  await expect(page.getByTestId("input-node")).toHaveCount(0);
+  await expect(page.getByTestId("input-chart-node")).toHaveCount(0);
   await page.getByRole("button", { name: "Back to my chart" }).click();
   await expect(page.getByTestId("solution-band")).toHaveCount(0);
   await expect(page.getByTestId("chart").locator("[data-chart-node]")).toHaveCount(3);

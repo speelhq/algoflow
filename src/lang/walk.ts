@@ -123,7 +123,7 @@ export function* programExprs(program: Program): Generator<Expr, void, void> {
  * The node that owns each block's diagnostics and selection. Expressions map to their
  * statement; statements and functions map to themselves.
  */
-export function ownerStmts(program: Program): Map<NodeId, NodeId> {
+export function ownersById(program: Program): Map<NodeId, NodeId> {
   const owners = new Map<NodeId, NodeId>();
   for (const fn of program.functions) owners.set(fn.id, fn.id);
   for (const { stmt } of programStmts(program)) {
