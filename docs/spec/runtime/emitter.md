@@ -130,7 +130,8 @@ The emitter writes each literal as its Python text:
 
 
 This section states what a block definition's `python()` returns and
-receives, and how the emitter writes a target and a named statement.
+receives, and how the emitter writes a target and a statement with a
+caption.
 
 A block definition writes the Python of its blocks with `python()`:
 
@@ -154,8 +155,8 @@ A block definition's `python()` receives this context:
 The emitter writes a target as the expression it is (`language.md`,
 Statements, Targets).
 
-Before a statement with a name (`language.md`, Statement names), the
-emitter writes the comment line `# <name>` at the statement's
+Before a statement with a caption (`language.md`, Captions), the
+emitter writes the comment line `# <caption>` at the statement's
 indentation, and the statement's map entry starts at that line.
 
 ## Modules

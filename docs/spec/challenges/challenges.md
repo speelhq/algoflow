@@ -66,7 +66,7 @@ input's name.
 
 A `solution` has the `version` that `migrate()` returns (`language.md`,
 Storage), because the build bundles a challenge file as it is, with no
-`migrate()`, so an older version would reach the page unmigrated.
+`migrate()`, so a file of another version would reach the page unchecked.
 
 Every challenge has at least one test with `edge: true`, a boundary
 case. For example: an empty list, zero, or a single item. A test is

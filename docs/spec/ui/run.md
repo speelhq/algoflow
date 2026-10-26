@@ -128,7 +128,7 @@ chart. The condition is written as the table above writes a comparison
 instead keeps its name (`found? Yes`), because its value in its place would
 drop the question (`True? Yes`).
 
-A named block is narrated by its statement, not its name.
+A block with a caption is narrated by its statement, not its caption.
 
 The narration names a location by the variable that holds it in the frame the
 event ran in, written as the chart writes it: an item as `nums[2]`, a field as

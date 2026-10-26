@@ -205,6 +205,8 @@ The spec uses these terms:
 | block           | a statement or an expression that the learner places, made from a block definition. It is a `Block` (`Stmt` or `Expr`) in the code (`language.md`, Statements; Expressions). A function is not a block. |
 | block definition | the kind that blocks are made from: a `BlockDef` in `src/blocks/` and its entry in the block menu (`blocks.md`) |
 | routine         | `main` or a function: a unit with its own statements and variables              |
+| name            | the name of a variable, function, parameter, class, or field (`language.md`, Identifiers). `Name` in the code. |
+| caption         | the one line of text that the learner gives a statement, which the chart shows in place of its notation or its question (`language.md`, Captions) |
 | region          | an ordered list of statements inside a branch or loop, or at top level          |
 | compound statement | a branch or a loop, as Python names it: a statement that holds a region in a slot of role `body` (`blocks.md`, The block definition) |
 | slot            | one editable field of a block                                                   |

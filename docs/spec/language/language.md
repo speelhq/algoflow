@@ -34,7 +34,7 @@ A program is one `Program` value:
 
 ```ts
 export type Program = {
-  version: 2;
+  version: 1;
   title: string;
   challengeId?: string;
   inputs: InputDecl[]; // empty in Playground (`scope.md`, Curriculum)
@@ -196,7 +196,7 @@ from Python, while a wrong `int` wouldn't show.
 A statement is one of these kinds:
 
 ```ts
-type S = { id: NodeId; name?: string }; // Statement names
+type S = { id: NodeId; caption?: string }; // Captions
 export type Stmt =
   | (S & { kind: "assign"; target: Expr; value: Expr })
   | (S & { kind: "delete"; target: Expr })
@@ -482,7 +482,7 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 
 `edit.ts` exports pure functions that return a new `Program`: `insertStmt`,
 `moveStmt`, `removeStmt`, `duplicateStmt`, `setSlot`, `setExpr`,
-`insertItem`, `removeItem`, `renameName`, `setStmtName`, `addFunction`,
+`insertItem`, `removeItem`, `renameName`, `setCaption`, `addFunction`,
 `removeFunction`, `addClass`, `removeClass`, `setFields`, `setParams`, and
 `hoistAssign`. `insertItem` and `removeItem` add and remove an item of an
 `exprs` slot.
@@ -547,16 +547,8 @@ challenge. A Playground program has neither.
 When the learner exports a program, the application writes
 `<title>.algoflow.json` and embeds the modules the program uses
 (`modules.md`, Operations). When the learner imports a file, `migrate()`
-checks it and migrates it by `version` (`src/lang/migrate.ts`).
-
-`migrate()` reads versions 1 and 2 and returns version 2. Three rules
-apply to the targets it reads:
-
-- A version-1 target `{ kind, ...parts }` becomes the expression of that
-  kind, with those parts and a new node id that the program doesn't hold.
-- A variable target with no name becomes `empty`.
-- When no registered block definition has the target's kind, `migrate()`
-  rejects the target as an unknown kind.
+checks it (`src/lang/migrate.ts`). `migrate()` reads a program of
+`version` 1 and rejects any other `version`.
 
 ### Playground programs
 
@@ -571,20 +563,20 @@ programs in storage.
 The time is kept in this record, not in `Program`, because `Program`
 would then carry it into every export and challenge file.
 
-## Statement names
+## Captions
 
-A statement's `name` is the learner's own name for it (`editor.md`,
-Node names). It is one line of text. `setStmtName` and `migrate()` both
-store a name the same way:
+A statement's `caption` is the learner's own one-line text for it
+(`editor.md`, Captions). `setCaption` and `migrate()` both store a
+caption the same way:
 
 - trimmed
 - with each run of spaces as one space
 - absent, when the result is empty
 
-`setStmtName` also turns each line break into a space. `migrate()`
-rejects a name that isn't one line of text.
+`setCaption` also turns each line break into a space. `migrate()`
+rejects a caption that isn't one line of text.
 
-A statement's name changes neither validation nor execution.
+A statement's caption changes neither validation nor execution.
 
 ## Kinds
 
@@ -611,5 +603,5 @@ The tests of `src/lang` show three things:
 
 - Every validation code has a failing and a passing case.
 - Every edit keeps node ids unique.
-- `migrate()` accepts each supported version and rejects a malformed
+- `migrate()` accepts a program of `version` 1 and rejects a malformed
   program with the path of the fault.

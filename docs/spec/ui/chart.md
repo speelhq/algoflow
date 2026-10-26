@@ -162,9 +162,9 @@ the connector after it.
 
 The text of a `branch` or `check` diamond is its condition as the chart
 writes it (`blocks.md`, Notation), followed by `?` (`chart.condition`).
-For example: `i < n + 1?`, `i % 15 = 0?`. A named block shows its name
-instead (`editor.md`, Node names). A condition template writes a
-condition in words. For example: `is divisible by`, `equals`.
+For example: `i < n + 1?`, `i % 15 = 0?`. A block with a caption shows
+its caption instead (`editor.md`, Captions). A condition template writes
+a condition in words. For example: `is divisible by`, `equals`.
 Condition templates were rejected, because they name only the
 conditions they list, and they would write a condition in words beside
 the notation that every other chart node uses, while the condition
