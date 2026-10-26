@@ -54,9 +54,9 @@ describe("emit (emitter.md)", () => {
     expect(map["f0000000000f"]).toEqual({ start: 4, end: 4 });
   });
 
-  it("a named statement is preceded by its name as a comment, where its map entry starts", () => {
-    const inner = { ...print(v("i")), name: "Show it" };
-    const loop = { ...for_("i", num(0), num(3), [inner]), name: "Count to three" };
+  it("a statement with a caption is preceded by it as a comment, where its map entry starts", () => {
+    const inner = { ...print(v("i")), caption: "Show it" };
+    const loop = { ...for_("i", num(0), num(3), [inner]), caption: "Count to three" };
     const { code, map } = emit(program([loop]), {});
     expect(code).toBe("# Count to three\nfor i in range(3):\n    # Show it\n    print(i)\n");
     expect(map[loop.id]).toEqual({ start: 1, end: 2 });

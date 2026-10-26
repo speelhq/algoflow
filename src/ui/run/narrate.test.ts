@@ -1,6 +1,6 @@
 // One sentence per event; a statement and a comparison as the chart writes them,
 // with the values of the moment; a diamond's question and its answer; values as the blocks write
-// them; a named block by its statement; a location as the blocks write it, by the variable that
+// them; a block with a caption by its statement; a location as the blocks write it, by the variable that
 // holds it.
 import { describe, expect, it } from "vitest";
 import { t } from "@/i18n/t";
@@ -47,9 +47,9 @@ describe("narrate", () => {
     expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("Running i ← 1");
   });
 
-  it("enter: a named block is narrated by its statement, not its name", () => {
-    const named = { ...assign("i", num(6)), name: "start counting" };
-    expect(told(program([named]), "enter")).toBe("Running i ← 6");
+  it("enter: a block with a caption is narrated by its statement, not its caption", () => {
+    const captioned = { ...assign("i", num(6)), caption: "start counting" };
+    expect(told(program([captioned]), "enter")).toBe("Running i ← 6");
   });
 
   it("compare: a diamond's whole condition is its question with the values, and its answer", () => {
