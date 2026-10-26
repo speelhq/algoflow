@@ -73,7 +73,7 @@ class Writer {
     this.lines.push(text === "" ? "" : INDENT.repeat(indent) + text);
   }
 
-  mark(id: NodeId): void {
+  mapLine(id: NodeId): void {
     const line = this.lines.length + 1;
     this.map[id] = { start: line, end: line };
   }
@@ -87,7 +87,7 @@ class Writer {
     for (const pyLine of pyLines) {
       if (typeof pyLine === "string") {
         if (first) {
-          this.mark(stmt.id); // A compound statement maps to its header; `else:` is unmapped
+          this.mapLine(stmt.id); // A compound statement maps to its header; `else:` is unmapped
           if (captioned !== undefined) this.map[stmt.id] = { start: captioned, end: captioned + 1 };
           first = false;
         }
@@ -107,7 +107,7 @@ class Writer {
   }
 
   functionDef(fn: FunctionDef): void {
-    this.mark(fn.id);
+    this.mapLine(fn.id);
     this.line(`def ${fn.name}(${fn.params.join(", ")}):`, 0);
     this.region(fn.body, 1);
   }

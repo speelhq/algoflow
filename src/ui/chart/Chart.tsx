@@ -108,8 +108,8 @@ function Mark({ node, mark }: { node: ChartNode; mark: boolean }) {
   );
 }
 
-/** The breakpoint mark: a dot at the node's left, its word above the node's corner. */
-function BreakpointMark({ node }: { node: ChartNode }) {
+/** The breakpoint: a dot at the node's left, its word above the node's corner. */
+function Breakpoint({ node }: { node: ChartNode }) {
   return (
     <g data-testid="breakpoint">
       <circle cx={node.x - 9} cy={node.y + node.h / 2} r={5} className="fill-destructive" />
@@ -215,7 +215,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
           data-testid="diagnostic-dot"
         />
       )}
-      {look.breakpoint && <BreakpointMark node={node} />}
+      {look.breakpoint && <Breakpoint node={node} />}
     </g>
   );
 }
@@ -232,7 +232,7 @@ function InputMenu(props: { label: string; cases: NonNullable<Props["cases"]> })
               type="button"
               aria-label={label}
               className="size-full cursor-pointer rounded-md"
-              data-testid="input-node"
+              data-testid="input-chart-node"
             />
           }
         />

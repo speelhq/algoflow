@@ -25,7 +25,7 @@ function view(partial: Partial<RunView>): RunView {
     activeId: null,
     lastEvent: null,
     taken: {},
-    verdicts: {},
+    marks: {},
     breakpoint: null,
     ...partial,
   };
@@ -51,7 +51,7 @@ describe("paint", () => {
       chart,
       view({
         taken: { [loop.id]: true, [branch.id]: true, [yes.id]: true },
-        verdicts: { [loop.id]: true, [branch.id]: true },
+        marks: { [loop.id]: true, [branch.id]: true },
       }),
     );
     expect(p.nodes.has("start")).toBe(true);
