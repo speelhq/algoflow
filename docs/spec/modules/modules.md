@@ -18,7 +18,7 @@ A module is one JSON value:
 ```ts
 export type Module = {
   version: 1;
-  name: Id; // a name as `language.md`, Identifiers allows; its Python file is <name>.py (`emitter.md`)
+  name: Id; // a name as `language.md`, Identifiers, allows; its Python file is <name>.py (`emitter.md`)
   title?: Localized; // built-in modules only; a learner module shows `name`
   classes: ClassDef[];
   functions: FunctionDef[];

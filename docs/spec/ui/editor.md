@@ -9,9 +9,9 @@ node editor `NodeEditor.tsx` with its session `session.ts`, the value line
 
 The block menu lists the registered statement blocks (blocks of
 `shape: "stmt"` and the method statements, `blocks.md`, not `hidden`), with a
-search over `label` and `help`. It groups them in the category order of
-`blocks.md`, The block definition (`Basic`, `Control`, `List`, `Function`,
-`Dict`, `Class`), and each category is in a fixed order that puts `assign`,
+search over `label` and `help`. It groups them in the category order (`Basic`,
+`Control`, `List`, `Function`, `Dict`, `Class`) of `blocks.md`, The block
+definition, and each category is in a fixed order that puts `assign`,
 `print`, `if`, `for`, and `while` first in theirs. An entry reads as the
 block's label followed by its notation with every slot as `…`
 (`Set variable  … ← …`, `Print  print(…)`, `For loop  … ← …`,
