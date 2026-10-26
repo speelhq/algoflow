@@ -44,7 +44,7 @@ describe("progress store", () => {
     expect(useProgress.getState().entries.fizzbuzz?.hints).toBe(3);
   });
 
-  it("the status mark of a row and the solved count of a plan", () => {
+  it("the status of a row and the solved count of a plan", () => {
     const { submitted } = useProgress.getState();
     submitted("tutorial", true);
     submitted("sum-to-n", false);

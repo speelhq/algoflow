@@ -30,7 +30,7 @@ export type ProgressState = {
 /** The entry that records nothing: joined with any entry, it leaves that entry. */
 const FRESH: ProgressEntry = { status: "attempted", hints: 0, solution: false };
 
-/** The status mark of a problem row; undefined while untouched. */
+/** The status of a problem row; undefined while untouched. */
 export function statusOf(entries: Progress, id: string): ProgressStatus | undefined {
   return Object.hasOwn(entries, id) ? entries[id]?.status : undefined;
 }
