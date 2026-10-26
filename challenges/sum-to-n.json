@@ -25,7 +25,7 @@
   ],
   "takeaway": { "en": "A **for** loop added each number to a running total." },
   "solution": {
-    "version": 2,
+    "version": 1,
     "title": "Sum to n",
     "challengeId": "sum-to-n",
     "inputs": [{ "name": "n", "kind": "number" }],

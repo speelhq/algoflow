@@ -32,7 +32,7 @@
     "en": "You printed two values, a text and an input, and print put a space between them."
   },
   "solution": {
-    "version": 2,
+    "version": 1,
     "title": "Hello",
     "challengeId": "tutorial",
     "inputs": [{ "name": "name", "kind": "text" }],

@@ -22,7 +22,7 @@ const lists = vi.hoisted((): Challenge => ({
   inputs: [{ name: "nums", kind: "list" }],
   tests: [{ inputs: { nums: [4, 5] }, expect: { variables: {} } }],
   hints: [],
-  solution: { version: 2, title: "", inputs: [], classes: [], functions: [], main: [] },
+  solution: { version: 1, title: "", inputs: [], classes: [], functions: [], main: [] },
 }));
 
 vi.mock("@/challenges", async (importOriginal) => {

@@ -104,7 +104,7 @@ export function program(
   opts: { inputs?: InputDecl[]; functions?: FunctionDef[]; title?: string } = {},
 ): Program {
   return {
-    version: 2,
+    version: 1,
     title: opts.title ?? "test",
     inputs: opts.inputs ?? [],
     classes: [],

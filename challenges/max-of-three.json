@@ -41,7 +41,7 @@
   ],
   "takeaway": { "en": "Two **if** blocks replaced `biggest` whenever a larger value appeared." },
   "solution": {
-    "version": 2,
+    "version": 1,
     "title": "Max of three",
     "challengeId": "max-of-three",
     "inputs": [
