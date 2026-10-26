@@ -84,7 +84,7 @@ export function scan(source: Source): Scan {
   return found;
 }
 
-/** Whether `key` is one the code builds from data: a registered block's, or an error code's. */
+/** Whether `key` is one the code builds from data: a registered block definition's, or an error code's. */
 function builtFromData(): (key: string) => boolean {
   const prefixes = [...BLOCK_DEFS.keys()].map(blockPrefix);
   const errors = new Set<string>(ERROR_CODES.map(errorKey));

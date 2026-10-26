@@ -1,4 +1,4 @@
-// What every registered block owes the catalog and the chart.
+// What every registered block definition owes the catalog and the chart.
 import { describe, expect, it } from "vitest";
 import en from "@/i18n/en.json";
 import { flatten } from "@/i18n/flatten";
@@ -44,7 +44,7 @@ describe("registry", () => {
     expect(BLOCK_DEFS.get("continue")?.chart).toEqual({ jump: "next" });
   });
 
-  it("every block has label and help, and its notation no catalog key", () => {
+  it("every block definition has label and help, and its notation no catalog key", () => {
     for (const key of BLOCK_DEFS.keys()) {
       for (const part of ["label", "help"]) {
         expect(keys.has(`block.${key}.${part}`), `block.${key}.${part}`).toBe(true);

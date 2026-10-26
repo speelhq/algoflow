@@ -1,4 +1,4 @@
-// The `swap` block: `<a>, <b> = <b>, <a>`, run in Python's order, each `write` carrying the place
+// The `swap` block definition: `<a>, <b> = <b>, <a>`, run in Python's order, each `write` carrying the place
 // its value was read from, by which the driver shows an exchange as one step.
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";

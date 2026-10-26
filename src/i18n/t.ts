@@ -69,7 +69,7 @@ export function blockText(key: string, part: string, params?: Record<string, str
   return t(blockKey(key, part), params);
 }
 
-/** An error's params as its message writes them: `op`, a registry key, as that block's label. */
+/** An error's params as its message writes them: `op`, a registry key, as that block definition's label. */
 export function errorParams(params: Params): Params {
   const { op } = params;
   return typeof op === "string" ? { ...params, op: blockText(op, "label") } : params;

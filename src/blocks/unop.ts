@@ -1,4 +1,4 @@
-// The `unop` block: `-x` and `not x`.
+// The `unop` block definition: `-x` and `not x`.
 import { newId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { PRECEDENCE } from "@/python/precedence";

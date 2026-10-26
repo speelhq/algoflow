@@ -101,7 +101,7 @@ describe("the key check", () => {
     ]);
   });
 
-  it("names the keys of registered blocks and of the error codes", () => {
+  it("names the keys of registered block definitions and of the error codes", () => {
     write(
       "src/i18n/en.json",
       JSON.stringify({

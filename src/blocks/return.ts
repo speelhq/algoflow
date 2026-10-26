@@ -1,4 +1,4 @@
-// The `return` block: `return <value>` / `return`; no value → None.
+// The `return` block definition: `return <value>` / `return`; no value → None.
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
 

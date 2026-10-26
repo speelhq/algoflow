@@ -1,4 +1,4 @@
-// The `none` block
+// The `none` block definition
 import { newId } from "@/lang/id";
 import { defineExpr } from "./types";
 

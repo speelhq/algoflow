@@ -1,4 +1,4 @@
-// The `binop` block: arithmetic, comparison, logic, and `in`, with the reads of `in`, the
+// The `binop` block definition: arithmetic, comparison, logic, and `in`, with the reads of `in`, the
 // `compare` events, and the operator precedence of the emitted text.
 import { dictKey } from "@/lang/data";
 import { newId } from "@/lang/id";
