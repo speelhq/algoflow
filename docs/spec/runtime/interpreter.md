@@ -419,7 +419,7 @@ The driver answers these controls:
 - Play: one Step every `1000 / speed` ms, where speed is 1, 4, or 15 for
   `Slow`, `Normal`, and `Fast` (`run.md`, Run bar).
 - Seek(k): a new runner advanced to visible step `k` in batches. The
-  driver rebuilds `state`, `stdout`, and `verdicts` from every event the
+  driver rebuilds `state`, `stdout`, and `marks` from every event the
   runner passes. When `k` is at or after the current step, Seek continues
   the shown runner instead of starting a new one, because the shown
   runner reaches the same position as a new one would (Runner).
@@ -489,7 +489,7 @@ The driver publishes these fields:
 | `state` | refreshed after each step of Step and Play, at the end of each batch, and on pause, done, and error |
 | `frame` | the index of the frame shown (`run.md`, Call stack) |
 | `stdout` | the shown runner's output (Runner) |
-| `verdicts` | the last check result of each diamond in the shown frame's current pass (`run.md`, Path and marks) |
+| `marks` | the last check result of each diamond in the shown frame's current pass (`run.md`, Path and marks) |
 | `taken` | the statements entered in the shown frame's current pass (`run.md`, Path and marks) |
 | `pass` | for a `loop` `lastEvent`, the number of that loop's passes since it was entered (`run.md`, Narration) |
 | `activeId` | the statement that contains `lastEvent`'s block, or, after an error, the failing block (`chart.md`, Zoom and highlight) |
@@ -501,7 +501,7 @@ The driver publishes these fields:
 
 After an error, `lastEvent` is none at step `total`.
 
-The driver keeps `taken` and `verdicts` per frame:
+The driver keeps `taken` and `marks` per frame:
 
 - A `call` starts them empty for the called frame.
 - A `return` gives back the caller's as they were.

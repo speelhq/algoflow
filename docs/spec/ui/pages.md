@@ -279,11 +279,11 @@ The `Solution` row offers the solution, because hiding it would send
 self-learners elsewhere.
 
 `Show solution` shows the solution in the canvas, read-only, under a
-band `Solution` that holds `Load into my chart` and `Back to my chart`.
-A flowchart with branches doesn't fit the 320 px panel, so the solution
-takes the chart's place.
+band `Solution` that holds `Load into my program` and
+`Back to my program`. A flowchart with branches doesn't fit the 320 px
+panel, so the solution takes the chart's place.
 
-`Load into my chart` replaces the program with the solution as one
+`Load into my program` replaces the program with the solution as one
 undoable edit (`language.md`, Edits), so the learner can change what
 they would otherwise only read.
 

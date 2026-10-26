@@ -87,8 +87,8 @@ A slot has one of six roles:
   `str.value`, or an operator.
 
 No statement has a `text` slot, because a statement's literal text would
-be a comment, and a statement's name takes the place of comments
-(`editor.md`, Node names).
+be a comment, and a caption takes the place of comments
+(`editor.md`, Captions).
 
 ### Parameters
 
