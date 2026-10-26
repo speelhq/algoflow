@@ -24,7 +24,7 @@ import {
   templatePieces,
 } from "@/ui/chart/text";
 import { allEntries, makeEntry, takesValue, type Entry } from "./entries";
-import { isNewName, matchesName, type ChartNames } from "./names";
+import { isNewName, matchesName, type RoutineNames } from "./names";
 
 type Bag = Record<string, unknown>;
 
@@ -54,7 +54,7 @@ export type LineFunction = { name: Name; params: readonly Name[] };
  * A target slot's line: the names offered where the whole target is to fill, the problem's
  * expected ones (`asked`) first, and whether a name typed that none is makes a new variable.
  */
-export type TargetLine = ChartNames & { binds: boolean };
+export type TargetLine = RoutineNames & { binds: boolean };
 
 export type LineContext = {
   /** The variables visible at the statement, the latest first. */

@@ -77,7 +77,7 @@ export function visibleAt(program: Program, id: NodeId): Name[] | undefined {
   return walk(program.main, program.inputs.map((input) => input.name).toReversed());
 }
 
-/** The statement whose region holds each statement; a top-level statement maps to its chart. */
+/** The statement whose region holds each statement; a top-level statement maps to its routine. */
 function parents(program: Program): Map<NodeId, NodeId | "main"> {
   const map = new Map<NodeId, NodeId | "main">();
   const walk = (stmts: Stmt[], parent: NodeId | "main") => {

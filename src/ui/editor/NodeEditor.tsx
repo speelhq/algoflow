@@ -9,7 +9,7 @@ import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { getChallenge } from "@/challenges";
 import { blockText, t } from "@/i18n/t";
 import { duplicateStmt, insertItem, removeItem, removeStmt, setExpr, setSlot } from "@/lang/edit";
-import { chartOf, variableKinds } from "@/lang/kinds";
+import { routineOf, variableKinds } from "@/lang/kinds";
 import { visibleAt } from "@/lang/scope";
 import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
 import { isExpr, blocksById } from "@/lang/walk";
@@ -39,7 +39,7 @@ import {
 } from "./fields";
 import { callableFunctions, lineTakes, matches, openLine, setText, type LineContext } from "./line";
 import { NameOfNode } from "./NameOfNode";
-import { chartNames, nameChars, type NameRow } from "./names";
+import { routineNames, nameChars, type NameRow } from "./names";
 import { offersAll } from "./list";
 import { nameList, shownNameRow, valueList } from "./rows";
 import {
@@ -89,14 +89,14 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     if (focus && !sameField(focus, focused)) elements.current.get(fieldKey(focus))?.focus();
   }, [focus, focused]);
 
-  const chart = chartOf(program, stmt.id);
-  const kinds = variableKinds(program, chart);
+  const routine = routineOf(program, stmt.id);
+  const kinds = variableKinds(program, routine);
   // The names the problem expects, which a name list and a binding target's list offer first.
   const asked = useMemo(
     () => Object.keys(getChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {}),
     [program.challengeId],
   );
-  const named = useMemo(() => chartNames(program, chart, asked), [program, chart, asked]);
+  const named = useMemo(() => routineNames(program, routine, asked), [program, routine, asked]);
   // The focused target slot's line keeps a target and offers names (`editor.md`, Targets).
   const target = focus ? targetSlot(stmt, focus) : undefined;
   const binds = target ? target.binds === true : undefined;

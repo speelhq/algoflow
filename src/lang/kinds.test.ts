@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { ast, program, tid } from "@/blocks/testing";
 import { isParseError, parse } from "@/python/parse";
-import { chartOf, dataKind, exprKind, firstSetters, variableKinds } from "./kinds";
+import { routineOf, dataKind, exprKind, firstSetters, variableKinds } from "./kinds";
 import type { Expr, Kind } from "./types";
 
 const { assign, num, str, v, for_, print } = ast;
@@ -125,15 +125,15 @@ describe("kinds", () => {
     expect(dataKind({ $float: 2 })).toBe("number");
   });
 
-  it("names the statement that first sets each variable, and the chart a statement is in", () => {
+  it("names the statement that first sets each variable, and the routine a statement is in", () => {
     const first = assign("x", num(1));
     const inner = print(v("y"));
     const p = program([first, assign("x", num(2))], {
       functions: [{ id: "fun000000002", name: "g", params: ["y"], body: [inner] }],
     });
     expect(firstSetters(p, "main").get("x")).toBe(first);
-    expect(chartOf(p, inner.id)).toBe("fun000000002");
-    expect(chartOf(p, first.id)).toBe("main");
-    expect(chartOf(p, tid())).toBe("main");
+    expect(routineOf(p, inner.id)).toBe("fun000000002");
+    expect(routineOf(p, first.id)).toBe("main");
+    expect(routineOf(p, tid())).toBe("main");
   });
 });
