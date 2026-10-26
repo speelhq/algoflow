@@ -10,7 +10,7 @@ import { t } from "@/i18n/t";
 import { inputValue } from "@/lang/data";
 import type { Data, Name, NodeId, Place, Program, Stmt } from "@/lang/types";
 import { regionsOf } from "@/lang/walk";
-import { getBlock, keyOf } from "@/blocks/registry";
+import { getBlockDef, keyOf } from "@/blocks/registry";
 import {
   generatedParts,
   hasInputToFill,
@@ -351,7 +351,7 @@ class Builder {
   }
 
   statement(stmt: Stmt): Frag {
-    const def = getBlock(keyOf(stmt));
+    const def = getBlockDef(keyOf(stmt));
     const chart = def.chart;
     if (!chart) return this.box(stmt, def.requires === "function" ? "end" : null);
     if ("jump" in chart) return this.box(stmt, this.depth > 0 ? chart.jump : null);

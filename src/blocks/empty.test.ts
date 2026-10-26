@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { getBlock, menuBlocks } from "./registry";
+import { getBlockDef, menuBlockDefs } from "./registry";
 import { ast, evalExpr, notation } from "./testing";
 
 describe("empty", () => {
@@ -10,8 +10,8 @@ describe("empty", () => {
   });
 
   it("is hidden from the block menu", () => {
-    expect(menuBlocks("basic").some((def) => def.key === "empty")).toBe(false);
-    expect(getBlock("empty").hidden).toBe(true);
+    expect(menuBlockDefs("basic").some((def) => def.key === "empty")).toBe(false);
+    expect(getBlockDef("empty").hidden).toBe(true);
   });
 
   it("cannot run: the interpreter refuses an empty slot it is given", () => {

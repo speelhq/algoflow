@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import en from "@/i18n/en.json";
 import { flatten } from "@/i18n/flatten";
 import { CATEGORIES } from "./categories";
-import { BLOCKS } from "./registry";
+import { BLOCK_DEFS } from "./registry";
 import type { ChartShape } from "./types";
 
 const keys = new Set(Object.keys(flatten(en)));
@@ -26,7 +26,7 @@ describe("registry", () => {
   });
 
   it("only an expression has a text slot", () => {
-    const statements = [...BLOCKS.values()].filter((def) => def.shape === "stmt");
+    const statements = [...BLOCK_DEFS.values()].filter((def) => def.shape === "stmt");
     expect(statements.length).toBeGreaterThan(0);
     for (const def of statements) {
       expect(
@@ -34,16 +34,18 @@ describe("registry", () => {
         def.key,
       ).toEqual([]);
     }
-    expect([...BLOCKS.values()].some((def) => def.slots.some((s) => s.role === "text"))).toBe(true);
+    expect([...BLOCK_DEFS.values()].some((def) => def.slots.some((s) => s.role === "text"))).toBe(
+      true,
+    );
   });
 
   it("break jumps out of the innermost loop and continue into its next pass", () => {
-    expect(BLOCKS.get("break")?.chart).toEqual({ jump: "exit" });
-    expect(BLOCKS.get("continue")?.chart).toEqual({ jump: "next" });
+    expect(BLOCK_DEFS.get("break")?.chart).toEqual({ jump: "exit" });
+    expect(BLOCK_DEFS.get("continue")?.chart).toEqual({ jump: "next" });
   });
 
   it("every block has label and help, and its notation no catalog key", () => {
-    for (const key of BLOCKS.keys()) {
+    for (const key of BLOCK_DEFS.keys()) {
       for (const part of ["label", "help"]) {
         expect(keys.has(`block.${key}.${part}`), `block.${key}.${part}`).toBe(true);
       }
@@ -55,7 +57,7 @@ describe("registry", () => {
   });
 
   it("each slot a statement's editor shows as a field has its name", () => {
-    for (const def of BLOCKS.values()) {
+    for (const def of BLOCK_DEFS.values()) {
       if (def.shape !== "stmt") continue;
       for (const slot of def.slots) {
         if (slot.role === "body") continue;
@@ -66,7 +68,7 @@ describe("registry", () => {
   });
 
   it("binop writes school symbols, and Python's where school has none", () => {
-    const binop = BLOCKS.get("binop");
+    const binop = BLOCK_DEFS.get("binop");
     const node = (op: string) => ({ id: "b", kind: "binop", op }) as never;
     const school = ["+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">="];
     expect(school.map((op) => binop?.text?.(node(op), "op"))).toEqual([
@@ -87,7 +89,7 @@ describe("registry", () => {
 
   it("expression blocks declare the value list's entries in the table's order", () => {
     const any = "number,text,truefalse,none,list,dict";
-    const rows = [...BLOCKS.values()].flatMap((def) =>
+    const rows = [...BLOCK_DEFS.values()].flatMap((def) =>
       (def.menu ?? []).map((entry) =>
         [
           def.key,
@@ -137,7 +139,7 @@ describe("registry", () => {
   });
 
   it("a named entry has its label and help, and no help names the entry's keys", () => {
-    for (const def of BLOCKS.values()) {
+    for (const def of BLOCK_DEFS.values()) {
       for (const entry of def.menu ?? []) {
         const base = entry.name === "" ? `block.${def.key}` : `block.${def.key}.${entry.name}`;
         expect(keys.has(`${base}.label`), `${base}.label`).toBe(true);
@@ -148,7 +150,7 @@ describe("registry", () => {
   });
 
   it("a chart names the body slots of its block, and a diamond's condition an expr slot", () => {
-    const shaped = [...BLOCKS.values()].filter((def) => def.chart);
+    const shaped = [...BLOCK_DEFS.values()].filter((def) => def.chart);
     expect(new Set(shaped.map((def) => def.key))).toEqual(
       new Set(["if", "while", "for", "break", "continue"]),
     );
@@ -164,7 +166,7 @@ describe("registry", () => {
   });
 
   it("a counted loop's generated texts name only its own slots, and its notation is its init", () => {
-    for (const def of BLOCKS.values()) {
+    for (const def of BLOCK_DEFS.values()) {
       if (!def.chart || !("counted" in def.chart)) continue;
       const { init, check, update } = def.chart.counted;
       const named = [init, check, update].flatMap((text) =>

@@ -14,7 +14,7 @@ import { visibleAt } from "@/lang/scope";
 import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
 import { isExpr, nodesById } from "@/lang/walk";
 import { cn } from "@/lib/utils";
-import { emptyExpr, getBlock, keyOf } from "@/blocks/registry";
+import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
 import { parseScope } from "@/python/parse";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
@@ -69,7 +69,7 @@ import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 type Initial = { slot: string | null; hole: NodeId | null };
 
 function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initial: Initial }) {
-  const def = getBlock(keyOf(stmt));
+  const def = getBlockDef(keyOf(stmt));
   const led = useEditor((s) => s.diagnostic);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
@@ -487,7 +487,7 @@ export function NodeEditor({ id }: { id: NodeId }) {
   // The node's box, which the editor is placed beside; it is no control of its own.
   const [anchor, setAnchor] = useState<Element | null>(null);
   const node = nodesById(program).get(id);
-  if (!node || !("kind" in node) || getBlock(keyOf(node)).shape !== "stmt") return null;
+  if (!node || !("kind" in node) || getBlockDef(keyOf(node)).shape !== "stmt") return null;
   return (
     <Popover
       open

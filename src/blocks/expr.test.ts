@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { getBlock } from "./registry";
+import { getBlockDef } from "./registry";
 import { ast, eventTypes, notation, program, runAll } from "./testing";
 
 const { exprStmt, call, num, bin } = ast;
 
 describe("expr (blocks.md)", () => {
   it("is hidden from the block menu", () => {
-    expect(getBlock("expr").hidden).toBe(true);
+    expect(getBlockDef("expr").hidden).toBe(true);
   });
 
   it("emits the expression alone", () => {

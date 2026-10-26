@@ -1,7 +1,14 @@
 // Typed expression text → Expr. No third-party imports.
 import { newId } from "@/lang/id";
 import type { BinOp, Data, Expr, Name, Program } from "@/lang/types";
-import { builtinKey, builtinOf, methodKey, BLOCKS, hasBlock, keyOf } from "@/blocks/registry";
+import {
+  builtinKey,
+  builtinOf,
+  methodKey,
+  BLOCK_DEFS,
+  hasBlockDef,
+  keyOf,
+} from "@/blocks/registry";
 import { dataToPython } from "./emit";
 import { NUMBER, numberLiteral } from "./number";
 import { BINOPS, PRECEDENCE, binopsAt, isBinOp } from "./precedence";
@@ -125,7 +132,7 @@ function tokenize(text: string): Token[] {
 
 function aliasTable(): Map<string, string> {
   const table = new Map<string, string>();
-  for (const def of BLOCKS.values()) {
+  for (const def of BLOCK_DEFS.values()) {
     const name = builtinOf(def.key);
     if (name === undefined) continue;
     for (const alias of def.aliases ?? []) table.set(alias, name);
@@ -179,7 +186,7 @@ class Parser {
 
   /** Every node must have a registered block; the registry is the arbiter of the language. */
   private node(pos: number, expr: Expr): Expr {
-    if (!hasBlock(keyOf(expr))) fail("E_PARSE_SYNTAX", pos);
+    if (!hasBlockDef(keyOf(expr))) fail("E_PARSE_SYNTAX", pos);
     return expr;
   }
 
@@ -299,7 +306,7 @@ class Parser {
   }
 
   private resolveCall(name: string, position: number, args: Expr[]): Expr {
-    if (hasBlock(builtinKey(name))) return { id: newId(), kind: "call", fn: name, args };
+    if (hasBlockDef(builtinKey(name))) return { id: newId(), kind: "call", fn: name, args };
     if (this.scope.functions.includes(name)) {
       return this.node(position, { id: newId(), kind: "call", fn: name, args });
     }
@@ -312,7 +319,7 @@ class Parser {
       const fn = this.aliases.get(`${obj.name}.${name.text}`);
       if (fn) return { id: newId(), kind: "call", fn, args };
     }
-    if (hasBlock(methodKey(name.text))) {
+    if (hasBlockDef(methodKey(name.text))) {
       return { id: newId(), kind: "method", obj, name: name.text, args };
     }
     return fail("E_UNKNOWN_CALL", name.pos, { name: name.text });

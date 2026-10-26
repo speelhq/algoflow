@@ -1,7 +1,7 @@
 // What the value list and the name list know of a value before the program runs: an
 // expression's kind from its block's `kind`, and a variable's from its input's declared kind,
 // else the value of its first assignment, else the kind its loop block declares. Registry-driven.
-import { getBlock, keyOf } from "@/blocks/registry";
+import { getBlockDef, keyOf } from "@/blocks/registry";
 import { isFloatData } from "./data";
 import { assignedValue, declaredBy } from "./scope";
 import type { Data, Expr, Name, Kind, NodeId, Program, Stmt } from "./types";
@@ -23,7 +23,7 @@ export type Kinds = ReadonlyMap<Name, Kind>;
 export function exprKind(expr: Expr, variables: Kinds): Kind | undefined {
   const name = variableOf(expr);
   if (name !== undefined) return variables.get(name);
-  return getBlock(keyOf(expr)).kind?.(expr, (inner) => exprKind(inner, variables));
+  return getBlockDef(keyOf(expr)).kind?.(expr, (inner) => exprKind(inner, variables));
 }
 
 /** `main`, or the function whose body holds statement `id`. */
@@ -57,7 +57,7 @@ function scope(program: Program, chart: "main" | NodeId): Scope {
     }
   }
   for (const stmt of allStmts(fn ? fn.body : program.main)) {
-    const def = getBlock(keyOf(stmt));
+    const def = getBlockDef(keyOf(stmt));
     for (const { name, role } of declaredBy(stmt)) {
       if (!setters.has(name)) setters.set(name, stmt);
       if (role === "name") {

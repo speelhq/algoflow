@@ -1,6 +1,6 @@
 // Pure edit functions. Each returns a new Program and keeps
 // every NodeId unique. Statements are addressed by id or by Place.
-import { getBlock, keyOf } from "@/blocks/registry";
+import { getBlockDef, keyOf } from "@/blocks/registry";
 import { newId } from "./id";
 import { assignedValue, declaredBy } from "./scope";
 import type { Expr, FunctionDef, Name, NodeId, Place, Program, Stmt } from "./types";
@@ -165,7 +165,7 @@ export function duplicateStmt(program: Program, id: NodeId): Program {
 export function setSlot(program: Program, id: NodeId, slot: string, value: string): Program {
   const next = clone(program);
   const node = getNode(next, id);
-  const spec = getBlock(keyOf(node)).slots.find((s) => s.name === slot);
+  const spec = getBlockDef(keyOf(node)).slots.find((s) => s.name === slot);
   if (spec?.role !== "name" && spec?.role !== "text") {
     throw new EditError(`node ${id} has no settable slot ${slot}`);
   }
@@ -186,7 +186,7 @@ export function setExpr(
 ): Program {
   const next = clone(program);
   const node = getNode(next, id);
-  const spec = getBlock(keyOf(node)).slots.find((s) => s.name === slot);
+  const spec = getBlockDef(keyOf(node)).slots.find((s) => s.name === slot);
   const bag = node as unknown as Bag;
   const old = (value: unknown) => (isExpr(value) ? value : undefined);
   if (spec?.role === "expr" || spec?.role === "target") {
@@ -212,7 +212,7 @@ export function insertItem(
 ): Program {
   const next = clone(program);
   const node = getNode(next, id);
-  const spec = getBlock(keyOf(node)).slots.find((s) => s.name === slot);
+  const spec = getBlockDef(keyOf(node)).slots.find((s) => s.name === slot);
   const items = (node as unknown as Bag)[slot];
   if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index > items.length) {
     throw new EditError(`node ${id} has no place ${index} in ${slot}`);
@@ -225,7 +225,7 @@ export function insertItem(
 export function removeItem(program: Program, id: NodeId, slot: string, index: number): Program {
   const next = clone(program);
   const node = getNode(next, id);
-  const spec = getBlock(keyOf(node)).slots.find((s) => s.name === slot);
+  const spec = getBlockDef(keyOf(node)).slots.find((s) => s.name === slot);
   const items = (node as unknown as Bag)[slot];
   if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index >= items.length) {
     throw new EditError(`node ${id} has no item ${index} in ${slot}`);
@@ -262,7 +262,7 @@ export function renameName(program: Program, from: Name, to: Name): Program {
   }
   const renameIdSlots = (node: Stmt | Expr) => {
     const bag = node as unknown as Bag;
-    for (const slot of getBlock(keyOf(node)).slots) {
+    for (const slot of getBlockDef(keyOf(node)).slots) {
       if (slot.role === "name" && typeof bag[slot.name] === "string") {
         bag[slot.name] = swap(bag[slot.name] as string);
       }
@@ -311,7 +311,7 @@ function defaultFor(stmts: Stmt[], name: Name): Expr {
     if (!declaredBy(stmt).some((declared) => declared.role === "target" && declared.name === name))
       continue;
     const value = assignedValue(stmt);
-    return (value && getBlock(keyOf(value)).zeroLike?.(value)) ?? none();
+    return (value && getBlockDef(keyOf(value)).zeroLike?.(value)) ?? none();
   }
   return none();
 }
