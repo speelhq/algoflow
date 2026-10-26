@@ -38,7 +38,7 @@ import {
   type Field,
 } from "./fields";
 import { callableFunctions, lineTakes, matches, openLine, setText, type LineContext } from "./line";
-import { NameOfNode } from "./NameOfNode";
+import { CaptionField } from "./CaptionField";
 import { routineNames, nameChars, type NameRow } from "./names";
 import { offersAll } from "./list";
 import { nameList, shownNameRow, valueList } from "./rows";
@@ -416,7 +416,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         </div>
       )}
       <div className="flex items-center gap-2 border-b p-2.5">
-        <NameOfNode stmt={stmt} />
+        <CaptionField stmt={stmt} />
         <Button
           variant="outline"
           size="icon"

@@ -80,15 +80,15 @@ class Writer {
 
   stmt(stmt: Stmt, indent: number): void {
     const pyLines = getBlockDef(keyOf(stmt)).python(stmt, ctx) as PyLine[];
-    // A named statement's lines start at the comment holding its name.
-    const named = stmt.name === undefined ? undefined : this.lines.length + 1;
-    if (stmt.name !== undefined) this.line(`# ${stmt.name}`, indent);
+    // A captioned statement's lines start at the comment holding its caption.
+    const captioned = stmt.caption === undefined ? undefined : this.lines.length + 1;
+    if (stmt.caption !== undefined) this.line(`# ${stmt.caption}`, indent);
     let first = true;
     for (const pyLine of pyLines) {
       if (typeof pyLine === "string") {
         if (first) {
           this.mark(stmt.id); // A compound statement maps to its header; `else:` is unmapped
-          if (named !== undefined) this.map[stmt.id] = { start: named, end: named + 1 };
+          if (captioned !== undefined) this.map[stmt.id] = { start: captioned, end: captioned + 1 };
           first = false;
         }
         this.line(pyLine, indent);

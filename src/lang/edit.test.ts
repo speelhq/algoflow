@@ -16,7 +16,7 @@ import {
   setExpr,
   setParams,
   setSlot,
-  setStmtName,
+  setCaption,
 } from "./edit";
 import { unparse } from "@/python/emit";
 import { emit } from "@/python/emit";
@@ -58,7 +58,7 @@ describe("edit", () => {
       insertItem: (p) => insertItem(p, b.id, "args", 0, value),
       removeItem: (p) => removeItem(p, b.id, "args", 0),
       renameName: (p) => renameName(p, "x", "total"),
-      setStmtName: (p) => setStmtName(p, loop.id, "Count"),
+      setCaption: (p) => setCaption(p, loop.id, "Count"),
       addFunction: (p) => addFunction(p, "g"),
       removeFunction: (p) => removeFunction(p, fn.id),
       setParams: (p) => setParams(p, fn.id, ["a", "b"]),
@@ -134,15 +134,15 @@ describe("edit", () => {
     expect(() => setSlot(p, a.id, "target", "y")).toThrow(/no settable slot/);
   });
 
-  it("setStmtName stores one trimmed line and removes an empty name", () => {
+  it("setCaption stores one trimmed line and removes an empty caption", () => {
     const { p, loop } = sample();
-    const named = setStmtName(p, loop.id, "  Count  to\n three ");
-    expect(findStmt(named, loop.id)?.stmt.name).toBe("Count to three");
-    expect(idsUnique(named)).toBe(true);
-    expect(findStmt(p, loop.id)?.stmt.name).toBeUndefined();
-    const cleared = setStmtName(named, loop.id, " \n ");
-    expect(findStmt(cleared, loop.id)?.stmt).not.toHaveProperty("name");
-    expect(() => setStmtName(p, "missing00000", "x")).toThrow(/no statement/);
+    const captioned = setCaption(p, loop.id, "  Count  to\n three ");
+    expect(findStmt(captioned, loop.id)?.stmt.caption).toBe("Count to three");
+    expect(idsUnique(captioned)).toBe(true);
+    expect(findStmt(p, loop.id)?.stmt.caption).toBeUndefined();
+    const cleared = setCaption(captioned, loop.id, " \n ");
+    expect(findStmt(cleared, loop.id)?.stmt).not.toHaveProperty("caption");
+    expect(() => setCaption(p, "missing00000", "x")).toThrow(/no statement/);
   });
 
   it("setExpr replaces an expression slot, an exprs item, or a nested expression block", () => {

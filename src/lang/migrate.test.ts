@@ -109,24 +109,24 @@ describe("migrate", () => {
     expect(() => migrate(stored)).toThrow(/^main\[0\]\.body\[0\]\.kind: unknown kind "comment"/);
   });
 
-  it("stores a statement's name as an edit does and rejects one that is not one line of text", () => {
-    const named = { ...assign("x", num(1)), name: "Start at one" };
-    expect(migrate(json(program([named])))).toEqual(program([named]));
-    const broken = json(program([{ ...named, name: "two\nlines" }]));
-    expect(() => migrate(broken)).toThrow(/^main\[0\]\.name: expected one line of text/);
+  it("stores a statement's caption as an edit does and rejects one that is not one line of text", () => {
+    const captioned = { ...assign("x", num(1)), caption: "Start at one" };
+    expect(migrate(json(program([captioned])))).toEqual(program([captioned]));
+    const broken = json(program([{ ...captioned, caption: "two\nlines" }]));
+    expect(() => migrate(broken)).toThrow(/^main\[0\]\.caption: expected one line of text/);
     const loose = migrate(
       json(
         program([
-          { ...named, name: "  Start  " },
-          { ...named, name: " " },
-          { ...named, name: "Start \t at  one" },
+          { ...captioned, caption: "  Start  " },
+          { ...captioned, caption: " " },
+          { ...captioned, caption: "Start \t at  one" },
         ]),
       ),
     );
-    expect(loose.main.map((stmt) => stmt.name)).toEqual(["Start", undefined, "Start at one"]);
-    expect(loose.main[1]).not.toHaveProperty("name");
-    expect(() => migrate(json(program([{ ...named, name: 3 } as never])))).toThrow(
-      /^main\[0\]\.name/,
+    expect(loose.main.map((stmt) => stmt.caption)).toEqual(["Start", undefined, "Start at one"]);
+    expect(loose.main[1]).not.toHaveProperty("caption");
+    expect(() => migrate(json(program([{ ...captioned, caption: 3 } as never])))).toThrow(
+      /^main\[0\]\.caption/,
     );
   });
 

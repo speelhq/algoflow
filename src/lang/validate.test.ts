@@ -227,13 +227,13 @@ describe("validate (language.md, Validation)", () => {
     expect(result.map((d) => d.code)).toEqual(["E_UNDEFINED", "E_BREAK_OUTSIDE", "E_BAD_NAME"]);
   });
 
-  it("a statement's name changes neither validation nor execution", () => {
+  it("a statement's caption changes neither validation nor execution", () => {
     const steps = [assign("x", num(1)), print(v("x")), print(v("y"))];
-    const named = steps.map((stmt) => ({ ...stmt, name: "a step" }));
-    expect(validate(program(named))).toEqual(validate(program(steps)));
+    const captioned = steps.map((stmt) => ({ ...stmt, caption: "a step" }));
+    expect(validate(program(captioned))).toEqual(validate(program(steps)));
     expect(validate(program(steps))).not.toEqual([]);
     const runs = (stmts: Stmt[]) => runAll(program(stmts.slice(0, 2)));
-    expect(runs(named).events).toEqual(runs(steps).events);
-    expect(runs(named).stdout).toEqual(["1"]);
+    expect(runs(captioned).events).toEqual(runs(steps).events);
+    expect(runs(captioned).stdout).toEqual(["1"]);
   });
 });
