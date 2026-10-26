@@ -49,8 +49,8 @@ const ctx: EmitContext = {
     const atom = getBlockDef(keyOf(node)).slots.find((slot) => slot.name === name)?.atom;
     return atom ? ctx.operand(expr, PRECEDENCE.atom, "left") : ctx.expr(expr);
   },
-  block(stmts: Stmt[]): PyLine {
-    return { block: stmts };
+  region(stmts: Stmt[]): PyLine {
+    return { region: stmts };
   },
 };
 
@@ -93,12 +93,12 @@ class Writer {
         }
         this.line(pyLine, indent);
       } else {
-        this.block(pyLine.block, indent + 1);
+        this.region(pyLine.region, indent + 1);
       }
     }
   }
 
-  block(stmts: Stmt[], indent: number): void {
+  region(stmts: Stmt[], indent: number): void {
     if (stmts.length === 0) {
       this.line("pass", indent);
       return;
@@ -109,7 +109,7 @@ class Writer {
   functionDef(fn: FunctionDef): void {
     this.mark(fn.id);
     this.line(`def ${fn.name}(${fn.params.join(", ")}):`, 0);
-    this.block(fn.body, 1);
+    this.region(fn.body, 1);
   }
 }
 
