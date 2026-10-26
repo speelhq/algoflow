@@ -5,8 +5,8 @@ program and emits one event for each thing the run does. Its driver
 reads those events as the visible steps the screens show, answers the
 controls of the run bar, and publishes the state the screens draw. This
 file states the runner's interface, the events, the runtime errors, what
-a block's `run` receives, how a module function runs, the driver, and
-the check that holds the interpreter to CPython.
+a block definition's `run` receives, how a module function runs, the
+driver, and the check that holds the interpreter to CPython.
 
 Code: the runner `src/runtime/`; the driver `src/store/run.ts` with
 `src/store/steps.ts` and `src/store/batches.ts`; the CPython check
@@ -118,9 +118,9 @@ A `swap` emits the events of its two places in Python's order
 
 A `read` is emitted in two cases:
 
-- The context's `read` (Blocks) emits one when it reads an item, a key,
-  or a field, whether the runner evaluates an expression or a `swap`
-  reads its places.
+- The context's `read` (Block definitions) emits one when it reads an
+  item, a key, or a field, whether the runner evaluates an expression or
+  a `swap` reads its places.
 - `in` on a list emits one, with one ref for each item the `in`
   compares.
 
@@ -128,7 +128,8 @@ Reading a variable emits no event.
 
 ### `write`
 
-These blocks emit `write`, directly or through the context's `store`:
+These block definitions emit `write`, directly or through the context's
+`store`:
 
 - `assign`
 - `swap`
@@ -149,7 +150,7 @@ decides how an exchange's events are shown.
 
 Each comparison `binop` emits `compare`, with the comparison's
 result. The comparisons are `== != < <= > >=` and `in`. The
-operator and the operands are those of the event's node.
+operator and the operands are those of the event's block.
 
 The event doesn't carry the operand values, because the values alone
 hide where they came from, and the narration instead writes the
@@ -158,9 +159,9 @@ comparison as the chart does, with each variable replaced by its value
 don't show where the 3 came from.
 
 When `if` or `while` has evaluated its condition, it emits a `compare`
-that carries the condition's id and the condition's truth value
+that carries the condition's node id and the condition's truth value
 (`language.md`, Semantics, Values and the run). When the last event of
-evaluating the condition is already a `compare` with that id, it emits
+evaluating the condition is already a `compare` with that node id, it emits
 none. So, either way, each check of a diamond ends in one `compare` of
 its whole condition.
 
@@ -169,7 +170,7 @@ truth value from the region the run enters next: an empty region holds
 no statement for the run to enter, and a loop's exit enters whatever
 follows the loop. The last event alone decides, because a call inside
 the condition can reach the same diamond in another frame and emit a
-`compare` with the same id, and every call ends in its `return`.
+`compare` with the same node id, and every call ends in its `return`.
 
 ### `loop`
 
@@ -207,22 +208,24 @@ The params hold:
 - `type`, of `E_VALUE`: the type name of the value
 
 A `bool` isn't a number for arithmetic, ordering, a list index, or `sum`,
-because no block program needs Python's reading of `True` as `1` in
-those places.
+because no program of the block language needs Python's reading of
+`True` as `1` in those places.
 
 `E_VALUE` is a code of its own, not an `E_TYPE`, because `E_TYPE` names
 two operand types, which fits an operator but names neither the
 operation nor the fault. For example, for `abs("x")` an `E_TYPE` message
 would read `abs and str …`.
 
-A message writes `op` as the block's label, so the message follows the
-locale, and no block spells a message key.
+A message writes `op` as the block definition's label, so the message
+follows the locale, and no block definition spells a message key.
 
-## Blocks
 
-A block implements its behavior as a generator, its `run` (`blocks.md`,
-The block definition). These are the types of `run` and of the context
-the runner gives it:
+## Block definitions
+
+
+A block definition implements its behavior as a generator, its `run`
+(`blocks.md`, The block definition). These are the types of `run` and of the
+context the runner gives it:
 
 ```ts
 export type Signal =
@@ -234,7 +237,7 @@ export type RunContext = {
   heap: Heap;
   eval(expr: Expr): Generator<Event, Value, void>;   // dispatches through the registry
   exec(body: Stmt[]): Generator<Event, Signal, void>; // emits `enter` per statement (Events)
-  locate(target: Expr, at: NodeId): Generator<Event, Ref, void>; // the target's block's `locate`
+  locate(target: Expr, at: NodeId): Generator<Event, Ref, void>; // the target's block definition's `locate`
   read(target: Expr, at: NodeId): Generator<Event, { ref: Ref; value: Value }, void>;
   save(ref: Ref, value: Value): void;
   store(target: Expr, value: Value, at: NodeId): Generator<Event, void, void>; // locate, save, its `write`
@@ -257,7 +260,7 @@ The context finds a target's place with `locate` and uses that place in
   has `at` as its `nodeId`.
 - `read` locates the target and reads the value at that place. For a
   variable never assigned, it raises `E_UNDEFINED`. For a place that
-  isn't a variable, it emits a `read` with the target's id (Events).
+  isn't a variable, it emits a `read` with the target's node id (Events).
 - `store` locates the target after the block has evaluated the value,
   saves the value, and emits its `write`. The `write` carries `at`, the
   statement that makes the write (Events).
@@ -303,9 +306,8 @@ A visible step is one of these:
 - an exchange of two writes
 - the call of `next()` that fails
 
-So a module call is one visible step. In a program's run, a module
-function is a block. For example, taking the minimum of a heap is such a
-block.
+So a module call is one visible step: taking the minimum of a heap, for
+example.
 
 In a program's run, the narration shows a module call by its returned
 value.
@@ -463,9 +465,9 @@ The driver holds at most one breakpoint, a statement's `NodeId`, from
 when it is set until Stop.
 
 Play, Step over, and Skip pause at a visible `enter` of the breakpoint's
-node. When the node is a loop, they also pause at each of its `loop`
-events, where the run is at the loop's check. Step and Seek ignore the
-breakpoint. `Next pass`, a run to the next `loop` event, was rejected
+statement. When the statement is a loop, they also pause at each of its
+`loop` events, where the run is at the loop's check. Step and Seek ignore
+the breakpoint. `Next pass`, a run to the next `loop` event, was rejected
 because in bubble sort it stops at every inner pass, not once per outer
 pass, and it can't say which loop is meant. A breakpoint says by its
 location where the run pauses. For example: a breakpoint on the outer
@@ -490,10 +492,10 @@ The driver publishes these fields:
 | `verdicts` | the last check result of each diamond in the shown frame's current pass (`run.md`, Path and marks) |
 | `taken` | the statements entered in the shown frame's current pass (`run.md`, Path and marks) |
 | `pass` | for a `loop` `lastEvent`, the number of that loop's passes since it was entered (`run.md`, Narration) |
-| `activeId` | the statement that contains `lastEvent`'s node, or, after an error, the failing node (`chart.md`, Zoom and highlight) |
+| `activeId` | the statement that contains `lastEvent`'s block, or, after an error, the failing block (`chart.md`, Zoom and highlight) |
 | `breakpoint` | a `NodeId` or none (Controls) |
 | `busy` | a boolean (Controls) |
-| `caseIndex` | the chosen case (`chart.md`, Input nodes) |
+| `caseIndex` | the chosen case (`chart.md`, Input chart nodes) |
 | `verdict` | the chosen case's result (`challenges.md`, Judging), only while the run is at step `total` |
 | `difference` | `{ step, line? }`, the step at which a run started by `Watch this case` opened (`run.md`, Submission), until Stop |
 
@@ -555,7 +557,8 @@ Tests cover:
 
 - the rules of `language.md`, Semantics, Values and the run, in the
   tests of `src/runtime`
-- each runtime error code, with the rule or the block that raises it
+- each runtime error code, with the rule or the block definition that
+  raises it
 - the same event sequence for the same program, inputs, seed, and
   modules (Runner), in the tests of `src/runtime` and `src/store/run.ts`
 - every statement of Driver, in the tests of `src/runtime` and

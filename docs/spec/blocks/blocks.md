@@ -1,20 +1,20 @@
 # Blocks
 
-A block is one kind of statement or expression of the block language. It
-declares its slots, how it runs, the Python it emits, its text on the
-chart, and its entries in the menus, and every other part of the
+A block definition is one kind of statement or expression of the block
+language. It declares its slots, how it runs, the Python it emits, its
+text on the chart, and its entries in the menus, and every other part of the
 application reads those declarations. This file states what a block
-declares and lists every block.
+definition declares and lists every block definition.
 
-Code: `src/blocks/`: one file per block, `registry.ts`, `types.ts`,
-`categories.ts`. Tests: one `<key>.test.ts` per block, and
-`registry.test.ts`.
+Code: `src/blocks/`: one file per block definition, `registry.ts`,
+`types.ts`, `categories.ts`. Tests: one `<key>.test.ts` per block
+definition, and `registry.test.ts`.
 
 ## The block definition
 
-Every block is one file, `src/blocks/<key>.ts`, and the file exports a
-`BlockDef`. A `:` in the key becomes `-` in the file name. For example:
-`call-abs.ts`, `method-append.ts`.
+Every block definition is one file, `src/blocks/<key>.ts`, and the file
+exports a `BlockDef`. A `:` in the key becomes `-` in the file name. For
+example: `call-abs.ts`, `method-append.ts`.
 
 ```ts
 export type BlockDef = {
@@ -32,14 +32,15 @@ export type BlockDef = {
   zeroLike?(node: Expr): Expr; // a literal block's zero of the same type (`hoistAssign`)
   callee?(node: Expr): Callee; // a call-like block's callee and argument count
   create(): Stmt | Expr; // required slots hold `empty` (`language.md`, Expressions)
-  run: StmtRunner | ExprRunner; // `interpreter.md`, Blocks
+  run: StmtRunner | ExprRunner; // `interpreter.md`, Block definitions
+
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // `emitter.md`: stmt → lines, expr → text
-  notation(node: Stmt | Expr): string; // Node text
+  notation(node: Stmt | Expr): string; // Notation
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined; // `language.md`, Data
-  text?(node: Stmt | Expr, slot: string): string; // Node text
+  text?(node: Stmt | Expr, slot: string): string; // Notation
   kind?(node: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
   declares?: Kind; // the kind of the variable its `id` slot names (`language.md`, Kinds)
-  locate?(node: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>; // a target's place (`interpreter.md`, Blocks)
+  locate?(node: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>; // a target's place (`interpreter.md`, Block definitions)
   menu?: MenuEntry[]; // the entries of the value list (Menu entries)
   chart?:
     | { branch: { cond: string; yes: string; no: string } }
@@ -58,7 +59,7 @@ export type Slot = {
   name: string;
   role: "expr" | "exprs" | "id" | "body" | "target" | "text";
   required?: boolean;
-  atom?: true; // its input binds as an atom (Node text)
+  atom?: true; // its input binds as an atom (Notation)
   binds?: true; // a `target` slot that declares the variable its target is (`language.md`, Scope)
 };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
@@ -86,7 +87,7 @@ A slot has one of six roles:
   `str.value`, or an operator.
 
 No statement has a `text` slot, because a statement's literal text would
-be a comment, and a node's name takes the place of comments
+be a comment, and a statement's name takes the place of comments
 (`editor.md`, Node names).
 
 ### Parameters
@@ -106,21 +107,21 @@ it would have to strip a mark such as `n?`.
 
 ### The registry
 
-`src/blocks/registry.ts` registers every block, and it is the only
-registry. Every other module reaches a block through it.
+`src/blocks/registry.ts` registers every block definition, and it is the
+only registry. Every other module reaches a block definition through it.
 
-No module other than a block's file and the registry's `keyOf` branches
-on `kind`, a builtin name, or a method name. Traversal, validation, the
-block menu, the value list, and the chart read a block's `slots`, `menu`,
-and flags instead.
+No module other than a block definition's file and the registry's `keyOf`
+branches on `kind`, a builtin name, or a method name. Traversal,
+validation, the block menu, the value list, and the chart read a block
+definition's `slots`, `menu`, and flags instead.
 
 ## Catalog keys
 
-Each block has these keys in `en.json`, and `ja.json` provides the same
-keys:
+Each block definition has these keys in `en.json`, and `ja.json`
+provides the same keys:
 
-- `block.<key>.label`: the block's name in the block menu and the value
-  list
+- `block.<key>.label`: the block definition's name in the block menu and
+  the value list
 - `block.<key>.help`: its help
 - `block.<key>.slot.<slot>`: the name of each slot of a statement that
   the editor shows as a field. For example, `block.assign.slot.value` is
@@ -128,19 +129,19 @@ keys:
 - `block.<key>.<name>.label` and `block.<key>.<name>.help`: the label and
   the help of a menu entry with a `name`
 
-The hidden `empty` block has its label and help.
+The hidden `empty` block definition has its label and help.
 
 No help names its entry's keys, because a help that named them would
-repeat the block's `keys` in every locale. The explanation line writes
-them from `keys` (`editor.md`, Explanation line).
+repeat the block definition's `keys` in every locale. The explanation
+line writes them from `keys` (`editor.md`, Explanation line).
 
-A block's node text isn't a catalog key. It is the block's `notation()`,
-the same in every locale (Node text).
+A block's notation isn't a catalog key. It is the block definition's
+`notation()`, the same in every locale (Notation).
 
 ## Statements
 
-The statement blocks. The Python column is the exact emitted text, and
-`<x>` stands for an emitted slot.
+The statement block definitions. The Python column is the exact emitted
+text, and `<x>` stands for an emitted slot.
 
 | key        | category | slots                  | notation                                                                                                            | Python                                                                              |
 | ---------- | -------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -163,7 +164,7 @@ special case.
 
 ## Expressions
 
-The expression blocks:
+The expression block definitions:
 
 | key     | category | slots           | notation                                                            | Python                 |
 | ------- | -------- | --------------- | ------------------------------------------------------------------- | ---------------------- |
@@ -172,7 +173,7 @@ The expression blocks:
 | `bool`  | basic    |                 | `True` / `False`                                                    | `True` / `False`       |
 | `none`  | basic    |                 | `None`                                                              | `None`                 |
 | `var`   | basic    | name            | `{name}`                                                            | `name`                 |
-| `binop` | basic    | op, left, right | `{left} {op} {right}` (Node text)                                   | infix (`emitter.md`)   |
+| `binop` | basic    | op, left, right | `{left} {op} {right}` (Notation)                                    | infix (`emitter.md`)   |
 | `unop`  | basic    | op, operand     | `−{operand}` / `not {operand}`                                      | `-<x>` / `not <x>`     |
 | `index` | list     | list, index     | `{list}[{index}]`                                                   | `<list>[<index>]`      |
 | `list`  | list     | items           | `[{items}]`                                                         | `[<a>, <b>]`           |
@@ -222,15 +223,15 @@ The methods:
 
 Method statements (`append`, `insert`, `sort`) are `expr` statements that
 wrap a `method` expression, and the block menu lists them as statements.
-The `expr` statement block itself is `hidden`, so the block menu offers
+The `expr` block definition itself is `hidden`, so the block menu offers
 it only as those method statements and as calls (`editor.md`, Block
 menu).
 
 ## Classes
 
-The learner edits a class in its chart tab as an ordered table of fields,
-and adds, removes, and reorders fields there. Each field has a name and a
-default that `language.md`, Semantics, Objects, allows.
+The learner edits a class in its field table, which lists its fields in
+order, and adds, removes, and reorders fields there. Each field has a
+name and a default that `language.md`, Semantics, Objects, allows.
 
 The emitted form:
 
@@ -250,18 +251,18 @@ A `[]` or `{}` default uses the `None` idiom, and any other default is a
 literal. `__repr__` lists the fields in order, as `print` does
 (`language.md`, Semantics, Calls).
 
-## Node text
+## Notation
 
 The chart, the value line, the block menu, the explanation line, and the
-narration all write a node and an expression from its block's
+narration all write a block from its block definition's
 `notation(node)`: the text of the tables above, with `{slot}`
 placeholders.
 
-A notation is the same in every locale, because the learner reads a node
+A notation is the same in every locale, because the learner reads a block
 again at every step of a run, in whatever language they read. The words a
-learner needs to choose and understand a block come in the learner's
-language instead (`pages.md`, Catalogs): the label, the help, the value
-list, the explanation line, and the narration.
+learner needs to choose and understand a block definition come in the
+learner's language instead (`pages.md`, Catalogs): the label, the help,
+the value list, the explanation line, and the narration.
 
 ### Text slots
 
@@ -281,7 +282,7 @@ slot's string value.
 - `<=` → `≤`
 - `>=` → `≥`
 
-The hidden `empty` block's notation is `…`, drawn as the placeholder of
+The notation of the hidden `empty` block is `…`, drawn as the placeholder of
 an empty input (`editor.md`, Value line).
 
 ### The form of an expression
@@ -336,7 +337,7 @@ The `Python` tab writes Python (`emitter.md`), where `←` becomes `=`.
 
 ### Drawing
 
-When the lines of a block's node editor write a slot twice, the slot is a
+When the lines of the block editor write a slot twice, the slot is a
 field in its first place, and the other place draws its value. For
 example, `for` writes `{var}` in its init and in its check.
 
@@ -345,27 +346,27 @@ parameters are separated by `, `, as Python separates them, in every
 locale.
 
 On the chart and in the editor, a variable is written as a bold word in
-the variable color, never in a box, because a box would cut the node into
-pieces. A node is drawn as its notation writes it, with no capital letter
+the variable color, never in a box, because a box would cut the block into
+pieces. A block is drawn as its notation writes it, with no capital letter
 added.
 
 ## Chart shape
 
-A block with body regions, or one that sends control somewhere other than
-the next statement in a loop, declares `chart` (`chart.md`, Shapes). The
-chart draws every other block as a box with its notation. `chart` doesn't
-affect the interpreter or the emitter.
+A block definition with body regions, or one that sends control somewhere
+other than the next statement in a loop, declares `chart` (`chart.md`,
+Shapes). The chart draws every other block as a box with its notation.
+`chart` doesn't affect the interpreter or the emitter.
 
 - `if` declares `{ branch: { cond: "cond", yes: "then", no: "else" } }`.
 - `while` declares `{ check: { cond: "cond", body: "body" } }`, where
   `cond` names the slot of the condition its diamond asks.
 - `for` and `foreach` declare `counted`, which names their body and the
-  texts of their generated nodes.
+  texts of their generated chart nodes.
 - `break` declares `{ jump: "exit" }` and `continue` declares
   `{ jump: "next" }`. The edge of each leads where control goes: out of
   the innermost loop, or into its next pass.
 
-The texts of a counted loop's generated nodes, with `{slot}`
+The texts of a counted loop's generated chart nodes, with `{slot}`
 placeholders:
 
 | key       | init                    | check                     | update               |
@@ -377,27 +378,27 @@ The chart draws a check the way it asks every diamond's condition
 (`chart.md`, Shapes), so a diamond's `?` follows one rule. For example:
 `i < n + 1?`.
 
-The texts of `for` are notation: the block declares them, and they are
-the same in every locale.
+The texts of `for` are notation: the block definition declares them, and
+they are the same in every locale.
 
 The texts of `foreach` hold words, because Python keeps the position
-hidden, so the loop's generated nodes have no expression to write. They
-are its
-catalog keys `block.foreach.init`, `check`, and `update`, translated.
-They are the only node texts in words.
+hidden, so the loop's generated chart nodes have no expression to write.
+They are its catalog keys `block.foreach.init`, `check`, and `update`,
+translated. They are the only chart node texts in words.
 
 A counted loop's own notation names it in the block menu and the editor.
 `for`'s notation is its init.
 
 ## Menu entries
 
-Expression blocks declare the entries of the value list (`editor.md`,
-Value list) in `menu`. The value list offers an entry with `on` after a
-value of those kinds, and the entry takes that value as its first input.
-An entry without `on` fills an input where a value is expected. Kinds are
-those of `language.md`, Kinds, and `any` below means every kind. Each
-block declares its own entries, because one block serves several groups:
-`binop` is `Add`, `Equals`, and `And`.
+Expression block definitions declare the entries of the value list
+(`editor.md`, Value list) in `menu`. The value list offers an entry with
+`on` after a value of those kinds, and the entry takes that value as its
+first input. An entry without `on` fills an input where a value is
+expected. Kinds are those of `language.md`, Kinds, and `any` below means
+every kind. Each block definition declares its own entries, because one
+block definition serves several groups: `binop` is `Add`, `Equals`, and
+`And`.
 
 | key               | name       | label                   | group      | on                   | symbol | keys  |
 | ----------------- | ---------- | ----------------------- | ---------- | -------------------- | ------ | ----- |
@@ -441,8 +442,8 @@ block declares its own entries, because one block serves several groups:
 | `call:float`      |            | As decimal              | convert    | number, text         |        | `float` |
 
 `binop` entries preset `op`, and `bool` entries preset `value`. `list`'s
-`empty` presets no item, so a list with items is named by the block's own
-label, `List`.
+`empty` presets no item, so a list with items is named by the block
+definition's own label, `List`.
 
 The help of `and` says that it is true when both sides are. The help of
 `or` says that it is true when one side or both are, because in everyday
@@ -450,7 +451,7 @@ English "or" often means only one.
 
 ## Kinds
 
-The registered blocks give these kinds (`language.md`, Kinds):
+The expression block definitions give these kinds (`language.md`, Kinds):
 
 | key | kind |
 | --- | --- |
@@ -482,7 +483,7 @@ no kind for the same reason.
 
 ## Verification
 
-Each block has these tests:
+Each block definition has these tests:
 
 - one that asserts its exact notation and its exact Python text
   (Statements, and the tables after it)

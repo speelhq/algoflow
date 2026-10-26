@@ -45,7 +45,7 @@ describe("builtin randint (blocks.md)", () => {
   });
 });
 
-describe("notation (blocks.md, Node text)", () => {
+describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
     expect(notation(call("randint", num(1), num(6)))).toBe("randint({a}, {b})");
   });

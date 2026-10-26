@@ -114,7 +114,7 @@ export function templateParts(template: string, fill: (name: string) => Part[]):
 
 const plain = (part: Part) => !part.variable && !part.empty && !part.underline;
 
-/** A node's notation (`blocks.md`, Node text). */
+/** A node's notation (`blocks.md`, Notation). */
 export function notationOf(node: Node): string {
   return getBlock(keyOf(node)).notation(node);
 }

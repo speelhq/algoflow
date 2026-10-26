@@ -66,7 +66,7 @@ input's name.
 
 A `solution` has the `version` that `migrate()` returns (`language.md`,
 Storage), because the build bundles a challenge file as it is, with no
-`migrate()`, so an older version would reach the chart unmigrated.
+`migrate()`, so an older version would reach the page unmigrated.
 
 Every challenge has at least one test with `edge: true`, a boundary
 case. For example: an empty list, zero, or a single item. A test is
@@ -121,7 +121,7 @@ itself.
 
 The three hints name, in this order:
 
-1. the block or module function to use
+1. the block definition or module function to use
 2. the shape of the loop or condition
 3. the remaining step
 
@@ -181,8 +181,8 @@ The test's row shows the runtime error (`run.md`, Submission).
 An accepted submission requires every test to pass.
 
 Run (`run.md`, Run bar) drives one runner with the inputs of the chosen
-case (`chart.md`, Input nodes), and judges that case at the end of the
-run (`pages.md`, Panel, Result tab).
+case (`chart.md`, Input chart nodes), and judges that case at the end
+of the run (`pages.md`, Panel, Result tab).
 
 Submit (`run.md`, Submission) judges every test on its own runner in
 batches (`interpreter.md`, Driver), without affecting the driver, and
@@ -197,8 +197,9 @@ Run, Submit, and `scripts/check.ts` take every test's verdict against
 
 ## Progress
 
-Progress persists under the `localStorage` key `algoflow:progress` as
-`Record<id, { status: "attempted" | "solved"; hints: number; solution: boolean }>`.
+Progress persists under the `localStorage` key `algoflow:progress`,
+keyed by challenge id, as
+`Record<string, { status: "attempted" | "solved"; hints: number; solution: boolean }>`.
 
 A browser tab adds a problem's entry on the problem's first submission,
 first revealed hint, or shown solution. The entry's fields:
@@ -244,8 +245,8 @@ Opening a problem:
   or, when none is stored, creates a program whose `main` is empty and
   whose `challengeId` and `inputs` are the challenge's
 - discards any runner (`interpreter.md`, Driver, Controls)
-- selects the first test's inputs for the Input nodes (`chart.md`,
-  Input nodes)
+- selects the first test's inputs for the Input chart nodes (`chart.md`,
+  Input chart nodes)
 
 The build bundles `challenges/*.json` and `plans.json`.
 `src/challenges/index.ts` imports the challenge files with

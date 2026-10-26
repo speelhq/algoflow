@@ -51,10 +51,10 @@ complete the problem without an instructor (`challenges.md`, Hints).
 Within one problem, the learner works in a loop:
 
 1. Read the problem's description.
-2. Build the chart.
+2. Build the program.
 3. Run it on one input and watch it.
 4. Compare the result with the expected one.
-5. Fix the chart.
+5. Fix the program.
 6. Submit, and move on to the next problem.
 
 This loop shapes the UI. A design of cards that read as code lines, with
@@ -76,7 +76,7 @@ starter programs, because a problem that started from the previous
 solution would discard the learner's own version.
 
 A module keeps that version, so when a bug in the learner's `heap_pop`
-shows up again in `dijkstra-heap`, the learner inspects the block they
+shows up again in `dijkstra-heap`, the learner inspects the function they
 rely on.
 
 ## Curriculum
@@ -107,8 +107,9 @@ The instructor decides whether to add a problem to the `course` plan.
 
 ### Blocks and modules
 
-The learner can solve every challenge with the blocks of `blocks.md` and the
-built-in modules (`modules.md`, Built-in modules), and with nothing else.
+The learner can solve every challenge with the block definitions of
+`blocks.md` and the built-in modules (`modules.md`, Built-in modules), and
+with nothing else.
 
 ### Playground programs
 
@@ -120,7 +121,7 @@ A Playground program has none of these:
 - Submit
 
 The learner can keep any number of Playground programs. The application
-stores each one under its own id (`language.md`, Storage).
+stores each one under its own Playground id (`language.md`, Storage).
 
 ## Acceptance
 

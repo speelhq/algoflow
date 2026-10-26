@@ -23,7 +23,7 @@ describe("builtin min (blocks.md)", () => {
   });
 });
 
-describe("notation (blocks.md, Node text)", () => {
+describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
     expect(notation(call("min", num(1), num(2)))).toBe("min({a}, {b})");
   });

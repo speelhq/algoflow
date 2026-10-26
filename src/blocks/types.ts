@@ -181,7 +181,7 @@ export type BlockDef = {
   create(): Stmt | Expr;
   run: StmtRunner | ExprRunner;
   python(node: Stmt | Expr, ctx: EmitContext): PyLine[] | string;
-  /** The node's text with `{slot}` placeholders, the same in every locale (Node text). */
+  /** The node's text with `{slot}` placeholders, the same in every locale (Notation). */
   notation(node: Stmt | Expr): string;
   /**
    * Which of a stored node's literal fields no edit could have written (an operator, a number's

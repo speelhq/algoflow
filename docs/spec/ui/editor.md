@@ -1,58 +1,59 @@
 # Editor
 
 Code: `src/ui/editor` (the block menu `menu.ts` and `BlockMenu.tsx`, the
-node editor `NodeEditor.tsx` with its session `session.ts`, the value line
+block editor `NodeEditor.tsx` with its session `session.ts`, the value line
 `line.ts` and `ValueLine.tsx`, names `names.ts`, the explanation line
 `explain.ts`). Tests: beside each file, and `e2e/`.
 
 ## Block menu
 
-The block menu lists the registered statement blocks (blocks of
-`shape: "stmt"` and the method statements, `blocks.md`, not `hidden`), with a
-search over `label` and `help`. It groups them in the category order (`Basic`,
-`Control`, `List`, `Function`, `Dict`, `Class`) of `blocks.md`, The block
-definition, and each category is in a fixed order that puts `assign`,
-`print`, `if`, `for`, and `while` first in theirs. An entry reads as the
-block's label followed by its notation with every slot as `…`
-(`Set variable  … ← …`, `Print  print(…)`, `For loop  … ← …`,
-`For each loop  for … in …`). A block whose `requires` the connector doesn't
-meet is listed disabled with the reason (`menu.requires.loop`,
-`menu.requires.function`). The `Function` category ends with `New function…`,
-which prompts for a name, creates the function, and inserts a call to it. Then
-follow the program's own functions under `This program`, when any exist, and a
-last row `Modules ▸` that opens one group per module (`modules.md`,
-Resolution), each titled by the module's name or title, with learner modules
-before built-in ones, each listing its functions as calls. Choosing an item
-inserts it and opens its editor. Expression blocks aren't in this menu: value
-lines offer them (Value list). A block that can't go at the connector is
+The block menu lists the statement block definitions (those of `shape: "stmt"`
+and the method statements, `blocks.md`, not `hidden`), with a search over
+`label` and `help`. It groups them in the category order (`Basic`, `Control`,
+`List`, `Function`, `Dict`, `Class`) of `blocks.md`, The block definition, and
+each category is in a fixed order that puts `assign`, `print`, `if`, `for`,
+and `while` first in theirs. An entry reads as the block definition's label
+followed by its notation with every slot as `…` (`Set variable  … ← …`,
+`Print  print(…)`, `For loop  … ← …`, `For each loop  for … in …`). A block
+definition whose `requires` the connector doesn't meet is listed disabled with
+the reason (`menu.requires.loop`, `menu.requires.function`). The `Function`
+category ends with `New function…`, which prompts for a name, creates the
+function, and inserts a call to it. Then follow the program's own functions
+under `This program`, when any exist, and a last row `Modules ▸` that opens
+one group per module (`modules.md`, Resolution), each titled by the module's
+name or title, with learner modules before built-in ones, each listing its
+functions as calls. Choosing an item inserts it and opens its editor.
+Expression block definitions aren't in this menu: value lines offer them
+(Value list). A block definition that can't go at the connector is
 disabled rather than hidden, because a disabled entry says that the block
-exists and where it applies. Restricting the menu per challenge was rejected,
-because it hides the language and adds authoring work. The modules sit behind
-one `Modules ▸` row so that they don't overfill a trainee's menu. The
-categories run Basic, Control, List because a beginner needs `if` and `for`
-before list blocks.
+definition exists and where it applies. Restricting the menu per challenge was
+rejected, because it hides the language and adds authoring work. The modules
+sit behind one `Modules ▸` row so that they don't overfill a trainee's menu.
+The categories run Basic, Control, List because a beginner needs `if` and `for`
+before the block definitions of `List`.
 
 The block menu's `This program` and the value list's `Your functions` list
 only the program's functions that a call can name. A function whose name a
 diagnostic refuses is left out, because a row for a function named `for` or
 `abs` would insert a call that validation refuses, or a call of the builtin.
-The diagnostic on that function's `Start` node says why (`chart.md`, Editing
-on the chart).
+The diagnostic on that function's `Start` chart node says why (`chart.md`,
+Editing on the chart).
 
-## Node editor
+## Block editor
 
-The node editor is a popover on the right of the selected node, within the
-canvas, so the panel stays readable while a block is edited. The editor stays
-within the canvas, on the node's right, because placed against the viewport it
-would flip over the panel and hide the problem's description the learner
-builds from, and turned below or above the node, it would cover the nodes
-built from. Where the canvas lacks room on the node's right, the canvas
-scrolls the chart left by what is missing while the editor is open, and the
-editor moves down or up only as far as it must to stay within the canvas.
-Clicking a slot drawn on the node opens the editor with that slot focused. The
-editor is drawn at 100 % whatever the chart's zoom. In-node editing was
-rejected, because the chart is fitted to its width, a diamond has little room,
-and a value being built needs space at full size.
+The block editor is a popover on the right of the selected block's chart node,
+within the canvas, so the panel stays readable while a block is edited. The
+editor stays within the canvas, on the chart node's right, because placed
+against the viewport it would flip over the panel and hide the problem's
+description the learner builds from, and turned below or above the chart node,
+it would cover the chart nodes built from. Where the canvas lacks room on the
+chart node's right, the canvas scrolls the chart left by what is missing while
+the editor is open, and the editor moves down or up only as far as it must to
+stay within the canvas. Clicking a slot drawn on the chart node opens the
+editor with that slot focused. The editor is drawn at 100 % whatever the
+chart's zoom. Editing inside the chart node was rejected, because the chart is
+fitted to its width, a diamond has little room, and a value being built needs
+space at full size.
 
 While a list is shown (Value list; Name fields), the editor is 480 px high, or
 as high as the canvas less its margins when the canvas is lower. Its
@@ -62,16 +63,16 @@ sight only when none of it is in sight, so the editor, placed by that height,
 moves neither when typing shortens the list nor when the highlight changes the
 explanation line, and no row moves under the pointer. In a canvas lower than
 the rest and a few rows, the editor scrolls within its height. Scrolling the
-chart up to make room below the node, as it is scrolled left, was rejected,
-because with an editor that high it would scroll for nearly every node and
-hide the statements above the one being built.
+chart up to make room below the chart node, as it is scrolled left, was
+rejected, because with an editor that high it would scroll for nearly every
+chart node and hide the statements above the one being built.
 
-From top to bottom, the editor holds the node's name field (Node names), the
+From top to bottom, the editor holds the block's name field (Node names), the
 block's notation, the list of the focused slot (Value list; Name fields), and
 the explanation line (Explanation line). The name field has `Duplicate` and
-`Delete` as icon buttons beside it and, when the node calls a function or
-constructs a class, `Open <name>`, which shows that function's or class's
-chart (`chart.md`, Charts and the path bar) or, for a module's, opens its
+`Delete` as icon buttons beside it and, when the block calls a function or
+constructs a class, `Open <name>`, which shows that function's chart or class's
+field table (`chart.md`, Charts and the path bar) or, for a module's, opens its
 Module page (`modules.md`, Operations). The notation has its slots editable in
 place (a `for`'s init and check, `i ← 1` and `i < n + 1?`): `id` slots as name
 fields (Name fields), `expr` and `target` slots as value lines (Value line;
@@ -79,28 +80,28 @@ Targets), an optional `expr` slot left empty as `+ value` (`editor.addValue`),
 which adds its value line, `exprs` slots as value lines separated by commas,
 each with a remove button (`editor.removeValue`), followed by `+ value`, which
 adds one, and `body` slots not shown. A separator divides each of the name
-field, the notation, and the list from the next. The slot clicked on the node,
-or a first slot still to fill, takes the keyboard when the editor opens.
-Otherwise, the keyboard stays with the chart, so Delete removes the node
+field, the notation, and the list from the next. The slot clicked on the chart
+node, or a first slot still to fill, takes the keyboard when the editor opens.
+Otherwise, the keyboard stays with the chart, so Delete removes the block
 (`chart.md`, Editing on the chart). An edit applies at once. Esc or a press
 outside the editor closes it.
 
-The editor is placed by its node without a control on the node: nothing
-there takes the keyboard or announces a popup.
+The editor is placed by its chart node without a control on the chart node:
+nothing there takes the keyboard or announces a popup.
 
 A field of the editor's notation is named, for assistive technology, by the
-block's label and the slot's name (`block.<key>.slot.<slot>`, `blocks.md`,
-Catalog keys), such as `Set variable, value`, because the symbols before a
-field (`←`, `print(`) name nothing a screen reader can say.
+block definition's label and the slot's name (`block.<key>.slot.<slot>`,
+`blocks.md`, Catalog keys), such as `Set variable, value`, because the symbols
+before a field (`←`, `print(`) name nothing a screen reader can say.
 
 A loop's editor edits the variable and the bounds (`for`), the list
-(`foreach`), or the condition (`while`), and the generated nodes (`chart.md`,
-Shapes) follow.
+(`foreach`), or the condition (`while`), and the generated chart nodes
+(`chart.md`, Shapes) follow.
 
 ## Value line
 
 A value line edits one expression, written as the chart writes it
-(`blocks.md`, Node text): variables as bold words in the variable color, an
+(`blocks.md`, Notation): variables as bold words in the variable color, an
 operator as its symbol, and an input still to fill as an empty field. A chip
 editor was rejected, because it nests a box per operation, so a value of three
 operations is three levels of boxes, whereas a line reads left to right as the
@@ -155,18 +156,18 @@ states, as it does outside the editor, because, unlike a text field, a value
 line edits the program at each key, so its undo is the program's.
 
 An empty required input is an empty field in the value line and a dashed `…`
-on the node, at any depth of the value. Clicking it on the node opens the
-editor focused on it. An empty name slot is drawn with the same placeholder.
-An `exprs` slot with no item draws nothing unless it is required. A diamond
-whose condition is empty shows the placeholder without `?`. A value line that
-is one empty field reads `type or choose` (`editor.typeHint`) while it doesn't
-have the keyboard.
+on the chart node, at any depth of the value. Clicking it on the chart node
+opens the editor focused on it. An empty name slot is drawn with the same
+placeholder. An `exprs` slot with no item draws nothing unless it is required.
+A diamond whose condition is empty shows the placeholder without `?`. A value
+line that is one empty field reads `type or choose` (`editor.typeHint`) while
+it doesn't have the keyboard.
 
 ## Value list
 
 The list of a value line holds groups chosen by what is before the caret.
 Where a value is expected, it holds `Variables` (the variables visible at the
-node, most recently assigned first, each with its kind, `language.md`, Kinds),
+block, most recently assigned first, each with its kind, `language.md`, Kinds),
 `Values` (the entries of group `values`: `Text`, `True`, `False`, `None`,
 `Empty list`, `Empty dict`), `Conditions` (`Not`), `Calculate`
 (`Random whole number`, then `( )`, a pair of parentheses, labeled
@@ -190,16 +191,16 @@ with no row reads `editor.noItems`. Groups are named by what is done with a
 value, not by block category. `Combine`, `Other`, `Totals`, `Order`, and
 `Functions` were rejected as names, because they mislead or head one or two
 rows. `Variables` offers no `v + 1`, because guessing it for an index or a
-bound would tie the list to two block kinds (`blocks.md`, The block
+bound would tie the list to two block definitions (`blocks.md`, The block
 definition).
 
 An entry chosen after a value takes that value as its first input. An entry
-whose block has a precedence (an operator) stands between the value before the
-caret and the next one, and binds by the precedence of `emitter.md` within the
-innermost parentheses. Any other entry takes the expression before the caret
-whose kind chose the list, so `i < n` followed by `As text` gives
+whose block definition has a precedence (an operator) stands between the value
+before the caret and the next one, and binds by the precedence of `emitter.md`
+within the innermost parentheses. Any other entry takes the expression before
+the caret whose kind chose the list, so `i < n` followed by `As text` gives
 `str(i < n)`, except an entry whose first input binds as an atom
-(`Item at a position`, `blocks.md`, Node text), which takes the value just
+(`Item at a position`, `blocks.md`, Notation), which takes the value just
 before the caret, as Python binds it (`i + nums[…]`), whether chosen or typed.
 An entry chosen where a value is expected fills that input. The inputs a
 choice leaves appear as fields in the line, and the caret moves to the first
@@ -219,10 +220,10 @@ fills the input it is chosen for. A value is built left to right, as it is
 typed and read, because choosing `abs` first would make the learner build
 the value again inside it. An entry with no precedence takes the expression
 the list was chosen for, because the list offered `As text` after `i < n`
-for the comparison, and applying it to `n`
-alone would fail when run. A selected value is replaced by what is typed
-because a slot reached by Tab already holds one, `0` in a new `for`, which a
-caret after it would extend (`01`).
+for the comparison, and applying it to `n` alone would fail when run. A
+selected value is replaced by what is typed because a slot reached by Tab
+already holds one, `0` in a new `for`, which a caret after it would extend
+(`01`).
 
 ## Backspace and keys
 
@@ -240,10 +241,10 @@ otherwise removes nothing and moves the caret to the end of the input before
 it. A name goes whole rather than by its letters, because a name is replaced
 far more often than corrected, and a correction is chosen from the list.
 Delete removes a selected value as Backspace does. Clicking an operator in the
-line lists the other entries of its block in its group, and choosing one
-replaces it (`<` to `≤`, `+` to `Remainder`). Removing the operation also
-removes the values of its other inputs, so Backspace removes it only when no
-input after the first holds a value (`f(a, b, …)` keeps `b`).
+line lists the other entries of its block definition in its group, and
+choosing one replaces it (`<` to `≤`, `+` to `Remainder`). Removing the
+operation also removes the values of its other inputs, so Backspace removes it
+only when no input after the first holds a value (`f(a, b, …)` keeps `b`).
 
 Keys typed in a value line insert what the chart writes. Each entry names its
 keys (`keys`, `blocks.md`, Menu entries). A key that two entries name inserts,
@@ -265,7 +266,7 @@ selected value, because the slot keeps no list:
 | `(`                     | a pair of parentheses, the caret inside them; after a call's name, the call's own |
 | `[` `,` `]`             | a list's pair of brackets; `,` between its items; `]` leaves it; after a value, `[` an item of it (`nums[…]`) |
 | `,` in a call           | the call's next input                            |
-| `,` in an `exprs` slot  | the next value of the slot (Node editor)         |
+| `,` in an `exprs` slot  | the next value of the slot (Block editor)        |
 | `%` `//` `**`           | as typed                                         |
 | `and` `or` `not` `in`   | as typed                                         |
 
@@ -318,7 +319,7 @@ Where the whole target is still to fill, the list of a slot that `binds`
 fields), `This problem` first, and a typed name that neither holds and that
 `language.md`, Identifiers, allows as `New variable <name>`, which the word
 names exactly. Where the whole target is still to fill, the list of a slot
-that doesn't bind holds the variables visible at the node. Either list of
+that doesn't bind holds the variables visible at the block. Either list of
 names ends with no `Show all`, because every name it could list is in it.
 After the target's variable, the list offers the entries that keep a target
 (`Item at a position`). Inside the target's inputs, the lists are a value
@@ -363,18 +364,20 @@ Identifiers).
 
 ## Node names
 
-Every statement may carry a name in the learner's own words (`language.md`,
-Statement names), typed in the editor's name field (`editor.name`, placeholder
-`editor.nameHint`: `optional`), because a condition written in symbols doesn't
-say what it is for, and a name in the learner's words does. The application
-never translates the name and never asks for it. A named node shows its name
-alone, in place of its notation or its question, unless a slot of it is still
-empty, when it shows its notation with the placeholder. A named counted loop
-shows its name on its check, and its other generated nodes keep their text.
-Hovering a named node shows what it draws without its name: its notation or
-its question, or, for a named counted loop, its check. The `Python` tab writes
-the name as a comment above the statement (`emitter.md`). A `comment` block
-was rejected, because it would draw Python's `#` on the chart.
+Every statement block may carry a name in the learner's own words
+(`language.md`, Statement names), typed in the editor's name field
+(`editor.name`, placeholder `editor.nameHint`: `optional`), because a
+condition written in symbols doesn't say what it is for, and a name in the
+learner's words does. The application never translates the name and never
+asks for it. A named block's chart node shows the name alone, in place of
+its notation or its question, unless a slot of the block is still empty,
+when it shows its notation with the placeholder. A named counted loop shows
+its name on its check, and its other generated chart nodes keep their text.
+Hovering a named block's chart node shows what it draws without the name:
+its notation or its question, or, for a named counted loop, its check. The
+`Python` tab writes the name as a comment above the statement
+(`emitter.md`). A `comment` block definition was rejected, because it would
+draw Python's `#` on the chart.
 
 ## Explanation line
 
@@ -393,7 +396,7 @@ highlights or the caret is in:
 | a refused key | its message (Backspace and keys) |
 | a word that matches nothing | the closest name (Value line), or `editor.nothingLike` when none is close |
 | a name field with nothing highlighted | `editor.explain.name` |
-| anything else | the block's help (`block.<key>.help`) |
+| anything else | the block definition's help (`block.<key>.help`) |
 
 An input is shown by its value, not named in words (`position`), because
 naming it would need a name for every input of every operation in every

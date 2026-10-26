@@ -113,9 +113,9 @@ convert back to itself. `$int:0` is canonical, and `$int:-0` is not.
 ### Faults that `migrate()` rejects
 
 `migrate()` reads a stored or imported program (Storage). It rejects a
-field that the node's block wouldn't make (`fieldsError`, `blocks.md`) and
-a class field default that isn't canonical `Data`, and it reports the path
-of the fault.
+field that the block's definition wouldn't make (`fieldsError`,
+`blocks.md`) and a class field default that isn't canonical `Data`, and it
+reports the path of the fault.
 
 `migrate()` and `validate()` catch different faults, depending on who
 fixes the fault and where. `validate()` reports the faults that an edit
@@ -124,7 +124,7 @@ can only come from editing the file by hand:
 
 - an unknown kind
 - a missing field
-- a literal that the node's block wouldn't make
+- a literal that the block's definition wouldn't make
 - a `Data` value that isn't canonical
 
 There is no node to fix those faults on, so `migrate()` rejects the file
@@ -133,7 +133,8 @@ instead, and `validate()` never reads a literal field.
 ### Classes and objects before `new` exists
 
 A program holds no class and `Data` holds no object, because no
-registered block constructs an object yet. Until a `new` block exists:
+registered block definition constructs an object yet. Until a `new` block
+definition exists:
 
 - `migrate()` rejects a class, and an input of the kind `object`.
 - `pnpm check` rejects a `$cls` in a challenge file, and a class name in
@@ -214,8 +215,8 @@ export type Stmt =
 ### Targets
 
 A target is an expression that names where a value is stored: a `var`, an
-`index`, a `key`, or a `field`. Each of these is a block that declares
-`locate` (`blocks.md`, The block definition).
+`index`, a `key`, or a `field`. Each of these is a block definition that
+declares `locate` (`blocks.md`, The block definition).
 
 A `target` slot holds one target, or `empty` while it is unfilled
 (Expressions). `migrate()` rejects any other expression in a `target`
@@ -282,14 +283,14 @@ consumer handles it in its own way:
 - The interpreter never executes it.
 
 `Expr | null` was rejected because it would spread null checks through
-every block and the emitter, while an `empty` kind keeps `Expr` a closed
-union.
+every block definition and the emitter, while an `empty` kind keeps `Expr`
+a closed union.
 
 ## Semantics
 
 This section states what each operation does at run time. Each heading
-names the block whose test holds one test per rule under it, with the
-rule's example. `src/runtime/semantics.test.ts` tests
+names the block definition whose test holds one test per rule under it,
+with the rule's example. `src/runtime/semantics.test.ts` tests
 the rules under Values and the run.
 
 ### Operators (`binop`)
@@ -475,7 +476,7 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 | `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`                    |
 | `E_EMPTY_SLOT`     | required slot empty (prevents execution)                    | `slot`                    |
 | `E_DEFAULT`        | a field default that Semantics, Objects doesn't allow       | `field`                   |
-| `E_DUPLICATE_ID`   | two nodes share an id (Program)                             |                           |
+| `E_DUPLICATE_ID`   | two nodes share a node id (Program)                         |                           |
 
 ## Edits
 
@@ -492,25 +493,26 @@ Every edit keeps node ids unique.
 
 `insertStmt` and `moveStmt` take a statement position,
 `Place = { parent: NodeId | "main"; slot: "main" | "body" | "then" | "else"; index: number }`.
-Its `parent` is `"main"`, a function id, or a compound statement's id.
+Its `parent` is `"main"`, a function's node id, or a compound statement's
+node id.
 
 `moveStmt` counts `index` in the destination region after it has removed
 the moved statement, because the chart computes the drop indicator
-on the list without the dragged node.
+on the list without the dragged block.
 
-`hoistAssign(program, compound, name)` takes `compound`, the id of a
+`hoistAssign(program, compound, name)` takes `compound`, the node id of a
 compound statement, and inserts the assignment before that statement.
-That id is the `compound` that `E_DECLARE_FIRST` reports.
+That node id is the `compound` that `E_DECLARE_FIRST` reports.
 
-The other edits address nodes by id. `setExpr` takes an item index for an
-`exprs` slot.
+The other edits address nodes by node id. `setExpr` takes an item index
+for an `exprs` slot.
 
 ### History
 
 History keeps the last 100 programs for undo and redo. Opening a program
 starts an empty history.
 
-Consecutive changes that the learner types into one field of the node
+Consecutive changes that the learner types into one field of the block
 editor form one entry, because a typed value changes the chart with every
 key. Two alternatives were rejected:
 
@@ -551,26 +553,27 @@ checks it and migrates it by `version` (`src/lang/migrate.ts`).
 apply to the targets it reads:
 
 - A version-1 target `{ kind, ...parts }` becomes the expression of that
-  kind, with those parts and a new id that the program doesn't hold.
+  kind, with those parts and a new node id that the program doesn't hold.
 - A variable target with no name becomes `empty`.
-- When no registered block has the target's kind, `migrate()` rejects the
-  target as an unknown kind.
+- When no registered block definition has the target's kind, `migrate()`
+  rejects the target as an unknown kind.
 
 ### Playground programs
 
-A Playground program's id is `play-` followed by a `NodeId`, so a
-Playground id can't read as a challenge id.
+A Playground id is `play-` followed by a `NodeId`, so it can't read as a
+challenge id.
 
-`algoflow:playground` holds `Record<id, { edited: number }>`: the time of
-each Playground program's last save, in milliseconds since the epoch. The
-record lists exactly the Playground programs in storage.
+`algoflow:playground` holds `Record<string, { edited: number }>`, keyed by
+Playground id: the time of each Playground program's last save, in
+milliseconds since the epoch. The record lists exactly the Playground
+programs in storage.
 
 The time is kept in this record, not in `Program`, because `Program`
 would then carry it into every export and challenge file.
 
 ## Statement names
 
-A statement's `name` is the learner's own name for its node (`editor.md`,
+A statement's `name` is the learner's own name for it (`editor.md`,
 Node names). It is one line of text. `setStmtName` and `migrate()` both
 store a name the same way:
 
@@ -589,18 +592,18 @@ A kind is what the value list and the name list (`editor.md`, Value list;
 Name fields) know of a value before the program runs. The kinds are
 `number`, `text`, `truefalse`, `none`, `list`, `dict`, and `object`.
 
-A block's `kind` (`blocks.md`) gives an expression's kind from the kinds
-of the expressions inside it. An expression whose kind can't be
+A block definition's `kind` (`blocks.md`) gives an expression's kind from
+the kinds of the expressions inside it. An expression whose kind can't be
 determined has none.
 
 A variable's kind is found in this order:
 
 1. the kind its input declares
 2. the kind of the value of its first assignment, in program order
-3. the kind its loop block declares (`declares`, `blocks.md`)
+3. the kind its loop block definition declares (`declares`, `blocks.md`)
 
-A `for` variable's block declares `number`. A parameter and a `foreach`
-variable have no kind.
+A `for` variable's block definition declares `number`. A parameter and a
+`foreach` variable have no kind.
 
 ## Verification
 

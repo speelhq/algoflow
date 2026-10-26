@@ -20,7 +20,7 @@ describe("empty", () => {
   });
 });
 
-describe("notation (blocks.md, Node text)", () => {
+describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
     expect(notation(ast.empty())).toBe("…");
   });

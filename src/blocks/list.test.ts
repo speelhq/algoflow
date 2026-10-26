@@ -38,7 +38,7 @@ describe("list (blocks.md)", () => {
   });
 });
 
-describe("notation (blocks.md, Node text)", () => {
+describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
     expect(notation(list(num(1)))).toBe("[{items}]");
   });

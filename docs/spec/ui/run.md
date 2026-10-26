@@ -9,16 +9,16 @@ Code: `src/ui/problem` (`RunBar.tsx`, `actions.ts`, `keys.ts`,
 
 The run bar at the foot of the canvas holds `▶ Run` in build mode. `Run` with
 diagnostics present doesn't start: it shows the chart of the first node with a
-diagnostic, selects that node, and shows its message (`chart.md`, Editing on
-the chart). `Submit` with diagnostics present does the same. Otherwise, `Run`
-pre-runs the program (`interpreter.md`, Steps and batches) with the Input
-nodes' values and puts the page in run mode, where editing is disabled. `Run`
-is never disabled for a diagnostic, because a disabled button gives no reason.
-An empty slot is reported only this way, because a block marked red when
-inserted would report an error before the learner had finished its value.
-Editing stays disabled while paused, because an edited program replayed to the
-same step arrives somewhere else, and resynchronizing by node breaks on the
-edited node.
+diagnostic, selects that node's statement, and shows its message (`chart.md`,
+Editing on the chart). `Submit` with diagnostics present does the same.
+Otherwise, `Run` pre-runs the program (`interpreter.md`, Steps and batches)
+with the Input chart nodes' values and puts the page in run mode, where
+editing is disabled. `Run` is never disabled for a diagnostic, because a
+disabled button gives no reason. An empty slot is reported only this way,
+because a block drawn red when inserted would report an error before the
+learner had finished its value. Editing stays disabled while paused, because
+an edited program replayed to the same step arrives somewhere else, and
+resynchronizing by node id breaks on the edited block.
 
 In run mode, the run bar holds, from its left: one play button in place of
 `▶ Run` (`❚❚ Pause` while playing, `▶ Play` while paused, and `↺ Replay` at
@@ -34,30 +34,31 @@ end, followed by the error's message (`pages.md`, Messages), which holds the
 hint, so the catalog holds the hint once. A notice that the run never reached
 its end was rejected, because a run that is only long would send the learner
 looking for a loop that doesn't end. `Stop` returns to build mode. Once the
-run has ended, in `done` or `error`, clicking a node also returns to build
-mode and opens that node's editor. `Run` and `Play` are one button because
-both start playback, so the button pressed to start is the one that pauses.
-The run bar holds the controls because they are too long to float over the
-chart's corner without covering a loop's back edge. A click edits after the
-end because a finished run has no position to keep, so the failing node of an
-error is one click from its correction.
+run has ended, in `done` or `error`, clicking a chart node also returns to
+build mode and opens its owner's editor. `Run` and `Play` are one button
+because both start playback, so the button pressed to start is the one that
+pauses. The run bar holds the controls because they are too long to float over
+the chart's corner without covering a loop's back edge. A click edits after
+the end because a finished run has no position to keep, so the failing chart
+node of an error is one click from its correction.
 
-Before the run has ended, clicking a node sets the breakpoint on it
+Before the run has ended, clicking a chart node sets the breakpoint on it
 (`interpreter.md`, Controls), pausing first when the run is playing, and
-clicking the node that holds the breakpoint, or pressing Esc, clears it. The
-node shows a breakpoint mark (`run.breakpoint`), and the run pauses each time
-it arrives there. `Skip` continues to the next arrival without drawing the
-steps in between, or to the end of the run when no breakpoint is set. In build
-mode, a click edits and sets no breakpoint. A `Run to this node` action was
-rejected, because it would give nodes a context menu, which nothing else on
-the chart has, and a modifier on the click has no touch equivalent.
+clicking the chart node that holds the breakpoint, or pressing Esc, clears it.
+The chart node shows the breakpoint (`run.breakpoint`), and the run pauses
+each time it arrives there. `Skip` continues to the next arrival without
+drawing the steps in between, or to the end of the run when no breakpoint is
+set. In build mode, a click edits and sets no breakpoint. A
+`Run to this block` action was rejected, because it would give chart nodes a
+context menu, which nothing else on the chart has, and a modifier on the click
+has no touch equivalent.
 
 ## Path and marks
 
-While running, the edges and nodes of the running frame's current pass are
-drawn in the taken-path color: a `Yes` edge when its diamond's mark is `✓`, a
-`No` edge when it is `✗`, an unlabeled edge when both its ends are on the
-path, and, once control has left a loop that has ended, its `No` edge when
+While running, the edges and chart nodes of the running frame's current pass
+are drawn in the taken-path color: a `Yes` edge when its diamond's mark is
+`✓`, a `No` edge when it is `✗`, an unlabeled edge when both its ends are on
+the path, and, once control has left a loop that has ended, its `No` edge when
 what it leads to is on the path (a statement, the next loop's junction, or a
 branch's merge). A `call` starts the called chart with no path and no marks,
 as a loop's new pass does, and a `return` gives back the caller's as they
@@ -65,8 +66,8 @@ were. A frame shown by a click on its segment (Call stack) shows its own path
 and marks. The marks decide the labeled edges because the path holds both ends
 of a diamond's `Yes` and `No` edges whenever the diamond was entered.
 
-While running, the current node has the accent outline and is scrolled into
-view.
+While running, the current chart node has the accent outline and is scrolled
+into view.
 
 A diamond shows `✓` or `✗` after its check: the result of the `compare` of its
 whole condition (`interpreter.md`, Events), or of the `loop` event of a
@@ -105,7 +106,7 @@ describes the event of the step (`lastEvent`) in one sentence
 | --- | --- |
 | `enter` | `Checking i % 3 = 0` for a condition, and otherwise `Running` and its notation (`Running total ← total + i`) |
 | `read` | `Read nums[2]: 5`, or for several items `Read 3 items of nums` |
-| `compare` | the comparison as the chart writes it (`blocks.md`, Node text), with every variable that holds a number, a text, a boolean, or none written as its value in the frame the event ran in, then `is` and the comparison's value (`3 < 10 is True`); for a diamond's whole condition, its question and answer (below) |
+| `compare` | the comparison as the chart writes it (`blocks.md`, Notation), with every variable that holds a number, a text, a boolean, or none written as its value in the frame the event ran in, then `is` and the comparison's value (`3 < 10 is True`); for a diamond's whole condition, its question and answer (below) |
 | `write` | `i is now 3` |
 | `swap` | `Swapped nums[1] and nums[2]` |
 | `loop` | `Pass 3: i is 3`, or without a variable `Pass 3` |
@@ -116,8 +117,8 @@ describes the event of the step (`lastEvent`) in one sentence
 | an error | the message (`pages.md`, Messages) |
 
 Values are written as `pages.md`, Values on one line, states. A tooltip beside
-the current node was rejected, because it would move with every step, cover
-the node it describes, and leave the view near an edge.
+the current chart node was rejected, because it would move with every step,
+cover the chart node it describes, and leave the view near an edge.
 
 The `compare` of a diamond's whole condition is narrated as the diamond's
 question and the label of the edge taken, because `is false, so No` would say
@@ -127,20 +128,21 @@ chart. The condition is written as the table above writes a comparison
 instead keeps its name (`found? Yes`), because its value in its place would
 drop the question (`True? Yes`).
 
-A named node is narrated by its statement, not its name.
+A named block is narrated by its statement, not its name.
 
 The narration names a location by the variable that holds it in the frame the
-event ran in, written as the nodes write it: an item as `nums[2]`, a field as
+event ran in, written as the chart writes it: an item as `nums[2]`, a field as
 `node.next`, and a dict's key as `counts["a"]`. A list that no variable of
 that frame references is `a list` (`run.narrate.ref.*`).
 
 ## Errors
 
-A runtime error outlines the failing node in the error color, shows the
+A runtime error outlines the failing chart node in the error color, shows the
 message (`pages.md`, Messages) in the narration line in the error color, stops
 playback, and leaves the path bar on the failing frame's stack. An error
-inside a module function is shown on the node that called it, whose
-`Open <name>` carries that call's arguments (`modules.md`, Operations).
+inside a module function is shown on the chart node of the statement that
+called it, whose `Open <name>` carries that call's arguments (`modules.md`,
+Operations).
 
 ## Call stack
 
@@ -153,8 +155,9 @@ call is one step (`interpreter.md`, Steps and batches). A segment reads
 written as `…`, and adjacent `…` merged. Beyond `main` and the last three
 segments, the middle collapses to `… n`, which lists them on click. While
 paused, clicking a segment shows that frame's chart with the call it awaits
-marked, and that frame's variables in `Result` (`pages.md`, Result tab). The
-next step returns to the running frame. While playing, the click pauses first.
+highlighted, and that frame's variables in `Result` (`pages.md`, Result tab).
+The next step returns to the running frame. While playing, the click pauses
+first.
 
 ## Submission
 
@@ -165,25 +168,25 @@ tab.
 
 A failed submission shows `Wrong Answer`, `k of n cases passed`, one chip per
 case (`✓` or `✗`, with the first failing one selected), and, for the selected
-case, the rows of the `Result` tab with the first differing one marked, and
-`▶ Watch this case`. `Watch this case` sets the Input nodes to the selected
-case and starts a run paused at the first difference (`interpreter.md`,
-Controls): the step of the `print` that produced the first differing line, or
-the last step of the run when no `print` produced it or a variable differs.
-The narration there says which (`run.narrate.difference`):
+case, the rows of the `Result` tab with the first differing one highlighted,
+and `▶ Watch this case`. `Watch this case` sets the Input chart nodes to the
+selected case and starts a run paused at the first difference
+(`interpreter.md`, Controls): the step of the `print` that produced the first
+differing line, or the last step of the run when no `print` produced it or a
+variable differs. The narration there says which (`run.narrate.difference`):
 `This printed line 1`, shown at that step in place of the event's sentence, or
 `The run ended here`. The position bar returns to step 0.
 
-A wrong answer is shown as its rows and nothing else. The application marks no
-node on the chart, because the node that printed a differing line is rarely
-the cause (a loop started at 0 prints `FizzBuzz` from a correct block), so
-marking it would assert what the application doesn't know. `Watch this case`
-and Back lead to the cause instead. Only a runtime error marks a node
-(Errors). The application generates no sentence about the difference, because
-a sentence that classes the difference as a missing line, an extra line, or a
-different value has no rule behind it: `1, 2, 3` against `2, 4, 6` reads as an
-extra `1`. `Hint` names the three authored hints of a challenge
-(`challenges.md`, Hints) and nothing generated.
+A wrong answer is shown as its rows and nothing else. The application points
+to no chart node, because the chart node that printed a differing line is
+rarely the cause (a loop started at 0 prints `FizzBuzz` from a correct block),
+so pointing to it would assert what the application doesn't know.
+`Watch this case` and Back lead to the cause instead. Only a runtime error
+points to a chart node (Errors). The application generates no sentence about
+the difference, because a sentence that classes the difference as a missing
+line, an extra line, or a different value has no rule behind it: `1, 2, 3`
+against `2, 4, 6` reads as an extra `1`. `Hint` names the three authored hints
+of a challenge (`challenges.md`, Hints) and nothing generated.
 
 An accepted submission shows `Accepted`, one `✓` chip per case, the events and
 loops of the first case, `What you used` (the challenge's `takeaway`,
@@ -220,9 +223,10 @@ A change of the program while `Submit` is judging abandons the submission:
 no verdict is shown and no attempt is recorded (`challenges.md`, Progress).
 
 A chip of a wrong answer selects which test's rows are shown and changes
-neither the Input nodes nor the run (`challenges.md`, Judging). The chips of
-an accepted submission select nothing. Setting the Input nodes is left to
-`Watch this case`, so a chip never changes the case under the chart.
+neither the Input chart nodes nor the run (`challenges.md`, Judging). The
+chips of an accepted submission select nothing. Setting the Input chart nodes
+is left to `Watch this case`, so a chip never changes the case under the
+chart.
 
 A test that ends in a runtime error shows its message (`pages.md`,
 Messages) in place of `Output`.

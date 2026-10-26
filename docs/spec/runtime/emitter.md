@@ -3,7 +3,7 @@
 The emitter writes a program as a Python file, together with the file's
 line map. This file states the emitter's interface, why Python is the
 only language it writes, the layout of the file, where the emitter
-writes parentheses and how it writes a literal, what a block's
+writes parentheses and how it writes a literal, what a block definition's
 `python()` returns and receives, and how the emitter writes a module's
 file.
 
@@ -30,7 +30,7 @@ considered together with Dart, differs from Python in these ways:
 - It has no `//`.
 - Its `in` on an array tests indices.
 
-So a JavaScript file would either differ from the chart or wrap
+So a JavaScript file would either differ from the program or wrap
 arithmetic in helpers that a learner can't read. A second language would
 first need a narrower block language or those helpers.
 
@@ -125,28 +125,30 @@ The emitter writes each literal as its Python text:
 - `bool`: `True` or `False`
 - `none`: `None`
 
-## Blocks
 
-This section states what a block's `python()` returns and receives, and
-how the emitter writes a target and a named statement.
+## Block definitions
 
-A block writes its own Python with `python()`:
 
-- A statement block's `python()` returns `PyLine[]`, where
+This section states what a block definition's `python()` returns and
+receives, and how the emitter writes a target and a named statement.
+
+A block definition writes the Python of its blocks with `python()`:
+
+- A statement block definition's `python()` returns `PyLine[]`, where
   `PyLine = string | { block: Stmt[] }`.
-- An expression block's `python()` returns text.
+- An expression block definition's `python()` returns text.
 
 The emitter flattens the lines: it indents each `{ block }` entry by one
 level, writes `pass` for an empty one, and records the line map as it
 goes.
 
-A block's `python()` receives this context:
+A block definition's `python()` receives this context:
 `EmitContext = { expr(e): string; operand(e, precedence, side): string; slot(node, name): string; block(stmts): PyLine }`.
 
 - `operand` writes `e` as the child on `side` of a parent at
   `precedence`, and applies the parentheses rule (Parentheses).
 - `slot` writes the input of a slot. When the slot declares `atom`
-  (`blocks.md`, Node text), `slot` writes the input as an atom, so `slot`
+  (`blocks.md`, Notation), `slot` writes the input as an atom, so `slot`
   parenthesizes an operation in the input.
 
 The emitter writes a target as the expression it is (`language.md`,
@@ -168,8 +170,8 @@ Resolution). When the program uses no module, the argument is empty.
 The returned `modules` holds one entry for each module:
 `Array<{ name: Id; code: string; map: Record<NodeId, { start: number; end: number }> }>`.
 Inlining a module's functions into `main.py` was rejected because the
-`Python` tab would then show one program where the chart shows a program
-and a module.
+`Python` tab would then show one program where the canvas and the path
+bar show a program and a module.
 
 The emitter lays out a module's file as it lays out the program's file
 (File layout), without inputs or `main`.

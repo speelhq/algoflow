@@ -26,12 +26,12 @@ after its artboard in the file.
 | `Main.png` | 1 Problems: one section per plan | `pages.md`, Pages and routes; Problems page |
 | `BuildEmpty.png` | 2 Build: first launch, an empty chart | `pages.md`, Page layout; Problem tab; First launch; `chart.md`, Editing on the chart |
 | `BuildMenu.png` | 3 Build: the + menu lists statements only | `editor.md`, Block menu; `chart.md`, Shapes |
-| `BuildEdit.png` | 4 Build: editing a block, choosing a variable | `editor.md`, Node editor; Name fields; Node names |
+| `BuildEdit.png` | 4 Build: editing a block, choosing a variable | `editor.md`, Block editor; Name fields; Node names |
 | `EditValue.png` | 4B Build: where a value is expected | `editor.md`, Value line; Value list |
 | `EditTyping.png` | 4C Build: typing, and the text becomes blocks | `editor.md`, Value line; Backspace and keys |
 | `EditNumber.png` | 4D Build: after a number, and a named check | `editor.md`, Value list; Node names; Explanation line |
 | `EditList.png` | 4E Build: after a list, what can be done with it | `editor.md`, Value list; `blocks.md`, Menu entries |
-| `EditCheck.png` | 4F Build: an unnamed check, then And or Or | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Node text |
+| `EditCheck.png` | 4F Build: an unnamed check, then And or Or | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Notation |
 | `EditItem.png` | 4G Build: set one item of a list | `editor.md`, Value list; Name fields; Explanation line |
 | `Run.png` | 5 Run: the moment on the chart, the state in Result | `run.md`, Run bar; Path and marks; Narration; `pages.md`, Result tab |
 | `Wrong.png` | 6 Submit: Wrong Answer, and a way to the cause | `run.md`, Submission |
@@ -42,7 +42,7 @@ after its artboard in the file.
 | `PythonChart.png` | 11 Python tab: a line and its block | `pages.md`, Python tab |
 | `PythonFiles.png` | 12 Python tab: a program that uses a module | `pages.md`, Python tab; `emitter.md` |
 | `Playground.png` | 13 Playground: many programs, the last edited first | `pages.md`, Playground page |
-| `InputMenu.png` | 14 Build: the Input node lists the problem's cases | `chart.md`, Input nodes |
+| `InputMenu.png` | 14 Build: the Input node lists the problem's cases | `chart.md`, Input chart nodes |
 | `Diagnostics.png` | 15 Build: a red dot, its message, and its fix | `chart.md`, Editing on the chart |
 | `PlaygroundProgram.png` | 17 Playground program: a title, Run, and Export | `pages.md`, Pages and routes |
 | `MenuProgram.png` | 18 Build: the + menu lists the program's own functions | `editor.md`, Block menu |
@@ -63,9 +63,9 @@ after its artboard in the file.
 - `Main.png` notes that the page scrolls on to `Build a Tiny Neural
   Network` and `More problems`. The spec has three plans, and every problem
   is in one of them (`scope.md`, Curriculum).
-- `BuildEdit.png` and `EditValue.png` draw the node editor as tall as its
+- `BuildEdit.png` and `EditValue.png` draw the block editor as tall as its
   list. While a list is shown, the editor is 480 px tall and its list
-  scrolls inside it (`editor.md`, Node editor).
+  scrolls inside it (`editor.md`, Block editor).
 - `Main.png` puts the row that `Continue` leads to on a colored background,
   which `pages.md`, Problems page, doesn't state. Every row is drawn alike.
 - `Run.png` and `Wrong.png` fold the `Output` and `Expected` columns to
@@ -74,10 +74,10 @@ after its artboard in the file.
   tab).
 - The gray sentences under the rows of `Run.png` and `Wrong.png` annotate
   the artboards and aren't part of the screen.
-- Every artboard that shows a node, a value, or the narration uses the
-  notation the blocks had before `blocks.md`, Node text, set it
-  (`Set i to 1`, `(remainder of i divided by 15) = 0?`, `n = 15`). The node
-  text in the spec applies until the artboards are drawn again.
+- Every artboard that shows a chart node, a value, or the narration uses
+  the notation the blocks had before `blocks.md`, Notation, set it
+  (`Set i to 1`, `(remainder of i divided by 15) = 0?`, `n = 15`). The
+  notation in the spec applies until the artboards are drawn again.
 - The artboards use a hand-drawn typeface to mark them as drafts. The
   application uses the typeface of `src/ui/theme.css`.
 

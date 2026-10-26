@@ -129,7 +129,7 @@ describe("swap, errors", () => {
   });
 });
 
-describe("notation (blocks.md, Node text)", () => {
+describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
     expect(notation(swap(v("x"), v("y")))).toBe("swap({a}, {b})");
   });
