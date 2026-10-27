@@ -262,7 +262,7 @@ the three plans read as follows:
 - In the `edge tests` columns, an entry written `edge: …` is a test with
   `edge: true`, and the text after it only describes the test.
 
-| id             | difficulty, topics          | inputs                                 | expectation                                  | edge tests                                            |
+| challenge id   | difficulty, topics          | inputs                                 | expectation                                  | edge tests                                            |
 | -------------- | --------------------------- | -------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
 | tutorial       | easy, output                | `name: "Claude"`                       | stdout `Hello, Claude`                       | `edge: empty` `""` → `Hello, `                        |
 | sum-to-n       | easy, loops variables       | `n: 10`                                | `total = 55`                                 | `edge: 0` → `0`; `1` → `1`                            |
@@ -294,7 +294,7 @@ item that is a list by its item 0 (`modules.md`, Built-in modules).
 `heap_push` and `heap_pop` from the learner's `heap` module or the
 built-in one (`language.md`, Scope).
 
-| id             | difficulty, topics      | inputs                                            | expectation                                                                                                              | edge tests                                              |
+| challenge id   | difficulty, topics      | inputs                                            | expectation                                                                                                              | edge tests                                              |
 | -------------- | ----------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
 | stack-balance  | medium, lists           | `text: "([]{})"`                                  | `ok = True` with a list as stack                                                                                         | `edge: empty` → `True`; `"(]"`; `"(("`                  |
 | bfs-grid       | hard, lists searching   | `grid: 5×5 of 0/1, start: [0, 0], goal: [4, 4]`   | `dist = 8`, table `seen`; frontier list used as a queue; `deltas = [[0,1],[1,0],[0,-1],[-1,0]]`                          | `edge: unreachable` → `-1`; start = goal → `0`          |
@@ -308,11 +308,11 @@ built-in one (`language.md`, Scope).
 
 This section lists the problems of the `dp` plan.
 
-| id          | difficulty, topics | inputs                                             | expectation                                | edge tests                                    |
-| ----------- | ------------------ | -------------------------------------------------- | ------------------------------------------ | --------------------------------------------- |
-| coin-change | hard, lists loops  | `coins: [1, 2, 5], amount: 11`                     | `best = 3`, list `dp` of length 12         | `edge: 0` → `0`; `coins [2], amount 3` → `-1` |
-| knapsack    | hard, lists loops  | `weights: [1, 3, 4], values: [15, 20, 30], cap: 4` | `best = 35`, table `dp`                    | `edge: cap 0` → `0`                           |
-| lcs         | hard, lists loops  | `s: "ABCBDAB", t: "BDCABA"`                        | `length = 4`, table `dp` 8 × 7             | `edge: empty` → `0`                           |
+| challenge id | difficulty, topics | inputs                                             | expectation                                | edge tests                                    |
+| ------------ | ------------------ | -------------------------------------------------- | ------------------------------------------ | --------------------------------------------- |
+| coin-change  | hard, lists loops  | `coins: [1, 2, 5], amount: 11`                     | `best = 3`, list `dp` of length 12         | `edge: 0` → `0`; `coins [2], amount 3` → `-1` |
+| knapsack     | hard, lists loops  | `weights: [1, 3, 4], values: [15, 20, 30], cap: 4` | `best = 35`, table `dp`                    | `edge: cap 0` → `0`                           |
+| lcs          | hard, lists loops  | `s: "ABCBDAB", t: "BDCABA"`                        | `length = 4`, table `dp` 8 × 7             | `edge: empty` → `0`                           |
 
 ## Verification
 
