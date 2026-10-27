@@ -21,8 +21,8 @@ labels: defect
      Paste command or test output rather than describing it, and say so
      when a fact is read from the code rather than run.
      Example: A script, pasted with its output, builds `xs = [0]` and
-     `xs[0] = xs` from the registered blocks and runs `print(xs == xs)`.
-     Run with `pnpm exec tsx repro.ts`, it prints
+     `xs[0] = xs` from the registered block definitions and runs
+     `print(xs == xs)`. Run with `pnpm exec tsx repro.ts`, it prints
      `RangeError: Maximum call stack size exceeded`. Read from the code:
      `equals()` in `src/runtime/values.ts` recurses into the list's
      items. -->

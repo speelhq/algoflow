@@ -27,23 +27,23 @@ labels: challenge
      Example: `course`, after `bubble-sort`, in this order. `reverse-list`
      ends the plan. -->
 
-## Blocks needed
+## Block definitions needed
 
-<!-- List each block or module function a solution needs that isn't
-     registered yet, with the file and heading of its statement, or
+<!-- List each block definition or module function a solution needs that
+     isn't registered yet, with the file and heading of its statement, or
      `no statement yet`.
      Write `None` if every one is registered. -->
 
 ## Spec
 
-<!-- Cite each statement the problems rely on (a block, a module, or a
-     plan) by its file and heading. Write `None` and the reason if the
+<!-- Cite each statement the problems rely on (a block definition, a module,
+     or a plan) by its file and heading. Write `None` and the reason if the
      problems need nothing the spec doesn't state. -->
 
 ## Done when
 
 <!-- List the conditions that close the issue, one per item. Include
-     these: every block the problems need is specified and then
+     these: every block definition the problems need is specified and then
      registered, each problem's file passes `pnpm check`, and the
      curriculum in docs/spec/scope/scope.md, the table in
      docs/spec/challenges/challenges.md, and the plan list each problem. -->
