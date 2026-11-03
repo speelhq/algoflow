@@ -45,6 +45,12 @@ collides with the block menu's `Function` category, leaves out classes,
 and can't group a `heap`. `Library` was rejected because it names a
 single flat collection.
 
+A built-in module is a module that the application ships as
+`modules/<name>.json` (Built-in modules).
+
+A learner module is a module that the learner creates, clones, or imports
+(Operations). The module store keeps it (Storage).
+
 Module names are unique among learner modules, and unique among built-in
 modules. A learner module with a built-in module's name shadows it
 (`language.md`, Scope), so a function the learner rebuilt is used under

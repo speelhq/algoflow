@@ -116,9 +116,17 @@ node opens no menu and the page disables the case selector.
 
 ## Shapes
 
+A chart node is a figure that the chart draws and joins to others with
+edges.
+
+A generated chart node is one of the three chart nodes that the chart
+draws for a `counted` loop's init, check, and update (`blocks.md`, Chart
+shape).
+
 A chart node has one of five shapes: `terminal` for `Start` and `End`,
 `input` for an Input chart node, `junction` for a point where edges join,
 and `box` or `diamond` for a statement block or a generated chart node.
+
 A statement block's chart nodes take their shapes from its block
 definition's `chart` field (`blocks.md`, Chart shape):
 
@@ -129,6 +137,14 @@ definition's `chart` field (`blocks.md`, Chart shape):
 | `check`  | a diamond with the condition; `Yes` leads down into the body, whose last chart node returns by a back edge to a junction above the diamond; `No` leads on past the loop                                                        |
 | `counted`| three generated chart nodes around the body: `i ← start`, the diamond `i < stop?`, and `i ← i + 1` (texts of the block definition's `counted`, `blocks.md`, Chart shape), drawn gray; the body and the back edge as for `check` |
 | `jump`   | a box with the notation whose edge leaves by the right and runs down a lane inside the extent of the innermost loop around it, in place of an edge to the next chart node: for `exit` past the loop, joining its `No` lane; for `next` into its next pass, at the update chart node of a `counted` loop and at the start of the back edge of a `check` loop; the edge carries the connector after it (Editing on the chart); outside every loop, a box as for an absent `chart` |
+
+A chart node carries the `NodeId` of its owner, the statement block that a
+click on the chart node selects in build mode and that a step highlights:
+
+- a generated chart node: its loop block
+- any other box or diamond: the statement block that it draws
+- a junction: the branch or loop block whose edges it joins
+- a terminal or an Input chart node: no owner
 
 ### Loops
 

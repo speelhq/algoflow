@@ -92,6 +92,9 @@ export type Ref =
   | { heap: HeapId; field: Name };
 ```
 
+A ref is a place in the run's state: a variable, a list item, a dict
+entry, or an object field.
+
 `Done` counts the run:
 
 - `events`: every event, whether or not a visible step shows it
@@ -317,6 +320,8 @@ value.
 The run steps into a function the learner is still building, because
 the function belongs to the program until the learner moves it with
 `Move to module…`.
+
+The screen uses the word `step` only for a visible step.
 
 Two `write` events in a row form an exchange when each carries in `from`
 the place the other writes.
