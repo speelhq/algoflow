@@ -182,9 +182,13 @@ A statement carries a reason in two cases only:
 - The statement rests on a constraint that the code, the configuration,
   and the statement itself don't show. The reason names that constraint.
 
+A reason names a rejected alternative in the past tense: "X was rejected,
+because …".
+
 The reason follows the statement it explains, in the same sentence or the
-next, and ends the paragraph. For a table row, the reason stands after
-the table and names the row.
+next, and ends the paragraph. Only an example of the statement may follow
+the reason. For a table row, the reason stands after the table and names
+the row.
 
 A reason does none of these:
 
