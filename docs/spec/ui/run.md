@@ -207,11 +207,11 @@ The problem becomes solved (`challenges.md`, Progress). The count is the work
 done, not the visible steps of the position bar, so `dijkstra-heap` shows
 fewer events than `dijkstra-grid`, although each heap call is one visible
 step. The count is named `Events`, because `step` names only what the position
-bar counts (`README.md`, Terms). `Next problem` counts round from the plan's
-start, because a skipped problem is one the plan still asks for.
-`Plan complete` returns the choice to the learner, because the next row after
-the last `course` problem would put a trainee into the first data-structure
-problem.
+bar counts (`interpreter.md`, Steps and batches). `Next problem` counts round
+from the plan's start, because a skipped problem is one the plan still asks
+for. `Plan complete` returns the choice to the learner, because the next row
+after the last `course` problem would put a trainee into the first
+data-structure problem.
 
 After `Submit`, the `Result` tab shows the submission instead of the run's
 rows until the next `Run`, the next `Watch this case`, or a change of the
