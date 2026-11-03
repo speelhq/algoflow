@@ -21,7 +21,7 @@ import {
   type Transition,
 } from "./session";
 
-const { assign, assignTo, print, num, bin, v, empty } = ast;
+const { assign, assignTo, print, num, bin, v, empty, call } = ast;
 
 const ctx: LineContext = {
   variables: ["x", "total"],
@@ -88,6 +88,43 @@ describe("editor session", () => {
     });
     expect(valueKey(session, { key: "Enter", shiftKey: false }, [], ctx, "").after).toBe("close");
     expect(valueKey(session, { key: "Escape", shiftKey: false }, [], ctx, "").taken).toBe(false);
+  });
+
+  it("Tab on a value printed enters its first input still to fill, Shift+Tab its last", () => {
+    const field: Field = { slot: "args", role: "expr", index: 0 };
+    // Typing abs( builds print(abs(…)); the slot is then entered with its value selected, as Tab does.
+    const typed = press(openSession(print(empty()), field, null), "abs(").edits.at(-1)?.root;
+    if (typed?.kind !== "call") throw new Error("typing abs( did not build a call");
+    const hole = typed.args[0];
+    const session = openSession(print(typed), field, null);
+    expect(session.line?.selected).toBe(true);
+    const forward = valueKey(session, { key: "Tab", shiftKey: false }, [], ctx, "");
+    expect(forward.after).toBeUndefined();
+    expect(forward.session.line?.caret).toEqual({ at: hole?.id });
+    expect(
+      valueKey(session, { key: "Tab", shiftKey: true }, [], ctx, "").session.line?.caret,
+    ).toEqual({
+      at: hole?.id,
+    });
+    expect(valueKey(forward.session, { key: "Tab", shiftKey: false }, [], ctx, "").after).toEqual({
+      go: 1,
+    });
+  });
+
+  it("Tab on a selected value skips the filled inputs before its first input still to fill", () => {
+    const gap = empty();
+    const field: Field = { slot: "args", role: "expr", index: 0 };
+    const session = openSession(print(call("max", num(1), gap)), field, null);
+    const forward = valueKey(session, { key: "Tab", shiftKey: false }, [], ctx, "");
+    expect(forward.session.line?.caret).toEqual({ at: gap.id });
+  });
+
+  it("Tab on a selected value with no input to fill leaves it at once", () => {
+    const field: Field = { slot: "args", role: "expr", index: 0 };
+    const session = openSession(print(call("abs", num(1))), field, null);
+    expect(valueKey(session, { key: "Tab", shiftKey: false }, [], ctx, "").after).toEqual({
+      go: 1,
+    });
   });
 
   it("a key the line refuses after its value, beginning the words after the field, moves on", () => {

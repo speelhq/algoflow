@@ -829,7 +829,9 @@ export function tab(line: Line, step: -1 | 1, ctx: LineContext): Outcome {
     current = exact ? choose(current, exact, ctx).line : { ...current, word: "" };
   }
   const all = stops(current.root);
-  const here = current.selected ? (step > 0 ? all.length - 1 : 0) : position(current);
+  // A selected value holds every input of its own, so Tab starts before its first input and
+  // Shift+Tab after its last.
+  const here = current.selected ? (step > 0 ? -1 : all.length) : position(current);
   const fields = all
     .map((stop, index) => ({ stop, index }))
     .filter(({ stop, index }) => "at" in stop && (step > 0 ? index > here : index < here));

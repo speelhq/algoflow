@@ -486,6 +486,18 @@ describe("Backspace and moving", () => {
     expect(tab(openLine(ast.v("n")), 1, ctx).move).toBe("next");
   });
 
+  it("Tab on a selected value enters its first input still to fill, Shift+Tab its last", () => {
+    const abs = choose(empty(), entry("call:abs"), ctx).line;
+    const selected = openLine(abs.root);
+    expect(selected.selected).toBe(true);
+    const forward = tab(selected, 1, ctx);
+    expect(forward.move).toBeUndefined();
+    const input = (abs.root as Extract<Expr, { kind: "call" }>).args[0];
+    expect(forward.line.caret).toEqual({ at: input?.id });
+    expect(tab(selected, -1, ctx).line.caret).toEqual(forward.line.caret);
+    expect(tab(forward.line, 1, ctx).move).toBe("next");
+  });
+
   it("→ at the end of an operation's last input leaves it", () => {
     const inside = keys("1", choose(empty(), entry("call:abs"), ctx).line);
     expect(py(keys("+2", inside))).toBe("abs(1 + 2)");
