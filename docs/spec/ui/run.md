@@ -55,6 +55,8 @@ has no touch equivalent.
 
 ## Path and marks
 
+A diamond's mark is the `✓` or `✗` that it shows after its check.
+
 While running, the edges and chart nodes of the running frame's current pass
 are drawn in the taken-path color: a `Yes` edge when its diamond's mark is
 `✓`, a `No` edge when it is `✗`, an unlabeled edge when both its ends are on
@@ -69,11 +71,11 @@ of a diamond's `Yes` and `No` edges whenever the diamond was entered.
 While running, the current chart node has the accent outline and is scrolled
 into view.
 
-A diamond shows `✓` or `✗` after its check: the result of the `compare` of its
-whole condition (`interpreter.md`, Events), or of the `loop` event of a
-generated check. It never shows the result of a comparison inside the
-condition, because the last inner compare of `not (a < b)` or
-`a < b and c < d` isn't the answer, and `found` holds no comparison at all.
+A diamond's mark is the result of the `compare` of its whole condition
+(`interpreter.md`, Events), or of the `loop` event of a generated check. It is
+never the result of a comparison inside the condition, because the last inner
+compare of `not (a < b)` or `a < b and c < d` isn't the answer, and `found`
+holds no comparison at all.
 
 A diamond's mark is cleared when the diamond is entered again and when a loop
 containing it starts a new pass (its `loop` event clears every diamond in its

@@ -43,6 +43,11 @@ export type Topic = "output" | "variables" | "loops" | "conditions" | "lists" | 
   | "sorting" | "recursion" | "dictionaries" | "classes";
 ```
 
+Every challenge has a challenge id, which is its `id`. The challenge id
+is the challenge's file name without `.json`.
+
+Each test is a case: one set of inputs with its expectation.
+
 ## Checks
 
 `scripts/check.ts` checks every challenge for:
@@ -129,6 +134,8 @@ The hints follow this order so that a learner without an instructor
 can complete the problem after the third hint.
 
 ## Study plans
+
+A study plan is a named, ordered list of challenges.
 
 `challenges/plans.json` lists the study plans in display order:
 

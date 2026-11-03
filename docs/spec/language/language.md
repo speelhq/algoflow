@@ -50,9 +50,23 @@ export type NodeId = string; // 12-char nanoid
 export type Name = string;
 ```
 
-Within a program, `NodeId` values are unique. Function names, class names,
-and input names are unique within a program, and they don't collide with
-each other.
+A block is a statement or an expression that the learner places, made
+from a block definition (`blocks.md`). In the code, a block is a
+`Block`: a `Stmt` or an `Expr`. A function is not a block.
+
+A node is a block, a function, or a class. Every node has a node id,
+which is a `NodeId`.
+
+Within a program, node ids are unique.
+
+Function names, class names, and input names are unique within a program,
+and they don't collide with each other.
+
+A routine is `main` or a function. Each routine has its own statements
+and variables.
+
+A region is an ordered list of statements: `main`, a function's body, or
+the statements of a `body` slot (`blocks.md`, Slots).
 
 An input declares only its name and its kind. Its value comes from the
 chosen case (`challenges.md`, Schema), because a value in the program
@@ -211,6 +225,9 @@ export type Stmt =
   | (S & { kind: "expr"; expr: Expr })
   | (S & { kind: "swap"; a: Expr; b: Expr });
 ```
+
+A compound statement is a branch or a loop: a statement that holds a
+region in a slot of role `body` (`blocks.md`, Slots).
 
 ### Targets
 

@@ -87,10 +87,10 @@ The panel (Panel) is on the left. It is 320 px wide by default,
 resizable from 280 px to 50 % of the viewport width, and collapsible,
 and its width persists under `algoflow:layout`.
 
-The canvas holds, from top to bottom:
+The canvas is on the right. It holds, from top to bottom:
 
 - the path bar (`chart.md`, Charts and the path bar)
-- the chart
+- the chart, or a class's field table
 - the narration line, while running (`run.md`, Narration)
 - the run bar (`run.md`, Run bar)
 

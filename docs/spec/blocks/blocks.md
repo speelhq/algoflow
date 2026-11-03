@@ -75,12 +75,13 @@ export type MenuEntry = {
 
 ### Slots
 
-A slot has one of six roles:
+A slot is one part of a block that the learner fills or edits. It has
+one of six roles:
 
 - `expr` holds one expression.
 - `exprs` holds an ordered list of expressions.
 - `name` holds a name.
-- `body` holds a statement region.
+- `body` holds a region (`language.md`, Program).
 - `target` holds one target (`language.md`, Statements). The emitter and
   the chart write it as the expression it is.
 - `text` holds a literal field of an expression: `num.value`,
