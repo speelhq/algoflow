@@ -91,9 +91,11 @@ be a comment, and a caption takes the place of comments
 
 A builtin or a method takes at least as many arguments as it has
 parameters not marked `optional`, and at most as many as it has
-parameters. When too few are passed, `E_ARITY` gives the number of
-parameters not marked `optional` as `expected`. When too many are passed,
-it gives the number of parameters as `expected`.
+parameters. `E_ARITY` gives as `expected`:
+
+- the number of parameters not marked `optional`, when a call passes too
+  few arguments
+- the number of parameters, when a call passes too many
 
 A builtin's `create()` gives it one empty argument per parameter not
 marked `optional`.
@@ -128,9 +130,9 @@ provides the same keys:
 
 The hidden `empty` block definition has its label and help.
 
-No help names its entry's keys, because a help that named them would
-repeat the block definition's `keys` in every locale. The explanation
-line writes them from `keys` (`editor.md`, Explanation line).
+The explanation line writes an entry's keys from `keys` (`editor.md`,
+Explanation line). No help names its entry's keys, because a help that
+named them would repeat the block definition's `keys` in every locale.
 
 A block's notation isn't a catalog key. It is the block definition's
 `notation()`, the same in every locale (Notation).
@@ -193,16 +195,14 @@ The builtins, each an expression:
 | `str`, `int`, `float`        | basic    | x    | `str({x})` / `int({x})` / `float({x})`             | `str(<x>)` / `int(<x>)` / `float(<x>)` |
 | `randint`                    | basic    | a, b | `randint({a}, {b})`                                | `random.randint(<a>, <b>)`             |
 
-A builtin is named as Python names it.
+A builtin is named as Python names it. A name of its own, such as
+`random_int`, was rejected because the chart writes the Python name: a
+function could take that name and be drawn as the builtin, and the name
+the function couldn't take would be one the learner never reads.
 
-A builtin of a module, such as `randint` of `random`, is called
-`<module>.<name>` in Python. The parser accepts that spelling as the
-builtin's alias, and the emitter adds `import <module>` (`emitter.md`).
-
-A name of its own, such as `random_int`, was rejected because the chart
-writes the Python name: a function could take that name and be drawn as
-the builtin, and the name the function couldn't take would be one the
-learner never reads.
+Python calls a builtin of a module, such as `randint` of `random`, as
+`<module>.<name>`. The parser accepts that spelling as the builtin's
+alias, and the emitter adds `import <module>` (`emitter.md`).
 
 ## Methods (`key = "method:<name>"`)
 
@@ -219,7 +219,7 @@ The methods:
 | `keys`   | dict | expr  |            | `{d}.keys()`                              | `list(<d>.keys())`           |
 
 Method statements (`append`, `insert`, `sort`) are `expr` statements that
-wrap a `method` expression, and the block menu lists them as statements.
+wrap a `method` expression. The block menu lists them as statements.
 The `expr` block definition itself is `hidden`, so the block menu offers
 it only as those method statements and as calls (`editor.md`, Block
 menu).
@@ -252,19 +252,21 @@ literal. `__repr__` lists the fields in order, as `print` does
 
 The chart, the value line, the block menu, the explanation line, and the
 narration all write a block from its block definition's
-`notation(block)`: the text of the tables above, with `{slot}`
-placeholders.
+`notation(block)`: the notation column of the block definition tables,
+with `{slot}` placeholders.
 
 A notation is the same in every locale, because the learner reads a block
-again at every step of a run, in whatever language they read. The words a
+again at every step of a run, in whatever language they read.
+
+The words a
 learner needs to choose and understand a block definition come in the
-learner's language instead (`pages.md`, Catalogs): the label, the help,
-the value list, the explanation line, and the narration.
+learner's language, unlike a notation (`pages.md`, Catalogs): the label,
+the help, the value list, the explanation line, and the narration.
 
 ### Text slots
 
-A `text` slot is written with `text(block, slot)`, which defaults to the
-slot's string value.
+`text(block, slot)` writes a `text` slot, and defaults to the slot's
+string value.
 
 `num` writes `raw`.
 
@@ -296,10 +298,13 @@ chart or the editor reads a translated word. The words of a notation are
 Python's, the same in every locale: `and`, `not`, `len`, `print`.
 
 The chart and the value line parenthesize operators as the emitter does
-(`emitter.md`). An input whose slot declares `atom`, such as the list of
-an item, binds as an atom, as Python binds the value that it takes an
-item from, so an operation in that input is parenthesized. For example:
-`(a + b)[0]`. The emitter, the chart, and the value line read that one
+(`emitter.md`).
+
+An input whose slot declares `atom` binds as an atom, as Python binds the
+value that it takes an item from, so an operation in that input is
+parenthesized. For example: the list of an item, as in `(a + b)[0]`.
+
+The emitter, the chart, and the value line read that one `atom`
 declaration.
 
 ### Symbols
@@ -307,10 +312,11 @@ declaration.
 Comparison and arithmetic keep the symbols a learner knows from school:
 `=`, `≠`, `≤`, `×`, `÷`. An operation that school has no symbol for is
 written with Python's symbol, `%`, `//`, or `**`, and named in words in
-the value list. An operation written in words was rejected because it
-needs parentheses of its own. For example: `(remainder of i divided by 15) =
-0`. It also carries one language's word order into every translation,
-and it is a second notation that the learner gives up for Python.
+the value list. An operation written in words, such as
+`(remainder of i divided by 15) = 0`, was rejected because it needs
+parentheses of its own. It also carries one language's word order into
+every translation, and it is a second notation that the learner gives up
+for Python.
 
 A variable gets a value with `←`, the first time and every time after,
 because no adult reads the arrow as an equation, and `=` keeps its school
@@ -344,7 +350,9 @@ locale.
 
 On the chart and in the editor, a variable is written as a bold word in
 the variable color, never in a box, because a box would cut the block into
-pieces. A block is drawn as its notation writes it, with no capital letter
+pieces.
+
+A block is drawn as its notation writes it, with no capital letter
 added.
 
 ## Chart shape
@@ -360,8 +368,8 @@ Shapes). The chart draws every other block as a box with its notation.
 - `for` and `foreach` declare `counted`, which names their body and the
   texts of their generated chart nodes.
 - `break` declares `{ jump: "exit" }` and `continue` declares
-  `{ jump: "next" }`. The edge of each leads where control goes: out of
-  the innermost loop, or into its next pass.
+  `{ jump: "next" }`. The edge of `break` leads out of the innermost loop,
+  and the edge of `continue` leads into the loop's next pass.
 
 The texts of a counted loop's generated chart nodes, with `{slot}`
 placeholders:
@@ -380,8 +388,10 @@ they are the same in every locale.
 
 The texts of `foreach` hold words, because Python keeps the position
 hidden, so the loop's generated chart nodes have no expression to write.
-They are its catalog keys `block.foreach.init`, `check`, and `update`,
-translated. They are the only chart node texts in words.
+
+The texts of `foreach` are its catalog keys `block.foreach.init`,
+`check`, and `update`, translated. They are the only chart node texts in
+words.
 
 A counted loop's own notation names it in the block menu and the editor.
 `for`'s notation is its init.
@@ -392,10 +402,10 @@ Expression block definitions declare the entries of the value list
 (`editor.md`, Value list) in `menu`. The value list offers an entry with
 `on` after a value of those kinds, and the entry takes that value as its
 first input. An entry without `on` fills an input where a value is
-expected. Kinds are those of `language.md`, Kinds, and `any` below means
-every kind. Each block definition declares its own entries, because one
-block definition serves several groups: `binop` is `Add`, `Equals`, and
-`And`.
+expected. Kinds are those of `language.md`, Kinds, and `any` in the
+`on` column means every kind. Each block definition declares its own
+entries, because one block definition serves several groups: `binop` is
+`Add`, `Equals`, and `And`.
 
 | key               | name       | label                   | group      | on                   | symbol | keys  |
 | ----------------- | ---------- | ----------------------- | ---------- | -------------------- | ------ | ----- |
@@ -482,8 +492,8 @@ no kind for the same reason.
 
 Each block definition has these tests:
 
-- one that asserts its exact notation and its exact Python text
-  (Statements, and the tables after it)
+- one that asserts its exact notation and its exact Python text, as the
+  block definition tables give them
 - one that asserts its event sequence and result
-- one per rule filed under it in the Semantics of `language.md`
+- one per rule filed under it (`language.md`, Semantics)
 - where it can fail, one error case

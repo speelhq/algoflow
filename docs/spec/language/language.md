@@ -123,9 +123,9 @@ convert back to itself. `$int:0` is canonical, and `$int:-0` is not.
 ### Faults that `migrate()` rejects
 
 `migrate()` reads a stored or imported program (Storage). It rejects a
-field that the block's definition wouldn't make (`fieldsError`,
-`blocks.md`) and a class field default that isn't canonical `Data`, and it
-reports the path of the fault.
+field that the block's definition wouldn't make (`fieldsError`;
+`blocks.md`, The block definition) and a class field default that isn't
+canonical `Data`, and it reports the path of the fault.
 
 `migrate()` and `validate()` catch different faults, depending on who
 fixes the fault and where. `validate()` reports the faults that an edit
@@ -137,8 +137,9 @@ can only come from editing the file by hand:
 - a literal that the block's definition wouldn't make
 - a `Data` value that isn't canonical
 
-There is no node to fix those faults on, so `migrate()` rejects the file
-instead, and `validate()` never reads a literal field.
+`migrate()` rejects a file with one of those faults, so `validate()` never
+reads a literal field. `migrate()` rejects the file because there is no
+node to fix those faults on.
 
 ### Classes and objects before `new` exists
 
@@ -400,7 +401,8 @@ A name becomes visible at one of three places:
 - the `for` or `foreach` that introduces it as its variable
 - the function that takes it as a parameter
 
-It stays visible to the end of its region and in the regions inside it.
+A name stays visible to the end of its region and in the regions inside
+it.
 
 A `target` slot that `binds` (`blocks.md`, The block definition) declares
 the variable that its target names, and it doesn't read that variable.
@@ -411,8 +413,9 @@ Two kinds of target read their expressions before the value is stored:
 - an item, a key, or a field in a binding slot
 - every target of a slot that doesn't bind
 
-A `for` or `foreach` variable is assigned by the loop statement itself, in
-the region that contains the loop, so it stays visible after the loop.
+The loop statement itself assigns its `for` or `foreach` variable, in the
+region that contains the loop, so the variable stays visible after the
+loop.
 
 The loop reads its bounds, or the iterated list, before the variable
 exists.
@@ -541,9 +544,11 @@ file and import it again.
 ### Where a program is stored
 
 A program persists to the `localStorage` key
-`algoflow:program:<challengeId | playground id>`. The application saves
-it 500 ms after the last edit, and at once when the browser hides the
-page. The key holds the `Program` JSON itself.
+`algoflow:program:<challengeId | playground id>`. The key holds the
+`Program` JSON itself.
+
+The application saves a program 500 ms after the last edit, and at once
+when the browser hides the page.
 
 When the application loads a program, it passes the stored value through
 `migrate()` and treats a rejected value as absent, so opening a problem
@@ -559,9 +564,10 @@ challenge. A Playground program has neither.
 
 When the learner exports a program, the application writes
 `<title>.algoflow.json` and embeds the modules the program uses
-(`modules.md`, Operations). When the learner imports a file, `migrate()`
-checks it (`src/lang/migrate.ts`). `migrate()` reads a program of
-`version` 1 and rejects any other `version`.
+(`modules.md`, Operations).
+
+When the learner imports a file, `migrate()` checks it. `migrate()` reads
+a program of `version` 1 and rejects any other `version`.
 
 ### Playground programs
 
@@ -597,15 +603,16 @@ A kind is what the value list and the name list (`editor.md`, Value list;
 Name fields) know of a value before the program runs. The kinds are
 `number`, `text`, `truefalse`, `none`, `list`, `dict`, and `object`.
 
-A block definition's `kind` (`blocks.md`) gives an expression's kind from
-the kinds of the expressions inside it. An expression whose kind can't be
-determined has none.
+A block definition's `kind` (`blocks.md`, The block definition) gives an
+expression's kind from the kinds of the expressions inside it. An expression
+whose kind can't be determined has none.
 
 A variable's kind is found in this order:
 
 1. the kind its input declares
 2. the kind of the value of its first assignment, in program order
-3. the kind its loop block definition declares (`declares`, `blocks.md`)
+3. the kind its loop block definition declares (`declares`; `blocks.md`, The
+   block definition)
 
 A `for` variable's block definition declares `number`. A parameter and a
 `foreach` variable have no kind.
