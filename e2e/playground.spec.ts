@@ -41,7 +41,7 @@ test("a Playground program runs to its output, with no case selector and no Expe
   await page.getByRole("button", { name: "▶ Run" }).click();
   await expect(page.getByTestId("narration")).toHaveText(/Finished in/);
   await expect(page.getByTestId("output-row")).toHaveText(["hi"]);
-  await expect(page.getByTestId("case-select")).toHaveCount(0);
+  await expect(page.getByTestId("case-selector")).toHaveCount(0);
   await expect(page.getByTestId("result-rows")).not.toContainText("Expected");
 });
 

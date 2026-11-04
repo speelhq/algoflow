@@ -41,16 +41,16 @@ test.describe("Problems page", () => {
     await expect(
       plan.getByRole("link", { name: "Continue: FizzBuzz ▶", exact: true }),
     ).toHaveAttribute("href", "#/p/fizzbuzz");
-    await expect(page.getByTestId("problem-tutorial").getByRole("img")).toHaveAccessibleName(
+    await expect(page.getByTestId("problem-row-tutorial").getByRole("img")).toHaveAccessibleName(
       "Solved",
     );
-    await expect(page.getByTestId("problem-fizzbuzz").getByRole("img")).toHaveAccessibleName(
+    await expect(page.getByTestId("problem-row-fizzbuzz").getByRole("img")).toHaveAccessibleName(
       "Attempted",
     );
-    await expect(page.getByTestId("problem-countdown").getByRole("img")).toHaveAccessibleName(
+    await expect(page.getByTestId("problem-row-countdown").getByRole("img")).toHaveAccessibleName(
       "Not started",
     );
-    const fizzbuzz = page.getByTestId("problem-fizzbuzz");
+    const fizzbuzz = page.getByTestId("problem-row-fizzbuzz");
     await expect(fizzbuzz).toContainText("FizzBuzz");
     await expect(fizzbuzz).toContainText("Easy");
     await expect(fizzbuzz).toContainText("Loops");
@@ -68,7 +68,7 @@ test.describe("Problems page", () => {
   test("a row opens its Problem page", async ({ page }) => {
     await seedProgress(page, {});
     await page.goto("/#/");
-    await page.getByTestId("problem-fizzbuzz").click();
+    await page.getByTestId("problem-row-fizzbuzz").click();
     await expect(page).toHaveURL(/#\/p\/fizzbuzz$/);
     await expect(page).toHaveTitle("FizzBuzz — AlgoFlow");
     await expect(page.getByTestId("top-bar")).toContainText("FizzBuzz");

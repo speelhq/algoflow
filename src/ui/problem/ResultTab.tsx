@@ -26,7 +26,7 @@ import { caseText } from "./caseText";
 import { ResultRows } from "./ResultRows";
 import { SubmissionView } from "./SubmissionView";
 
-function CaseSelect({ challenge }: { challenge: Challenge }) {
+function CaseSelector({ challenge }: { challenge: Challenge }) {
   const caseIndex = useRun((s) => s.caseIndex);
   const selectCase = useRun((s) => s.selectCase);
   // The case stays the run's in run mode.
@@ -46,7 +46,7 @@ function CaseSelect({ challenge }: { challenge: Challenge }) {
         disabled={runMode}
         onValueChange={(value) => typeof value === "number" && value >= 0 && selectCase(value)}
       >
-        <SelectTrigger className="font-mono text-xs" data-testid="case-select">
+        <SelectTrigger className="font-mono text-xs" data-testid="case-selector">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -67,7 +67,7 @@ function CaseBar({ challenge }: { challenge: Challenge }) {
   const submitting = useTests((s) => s.running);
   return (
     <div className="flex items-center justify-between gap-2">
-      <CaseSelect challenge={challenge} />
+      <CaseSelector challenge={challenge} />
       <Button
         variant="outline"
         className="border-selection/60 bg-selection/10"

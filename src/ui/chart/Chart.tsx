@@ -180,7 +180,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
               key={i}
               x={node.x + part.dx + (part.empty ? PILL : 0)}
               y={node.y + node.h / 2 + part.dy}
-              data-slot={part.slot}
+              data-block-slot={part.slot}
               data-hole={part.hole}
               data-empty={part.empty || undefined}
               data-variable={part.variable || undefined}
@@ -212,7 +212,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
           cy={node.y + 4}
           r={5}
           className="fill-destructive stroke-background stroke-2"
-          data-testid="diagnostic-dot"
+          data-testid="red-dot"
         />
       )}
       {look.breakpoint && <Breakpoint node={node} />}
@@ -325,8 +325,8 @@ export function Chart(props: Props) {
     const click = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target : null;
       const owner = target?.closest<SVGGElement>("[data-owner]")?.dataset.owner;
-      const part = target?.closest<SVGElement>("[data-slot]");
-      if (owner) onSelect(owner, part?.dataset.slot, part?.dataset.hole);
+      const part = target?.closest<SVGElement>("[data-block-slot]");
+      if (owner) onSelect(owner, part?.dataset.blockSlot, part?.dataset.hole);
     };
     element.addEventListener("click", click);
     return () => element.removeEventListener("click", click);
@@ -463,7 +463,7 @@ export function Chart(props: Props) {
                       <div
                         className="pointer-events-auto absolute w-72 rounded-lg border bg-background p-2 shadow-md"
                         style={{ left: flagNode.x + flagNode.w + 12, top: flagNode.y }}
-                        data-testid="diagnostic-card"
+                        data-testid="diagnostic-message"
                         onMouseEnter={() => hold(flagHover)}
                         onMouseLeave={() => hold(null)}
                       >
