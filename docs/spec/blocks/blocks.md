@@ -127,6 +127,9 @@ provides the same keys:
   `value`.
 - `block.<key>.<name>.label` and `block.<key>.<name>.help`: the label and
   the help of a menu entry with a `name`
+- `block.<key>.init`, `block.<key>.check`, and `block.<key>.update`: the
+  texts of a counted loop's generated chart nodes, for a loop whose texts
+  aren't notation (Chart shape)
 
 The hidden `empty` block definition has its label and help.
 

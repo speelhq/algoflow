@@ -97,6 +97,8 @@ Each emitted file:
 This section states where the emitter writes parentheses and how it
 writes a literal and an `empty` expression.
 
+`unparse(expr)` writes one expression as the emitter writes it in a file.
+
 The emitter writes an `empty` expression as `...`.
 
 ### Parentheses

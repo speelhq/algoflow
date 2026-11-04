@@ -145,6 +145,9 @@ class it references, into an existing or a new learner module. The
 program's calls then resolve to the module. The move is one undoable edit
 of the program, but undoing it doesn't undo the change to the module.
 
+In an accepted submission, it reads `Move to module <name>` and moves into
+the challenge's `module` (`challenges.md`, Modules and definitions).
+
 ### `Clone`
 
 `Clone`, on a built-in module's page, creates a learner module with the
