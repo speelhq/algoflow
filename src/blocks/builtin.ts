@@ -8,7 +8,7 @@ import {
   builtinKey,
   defineExpr,
   expectedArgs,
-  type MenuEntry,
+  type ValueEntry,
   type BlockDef,
   type Param,
   type RunContext,
@@ -23,8 +23,8 @@ export type BuiltinDef = {
   /** The module Python calls it through (`random.randint`), which the emitted file imports. */
   module?: "random";
   /** The call's kind, given its arguments. */
-  kind?: (args: Expr[], kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
-  menu?: readonly MenuEntry[];
+  yields?: (args: Expr[], kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
+  entries?: readonly ValueEntry[];
   evaluate(args: Value[], block: Extract<Expr, { kind: "call" }>, ctx: RunContext): Value;
 };
 
@@ -41,8 +41,10 @@ export function defineBuiltin(def: BuiltinDef): BlockDef {
       family: "builtin",
     }),
     ...(def.module ? { aliases: [callee], imports: def.module } : {}),
-    ...(def.menu ? { menu: def.menu.map((entry) => ({ ...entry, keys: def.name })) } : {}),
-    ...(def.kind ? { kind: (block, kindOf) => def.kind?.(block.args, kindOf) } : {}),
+    ...(def.entries
+      ? { entries: def.entries.map((entry) => ({ ...entry, typed: def.name })) }
+      : {}),
+    ...(def.yields ? { yields: (block, kindOf) => def.yields?.(block.args, kindOf) } : {}),
     create: () => ({
       id: newId(),
       kind: "call",

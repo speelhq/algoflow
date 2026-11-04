@@ -4,7 +4,7 @@
 // whole value is to fill lists names (`editor.md`, Targets). Reads the entries' `group` and `on`
 // only.
 import type { Kind } from "@/lang/types";
-import type { MenuGroup } from "@/blocks/types";
+import type { ValueGroup } from "@/blocks/types";
 import { allEntries, GROUPS, takesValue } from "./entries";
 import {
   atInput,
@@ -18,7 +18,7 @@ import {
   type Row,
 } from "./line";
 
-export type ListGroup = "problem" | "variables" | "new" | MenuGroup | "functions";
+export type ListGroup = "problem" | "variables" | "new" | ValueGroup | "functions";
 const LIST_GROUPS: readonly ListGroup[] = ["problem", "variables", "new", ...GROUPS, "functions"];
 
 export type Section = { group: ListGroup; rows: Row[] };
@@ -31,7 +31,7 @@ function groupOf(row: Row, asked: readonly string[]): ListGroup {
     case "new":
       return "new";
     case "entry":
-      return row.entry.menu.group;
+      return row.entry.declared.group;
     case "parentheses":
       return "calculate";
     case "function":
@@ -51,7 +51,7 @@ function expected(ctx: LineContext, all: boolean): Row[] {
   const offered = allEntries().filter((entry) => all || !takesValue(entry));
   // The parentheses follow the calculations offered where a value is expected.
   const last = offered.findLastIndex(
-    (entry) => entry.menu.group === "calculate" && !takesValue(entry),
+    (entry) => entry.declared.group === "calculate" && !takesValue(entry),
   );
   const entries = offered.map((entry): Row => ({ kind: "entry", entry }));
   entries.splice(last + 1, 0, { kind: "parentheses" });
@@ -66,7 +66,8 @@ function expected(ctx: LineContext, all: boolean): Row[] {
 function after(kind: Kind | undefined, all: boolean): Row[] {
   return allEntries()
     .filter(
-      (entry) => takesValue(entry) && (all || kind === undefined || entry.menu.on?.includes(kind)),
+      (entry) =>
+        takesValue(entry) && (all || kind === undefined || entry.declared.on?.includes(kind)),
     )
     .map((entry): Row => ({ kind: "entry", entry }));
 }

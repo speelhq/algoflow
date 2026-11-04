@@ -152,7 +152,7 @@ export const binop = defineExpr<"binop">({
   notation: () => "{left} {op} {right}",
   // The symbols taught at school, and Python's where school has none (`%`, `//`, `**`, `in`).
   text: (block, slot) => (slot === "op" ? (CANVAS_OPS[block.op] ?? block.op) : ""),
-  kind: (block, kindOf) => {
+  yields: (block, kindOf) => {
     if (isComparison(block.op)) return "truefalse";
     const left = kindOf(block.left);
     const right = kindOf(block.right);
@@ -165,14 +165,14 @@ export const binop = defineExpr<"binop">({
     }
     return "number";
   },
-  menu: [
+  entries: [
     {
       name: "and",
       group: "conditions",
       on: ["truefalse"],
       preset: { op: "and" },
       symbol: "and",
-      keys: "and",
+      typed: "and",
     },
     {
       name: "or",
@@ -180,7 +180,7 @@ export const binop = defineExpr<"binop">({
       on: ["truefalse"],
       preset: { op: "or" },
       symbol: "or",
-      keys: "or",
+      typed: "or",
     },
     {
       name: "add",
@@ -188,7 +188,7 @@ export const binop = defineExpr<"binop">({
       on: ["number", "text"],
       preset: { op: "+" },
       symbol: "+",
-      keys: "+",
+      typed: "+",
     },
     {
       name: "sub",
@@ -196,7 +196,7 @@ export const binop = defineExpr<"binop">({
       on: ["number"],
       preset: { op: "-" },
       symbol: "−",
-      keys: "-",
+      typed: "-",
     },
     {
       name: "mul",
@@ -204,7 +204,7 @@ export const binop = defineExpr<"binop">({
       on: ["number"],
       preset: { op: "*" },
       symbol: "×",
-      keys: "*",
+      typed: "*",
     },
     {
       name: "div",
@@ -212,7 +212,7 @@ export const binop = defineExpr<"binop">({
       on: ["number"],
       preset: { op: "/" },
       symbol: "÷",
-      keys: "/",
+      typed: "/",
     },
     {
       name: "mod",
@@ -220,7 +220,7 @@ export const binop = defineExpr<"binop">({
       on: ["number"],
       preset: { op: "%" },
       symbol: "%",
-      keys: "%",
+      typed: "%",
     },
     {
       name: "floorDiv",
@@ -228,7 +228,7 @@ export const binop = defineExpr<"binop">({
       on: ["number"],
       preset: { op: "//" },
       symbol: "//",
-      keys: "//",
+      typed: "//",
     },
     {
       name: "pow",
@@ -236,16 +236,16 @@ export const binop = defineExpr<"binop">({
       on: ["number"],
       preset: { op: "**" },
       symbol: "**",
-      keys: "**",
+      typed: "**",
     },
     { name: "join", group: "items", on: ["list"], preset: { op: "+" }, symbol: "+" },
-    { name: "eq", group: "compare", on: KINDS, preset: { op: "==" }, symbol: "=", keys: "==" },
-    { name: "ne", group: "compare", on: KINDS, preset: { op: "!=" }, symbol: "≠", keys: "!=" },
-    { name: "lt", group: "compare", on: ORDERED, preset: { op: "<" }, symbol: "<", keys: "<" },
-    { name: "le", group: "compare", on: ORDERED, preset: { op: "<=" }, symbol: "≤", keys: "<=" },
-    { name: "gt", group: "compare", on: ORDERED, preset: { op: ">" }, symbol: ">", keys: ">" },
-    { name: "ge", group: "compare", on: ORDERED, preset: { op: ">=" }, symbol: "≥", keys: ">=" },
-    { name: "in", group: "compare", on: KINDS, preset: { op: "in" }, symbol: "in", keys: "in" },
+    { name: "eq", group: "compare", on: KINDS, preset: { op: "==" }, symbol: "=", typed: "==" },
+    { name: "ne", group: "compare", on: KINDS, preset: { op: "!=" }, symbol: "≠", typed: "!=" },
+    { name: "lt", group: "compare", on: ORDERED, preset: { op: "<" }, symbol: "<", typed: "<" },
+    { name: "le", group: "compare", on: ORDERED, preset: { op: "<=" }, symbol: "≤", typed: "<=" },
+    { name: "gt", group: "compare", on: ORDERED, preset: { op: ">" }, symbol: ">", typed: ">" },
+    { name: "ge", group: "compare", on: ORDERED, preset: { op: ">=" }, symbol: "≥", typed: ">=" },
+    { name: "in", group: "compare", on: KINDS, preset: { op: "in" }, symbol: "in", typed: "in" },
   ],
 });
 

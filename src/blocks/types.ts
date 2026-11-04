@@ -69,13 +69,13 @@ export type Slot = {
 };
 
 /** The groups of the value list, in its order. */
-export type MenuGroup = "values" | "conditions" | "calculate" | "items" | "compare" | "convert";
+export type ValueGroup = "values" | "conditions" | "calculate" | "items" | "compare" | "convert";
 
 /** One entry of the value list. */
-export type MenuEntry = {
+export type ValueEntry = {
   /** `""` for the block's own label and help, else `block.<key>.<name>.label` / `.help`. */
   name: string;
-  group: MenuGroup;
+  group: ValueGroup;
   /** Offered after a value of these kinds, which it takes as its first input. */
   on?: readonly Kind[];
   /** Slot values set on the block's `create()` (binop `op`). */
@@ -83,7 +83,7 @@ export type MenuEntry = {
   /** Shown before the name in the list (`×`). */
   symbol?: string;
   /** What typed in a value line inserts it. */
-  keys?: string;
+  typed?: string;
 };
 
 // ---------------------------------------------------------------- runner
@@ -193,11 +193,11 @@ export type BlockDef = {
   /** How the chart draws the block's regions; absent = a box with the notation. */
   chart?: ChartShape;
   /** The kind of the expression, given the kinds of the expressions inside it. */
-  kind?: (block: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
+  yields?: (block: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
   /** The kind of the variable its `name` slot names. */
   declares?: Kind;
   /** The entries of the value list. */
-  menu?: readonly MenuEntry[];
+  entries?: readonly ValueEntry[];
   /**
    * A target's place: evaluates the target's expressions, the container before its position, and
    * gives the place, its errors at `at`. A block with `locate` is a target.
@@ -208,7 +208,7 @@ export type BlockDef = {
 type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
 type ExprOf<K extends ExprKind> = Extract<Expr, { kind: K }>;
 
-type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "kind" | "locate";
+type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "yields" | "locate";
 
 type StmtDef<K extends StmtKind> = Omit<BlockDef, Generic> & {
   create(): StmtOf<K>;
@@ -224,7 +224,7 @@ type ExprDef<K extends ExprKind> = Omit<BlockDef, Generic> & {
   python(block: ExprOf<K>, ctx: EmitContext): string;
   notation(block: ExprOf<K>): string;
   text?(block: ExprOf<K>, slot: string): string;
-  kind?(block: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
+  yields?(block: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
   locate?(block: ExprOf<K>, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
 };
 

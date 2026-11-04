@@ -463,7 +463,7 @@ function rowName(row: Row): string {
 
 /** Whether the row is named exactly by the word: its name, or the entry's keys. */
 function namesExactly(row: Row, word: string): boolean {
-  if (row.kind === "entry" && row.entry.menu.keys === word) return true;
+  if (row.kind === "entry" && row.entry.declared.typed === word) return true;
   return rowName(row).toLowerCase() === word.toLowerCase();
 }
 
@@ -528,7 +528,7 @@ export function matches(line: Line, ctx: LineContext): Row[] {
   const found = wordRows(line, ctx).filter(
     (row) =>
       matchesName(rowName(row), word) ||
-      (row.kind === "entry" && (row.entry.menu.keys ?? "").startsWith(word)),
+      (row.kind === "entry" && (row.entry.declared.typed ?? "").startsWith(word)),
   );
   // A new variable comes last: a name the program has is the likelier one meant.
   const rank = (row: Row) =>
@@ -536,7 +536,7 @@ export function matches(line: Line, ctx: LineContext): Row[] {
       ? 3
       : namesExactly(row, word)
         ? 0
-        : kind !== undefined && row.kind === "entry" && row.entry.menu.on?.includes(kind)
+        : kind !== undefined && row.kind === "entry" && row.entry.declared.on?.includes(kind)
           ? 1
           : 2;
   return found
@@ -564,14 +564,15 @@ export const PARENTHESES_KEY = "(";
 /** The keys that end a word. */
 const ENDS_WORD = /^[-+*/%<>=!(),[\]]$/;
 
-/** The entries `keys` name, the one that fills an input before the one that takes a value. */
-const entriesByKeys = (keys: string) =>
+/** The entries whose `typed` is `typed`, the one that fills an input before the one that takes a value. */
+const entriesTyped = (typed: string) =>
   allEntries()
-    .filter((entry) => entry.menu.keys === keys)
+    .filter((entry) => entry.declared.typed === typed)
     .toSorted((a, b) => Number(takesValue(a)) - Number(takesValue(b)));
-const startsKeys = (key: string) =>
+const startsTyped = (key: string) =>
   allEntries().some(
-    (entry) => (entry.menu.keys ?? "").length > key.length && entry.menu.keys?.startsWith(key),
+    (entry) =>
+      (entry.declared.typed ?? "").length > key.length && entry.declared.typed?.startsWith(key),
   );
 
 function typeDigit(line: Line, ch: string): Outcome {
@@ -622,7 +623,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
   }
   if (key === " ") return done(current);
   if (current.pending) {
-    const entry = entriesByKeys(current.pending.key + key).find(takesValue);
+    const entry = entriesTyped(current.pending.key + key).find(takesValue);
     const before = current.pending.before ?? current;
     current = { ...current, pending: undefined };
     if (entry) return takeValue({ ...before, pending: undefined }, entry);
@@ -694,13 +695,13 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
   }
   // Of the entries the key names that apply at the caret, the first the slot keeps; a selected
   // value is both an input to fill and a value (`editor.md`, Backspace and keys).
-  const applying = entriesByKeys(key)
+  const applying = entriesTyped(key)
     .filter((entry) => (takesValue(entry) ? value : !value || current.selected))
     .map((entry) => keyed(current, entry, key));
   const inserted =
     applying.find((outcome) => outcome.taken && keeps(outcome.line.root, ctx)) ?? applying[0];
   if (inserted) return inserted;
-  if (value && startsKeys(key)) return done({ ...current, pending: { key } });
+  if (value && startsTyped(key)) return done({ ...current, pending: { key } });
   return refused(line);
 }
 
@@ -715,7 +716,7 @@ function keyed(line: Line, entry: Entry, key: string): Outcome {
     return fill(base, isSequence(made) ? items(made).with([emptyExpr()]) : made);
   }
   const placed = takeValue(line, entry);
-  if (placed.taken && startsKeys(key)) placed.line.pending = { key, before: line };
+  if (placed.taken && startsTyped(key)) placed.line.pending = { key, before: line };
   return placed;
 }
 
@@ -864,5 +865,5 @@ export function endText(line: Line): Line {
 export function switchTo(line: Line, id: NodeId, entry: Entry): Line {
   const held = find(line.root, id);
   if (!held) return line;
-  return replace(line, id, { ...held, ...entry.menu.preset });
+  return replace(line, id, { ...held, ...entry.declared.preset });
 }

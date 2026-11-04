@@ -1,10 +1,10 @@
 // The entries of the value list as the blocks declare them: each with its block, its
-// label and help, and how it makes its expression. Reads `menu` and `create()`, never a kind.
+// label and help, and how it makes its expression. Reads `entries` and `create()`, never a kind.
 import { exprKind, type Kinds } from "@/lang/kinds";
 import type { Expr } from "@/lang/types";
 import { childSlots } from "@/lang/walk";
 import { BLOCK_DEFS, getBlockDef, keyOf, type BlockDef } from "@/blocks/registry";
-import type { MenuEntry, MenuGroup } from "@/blocks/types";
+import type { ValueEntry, ValueGroup } from "@/blocks/types";
 import { blockText } from "@/i18n/t";
 import { isCall } from "@/ui/chart/text";
 
@@ -12,20 +12,20 @@ export type Entry = {
   /** `<key>` or `<key>.<name>`. */
   id: string;
   def: BlockDef;
-  menu: MenuEntry;
+  declared: ValueEntry;
   label: string;
   help: string;
   /** Its block is a call, typed where a value is expected as the chart writes it (`abs(x)`). */
   call: boolean;
 };
 
-const base = (def: BlockDef, menu: MenuEntry) =>
-  menu.name === "" ? def.key : `${def.key}.${menu.name}`;
+const base = (def: BlockDef, declared: ValueEntry) =>
+  declared.name === "" ? def.key : `${def.key}.${declared.name}`;
 
-// The preset is copied, so no expression shares a value with the menu.
-const made = (def: BlockDef, menu: MenuEntry): Expr => ({
+// The preset is copied, so no expression shares a value with the block definition.
+const made = (def: BlockDef, declared: ValueEntry): Expr => ({
   ...(def.create() as Expr),
-  ...structuredClone(menu.preset),
+  ...structuredClone(declared.preset),
 });
 
 let cached: Entry[] | undefined;
@@ -33,13 +33,13 @@ let cached: Entry[] | undefined;
 /** Every entry of the registered block definitions, in registry order (the order of the value list). */
 export function allEntries(): Entry[] {
   cached ??= [...BLOCK_DEFS.values()].flatMap((def) =>
-    (def.menu ?? []).map((menu) => ({
-      id: base(def, menu),
+    (def.entries ?? []).map((declared) => ({
+      id: base(def, declared),
       def,
-      menu,
-      label: blockText(base(def, menu), "label"),
-      help: blockText(base(def, menu), "help"),
-      call: isCall(made(def, menu)),
+      declared,
+      label: blockText(base(def, declared), "label"),
+      help: blockText(base(def, declared), "help"),
+      call: isCall(made(def, declared)),
     })),
   );
   return cached;
@@ -47,12 +47,12 @@ export function allEntries(): Entry[] {
 
 /** Whether the entry is offered after a value, which it takes as its first input. */
 export function takesValue(entry: Entry): boolean {
-  return entry.menu.on !== undefined;
+  return entry.declared.on !== undefined;
 }
 
 /** The entry's expression: its block's `create()` with the entry's preset. */
 export function makeEntry(entry: Entry): Expr {
-  return made(entry.def, entry.menu);
+  return made(entry.def, entry.declared);
 }
 
 /**
@@ -66,13 +66,13 @@ export function entryOf(expr: Expr, kinds: Kinds): Entry | undefined {
   const held = allEntries().filter(
     (entry) =>
       entry.def.key === key &&
-      Object.entries(entry.menu.preset ?? {}).every(
+      Object.entries(entry.declared.preset ?? {}).every(
         ([slot, value]) => JSON.stringify(bag[slot]) === JSON.stringify(value),
       ),
   );
   const first = childSlots(expr)[0]?.expr;
   const kind = first ? exprKind(first, kinds) : undefined;
-  return held.find((entry) => kind !== undefined && entry.menu.on?.includes(kind)) ?? held[0];
+  return held.find((entry) => kind !== undefined && entry.declared.on?.includes(kind)) ?? held[0];
 }
 
 /** The label of what an expression is: its entry's, else its block's. */
@@ -80,7 +80,7 @@ export function labelOf(expr: Expr, kinds: Kinds): string {
   return entryOf(expr, kinds)?.label ?? blockText(getBlockDef(keyOf(expr)).key, "label");
 }
 
-export const GROUPS: readonly MenuGroup[] = [
+export const GROUPS: readonly ValueGroup[] = [
   "values",
   "conditions",
   "calculate",

@@ -90,14 +90,14 @@ describe("registry", () => {
   it("expression blocks declare the value list's entries in the table's order", () => {
     const any = "number,text,truefalse,none,list,dict";
     const rows = [...BLOCK_DEFS.values()].flatMap((def) =>
-      (def.menu ?? []).map((entry) =>
+      (def.entries ?? []).map((entry) =>
         [
           def.key,
           entry.name,
           entry.group,
           entry.on?.join(",") ?? "",
           entry.symbol ?? "",
-          entry.keys ?? "",
+          entry.typed ?? "",
         ].join(" | "),
       ),
     );
@@ -140,7 +140,7 @@ describe("registry", () => {
 
   it("a named entry has its label and help, and no help names the entry's keys", () => {
     for (const def of BLOCK_DEFS.values()) {
-      for (const entry of def.menu ?? []) {
+      for (const entry of def.entries ?? []) {
         const base = entry.name === "" ? `block.${def.key}` : `block.${def.key}.${entry.name}`;
         expect(keys.has(`${base}.label`), `${base}.label`).toBe(true);
         const help = flatten(en)[`${base}.help`] ?? "";

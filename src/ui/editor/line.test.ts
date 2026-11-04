@@ -673,7 +673,7 @@ describe("a target's line (editor.md, Targets)", () => {
         (each) =>
           takesValue(each) &&
           each.def.locate !== undefined &&
-          (kind === undefined || each.menu.on?.includes(kind)),
+          (kind === undefined || each.declared.on?.includes(kind)),
       );
       const listed = groups(line, false, context).flatMap(([, labels]) => labels);
       expect(listed, text).toEqual(targets.map((each) => each.label));

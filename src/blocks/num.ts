@@ -32,5 +32,5 @@ export const num = defineExpr<"num">({
   python: (block) => block.raw,
   notation: () => "{value}",
   text: (block) => block.raw, // the literal as typed
-  kind: () => "number",
+  yields: () => "number",
 });

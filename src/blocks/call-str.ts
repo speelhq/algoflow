@@ -7,8 +7,8 @@ export const strCall = defineBuiltin({
   name: "str",
   category: "basic",
   params: [{ name: "x" }],
-  kind: () => "text",
-  menu: [{ name: "", group: "convert", on: KINDS }],
+  yields: () => "text",
+  entries: [{ name: "", group: "convert", on: KINDS }],
   evaluate([x = { t: "none" }], _node, ctx) {
     return { t: "str", v: text(x, ctx.heap) };
   },

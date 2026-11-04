@@ -6,8 +6,8 @@ export const randomInt = defineBuiltin({
   name: "randint",
   category: "basic",
   params: [{ name: "a" }, { name: "b" }],
-  kind: () => "number",
-  menu: [{ name: "", group: "calculate" }],
+  yields: () => "number",
+  entries: [{ name: "", group: "calculate" }],
   module: "random",
   evaluate([a = { t: "none" }, b = { t: "none" }], block, ctx) {
     if (a.t !== "int" || b.t !== "int") {

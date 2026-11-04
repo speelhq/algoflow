@@ -8,8 +8,8 @@ export const intCall = defineBuiltin({
   name: "int",
   category: "basic",
   params: [{ name: "x" }],
-  kind: () => "number",
-  menu: [{ name: "", group: "convert", on: ["number", "text"] }],
+  yields: () => "number",
+  entries: [{ name: "", group: "convert", on: ["number", "text"] }],
   evaluate([x = { t: "none" }], block, ctx) {
     switch (x.t) {
       case "int":
