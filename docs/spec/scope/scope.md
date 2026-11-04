@@ -12,10 +12,11 @@ offers, and how it reaches the learner.
 
 ### Platform
 
-The application has no server, no accounts, and no roles. It needs no
-roles because an instructor writes the challenge files, the study plans,
-and the built-in modules in the repository rather than in the application. So
-a trainee and a self-learner use the same features.
+The application has no server and no accounts. It has no roles, so a
+trainee and a self-learner use the same features. It needs no roles
+because an
+instructor writes the challenge files, the study plans, and the built-in
+modules in the repository rather than in the application.
 
 ### Viewport
 
@@ -73,9 +74,8 @@ and in Playground programs (`modules.md`, Resolution).
 
 A study plan connects its problems through modules rather than through
 starter programs, because a problem that started from the previous
-solution would discard the learner's own version.
-
-A module keeps that version, so when a bug in the learner's `heap_pop`
+solution would discard the learner's own version. A module keeps that
+version, so when a bug in the learner's `heap_pop`
 shows up again in `dijkstra-heap`, the learner inspects the function they
 rely on.
 

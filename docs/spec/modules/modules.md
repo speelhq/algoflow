@@ -48,9 +48,11 @@ A learner module is a module that the learner creates, clones, or imports
 (Operations). The module store keeps it (Storage).
 
 Module names are unique among learner modules, and unique among built-in
-modules. A learner module with a built-in module's name shadows it
-(`language.md`, Scope), so a function the learner rebuilt is used under
-its name, and no problem has to say which one to use.
+modules.
+
+A learner module with a built-in module's name shadows it (`language.md`,
+Scope), so a program uses the function the learner rebuilt under its
+name, and no problem has to say which one to use.
 
 Built-in modules are read-only.
 
@@ -80,11 +82,13 @@ lifted.
 ### Running a module
 
 A module has no `main`. Its page runs one function at a time
-(`interpreter.md`, Modules). The shown function's parameters are Input
-chart nodes in the form of `chart.md`, Input chart nodes. Their menu lists
-that function's cases (Cases). When `Open <name>` (Operations) opened the
-page, they hold the arguments it brought. After a run, `End` shows the
-returned value.
+(`interpreter.md`, Modules).
+
+The shown function's parameters are Input chart nodes in the form of
+`chart.md`, Input chart nodes. Their menu lists that function's cases
+(Cases).
+
+After a run, `End` shows the returned value.
 
 ## Pages
 
@@ -94,16 +98,18 @@ Module page, which shows one.
 ### Modules page
 
 The Modules page (`#/modules`) has one row per module: learner modules
-first, then built-in modules, each in name order. A row shows the name or
-title, the number of functions and classes, and `Built-in` on a built-in
-module. The rows have the form of `pages.md`, Playground page.
+first, then built-in modules, each in name order. The page orders
+built-in modules by name, not by title, because a title differs by
+locale, so the rows would move when the language changes.
 
-The page orders built-in modules by name, not by title, because a title
-differs by locale, so the rows would move when the language changes.
+A row has the form of `pages.md`, Playground page, and shows:
+
+- the name or title
+- the number of functions and classes
+- `Built-in`, on a built-in module
 
 The page has `New module…`, which prompts for the name, and `Import…`
-(Operations). Each learner module's row has `Export` and `Delete`
-(Operations).
+(Operations). Each learner module's row has `Export` and `Delete`.
 
 ### Module page
 
@@ -165,9 +171,12 @@ program export (`language.md`, Storage) embeds the modules it uses under
 `modules`.
 
 When the learner imports a module file or a program export, the
-application validates each module by `version`, adds the modules whose
-names are new, keeps existing ones unchanged, and reports
-`Kept existing module <name>`.
+application:
+
+1. validates each module by `version`
+2. adds the modules whose names are new
+3. keeps existing ones unchanged, and reports
+   `Kept existing module <name>`
 
 ### `Open <name>`
 
@@ -232,37 +241,39 @@ When `Move to module…` places a function into a learner module that has a
 built-in module's name, and the learner module holds no cases for a
 function of that name while the built-in module does, `Move to module…`
 copies those cases into the learner module, because the author's cases,
-which both engines check, find what the problem's tests don't. `Clone`
-copies every case.
+which both engines check, find what the problem's tests don't.
 
 ## Storage
 
 `src/store/modules.ts` is the only reader and writer of learner modules.
-It persists them under the `localStorage` key `algoflow:modules`, as
-`Record<Name, Module>`, 500 ms after the last edit. It exposes `list()`,
-`get(name)`, `put(module)`, and `remove(name)`, and nothing else accesses
-the key.
+It exposes `list()`, `get(name)`, `put(module)`, and `remove(name)`, and
+nothing else accesses `algoflow:modules`. `localStorage` and export files
+are enough for a course on one machine, so a server, with its accounts,
+would be worth adding only for sharing between learners or syncing across
+devices. One store keeps that option open without changing its callers.
 
-`localStorage` and export files are enough for a course on one machine,
-so a server, with its accounts, would be worth adding only for sharing
-between learners or syncing across devices. One store keeps that option
-open without changing its callers.
+The store persists learner modules under the `localStorage` key
+`algoflow:modules`, as `Record<Name, Module>`, 500 ms after the last
+edit.
 
 The store reads `algoflow:modules` again on the window's `storage` event,
-so an edit in one browser tab reaches the others, and open programs are
-validated again. A run in progress keeps the modules it began with
+so an edit in one browser tab reaches the others. The application then
+validates open programs again.
+
+A run in progress keeps the modules it began with
 (`interpreter.md`, Runner), so its replays stay deterministic. The next
 Run uses the changed modules, with no stop and no message.
 
 ## Built-in modules
 
-`modules/<name>.json` files are bundled like challenges (`challenges.md`,
-Opening and bundling). `scripts/check.ts` checks them in this order:
+The build bundles `modules/<name>.json` files as it bundles challenges
+(`challenges.md`, Opening and bundling).
+
+`scripts/check.ts` checks them in this order:
 
 1. the Schema
 2. name resolution within the module
-3. emitting and compiling, as the CPython check states
-   (`interpreter.md`, CPython check)
+3. emitting and compiling (`interpreter.md`, CPython check)
 4. running every case in the interpreter and in CPython, and comparing
    the results by the judge's equality
 
@@ -271,14 +282,15 @@ It uses no learner module.
 
 ### `heap`
 
-The built-in module `heap` (title `Heap`) defines two functions:
+The built-in module `heap`, whose title is `Heap`, defines two
+functions:
 
 - `heap_push(heap, x)` appends `x` and sifts it up with `swap`.
 - `heap_pop(heap)` removes the root, moves the last item to the root,
   sifts it down, and returns the root.
 
-Both compare items with `<`, and an item that is a list is compared by
-its item 0. `heap_pop` on an empty list raises `E_POP_EMPTY` from the list
+Both compare items with `<`, and compare an item that is a list by its
+item 0. `heap_pop` on an empty list raises `E_POP_EMPTY` from the list
 method it calls.
 
 The names carry the prefix, as `heapq.heappush` does, because `pop` alone

@@ -121,7 +121,9 @@ The spec punctuates a reference in three ways:
 
 A handle is a name that the code, the tests, and the spec share. For
 example: an error code, a block key, a message key, or a function or type
-name. The spec, and every document that cites it, refers to a handle by the
+name.
+
+The spec, and every document that cites it, refers to a handle by the
 handle alone.
 
 A reference names a heading without the handles in parentheses that end
@@ -150,13 +152,14 @@ An issue cites each statement it rests on by its file and heading, because
 an issue waits while the spec changes, and a quote would be a copy that
 goes stale.
 
-An issue quotes only three things, because a reader decides or checks
-from the quoted words, and a heading alone doesn't find a part inside a
-table row:
+An issue quotes only these three things:
 
 - the part of a statement that a defect contradicts
 - the statements and recorded reasons that constrain a decision
 - the statements that the work changes
+
+An issue quotes them, because a reader decides or checks from the quoted
+words, and a heading alone doesn't find a part inside a table row.
 
 ## File layout
 
