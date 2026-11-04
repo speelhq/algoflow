@@ -85,12 +85,12 @@ function ProblemRow({ challenge, status }: { challenge: Challenge; status: Retur
         </span>
         <span>{localized(challenge.title)}</span>
         <span className="text-sm text-muted-foreground">
-          {t(`problems.difficulty.${challenge.difficulty}`)}
+          {t(`challenge.difficulty.${challenge.difficulty}`)}
         </span>
         <span className="flex flex-wrap gap-1">
           {challenge.topics.map((topic) => (
             <span key={topic} className="rounded-full border px-2 text-xs text-muted-foreground">
-              {t(`problems.topic.${topic}`)}
+              {t(`challenge.topic.${topic}`)}
             </span>
           ))}
         </span>

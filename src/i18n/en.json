@@ -9,9 +9,8 @@
       "playground": "Playground"
     },
     "help": {
-      "open": "Help",
-      "glyph": "?",
-      "title": "Help",
+      "label": "Help",
+      "icon": "?",
       "close": "Close",
       "loop": {
         "build": "Build: add blocks to the chart under Start.",
@@ -26,11 +25,26 @@
           "keys": "Delete, Backspace",
           "action": "Remove the selected block, unless typing in the editor"
         },
-        "undo": { "keys": "Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z", "action": "Undo, redo" },
-        "duplicate": { "keys": "Ctrl/Cmd+D", "action": "Duplicate the selected block" },
-        "run": { "keys": "Ctrl/Cmd+Enter", "action": "Run, Pause, Play, Replay" },
-        "step": { "keys": "→, ←", "action": "Step, Back (while running)" },
-        "skip": { "keys": "Ctrl/Cmd+→", "action": "Skip (while running)" },
+        "undo": {
+          "keys": "Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z",
+          "action": "Undo, redo"
+        },
+        "duplicate": {
+          "keys": "Ctrl/Cmd+D",
+          "action": "Duplicate the selected block"
+        },
+        "run": {
+          "keys": "Ctrl/Cmd+Enter",
+          "action": "Run, Pause, Play, Replay"
+        },
+        "step": {
+          "keys": "→, ←",
+          "action": "Step, Back (while running)"
+        },
+        "skip": {
+          "keys": "Ctrl/Cmd+→",
+          "action": "Skip (while running)"
+        },
         "escape": {
           "keys": "Esc",
           "action": "Close a menu or editor and clear the selection; while running, clear the breakpoint, else Stop"
@@ -39,8 +53,14 @@
           "keys": "Tab, Shift+Tab",
           "action": "Next or previous input of a value, then the next or previous slot"
         },
-        "highlight": { "keys": "↑, ↓", "action": "Move the highlight in the editor's list" },
-        "caret": { "keys": "←, →", "action": "Previous or next value or input of a value" },
+        "highlight": {
+          "keys": "↑, ↓",
+          "action": "Move the highlight in the editor's list"
+        },
+        "caret": {
+          "keys": "←, →",
+          "action": "Previous or next value or input of a value"
+        },
         "enter": {
           "keys": "Enter",
           "action": "Choose the highlighted entry; in a name field not typed in, go to the next slot; else close the editor"
@@ -54,10 +74,20 @@
     "start": "Start",
     "continue": "Continue: {title} ▶",
     "status": {
-      "solved": { "label": "Solved", "icon": "✓" },
-      "attempted": { "label": "Attempted", "icon": "•" },
-      "untouched": { "label": "Not started" }
-    },
+      "solved": {
+        "label": "Solved",
+        "icon": "✓"
+      },
+      "attempted": {
+        "label": "Attempted",
+        "icon": "•"
+      },
+      "untouched": {
+        "label": "Not started"
+      }
+    }
+  },
+  "challenge": {
     "difficulty": {
       "easy": "Easy",
       "medium": "Medium",
@@ -78,15 +108,19 @@
   },
   "problem": {
     "back": "← Problems",
-    "submit": "✓ Submit",
-    "more": "More",
-    "moreGlyph": "⋯",
-    "help": "Help",
+    "more": {
+      "label": "More",
+      "icon": "⋯"
+    },
     "openInPlayground": "Open in Playground",
-    "undo": "Undo",
-    "redo": "Redo",
-    "undoGlyph": "↶",
-    "redoGlyph": "↷",
+    "undo": {
+      "label": "Undo",
+      "icon": "↶"
+    },
+    "redo": {
+      "label": "Redo",
+      "icon": "↷"
+    },
     "caseSeparator": " · ",
     "tabs": {
       "problem": "Problem",
@@ -95,30 +129,37 @@
     },
     "panel": {
       "label": "Panel",
-      "collapse": "Collapse the panel",
-      "expand": "Expand the panel",
-      "resize": "Resize the panel",
-      "collapseGlyph": "«",
-      "expandGlyph": "»"
+      "collapse": {
+        "label": "Collapse the panel",
+        "icon": "«"
+      },
+      "expand": {
+        "label": "Expand the panel",
+        "icon": "»"
+      },
+      "resize": "Resize the panel"
     },
     "example": "Example",
     "exampleOutput": "Output",
     "exampleVariables": "Variables",
     "fold": "… {n} more",
     "cases": "Cases used by Submit",
-    "hints": "Hints",
-    "hintsShown": "{n} of {m} shown",
-    "showHint": "Show next hint",
-    "solution": "Solution",
-    "showSolution": "Show solution",
-    "solutionShown": "shown in the chart"
-  },
-  "python": {
-    "copy": "Copy",
-    "download": "Download .py",
-    "code": "Python code"
+    "hints": {
+      "label": "Hints",
+      "shown": "{n} of {m} shown",
+      "show": "Show next hint"
+    },
+    "solution": {
+      "label": "Solution",
+      "show": "Show solution",
+      "shown": "shown in the chart",
+      "readOnly": "read-only",
+      "back": "Back to my program",
+      "load": "Load into my program"
+    }
   },
   "result": {
+    "submit": "✓ Submit",
     "empty": "Run to see the values",
     "case": "Case",
     "variables": "Variables",
@@ -141,6 +182,11 @@
     "chipPass": "✓ {case}",
     "chipFail": "✗ {case}"
   },
+  "python": {
+    "copy": "Copy",
+    "download": "Download .py",
+    "code": "Python code"
+  },
   "playground": {
     "title": "Playground",
     "description": "Programs of your own: no problem, no inputs, no Submit. The last one you edited comes first.",
@@ -155,7 +201,7 @@
     "cancel": "Cancel",
     "back": "← Playground",
     "export": "Export",
-    "titleLabel": "Program title",
+    "programTitle": "Program title",
     "rows": "Playground programs"
   },
   "block": {
@@ -165,22 +211,33 @@
     },
     "assign": {
       "label": "Set variable",
-      "slot": { "target": "target", "value": "value" },
+      "slot": {
+        "target": "target",
+        "value": "value"
+      },
       "help": "Gives a variable a value, the first time or again."
     },
     "if": {
       "label": "If",
-      "slot": { "cond": "condition" },
+      "slot": {
+        "cond": "condition"
+      },
       "help": "Runs the then region when the condition is true, otherwise the else region."
     },
     "for": {
       "label": "For loop",
-      "slot": { "var": "variable", "start": "start", "stop": "stop" },
+      "slot": {
+        "var": "variable",
+        "start": "start",
+        "stop": "stop"
+      },
       "help": "Counts the variable from start up to, but not including, stop."
     },
     "while": {
       "label": "While loop",
-      "slot": { "cond": "condition" },
+      "slot": {
+        "cond": "condition"
+      },
       "help": "Repeats the body as long as the condition stays true."
     },
     "break": {
@@ -193,22 +250,31 @@
     },
     "print": {
       "label": "Print",
-      "slot": { "args": "value" },
+      "slot": {
+        "args": "value"
+      },
       "help": "Writes the values to the Output tab, separated by spaces."
     },
     "return": {
       "label": "Return",
-      "slot": { "value": "value" },
+      "slot": {
+        "value": "value"
+      },
       "help": "Leaves the function and hands back the value."
     },
     "swap": {
       "label": "Swap",
-      "slot": { "a": "first", "b": "second" },
+      "slot": {
+        "a": "first",
+        "b": "second"
+      },
       "help": "Exchanges the values of two places: two items of a list, or two variables."
     },
     "expr": {
       "label": "Expression",
-      "slot": { "expr": "expression" },
+      "slot": {
+        "expr": "expression"
+      },
       "help": "Evaluates an expression for its effect, such as a method call."
     },
     "num": {
@@ -222,8 +288,14 @@
     "bool": {
       "label": "True / false",
       "help": "A truth value.",
-      "true": { "label": "True", "help": "The value of a condition that holds." },
-      "false": { "label": "False", "help": "The value of a condition that does not hold." }
+      "true": {
+        "label": "True",
+        "help": "The value of a condition that holds."
+      },
+      "false": {
+        "label": "False",
+        "help": "The value of a condition that does not hold."
+      }
     },
     "none": {
       "label": "None",
@@ -370,29 +442,41 @@
     "start": "Start",
     "startFn": "Start {name}({params})",
     "end": "End",
-    "input": "Input {assignment}",
+    "input": {
+      "text": "Input {assignment}",
+      "icon": "▾"
+    },
     "condition": "{cond}?",
     "label": "Flowchart",
     "yes": "Yes",
     "no": "No",
     "path": "Chart path",
-    "inputGlyph": "▾",
-    "zoomInGlyph": "+",
-    "zoomOutGlyph": "−",
-    "markYes": "✓",
-    "markNo": "✗",
+    "zoomIn": {
+      "icon": "+",
+      "label": "Zoom in"
+    },
+    "zoomOut": {
+      "icon": "−",
+      "label": "Zoom out"
+    },
+    "mark": {
+      "yes": "✓",
+      "no": "✗"
+    },
     "main": "main",
-    "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out",
-    "zoomReset": "Zoom to 100 %",
-    "percent": "{n}%",
-    "solution": "Solution",
-    "readOnly": "read-only",
-    "backToMine": "Back to my program",
-    "load": "Load into my program",
+    "zoomReset": {
+      "label": "Zoom to 100 %",
+      "text": "{n}%"
+    },
     "addFirst": "Add your first block",
-    "connector": "Add a block here",
-    "connectorGlyph": "+"
+    "connector": {
+      "label": "Add a block here",
+      "icon": "+"
+    },
+    "breakpoint": "breakpoint",
+    "fix": {
+      "hoistAssign": "Give {name} a value before it"
+    }
   },
   "menu": {
     "label": "Blocks",
@@ -416,22 +500,27 @@
     "noItems": "Nothing matches",
     "textField": "Text",
     "addValue": "+ value",
-    "removeValue": "Remove this value",
-    "removeGlyph": "×",
+    "removeValue": {
+      "label": "Remove this value",
+      "icon": "×"
+    },
     "duplicate": "Duplicate",
     "delete": "Delete",
-    "fix": {
-      "hoistAssign": "Give {name} a value before it"
+    "caption": {
+      "label": "Caption",
+      "hint": "optional"
     },
-    "caption": "Caption",
-    "captionHint": "optional",
-    "typeHint": "type or choose",
+    "valueLine": {
+      "hint": "type or choose"
+    },
     "typeKeys": "Type `{keys}`.",
     "fieldName": "{label}, {slot}",
     "showAll": "Show all",
-    "parentheses": "Parentheses",
-    "parenthesesGlyph": "( )",
-    "parenthesesHelp": "Groups what is inside, so it is worked out first.",
+    "parentheses": {
+      "label": "Parentheses",
+      "symbol": "( )",
+      "help": "Groups what is inside, so it is worked out first."
+    },
     "ownFunction": "One of this program's functions. Choosing it calls it.",
     "didYouMean": "Did you mean {name}?",
     "nothingLike": "Nothing has this name. Check the spelling, or choose from the list.",
@@ -480,10 +569,11 @@
     "pause": "❚❚ Pause",
     "step": "Step ▶|",
     "skip": "Skip ▶▶",
-    "position": "step {k} of {n}",
-    "positionLabel": "Position",
+    "position": {
+      "text": "step {k} of {n}",
+      "label": "Position"
+    },
     "speed": "Speed",
-    "breakpoint": "breakpoint",
     "endless": "This run was stopped before it reached its end. {message}.",
     "narrate": {
       "enter": "Running {notation}",

@@ -109,11 +109,11 @@ export function RunBar() {
               max={total}
               value={[step]}
               onValueChange={(value) => void seek(first(value))}
-              aria-label={t("run.positionLabel")}
+              aria-label={t("run.position.label")}
               data-testid="position"
             />
             <span className="font-mono text-sm whitespace-nowrap" data-testid="position-text">
-              {t("run.position", { k: step, n: total })}
+              {t("run.position.text", { k: step, n: total })}
             </span>
             <Speed />
             <Button variant="outline" onClick={stop}>

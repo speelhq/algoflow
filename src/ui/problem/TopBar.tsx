@@ -37,20 +37,20 @@ function UndoRedo() {
       <Button
         variant="outline"
         size="icon"
-        aria-label={t("problem.undo")}
+        aria-label={t("problem.undo.label")}
         disabled={!canUndo || locked}
         onClick={undo}
       >
-        {t("problem.undoGlyph")}
+        {t("problem.undo.icon")}
       </Button>
       <Button
         variant="outline"
         size="icon"
-        aria-label={t("problem.redo")}
+        aria-label={t("problem.redo.label")}
         disabled={!canRedo || locked}
         onClick={redo}
       >
-        {t("problem.redoGlyph")}
+        {t("problem.redo.icon")}
       </Button>
     </>
   );
@@ -74,13 +74,13 @@ export function TopBar({ back, title, actions, menu }: Props) {
         <UndoRedo />
         <DropdownMenu>
           <DropdownMenuTrigger
-            render={<Button variant="outline" size="icon" aria-label={t("problem.more")} />}
+            render={<Button variant="outline" size="icon" aria-label={t("problem.more.label")} />}
           >
-            {t("problem.moreGlyph")}
+            {t("problem.more.icon")}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-auto min-w-44">
             {menu}
-            <DropdownMenuItem onClick={() => setHelp(true)}>{t("problem.help")}</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setHelp(true)}>{t("app.help.label")}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

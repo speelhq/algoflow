@@ -33,7 +33,7 @@ export function HelpDialog({ open, onOpenChange }: Props) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent showCloseButton={false} className="sm:max-w-xl" data-testid="help">
         <DialogHeader>
-          <DialogTitle>{t("app.help.title")}</DialogTitle>
+          <DialogTitle>{t("app.help.label")}</DialogTitle>
         </DialogHeader>
         <ol className="list-decimal space-y-1 pl-5">
           {LOOP.map((line) => (

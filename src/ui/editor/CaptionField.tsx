@@ -13,12 +13,12 @@ export function CaptionField({ stmt }: { stmt: Stmt }) {
   return (
     <label className="flex h-9 flex-1 items-center gap-2 rounded-md border px-2.5 focus-within:border-selection">
       <span className="text-[0.7rem] tracking-wide text-muted-foreground uppercase">
-        {t("editor.caption")}
+        {t("editor.caption.label")}
       </span>
       <input
         value={draft}
-        placeholder={t("editor.captionHint")}
-        aria-label={t("editor.caption")}
+        placeholder={t("editor.caption.hint")}
+        aria-label={t("editor.caption.label")}
         data-testid="caption"
         className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
         onChange={(event) => {

@@ -85,14 +85,14 @@ export function Connector({ place, first }: { place: Place; first: boolean }) {
           render={
             <button
               type="button"
-              aria-label={t("chart.connector")}
+              aria-label={t("chart.connector.label")}
               data-testid="connector"
               data-place={`${place.parent}/${place.slot}/${place.index}`}
               className="flex size-[18px] cursor-pointer items-center justify-center rounded-full border border-dashed border-selection bg-background text-xs leading-none text-selection hover:bg-selection/10"
             />
           }
         >
-          {t("chart.connectorGlyph")}
+          {t("chart.connector.icon")}
         </PopoverTrigger>
         {first && (
           <button

@@ -85,13 +85,13 @@ export function ValueItems(props: {
           {props.line(item, index)}
           <button
             type="button"
-            aria-label={t("editor.removeValue")}
+            aria-label={t("editor.removeValue.label")}
             // Pressing it leaves the keyboard where it is, and the line as it is drawn.
             onMouseDown={(event) => event.preventDefault()}
             className="size-5 cursor-pointer rounded-full text-muted-foreground hover:bg-muted"
             onClick={() => props.onRemove(index)}
           >
-            {t("editor.removeGlyph")}
+            {t("editor.removeValue.icon")}
           </button>
         </span>
       ))}

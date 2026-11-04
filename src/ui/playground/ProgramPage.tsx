@@ -22,7 +22,7 @@ function TitleField() {
   return (
     <Input
       value={title}
-      aria-label={t("playground.titleLabel")}
+      aria-label={t("playground.programTitle")}
       placeholder={t("playground.untitled")}
       disabled={locked}
       className="h-8 w-64 font-semibold"
