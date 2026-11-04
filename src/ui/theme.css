@@ -31,8 +31,10 @@
   --color-solved: var(--solved);
   --color-solved-foreground: var(--solved-foreground);
   --color-attempted: var(--attempted);
+  --color-band: var(--band);
   --color-selection: var(--selection);
   --color-taken: var(--taken);
+  --color-pass: var(--pass);
   --color-variable: var(--variable);
   --color-code-keyword: var(--code-keyword);
   --color-code-string: var(--code-string);
@@ -66,14 +68,18 @@
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --radius: 0.625rem;
-  /* The status icons of a problem row. */
+  /* The status icon of a problem row. */
   --solved: oklch(0.6 0.15 150);
   --solved-foreground: oklch(1 0 0);
   --attempted: oklch(0.72 0.16 70);
+  /* The band above the canvas, such as the solution's. */
+  --band: oklch(0.72 0.16 70);
   /* The selected node and its lines; the current node while running. */
   --selection: oklch(0.6 0.19 260);
-  /* The taken path of the current pass, and a check that passed. */
+  /* The taken path of the current pass, and a diamond's ✓. */
   --taken: oklch(0.58 0.15 150);
+  /* A case that passes, its chip, and Accepted. */
+  --pass: oklch(0.58 0.15 150);
   /* A variable's name, on the chart and in the editor. */
   --variable: oklch(0.55 0.15 50);
   /* Keywords, strings, and numbers in the Python tab. */

@@ -43,7 +43,7 @@ function SolutionBand({ challenge }: { challenge: Challenge }) {
   const showSolution = useEditor((s) => s.showSolution);
   return (
     <div
-      className="flex h-11 shrink-0 items-center gap-2 border-b bg-attempted/15 px-4"
+      className="flex h-11 shrink-0 items-center gap-2 border-b bg-band/15 px-4"
       data-testid="solution-band"
     >
       <span className="font-semibold">{t("problem.solution.label")}</span>
