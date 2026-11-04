@@ -1,7 +1,7 @@
 // The driver: pre-run, Step, Play, Seek, Back, Stop; its state; breakpoint and Skip; marks; the
 // verdict; Seek replays identically.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getChallenge, type Challenge } from "@/challenges";
+import { findChallenge, type Challenge } from "@/challenges";
 import { canRun } from "@/lang/validate";
 import { ast, program, runAll, tid } from "@/blocks/testing";
 import { SPEEDS, useLayout } from "./layout";
@@ -29,7 +29,7 @@ vi.mock("@/challenges", async (importOriginal) => {
   const real = await importOriginal<typeof import("@/challenges")>();
   return {
     ...real,
-    getChallenge: (id: string | undefined) => (id === lists.id ? lists : real.getChallenge(id)),
+    findChallenge: (id: string | undefined) => (id === lists.id ? lists : real.findChallenge(id)),
   };
 });
 
@@ -62,7 +62,7 @@ function position(s: RunState) {
 }
 
 function fizzbuzz() {
-  const challenge = getChallenge("fizzbuzz");
+  const challenge = findChallenge("fizzbuzz");
   if (!challenge) throw new Error("fizzbuzz missing");
   return challenge;
 }

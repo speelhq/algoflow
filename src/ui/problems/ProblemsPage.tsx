@@ -1,6 +1,6 @@
 // One section per study plan, in plan order; the status icons and plan counts come from
 // progress.
-import { challengesOf, getChallenge, PLANS, type Challenge, type Plan } from "@/challenges";
+import { challengesOf, findChallenge, PLANS, type Challenge, type Plan } from "@/challenges";
 import { planAction, type Status } from "@/challenges/next";
 import { localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ function PlanSection({ plan, entries }: { plan: Plan; entries: Progress }) {
   const status: Status = (id) => statusOf(entries, id);
   const action = planAction(problems, status);
   const solved = solvedCount(entries, problems);
-  const next = action && getChallenge(action.id);
+  const next = action && findChallenge(action.id);
   return (
     <section className="mb-6" data-testid={`plan-${plan.id}`}>
       <div className="flex items-center gap-4 rounded-xl border bg-muted/40 px-4 py-3">

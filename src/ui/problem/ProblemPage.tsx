@@ -1,6 +1,6 @@
 // The Problem page: the top bar, then two regions, the panel and the canvas. Its route has
 // opened the problem's program before it draws (`route.ts`).
-import { getChallenge, type Challenge } from "@/challenges";
+import { findChallenge, type Challenge } from "@/challenges";
 import { localized, t } from "@/i18n/t";
 import { openInPlayground } from "@/ui/editor/programs";
 import { useTitle } from "@/ui/hooks/useTitle";
@@ -11,7 +11,7 @@ import { TopBar } from "./TopBar";
 import { usePageKeys } from "./keys";
 
 export function ProblemPage({ id }: { id: string }) {
-  const challenge = getChallenge(id);
+  const challenge = findChallenge(id);
   return challenge ? <Problem challenge={challenge} /> : null;
 }
 

@@ -20,7 +20,7 @@ export function challengesOf(plan: Plan): Challenge[] {
 
 export const CHALLENGES: readonly Challenge[] = PLANS.flatMap(challengesOf);
 
-export function getChallenge(id: string | undefined): Challenge | undefined {
+export function findChallenge(id: string | undefined): Challenge | undefined {
   return id === undefined ? undefined : CHALLENGES.find((challenge) => challenge.id === id);
 }
 

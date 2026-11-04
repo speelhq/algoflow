@@ -2,11 +2,11 @@
 import { describe, expect, it } from "vitest";
 import { program } from "@/blocks/testing";
 import { caseInputs, caseOf } from "./cases";
-import { getChallenge } from "./index";
+import { findChallenge } from "./index";
 import { seedOf } from "./types";
 
 describe("the chosen case", () => {
-  const fizzbuzz = getChallenge("fizzbuzz");
+  const fizzbuzz = findChallenge("fizzbuzz");
   if (!fizzbuzz) throw new Error("fizzbuzz missing");
 
   it("is the test at the case index of the program's challenge", () => {

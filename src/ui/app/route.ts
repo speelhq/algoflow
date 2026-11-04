@@ -3,7 +3,7 @@
 // that names a program opens it before React draws its page, so no page ever draws with the
 // program of the page before.
 import { useSyncExternalStore } from "react";
-import { getChallenge } from "@/challenges";
+import { findChallenge } from "@/challenges";
 import { openProgram } from "@/store/open";
 import { isListed } from "@/store/playground";
 
@@ -41,7 +41,7 @@ export function parseRoute(hash: string): Route {
 /** As `parseRoute`, with an id that names no challenge or no Playground program sent to Problems. */
 export function resolveRoute(hash: string): Route {
   const route = parseRoute(hash);
-  if (route.page === "problem" && !getChallenge(route.id)) return PROBLEMS;
+  if (route.page === "problem" && !findChallenge(route.id)) return PROBLEMS;
   if (route.page === "program" && !isListed(route.id)) return PROBLEMS;
   return route;
 }

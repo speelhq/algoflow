@@ -2,7 +2,7 @@
 // stored under its challenge id, a Playground program under its Playground id; a save
 // follows 500 ms after the last edit, or comes at once when the page is hidden.
 import { create } from "zustand";
-import { getChallenge } from "@/challenges";
+import { findChallenge } from "@/challenges";
 import { migrate } from "@/lang/migrate";
 import type { Program } from "@/lang/types";
 import { asPlayground, forget, isPlaygroundId, newPlaygroundId, touch } from "./playground";
@@ -46,7 +46,7 @@ export function storedTitle(id: string): string | undefined {
 export function restore(id: string): Program {
   const stored = readProgram(id);
   if (isPlaygroundId(id)) return asPlayground(stored ?? emptyProgram());
-  const challenge = getChallenge(id);
+  const challenge = findChallenge(id);
   if (!challenge) return emptyProgram();
   const base = stored ?? emptyProgram();
   return { ...base, challengeId: challenge.id, inputs: structuredClone(challenge.inputs) };

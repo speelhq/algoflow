@@ -1,6 +1,6 @@
 // Submit judges every test on its own runner.
 import { beforeEach, describe, expect, it } from "vitest";
-import { getChallenge } from "@/challenges";
+import { findChallenge } from "@/challenges";
 import { ast, program } from "@/blocks/testing";
 import { useProgress } from "./progress";
 import { useProgram } from "./program";
@@ -10,7 +10,7 @@ import { useTests } from "./tests";
 const { assign, num, bin, print, str } = ast;
 
 const fizzbuzz = () => {
-  const challenge = getChallenge("fizzbuzz");
+  const challenge = findChallenge("fizzbuzz");
   if (!challenge) throw new Error("fizzbuzz missing");
   return challenge;
 };

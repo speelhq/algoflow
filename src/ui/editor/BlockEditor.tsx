@@ -6,7 +6,7 @@
 import { Copy, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
-import { getChallenge } from "@/challenges";
+import { findChallenge } from "@/challenges";
 import { blockText, t } from "@/i18n/t";
 import { duplicateStmt, insertItem, removeItem, removeStmt, setExpr, setSlot } from "@/lang/edit";
 import { routineOf, variableKinds } from "@/lang/kinds";
@@ -93,7 +93,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const kinds = variableKinds(program, routine);
   // The names the problem expects, which a name list and a binding target's list offer first.
   const asked = useMemo(
-    () => Object.keys(getChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {}),
+    () => Object.keys(findChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {}),
     [program.challengeId],
   );
   const named = useMemo(() => routineNames(program, routine, asked), [program, routine, asked]);

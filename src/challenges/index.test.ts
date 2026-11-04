@@ -1,6 +1,6 @@
 // Every challenge file is bundled; the list follows the plans.
 import { describe, expect, it, vi } from "vitest";
-import { CHALLENGES, challengesOf, getChallenge, PLANS, planOf } from "./index";
+import { CHALLENGES, challengesOf, findChallenge, PLANS, planOf } from "./index";
 
 describe("challenge bundle", () => {
   it("loads every challenges/*.json with id, tests, and solution; plans.json is not one", () => {
@@ -38,8 +38,8 @@ describe("challenge bundle", () => {
   });
 
   it("looks up by id", () => {
-    expect(getChallenge("fizzbuzz")?.title.en).toBe("FizzBuzz");
-    expect(getChallenge("nope")).toBeUndefined();
-    expect(getChallenge(undefined)).toBeUndefined();
+    expect(findChallenge("fizzbuzz")?.title.en).toBe("FizzBuzz");
+    expect(findChallenge("nope")).toBeUndefined();
+    expect(findChallenge(undefined)).toBeUndefined();
   });
 });
