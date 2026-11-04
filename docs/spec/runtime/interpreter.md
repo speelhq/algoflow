@@ -14,7 +14,9 @@ The runner executes one program and gives out its events one call at a
 time.
 
 `run(program, inputs: Record<Name, Data>, seed: number, modules: Module[]): Runner`
-executes a program that has no diagnostics. `modules` lists the modules
+executes a program that has no diagnostics.
+
+`modules` lists the modules
 the program uses (`modules.md`, Resolution). When the program uses none,
 `modules` is empty.
 
@@ -56,10 +58,10 @@ these in order:
   returns `E_RECURSION`.
 
 Once `next()` has returned a `Done`, every later call returns that same
-`Done` and emits no event. This holds after `done` and after an error
-alike, so no caller has to guard the end of a run. Forbidding the later
-call was rejected because the guard would then sit in every caller, and
-nothing would catch a caller that forgot it.
+`Done` and emits no event, after `done` and after an error alike.
+Forbidding the later call was rejected because every caller would then
+need a guard for the end of a run, and nothing would catch a caller that
+forgot it.
 
 Two runs of one program with the same inputs, seed, and modules emit the
 same event sequence.
@@ -113,7 +115,7 @@ A `swap` emits the events of its two places in Python's order
 
 ### `read`
 
-A `read` is emitted in two cases:
+The runner emits a `read` in two cases:
 
 - The context's `read` (Block definitions) emits one when it reads an
   item, a key, or a field, whether the runner evaluates an expression or
@@ -140,34 +142,31 @@ The `write` of a `swap` carries in `from` the place where the `swap` read
 the value it writes, so the driver can recognize an exchange (Steps and
 batches).
 
-The runner emits no event of its own for an exchange, because the driver
-decides how an exchange's events are shown.
-
 ### `compare`
 
 Each comparison `binop` emits `compare`, with the comparison's
-result. The comparisons are `== != < <= > >=` and `in`. The
-operator and the operands are those of the event's block.
+result. The comparisons are `== != < <= > >=` and `in`.
+
+A `compare` event's operator and operands are those of its block.
 
 The event doesn't carry the operand values, because the values alone
-hide where they came from, and the narration instead writes the
-comparison as the chart does, with each variable replaced by its value
-(`run.md`, Narration). For example, the `3` and `0` of `i % 15 == 0`
-don't show where the 3 came from.
+hide where they came from (`run.md`, Narration). For example: the `3`
+and `0` of `i % 15 == 0` don't show where the 3 came from.
 
 When `if` or `while` has evaluated its condition, it emits a `compare`
 that carries the condition's node id and the condition's truth value
-(`language.md`, Semantics, Values and the run). When the last event of
-evaluating the condition is already a `compare` with that node id, it emits
-none. So, either way, each check of a diamond ends in one `compare` of
-its whole condition.
+(`language.md`, Semantics, Values and the run), because the driver can't
+infer the truth value from the region the run enters next: an empty
+region holds no statement for the run to enter, and a loop's exit enters
+whatever follows the loop.
 
-`if` and `while` emit this `compare` because the driver can't infer the
-truth value from the region the run enters next: an empty region holds
-no statement for the run to enter, and a loop's exit enters whatever
-follows the loop. The last event alone decides, because a call inside
-the condition can reach the same diamond in another frame and emit a
-`compare` with the same node id, and every call ends in its `return`.
+When the last event of evaluating the condition is already a `compare`
+with that node id, `if` or `while` emits none. The last event alone
+decides, because a call inside the condition can reach the same diamond
+in another frame and emit a `compare` with the same node id, and every
+call ends in its `return`.
+
+Each check of a diamond ends in one `compare` of its whole condition.
 
 ### `loop`
 
@@ -252,8 +251,7 @@ The context finds a target's place with `locate` and uses that place in
 
 - `locate` evaluates the target's expressions as Python does, the
   container first and then its position or key, and gives the target's
-  place as a `Ref`. For example, a `Ref` names a variable of the current
-  frame, a list's item, or a dict's key. An error that `locate` raises
+  place as a `Ref`. An error that `locate` raises
   has `at` as its `nodeId`.
 - `read` locates the target and reads the value at that place. For a
   variable never assigned, it raises `E_UNDEFINED`. For a place that
@@ -303,13 +301,8 @@ A visible step is one of these:
 - an exchange of two writes
 - the call of `next()` that fails
 
-So a module call is one visible step: taking the minimum of a heap, for
-example.
-
-In a program's run, the narration shows a module call by its returned
-value.
-
-`Open <name>` shows the function's inside (`modules.md`, Operations).
+So a module call is one visible step. For example: taking the minimum of
+a heap.
 
 The run steps into a function the learner is still building, because
 the function belongs to the program until the learner moves it with
@@ -331,24 +324,28 @@ cases:
   `swap(i, nums[i])`.
 - when the `swap` emits an event while it finds the second place again.
 
-The driver shows the writes apart there, because one `swap` step would
-follow a step that already shows the first write alone, and the slide
-would hide that step.
+The driver shows the writes of such a `swap` apart, because one `swap`
+step would follow a step that already shows the first write alone, and
+the slide would hide that step.
 
 The exchange belongs to the driver, not to the runner, because only the
 event after the first write reveals the exchange, and the runner can't
 know that event before it has run the code that makes it.
 
-`src/store/steps.ts` reads a runner one visible step at a time, and the
+`src/store/steps.ts` reads a runner one visible step at a time. The
 pre-run, Step, Seek, and Skip all read through it, so every count of
 visible steps agrees.
 
-To recognize an exchange, the driver reads the event after a `write`
-that carries `from`. When the driver will publish the write's step, it
-copies the state before it reads that event. When that event isn't the
-other write of an exchange, the driver publishes the write's step with
-that copy, so a frame that a call in the second place pushes isn't shown
-before its `call`.
+To recognize an exchange, the driver does these after a `write` that
+carries `from`:
+
+1. When it will publish the write's step, it copies the state.
+2. It reads the next event.
+3. When that event isn't the other write of an exchange, it publishes
+   the write's step with that copy.
+
+The driver publishes the copy so that no screen shows a frame that a
+call in the second place pushes before its `call`.
 
 The driver takes that copy only for a step it publishes:
 
@@ -361,10 +358,10 @@ The driver copies for no other step, because a Seek through a long run
 would otherwise copy the heap at every `swap`.
 
 The driver works through runners in batches of 20,000 visible steps,
-with `setTimeout(0)` between batches, because a visible step costs one
-call of `next()`, or two for an exchange, and a call costs about 0.65 µs
-at the heaviest work measured, so a batch takes about 13 ms, under one
-display frame.
+with `setTimeout(0)` between batches, because a batch of that size takes
+about 13 ms, under one display frame. A visible step costs one call of
+`next()`, or two for an exchange, and a call costs about 0.65 µs at the
+heaviest work measured.
 
 A batch bounded by time was rejected because it would never yield under
 the tests' fake timers, which stop `performance.now`. Once a block makes
@@ -375,7 +372,7 @@ Run first advances a separate runner to its end in batches. This run is
 the pre-run. From the pre-run, Run records:
 
 - `total`: the number of visible steps the runner produced, however the
-  run ended. After an error, the failing step is step `total`.
+  run ended.
 - `outcome`: how the run ended.
 - `prints`: the visible step of each `print`.
 
@@ -406,9 +403,8 @@ At its end, a run is `done` or in `error`:
   unwound.
 - A failed run is in `error` at step `total`.
 
-The call of `next()` that fails is a step of its own, so a failed run's
-`total` is one more than its steps with an event, and the position bar's
-last position shows the error.
+A failed run's `total` is one more than its steps with an event, so the
+position bar's last position shows the error.
 
 ### Controls
 
@@ -445,33 +441,30 @@ beginner has no use for the number:
 While the pre-run, a Seek, or a Skip works through its batches, `busy`
 is true.
 
-While `busy` is true, the play button, Step, and Play do nothing. During
-a Skip, though, the play button reads `❚❚ Pause` and cancels the Skip.
-These controls do nothing then, because a control that took over the
-runner would restart the pre-run, or leave a Seek at a step the position
-bar doesn't show.
+While `busy` is true, the play button, Step, and Play do nothing, except
+that during a Skip the play button reads `❚❚ Pause` and cancels the
+Skip. They do nothing because a control that took over the runner would
+restart the pre-run, or leave a Seek at a step the position bar doesn't
+show.
 
 `busy` is a field of its own, not a sixth value of `status`, because a
 sixth status would make every test of `status` in the screens
 three-way.
 
-A call shows in the called function's own chart (`run.md`, Call stack).
-Expanding a call inline in the caller's chart was rejected because the
-flowchart becomes hard to read one level down, and the learner would
-have two places to edit a function.
-
 The driver holds at most one breakpoint, a statement's `NodeId`, from
-when it is set until Stop.
+when the learner sets it until Stop.
 
 Play, Step over, and Skip pause at a visible `enter` of the breakpoint's
 statement. When the statement is a loop, they also pause at each of its
-`loop` events, where the run is at the loop's check. Step and Seek ignore
-the breakpoint. `Next pass`, a run to the next `loop` event, was rejected
-because in bubble sort it stops at every inner pass, not once per outer
-pass, and it can't say which loop is meant. A breakpoint says by its
-location where the run pauses. For example: a breakpoint on the outer
-loop pauses once per outer pass, and one on a `print` pauses at the next
-output.
+`loop` events, where the run is at the loop's check.
+
+Step and Seek ignore the breakpoint.
+
+A breakpoint says by its location where the run pauses. `Next pass`, a
+run to the next `loop` event, was rejected because in bubble sort it
+stops at every inner pass, not once per outer pass, and it can't say
+which loop is meant. For example: a breakpoint on the outer loop pauses
+once per outer pass, and one on a `print` pauses at the next output.
 
 ### Published state
 
@@ -544,7 +537,7 @@ The script has three parts, in this order:
 The epilogue writes Python's values as `Data` itself, so the one
 equality rule that judges an expectation also compares the two engines.
 
-The check writes each module the solution uses (`emitter.md`) as
+The check writes each module the solution uses (`emitter.md`, Modules) as
 `<name>.py` beside the script.
 
 The check also emits every built-in module (`modules.md`, Built-in

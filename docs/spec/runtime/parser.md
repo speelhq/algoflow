@@ -46,12 +46,12 @@ rule (`language.md`, Data, Faults that `migrate()` rejects).
 
 A construct whose block definition isn't in the registry gives
 `E_PARSE_SYNTAX` at its token, so the registry alone determines what the
-language accepts. For example: `[1, 2]` and `xs[i]` parse only while
-their block definitions are registered. The parser rejects such a
-construct at its token because a grammar-legal form whose block
-definition isn't registered would otherwise fail later, in `unparse`,
-`validate`, or `run`, with an error that names an unknown block definition
-instead of a diagnostic.
+language accepts. The parser rejects such a construct at its token because
+a grammar-legal form whose block definition isn't registered would
+otherwise fail later, in `unparse`, `validate`, or `run`, with an error
+that names an unknown block definition instead of a diagnostic. For
+example: `[1, 2]` and `xs[i]` parse only while their block definitions
+are registered.
 
 The parser reads no Python statement, for three reasons:
 
@@ -65,15 +65,9 @@ The parser reads no Python statement, for three reasons:
 
 This section states how the parser resolves a call.
 
-The parser resolves `NAME(...)` in the order of `language.md`, Scope,
-Resolving a call:
-
-1. a function or class of the program
-2. a learner module
-3. a built-in module
-4. a builtin of `blocks.md`
-
-A name that none of these defines gives `E_UNKNOWN_CALL`.
+The parser resolves `NAME(...)` in the order that `language.md`, Scope,
+Resolving a call, states. A name that resolves to nothing gives
+`E_UNKNOWN_CALL`.
 
 The parser resolves `a.b(...)` to one of two things:
 
