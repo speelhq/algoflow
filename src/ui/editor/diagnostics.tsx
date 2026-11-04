@@ -7,7 +7,7 @@ import { ownersById } from "@/lang/walk";
 import { Button } from "@/ui/primitives/button";
 import { apply } from "./edits";
 
-/** The diagnostics chart nodes show, by statement: no empty slot, whose placeholder already shows it. */
+/** The diagnostics chart nodes show, by statement: no empty slot, whose `…` already shows it. */
 export function flaggedStatements(program: Program): Map<NodeId, Diagnostic[]> {
   const owners = ownersById(program);
   const flagged = new Map<NodeId, Diagnostic[]>();

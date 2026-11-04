@@ -103,7 +103,7 @@ test("the list follows what is before the caret, and a choice after a value take
   await expect(list).not.toContainText("Random whole number");
   await list.locator('[data-row="e:call:str"]').click();
   await expect(chart(page)).toContainText("total ← str(n)");
-  // Backspace after the call's parenthesis keeps its first input.
+  // Backspace after the call's parenthesis keeps its first argument.
   await page.keyboard.press("Backspace");
   await expect(chart(page)).toContainText("total ← n");
 });
@@ -180,7 +180,7 @@ test("`,` in a list of values opens the next value after this one", async ({ pag
   await expect(chart(page)).toContainText("print(1, …, 2)");
 });
 
-test("a print with no value draws no placeholder", async ({ page }) => {
+test("a print with no value draws no `…`", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/tutorial");
   await insert(page, "main/main/0", "print");

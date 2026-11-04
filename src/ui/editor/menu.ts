@@ -63,7 +63,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
   return groups;
 }
 
-/** A statement calling `fn` of `program`, its arguments to fill, as a value line makes the call. */
+/** A statement calling `fn` of `program`, its arguments empty, as a value line makes the call. */
 function callStatement(program: Program, fn: LineFunction): Stmt {
   const call = callExpr(fn, parseScope(program));
   if (!call) throw new Error(`"${fn.name}" is no function of the program`);

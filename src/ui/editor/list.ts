@@ -1,13 +1,13 @@
 // The list under a value line: the groups chosen by what is before the caret, in one
 // order everywhere, or the rows a typed word matches; `Show all` lists every entry that can be
 // chosen there. A target's line leaves out the rows that would leave no target, and where its
-// whole value is to fill lists names (`editor.md`, Targets). Reads the entries' `group` and `on`
-// only.
+// whole value is an empty slot lists names (`editor.md`, Targets). Reads the entries' `group`
+// and `on` only.
 import type { Kind } from "@/lang/types";
 import type { ValueGroup } from "@/blocks/types";
 import { allEntries, GROUPS, takesValue } from "./entries";
 import {
-  atInput,
+  atEmptySlot,
   keptRows,
   kindBefore,
   matches,
@@ -89,7 +89,7 @@ export function listSections(line: Line, ctx: LineContext, all = false): Section
   }
   const rows =
     wholeTargetRows(line, ctx) ??
-    keptRows(line, atInput(line) ? expected(ctx, all) : after(kindBefore(line, ctx), all), ctx);
+    keptRows(line, atEmptySlot(line) ? expected(ctx, all) : after(kindBefore(line, ctx), all), ctx);
   return sections(rows, asked);
 }
 

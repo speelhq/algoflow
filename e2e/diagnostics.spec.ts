@@ -38,7 +38,7 @@ test("hovering a flagged chart node shows its message, and the fix applies", asy
   await expect(page.getByTestId("chart")).toContainText("total ← None");
 });
 
-test("an empty slot shows no dot, only its placeholder", async ({ page }) => {
+test("an empty slot shows no dot, only its `…`", async ({ page }) => {
   const assign = {
     id: "dgn-asg0-001",
     kind: "assign",

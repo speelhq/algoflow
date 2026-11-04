@@ -1,4 +1,4 @@
-// The slot clicked, else the first to fill, takes the keyboard; keys in a value line, Tab past its last field, `,` in a list; a handler's changes chain on what each returns.
+// The slot clicked, else the first field with an empty slot, takes the keyboard; keys in a value line, Tab past its last empty slot, `,` in a list; a handler's changes chain on what each returns.
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
 import { ast } from "@/blocks/testing";
@@ -41,18 +41,18 @@ const press = (session: Session, keys: string): Transition => {
 };
 
 describe("editor session", () => {
-  it("the slot clicked takes the keyboard, else the first field still to fill", () => {
-    const hole = empty();
-    const stmt = assign("total", bin("+", v("x"), hole));
+  it("the slot clicked takes the keyboard, else the first field with an empty slot", () => {
+    const slot = empty();
+    const stmt = assign("total", bin("+", v("x"), slot));
     const fields = fieldsOf(stmt);
     expect(fields).toEqual([
       { slot: "target", role: "expr" },
       { slot: "value", role: "expr" },
     ]);
-    expect(startField(stmt, fields, { slot: null, hole: null })).toEqual(fields[1]);
-    expect(startField(stmt, fields, { slot: "target", hole: null })).toEqual(fields[0]);
-    const opened = openSession(stmt, fields[1] ?? null, hole.id);
-    expect(opened.line?.caret).toEqual({ at: hole.id });
+    expect(startField(stmt, fields, { slot: null, emptyId: null })).toEqual(fields[1]);
+    expect(startField(stmt, fields, { slot: "target", emptyId: null })).toEqual(fields[0]);
+    const opened = openSession(stmt, fields[1] ?? null, slot.id);
+    expect(opened.line?.caret).toEqual({ at: slot.id });
   });
 
   it("a value typed is written once, when it changes the field's value", () => {
@@ -79,7 +79,7 @@ describe("editor session", () => {
     expect(settleWord(word.session, ctx).edits).toHaveLength(1);
   });
 
-  it("Tab past the line's last field leaves for the next field; Enter with nothing chosen closes", () => {
+  it("Tab past the line's last empty slot leaves for the next field; Enter with nothing chosen closes", () => {
     const stmt = assign("total", num(1));
     const field: Field = { slot: "value", role: "expr" };
     const session = openSession(stmt, field, null);
@@ -100,7 +100,7 @@ describe("editor session", () => {
     expect(valueKey(typed, { key: "+", shiftKey: false }, [], ctx, "+").after).toBeUndefined();
   });
 
-  it("in a target's line, Enter choosing a whole target moves on; an item to fill stays", () => {
+  it("in a target's line, Enter choosing a whole target moves on; an empty item stays", () => {
     const targetCtx: LineContext = {
       ...ctx,
       target: { asked: ["total"], names: ["x"], binds: true },
@@ -121,7 +121,7 @@ describe("editor session", () => {
       position.id,
     );
     expect(pickRow(atPosition, total, targetCtx).after).toEqual({ go: 1 });
-    // A choice that leaves an input to fill, or one the target refuses, keeps the keyboard.
+    // A choice that leaves an empty slot, or one the target refuses, keeps the keyboard.
     const parentheses = pickRow(openSession(stmt, field, null), { kind: "parentheses" }, targetCtx);
     expect(parentheses.after).toBeUndefined();
     const text = allEntries().find((entry) => entry.id === "str");
@@ -137,12 +137,12 @@ describe("editor session", () => {
     expect(valueKey(valueOpen, enter, [total], ctx, "").after).toBeUndefined();
   });
 
-  it("Backspace in an empty text field removes the text, leaving its input to fill", () => {
+  it("Backspace in an empty text field removes the text, leaving an empty slot", () => {
     const stmt = print(empty());
     const field: Field = { slot: "args", role: "expr", index: 0 };
     const text = allEntries().find((entry) => entry.id === "str");
     if (!text) throw new Error("no Text");
-    // `Text` opens an empty field, as the learner chooses it.
+    // `Text` opens an empty text field, as the learner chooses it.
     const editing = chooseRow(openSession(stmt, field, null), { kind: "entry", entry: text }, ctx);
     expect(editing.session.line?.text).toBeDefined();
     const transition = textEnded(editing.session, "Backspace", ctx);

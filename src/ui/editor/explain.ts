@@ -8,7 +8,7 @@ import {
   parenthesized,
   notationOf,
   exprText,
-  placeholder,
+  emptyNotation,
   placeholderValue,
   notationText,
   templateParts,
@@ -95,7 +95,7 @@ function explainRow(row: Row, program: Program, at: NodeId): Explanation {
 
 /** A function as the list names it: `name(…)`, or `name()` with no parameter. */
 export function functionLabel(fn: { name: string; params: readonly string[] }): string {
-  return `${fn.name}(${fn.params.length > 0 ? placeholder() : ""})`;
+  return `${fn.name}(${fn.params.length > 0 ? emptyNotation() : ""})`;
 }
 
 /** The edit distance of two words, ignoring case. */
@@ -135,20 +135,20 @@ function closestName(line: Line, ctx: LineContext): string | undefined {
   return best?.name;
 }
 
-/** The operation whose input holds the caret, and that input. */
-function operationAt(line: Line): { operation: Expr; input: Expr } | undefined {
+/** The operation one of whose slots holds the caret, and that slot's value. */
+function operationAt(line: Line): { operation: Expr; value: Expr } | undefined {
   if (line.selected) return undefined;
   const id = "at" in line.caret ? line.caret.at : line.caret.after;
   const up = parentOf(line.root, id);
-  const input = find(line.root, id);
-  return up && input ? { operation: up.parent, input } : undefined;
+  const value = find(line.root, id);
+  return up && value ? { operation: up.parent, value } : undefined;
 }
 
-/** An operation's notation with the caret's input underlined and every other empty one `…`. */
+/** An operation's notation with the caret's slot underlined and every other empty slot `…`. */
 function operationParts(operation: Expr, current: Expr): Part[] {
-  const written = (input: Expr): Part => {
-    const text = isEmptyExpr(input) ? placeholder() : exprText(input);
-    return input === current ? { text, underline: true } : { text };
+  const written = (value: Expr): Part => {
+    const text = isEmptyExpr(value) ? emptyNotation() : exprText(value);
+    return value === current ? { text, underline: true } : { text };
   };
   return templateParts(notationOf(operation), (name) => {
     const held = placeholderValue(operation, name);
@@ -195,6 +195,6 @@ export function explainLine(
   if (!inside) return undefined;
   return {
     name: labelOf(inside.operation, ctx.kinds),
-    parts: operationParts(inside.operation, inside.input),
+    parts: operationParts(inside.operation, inside.value),
   };
 }

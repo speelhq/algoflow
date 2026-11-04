@@ -95,7 +95,7 @@ describe("typing", () => {
     expect(py(keys("i=0"))).toBe("i");
   });
 
-  it("a - at an input still to fill is the sign of what follows", () => {
+  it("a - at an empty slot is the sign of what follows", () => {
     expect(py(keys("-1"))).toBe("-1");
     expect(py(keys("n*-1"))).toBe("n * -1");
     expect(py(keys("-i"))).toBe("-i");
@@ -128,7 +128,7 @@ describe("typing", () => {
     expect(lineTakes(key(true, false, true))).toBe(true);
   });
 
-  it("an operator's key at an input still to fill inserts nothing", () => {
+  it("an operator's key at an empty slot inserts nothing", () => {
     expect(type(empty(), "*", ctx).taken).toBe(false);
     expect(type(keys("i+"), "*", ctx).taken).toBe(false);
   });
@@ -179,14 +179,14 @@ describe("typing", () => {
     expect(py(keys("abs((i+1)*2)"))).toBe("abs((i + 1) * 2)");
   });
 
-  it("`,` in a call moves to its next input, and elsewhere to the slot's next value", () => {
+  it("`,` in a call moves to its next argument, and elsewhere to the slot's next value", () => {
     expect(py(keys("randint(1,6)"))).toBe("random.randint(1, 6)");
     expect(py(keys("min(i,n+1)"))).toBe("min(i, n + 1)");
     expect(py(keys("twice(abs(i),"))).toBe("twice(abs(i))");
     expect(type(raw("twice(1"), ",", ctx).taken).toBe(false);
     expect(type(keys("max(i,n)"), ",", ctx).move).toBe("item");
     expect(type(keys("1"), ",", ctx).move).toBe("item");
-    // A filled next input takes the caret at its end.
+    // A filled next argument takes the caret at its end.
     const filled = keys("min(i,n+1)");
     const [first, second] = (filled.root as Extract<Expr, { kind: "call" }>).args;
     const moved = type(clickAt(filled, first?.id ?? ""), ",", ctx).line;
@@ -194,13 +194,13 @@ describe("typing", () => {
     expect(moved.caret).toEqual({ after: one.id });
   });
 
-  it("`[` opens a list with an item to fill; `,` adds an item, and `]` leaves the list", () => {
+  it("`[` opens a list with an empty item; `,` adds an item, and `]` leaves the list", () => {
     expect(py(keys("[4,9,2]"))).toBe("[4, 9, 2]");
     expect(py(keys("[i+1,n]"))).toBe("[i + 1, n]");
     expect(py(keys("[[1,2],[3]]"))).toBe("[[1, 2], [3]]");
     expect(py(keys("[abs(i),2]"))).toBe("[abs(i), 2]");
     expect(py(raw("["))).toBe("[...]");
-    // `]` removes an item still to fill at the end first, so `[` then `]` is an empty list.
+    // `]` removes an empty item at the end first, so `[` then `]` is an empty list.
     expect(py(keys("[]"))).toBe("[]");
     expect(py(keys("[4,]"))).toBe("[4]");
     const left = keys("[1]");
@@ -298,7 +298,7 @@ describe("typing", () => {
 });
 
 describe("choosing", () => {
-  it("an entry after a value takes it as its first input; inputs left are fields", () => {
+  it("an entry after a value takes it as its first expression; empty slots left are in the line", () => {
     const line = keys("i");
     const abs = choose(line, entry("call:abs"), ctx).line;
     expect(py(abs)).toBe("abs(i)");
@@ -313,7 +313,7 @@ describe("choosing", () => {
     expect(py(choose(keys("total+(i"), entry("call:str"), ctx).line)).toBe("total + str(i)");
   });
 
-  it("where a value is expected, an entry fills the input and the caret moves to its first input", () => {
+  it("where a value is expected, an entry fills the slot and the caret moves to its first empty slot", () => {
     const placed = choose(empty(), entry("binop.add"), ctx).line;
     expect(py(placed)).toBe("... + ...");
     const random = choose(empty(), entry("call:randint"), ctx).line;
@@ -392,27 +392,27 @@ describe("Backspace and moving", () => {
     expect(py(back(openLine(ast.v("n"))))).toBe("...");
   });
 
-  it("after an operator's last input, it removes what ends that input", () => {
+  it("after an operator's last slot, it removes what ends that slot", () => {
     const after = keys("(i+12)");
     expect(after.caret).toEqual({ after: after.root.id });
     expect(py(back(after))).toBe("i + 1");
     expect(py(back(after, 3))).toBe("i");
   });
 
-  it("after a call's parenthesis it removes the call and keeps its first input", () => {
+  it("after a call's parenthesis it removes the call and keeps its first argument", () => {
     const line = choose(keys("i"), entry("call:str"), ctx).line;
     expect(py(back(line))).toBe("i");
     const inside = keys("12", choose(empty(), entry("call:abs"), ctx).line);
     expect(py(back(move(inside, 1).line))).toBe("12");
   });
 
-  it("at an item still to fill of a list, other than its first, it removes that item", () => {
+  it("at an empty item of a list, other than its first, it removes that item", () => {
     const added = raw("[4,");
     const removed = back(added);
     expect(py(removed)).toBe("[4]");
     const [four] = (removed.root as Extract<Expr, { kind: "list" }>).items;
     expect(removed.caret).toEqual({ after: four?.id });
-    // The only item left to fill goes with its list.
+    // The only empty item left goes with its list.
     expect(py(back(raw("[")))).toBe("...");
   });
 
@@ -435,7 +435,7 @@ describe("Backspace and moving", () => {
     expect(py(back(after, 3))).toBe("nums");
   });
 
-  it("after a call whose later input holds a value, it removes nothing and moves left", () => {
+  it("after a call whose later argument holds a value, it removes nothing and moves left", () => {
     const larger = keys("3)", choose(keys("i"), entry("call:max"), ctx).line);
     expect([py(larger), larger.caret]).toEqual(["max(i, 3)", { after: larger.root.id }]);
     const after = backspace(larger, ctx).line;
@@ -444,7 +444,7 @@ describe("Backspace and moving", () => {
     expect(py(back(after))).toBe("max(i, ...)");
   });
 
-  it("at a first input still to fill while a later one holds a value, it moves left", () => {
+  it("at an empty first slot while a later one holds a value, it moves left", () => {
     const opened = choose(keys("i*("), entry("binop.add"), ctx).line;
     const filled = keys("3", tab(opened, 1, ctx).line);
     expect(py(filled)).toBe("i * (... + 3)");
@@ -457,7 +457,7 @@ describe("Backspace and moving", () => {
     });
   });
 
-  it("at a later input still to fill, it moves left while another later input holds a value", () => {
+  it("at an empty later slot, it moves left while another later slot holds a value", () => {
     const three = { name: "three", params: ["a", "b", "c"] };
     const wide: LineContext = {
       ...ctx,
@@ -471,13 +471,13 @@ describe("Backspace and moving", () => {
     const left = backspace(third, ctx).line;
     expect(py(left)).toBe("three(1, 2, ...)");
     expect("after" in left.caret).toBe(true);
-    // With nothing after the first input, the call goes and its first input stays.
+    // With nothing after the first argument, the call goes and its first argument stays.
     const bare = tab(tab(keys("1", placed), 1, wide).line, 1, wide).line;
     expect(py(bare)).toBe("three(1, ..., ...)");
     expect(py(backspace(bare, ctx).line)).toBe("1");
   });
 
-  it("Tab moves between inputs still to fill, then to the next slot", () => {
+  it("Tab moves between empty slots, then to the next field", () => {
     const placed = choose(empty(), entry("call:randint"), ctx).line;
     const second = tab(placed, 1, ctx);
     expect(second.move).toBeUndefined();
@@ -486,7 +486,7 @@ describe("Backspace and moving", () => {
     expect(tab(openLine(ast.v("n")), 1, ctx).move).toBe("next");
   });
 
-  it("→ at the end of an operation's last input leaves it", () => {
+  it("→ at the end of an operation's last slot leaves it", () => {
     const inside = keys("1", choose(empty(), entry("call:abs"), ctx).line);
     expect(py(keys("+2", inside))).toBe("abs(1 + 2)");
     expect(py(keys("+2", move(inside, 1).line))).toBe("abs(1) + 2");
@@ -596,7 +596,7 @@ describe("a target's line (editor.md, Targets)", () => {
     expect(refused.line.refused).toBe("Only a variable or an item of a list can be given a value");
     expect(py(refused.line)).toBe("nums");
     expect(py(typed("nums[-1]", binding))).toBe("nums[-1]");
-    // Backspace at an item's position still to fill takes the item back to its variable.
+    // Backspace at an item's empty position takes the item back to its variable.
     expect(py(backspace(type(typed("nums", binding), "[", binding).line, binding).line)).toBe(
       "nums",
     );

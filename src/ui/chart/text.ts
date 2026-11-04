@@ -1,6 +1,6 @@
 // A block's text as runs: its block's `notation()` with the block's slots filled in, the same in
-// every locale; a variable is drawn bold in its own color, and an input still to fill as the
-// placeholder. Operators are parenthesized as the emitter does. Reads slot roles, `params`,
+// every locale; a variable is drawn bold in its own color, and an empty slot as `…`, the `empty`
+// block's notation. Operators are parenthesized as the emitter does. Reads slot roles, `params`,
 // `notation`, `text`, `chart`, and `precedence` only, never a kind; a variable shown with its
 // value is written by the `assign` block's notation.
 import { t } from "@/i18n/t";
@@ -33,25 +33,25 @@ export function templatePieces(template: string): Piece[] {
   return pieces;
 }
 
-/** A template with every placeholder written as the placeholder `…`. */
+/** A template with every placeholder written as `…`, the `empty` block's notation. */
 export function blankTemplate(template: string): string {
   return templatePieces(template)
-    .map((piece) => ("words" in piece ? piece.words : placeholder()))
+    .map((piece) => ("words" in piece ? piece.words : emptyNotation()))
     .join("");
 }
 
 /**
  * A run of a block's text: the template's own words, or what a slot holds (`slot` names the
- * statement's slot it belongs to). `variable` marks a variable's name, `empty` the placeholder
- * of an input still to fill, and `hole` the input a click on the run opens.
+ * statement's slot it belongs to). `variable` marks a variable's name, `empty` the `…` of an
+ * empty slot, and `emptyId` the empty slot a click on the run opens.
  */
 export type Part = {
   text: string;
   slot?: string;
   empty?: boolean;
-  hole?: NodeId;
+  emptyId?: NodeId;
   variable?: boolean;
-  /** The input the editor's caret is in. */
+  /** The slot the editor's caret is in. */
   underline?: boolean;
 };
 
@@ -60,11 +60,11 @@ export function joinParts(parts: readonly Part[]): string {
   return parts.map((part) => part.text).join("");
 }
 
-/** An input still to fill, whose block's notation is the placeholder. */
+/** An empty slot's value, whose block's notation is `…`. */
 const EMPTY = emptyExpr();
 
-/** The placeholder of an input still to fill: the `empty` block's notation, `…`. */
-export function placeholder(): string {
+/** The `empty` block's notation, `…`, which draws an empty slot. */
+export function emptyNotation(): string {
   return notationOf(EMPTY);
 }
 
@@ -104,7 +104,7 @@ export function templateParts(template: string, fill: (name: string) => Part[]):
       plain(before) &&
       plain(part) &&
       before.slot === part.slot &&
-      before.hole === part.hole
+      before.emptyId === part.emptyId
     ) {
       before.text += part.text;
     } else if (part.text !== "") merged.push({ ...part });
@@ -133,8 +133,8 @@ export function isCall(expr: Expr): boolean {
 const precedenceOf = (expr: Expr) => getBlockDef(keyOf(expr)).precedence?.(expr);
 
 /**
- * The precedence the input in slot `slot` of `block` binds at: the block's own, as an operator's
- * inputs do, else an atom's where the slot declares one (the list of an item), else none.
+ * The precedence the value in slot `slot` of `block` binds at: the block's own, as an operator's
+ * values do, else an atom's where the slot declares one (the list of an item), else none.
  */
 export function bindsAt(block: Block, slot: string): number | undefined {
   const def = getBlockDef(keyOf(block));
@@ -142,7 +142,7 @@ export function bindsAt(block: Block, slot: string): number | undefined {
   return own ?? (def.slots.find((s) => s.name === slot)?.atom ? PRECEDENCE.atom : undefined);
 }
 
-/** Whether `child`, the input `held` places, is put in parentheses: as the emitter does. */
+/** Whether `child`, the value `held` places, is put in parentheses: as the emitter does. */
 export function parenthesized(
   child: Expr,
   held: { binds: number | undefined; side: Side },
@@ -155,7 +155,7 @@ function inParentheses(parts: Part[]): Part[] {
   return [{ text: "(" }, ...parts, { text: ")" }];
 }
 
-/** The parts of the input `held` places. */
+/** The parts of the value `held` places. */
 function operandParts(
   child: Expr,
   held: { binds: number | undefined; side: Side },
@@ -167,7 +167,7 @@ function operandParts(
 
 /**
  * What a placeholder of a block's notation or template holds: an expression slot, a target slot,
- * or a builtin's parameter (its input, and the side it is on), a list of values, a name, or a
+ * or a builtin's parameter (its argument, and the side it is on), a list of values, a name, or a
  * literal field as its block writes it. Undefined when the placeholder holds nothing drawn (a
  * body).
  */
@@ -210,7 +210,7 @@ export function placeholderValue(block: Block, name: string): Held | undefined {
 
 /** An expression as the chart writes it. */
 export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
-  if (isEmptyExpr(expr)) return [{ text: placeholder(), empty: true, hole: expr.id }];
+  if (isEmptyExpr(expr)) return [{ text: emptyNotation(), empty: true, emptyId: expr.id }];
   const name = variableOf(expr);
   if (name !== undefined) {
     const value = writing.value?.(name);
@@ -255,8 +255,11 @@ export function exprText(expr: Expr, writing: Writing = {}): string {
   return joinParts(exprParts(expr, writing));
 }
 
-/** Whether a slot is drawn as the placeholder: an empty expression, an empty name, or no item. */
-function drawsPlaceholder(block: Block, def: BlockDef, name: string): boolean {
+/**
+ * Whether the chart draws a slot as `…`: an empty expression or name, or a required list with no
+ * item.
+ */
+function drawsEmpty(block: Block, def: BlockDef, name: string): boolean {
   const slot = def.slots.find((s) => s.name === name);
   const value = (block as unknown as Bag)[name];
   switch (slot?.role) {
@@ -276,7 +279,7 @@ function drawsPlaceholder(block: Block, def: BlockDef, name: string): boolean {
 /** The parts of one slot of a statement, each naming the slot. */
 function stmtSlotParts(block: Block, def: BlockDef, name: string): Part[] {
   const parts = (): Part[] => {
-    if (drawsPlaceholder(block, def, name)) return [{ text: placeholder(), empty: true }];
+    if (drawsEmpty(block, def, name)) return [{ text: emptyNotation(), empty: true }];
     const held = placeholderValue(block, name);
     switch (held?.role) {
       case "expr":
@@ -316,8 +319,8 @@ export function notationText(block: Block): string {
   return joinParts(notationParts(block));
 }
 
-/** Whether a statement has an input still to fill in any of its slots, at any depth. */
-export function hasInputToFill(block: Block): boolean {
+/** Whether a statement has an empty slot, at any depth of its slots. */
+export function hasEmptySlot(block: Block): boolean {
   const def = getBlockDef(keyOf(block));
   return def.slots.some((slot) => stmtSlotParts(block, def, slot.name).some((part) => part.empty));
 }
@@ -342,7 +345,7 @@ export function generatedParts(block: Block, part: Generated): Part[] {
   return notation === undefined ? [] : stmtParts(notation, block);
 }
 
-/** A diamond's text: its condition followed by `?`, or the placeholder without it. */
+/** A diamond's text: its condition followed by `?`, or the `…` without it. */
 export function questionParts(block: Block): Part[] {
   const condition = conditionOf(block);
   if (!condition) return [];

@@ -45,7 +45,7 @@ export function allEntries(): Entry[] {
   return cached;
 }
 
-/** Whether the entry is offered after a value, which it takes as its first input. */
+/** Whether the entry is offered after a value, which it takes as the first expression it holds. */
 export function takesValue(entry: Entry): boolean {
   return entry.declared.on !== undefined;
 }
@@ -57,8 +57,9 @@ export function makeEntry(entry: Entry): Expr {
 
 /**
  * The entry an expression was made from: its block's entry whose preset it holds, compared as
- * data (`Empty list` presets no item), and of those the one offered after the kind of its first
- * input (`Join with another list` for `+` after a list); `kinds` are the variables' kinds.
+ * data (`Empty list` presets no item), and of those the one offered after the kind of the first
+ * expression it holds (`Join with another list` for `+` after a list); `kinds` are the
+ * variables' kinds.
  */
 export function findEntry(expr: Expr, kinds: Kinds): Entry | undefined {
   const bag = expr as unknown as Record<string, unknown>;

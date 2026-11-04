@@ -1,5 +1,5 @@
 // A value line drawn as the chart writes its expression: variables as bold words in
-// their color, an operator as its symbol, an input still to fill as an empty field, the
+// their color, an operator as its symbol, an empty slot as a dashed box, the
 // parentheses the chart draws and those opened and not closed, the caret, and the word being
 // typed. Keys go to `onKey`; clicks name the expression clicked.
 import { forwardRef, useState, type KeyboardEvent, type ReactNode } from "react";
@@ -16,7 +16,7 @@ import {
   templatePieces,
   SEPARATOR,
 } from "@/ui/chart/text";
-import { inputs, textOf, type Line } from "./line";
+import { slotValues, textOf, type Line } from "./line";
 import type { TextEnd } from "./session";
 
 type Props = {
@@ -29,7 +29,7 @@ type Props = {
   unmatched: boolean;
   onKey: (event: KeyboardEvent<HTMLDivElement>) => void;
   onFocus: () => void;
-  /** A click on a value or an input still to fill; `op` when it is an operator's symbol. */
+  /** A click on a value or an empty slot; `op` when it is an operator's symbol. */
   onClickAt: (id: NodeId, op: boolean) => void;
   /** The text being typed in a text field changes or ends. */
   onText: (id: NodeId, text: string) => void;
@@ -58,7 +58,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
     </>
   );
 
-  const field = (expr: Expr): ReactNode => {
+  const emptyBox = (expr: Expr): ReactNode => {
     const here = caret && "at" in caret && caret.at === expr.id && !line?.selected;
     return (
       <button
@@ -94,7 +94,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
           onKeyDown={(event) => {
             // A key of an input method's composition is the composition's (Enter confirms it).
             if (event.nativeEvent.isComposing) return;
-            // Backspace in the empty field removes the text.
+            // Backspace in the empty text field removes the text.
             if (event.key === "Backspace" && event.currentTarget.value === "") {
               event.preventDefault();
               event.stopPropagation();
@@ -134,8 +134,8 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
     const open = line?.open.includes(expr.id) ?? false;
     const parentheses = (placed !== undefined && parenthesized(expr, placed)) || open;
     let body: ReactNode;
-    if (isEmptyExpr(expr)) body = field(expr);
-    else if (inputs(expr).length === 0) body = leaf(expr);
+    if (isEmptyExpr(expr)) body = emptyBox(expr);
+    else if (slotValues(expr).length === 0) body = leaf(expr);
     else body = operation(expr);
     const after = caret && "after" in caret && caret.after === expr.id && !line?.selected;
     return (

@@ -66,7 +66,7 @@ import { AddValue, NameField, ValueItems } from "./slots";
 import { ValueLine } from "./ValueLine";
 import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 
-type Initial = { slot: string | null; hole: NodeId | null };
+type Initial = { slot: string | null; emptyId: NodeId | null };
 
 function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initial: Initial }) {
   const def = getBlockDef(keyOf(stmt));
@@ -76,7 +76,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const fields = fieldsOf(stmt);
   const elements = useRef(new Map<string, HTMLElement | null>());
   const [kept, setSession] = useState(() =>
-    openSession(stmt, startField(stmt, fields, initial), initial.hole),
+    openSession(stmt, startField(stmt, fields, initial), initial.emptyId),
   );
   // A value changed elsewhere (an undo) reopens the line on it.
   const session = follow(kept, stmt);
@@ -482,7 +482,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 export function BlockEditor({ id }: { id: NodeId }) {
   const program = useProgram((s) => s.program);
   const slot = useEditor((s) => s.slot);
-  const hole = useEditor((s) => s.hole);
+  const emptyId = useEditor((s) => s.emptyId);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
   // The chart node's box, which the editor is placed beside; it is no control of its own.
@@ -521,10 +521,10 @@ export function BlockEditor({ id }: { id: NodeId }) {
             finalFocus={false}
           >
             <Body
-              key={`${id}:${slot ?? ""}:${hole ?? ""}`}
+              key={`${id}:${slot ?? ""}:${emptyId ?? ""}`}
               stmt={block as Stmt}
               program={program}
-              initial={{ slot, hole }}
+              initial={{ slot, emptyId }}
             />
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>

@@ -14,7 +14,7 @@ import {
   joinParts,
   placeholderValue,
   questionParts,
-  hasInputToFill,
+  hasEmptySlot,
   notationParts,
   notationText,
   templatePieces,
@@ -47,7 +47,7 @@ describe("templatePieces and placeholderValue", () => {
     const left = v("a");
     const right = num(2);
     const sum = bin("+", left, right);
-    // An operator's inputs bind at its own precedence.
+    // An operator's values bind at its own precedence.
     expect(placeholderValue(sum, "left")).toEqual({
       role: "expr",
       expr: left,
@@ -122,7 +122,7 @@ describe("notation", () => {
     expect(exprText(expr("a < b and b < c"))).toBe("a < b and b < c");
   });
 
-  it("parenthesizes no call and no input of one, and every operator as the emitter does", () => {
+  it("parenthesizes no call and no argument of one, and every operator as the emitter does", () => {
     expect(exprText(expr("i % 15 == 0"))).toBe("i % 15 = 0");
     expect(exprText(expr("(i + 1) % 3"))).toBe("(i + 1) % 3");
     expect(exprText(expr("abs(i % 3)"))).toBe("abs(i % 3)");
@@ -147,22 +147,22 @@ describe("notation", () => {
     expect(notationText(assignTo(item(v("nums"), v("i")), num(0)))).toBe("nums[i] ← 0");
   });
 
-  it("a target is written as the expression it is, its inputs still to fill as `…`", () => {
+  it("a target is written as the expression it is, its empty slots as `…`", () => {
     const parts = notationParts(assignTo(item(v("nums"), empty()), num(0)));
     expect(joinParts(parts)).toBe("nums[…] ← 0");
     expect(parts.find((part) => part.text === "nums")).toMatchObject({ variable: true });
-    expect(parts.filter((part) => part.hole !== undefined)).toHaveLength(1);
+    expect(parts.filter((part) => part.emptyId !== undefined)).toHaveLength(1);
   });
 
-  it("marks variables, and an input still to fill at any depth", () => {
-    const hole = empty();
-    const parts = exprParts(bin("+", v("total"), hole));
+  it("marks variables, and an empty slot at any depth", () => {
+    const slot = empty();
+    const parts = exprParts(bin("+", v("total"), slot));
     expect(parts).toEqual([
       { text: "total", variable: true },
       { text: " + " },
-      { text: "…", empty: true, hole: hole.id },
+      { text: "…", empty: true, emptyId: slot.id },
     ]);
-    const set = assign("total", bin("+", v("total"), hole));
+    const set = assign("total", bin("+", v("total"), slot));
     expect(notationParts(set).map((part) => [part.text, part.slot])).toEqual([
       ["total", "target"],
       [" ← ", undefined],
@@ -170,10 +170,10 @@ describe("notation", () => {
       [" + ", "value"],
       ["…", "value"],
     ]);
-    expect(hasInputToFill(set)).toBe(true);
+    expect(hasEmptySlot(set)).toBe(true);
     // A counted loop's stop, which its notation (its init) does not write, counts too.
-    expect(hasInputToFill(for_("i", num(0), empty(), []))).toBe(true);
-    expect(hasInputToFill(for_("i", num(0), num(3), []))).toBe(false);
+    expect(hasEmptySlot(for_("i", num(0), empty(), []))).toBe(true);
+    expect(hasEmptySlot(for_("i", num(0), num(3), []))).toBe(false);
   });
 
   it("writes a variable as its value when the writing gives one", () => {
@@ -195,7 +195,7 @@ describe("notation", () => {
 });
 
 describe("diamonds and generated chart nodes", () => {
-  it("a diamond is its condition followed by ?, or the placeholder without it", () => {
+  it("a diamond is its condition followed by ?, or the `…` without it", () => {
     expect(joinParts(questionParts(if_(expr("i % 15 == 0"), [])))).toBe("i % 15 = 0?");
     expect(joinParts(questionParts(if_(expr("abs(x) < 3"), [])))).toBe("abs(x) < 3?");
     expect(joinParts(questionParts(if_(empty(), [])))).toBe("…");
