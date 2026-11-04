@@ -33,7 +33,7 @@ const bare: Challenge = {
 };
 
 vi.mock("@/challenges", () => ({
-  getChallenge: (id: string | undefined) => [bare].find((challenge) => challenge.id === id),
+  findChallenge: (id: string | undefined) => [bare].find((challenge) => challenge.id === id),
 }));
 
 const stored = (id: string): unknown => JSON.parse(localStorage.getItem(programKey(id)) ?? "null");

@@ -1,7 +1,7 @@
 // Submit judges every test on its own runner in batches,
 // without touching the driver; the driver judges the chosen case of a Run itself.
 import { create } from "zustand";
-import { getChallenge } from "@/challenges";
+import { findChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";
 import { seedOf, type Test } from "@/challenges/types";
 import type { Program } from "@/lang/types";
@@ -50,7 +50,7 @@ async function evaluate(program: Program, test: Test, mine: number): Promise<Out
 
 function current(): { id: string; program: Program; tests: Test[] } | null {
   const program = useProgram.getState().program;
-  const challenge = getChallenge(program.challengeId);
+  const challenge = findChallenge(program.challengeId);
   return challenge && canRun(program)
     ? { id: challenge.id, program, tests: challenge.tests }
     : null;

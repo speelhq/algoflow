@@ -2,7 +2,7 @@
 // Opening a program loads it, chooses the first case, and discards any run; the page opens on its
 // first tab with nothing selected.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getChallenge } from "@/challenges";
+import { findChallenge } from "@/challenges";
 import { useEditor } from "./editor";
 import { openProgram } from "./open";
 import { createPlaygroundProgram, emptyProgram, useProgram } from "./program";
@@ -21,7 +21,7 @@ describe("openProgram", () => {
 
   it("a problem opens at its first case with no run, on the Problem tab", async () => {
     openProgram("fizzbuzz");
-    const challenge = getChallenge("fizzbuzz");
+    const challenge = findChallenge("fizzbuzz");
     if (!challenge) throw new Error("fizzbuzz missing");
     useProgram.getState().edit(challenge.solution);
     useRun.getState().selectCase(1);
