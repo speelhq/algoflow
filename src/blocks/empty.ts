@@ -1,11 +1,11 @@
-// The placeholder in an unfilled required slot. Never in the block menu;
+// What an empty expression slot holds. Never in the block menu;
 // validate reports E_EMPTY_SLOT before anything runs.
 import { newId } from "@/lang/id";
 import type { Expr, Value } from "@/lang/types";
 import type { Event } from "@/runtime/types";
 import { defineExpr } from "./types";
 
-/** A new unfilled slot: what every block's `create()` and the editor put in an input to fill. */
+/** A new empty expression slot's value, as every block's `create()` and the editor make one. */
 export function emptyExpr(): Extract<Expr, { kind: "empty" }> {
   return { id: newId(), kind: "empty" };
 }
