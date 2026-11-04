@@ -108,7 +108,8 @@ function checkStmts(value: unknown, path: string): void {
     }
     checkFields(stmt, at);
     for (const child of rawChildren(stmt, at)) checkExpr(child.value, child.path);
-    // A target slot holds a target, or an input to fill: no edit makes any other value there.
+    // A target slot holds a target, or `empty` while it is an empty slot: no edit makes any
+    // other value there.
     for (const slot of getBlockDef(kind).slots) {
       const held = stmt[slot.name] as Expr;
       if (slot.role === "target" && !isEmptyExpr(held) && !isTarget(held)) {

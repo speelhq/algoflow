@@ -62,7 +62,7 @@ describe("kinds", () => {
     ]);
   });
 
-  it("binop by its operator and, where they settle it, its inputs", () => {
+  it("binop by its operator and, where they settle it, its values", () => {
     expect(["n < 1", "s == n", "n in xs"].map(kind)).toEqual([
       "truefalse",
       "truefalse",

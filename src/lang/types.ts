@@ -70,7 +70,7 @@ export type StmtKind = Stmt["kind"];
 
 type E = { id: NodeId };
 export type Expr =
-  | (E & { kind: "empty" }) // An unfilled required slot
+  | (E & { kind: "empty" }) // What an empty slot holds
   | (E & { kind: "num"; value: number; float: boolean; raw: string })
   | (E & { kind: "str"; value: string })
   | (E & { kind: "bool"; value: boolean })
