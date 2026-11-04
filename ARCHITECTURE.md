@@ -41,9 +41,9 @@ depends on React, so the core runs under Vitest and in `scripts/check.ts`
 without a browser.
 
 Each entry names the spec that its folder follows, except
-`src/ui/primitives` and `src/ui/hooks`, which no spec governs. A test sits
-A unit test sits beside the code it tests, and `e2e/` holds the
-end-to-end tests.
+`src/ui/primitives` and `src/ui/hooks`, which no spec governs. A unit
+test sits beside the code it tests, and `e2e/` holds the end-to-end
+tests.
 
 - `src/lang`: the `Program` AST (`types.ts`), `validate()`, pure edit
   functions that return a new `Program` (`edit.ts`), and the conversion
