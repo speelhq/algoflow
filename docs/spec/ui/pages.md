@@ -38,8 +38,6 @@ The Problems page has a 52 px header, which holds:
 - Help
 - the JA/EN switch
 
-Below the header is one section per study plan (Problems page).
-
 The Playground and Modules pages share this header.
 
 Every page sets the browser tab title to `<title> — AlgoFlow`, where
@@ -75,12 +73,13 @@ The top bar is 52 px high and holds:
 The top bar holds no difficulty badge and no action on the program's
 run: `Run` and `Submit` aren't in it, because starting a run and
 pausing it would then sit at opposite edges of the page, and `Submit`
-would read as having the same weight as `Run`. `Submit` judges every
-case and records the attempt, and `Run` tries one case.
+would read as having the same weight as `Run`, which tries one case.
 
-The panel (Panel) is on the left. It is 320 px wide by default,
-resizable from 280 px to 50 % of the viewport width, and collapsible,
-and its width persists under `algoflow:layout`.
+The panel (Panel) is on the left. Its width:
+
+- is 320 px by default
+- is resizable from 280 px to 50 % of the viewport width
+- persists under `algoflow:layout`
 
 The canvas is on the right. It holds, from top to bottom:
 
@@ -89,9 +88,9 @@ The canvas is on the right. It holds, from top to bottom:
 - the narration line, while running (`run.md`, Narration)
 - the run bar (`run.md`, Run bar)
 
-The layout store keeps the requested panel width, bounded below, and
-one pure function applies the upper bound where the width is set and
-where it is drawn, because the bound follows the viewport, and a store
+The layout store keeps the requested panel width with the lower bound
+applied. One pure function applies the upper bound where the width is set
+and where it is drawn, because the bound follows the viewport, and a store
 that read `window.innerWidth` wouldn't run under the node tests and
 would keep a stale bound after a resize.
 
@@ -159,8 +158,8 @@ the Problem page. A problem row shows:
 - the difficulty: `Easy`, `Medium`, or `Hard`
 - the topic tags
 
-The page shows one section per plan, in the order of `challenges.md`,
-Study plans. A section shows:
+Below the header, the page shows one section per plan, in the order of
+`challenges.md`, Study plans. A section shows:
 
 - the title
 - the one-line description
@@ -171,7 +170,9 @@ Study plans. A section shows:
 The page has no filters and no overall progress meter, because the
 plans' order says which problem to attempt next, a filter row suits
 thousands of problems, and a meter or a `blocks used` column helps no
-beginner choose. Topics stay as tags, so a row says what it practices.
+beginner choose.
+
+Topics stay as tags, so a row says what it practices.
 
 A plan's button depends on the plan's progress entries
 (`challenges.md`, Progress):
@@ -215,8 +216,9 @@ with the latest first. A row shows:
 - the time of its last edit
 - `Delete`
 
-While there is no program, the page shows `playground.empty`. A row
-opens its program.
+While there is no program, the page shows `playground.empty`.
+
+A row opens its program.
 
 The card's and a row's controls:
 
@@ -244,8 +246,7 @@ A page opens on its first tab. `Run`, `Submit`, and `Test`
 
 Nothing selects `Python` or returns to `Problem` automatically, because
 Python shown by default, or as a fragment per block, would teach syntax
-before the flow is understood. The Accepted view offers the `Python`
-tab after solving.
+before the learner understands the flow.
 
 ### Problem tab
 
@@ -259,16 +260,20 @@ The `Problem` tab shows, in order:
 - a `Solution` row with `Show solution`
 
 `Example` shows the first test's inputs and its expected output, one
-line per value, and an output of more than eight lines folds to its
-first five and `… n more`.
+line per value.
+
+An output of more than eight lines in `Example` folds to its first five
+and `… n more`.
 
 `Cases used by Submit` shows the inputs of every test.
 
 The `Hints` section reveals one hint per click on `Show next hint` and
-shows `n of 3 shown`, and the application records the number of hints
-shown (`challenges.md`, Progress). The hints are a section here,
+shows `n of 3 shown`. The hints are a section of the `Problem` tab,
 because a hint refers to the description, which a tab of their own
 would hide.
+
+The application records the number of hints shown (`challenges.md`,
+Progress).
 
 The `Solution` row offers the solution, because hiding it would send
 self-learners elsewhere.
@@ -324,10 +329,11 @@ The `Result` tab shows one case. It holds:
 - `Output`, the lines printed so far
 
 When the case is one of the challenge's tests and expects `stdout`,
-`Expected` stands beside `Output`, and the two are aligned line by line,
-with a blank cell where one side has no line. While a run is on the
-chart, an `Expected` line beyond the lines printed so far is drawn
-muted.
+`Expected` stands beside `Output`. The tab aligns the two line by line,
+with a blank cell where one side has no line.
+
+While a run is on the chart, the tab draws muted each `Expected` line
+beyond the lines printed so far.
 
 Each expected variable is a row that shows its value beside its
 expected value. When the program never gave the variable a value, its
@@ -448,20 +454,22 @@ an unused string.
 
 ### The key check
 
-`pnpm check` (`scripts/lib/i18n-check.ts`) checks the keys that the
+`pnpm check` checks the keys that the
 code names against the keys that the catalogs hold. It fails on a
 `t()` call in `src/` whose first argument is a string literal that
 `en.json` doesn't hold. The check doesn't scan `*.d.ts` files or test
 files, because test files call `t()` with unknown keys on purpose.
 
 The check reads each file with `oxc-parser`, so it doesn't read
-comments, and a call counts only when its callee is the name `t`. For
-example: `at(` and `obj.t(` don't count. A pattern over the text was
-rejected, because it can't tell a comment from code, or read a
-template literal that spans lines or nests another.
+comments. A pattern over the text was rejected, because it can't tell a
+comment from code, or read a template literal that spans lines or nests
+another.
 
-A template literal passed to `t()` without a cast to `MessageKey` is
-checked by TypeScript, not by the check, so it yields only keys of
+A call counts only when its callee is the name `t`. For example: `at(`
+and `obj.t(` don't count.
+
+TypeScript, not the check, checks a template literal passed to `t()`
+without a cast to `MessageKey`, so it yields only keys of
 `MessageKey`.
 
 `pnpm check` fails on a scanned file that `oxc-parser` rejects.
@@ -477,24 +485,26 @@ matches:
 - `t()`'s first argument itself
 - a branch of a conditional or logical expression in that argument
 
+A list of each family's members was rejected, because it would repeat the
+union the code already types, beside the template literal that builds the
+family's keys.
+
 Each placeholder stands for one segment: a run of characters other
 than `.`. For example: `` t(`problems.topic.${topic}`) `` names every
-`problems.topic.*` key. When a template literal with a placeholder
-begins with the placeholder, or stands outside the two places above, it
-names no key, because one that begins with a placeholder would match
-every key. For example: a storage key's `${prefix}${id}`. A list of
-each family's members was rejected, because it would repeat the union
-the code already types, beside the template literal that builds the
-family's keys.
+`problems.topic.*` key.
+
+A template literal with a placeholder names no key when it begins with
+the placeholder or stands in neither place of that list, because one
+that begins with a placeholder would match every key. For example: a
+storage key's `${prefix}${id}`.
 
 The keys built from data are built in `src/i18n/t.ts`, and the check
 names them with the same functions:
 
 - `block.<key>.<part>` (`blockKey`), under `blockPrefix(key)` for each
   key the registry holds
-- `error.<code>` (`errorKey`), for each code of `ERROR_CODES`
-  (`src/i18n/codes.ts`: `DIAGNOSTIC_CODES`, `RUNTIME_CODES`, and
-  `PARSE_CODES`)
+- `error.<code>` (`errorKey`), for each code of `ERROR_CODES`, which
+  joins `DIAGNOSTIC_CODES`, `RUNTIME_CODES`, and `PARSE_CODES`
 
 A template literal passed to `t()` with a cast to `MessageKey` names no
 key, because TypeScript doesn't check what it yields, and its pattern
@@ -503,7 +513,7 @@ would match a whole namespace.
 The check doesn't report a key left behind when a member leaves a
 family whose template literal remains, or when a named menu entry, a
 slot's name, or a generated chart node's text leaves a registered block
-definition. Those leftovers aren't reported, because a family's members
+definition, because a family's members
 are a type, which the check doesn't read without the type checker, and
 naming a block definition's keys one by one would copy `blocks.md`,
 Catalog keys, into the check, beside the code that builds them.
@@ -531,19 +541,23 @@ example: the loanword for "loop" beside its Japanese word.
   has one
 - the words avoided for it
 
-A term's Japanese word and technical word are its glossary words. The
-learner can't tell two words for one thing from two things, and the
+The learner can't tell two words for one thing from two things, and the
 instructor teaches with the words the screens use, so one list serves
 the writer and the reviewer of every Japanese text.
 
+A term's Japanese word and technical word are its glossary words.
+
 `pnpm check` fails on a text of `ja.json` that holds an avoided word,
-and it names the key and the word. The words are compared after Unicode
-NFKC normalization, so a half-width katakana word is found too. A
-glossary with no check was rejected, because a word that drifts would
-be found only when a review noticed it. A check that a Japanese text
-holds a term's glossary word wherever its English holds the term was
-rejected, because a natural Japanese sentence often leaves the term
-out, and each such text would need an exception.
+and it names the key and the word. These were rejected:
+
+- a glossary with no check, because a word that drifts would be found
+  only when a review noticed it
+- a check that a Japanese text holds a term's glossary word wherever its
+  English holds the term, because a natural Japanese sentence often
+  leaves the term out, and each such text would need an exception
+
+The check compares the words after Unicode NFKC normalization, so it
+finds a half-width katakana word too.
 
 `pnpm check` fails on a glossary that does one of these:
 
@@ -637,7 +651,8 @@ The end-to-end suite draws, in each locale:
   graph, and the views a learner switches to
 
 The end-to-end suite switches the language on each page that holds the
-switch, then draws that page and each screen state above, and checks
+switch, then draws that page and each screen state that has a
+screenshot, and checks
 that every text except a program's title is the same as when the page
 is loaded in the chosen language.
 

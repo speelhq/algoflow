@@ -89,5 +89,5 @@ shows its index and its item as inline text.
 The choice persists under the `localStorage` key `algoflow:views`.
 That entry holds one choice per pair of a program's storage key
 (`language.md`, Storage, Where a program is stored) and a variable's
-name. The choice lives outside `Program`, because a program's export
-and its diff would then carry the choice with the code.
+name. The choice lives outside `Program`, because a choice in `Program`
+would carry into the program's export and its diff with the code.
