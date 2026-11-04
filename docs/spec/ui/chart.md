@@ -248,8 +248,8 @@ change makes that drop valid.
 A chart node with a diagnostic shows a red dot. Hovering the chart node
 shows the message and, when `fix` is set, a button that applies the fix.
 Its owner's editor shows the same message and button at its top. A chart
-node shows no dot for `E_EMPTY_SLOT`, because the empty slot's
-placeholder (`editor.md`, Value line) already shows it.
+node shows no dot for `E_EMPTY_SLOT`, because the empty slot's `…`
+(`editor.md`, Value line, Empty slots) already shows it.
 
 ## Zoom and highlight
 

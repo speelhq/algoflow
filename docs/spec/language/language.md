@@ -232,9 +232,10 @@ A target is an expression that names where a value is stored: a `var`, an
 `index`, a `key`, or a `field`. Each of these is a block definition that
 declares `locate` (`blocks.md`, The block definition).
 
-A `target` slot holds one target, or `empty` while it is unfilled
-(Expressions). `migrate()` rejects any other expression in a `target`
-slot. No edit puts any other expression there (`editor.md`, Targets).
+A `target` slot holds one target, or `empty` while it is an empty slot
+(Expressions, Empty slots). `migrate()` rejects any other expression in a
+`target` slot. No edit puts any other expression there (`editor.md`,
+Targets).
 
 A separate target type was rejected because Python reads a target as an
 expression in store position, and because a second type would repeat each
@@ -248,7 +249,7 @@ An expression is one of these kinds:
 ```ts
 type E = { id: NodeId };
 export type Expr =
-  | (E & { kind: "empty" }) // an unfilled slot, below
+  | (E & { kind: "empty" }) // what an empty slot holds (Empty slots)
   | (E & { kind: "num"; value: number; float: boolean; raw: string })
   | (E & { kind: "str"; value: string })
   | (E & { kind: "bool"; value: boolean })
@@ -288,11 +289,14 @@ export type BinOp =
 
 ### Empty slots
 
-An unfilled required expression slot holds `{ kind: "empty" }`. Each
-consumer handles it in its own way:
+An empty slot is a slot that still needs filling: an expression slot or
+an item that holds `{ kind: "empty" }`, or a required name, text, or
+list that holds nothing. `validate()` reports each empty slot as
+`E_EMPTY_SLOT` with the slot's name.
 
-- `create()` fills every required slot with it.
-- `validate()` reports it as `E_EMPTY_SLOT` with the slot's name.
+Each consumer handles the `empty` expression in its own way:
+
+- `create()` fills every required expression slot with it.
 - The emitter writes `...` for it.
 - The interpreter never executes it.
 

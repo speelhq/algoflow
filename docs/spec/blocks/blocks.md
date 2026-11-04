@@ -55,16 +55,16 @@ export type Slot = {
   name: string;
   role: "expr" | "exprs" | "name" | "body" | "target" | "text";
   required?: boolean;
-  atom?: true; // its input binds as an atom (Notation)
+  atom?: true; // its value binds as an atom (Notation)
   binds?: true; // a `target` slot that declares the variable its target is (`language.md`, Scope)
 };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
 export type ValueEntry = {
   name: string; // "" for the block's own label and help, else block.<key>.<name>.label / .help
   group: "values" | "conditions" | "calculate" | "items" | "compare" | "convert"; // `editor.md`, Value list
-  on?: Kind[]; // offered after a value of these kinds, which it takes as its first input
+  on?: Kind[]; // offered after a value of these kinds, which it takes as its first expression
   preset?: Record<string, unknown>; // slot values set on the block's create() (binop `op`)
-  symbol?: string; // shown before the name in the list (`×`)
+  symbol?: string; // shown before the name in the value list (`×`)
   typed?: string; // what typed in a value line inserts it (`editor.md`, Backspace and keys)
 };
 ```
@@ -284,14 +284,14 @@ string value.
 - `<=` → `≤`
 - `>=` → `≥`
 
-The notation of the hidden `empty` block is `…`, drawn as the placeholder of
-an empty input (`editor.md`, Value line).
+The notation of the hidden `empty` block is `…`, which draws an empty slot
+(`editor.md`, Value line, Empty slots).
 
 ### The form of an expression
 
 Every expression is one of these:
 
-- an operator between or before its inputs: `i % 15`, `not done`
+- an operator between or before its values: `i % 15`, `not done`
 - a call: `len(nums)`, `f(x)`
 - an item, a key, or a field: `nums[i]`, `d["a"]`, `node.next`
 - a value
@@ -303,9 +303,9 @@ Python's, the same in every locale: `and`, `not`, `len`, `print`.
 The chart and the value line parenthesize operators as the emitter does
 (`emitter.md`).
 
-An input whose slot declares `atom` binds as an atom, as Python binds the
-value that it takes an item from, so an operation in that input is
-parenthesized. For example: the list of an item, as in `(a + b)[0]`.
+The value of a slot that declares `atom` binds as an atom, as Python
+binds the value that it takes an item from, so an operation in that slot
+is parenthesized. For example: the list of an item, as in `(a + b)[0]`.
 
 The emitter, the chart, and the value line read that one `atom`
 declaration.
@@ -403,12 +403,12 @@ A counted loop's own notation names it in the block menu and the editor.
 
 Expression block definitions declare the entries of the value list
 (`editor.md`, Value list) in `entries`. The value list offers an entry with
-`on` after a value of those kinds, and the entry takes that value as its
-first input. An entry without `on` fills an input where a value is
-expected. Kinds are those of `language.md`, Kinds, and `any` in the
-`on` column means every kind. Each block definition declares its own
-entries, because one block definition serves several groups: `binop` is
-`Add`, `Equals`, and `And`.
+`on` after a value of those kinds, and the entry takes that value as the
+first expression it holds. An entry without `on` fills an empty slot
+where a value is expected. Kinds are those of `language.md`, Kinds, and
+`any` in the `on` column means every kind. Each block definition declares
+its own entries, because one block definition serves several groups:
+`binop` is `Add`, `Equals`, and `And`.
 
 | key               | name       | label                   | group      | on                   | symbol | typed |
 | ----------------- | ---------- | ----------------------- | ---------- | -------------------- | ------ | ----- |
@@ -471,13 +471,13 @@ The expression block definitions give these kinds (`language.md`, Kinds):
 | `none` | none |
 | `unop` | a true/false value for `not`, and a number for `−` |
 | `binop`, a comparison or `in` | a true/false value |
-| `binop`, `and` or `or` | the kind of both inputs when they agree |
-| `binop`, `+` | the kind of both inputs when they agree and aren't true/false |
-| `binop`, `*` | a list or a text when one input is a list or a text |
+| `binop`, `and` or `or` | the kind of both values when they agree |
+| `binop`, `+` | the kind of both values when they agree and aren't true/false |
+| `binop`, `*` | a list or a text when one value is a list or a text |
 | `binop`, any other case | a number |
 | `call:abs`, `call:int`, `call:float`, `call:randint` | a number |
 | `call:str` | a text |
-| `call:min`, `call:max` | the kind of their first input |
+| `call:min`, `call:max` | the kind of their first argument |
 | `call:len`, `call:sum` | a number |
 | `list`, `method:copy` | a list |
 | `dict` | a dict |
