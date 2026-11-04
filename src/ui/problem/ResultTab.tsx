@@ -141,7 +141,7 @@ function RunResult({ challenge }: { challenge: Challenge | undefined }) {
         <p
           className={cn(
             "font-semibold",
-            verdict.status === "pass" ? "text-taken" : "text-destructive",
+            verdict.status === "pass" ? "text-pass" : "text-destructive",
           )}
           data-testid="case-verdict"
         >

@@ -39,7 +39,7 @@ function Chips({ challenge }: { challenge: Challenge }) {
             <span
               // oxlint-disable-next-line react/no-array-index-key -- a case is its index in the tests
               key={index}
-              className="rounded-lg border border-taken/60 px-2.5 py-1 font-mono text-[0.8rem] text-taken"
+              className="rounded-lg border border-pass/60 px-2.5 py-1 font-mono text-[0.8rem] text-pass"
               data-chip
             >
               {label}
@@ -55,8 +55,8 @@ function Chips({ challenge }: { challenge: Challenge }) {
             aria-pressed={index === selected}
             className={cn(
               "font-mono",
-              pass ? "border-taken/60 text-taken" : "border-destructive/60 text-destructive",
-              index === selected && (pass ? "bg-taken/10" : "bg-destructive/10"),
+              pass ? "border-pass/60 text-pass" : "border-destructive/60 text-destructive",
+              index === selected && (pass ? "bg-pass/10" : "bg-destructive/10"),
             )}
             onClick={() => select(index)}
             data-chip
@@ -169,7 +169,7 @@ export function SubmissionView({ challenge }: { challenge: Challenge }) {
   return (
     <div className="space-y-4" data-testid="submission">
       <h2
-        className={cn("text-lg font-semibold", cleared ? "text-taken" : "text-destructive")}
+        className={cn("text-lg font-semibold", cleared ? "text-pass" : "text-destructive")}
         data-testid="verdict"
       >
         {t(cleared ? "result.accepted" : "result.wrong")}
