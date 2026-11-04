@@ -8,7 +8,7 @@ import { typeError } from "@/runtime/access";
 import type { Event, Ref } from "@/runtime/types";
 import {
   compare,
-  entryOf,
+  getHeapEntry,
   equals,
   floatFloorDiv,
   floatMod,
@@ -84,7 +84,7 @@ function* membership(
   ctx: RunContext,
 ): Generator<Event, boolean, void> {
   if (r.t === "list") {
-    const entry = entryOf(ctx.heap, r.ref);
+    const entry = getHeapEntry(ctx.heap, r.ref);
     if (entry.kind !== "list") return false;
     const refs: Ref[] = [];
     let found = false;
@@ -101,7 +101,7 @@ function* membership(
   if (r.t === "dict") {
     const key = dictKey(l);
     if (key === undefined) return typeError(block.id, l, r, ctx);
-    const entry = entryOf(ctx.heap, r.ref);
+    const entry = getHeapEntry(ctx.heap, r.ref);
     return entry.kind === "dict" && entry.entries.has(key);
   }
   if (r.t === "str") {

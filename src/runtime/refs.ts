@@ -2,7 +2,7 @@
 // place. Read and written by the ref's variant, not by the block that found it.
 import type { Heap, Name, Value } from "@/lang/types";
 import type { Ref } from "./types";
-import { entryOf } from "./values";
+import { getHeapEntry } from "./values";
 
 /** The value at `ref`, a variable read in `vars`; undefined when the place holds none. */
 export function valueAt(ref: Ref, vars: ReadonlyMap<Name, Value>, heap: Heap): Value | undefined {
@@ -18,7 +18,7 @@ export function setValueAt(ref: Ref, value: Value, vars: Map<Name, Value>, heap:
     vars.set(ref.var, value);
     return;
   }
-  const entry = entryOf(heap, ref.heap);
+  const entry = getHeapEntry(heap, ref.heap);
   if ("index" in ref && entry.kind === "list") entry.items[ref.index] = value;
   else if ("key" in ref && entry.kind === "dict") entry.entries.set(ref.key, value);
   else throw new Error(`ref does not fit heap entry ${ref.heap}`);
