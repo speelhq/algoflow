@@ -138,7 +138,7 @@ The notation has its slots editable in place, each as its role chooses:
 - an optional `expr` left empty: `+ value` (`editor.addValue`), which adds
   its value line
 - `exprs`: value lines separated by commas, each with a remove button
-  (`editor.removeValue`), followed by `+ value`, which adds one
+  (`editor.removeValue.label`), followed by `+ value`, which adds one
 - `body`: not shown
 
 For example: a `for`'s init and check, `i ← 1` and `i < n + 1?`, are
@@ -294,7 +294,7 @@ slot is required.
 A diamond whose condition is empty shows the placeholder without `?`.
 
 A value line that is one empty field reads `type or choose`
-(`editor.typeHint`) while it doesn't have the keyboard.
+(`editor.valueLine.hint`) while it doesn't have the keyboard.
 
 ## Value list
 
@@ -310,7 +310,7 @@ Where a value is expected, the list holds:
   `False`, `None`, `Empty list`, and `Empty dict`
 - `Conditions`: `Not`
 - `Calculate`: `Random whole number`, then `( )`, a pair of parentheses
-  labeled `editor.parentheses`
+  labeled `editor.parentheses.label`
 - `Your functions`: the program's own functions as calls, then
   `Modules ▸`
 
@@ -649,8 +649,8 @@ Every statement block may carry a caption in the learner's own words
 say what it is for, and a caption in the learner's words does.
 
 The learner types the caption in the editor's caption field
-(`editor.caption`). The field's hint reads `optional`
-(`editor.captionHint`).
+(`editor.caption.label`). The field's hint reads `optional`
+(`editor.caption.hint`).
 
 The application never translates the caption and never asks for it.
 
@@ -677,7 +677,7 @@ highlights or the caret is in:
 | What it explains | What the line shows |
 | --- | --- |
 | an entry | its name and its help (`blocks.md`, Catalog keys), followed, when keys insert it, by how to type them (`editor.typeKeys`: `Type %.`) |
-| the parentheses | their label with `editor.parenthesesHelp`, and how to type them |
+| the parentheses | their label with `editor.parentheses.help`, and how to type them |
 | an input of the problem | its kind (`editor.explain.input`) |
 | a parameter | `editor.explain.parameter` |
 | a name set nowhere yet | that choosing it makes a new variable that gets its value there (`editor.explain.newVariable`) |
