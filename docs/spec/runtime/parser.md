@@ -95,7 +95,7 @@ writes.
 For an expression `e` with no empty slot (`language.md`, Expressions,
 Empty slots), `parse(unparse(e))` in the scope of `e`'s program is `e`
 apart from each `NodeId`, so `unparse(parse(s))` is a fixed point of
-`parse ∘ unparse`.
+`unparse ∘ parse`.
 
 The round trip compares expressions, not texts, because only the
 expression shows a lost meaning. For example: `a - (b - c)` written as
