@@ -253,7 +253,7 @@
       "slot": {
         "args": "value"
       },
-      "help": "Writes the values to the Output tab, separated by spaces."
+      "help": "Writes the values to Output, separated by spaces."
     },
     "return": {
       "label": "Return",
@@ -610,7 +610,7 @@
     "E_ARITY": "{name} needs {expected} values (got {got})",
     "E_UNKNOWN_CALL": "{name} was not found",
     "E_EMPTY_SLOT": "{slot} is empty",
-    "E_DUPLICATE_ID": "Two blocks share the same id",
+    "E_DUPLICATE_ID": "Two blocks or functions share the same id",
     "E_PARSE_SYNTAX": "Syntax error at character {position}",
     "E_PARSE_CHAIN": "Write a < b < c as a < b and b < c",
     "E_INDEX": "Item {index} does not exist (length {length})",
