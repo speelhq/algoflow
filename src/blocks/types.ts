@@ -62,7 +62,7 @@ export type Slot = {
   name: string;
   role: SlotRole;
   required?: boolean;
-  /** Its input binds as an atom: an operation there is parenthesized (the list of an item). */
+  /** Its value binds as an atom: an operation there is parenthesized (the list of an item). */
   atom?: true;
   /** A `target` slot that declares the variable its target is (`assign`'s). */
   binds?: true;
@@ -76,7 +76,7 @@ export type ValueEntry = {
   /** `""` for the block's own label and help, else `block.<key>.<name>.label` / `.help`. */
   name: string;
   group: ValueGroup;
-  /** Offered after a value of these kinds, which it takes as its first input. */
+  /** Offered after a value of these kinds, which it takes as the first expression it holds. */
   on?: readonly Kind[];
   /** Slot values set on the block's `create()` (binop `op`). */
   preset?: Record<string, unknown>;
@@ -130,7 +130,7 @@ export type EmitContext = {
   expr(expr: Expr): string;
   /** `expr` wrapped in parentheses when the operator table requires it under a parent of `precedence`. */
   operand(expr: Expr, precedence: number, side: Side): string;
-  /** The input in slot `name` of `block`, parenthesized as an atom where the slot declares one. */
+  /** The value of slot `name` of `block`, parenthesized as an atom where the slot declares one. */
   slot(block: Stmt | Expr, name: string): string;
   region(stmts: Stmt[]): PyLine;
 };

@@ -4,7 +4,7 @@ import { getBlockDef, menuBlockDefs } from "./registry";
 import { ast, evalExpr, notation } from "./testing";
 
 describe("empty", () => {
-  it("emits `...` so a program with an unfilled slot still renders as Python", () => {
+  it("emits `...` so a program with an empty slot still renders as Python", () => {
     expect(unparse(ast.empty())).toBe("...");
     expect(unparse(ast.bin("+", ast.num(1), ast.empty()))).toBe("1 + ...");
   });
