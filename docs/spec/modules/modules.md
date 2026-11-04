@@ -7,10 +7,6 @@ finds a module's functions, the Modules and Module pages, the operations
 on a module, a module's cases, where modules persist, and the built-in
 modules.
 
-Code: types `src/modules/types.ts`, resolution `src/modules/resolve.ts`,
-the store `src/store/modules.ts`, built-in modules `modules/<name>.json`.
-Tests: beside each file.
-
 ## Schema
 
 A module is one JSON value:

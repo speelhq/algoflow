@@ -6,10 +6,6 @@ text on the chart, and its entries in the menus, and every other part of the
 application reads those declarations. This file states what a block
 definition declares and lists every block definition.
 
-Code: `src/blocks/`: one file per block definition, `registry.ts`,
-`types.ts`, `categories.ts`. Tests: one `<key>.test.ts` per block
-definition, and `registry.test.ts`.
-
 ## The block definition
 
 Every block definition is one file, `src/blocks/<key>.ts`, and the file

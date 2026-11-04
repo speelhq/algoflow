@@ -6,11 +6,6 @@ what the object graph draws, how a view shows what the current step
 read and wrote, how the tab draws views, and which views the learner
 may switch a list to.
 
-Code: the variables of the `Result` tab (`src/ui/problem/ResultTab.tsx`),
-and the learner's choice of a view, persisted through
-`src/store/storage.ts`. Tests: the screenshots of `pages.md`,
-Verification.
-
 ## Choosing a view
 
 The `Result` tab chooses one view per variable by its value:

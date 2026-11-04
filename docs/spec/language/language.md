@@ -6,10 +6,6 @@ statement and expression means, which names are visible where, which
 faults validation reports, how a program is edited, and where it
 persists.
 
-Code: `src/lang/`: types `types.ts`, validation `validate.ts`, edits
-`edit.ts`, data conversion `data.ts`, import `migrate.ts`, traversal
-`walk.ts`, scope `scope.ts`, kinds `kinds.ts`. Tests: beside each file.
-
 ## Identifiers
 
 Identifiers are the names in a program. A name has one of two forms:

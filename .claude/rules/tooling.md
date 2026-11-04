@@ -14,8 +14,8 @@ paths:
 
 # Tooling
 
-`scripts/check.ts` implements four parts of the spec. Read them before you
-change it:
+`scripts/check.ts`, with `scripts/lib/`, implements four parts of the
+spec. Read them before you change it:
 
 - `docs/spec/challenges/challenges.md`, Checks
 - the CPython check in `docs/spec/runtime/interpreter.md`

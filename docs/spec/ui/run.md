@@ -5,11 +5,6 @@ program against every test of its challenge. This file states the run
 bar, the path and marks on the chart, the narration, how a runtime error
 shows, the call stack, and the submission.
 
-Code: `src/ui/problem` (`RunBar.tsx`, `actions.ts`, `keys.ts`,
-`ResultTab.tsx`, `SubmissionView.tsx`), `src/ui/run/narrate.ts`,
-`src/ui/chart/paint.ts`, the driver `src/store/run.ts`, and the submission
-`src/store/tests.ts`. Tests: beside each file, and `e2e/`.
-
 ## Run bar
 
 The run bar at the foot of the canvas holds the run's controls, because

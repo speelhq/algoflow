@@ -7,12 +7,16 @@ paths:
 
 Before you change a store, read the spec it implements:
 
-- `run.ts` and `batches.ts`: `docs/spec/runtime/interpreter.md`, Driver.
+- `run.ts`, `steps.ts`, and `batches.ts`: `docs/spec/runtime/interpreter.md`,
+  Driver, and, for what the run shows, `docs/spec/ui/run.md`.
 - `program.ts` and `playground.ts`: `docs/spec/language/language.md`, Edits;
   Storage.
 - `progress.ts` and `tests.ts`: `docs/spec/challenges/challenges.md`,
-  Progress; Judging.
+  Progress; Judging. `tests.ts` also follows `docs/spec/ui/run.md`,
+  Submission.
 - `layout.ts`: `docs/spec/ui/pages.md`.
+- `storage.ts`: the spec that names each `algoflow:` key it reads or
+  writes.
 
 When you change a store or its tests:
 

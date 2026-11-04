@@ -5,9 +5,6 @@ The parser reads one Python expression as an `Expr`. The emitter's
 grammar the parser reads, how it resolves a call, the errors it reports,
 and the round trip between the parser and the emitter.
 
-Code: `src/python/parse.ts`, `number.ts`, `precedence.ts`. Tests:
-`parse.test.ts`, `number.test.ts`.
-
 ## Grammar
 
 `parse` reads one expression, or reports a parse error:
