@@ -273,7 +273,6 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         return shownName === undefined ? null : (
           <NameField
             key={name}
-            slot={name}
             label={fieldLabel(stmt, field)}
             name={shownName}
             typed={on ? session.typed : null}

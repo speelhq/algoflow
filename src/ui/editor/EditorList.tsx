@@ -78,7 +78,6 @@ export function EditorList(props: Props) {
                 type="button"
                 tabIndex={-1}
                 data-row={item.key}
-                data-highlighted={on || undefined}
                 className={cn(
                   "flex w-full items-center gap-2 rounded-md px-2 py-1 text-left",
                   on && "bg-selection/10",
