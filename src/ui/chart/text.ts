@@ -387,5 +387,5 @@ export function assignmentText(name: string, value: string): string {
 
 /** An Input chart node's text, its name a variable (`Input n ← 15`). */
 export function inputParts(name: string, value: Data): Part[] {
-  return templateParts(t("chart.input"), () => assignmentParts(name, dataText(value)));
+  return templateParts(t("chart.input.text"), () => assignmentParts(name, dataText(value)));
 }

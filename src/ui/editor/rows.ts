@@ -44,8 +44,8 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
     case "parentheses":
       return {
         key: "parentheses",
-        label: t("editor.parentheses"),
-        symbol: t("editor.parenthesesGlyph"),
+        label: t("editor.parentheses.label"),
+        symbol: t("editor.parentheses.symbol"),
       };
   }
 }

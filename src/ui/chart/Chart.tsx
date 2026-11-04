@@ -102,7 +102,7 @@ function Mark({ node, mark }: { node: ChartNode; mark: boolean }) {
         dominantBaseline="central"
         className="fill-current text-[10px] font-bold"
       >
-        {t(mark ? "chart.markYes" : "chart.markNo")}
+        {t(mark ? "chart.mark.yes" : "chart.mark.no")}
       </text>
     </g>
   );
@@ -120,7 +120,7 @@ function Breakpoint({ node }: { node: ChartNode }) {
         dominantBaseline="auto"
         className="fill-muted-foreground text-[11px]"
       >
-        {t("run.breakpoint")}
+        {t("chart.breakpoint")}
       </text>
     </g>
   );
@@ -202,7 +202,7 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
           dominantBaseline="central"
           className="fill-muted-foreground text-[10px]"
         >
-          {t("chart.inputGlyph")}
+          {t("chart.input.icon")}
         </text>
       )}
       {look.mark !== undefined && <Mark node={node} mark={look.mark} />}
@@ -527,26 +527,26 @@ export function Chart(props: Props) {
             <Button
               variant="outline"
               size="icon-sm"
-              aria-label={t("chart.zoomOut")}
+              aria-label={t("chart.zoomOut.label")}
               onClick={() => setZoom(zoomStep(scale, -1))}
             >
-              {t("chart.zoomOutGlyph")}
+              {t("chart.zoomOut.icon")}
             </Button>
             <Button
               variant="outline"
               size="sm"
-              aria-label={t("chart.zoomReset")}
+              aria-label={t("chart.zoomReset.label")}
               onClick={() => setZoom(1)}
             >
-              {t("chart.percent", { n: Math.round(scale * 100) })}
+              {t("chart.zoomReset.text", { n: Math.round(scale * 100) })}
             </Button>
             <Button
               variant="outline"
               size="icon-sm"
-              aria-label={t("chart.zoomIn")}
+              aria-label={t("chart.zoomIn.label")}
               onClick={() => setZoom(zoomStep(scale, 1))}
             >
-              {t("chart.zoomInGlyph")}
+              {t("chart.zoomIn.icon")}
             </Button>
           </div>
         </div>

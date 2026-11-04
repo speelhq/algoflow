@@ -35,10 +35,10 @@ export function Panel({ challenge }: { challenge?: Challenge }) {
         <Button
           variant="outline"
           size="icon-sm"
-          aria-label={t("problem.panel.expand")}
+          aria-label={t("problem.panel.expand.label")}
           onClick={() => setCollapsed(false)}
         >
-          {t("problem.panel.expandGlyph")}
+          {t("problem.panel.expand.icon")}
         </Button>
       </aside>
     );
@@ -69,10 +69,10 @@ export function Panel({ challenge }: { challenge?: Challenge }) {
               variant="outline"
               size="icon-sm"
               className="ml-auto"
-              aria-label={t("problem.panel.collapse")}
+              aria-label={t("problem.panel.collapse.label")}
               onClick={() => setCollapsed(true)}
             >
-              {t("problem.panel.collapseGlyph")}
+              {t("problem.panel.collapse.icon")}
             </Button>
           </div>
           {challenge && (

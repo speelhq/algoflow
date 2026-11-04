@@ -46,12 +46,12 @@ function SolutionBand({ challenge }: { challenge: Challenge }) {
       className="flex h-11 shrink-0 items-center gap-2 border-b bg-attempted/15 px-4"
       data-testid="solution-band"
     >
-      <span className="font-semibold">{t("chart.solution")}</span>
-      <span className="text-muted-foreground">{t("chart.readOnly")}</span>
+      <span className="font-semibold">{t("problem.solution.label")}</span>
+      <span className="text-muted-foreground">{t("problem.solution.readOnly")}</span>
       <Button className="ml-auto" variant="outline" onClick={() => loadSolution(challenge)}>
-        {t("chart.load")}
+        {t("problem.solution.load")}
       </Button>
-      <Button onClick={() => showSolution(false)}>{t("chart.backToMine")}</Button>
+      <Button onClick={() => showSolution(false)}>{t("problem.solution.back")}</Button>
     </div>
   );
 }

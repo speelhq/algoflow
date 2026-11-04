@@ -73,9 +73,9 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
     <div className="space-y-4" data-testid="problem-tab">
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-base font-semibold">{localized(challenge.title)}</h2>
-        <Tag>{t(`problems.difficulty.${challenge.difficulty}`)}</Tag>
+        <Tag>{t(`challenge.difficulty.${challenge.difficulty}`)}</Tag>
         {challenge.topics.map((topic) => (
-          <Tag key={topic}>{t(`problems.topic.${topic}`)}</Tag>
+          <Tag key={topic}>{t(`challenge.topic.${topic}`)}</Tag>
         ))}
       </div>
       <Markdown text={localized(challenge.description)} />
@@ -88,9 +88,9 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
       </section>
       <section className="space-y-2 border-t pt-3" data-testid="hints">
         <div className="flex items-center gap-2">
-          <span className="font-medium">{t("problem.hints")}</span>
+          <span className="font-medium">{t("problem.hints.label")}</span>
           <span className="text-muted-foreground">
-            {t("problem.hintsShown", { n: revealed, m: HINTS })}
+            {t("problem.hints.shown", { n: revealed, m: HINTS })}
           </span>
           <Button
             variant="outline"
@@ -98,7 +98,7 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
             disabled={revealed >= challenge.hints.length}
             onClick={() => hintShown(id, revealed + 1)}
           >
-            {t("problem.showHint")}
+            {t("problem.hints.show")}
           </Button>
         </div>
         <ol className="list-decimal space-y-2 pl-5">
@@ -111,8 +111,8 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
         </ol>
       </section>
       <section className="flex items-center gap-2 border-t pt-3">
-        <span className="font-medium">{t("problem.solution")}</span>
-        {solution && <span className="text-muted-foreground">{t("problem.solutionShown")}</span>}
+        <span className="font-medium">{t("problem.solution.label")}</span>
+        {solution && <span className="text-muted-foreground">{t("problem.solution.shown")}</span>}
         <Button
           variant="outline"
           className={cn("ml-auto", solution && "border-ring bg-accent")}
@@ -124,7 +124,7 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
             solutionShown(id);
           }}
         >
-          {t("problem.showSolution")}
+          {t("problem.solution.show")}
         </Button>
       </section>
     </div>

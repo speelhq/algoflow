@@ -85,8 +85,8 @@ function explainRow(row: Row, program: Program, at: NodeId): Explanation {
       return { name: row.entry.label, parts: typedHelp(row.entry.help, row.entry.menu.keys) };
     case "parentheses":
       return {
-        name: t("editor.parentheses"),
-        parts: typedHelp(t("editor.parenthesesHelp"), PARENTHESES_KEY),
+        name: t("editor.parentheses.label"),
+        parts: typedHelp(t("editor.parentheses.help"), PARENTHESES_KEY),
       };
     case "function":
       return { name: functionLabel(row.fn), parts: [{ text: t("editor.ownFunction") }] };

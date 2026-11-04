@@ -221,7 +221,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
       }}
     >
       {empty ? (
-        <span className="text-muted-foreground">{t("editor.typeHint")}</span>
+        <span className="text-muted-foreground">{t("editor.valueLine.hint")}</span>
       ) : (
         <>
           {draw(root)}

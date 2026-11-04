@@ -37,10 +37,10 @@ export function Header({ current }: { current: Tab }) {
         variant="outline"
         size="icon"
         className="ml-auto"
-        aria-label={t("app.help.open")}
+        aria-label={t("app.help.label")}
         onClick={() => setHelp(true)}
       >
-        {t("app.help.glyph")}
+        {t("app.help.icon")}
       </Button>
       <HelpDialog open={help} onOpenChange={setHelp} />
     </header>

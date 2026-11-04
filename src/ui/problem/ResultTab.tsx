@@ -74,7 +74,7 @@ function CaseBar({ challenge }: { challenge: Challenge }) {
         disabled={runMode || submitting}
         onClick={startSubmit}
       >
-        {t("problem.submit")}
+        {t("result.submit")}
       </Button>
     </div>
   );
