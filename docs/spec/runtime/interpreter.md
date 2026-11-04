@@ -364,9 +364,7 @@ about 13 ms, under one display frame. A visible step costs one call of
 heaviest work measured.
 
 A batch bounded by time was rejected because it would never yield under
-the tests' fake timers, which stop `performance.now`. Once a block makes
-one call far more costly, a batch bounded by time becomes the better
-choice.
+the tests' fake timers, which stop `performance.now`.
 
 Run first advances a separate runner to its end in batches. This run is
 the pre-run. From the pre-run, Run records:

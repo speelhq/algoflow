@@ -70,10 +70,6 @@ The tab draws views with CSS transforms keyed by index.
 
 The tab re-renders only the variables that the current step changed.
 
-The tab aims to draw each step in 32 ms. The aim isn't a requirement
-and needs no test, because a frame-time assertion on CI hardware is
-either too loose to mean anything or unreliable.
-
 ## Switching a view
 
 The learner may switch a list variable's view to one of these views:
