@@ -2,10 +2,10 @@
 
 A page is one screen of the application, addressed by a hash route.
 This file states the pages and their routes, the layout of the Problem
-page, Help and `⋯`, the Problems page, the Playground page, the panel
-and its tabs, the first launch, the keyboard, the messages, the
-catalogs and the Japanese texts, how a value is written on one line,
-and the verification.
+page, the modes, Help and `⋯`, the Problems page, the Playground page,
+the panel and its tabs, the first launch, the keyboard, the messages,
+the catalogs and the Japanese texts, how a value is written on one
+line, and the verification.
 
 ## Pages and routes
 
@@ -85,7 +85,7 @@ The canvas is on the right. It holds, from top to bottom:
 
 - the path bar (`chart.md`, Charts and the path bar)
 - the chart, or a class's field table
-- the narration line, while running (`run.md`, Narration)
+- the narration line, in run mode (`run.md`, Narration)
 - the run bar (`run.md`, Run bar)
 
 The layout store keeps the requested panel width with the lower bound
@@ -125,6 +125,24 @@ The Problem page, during a run, looks like this:
 │                     │ ❚❚ |◀ ▶| ⤼ ▶▶ ━●━ 23 of 124  Slow Normal Fast ■│
 └─────────────────────┴────────────────────────────────────────────────┘
 ```
+
+## Modes
+
+A mode decides what the canvas of a Problem page or a Playground program
+shows and what the learner can do on the page. The page is always in one
+of three modes:
+
+- build mode: the chart shows the learner's program, and the learner
+  edits it
+- solution mode, on a Problem page only: the chart shows the solution,
+  read-only (Panel, Problem tab)
+- run mode: a run is on the chart, while the driver's `status` isn't
+  `idle` (`interpreter.md`, Driver, Published state)
+
+A run in run mode is in one of two states, by the driver's `status`:
+
+- running: `playing` or `paused`
+- ended: `done` or `error` (`interpreter.md`, Driver, Steps and batches)
 
 ## Help and `⋯`
 
@@ -299,11 +317,10 @@ shown, either one first returns the canvas to the learner's program,
 because a run under the solution's chart would put the highlight, the
 marks, and the narration on a chart other than the one running.
 
-While running, `Submit`, `Show solution`, and
-`Compare with the solution` are disabled, because showing the solution
-or choosing another case while running would replace what the run bar
-drives, so `Show solution` and the case selector wait for `Stop`, as
-editing does.
+In run mode, `Submit`, `Show solution`, and `Compare with the solution`
+are disabled, because showing the solution or choosing another case in
+run mode would replace what the run bar drives, so `Show solution` and
+the case selector wait for `Stop`, as editing does.
 
 The application renders a challenge's Markdown texts (`description`,
 `hints`, and `takeaway`; `challenges.md`, Schema) in four forms:
@@ -332,12 +349,14 @@ The `Result` tab shows one case. It holds:
   with one view each (`views.md`)
 - `Output`, the lines printed so far
 
+In run mode, the page disables the case selector.
+
 When the case is one of the challenge's tests and expects `stdout`,
 `Expected` stands beside `Output`. The tab aligns the two line by line,
 with a blank cell where one side has no line.
 
-While a run is on the chart, the tab draws muted each `Expected` line
-beyond the lines printed so far.
+In run mode, until the run has ended, the tab draws muted each
+`Expected` line beyond the lines printed so far.
 
 Each expected variable is a row that shows its value beside its
 expected value. When the program never gave the variable a value, its
@@ -374,7 +393,7 @@ The tab's lines and the chart nodes are linked:
 - Selecting a block highlights its lines.
 - Clicking a line selects its block and, for a line inside a function,
   shows that function's chart (`chart.md`, Charts and the path bar).
-- While running, the line of the current statement is highlighted.
+- In run mode, the line of the current statement is highlighted.
 
 `Copy` and a `.py` download act on the shown file.
 
@@ -411,7 +430,7 @@ A Problem page and a Playground program answer these keys:
 | →, ←                         | Step, Back (run mode)               |
 | Shift+→                      | Step over (run mode)                |
 | Ctrl/Cmd+→                   | Skip (run mode)                     |
-| Esc                          | close menu or editor, clear selection; while running, clear the breakpoint, else Stop |
+| Esc                          | close menu or editor, clear selection; in run mode, clear the breakpoint before the run has ended, else Stop |
 | Tab, Shift+Tab               | next, previous field of a value line, then slot (`editor.md`, Value list) |
 | ↑, ↓                         | move the highlight in the editor's list (`editor.md`, Value list) |
 | ←, →                         | previous, next value or input of a value line (`editor.md`, Value list) |

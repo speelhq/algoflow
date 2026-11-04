@@ -87,12 +87,12 @@ editor):
   the opened call block selected
 - choosing from `▾` resets the path to that one chart or field table
 
-`run.md`, Call stack, states the path while running.
+`run.md`, Call stack, states the path in run mode.
 
 Tabs for `main`, functions, and classes were rejected, because a flat
 list shows no calls, overflows at twenty entries, and would need a
-call-stack strip beside it while running, whereas one path states the
-position in both modes.
+call-stack strip beside it in run mode, whereas one path states the
+position in build mode and in run mode.
 
 ## Input chart nodes
 
@@ -106,8 +106,9 @@ reading it.
 
 Choosing a case from the menu sets every Input chart node to that case's
 values and the case selector (`pages.md`, Panel, Result tab) to that
-case, and the next run uses those values. While running, an Input chart
-node opens no menu and the page disables the case selector.
+case, and the next run uses those values.
+
+An Input chart node opens its menu only in build mode.
 
 ## Shapes
 

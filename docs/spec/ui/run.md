@@ -98,7 +98,7 @@ In build mode, a click edits and sets no breakpoint.
 
 ## Path and marks
 
-While running, the chart shows the path and the marks of the shown
+In run mode, the chart shows the path and the marks of the shown
 frame's current pass.
 
 A diamond's mark is the `✓` or `✗` that it shows after its check.
@@ -118,7 +118,7 @@ pass. The path holds these edges:
 The marks decide the labeled edges because the path holds both ends of a
 diamond's `Yes` and `No` edges whenever the diamond was entered.
 
-While running, the chart draws the path in the taken-path color.
+In run mode, the chart draws the path in the taken-path color.
 
 A `call` starts the called chart with no path and no marks, as a loop's
 new pass does (Clearing a mark). A `return` gives back the caller's path
@@ -127,7 +127,7 @@ and marks as they were.
 A frame shown by a click on its segment (Call stack) shows its own path
 and marks.
 
-While running, the chart outlines the current chart node in the accent
+In run mode, the chart outlines the current chart node in the selection
 color and scrolls it into view.
 
 ### What a mark shows
@@ -178,7 +178,7 @@ stack). These alternatives were rejected:
 
 ## Narration
 
-While running, the narration line describes the event of the step
+In run mode, the narration line describes the event of the step
 (`lastEvent`) in one sentence (`run.narrate.*`):
 
 | What happened | Sentence |
@@ -246,7 +246,7 @@ call's arguments (`modules.md`, Operations).
 
 ## Call stack
 
-While running, the path bar is the call stack: one segment per frame,
+In run mode, the path bar is the call stack: one segment per frame,
 with `main` first and the running frame last.
 
 The chart shows the running frame and follows it on every `call` and
@@ -281,7 +281,7 @@ Result tab), judges every test on its own runner (`challenges.md`,
 Judging). It records the attempt (`challenges.md`, Progress) and selects
 the `Result` tab.
 
-While running, `Submit` is disabled, because a verdict arriving during
+In run mode, `Submit` is disabled, because a verdict arriving during
 playback would replace the rows being watched.
 
 A change of the program while `Submit` is judging abandons the
