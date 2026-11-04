@@ -338,7 +338,8 @@ emitted Python with no message.
 run a body that changes the list differently from the emitted Python, with
 no sign of it.
 
-Every other difference from Python is stricter and ends in an error:
+Every other difference from Python, except the int range (Run-time
+values, Int range), is stricter and ends in an error:
 
 - A `bool` isn't a number.
 - Recursion stops at 200.

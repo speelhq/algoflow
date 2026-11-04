@@ -36,8 +36,8 @@ The main chart shows, in order:
 
 A function chart shows `Start name(params)`, its body, and `End`.
 
-Edges are vertical and carry arrowheads. A `Return` chart node's edge
-leads to `End`.
+The chart runs from top to bottom, and its edges carry arrowheads. A
+`Return` chart node's edge leads to `End`.
 
 ### Functions and classes
 

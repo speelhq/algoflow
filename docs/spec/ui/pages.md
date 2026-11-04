@@ -35,7 +35,7 @@ The Problems page has a 52 px header, which holds:
 
 - the app name
 - the tabs `Problems`, `Playground`, and `Modules`
-- Help
+- `?`, which opens Help (Help and `⋯`)
 - the JA/EN switch
 
 The Playground and Modules pages share this header.
@@ -100,10 +100,11 @@ collapsed state persists under `algoflow:layout`.
 `algoflow:layout` holds the record of `panel`, `collapsed`, and `speed`
 directly, with no wrapper and no `version`, as `algoflow:progress` holds
 its own (`challenges.md`, Progress). The layout store validates the
-record when it sets a field and when it reads storage. A non-number or an
-out-of-range size falls back to the default or the lower bound, so a
-hand-edited or stale record never draws an unusable panel, and a record
-of an older shape needs no `version` or migration.
+record when it sets a field and when it reads storage. A size that isn't
+a number falls back to the default, and a size below the lower bound
+becomes the lower bound, so a hand-edited or stale record never draws an
+unusable panel, and a record of an older shape needs no `version` or
+migration.
 
 The Problem page, during a run, looks like this:
 
@@ -286,6 +287,9 @@ panel, so the solution takes the chart's place.
 `Load into my program` replaces the program with the solution as one
 undoable edit (`language.md`, Edits), so the learner can change what
 they would otherwise only read.
+
+`Compare with the solution` in an accepted submission (`run.md`,
+Submission, Accepted) does what `Show solution` does.
 
 The application records that the solution was shown (`challenges.md`,
 Progress).
@@ -526,9 +530,9 @@ The check does report a removed block definition's keys.
 
 The Japanese locale writes a label, a menu entry, a button, and a
 `foreach`'s generated chart nodes in plain form or as a noun, the way a
-command is named. For example: `余り`, `値を入れる`. It writes `help` texts,
-explanations, messages, and the narration in polite form, because they
-are spoken to the learner.
+command is named. For example: `block.binop.mod.label` and
+`editor.addValue`. It writes `help` texts, explanations, messages, and
+the narration in polite form, because they are spoken to the learner.
 
 A `help` text gives a term's technical word in parentheses. For
 example: the loanword for "loop" beside its Japanese word.
