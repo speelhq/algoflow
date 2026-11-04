@@ -4,7 +4,7 @@ import { t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
 import type { Name } from "@/lang/types";
 import type { ListItem, ListSection } from "./EditorList";
-import { allEntries, entryOf } from "./entries";
+import { allEntries, findEntry } from "./entries";
 import { functionLabel } from "./explain";
 import { find, type LineContext, type Row } from "./line";
 import { listRows, listSections, type ListGroup } from "./list";
@@ -54,7 +54,7 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
 function switchRows(session: Session, kinds: Kinds): { rows: Row[]; sections: ListSection[] } {
   const { line, switching } = session;
   const held = line && switching ? find(line.root, switching) : undefined;
-  const current = held ? entryOf(held, kinds) : undefined;
+  const current = held ? findEntry(held, kinds) : undefined;
   if (!current) return { rows: [], sections: [] };
   const rows = allEntries()
     .filter(

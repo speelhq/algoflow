@@ -60,7 +60,7 @@ export function makeEntry(entry: Entry): Expr {
  * data (`Empty list` presets no item), and of those the one offered after the kind of its first
  * input (`Join with another list` for `+` after a list); `kinds` are the variables' kinds.
  */
-export function entryOf(expr: Expr, kinds: Kinds): Entry | undefined {
+export function findEntry(expr: Expr, kinds: Kinds): Entry | undefined {
   const bag = expr as unknown as Record<string, unknown>;
   const key = keyOf(expr);
   const held = allEntries().filter(
@@ -77,7 +77,7 @@ export function entryOf(expr: Expr, kinds: Kinds): Entry | undefined {
 
 /** The label of what an expression is: its entry's, else its block's. */
 export function labelOf(expr: Expr, kinds: Kinds): string {
-  return entryOf(expr, kinds)?.label ?? blockText(getBlockDef(keyOf(expr)).key, "label");
+  return findEntry(expr, kinds)?.label ?? blockText(getBlockDef(keyOf(expr)).key, "label");
 }
 
 export const GROUPS: readonly ValueGroup[] = [
