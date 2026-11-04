@@ -51,7 +51,7 @@
         },
         "tab": {
           "keys": "Tab, Shift+Tab",
-          "action": "Next or previous input of a value, then the next or previous slot"
+          "action": "Next or previous empty slot of a value, then the next or previous field"
         },
         "highlight": {
           "keys": "↑, ↓",
@@ -59,7 +59,7 @@
         },
         "caret": {
           "keys": "←, →",
-          "action": "Previous or next value or input of a value"
+          "action": "Previous or next value or empty slot"
         },
         "enter": {
           "keys": "Enter",
