@@ -250,7 +250,11 @@ While running, the path bar is the call stack: one segment per frame,
 with `main` first and the running frame last.
 
 The chart shows the running frame and follows it on every `call` and
-`return`. Back and Seek show the frame of the step they reach.
+`return`. Expanding a call inline in the caller's chart was rejected
+because the flowchart becomes hard to read one level down, and the
+learner would have two places to edit a function.
+
+Back and Seek show the frame of the step they reach.
 
 A module function's frame is never a segment, because its call is one
 step (`interpreter.md`, Steps and batches).

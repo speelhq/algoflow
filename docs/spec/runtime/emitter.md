@@ -14,22 +14,28 @@ files (Modules):
 
 `emit(program, inputs: Record<Name, Data>, modules: Module[]): { code: string; map: Record<NodeId, { start: number; end: number }>; modules }`
 
-The map's lines are 1-based and inclusive. A compound statement maps to
-its header line, and `else:` has no entry in the map.
+The line map follows these rules:
+
+- Its lines are 1-based and inclusive.
+- A compound statement maps to its header line.
+- `else:` has no entry.
 
 ## The generated language
 
-Python is the only language the emitter writes. JavaScript, which was
-considered together with Dart, differs from Python in these ways:
+Python is the only language the emitter writes. JavaScript differs from
+Python in these ways:
 
 - It has no distinction between `int` and `float`.
 - It makes `-7 % 2` equal `-1`.
 - It has no `//`.
 - Its `in` on an array tests indices.
 
-So a JavaScript file would either differ from the program or wrap
-arithmetic in helpers that a learner can't read. A second language would
-first need a narrower block language or those helpers.
+JavaScript was rejected, because a JavaScript file would either differ
+from the program or wrap arithmetic in helpers that a learner can't
+read.
+
+A second language would first need a narrower block language or those
+helpers.
 
 ## File layout
 
@@ -46,8 +52,10 @@ A section appears only if it isn't empty.
 Two blank lines separate a class or a function from what is next to it,
 and one blank line separates any other two sections.
 
-The `from` lines follow the order of the modules' names, and each line
-lists its names in the order the program first uses them.
+The `from` lines follow the order of the modules' names.
+
+Each `from` line lists its names in the order the program first uses
+them.
 
 The emitter writes each input as an assignment of its value in
 `inputs`, in the order the inputs are declared.
@@ -122,9 +130,7 @@ The emitter writes each literal as its Python text:
 - `bool`: `True` or `False`
 - `none`: `None`
 
-
 ## Block definitions
-
 
 This section states what a block definition's `python()` returns and
 receives, and how the emitter writes a target and a statement with a
@@ -136,9 +142,11 @@ A block definition writes the Python of its blocks with `python()`:
   `PyLine = string | { region: Stmt[] }`.
 - An expression block definition's `python()` returns text.
 
-The emitter flattens the lines: it indents each `{ region }` entry by one
-level, writes `pass` for an empty one, and records the line map as it
-goes.
+The emitter flattens the lines. It:
+
+- indents each `{ region }` entry by one level
+- writes `pass` for an empty region
+- records the line map as it goes
 
 A block definition's `python()` receives this context:
 `EmitContext = { expr(e): string; operand(e, precedence, side): string; slot(block, name): string; region(stmts): PyLine }`.
@@ -154,7 +162,9 @@ Statements, Targets).
 
 Before a statement with a caption (`language.md`, Captions), the
 emitter writes the comment line `# <caption>` at the statement's
-indentation, and the statement's map entry starts at that line.
+indentation.
+
+The map entry of a statement with a caption starts at its comment line.
 
 ## Modules
 
@@ -176,9 +186,9 @@ The emitter lays out a module's file as it lays out the program's file
 
 `emit(module)` writes a module's file alone, with its `map`.
 
-The emitter writes a call of a module function unqualified. For
-example: `heap_push(h, x)`. A qualified call was rejected because
-`heap.push(h, x)` would collide with the parser's method syntax.
+The emitter writes a call of a module function unqualified. A qualified
+call was rejected because `heap.push(h, x)` would collide with the
+parser's method syntax. For example: `heap_push(h, x)`.
 
 ## Verification
 
