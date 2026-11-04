@@ -8,8 +8,8 @@ export const sum = defineBuiltin({
   name: "sum",
   category: "list",
   params: [{ name: "a" }],
-  kind: () => "number",
-  menu: [{ name: "", group: "items", on: ["list"] }],
+  yields: () => "number",
+  entries: [{ name: "", group: "items", on: ["list"] }],
   evaluate([a = { t: "none" }], block, ctx) {
     if (a.t !== "list") return ctx.valueError(block, a);
     const { items } = asList(a, block.id, ctx, a);

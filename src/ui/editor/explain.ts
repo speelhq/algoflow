@@ -82,7 +82,7 @@ function explainRow(row: Row, program: Program, at: NodeId): Explanation {
     case "new":
       return explainName(program, at, row.name, row.kind === "new");
     case "entry":
-      return { name: row.entry.label, parts: typedHelp(row.entry.help, row.entry.menu.keys) };
+      return { name: row.entry.label, parts: typedHelp(row.entry.help, row.entry.declared.typed) };
     case "parentheses":
       return {
         name: t("editor.parentheses.label"),

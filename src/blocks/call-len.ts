@@ -10,8 +10,8 @@ export const len = defineBuiltin({
   name: "len",
   category: "list",
   params: [{ name: "a" }],
-  kind: () => "number",
-  menu: [{ name: "", group: "items", on: ["list", "text", "dict"] }],
+  yields: () => "number",
+  entries: [{ name: "", group: "items", on: ["list", "text", "dict"] }],
   evaluate([a = { t: "none" }], block, ctx) {
     switch (a.t) {
       case "str":

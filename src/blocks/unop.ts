@@ -38,6 +38,8 @@ export const unop = defineExpr<"unop">({
     return block.op === "neg" ? `-${operand}` : `not ${operand}`;
   },
   notation: (block) => (block.op === "not" ? "not {operand}" : "−{operand}"),
-  kind: (block) => (block.op === "not" ? "truefalse" : "number"),
-  menu: [{ name: "not", group: "conditions", preset: { op: "not" }, symbol: "not", keys: "not" }],
+  yields: (block) => (block.op === "not" ? "truefalse" : "number"),
+  entries: [
+    { name: "not", group: "conditions", preset: { op: "not" }, symbol: "not", typed: "not" },
+  ],
 });

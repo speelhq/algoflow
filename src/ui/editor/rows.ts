@@ -37,7 +37,7 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
       return {
         key: `e:${row.entry.id}`,
         label: row.entry.label,
-        ...(row.entry.menu.symbol ? { symbol: row.entry.menu.symbol } : {}),
+        ...(row.entry.declared.symbol ? { symbol: row.entry.declared.symbol } : {}),
       };
     case "function":
       return { key: `f:${row.fn.name}`, label: functionLabel(row.fn) };
@@ -59,10 +59,12 @@ function switchRows(session: Session, kinds: Kinds): { rows: Row[]; sections: Li
   const rows = allEntries()
     .filter(
       (entry) =>
-        entry !== current && entry.def === current.def && entry.menu.group === current.menu.group,
+        entry !== current &&
+        entry.def === current.def &&
+        entry.declared.group === current.declared.group,
     )
     .map((entry): Row => ({ kind: "entry", entry }));
-  const title = t(`editor.lists.${current.menu.group}`);
+  const title = t(`editor.lists.${current.declared.group}`);
   const items = rows.map((row, index) => rowItem(row, index, kinds));
   return { rows, sections: rows.length > 0 ? [{ title, items }] : [] };
 }

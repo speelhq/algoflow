@@ -93,7 +93,7 @@ describe("explanation line", () => {
     if (!blank) throw new Error("no Empty list");
     const [one, two] = [makeEntry(blank), makeEntry(blank)];
     expect(labelOf(one, lists.kinds)).toBe("Empty list");
-    // Each made list has its own items, none shared with the menu.
+    // Each made list has its own items, none shared with the block definition.
     expect(Reflect.get(one, "items")).not.toBe(Reflect.get(two, "items"));
   });
 

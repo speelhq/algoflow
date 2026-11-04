@@ -1,5 +1,5 @@
 // What the value list and the name list know of a value before the program runs: an
-// expression's kind from its block's `kind`, and a variable's from its input's declared kind,
+// expression's kind from its block's `yields`, and a variable's from its input's declared kind,
 // else the value of its first assignment, else the kind its loop block declares. Registry-driven.
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import { isFloatData } from "./data";
@@ -23,7 +23,7 @@ export type Kinds = ReadonlyMap<Name, Kind>;
 export function exprKind(expr: Expr, variables: Kinds): Kind | undefined {
   const name = variableOf(expr);
   if (name !== undefined) return variables.get(name);
-  return getBlockDef(keyOf(expr)).kind?.(expr, (inner) => exprKind(inner, variables));
+  return getBlockDef(keyOf(expr)).yields?.(expr, (inner) => exprKind(inner, variables));
 }
 
 /** `main`, or the function whose body holds statement `id`. */

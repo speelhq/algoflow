@@ -17,8 +17,8 @@ export const bool = defineExpr<"bool">({
   },
   python: (block) => (block.value ? "True" : "False"),
   notation: (block) => (block.value ? "True" : "False"),
-  kind: () => "truefalse",
-  menu: [
+  yields: () => "truefalse",
+  entries: [
     { name: "true", group: "values", preset: { value: true } },
     { name: "false", group: "values", preset: { value: false } },
   ],

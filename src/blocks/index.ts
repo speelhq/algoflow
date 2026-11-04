@@ -25,5 +25,5 @@ export const index = defineExpr<"index">({
   },
   python: (block, ctx) => `${ctx.slot(block, "list")}[${ctx.slot(block, "index")}]`,
   notation: () => "{list}[{index}]",
-  menu: [{ name: "", group: "items", on: ["list"], keys: "[" }],
+  entries: [{ name: "", group: "items", on: ["list"], typed: "[" }],
 });

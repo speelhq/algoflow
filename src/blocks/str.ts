@@ -16,6 +16,6 @@ export const str = defineExpr<"str">({
   },
   python: (block) => pyString(block.value),
   notation: () => '"{value}"',
-  kind: () => "text",
-  menu: [{ name: "", group: "values" }],
+  yields: () => "text",
+  entries: [{ name: "", group: "values" }],
 });
