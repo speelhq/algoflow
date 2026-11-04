@@ -8,7 +8,7 @@ import type { Program } from "@/lang/types";
 import { asPlayground, forget, isPlaygroundId, newPlaygroundId, touch } from "./playground";
 import { readStored, writeStored } from "./storage";
 
-export const PROGRAM_KEY_PREFIX = "algoflow:program:";
+export const PROGRAM_STORAGE_PREFIX = "algoflow:program:";
 /** Programs kept for undo. */
 export const HISTORY = 100;
 /** Milliseconds from the last edit to its save. */
@@ -16,7 +16,7 @@ export const SAVE_DELAY = 500;
 
 /** `algoflow:program:<challengeId | playground id>`. */
 export function programKey(id: string): string {
-  return `${PROGRAM_KEY_PREFIX}${id}`;
+  return `${PROGRAM_STORAGE_PREFIX}${id}`;
 }
 
 export function emptyProgram(title = ""): Program {

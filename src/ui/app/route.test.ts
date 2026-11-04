@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // The hash routes of the pages built; anything else shows the Problems page.
 import { describe, expect, it } from "vitest";
-import { PLAYGROUND_KEY } from "@/store/playground";
+import { PLAYGROUND_STORAGE_KEY } from "@/store/playground";
 import { parseRoute, resolveRoute, routeHash, type Route } from "./route";
 
 describe("routes", () => {
@@ -42,7 +42,10 @@ describe("unknown routes", () => {
   });
 
   it("shows Problems for a Playground id the Playground does not list", () => {
-    localStorage.setItem(PLAYGROUND_KEY, JSON.stringify({ "play-abcdefghijkl": { edited: 1 } }));
+    localStorage.setItem(
+      PLAYGROUND_STORAGE_KEY,
+      JSON.stringify({ "play-abcdefghijkl": { edited: 1 } }),
+    );
     expect(resolveRoute("#/play/play-abcdefghijkl")).toEqual({
       page: "program",
       id: "play-abcdefghijkl",
