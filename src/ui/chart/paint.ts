@@ -21,7 +21,7 @@ export type Paint = {
   edges: Set<string>;
   /** Diamond chart node id → ✓ (true) or ✗ (false). */
   marks: Map<string, boolean>;
-  /** The chart node with the accent outline or the error outline. */
+  /** The chart node with the selection outline or the error outline. */
   current: string | null;
   breakpoint: string | null;
 };
