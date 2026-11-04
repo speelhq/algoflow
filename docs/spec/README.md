@@ -16,7 +16,7 @@ The spec has one folder per area, and each folder holds that area's files:
 | ------------- | ---------------- | --------------------------------------------------------------- |
 | `scope/`      | `scope.md`       | product scope, the learner, curriculum, acceptance              |
 | `language/`   | `language.md`    | AST types, data model, semantics, validation, edits, kinds      |
-| `blocks/`     | `blocks.md`      | every block definition: slots, Python output, notation, chart, menu entries |
+| `blocks/`     | `blocks.md`      | every block definition: slots, Python output, notation, chart, value list entries |
 | `runtime/`    | `interpreter.md` | runner, events, runtime errors, driver, CPython check           |
 |               | `emitter.md`     | the Python emitter                                              |
 |               | `parser.md`      | the expression parser                                           |

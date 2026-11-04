@@ -2,8 +2,8 @@
 
 A block definition is one kind of statement or expression of the block
 language. It declares its slots, how it runs, the Python it emits, its
-text on the chart, and its entries in the menus, and every other part of the
-application reads those declarations. This file states what a block
+text on the chart, and its entries in the value list, and every other part
+of the application reads those declarations. This file states what a block
 definition declares and lists every block definition.
 
 ## The block definition
@@ -34,10 +34,10 @@ export type BlockDef = {
   notation(block: Stmt | Expr): string; // Notation
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined; // `language.md`, Data
   text?(block: Stmt | Expr, slot: string): string; // Notation
-  kind?(block: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
+  yields?(block: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
   declares?: Kind; // the kind of the variable its `name` slot names (`language.md`, Kinds)
   locate?(block: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>; // a target's place (`interpreter.md`, Block definitions)
-  menu?: MenuEntry[]; // the entries of the value list (Menu entries)
+  entries?: ValueEntry[]; // the entries of the value list (Value list entries)
   chart?:
     | { branch: { cond: string; yes: string; no: string } }
     | { check: { cond: string; body: string } }
@@ -59,13 +59,13 @@ export type Slot = {
   binds?: true; // a `target` slot that declares the variable its target is (`language.md`, Scope)
 };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
-export type MenuEntry = {
+export type ValueEntry = {
   name: string; // "" for the block's own label and help, else block.<key>.<name>.label / .help
   group: "values" | "conditions" | "calculate" | "items" | "compare" | "convert"; // `editor.md`, Value list
   on?: Kind[]; // offered after a value of these kinds, which it takes as its first input
   preset?: Record<string, unknown>; // slot values set on the block's create() (binop `op`)
   symbol?: string; // shown before the name in the list (`×`)
-  keys?: string; // what typed in a value line inserts it (`editor.md`, Backspace and keys)
+  typed?: string; // what typed in a value line inserts it (`editor.md`, Backspace and keys)
 };
 ```
 
@@ -112,7 +112,7 @@ only registry. Every other module reaches a block definition through it.
 No module other than a block definition's file and the registry's `keyOf`
 branches on `kind`, a builtin name, or a method name. Traversal,
 validation, the block menu, the value list, and the chart read a block
-definition's `slots`, `menu`, and flags instead.
+definition's `slots`, `entries`, and flags instead.
 
 ## Catalog keys
 
@@ -126,16 +126,16 @@ provides the same keys:
   the editor shows as a field. For example, `block.assign.slot.value` is
   `value`.
 - `block.<key>.<name>.label` and `block.<key>.<name>.help`: the label and
-  the help of a menu entry with a `name`
+  the help of a value list entry with a `name`
 - `block.<key>.init`, `block.<key>.check`, and `block.<key>.update`: the
   texts of a counted loop's generated chart nodes, for a loop whose texts
   aren't notation (Chart shape)
 
 The hidden `empty` block definition has its label and help.
 
-The explanation line writes an entry's keys from `keys` (`editor.md`,
+The explanation line writes an entry's keys from `typed` (`editor.md`,
 Explanation line). No help names its entry's keys, because a help that
-named them would repeat the block definition's `keys` in every locale.
+named them would repeat the entry's `typed` in every locale.
 
 A block's notation isn't a catalog key. It is the block definition's
 `notation()`, the same in every locale (Notation).
@@ -399,10 +399,10 @@ words.
 A counted loop's own notation names it in the block menu and the editor.
 `for`'s notation is its init.
 
-## Menu entries
+## Value list entries
 
 Expression block definitions declare the entries of the value list
-(`editor.md`, Value list) in `menu`. The value list offers an entry with
+(`editor.md`, Value list) in `entries`. The value list offers an entry with
 `on` after a value of those kinds, and the entry takes that value as its
 first input. An entry without `on` fills an input where a value is
 expected. Kinds are those of `language.md`, Kinds, and `any` in the
@@ -410,7 +410,7 @@ expected. Kinds are those of `language.md`, Kinds, and `any` in the
 entries, because one block definition serves several groups: `binop` is
 `Add`, `Equals`, and `And`.
 
-| key               | name       | label                   | group      | on                   | symbol | keys  |
+| key               | name       | label                   | group      | on                   | symbol | typed |
 | ----------------- | ---------- | ----------------------- | ---------- | -------------------- | ------ | ----- |
 | `str`             |            | Text                    | values     |                      |        |       |
 | `bool`            | `true`     | True                    | values     |                      |        |       |

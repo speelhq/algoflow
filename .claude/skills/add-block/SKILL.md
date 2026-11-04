@@ -23,8 +23,8 @@ Add the block definition described in $ARGUMENTS.
 4. Add `block.<key>.label`, `block.<key>.help`, and one
    `block.<key>.slot.<slot>` for each slot the editor shows to
    `src/i18n/en.json`, and to `ja.json` if that file exists (`blocks.md`,
-   Catalog keys). A named menu entry also needs `block.<key>.<name>.label`
-   and `.help`.
+   Catalog keys). A named value list entry also needs
+   `block.<key>.<name>.label` and `.help`.
 5. Register the block definition in `src/blocks/registry.ts`.
 6. Add the tests that `blocks.md`, Verification, requires: the exact
    emitted Python, the interpreter's event sequence and result, one test

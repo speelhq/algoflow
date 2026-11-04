@@ -573,7 +573,7 @@ key, because TypeScript doesn't check what it yields, and its pattern
 would match a whole namespace.
 
 The check doesn't report a key left behind when a member leaves a
-family whose template literal remains, or when a named menu entry, a
+family whose template literal remains, or when a named value list entry, a
 slot's name, or a generated chart node's text leaves a registered block
 definition, because a family's members
 are a type, which the check doesn't read without the type checker, and
@@ -586,7 +586,7 @@ The check does report a removed block definition's keys.
 
 ### Japanese
 
-The Japanese locale writes a label, a menu entry, a button, and a
+The Japanese locale writes a label, a value list entry, a button, and a
 `foreach`'s generated chart nodes in plain form or as a noun, the way a
 command is named. For example: `block.binop.mod.label` and
 `editor.addValue`. It writes `help` texts, explanations, messages, and

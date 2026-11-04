@@ -604,7 +604,7 @@ A kind is what the value list and the name list (`editor.md`, Value list;
 Name fields) know of a value before the program runs. The kinds are
 `number`, `text`, `truefalse`, `none`, `list`, `dict`, and `object`.
 
-A block definition's `kind` (`blocks.md`, The block definition) gives an
+A block definition's `yields` (`blocks.md`, The block definition) gives an
 expression's kind from the kinds of the expressions inside it. An expression
 whose kind can't be determined has none.
 
