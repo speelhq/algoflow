@@ -1,7 +1,7 @@
 // Element access shared by the blocks that read or write list items.
 import type { HeapId, NodeId, Value } from "@/lang/types";
 import type { RunContext } from "@/blocks/types";
-import { entryOf, typeName } from "./values";
+import { getHeapEntry, typeName } from "./values";
 
 /** `E_TYPE` with the operand type names. */
 export function typeError(nodeId: NodeId, left: Value, right: Value, ctx: RunContext): never {
@@ -23,7 +23,7 @@ export function asList(
       right: typeName(other),
     });
   }
-  const entry = entryOf(ctx.heap, list.ref);
+  const entry = getHeapEntry(ctx.heap, list.ref);
   if (entry.kind !== "list") throw new Error("list ref is not a list");
   return { ref: list.ref, items: entry.items };
 }

@@ -1,6 +1,6 @@
 // The builtin `len`: how many items a list or a dict holds, or characters a text holds.
 import type { HeapEntry } from "@/lang/types";
-import { entryOf } from "@/runtime/values";
+import { getHeapEntry } from "@/runtime/values";
 import { defineBuiltin } from "./builtin";
 
 const countOf = (entry: HeapEntry): number =>
@@ -19,7 +19,7 @@ export const len = defineBuiltin({
         return { t: "int", v: [...a.v].length };
       case "list":
       case "dict":
-        return { t: "int", v: countOf(entryOf(ctx.heap, a.ref)) };
+        return { t: "int", v: countOf(getHeapEntry(ctx.heap, a.ref)) };
       default:
         return ctx.valueError(block, a);
     }

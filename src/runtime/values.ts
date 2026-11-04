@@ -39,7 +39,7 @@ export function floatFloorDiv(a: number, b: number): number {
   return floor;
 }
 
-export function entryOf(heap: Heap, ref: number): HeapEntry {
+export function getHeapEntry(heap: Heap, ref: number): HeapEntry {
   const entry = heap.get(ref);
   if (!entry) throw new Error(`dangling heap ref ${ref}`);
   return entry;
@@ -61,11 +61,11 @@ export function truthy(value: Value, heap: Heap): boolean {
     case "none":
       return false;
     case "list": {
-      const entry = entryOf(heap, value.ref);
+      const entry = getHeapEntry(heap, value.ref);
       return entry.kind === "list" && entry.items.length > 0;
     }
     case "dict": {
-      const entry = entryOf(heap, value.ref);
+      const entry = getHeapEntry(heap, value.ref);
       return entry.kind === "dict" && entry.entries.size > 0;
     }
   }
@@ -108,8 +108,8 @@ export function equals(a: Value, b: Value, heap: Heap): boolean {
     case "none":
       return true;
     case "list": {
-      const x = entryOf(heap, a.ref);
-      const y = entryOf(heap, (b as typeof a).ref);
+      const x = getHeapEntry(heap, a.ref);
+      const y = getHeapEntry(heap, (b as typeof a).ref);
       if (x.kind !== "list" || y.kind !== "list") return false;
       return (
         x.items.length === y.items.length &&
@@ -117,8 +117,8 @@ export function equals(a: Value, b: Value, heap: Heap): boolean {
       );
     }
     case "dict": {
-      const x = entryOf(heap, a.ref);
-      const y = entryOf(heap, (b as typeof a).ref);
+      const x = getHeapEntry(heap, a.ref);
+      const y = getHeapEntry(heap, (b as typeof a).ref);
       if (x.kind !== "dict" || y.kind !== "dict") return false;
       if (x.entries.size !== y.entries.size) return false;
       for (const [key, item] of x.entries) {
@@ -200,11 +200,11 @@ export function writeValue(value: Value, heap: Heap, scalar: (value: Value) => s
   const write = (item: Value) => writeValue(item, heap, scalar);
   switch (value.t) {
     case "list": {
-      const entry = entryOf(heap, value.ref);
+      const entry = getHeapEntry(heap, value.ref);
       return entry.kind === "list" ? `[${entry.items.map(write).join(", ")}]` : "[]";
     }
     case "dict": {
-      const entry = entryOf(heap, value.ref);
+      const entry = getHeapEntry(heap, value.ref);
       if (entry.kind !== "dict") return "{}";
       const parts = [...entry.entries].map(
         ([key, item]) => `${scalar(keyValue(key))}: ${write(item)}`,
