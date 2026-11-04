@@ -71,12 +71,13 @@ describe("a target", () => {
     expect(valueOf(stmt, { slot: "target", role: "expr" })).toBe(stmt.target);
     expect(targetSlot(stmt, { slot: "target", role: "expr" })).toMatchObject({ binds: true });
     expect(targetSlot(stmt, { slot: "value", role: "expr" })).toBeUndefined();
-    // A new assignment's target is to fill first; a click on an item's position opens the target.
+    // A new assignment's target is the first empty slot; a click on an item's position opens the
+    // target.
     const fields = fieldsOf(stmt);
     const fresh = getBlockDef("assign").create() as Stmt;
-    expect(startField(fresh, fieldsOf(fresh), { slot: null, hole: null })).toEqual(fields[0]);
-    const hole = (stmt.target as Extract<typeof stmt.target, { kind: "index" }>).index;
-    expect(startField(stmt, fields, { slot: "target", hole: hole.id })).toEqual(fields[0]);
+    expect(startField(fresh, fieldsOf(fresh), { slot: null, emptyId: null })).toEqual(fields[0]);
+    const position = (stmt.target as Extract<typeof stmt.target, { kind: "index" }>).index;
+    expect(startField(stmt, fields, { slot: "target", emptyId: position.id })).toEqual(fields[0]);
   });
 
   it("names the words after a field, which a key beginning them moves on from", () => {

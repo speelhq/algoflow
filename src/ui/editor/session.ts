@@ -47,12 +47,12 @@ export function chain(first: Transition, next: (session: Session) => Transition)
   return { session: second.session, edits: [...first.edits, ...second.edits] };
 }
 
-/** The session an editor opens with: on `start`, its line at the input clicked, if any. */
-export function openSession(stmt: Stmt, start: Field | null, hole: NodeId | null): Session {
+/** The session an editor opens with: on `start`, its line at the empty slot clicked, if any. */
+export function openSession(stmt: Stmt, start: Field | null, emptyId: NodeId | null): Session {
   const root = start ? valueOf(stmt, start) : undefined;
   return {
     focus: start,
-    line: root ? openLine(root, hole ?? undefined) : null,
+    line: root ? openLine(root, emptyId ?? undefined) : null,
     typed: null,
     highlight: null,
     all: false,
@@ -167,7 +167,7 @@ const taken = (transition: Transition, after?: After): KeyTransition =>
 
 /**
  * A row chosen by Enter or a click. In a target's line, a choice that leaves the target with no
- * input still to fill moves on to the next field, as a name field's does (`editor.md`, Targets).
+ * empty slot moves on to the next field, as a name field's does (`editor.md`, Targets).
  */
 export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransition {
   const { line, switching } = session;

@@ -13,7 +13,7 @@ import { regionsOf } from "@/lang/walk";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import {
   generatedParts,
-  hasInputToFill,
+  hasEmptySlot,
   inputParts,
   joinParts,
   questionParts,
@@ -285,7 +285,7 @@ class Builder {
   }
 
   /**
-   * A statement's chart node: its caption alone when it has one and no input is still to fill,
+   * A statement's chart node: its caption alone when it has one and no empty slot,
    * with `parts`, what it draws without its caption, as the title; otherwise `parts`.
    */
   private captioned(
@@ -296,7 +296,7 @@ class Builder {
     parts: Part[],
     y: number,
   ): ChartNode {
-    if (stmt.caption === undefined || hasInputToFill(stmt)) {
+    if (stmt.caption === undefined || hasEmptySlot(stmt)) {
       return this.node(id, stmt.id, role, shape, parts, y);
     }
     const node = this.node(id, stmt.id, role, shape, [{ text: stmt.caption }], y);

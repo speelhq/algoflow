@@ -16,8 +16,8 @@ export type EditorState = {
   selectedId: NodeId | null;
   /** The slot the editor opens focused on: the one clicked on the chart node. */
   slot: string | null;
-  /** The input still to fill clicked on the chart node, inside that slot. */
-  hole: NodeId | null;
+  /** The empty slot clicked on the chart node, inside that slot. */
+  emptyId: NodeId | null;
   /** The selected node's editor is open; a press outside it closes it and keeps the selection. */
   editing: boolean;
   hoveredId: NodeId | null;
@@ -25,8 +25,8 @@ export type EditorState = {
   /** Shown beside its chart node until the selection changes. */
   diagnostic: Diagnostic | null;
   setTab: (tab: PanelTab) => void;
-  /** Selects a node and opens its editor, on `slot` (and `hole`) when clicked; `edit: false` only selects. */
-  select: (id: NodeId | null, slot?: string, edit?: boolean, hole?: NodeId) => void;
+  /** Selects a node and opens its editor, on `slot` (and `emptyId`) when clicked; `edit: false` only selects. */
+  select: (id: NodeId | null, slot?: string, edit?: boolean, emptyId?: NodeId) => void;
   closeEditor: () => void;
   setHovered: (id: NodeId | null) => void;
   showSolution: (shown: boolean) => void;
@@ -40,17 +40,17 @@ export const useEditor = create<EditorState>()((set) => ({
   tab: "problem",
   selectedId: null,
   slot: null,
-  hole: null,
+  emptyId: null,
   editing: false,
   hoveredId: null,
   solution: false,
   diagnostic: null,
   setTab: (tab) => set({ tab }),
-  select: (id, slot, edit = true, hole) =>
+  select: (id, slot, edit = true, emptyId) =>
     set({
       selectedId: id,
       slot: slot ?? null,
-      hole: hole ?? null,
+      emptyId: emptyId ?? null,
       editing: id !== null && edit,
       diagnostic: null,
     }),
@@ -58,13 +58,20 @@ export const useEditor = create<EditorState>()((set) => ({
   setHovered: (id) => set({ hoveredId: id }),
   showSolution: (shown) => set({ solution: shown }),
   lead: (owner, diagnostic) =>
-    set({ selectedId: owner, slot: null, hole: null, editing: true, diagnostic, solution: false }),
+    set({
+      selectedId: owner,
+      slot: null,
+      emptyId: null,
+      editing: true,
+      diagnostic,
+      solution: false,
+    }),
   open: (tab) =>
     set({
       tab,
       selectedId: null,
       slot: null,
-      hole: null,
+      emptyId: null,
       editing: false,
       hoveredId: null,
       solution: false,

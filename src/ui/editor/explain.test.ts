@@ -68,18 +68,18 @@ describe("explanation line", () => {
     );
   });
 
-  it("inside an operation's input: its name and its template with that input underlined", () => {
+  it("inside an operation's slot: its name and its template with that slot underlined", () => {
     const explained = explainLine(keys("total+"), ctx, undefined, p, target.id);
     expect(shown(explained)).toEqual(["Add", "total + …"]);
     expect(explained?.parts.find((part) => part.underline)?.text).toBe("…");
-    // An input is parenthesized as the chart parenthesizes it.
+    // A slot's value is parenthesized as the chart parenthesizes it.
     expect(shown(explainLine(keys("(i+n)//"), ctx, undefined, p, target.id))).toEqual([
       "Whole-number quotient",
       "(i + n) // …",
     ]);
   });
 
-  it("an operation is named by the entry offered after its first input's kind", () => {
+  it("an operation is named by the entry offered after the kind of its first slot's value", () => {
     const lists: LineContext = { ...ctx, variables: ["nums"], kinds: new Map([["nums", "list"]]) };
     const typed = (text: string) => {
       let line = openLine(empty());

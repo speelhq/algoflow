@@ -1,5 +1,5 @@
 // The value line: one expression edited as a line, with a caret at
-// an input still to fill or after a value, the parentheses opened and not yet closed, the word
+// an empty slot or after a value, the parentheses opened and not yet closed, the word
 // being typed, and the first key of a two-key operator. Every change is a new `Line`.
 // Blocks are made by the parser (a variable, a number, a sign, a call) or by an entry's
 // block (`create()` with its preset), and read through their slots, their notation (the caret
@@ -28,7 +28,7 @@ import { isNewName, matchesName, type RoutineNames } from "./names";
 
 type Bag = Record<string, unknown>;
 
-/** At an input still to fill, or after a value (or after an operation, once it is left). */
+/** At an empty slot, or after a value (or after an operation, once it is left). */
 export type Caret = { at: NodeId } | { after: NodeId };
 
 export type Line = {
@@ -51,8 +51,9 @@ export type Line = {
 export type LineFunction = { name: Name; params: readonly Name[] };
 
 /**
- * A target slot's line: the names offered where the whole target is to fill, the problem's
- * expected ones (`asked`) first, and whether a name typed that none is makes a new variable.
+ * A target slot's line: the names offered where the whole target is an empty slot, the
+ * problem's expected ones (`asked`) first, and whether a name typed that none is makes a new
+ * variable.
  */
 export type TargetLine = RoutineNames & { binds: boolean };
 
@@ -77,16 +78,17 @@ export type Row =
   | { kind: "parentheses" }
   | { kind: "function"; fn: LineFunction };
 
-/** What a key or a choice did: `move` leaves the line for the next or previous slot or item. */
+/** What a key or a choice did: `move` leaves the line for the next or previous field or item. */
 export type Outcome = { line: Line; taken: boolean; move?: "next" | "previous" | "item" };
 
 // ---------------------------------------------------------------- the tree
 
 /**
- * The inputs of an expression in reading order, as its notation places them: the order the
- * caret moves in. Which input an entry's value goes into is the slot order's (`withFirst`).
+ * The values in an expression's slots, each item of a list its own, in reading order as its
+ * notation places them: the order the caret moves in. Which slot an entry's value goes into is
+ * the slot order's (`withFirst`).
  */
-export function inputs(expr: Expr): Expr[] {
+export function slotValues(expr: Expr): Expr[] {
   return templatePieces(notationOf(expr)).flatMap((piece) => {
     if ("words" in piece) return [];
     const held = placeholderValue(expr, piece.name);
@@ -100,17 +102,17 @@ export function find(root: Expr, id: NodeId): Expr | undefined {
   return undefined;
 }
 
-/** The expression holding `id` as an input, with the input's position. */
+/** The expression holding `id` in a slot, with the slot's position. */
 export function parentOf(root: Expr, id: NodeId): { parent: Expr; index: number } | undefined {
   for (const expr of allExprs(root)) {
-    const index = inputs(expr).findIndex((input) => input.id === id);
+    const index = slotValues(expr).findIndex((value) => value.id === id);
     if (index >= 0) return { parent: expr, index };
   }
   return undefined;
 }
 
-/** `expr` with each input replaced by what `map` makes of it. */
-function mapInputs(expr: Expr, map: (input: Expr, index: number) => Expr): Expr {
+/** `expr` with each slot's value replaced by what `map` makes of it. */
+function mapSlotValues(expr: Expr, map: (value: Expr, index: number) => Expr): Expr {
   const copy = { ...expr } as unknown as Bag;
   let index = 0;
   for (const slot of getBlockDef(keyOf(expr)).slots) {
@@ -131,7 +133,7 @@ function mapInputs(expr: Expr, map: (input: Expr, index: number) => Expr): Expr 
 
 function replaceIn(root: Expr, id: NodeId, by: Expr): Expr {
   if (root.id === id) return by;
-  return mapInputs(root, (input) => replaceIn(input, id, by));
+  return mapSlotValues(root, (value) => replaceIn(value, id, by));
 }
 
 /** The line with expression `id` replaced; a parenthesis that held it holds what replaces it. */
@@ -166,7 +168,7 @@ function items(expr: Expr): { held: Expr[]; with: (items: Expr[]) => Expr } {
 /** The caret stops of an expression in reading order. */
 export function stops(expr: Expr): Caret[] {
   if (isEmptyExpr(expr)) return [{ at: expr.id }];
-  const own = inputs(expr);
+  const own = slotValues(expr);
   if (own.length === 0) return [{ after: expr.id }];
   const inner = own.flatMap(stops);
   // An operation with no precedence ends with its own text (a call's parenthesis): a stop of
@@ -217,8 +219,8 @@ export function atEnd(line: Line): boolean {
   );
 }
 
-/** The caret is at an input still to fill (and nothing is selected). */
-export function atInput(line: Line): boolean {
+/** The caret is at an empty slot (and nothing is selected). */
+export function atEmptySlot(line: Line): boolean {
   return !line.selected && "at" in line.caret;
 }
 
@@ -239,7 +241,7 @@ function bindAt(line: Line, value: Expr, level: number): Expr | "chain" {
     if (line.open.includes(target.id)) return target;
     const up = parentOf(line.root, target.id);
     const outer = up ? precedenceOf(up.parent) : undefined;
-    if (!up || outer === undefined || up.index !== inputs(up.parent).length - 1) return target;
+    if (!up || outer === undefined || up.index !== slotValues(up.parent).length - 1) return target;
     if (outer > level) target = up.parent;
     else if (outer === level && levelAssociativity(level) === "left") target = up.parent;
     else if (outer === level && levelAssociativity(level) === "none") return "chain";
@@ -256,7 +258,7 @@ function valueBefore(line: Line): Expr | undefined {
     if (line.open.includes(target.id)) return target;
     const up = parentOf(line.root, target.id);
     if (!up || precedenceOf(up.parent) === undefined) return target;
-    if (up.index !== inputs(up.parent).length - 1) return target;
+    if (up.index !== slotValues(up.parent).length - 1) return target;
     target = up.parent;
   }
 }
@@ -278,7 +280,7 @@ function parsed(text: string, scope: ParseScope): Expr | undefined {
 function numberOf(raw: string): Expr | undefined {
   if (!/^[0-9.]+$/.test(raw)) return undefined;
   const made = parsed(raw, NO_DEFINITIONS);
-  return made && inputs(made).length === 0 && exprText(made) === raw ? made : undefined;
+  return made && slotValues(made).length === 0 && exprText(made) === raw ? made : undefined;
 }
 
 let numberKey: string | undefined;
@@ -294,16 +296,16 @@ export function variableExpr(name: Name): Expr | undefined {
   return made && variableOf(made) === name ? made : undefined;
 }
 
-/** A sign before the input it leaves to fill (`−…`). */
+/** A sign before the empty slot it leaves (`−…`). */
 function signExpr(): Expr | undefined {
   const made = parsed("-a", NO_DEFINITIONS);
-  return made && mapInputs(made, () => emptyExpr());
+  return made && mapSlotValues(made, () => emptyExpr());
 }
 
-/** A call of one of the program's functions, its arguments to fill. */
+/** A call of one of the program's functions, its arguments empty slots. */
 export function callExpr(fn: LineFunction, scope: ParseScope): Expr | undefined {
   const made = parsed(`${fn.name}(${fn.params.map(() => "a").join(", ")})`, scope);
-  return made && mapInputs(made, () => emptyExpr());
+  return made && mapSlotValues(made, () => emptyExpr());
 }
 
 /** The program's functions a call can name: those whose name no diagnostic refuses. */
@@ -316,7 +318,7 @@ export function callableFunctions(program: Program): LineFunction[] {
 
 // ---------------------------------------------------------------- starting
 
-/** A line opened on `root`: at the given input, else with the value selected, else at its input. */
+/** A line opened on `root`: at the empty slot `at`, else with the value selected, else at `root`. */
 export function openLine(root: Expr, at?: NodeId): Line {
   const base: Line = { root, caret: endOf(root), selected: false, open: [], word: "" };
   if (at !== undefined && find(root, at) && isEmptyExpr(find(root, at))) {
@@ -325,7 +327,7 @@ export function openLine(root: Expr, at?: NodeId): Line {
   return isEmptyExpr(root) ? base : { ...base, selected: true };
 }
 
-/** The value removed: one input to fill, the caret at it. */
+/** The value removed: one empty slot, the caret at it. */
 function cleared(line: Line): Line {
   const fresh = emptyExpr();
   return { ...line, root: fresh, caret: { at: fresh.id }, selected: false, open: [], word: "" };
@@ -334,7 +336,7 @@ function cleared(line: Line): Line {
 const done = (line: Line): Outcome => ({ line, taken: true });
 const refused = (line: Line): Outcome => ({ line, taken: false });
 
-/** Whether the line's slot keeps `root`: any value, or in a target slot a target or an input to fill. */
+/** Whether the line's slot keeps `root`: any value, or in a target slot a target or empty slot. */
 function keeps(root: Expr, ctx: LineContext): boolean {
   return ctx.target === null || isEmptyExpr(root) || isTarget(root);
 }
@@ -345,31 +347,32 @@ function inSlot(line: Line, outcome: Outcome, ctx: LineContext): Outcome {
   return refused({ ...line, refused: t("editor.notTarget") });
 }
 
-/** Whether the caret is at the whole value, still to fill. */
+/** Whether the caret is at the whole value, which is then an empty slot. */
 function fillsWhole(line: Line): boolean {
   return !line.selected && "at" in line.caret && line.caret.at === line.root.id;
 }
 
 // ---------------------------------------------------------------- entries
 
-/** The first input of `made` still to fill, in reading order, other than `placed`; else after it. */
+/** The first empty slot in `made`, in reading order, outside `placed`; else after it. */
 function caretIn(made: Expr, placed: Expr | null): Caret {
-  for (const input of inputs(made)) {
-    if (input === placed) continue;
-    const empty = [...allExprs(input)].find(isEmptyExpr);
+  for (const value of slotValues(made)) {
+    if (value === placed) continue;
+    const empty = [...allExprs(value)].find(isEmptyExpr);
     if (empty) return { at: empty.id };
   }
   return endOf(made);
 }
 
-/** `made` with `value` as its first input, in slot order. */
+/** `made` with `value` as the first of its slot values, in slot order. */
 function withFirst(made: Expr, value: Expr): Expr {
-  return mapInputs(made, (input, index) => (index === 0 ? value : input));
+  return mapSlotValues(made, (held, index) => (index === 0 ? value : held));
 }
 
 /**
- * An entry chosen after a value takes it as its first input, chosen or typed alike: an entry
- * whose first input binds at a precedence (an operator, or an item's atom) binds by it.
+ * An entry chosen after a value takes it as the first expression it holds, chosen or typed
+ * alike: an entry whose first expression binds at a precedence (an operator, or an item's atom)
+ * binds by it.
  */
 function takeValue(line: Line, entry: Entry): Outcome {
   const last = lastValue(line);
@@ -391,7 +394,7 @@ function takeValue(line: Line, entry: Entry): Outcome {
   return done({ ...next, caret: caretIn(placed, target), selected: false, word: "" });
 }
 
-/** A block made where a value is expected, filling the input at the caret. */
+/** A block made where a value is expected, filling the empty slot at the caret. */
 function fill(line: Line, made: Expr, text = false): Outcome {
   if (!("at" in line.caret)) return refused(line);
   const next = replace(line, line.caret.at, made);
@@ -401,7 +404,7 @@ function fill(line: Line, made: Expr, text = false): Outcome {
 
 /** The slot of a value typed in a text field of its own (`Text`); a number is typed in the line. */
 function textSlot(made: Expr): string | undefined {
-  if (isNumber(made) || inputs(made).length > 0) return undefined;
+  if (isNumber(made) || slotValues(made).length > 0) return undefined;
   return getBlockDef(keyOf(made)).slots.find((s) => s.role === "text")?.name;
 }
 
@@ -419,7 +422,7 @@ export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
 
 function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
   let base: Line = { ...line, word: "", refused: undefined, pending: undefined };
-  if (row.kind === "entry" && takesValue(row.entry) && !atInput(base)) {
+  if (row.kind === "entry" && takesValue(row.entry) && !atEmptySlot(base)) {
     // A refused choice leaves the line as it was, its word still to correct, with the reason.
     const placed = takeValue(base, row.entry);
     return placed.taken ? placed : refused({ ...line, refused: placed.line.refused });
@@ -468,8 +471,8 @@ function namesExactly(row: Row, word: string): boolean {
 }
 
 /**
- * The names offered where a target slot's whole value is to fill (`editor.md`, Targets), and in a
- * slot that binds the word typed as a new variable when it names none and is a name.
+ * The names offered where a target slot's whole value is an empty slot (`editor.md`, Targets),
+ * and in a slot that binds the word typed as a new variable when it names none and is a name.
  */
 function targetNames(word: string, target: TargetLine): Row[] {
   const names = [...target.asked, ...target.names];
@@ -478,7 +481,7 @@ function targetNames(word: string, target: TargetLine): Row[] {
   return rows;
 }
 
-/** The names a target's line offers where its whole value is to fill; undefined elsewhere. */
+/** The names a target's line offers where its whole value is an empty slot; undefined elsewhere. */
 export function wholeTargetRows(line: Line, ctx: LineContext): Row[] | undefined {
   return ctx.target && fillsWhole(line) ? targetNames(line.word, ctx.target) : undefined;
 }
@@ -495,8 +498,8 @@ export function keptRows(line: Line, rows: readonly Row[], ctx: LineContext): Ro
 }
 
 /**
- * Whether a word typed names the target's names: where the whole target is to fill, or in place
- * of its selected value.
+ * Whether a word typed names the target's names: where the whole target is an empty slot, or in
+ * place of its selected value.
  */
 export function namesTarget(line: Line, ctx: LineContext): boolean {
   return ctx.target !== null && (fillsWhole(line) || line.selected);
@@ -505,7 +508,7 @@ export function namesTarget(line: Line, ctx: LineContext): boolean {
 /** The rows a word can name at the caret: where a value is expected, or after one. */
 export function wordRows(line: Line, ctx: LineContext): Row[] {
   if (ctx.target && namesTarget(line, ctx)) return targetNames(line.word, ctx.target);
-  if (atInput(line) || (line.selected && line.word !== "")) {
+  if (atEmptySlot(line) || (line.selected && line.word !== "")) {
     return [
       ...ctx.variables.map((name): Row => ({ kind: "variable", name })),
       ...allEntries()
@@ -524,7 +527,7 @@ export function wordRows(line: Line, ctx: LineContext): Row[] {
 export function matches(line: Line, ctx: LineContext): Row[] {
   const word = line.word;
   if (word === "") return [];
-  const kind = atInput(line) ? undefined : kindBefore(line, ctx);
+  const kind = atEmptySlot(line) ? undefined : kindBefore(line, ctx);
   const found = wordRows(line, ctx).filter(
     (row) =>
       matchesName(rowName(row), word) ||
@@ -564,7 +567,10 @@ export const PARENTHESES_KEY = "(";
 /** The keys that end a word. */
 const ENDS_WORD = /^[-+*/%<>=!(),[\]]$/;
 
-/** The entries whose `typed` is `typed`, the one that fills an input before the one that takes a value. */
+/**
+ * The entries whose `typed` is `typed`, the one that fills an empty slot before the one that
+ * takes a value.
+ */
 const entriesTyped = (typed: string) =>
   allEntries()
     .filter((entry) => entry.declared.typed === typed)
@@ -629,7 +635,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
     if (entry) return takeValue({ ...before, pending: undefined }, entry);
   }
   if (/[0-9.]/.test(key)) return typeDigit(current, key);
-  const value = !atInput(current);
+  const value = !atEmptySlot(current);
   switch (key) {
     case PARENTHESES_KEY: {
       const base = current.selected ? cleared(current) : current;
@@ -653,7 +659,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
       });
     }
     case ",": {
-      // In a call, the call's next input; in a list, a new item; elsewhere, the slot's next value.
+      // In a call, its next argument; in a list, a new item; elsewhere, the slot's next value.
       const around = current.selected
         ? undefined
         : enclosing(current, (expr) => isCall(expr) || isSequence(expr));
@@ -661,17 +667,17 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
       if (isSequence(around.parent)) {
         const { held, with: holding } = items(around.parent);
         const fresh = emptyExpr();
-        const at = held.findIndex((item) => item.id === around.input.id) + 1;
+        const at = held.findIndex((item) => item.id === around.value.id) + 1;
         const next = replace(current, around.parent.id, holding(held.toSpliced(at, 0, fresh)));
         return done(closeBehind({ ...next, caret: { at: fresh.id } }));
       }
-      const next = inputs(around.parent)[around.index + 1];
+      const next = slotValues(around.parent)[around.index + 1];
       if (!next) return refused(line);
       const empty = [...allExprs(next)].find(isEmptyExpr);
       return done(closeBehind({ ...current, caret: empty ? { at: empty.id } : endOf(next) }));
     }
     case "]": {
-      // Leaves the innermost list or item, a list's item still to fill at its end removed first.
+      // Leaves the innermost list or item, a list's empty item at its end removed first.
       const around = current.selected
         ? undefined
         : enclosing(current, (expr) => closedBy(expr, "]"));
@@ -694,7 +700,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
       break;
   }
   // Of the entries the key names that apply at the caret, the first the slot keeps; a selected
-  // value is both an input to fill and a value (`editor.md`, Backspace and keys).
+  // value is both an empty slot and a value (`editor.md`, Backspace and keys).
   const applying = entriesTyped(key)
     .filter((entry) => (takesValue(entry) ? value : !value || current.selected))
     .map((entry) => keyed(current, entry, key));
@@ -706,8 +712,8 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
 }
 
 /**
- * The entry a key names, inserted at the caret: filling the input or the selected value's place (a
- * list opens with an item to fill, `[`), or taking the value before it.
+ * The entry a key names, inserted at the caret: filling the empty slot or the selected value's
+ * place (a list opens with an empty item, `[`), or taking the value before it.
  */
 function keyed(line: Line, entry: Entry, key: string): Outcome {
   if (!takesValue(entry)) {
@@ -723,11 +729,11 @@ function keyed(line: Line, entry: Entry, key: string): Outcome {
 /** Whether a row makes a call: a function of the program, or an entry whose block is one. */
 const makesCall = (row: Row) => row.kind === "function" || (row.kind === "entry" && row.entry.call);
 
-/** The innermost operation `is` accepts with an input that holds the caret, and that input. */
+/** The innermost operation `is` accepts with a slot that holds the caret, and that slot's value. */
 function enclosing(
   line: Line,
   is: (expr: Expr) => boolean,
-): { parent: Expr; input: Expr; index: number } | undefined {
+): { parent: Expr; value: Expr; index: number } | undefined {
   const { caret, root } = line;
   let id = "at" in caret ? caret.at : caret.after;
   let up = parentOf(root, id);
@@ -735,8 +741,8 @@ function enclosing(
     id = up.parent.id;
     up = parentOf(root, id);
   }
-  const input = up && inputs(up.parent)[up.index];
-  return up && input && { parent: up.parent, input, index: up.index };
+  const value = up && slotValues(up.parent)[up.index];
+  return up && value && { parent: up.parent, value, index: up.index };
 }
 
 // ---------------------------------------------------------------- removing and moving
@@ -767,16 +773,16 @@ function removeBefore(line: Line): Outcome {
         text: last.id,
       });
     }
-    const own = inputs(last);
+    const own = slotValues(last);
     const [first] = own;
     if (first) {
-      // An operator ends in an input, and a list in its last item: what is before the caret ends it.
+      // An operator ends in a slot, and a list in its last item: what is before the caret ends it.
       if (precedenceOf(last) !== undefined || isSequence(last)) {
         const end = own.at(-1);
         return end ? removeBefore({ ...current, caret: endOf(end) }) : refused(line);
       }
-      // A call ends in its parenthesis; removing it would lose the value of a later input.
-      if (own.slice(1).some((input) => !isEmptyExpr(input))) return move(current, -1);
+      // A call ends in its parenthesis; removing it would lose the value of a later argument.
+      if (own.slice(1).some((value) => !isEmptyExpr(value))) return move(current, -1);
       const next = replace(current, last.id, first);
       return done({ ...next, caret: endOf(first) });
     }
@@ -795,11 +801,11 @@ function removeBefore(line: Line): Outcome {
     const next = replace(current, up.parent.id, item.with(item.held.toSpliced(at, 1)));
     return done({ ...next, caret: endOf(before) });
   }
-  const own = inputs(up.parent);
+  const own = slotValues(up.parent);
   const [first] = own;
   if (!first) return refused(line);
-  // While an input after the first holds a value, removing the operation would lose it.
-  if (own.slice(1).some((input) => !isEmptyExpr(input))) return move(current, -1);
+  // While a slot after the first holds a value, removing the operation would lose it.
+  if (own.slice(1).some((value) => !isEmptyExpr(value))) return move(current, -1);
   if (up.index === 0) {
     const next = replace(current, up.parent.id, first);
     return done({ ...next, caret: { at: first.id } });
@@ -808,7 +814,7 @@ function removeBefore(line: Line): Outcome {
   return done({ ...next, caret: endOf(first) });
 }
 
-/** ← and →: the previous or next value or input. */
+/** ← and →: the previous or next value or empty slot. */
 export function move(line: Line, step: -1 | 1): Outcome {
   const all = stops(line.root);
   if (line.selected) {
@@ -816,13 +822,13 @@ export function move(line: Line, step: -1 | 1): Outcome {
     return done(closeBehind({ ...line, selected: false, caret: caret ?? line.caret }));
   }
   const here = position(line);
-  // → at the end of an operation's last input leaves the operation.
+  // → at the end of an operation's last slot leaves the operation.
   const target = all[here + step];
   if (!target) return refused(line);
   return done(closeBehind({ ...line, caret: target, pending: undefined, refused: undefined }));
 }
 
-/** Tab and Shift+Tab: the next or previous input still to fill, else the next or previous slot. */
+/** Tab and Shift+Tab: the next or previous empty slot, else the next or previous field. */
 export function tab(line: Line, step: -1 | 1, ctx: LineContext): Outcome {
   let current: Line = { ...line, pending: undefined, refused: undefined };
   if (current.word !== "") {
@@ -831,15 +837,18 @@ export function tab(line: Line, step: -1 | 1, ctx: LineContext): Outcome {
   }
   const all = stops(current.root);
   const here = current.selected ? (step > 0 ? all.length - 1 : 0) : position(current);
-  const fields = all
+  const empties = all
     .map((stop, index) => ({ stop, index }))
     .filter(({ stop, index }) => "at" in stop && (step > 0 ? index > here : index < here));
-  const field = step > 0 ? fields[0] : fields.at(-1);
-  if (!field) return { line: current, taken: true, move: step > 0 ? "next" : "previous" };
-  return done(closeBehind({ ...current, caret: field.stop, selected: false }));
+  const empty = step > 0 ? empties[0] : empties.at(-1);
+  if (!empty) return { line: current, taken: true, move: step > 0 ? "next" : "previous" };
+  return done(closeBehind({ ...current, caret: empty.stop, selected: false }));
 }
 
-/** A click on a value puts the caret after it, and on an input at it; on a text it opens its field. */
+/**
+ * A click on a value puts the caret after it, and on an empty slot at it; on a text it opens its
+ * field.
+ */
 export function clickAt(line: Line, id: NodeId): Line {
   const clicked = find(line.root, id);
   if (!clicked) return line;

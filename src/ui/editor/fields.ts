@@ -109,8 +109,8 @@ export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
   return isExpr(item) ? item : undefined;
 }
 
-/** Whether a field still has something to fill: an empty name or an input at any depth. */
-function toFill(stmt: Stmt, field: Field): boolean {
+/** Whether a field holds an empty slot: its name is empty, or its value has one at any depth. */
+function holdsEmptySlot(stmt: Stmt, field: Field): boolean {
   if (field.role === "name") return nameOf(stmt, field.slot) === "";
   const value = valueOf(stmt, field);
   return value !== undefined && [...allExprs(value)].some(isEmptyExpr);
@@ -118,22 +118,23 @@ function toFill(stmt: Stmt, field: Field): boolean {
 
 /**
  * The field that takes the keyboard when the editor opens: the slot clicked on the chart node (the
- * item holding the input clicked, when one was), else the first field still to fill, else none.
+ * item holding the empty slot clicked, when one was), else the first field that holds an empty
+ * slot, else none.
  */
 export function startField(
   stmt: Stmt,
   fields: readonly Field[],
-  clicked: { slot: string | null; hole: NodeId | null },
+  clicked: { slot: string | null; emptyId: NodeId | null },
 ): Field | null {
-  const { slot, hole } = clicked;
-  if (slot === null) return fields.find((field) => toFill(stmt, field)) ?? null;
+  const { slot, emptyId } = clicked;
+  if (slot === null) return fields.find((field) => holdsEmptySlot(stmt, field)) ?? null;
   const inSlot = fields.filter((field) => field.slot === slot);
   const holding =
-    hole === null
+    emptyId === null
       ? undefined
       : inSlot.find((field) => {
           const value = valueOf(stmt, field);
-          return value !== undefined && find(value, hole) !== undefined;
+          return value !== undefined && find(value, emptyId) !== undefined;
         });
   return holding ?? inSlot[0] ?? null;
 }

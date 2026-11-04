@@ -68,11 +68,11 @@ export function startSubmit(): void {
 }
 
 /**
- * A click on a statement's chart node, with the slot and the input clicked: while running it sets or
- * clears the breakpoint, pausing first; once the run has ended it returns to build mode and
- * selects; in build mode it selects; on the shown solution it does nothing.
+ * A click on a statement's chart node, with the slot and the empty slot clicked: while running it
+ * sets or clears the breakpoint, pausing first; once the run has ended it returns to build mode
+ * and selects; in build mode it selects; on the shown solution it does nothing.
  */
-export function clickChartNode(owner: NodeId, slot?: string, hole?: NodeId): void {
+export function clickChartNode(owner: NodeId, slot?: string, emptyId?: NodeId): void {
   const run = useRun.getState();
   switch (currentMode()) {
     case "running":
@@ -87,5 +87,5 @@ export function clickChartNode(owner: NodeId, slot?: string, hole?: NodeId): voi
     case "build":
       break;
   }
-  useEditor.getState().select(owner, slot, true, hole);
+  useEditor.getState().select(owner, slot, true, emptyId);
 }
