@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Challenge } from "@/challenges/types";
 import type { Program } from "@/lang/types";
 import { ast, program } from "@/blocks/testing";
-import { isPlaygroundId, PLAYGROUND_KEY, playgroundRows, readIndex } from "./playground";
+import { isPlaygroundId, PLAYGROUND_STORAGE_KEY, playgroundRows, readIndex } from "./playground";
 import {
   createPlaygroundProgram,
   deletePlaygroundProgram,
@@ -194,12 +194,12 @@ describe("program store", () => {
     deletePlaygroundProgram(id);
     expect(readIndex()).toEqual({});
     expect(stored(id)).toBeNull();
-    expect(localStorage.getItem(PLAYGROUND_KEY)).toBe("{}");
+    expect(localStorage.getItem(PLAYGROUND_STORAGE_KEY)).toBe("{}");
   });
 
   it("rows are ordered by last edit, the latest first", () => {
     localStorage.setItem(
-      PLAYGROUND_KEY,
+      PLAYGROUND_STORAGE_KEY,
       JSON.stringify({ "play-a": { edited: 1 }, "play-b": { edited: 3 }, "play-c": { edited: 2 } }),
     );
     const rows = playgroundRows((id) => id);

@@ -5,24 +5,24 @@ import { isRecord } from "@/lang/record";
 import type { Program } from "@/lang/types";
 import { readStored, removeStored, writeStored } from "./storage";
 
-export const PLAYGROUND_KEY = "algoflow:playground";
-const PLAYGROUND_PREFIX = "play-";
+export const PLAYGROUND_STORAGE_KEY = "algoflow:playground";
+const PLAYGROUND_ID_PREFIX = "play-";
 
 export type PlaygroundIndex = Record<string, { edited: number }>;
 export type PlaygroundRow = { id: string; title: string; edited: number };
 
 export function isPlaygroundId(id: string): boolean {
-  return id.startsWith(PLAYGROUND_PREFIX);
+  return id.startsWith(PLAYGROUND_ID_PREFIX);
 }
 
 export function newPlaygroundId(): string {
-  return `${PLAYGROUND_PREFIX}${newId()}`;
+  return `${PLAYGROUND_ID_PREFIX}${newId()}`;
 }
 
 /** The index as stored; malformed entries are dropped. */
 export function readIndex(): PlaygroundIndex {
   return (
-    readStored(PLAYGROUND_KEY, (stored) => {
+    readStored(PLAYGROUND_STORAGE_KEY, (stored) => {
       if (!isRecord(stored)) return undefined;
       const index: PlaygroundIndex = {};
       for (const [id, entry] of Object.entries(stored)) {
@@ -41,13 +41,13 @@ export function isListed(id: string): boolean {
 
 /** Records a save of `id` at `now`. */
 export function touch(id: string, now = Date.now()): void {
-  writeStored(PLAYGROUND_KEY, { ...readIndex(), [id]: { edited: now } });
+  writeStored(PLAYGROUND_STORAGE_KEY, { ...readIndex(), [id]: { edited: now } });
 }
 
 /** Removes a Playground program and its index entry. */
 export function forget(id: string, programKey: string): void {
   const { [id]: _removed, ...rest } = readIndex();
-  writeStored(PLAYGROUND_KEY, rest);
+  writeStored(PLAYGROUND_STORAGE_KEY, rest);
   removeStored(programKey);
 }
 

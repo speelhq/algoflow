@@ -1,7 +1,7 @@
 // With no work stored, a load at the Problems route opens the first problem of the
 // first study plan. Only progress and programs count as work; the layout key does not.
 import type { Plan } from "@/challenges";
-import { PROGRAM_KEY_PREFIX } from "@/store/program";
+import { PROGRAM_STORAGE_PREFIX } from "@/store/program";
 import { PROGRESS_STORAGE_KEY } from "@/store/progress";
 import { routeHash } from "./route";
 
@@ -16,7 +16,7 @@ export function firstLaunchTarget(
 ): string | null {
   if (!PROBLEMS_HASHES.has(hash)) return null;
   const worked = keys.some(
-    (key) => key === PROGRESS_STORAGE_KEY || key.startsWith(PROGRAM_KEY_PREFIX),
+    (key) => key === PROGRESS_STORAGE_KEY || key.startsWith(PROGRAM_STORAGE_PREFIX),
   );
   const first = plans[0]?.problems[0];
   return worked || first === undefined ? null : routeHash({ page: "problem", id: first });
