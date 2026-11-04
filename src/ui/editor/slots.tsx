@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 
 /** A name slot: shown as the variable it names until it has the keyboard. */
 export function NameField({
-  slot,
   label,
   name,
   typed,
@@ -19,7 +18,6 @@ export function NameField({
   onType,
   onKey,
 }: {
-  slot: string;
   label: string;
   name: string;
   /** What is typed while the field has the keyboard, else null. */
@@ -36,7 +34,6 @@ export function NameField({
       ref={register}
       value={on && typed !== null ? typed : name}
       aria-label={label}
-      data-name-slot={slot}
       className={cn(
         "h-8 min-w-10 rounded-md border px-1.5 outline-none [field-sizing:content]",
         on && "border-selection ring-1 ring-selection",

@@ -66,7 +66,6 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
         type="button"
         tabIndex={-1}
         onMouseDown={(event) => event.preventDefault()}
-        data-hole={expr.id}
         className={cn(
           "inline-flex h-6 min-w-8 items-center rounded border border-dashed border-muted-foreground/60 px-1 align-middle",
           here && "border-solid border-selection",
@@ -177,7 +176,6 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
               type="button"
               tabIndex={-1}
               onMouseDown={(event) => event.preventDefault()}
-              data-op={expr.id}
               className="cursor-pointer rounded-sm px-0.5 hover:bg-muted"
               onClick={() => props.onClickAt(expr.id, true)}
             >
@@ -203,7 +201,6 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
       tabIndex={0}
       aria-label={label}
       data-value-line
-      data-focused={focused || undefined}
       className={cn(
         "inline-flex min-h-8 max-w-full flex-wrap items-center gap-y-1 rounded-md border px-2 py-1 whitespace-pre-wrap outline-none",
         focused

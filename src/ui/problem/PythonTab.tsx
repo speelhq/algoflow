@@ -101,7 +101,6 @@ export function PythonTab() {
               data-testid="python-line"
               data-line={line}
               data-selected={selected.has(line) || undefined}
-              data-active={active.has(line) || undefined}
               className={cn(
                 "flex cursor-pointer border-l-2 border-transparent hover:bg-muted/60",
                 selected.has(line) && "border-selection bg-selection/10",

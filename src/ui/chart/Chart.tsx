@@ -93,7 +93,7 @@ function Mark({ node, mark }: { node: ChartNode; mark: boolean }) {
   const cx = node.x + node.w * 0.75 + 14;
   const cy = node.y + 4;
   return (
-    <g data-mark={mark ? "yes" : "no"} className={mark ? "text-taken" : "text-destructive"}>
+    <g className={mark ? "text-taken" : "text-destructive"}>
       <circle cx={cx} cy={cy} r={8} className="fill-background stroke-current" />
       <text
         x={cx}
@@ -136,7 +136,6 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
       data-chart-node={node.id}
       data-owner={node.owner ?? undefined}
       data-selected={outline === "selected" || undefined}
-      data-taken={taken || undefined}
       data-current={current ?? undefined}
       className={cn(
         "[&_[data-shape]]:fill-background [&_[data-shape]]:stroke-foreground [&_[data-shape]]:stroke-[1.25]",
@@ -182,8 +181,6 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
               y={node.y + node.h / 2 + part.dy}
               data-block-slot={part.slot}
               data-hole={part.hole}
-              data-empty={part.empty || undefined}
-              data-variable={part.variable || undefined}
               className={cn(
                 part.empty && "fill-muted-foreground",
                 part.variable && "fill-variable font-semibold",
@@ -269,7 +266,7 @@ function EdgeLabel({ edge }: { edge: ChartEdge }) {
 
 function EdgeView({ edge, taken }: { edge: ChartEdge; taken: boolean }) {
   return (
-    <g data-edge={edge.id} data-taken={taken || undefined}>
+    <>
       <polyline
         points={edge.points.map((p) => `${p.x},${p.y}`).join(" ")}
         fill="none"
@@ -278,7 +275,7 @@ function EdgeView({ edge, taken }: { edge: ChartEdge; taken: boolean }) {
         strokeWidth={taken ? 2 : 1.25}
       />
       <EdgeLabel edge={edge} />
-    </g>
+    </>
   );
 }
 
@@ -412,7 +409,6 @@ export function Chart(props: Props) {
                   aria-label={t("chart.label")}
                   role="img"
                   data-testid="chart"
-                  data-scale={scale}
                 >
                   <defs>
                     <marker

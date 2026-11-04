@@ -50,7 +50,6 @@ function Speed() {
           key={name}
           type="button"
           aria-pressed={speed === SPEEDS[name]}
-          data-speed={name}
           className={cn(
             "rounded px-2 py-1 text-sm",
             speed === SPEEDS[name] ? "bg-foreground text-background" : "hover:bg-muted",
