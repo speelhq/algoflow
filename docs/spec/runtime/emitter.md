@@ -152,9 +152,9 @@ A block definition's `python()` receives this context:
 
 - `operand` writes `e` as the child on `side` of a parent at
   `precedence`, and applies the parentheses rule (Parentheses).
-- `slot` writes the input of a slot. When the slot declares `atom`
-  (`blocks.md`, Notation), `slot` writes the input as an atom, so `slot`
-  parenthesizes an operation in the input.
+- `slot` writes the value of a slot. When the slot declares `atom`
+  (`blocks.md`, Notation), `slot` writes the value as an atom, so `slot`
+  parenthesizes an operation in the slot.
 
 The emitter writes a target as the expression it is (`language.md`,
 Statements, Targets).

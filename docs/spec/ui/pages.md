@@ -431,10 +431,10 @@ A Problem page and a Playground program answer these keys:
 | Shift+→                      | Step over (run mode)                |
 | Ctrl/Cmd+→                   | Skip (run mode)                     |
 | Esc                          | close menu or editor, clear selection; in run mode, clear the breakpoint before the run has ended, else Stop |
-| Tab, Shift+Tab               | next, previous field of a value line, then slot (`editor.md`, Value list) |
+| Tab, Shift+Tab               | next, previous empty slot of a value line, then field (`editor.md`, Value list) |
 | ↑, ↓                         | move the highlight in the editor's list (`editor.md`, Value list) |
-| ←, →                         | previous, next value or input of a value line (`editor.md`, Value list) |
-| Enter                        | choose the highlighted entry, and in a target's line, when it leaves no input to fill, go to the next slot (`editor.md`, Targets); in a name field not typed in, the next slot (`editor.md`, Name fields); else close the editor |
+| ←, →                         | previous, next value or empty slot of a value line (`editor.md`, Value list) |
+| Enter                        | choose the highlighted entry, and in a target's line, when it leaves no empty slot, go to the next field (`editor.md`, Targets); in a name field not typed in, the next field (`editor.md`, Name fields); else close the editor |
 
 ## Messages
 
