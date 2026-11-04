@@ -86,9 +86,11 @@ These are parallel statements:
 Parallel statements are a list or a table, because a reader scans
 parallel items and reads a rule as prose.
 
-An example follows its rule as a sentence or a code block of its own,
-because an example inside a sentence makes the reader hold the rule open
-while reading the example. A parenthesis holds only a reference or a key.
+An example, except a list of code spans after "such as", follows its
+rule as a sentence or a code block of its own, because an example inside a
+sentence makes the reader hold the rule open while reading the example.
+
+A parenthesis holds only a reference or a key.
 
 Statements carry no numbers, because a quoted sentence reads on its own,
 and a handle (References) finds the statement, the code, and the tests in
@@ -181,8 +183,9 @@ A statement carries a reason in two cases only:
 - The statement rests on a constraint that the code, the configuration,
   and the statement itself don't show. The reason names that constraint.
 
-A reason names a rejected alternative in the past tense: "X was rejected,
-because …".
+A reason that names a rejected alternative names it in the statement's
+sentence or the next one. When several alternatives each have a reason, a
+list after a sentence that ends in "were rejected:" holds them.
 
 The reason follows the statement it explains, in the same sentence or the
 next, and ends the paragraph. Only an example of the statement may follow
