@@ -75,9 +75,7 @@ program or of another module gives `E_UNKNOWN_CALL`.
 
 A module uses no other module, because imports between modules would need
 dependency order, cycle detection, and a second `from … import` layer in
-the emitted files. No problem of the curriculum needs them. When a
-challenge's `module` has to call another learner module, the rule is
-lifted.
+the emitted files, and no problem of the curriculum needs them.
 
 ### Running a module
 
@@ -250,10 +248,8 @@ which both engines check, find what the problem's tests don't.
 
 `src/store/modules.ts` is the only reader and writer of learner modules.
 It exposes `list()`, `get(name)`, `put(module)`, and `remove(name)`, and
-nothing else accesses `algoflow:modules`. `localStorage` and export files
-are enough for a course on one machine, so a server, with its accounts,
-would be worth adding only for sharing between learners or syncing across
-devices. One store keeps that option open without changing its callers.
+nothing else accesses `algoflow:modules`. One store lets the storage
+change without changing its callers.
 
 The store persists learner modules under the `localStorage` key
 `algoflow:modules`, as `Record<Name, Module>`, 500 ms after the last

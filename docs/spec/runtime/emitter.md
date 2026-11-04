@@ -34,9 +34,6 @@ JavaScript was rejected, because a JavaScript file would either differ
 from the program or wrap arithmetic in helpers that a learner can't
 read.
 
-A second language would first need a narrower block language or those
-helpers.
-
 ## File layout
 
 The file holds these sections, in this order:

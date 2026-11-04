@@ -103,8 +103,6 @@ problem builds on the problems before it:
   queue, to the `heap` module.
 - The `dp` problems go from one dimension to two, and then to strings.
 
-The instructor decides whether to add a problem to the `course` plan.
-
 ### Blocks and modules
 
 The learner can solve every challenge with the block definitions of
