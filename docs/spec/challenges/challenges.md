@@ -38,8 +38,7 @@ export type Topic = "output" | "variables" | "loops" | "conditions" | "lists" | 
   | "sorting" | "recursion" | "dictionaries" | "classes";
 ```
 
-Every challenge has a challenge id, which is its `id`. The challenge id
-is the challenge's file name without `.json`.
+Every challenge has a challenge id, which is its `id`.
 
 Each test is a case: one set of inputs with its expectation.
 
@@ -48,8 +47,9 @@ Each test is a case: one set of inputs with its expectation.
 `scripts/check.ts` checks every challenge for:
 
 - the schema (Schema)
-- the `version`, `edge`, `ja`, and input-value rules of this section,
-  the input names, and `defines` (Modules and definitions)
+- the `version`, `edge`, `ja`, and input-value rules (Checks)
+- the input names
+- `defines` (Modules and definitions)
 - `solution`, validated as `language.md` states, with the built-in
   modules (`modules.md`, Built-in modules)
 - `solution`, run on every test in the interpreter against `expect`
@@ -69,10 +69,11 @@ Storage), because the build bundles a challenge file as it is, with no
 `migrate()`, so a file of another version would reach the page unchecked.
 
 Every challenge has at least one test with `edge: true`, a boundary
-case. For example: an empty list, zero, or a single item. A test is
-marked as an edge test by a flag, not by a name that begins with
-`edge:`, because a test is shown by its inputs and has no name, and a
-name would need a Japanese text.
+case. For example: an empty list, zero, or a single item.
+
+A flag marks an edge test, not a name that begins with `edge:`, because a
+test is shown by its inputs and has no name, and a name would need a
+Japanese text.
 
 Every value of a test's `inputs` is one that the blocks write: its
 Python text (`emitter.md`) parses (`parser.md`), so that
@@ -251,8 +252,11 @@ Opening a problem:
   Input chart nodes)
 
 The build bundles `challenges/*.json` and `plans.json`.
+
 `src/challenges/index.ts` imports the challenge files with
-`import.meta.glob`. `scripts/check.ts` reads the files from disk.
+`import.meta.glob`.
+
+`scripts/check.ts` reads the files from disk.
 
 ## Course plan (`course`)
 
@@ -289,10 +293,11 @@ problem introduces operators.
 
 This section lists the problems of the `structures` plan.
 
-`heap_push` and `heap_pop` compare heap items with `<`, and compare an
-item that is a list by its item 0 (`modules.md`, Built-in modules).
+`heap_push` and `heap_pop` compare heap items as the built-in `heap`
+does (`modules.md`, Built-in modules, `heap`).
 
-`heap-push` and `heap-pop` carry `module: heap`. The later problems use
+`heap-push` and `heap-pop` carry `module: heap`. `dijkstra-heap` and
+`astar-grid` use
 `heap_push` and `heap_pop` from the learner's `heap` module or the
 built-in one (`language.md`, Scope).
 
