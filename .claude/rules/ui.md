@@ -26,5 +26,11 @@ are shared with, and a pull request can't review or diff them.
   exception: `shadcn add` writes `import { cn } from "cn"` and adds an npm
   package named `cn`, so change the import to `@/lib/utils` and revert
   `package.json` and the lockfile.
+- Name a `data-*` attribute or a `data-testid` with the spec's word for
+  what it marks, in kebab-case, such as `value-list`, so a test reads as
+  the spec does, and give one thing one name. Set any other `data-*`
+  attribute only where a test, a style, or a handler reads it, and leave
+  `data-slot` to the shadcn and Base UI components, which name their parts
+  with it.
 - To inspect a chart without a screen, write `layout()`'s result as SVG
   from a temporary Vitest file and take a screenshot of it with Playwright.
