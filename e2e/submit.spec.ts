@@ -33,7 +33,7 @@ function fromZero(): Record<string, unknown> {
 test("FizzBuzz from the list to Accepted, Python, and the next problem", async ({ page }) => {
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/");
-  await page.getByTestId("problem-fizzbuzz").click();
+  await page.getByTestId("problem-row-fizzbuzz").click();
   await expect(page).toHaveTitle("FizzBuzz — AlgoFlow");
   await expect(page.getByTestId("chart")).toContainText("i % 15 = 0?");
 
@@ -100,7 +100,7 @@ test("Wrong Answer shows the rows only, and Watch opens at the first difference"
   await expect(page.getByTestId("output-row")).toHaveText(["FizzBuzz1", "1"]);
 
   await page.getByRole("button", { name: "▶ Watch this case" }).click();
-  await expect(page.getByTestId("case-select")).toContainText("n ← 1");
+  await expect(page.getByTestId("case-selector")).toContainText("n ← 1");
   await expect(page.getByTestId("narration")).toHaveText("This printed line 1");
   await expect(page.getByRole("button", { name: "▶ Play" })).toBeVisible();
   await expect(page.getByTestId("submission")).toHaveCount(0);

@@ -349,6 +349,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     const row = shown === null ? undefined : names.rows[shown];
     list = (
       <EditorList
+        testId="name-list"
         sections={names.sections}
         highlight={shown}
         enter={session.typed !== null}
@@ -367,6 +368,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     const shown = shownHighlight(session, rows.length);
     list = (
       <EditorList
+        testId="value-list"
         sections={sections}
         highlight={shown}
         enter={line.word !== ""}

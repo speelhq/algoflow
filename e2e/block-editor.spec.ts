@@ -42,7 +42,7 @@ test("FizzBuzz is built from an empty chart by typing and choosing, and accepted
   const loop = await insert(page, "main/main/0", "for");
   // The variable's name field has the keyboard: a typed name is offered as a new variable.
   await keys(page, "i");
-  await expect(editor(page).getByTestId("editor-list")).toContainText("New variable");
+  await expect(editor(page).getByTestId("name-list")).toContainText("New variable");
   await page.keyboard.press("Enter");
   // The start value is selected: a digit replaces it; Tab reaches the stop.
   await keys(page, "1");
@@ -90,12 +90,12 @@ test("the list follows what is before the caret, and a choice after a value take
   await page.goto("/#/p/sum-to-n");
   await insert(page, "main/main/0", "assign");
   // This problem's names come first.
-  await expect(editor(page).getByTestId("editor-list")).toContainText("This problem");
+  await expect(editor(page).getByTestId("value-list")).toContainText("This problem");
   await keys(page, "to");
   await expect(editor(page).locator('[data-row^="v:total"]')).toBeVisible();
   await expect(editor(page).locator('[data-row="new:to"]')).toBeVisible();
   await page.keyboard.press("Enter");
-  const list = editor(page).getByTestId("editor-list");
+  const list = editor(page).getByTestId("value-list");
   await expect(list).toContainText("Variables");
   await expect(list).toContainText("Random whole number");
   await keys(page, "n ");
@@ -200,7 +200,7 @@ test("a list is typed, its item read, and one item set in the target's line", as
   await page.keyboard.press("Enter");
   await keys(page, "[4,9,2,7]");
   // After a list, the list offers what can be done with it.
-  const list = editor(page).getByTestId("editor-list");
+  const list = editor(page).getByTestId("value-list");
   await expect(list.locator('section[aria-label="Items"]')).toContainText("Item at a position");
   await expect(list.locator('section[aria-label="Items"]')).toContainText("Count");
   await page.keyboard.press("Enter");
@@ -382,7 +382,7 @@ test("the editor stays where it is while its list changes, within the canvas", a
   const rows = editor(page).locator("[data-row]");
   const count = await rows.count();
   for (let i = 0; i < count; i += 1) {
-    const shown = await editor(page).getByTestId("editor-list").boundingBox();
+    const shown = await editor(page).getByTestId("value-list").boundingBox();
     const row = await rows.nth(i).boundingBox();
     // A row the list has scrolled out of sight is not pointed at.
     if (!row || !shown || row.y + row.height > shown.y + shown.height) continue;

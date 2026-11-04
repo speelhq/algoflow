@@ -70,7 +70,7 @@ function ProblemRow({ challenge, status }: { challenge: Challenge; status: Retur
       <a
         href={routeHash({ page: "problem", id: challenge.id })}
         className="grid grid-cols-[2rem_1fr_8rem_20rem] items-center gap-2 px-2 py-1.5 hover:bg-muted/60"
-        data-testid={`problem-${challenge.id}`}
+        data-testid={`problem-row-${challenge.id}`}
       >
         <span
           role="img"

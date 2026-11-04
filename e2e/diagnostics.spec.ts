@@ -29,12 +29,12 @@ test("hovering a flagged chart node shows its message, and the fix applies", asy
   };
   await seedProgram(page, "fizzbuzz", programWith([loop, out]));
   await page.goto("/#/p/fizzbuzz");
-  await expect(page.getByTestId("diagnostic-dot")).toHaveCount(1);
+  await expect(page.getByTestId("red-dot")).toHaveCount(1);
   await page.locator('[data-chart-node="dgn-prnt-001"]').hover();
-  const card = page.getByTestId("diagnostic-card");
-  await expect(card).toContainText("Give total a value before the if or loop");
-  await card.getByRole("button", { name: "Give total a value before it" }).click();
-  await expect(page.getByTestId("diagnostic-dot")).toHaveCount(0);
+  const message = page.getByTestId("diagnostic-message");
+  await expect(message).toContainText("Give total a value before the if or loop");
+  await message.getByRole("button", { name: "Give total a value before it" }).click();
+  await expect(page.getByTestId("red-dot")).toHaveCount(0);
   await expect(page.getByTestId("chart")).toContainText("total ← None");
 });
 
@@ -48,5 +48,5 @@ test("an empty slot shows no dot, only its placeholder", async ({ page }) => {
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");
   await expect(page.getByTestId("chart")).toContainText("x ← …");
-  await expect(page.getByTestId("diagnostic-dot")).toHaveCount(0);
+  await expect(page.getByTestId("red-dot")).toHaveCount(0);
 });

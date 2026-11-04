@@ -28,6 +28,8 @@ type Props = {
   onChoose: (index: number) => void;
   /** `Show all`, when the list offers it. */
   onShowAll?: () => void;
+  /** A value line's list or a name field's list. */
+  testId: "value-list" | "name-list";
 };
 
 export function EditorList(props: Props) {
@@ -53,7 +55,7 @@ export function EditorList(props: Props) {
     <div
       ref={shown}
       className="flex min-h-0 flex-1 flex-col overflow-y-auto px-1.5 py-1.5"
-      data-testid="editor-list"
+      data-testid={props.testId}
     >
       {rows === 0 && <p className="px-2 py-1 text-muted-foreground">{t("editor.noItems")}</p>}
       {sections.map((section, s) => (
