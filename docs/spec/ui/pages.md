@@ -205,7 +205,7 @@ A plan's button depends on the plan's progress entries
 A problem's progress entry sets its status icon, and a plan's
 `n of m solved` counts its solved problems.
 
-Topics are fixed (`problems.topic.<key>`):
+Topics are fixed (`challenge.topic.<key>`):
 
 - `Output`
 - `Variables`
@@ -454,22 +454,61 @@ form of its own for its first value (`blocks.md`, Notation).
 ## Catalogs
 
 A catalog holds the strings of one locale that the application words.
-All strings are in `src/i18n/en.json` and `src/i18n/ja.json`, under
-these namespaces:
+All strings are in `src/i18n/en.json` and `src/i18n/ja.json`.
 
-- `app.*`
-- `problems.*`
-- `problem.*`
-- `playground.*`
-- `modules.*`
-- `chart.*`
-- `menu.*`
-- `editor.*`
-- `run.*`
-- `result.*`
-- `python.*`
-- `block.*`
-- `error.*`
+A namespace holds the texts of one part of the screen. `challenge.*`,
+`block.*`, and `error.*` hold the texts of one kind of data instead,
+wherever it shows. The namespaces are:
+
+- `app.*`: what every page shares: the header, the browser tab's title,
+  Help (Help and `⋯`), and the notice for a narrow window
+- `problems.*`: the Problems page
+- `problem.*`: the Problem page: its top bar and `⋯`, which a Playground
+  program shares, its panel, and the `Problem` tab, with the band that
+  `Show solution` opens
+- `playground.*`: the Playground page, and what a Playground program's
+  top bar holds that a Problem page's doesn't (Pages and routes)
+- `modules.*`: the Modules and Module pages (`modules.md`, Pages)
+- `chart.*`: the chart, its path bar, its connectors, its zoom, and the
+  marks it draws
+- `menu.*`: the block menu
+- `editor.*`: the block editor, its value lines, the value list, and the
+  name fields
+- `run.*`: the run bar and the narration
+- `result.*`: the `Result` tab
+- `python.*`: the `Python` tab
+- `challenge.*`: a challenge's difficulty and topics (`challenges.md`,
+  Schema)
+- `block.*`: each block definition's texts (`blocks.md`, Catalog keys)
+- `error.*`: each code's message (Messages)
+
+A text that several parts show for one thing has one key, in the
+namespace of the part whose statement defines the thing. For example:
+the narration repeats an edge's label from `chart.*`, and the block
+editor labels a diagnostic's fix button from `chart.*` (`chart.md`,
+Editing on the chart, Diagnostics).
+
+The texts of one control or field are the leaves of one key, with these
+names:
+
+- `label`: its name, shown or read aloud
+- `text`: what it shows besides its name
+- `help`: a sentence that explains it
+- `hint`: what it shows while it is empty
+- `icon`: the symbol on its face
+- `symbol`: the symbol that a value list entry shows before its name
+
+For example: `problem.undo.label` is `Undo`, and `problem.undo.icon` is
+`↶`.
+
+A label that holds its symbol, such as `▶ Run`, is one text.
+
+A control or field whose only text is its label has a key of its own,
+such as `chart.path`.
+
+A key that holds the texts of a section, a band, or a dialog names each
+text for what it is. For example: `problem.solution.load` is the band's
+`Load into my program`.
 
 A change adds a key together with the code that renders it, so the
 writer words the key once the UI exists, and no translator is asked for
@@ -513,8 +552,8 @@ union the code already types, beside the template literal that builds the
 family's keys.
 
 Each placeholder stands for one segment: a run of characters other
-than `.`. For example: `` t(`problems.topic.${topic}`) `` names every
-`problems.topic.*` key.
+than `.`. For example: `` t(`challenge.topic.${topic}`) `` names every
+`challenge.topic.*` key.
 
 A template literal with a placeholder names no key when it begins with
 the placeholder or stands in neither place of that list, because one

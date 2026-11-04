@@ -86,7 +86,7 @@ When the run is playing, a click on a chart node pauses the run first.
 Before the run has ended, clicking the chart node that holds the
 breakpoint, or pressing Esc, clears the breakpoint.
 
-The chart node that holds the breakpoint shows it (`run.breakpoint`).
+The chart node that holds the breakpoint shows it (`chart.breakpoint`).
 
 The run pauses each time it arrives at the breakpoint.
 
