@@ -30,7 +30,7 @@ after its artboard in the file.
 | `EditValue.png` | 4B Build: where a value is expected | `editor.md`, Value line; Value list |
 | `EditTyping.png` | 4C Build: typing, and the text becomes blocks | `editor.md`, Value line; Backspace and keys |
 | `EditNumber.png` | 4D Build: after a number, and a named check | `editor.md`, Value list; Captions; Explanation line |
-| `EditList.png` | 4E Build: after a list, what can be done with it | `editor.md`, Value list; `blocks.md`, Menu entries |
+| `EditList.png` | 4E Build: after a list, what can be done with it | `editor.md`, Value list; `blocks.md`, Value list entries |
 | `EditCheck.png` | 4F Build: an unnamed check, then And or Or | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Notation |
 | `EditItem.png` | 4G Build: set one item of a list | `editor.md`, Value list; Name fields; Explanation line |
 | `Run.png` | 5 Run: the moment on the chart, the state in Result | `run.md`, Run bar; Path and marks; Narration; `pages.md`, Result tab |

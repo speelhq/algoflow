@@ -321,7 +321,7 @@ it has no parameter, and explained by `editor.ownFunction`.
 (Block menu).
 
 After a value, the list holds the entries whose `on` holds the kind of
-the expression before the caret (`blocks.md`, Menu entries), in these
+the expression before the caret (`blocks.md`, Value list entries), in these
 groups:
 
 - `Calculate` for a number
@@ -480,7 +480,7 @@ Delete removes a selected value as Backspace does.
 
 ### Keys
 
-Each entry names its keys (`keys`, `blocks.md`, Menu entries):
+Each entry names its keys (`typed`, `blocks.md`, Value list entries):
 
 | Typed                   | Inserts                                          |
 | ----------------------- | ------------------------------------------------ |
