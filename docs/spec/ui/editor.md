@@ -6,11 +6,6 @@ place. This file states the block menu, the block editor, value lines and
 their lists, what Backspace removes and what keys insert, target
 slots, name fields, captions, the explanation line, and the verification.
 
-Code: `src/ui/editor` (the block menu `menu.ts` and `BlockMenu.tsx`, the
-block editor `BlockEditor.tsx` with its session `session.ts`, the value line
-`line.ts` and `ValueLine.tsx`, names `names.ts`, the explanation line
-`explain.ts`). Tests: beside each file, and `e2e/`.
-
 ## Block menu
 
 The block menu lists the statement block definitions, except those marked

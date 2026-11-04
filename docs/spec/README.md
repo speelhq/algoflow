@@ -159,8 +159,7 @@ table row:
 ## File layout
 
 Each file opens with one paragraph. The paragraph says what the area is
-and what the file states, and then names the code and the tests that the
-file governs.
+and what the file states.
 
 A `##` section states one part of the area and opens with what that part
 is for.

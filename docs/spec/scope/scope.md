@@ -3,7 +3,7 @@
 AlgoFlow is a single-page web application. All of it runs in the browser.
 This file states where it runs, who learns with it, which problems it
 holds, and what every challenge's solution passes. This file governs the
-whole product. This file has no code of its own.
+whole product.
 
 ## Product
 

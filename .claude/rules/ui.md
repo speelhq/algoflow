@@ -5,11 +5,11 @@ paths:
 
 # The screens
 
-Before you change a screen, read its file in `docs/spec/ui/` and
-`pages.md`. Before you build one, also read `docs/design/README.md` and
-the screen's artboard, the exported PNG. Work from the PNG because the
-Claude Design files open only for the people they are shared with, and a
-pull request can't review or diff them.
+Before you change a screen, read the spec that `ARCHITECTURE.md`, Code
+map, names for its part, and `pages.md`. Before you build one, also read
+`docs/design/README.md` and the screen's artboard, the exported PNG. Work
+from the PNG because the Claude Design files open only for the people they
+are shared with, and a pull request can't review or diff them.
 
 - oxlint's `jsx-a11y` rejects mouse and click handlers on `li`, `tr`, and
   `ol`. Use one delegated listener with `data-*` attributes instead.

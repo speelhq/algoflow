@@ -40,13 +40,19 @@ and `src/store` on the core (`src/lang`, `src/blocks`, `src/runtime`,
 depends on React, so the core runs under Vitest and in `scripts/check.ts`
 without a browser.
 
+Each entry names the spec that its folder follows, except
+`src/ui/primitives` and `src/ui/hooks`, which no spec governs. A test sits
+A unit test sits beside the code it tests, and `e2e/` holds the
+end-to-end tests.
+
 - `src/lang`: the `Program` AST (`types.ts`), `validate()`, pure edit
   functions that return a new `Program` (`edit.ts`), and the conversion
   between `Data` and `Value`, which places lists, dicts, and objects on the
   heap (`data.ts`). `validate()` returns `Diagnostic[]` and runs after every
   edit and before every run. Never change a `Program` in place:
   `validate()`, `refusedDefinitions()`, and `blocksById()` are memoized per
-  `Program` object, and the undo history keeps earlier programs.
+  `Program` object, and the undo history keeps earlier programs. Its spec
+  is `docs/spec/language/language.md`.
 - `src/blocks`: one block definition (`BlockDef`) per file. It owns its slots,
   `create()`, `run` (what the interpreter does), `python()` (the exact
   Python it emits), and `chart` (`docs/spec/blocks/`). `registry.ts` is the
@@ -60,12 +66,16 @@ without a browser.
   (`src/store/steps.ts`).
 - `src/python`: `emit()` produces the Python file and a map from each
   `NodeId` to its line. `parse()` turns typed expression text back into an
-  `Expr`, and `unparse(parse(s))` is a fixed point
-  (`docs/spec/runtime/parser.md`). The emitted Python, not the interpreter,
-  is the reference for how a program behaves.
+  `Expr`, and `unparse(parse(s))` is a fixed point. The emitted Python, not
+  the interpreter, is the reference for how a program behaves. Its specs
+  are `docs/spec/runtime/emitter.md` and `docs/spec/runtime/parser.md`.
 - `src/challenges`: the challenge schema, the bundled challenges and study
   plans, and the judge (`judge.ts`), which `scripts/check.ts` also uses.
+  Its spec is `docs/spec/challenges/challenges.md`.
+- `src/i18n`: the catalog `en.json` and `t()`. Its spec is
+  `docs/spec/ui/pages.md`, Messages; Catalogs.
 - `src/store`: the Zustand stores, and the modules that work with them.
+  `.claude/rules/store.md` names the spec of each store.
   - `program`: the open program, its undo history, and its persistence.
   - `playground`: the index of Playground programs.
   - `editor`: the hovered and the selected node.
@@ -96,15 +106,35 @@ without a browser.
   a route's program before it notifies React, so a page never renders with
   the previous page's program. The panel's resize handle is the app's own
   `ResizeHandle.tsx` rather than `react-resizable-panels`, which works in
-  percentages where the spec gives sizes in pixels.
-- The rest of `src/ui`: React components. The chart is an SVG flowchart
-  with a computed layout (`src/ui/chart/layout.ts`). Chart node text and
-  the narration are plain strings from `src/ui/chart/text.ts` and
-  `src/ui/run/narrate.ts`, and `text.ts` is the only code that splits a
-  notation into its pieces. The block editor's state is a session that
-  changes only through pure transitions (`src/ui/editor/session.ts`). A
-  variable's view is chosen by the type of its value alone, never by block
-  or challenge (`docs/spec/ui/views.md`).
+  percentages where the spec gives sizes in pixels. Its spec is
+  `docs/spec/ui/pages.md`.
+- The rest of `src/ui`: React components, each following the spec of its
+  part:
+  - `src/ui/chart`: the chart (`docs/spec/ui/chart.md`), and the path and
+    marks it draws during a run (`docs/spec/ui/run.md`).
+  - `src/ui/editor`: the block menu, the block editor, and value lines
+    (`docs/spec/ui/editor.md`).
+  - `src/ui/run`: the narration (`docs/spec/ui/run.md`).
+  - `src/ui/problem`: the Problem page. Its canvas follows `chart.md`; its
+    run bar, the actions of `Run` and `Submit`, and the submission follow
+    `run.md`; the variables of its `Result` tab follow `views.md`; and its
+    panel, tabs, and keys follow `pages.md`, all in `docs/spec/ui/`.
+  - `src/ui/problems` and `src/ui/playground`: the Problems page and the
+    Playground page (`docs/spec/ui/pages.md`).
+  - `src/ui/python`: the highlighting and the lines of the `Python` tab
+    (`docs/spec/ui/pages.md`, Python tab).
+  - `src/ui/text`: the Markdown that the panel shows
+    (`docs/spec/ui/pages.md`).
+
+  The chart is an SVG flowchart with a computed layout
+  (`src/ui/chart/layout.ts`). Chart node text and the narration are plain
+  strings from `src/ui/chart/text.ts` and `src/ui/run/narrate.ts`, and
+  `text.ts` is the only code that splits a notation into its pieces. The
+  block editor's state is a session that changes only through pure
+  transitions (`src/ui/editor/session.ts`). A variable's view is chosen by
+  the type of its value alone, never by block or challenge
+  (`docs/spec/ui/views.md`).
+
 - `challenges/<id>.json`: one file per challenge. `scripts/check.ts` runs
   every solution in both the interpreter and CPython and compares the
   results (`docs/spec/challenges/`).

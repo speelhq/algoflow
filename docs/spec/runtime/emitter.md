@@ -7,9 +7,6 @@ writes parentheses and how it writes a literal, what a block definition's
 `python()` returns and receives, and how the emitter writes a module's
 file.
 
-Code: `src/python/emit.ts`, `strings.ts`, `precedence.ts`. Tests:
-`emit.test.ts`, with the expression fixture `fixtures/expressions.ts`.
-
 ## Interface
 
 `emit` returns the program's file, its line map, and the modules'

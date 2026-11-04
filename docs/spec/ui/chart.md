@@ -7,11 +7,6 @@ path bar names it, the Input chart nodes, the shape of every chart node,
 how the learner edits on the chart, zoom and the run's highlight, and
 the verification.
 
-Code: `src/ui/problem/Canvas.tsx`, and `src/ui/chart`, which holds the
-layout (`layout.ts`), the text (`text.ts`), the drawing (`Chart.tsx`,
-`paint.ts`), `drag.tsx`, `zoom.ts`, and `PathBar.tsx`. Tests: beside
-each file, and `e2e/`.
-
 ## Charts and the path bar
 
 The canvas shows one chart or field table, and the path bar above it

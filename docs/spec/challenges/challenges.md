@@ -8,11 +8,6 @@ fields, the hints, the study plans, how a submission is judged, how
 progress is recorded, how a problem opens and how the files are
 bundled, the problems of each plan, and the verification.
 
-Code: `challenges/*.json`, `challenges/plans.json`, `src/challenges/`
-with the `Challenge` and `Plan` types in `types.ts`, and
-`scripts/check.ts` with `scripts/lib/challenge.ts`, `plans.ts`,
-`interp.ts`, and `agreement.ts`. Tests: beside each file.
-
 ## Schema
 
 Each challenge is one file `challenges/<id>.json` of this shape:

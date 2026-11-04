@@ -8,12 +8,6 @@ file states the runner's interface, the events, the runtime errors, what
 a block definition's `run` receives, how a module function runs, the
 driver, and the check that holds the interpreter to CPython.
 
-Code: the runner `src/runtime/`; the driver `src/store/run.ts` with
-`src/store/steps.ts` and `src/store/batches.ts`; the CPython check
-`scripts/check.ts` with `scripts/lib/cpython.ts` and
-`scripts/lib/agreement.ts`. Tests: beside each file, and the tests of the
-Semantics rules, where `language.md`, Semantics, places them.
-
 ## Runner
 
 The runner executes one program and gives out its events one call at a

@@ -7,11 +7,6 @@ and its tabs, the first launch, the keyboard, the messages, the
 catalogs and the Japanese texts, how a value is written on one line,
 and the verification.
 
-Code: `src/ui/app`, `src/ui/problems`, `src/ui/playground`, the panel
-and its tabs in `src/ui/problem`, `src/ui/python`, `src/ui/text`,
-`src/i18n`, and `src/store/layout.ts`. Tests: beside each file, and
-`e2e/`.
-
 ## Pages and routes
 
 The application has six pages, each addressed by a hash route:
