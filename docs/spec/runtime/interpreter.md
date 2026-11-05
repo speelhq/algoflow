@@ -82,7 +82,7 @@ export type Event =
   | { type: "read"; nodeId: NodeId; refs: Ref[] }
   | { type: "write"; nodeId: NodeId; ref: Ref; value: Value; from?: Ref } // `from`: `swap`
   | { type: "compare"; nodeId: NodeId; result: boolean }
-  | { type: "loop"; nodeId: NodeId; var?: Name; value?: Value }
+  | { type: "loop"; nodeId: NodeId; ref?: Ref; value?: Value } // `ref`: the place of a loop's target
   | { type: "call"; nodeId: NodeId; fn: Name; args: Value[] }
   | { type: "return"; nodeId: NodeId; fn: Name; value: Value }
   | { type: "print"; nodeId: NodeId; text: string };
@@ -178,6 +178,12 @@ Each check of a diamond ends in one `compare` of its whole condition.
 `for`, `foreach`, and `while` emit `loop` at the start of each pass.
 
 In a `while`, the `loop` follows the `compare` of its check.
+
+A `for` or a `foreach` finds its target's place at each pass with the
+context's `locate` (Block definitions), saves the pass's value there, and
+then emits `loop` with that place in `ref` and the value in `value`. So
+the events of finding the place come before the `loop`, as the events of
+a statement's expressions come before its effect.
 
 ## Errors
 

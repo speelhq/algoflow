@@ -228,8 +228,8 @@ export type Stmt =
   | (S & { kind: "assign"; target: Expr; value: Expr })
   | (S & { kind: "delete"; target: Expr })
   | (S & { kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
-  | (S & { kind: "for"; var: Name; start: Expr; stop: Expr; body: Stmt[] })
-  | (S & { kind: "foreach"; var: Name; list: Expr; body: Stmt[] })
+  | (S & { kind: "for"; var: Expr; start: Expr; stop: Expr; body: Stmt[] })
+  | (S & { kind: "foreach"; var: Expr; list: Expr; body: Stmt[] })
   | (S & { kind: "while"; cond: Expr; body: Stmt[] })
   | (S & { kind: "break" })
   | (S & { kind: "continue" })
@@ -306,15 +306,15 @@ export type BinOp =
 ### Empty slots
 
 An empty slot is a slot that still needs filling: an expression slot or
-an item that holds `{ kind: "empty" }`, or a `name` slot that holds
-`""` (`blocks.md`, The block definition, Slots).
+an item that holds `{ kind: "empty" }`.
 `validate()` reports each empty slot as `E_EMPTY_SLOT` with the slot's
 name.
 
 Each consumer handles the `empty` expression in its own way:
 
 - `create()` fills with it every expression slot that it gives no value
-  and that isn't `optional`. For example: a new `for` starts at `0`.
+  and that isn't `optional`. For example: a new `for` starts at `0`, and
+  its variable is an empty slot.
 - The emitter writes `...` for it.
 - The interpreter never executes it.
 
@@ -355,10 +355,16 @@ emitted Python with no message.
 | --- | --- |
 | `for` iterates `start … stop-1`, bounds evaluated once, `int` only else `E_TYPE` | |
 | `foreach` visits `list[0]`, `list[1]`, … and reads the list's length before each pass, as Python does, so changing the list inside the loop changes the passes | appending in the body adds a pass |
+| each pass finds its target's place again and stores the pass's value there | `for nums[k] in range(3)` with a body `k ← 1`, `k = 0`, and `nums = [9, 9]` → `nums = [0, 2]` |
 
 `foreach` reads the live list, not a snapshot, because a snapshot would
 run a body that changes the list differently from the emitted Python, with
 no sign of it.
+
+A loop finds its target's place again at each pass, because Python
+assigns its target at each pass. Finding the place once, before the first
+pass, was rejected, because a body that changes the target's position
+would then store into a place that the emitted Python no longer writes.
 
 Every other difference from Python, except the int range (Run-time
 values, Int range), is stricter and ends in an error:
@@ -429,7 +435,8 @@ it.
 
 A `target` slot that `binds` (`blocks.md`, The block definition) declares
 the variable that its target names, and it doesn't read that variable.
-`assign`'s slot binds; `delete`'s and `swap`'s slots don't.
+The slots of `assign`, `for`, and `foreach` bind; `delete`'s and `swap`'s
+slots don't.
 
 Two kinds of target read their expressions before the value is stored:
 
@@ -520,10 +527,10 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 ## Edits
 
 `edit.ts` exports pure functions that return a new `Program`:
-`insertStmt`, `moveStmt`, `removeStmt`, `duplicateStmt`, `setSlot`,
-`setExpr`, `insertItem`, `removeItem`, `renameName`, `setCaption`,
-`addFunction`, `removeFunction`, `addClass`, `removeClass`,
-`setAttributes`, `setParams`, and `hoistAssign`. `insertItem` and
+`insertStmt`, `moveStmt`, `removeStmt`, `duplicateStmt`, `setExpr`,
+`insertItem`, `removeItem`, `renameName`, `setCaption`, `addFunction`,
+`removeFunction`, `addClass`, `removeClass`, `setAttributes`,
+`setParams`, and `hoistAssign`. `insertItem` and
 `removeItem` add and remove an item of an `exprs` slot.
 
 Every edit keeps node ids unique.
@@ -623,7 +630,7 @@ A statement's caption changes neither validation nor execution.
 ## Kinds
 
 A kind is what the value list and the name list (`editor.md`, Value list;
-Name fields) know of a value before the program runs. The kinds are
+Name list) know of a value before the program runs. The kinds are
 `number`, `text`, `truefalse`, `none`, `list`, `dict`, and `object`.
 
 A block definition's `yields` (`blocks.md`, The block definition) gives an
@@ -633,9 +640,10 @@ whose kind can't be determined has none.
 A variable's kind is found in this order:
 
 1. the kind its input declares
-2. the kind of the value of its first assignment, in program order
-3. the kind its loop block definition declares (`declares`; `blocks.md`, The
-   block definition)
+2. the kind of the value that its first assignment stores, in program
+   order (`stores`; `blocks.md`, The block definition)
+3. the kind that the block definition of a loop declares for the variable
+   that the loop's binding target names (`declares`)
 
 A `for` variable's block definition declares `number`. A parameter and a
 `foreach` variable have no kind.

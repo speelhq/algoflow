@@ -438,7 +438,7 @@ A Problem page and a Playground program answer these keys:
 | Tab, Shift+Tab               | next, previous empty slot of a value line, then field (`editor.md`, Value list) |
 | ↑, ↓                         | move the highlight in the editor's list (`editor.md`, Value list) |
 | ←, →                         | previous, next value or empty slot of a value line (`editor.md`, Value list) |
-| Enter                        | choose the highlighted entry, and in a target's line, when it leaves no empty slot, go to the next field (`editor.md`, Targets); in a name field not typed in, the next field (`editor.md`, Name fields); else close the editor |
+| Enter                        | choose the highlighted entry, and in a target's line, when it leaves no empty slot, go to the next field (`editor.md`, Targets); else close the editor |
 
 ## Messages
 
@@ -476,8 +476,7 @@ wherever it shows. The namespaces are:
 - `chart.*`: the chart, its path bar, its connectors, its zoom, and the
   marks it draws
 - `menu.*`: the block menu
-- `editor.*`: the block editor, its value lines, the value list, and the
-  name fields
+- `editor.*`: the block editor, its value lines, and the value list
 - `run.*`: the run bar and the narration
 - `result.*`: the `Result` tab
 - `python.*`: the `Python` tab

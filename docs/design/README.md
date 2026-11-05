@@ -26,13 +26,13 @@ after its artboard in the file.
 | `Main.png` | 1 Problems: one section per plan | `pages.md`, Pages and routes; Problems page |
 | `BuildEmpty.png` | 2 Build: first launch, an empty chart | `pages.md`, Page layout; Problem tab; First launch; `chart.md`, Editing on the chart |
 | `BuildMenu.png` | 3 Build: the + menu lists statements only | `editor.md`, Block menu; `chart.md`, Shapes |
-| `BuildEdit.png` | 4 Build: editing a block, choosing a variable | `editor.md`, Block editor; Name fields; Captions |
+| `BuildEdit.png` | 4 Build: editing a block, choosing a variable | `editor.md`, Block editor; Name list; Captions |
 | `EditValue.png` | 4B Build: where a value is expected | `editor.md`, Value line; Value list |
 | `EditTyping.png` | 4C Build: typing, and the text becomes blocks | `editor.md`, Value line; Backspace and keys |
 | `EditNumber.png` | 4D Build: after a number, and a named check | `editor.md`, Value list; Captions; Explanation line |
 | `EditList.png` | 4E Build: after a list, what can be done with it | `editor.md`, Value list; `blocks.md`, Value list entries |
 | `EditCheck.png` | 4F Build: an unnamed check, then And or Or | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Notation |
-| `EditItem.png` | 4G Build: set one item of a list | `editor.md`, Value list; Name fields; Explanation line |
+| `EditItem.png` | 4G Build: set one item of a list | `editor.md`, Value list; Name list; Explanation line |
 | `Run.png` | 5 Run: the moment on the chart, the state in Result | `run.md`, Run bar; Path and marks; Narration; `pages.md`, Result tab |
 | `Wrong.png` | 6 Submit: Wrong Answer, and a way to the cause | `run.md`, Submission |
 | `Accepted.png` | 7 Submit: Accepted, with what comes next | `run.md`, Submission |
