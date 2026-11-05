@@ -145,8 +145,12 @@ can only come from editing the file by hand:
   definition, Slots)
 
 `migrate()` rejects a file with one of those faults, so `validate()` never
-reads a field that `fieldsError` checks. `migrate()` rejects the file because there is no
-node to fix those faults on.
+reads a field that `fieldsError` checks. `migrate()` rejects the file
+because there is no node to fix those faults on. An expression whose
+`name` slot holds `""` is rejected although it has a node, because
+nothing there would show the fault: `E_EMPTY_SLOT` puts no dot on a chart
+node (`chart.md`, Editing on the chart, Diagnostics), and a value's slots
+are its expression slots only (`editor.md`, Value line).
 
 ### Classes and objects before `new` exists
 
