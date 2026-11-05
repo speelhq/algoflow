@@ -19,7 +19,8 @@ With diagnostics present, neither `Run` nor `Submit` starts. Instead,
 each:
 
 - shows the chart of the first node with a diagnostic
-- selects that node's statement
+- selects that node's statement, or, for a function's diagnostic, clears
+  the selection and opens the function's editor
 - shows its message (`chart.md`, Editing on the chart)
 
 An empty slot is reported only this way, because a block drawn red when
