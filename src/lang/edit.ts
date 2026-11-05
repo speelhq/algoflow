@@ -11,7 +11,9 @@ import {
   childSlots,
   idsUnder,
   programIds,
+  findRoutine,
   programStmts,
+  routineStmts,
   regionsOf,
 } from "./walk";
 
@@ -78,7 +80,7 @@ export type StmtAt = { stmt: Stmt; region: Stmt[]; index: number };
 function* regions(program: Program): Generator<Stmt[], void, void> {
   yield program.main;
   for (const fn of program.functions) yield fn.body;
-  for (const { stmt } of programStmts(program))
+  for (const stmt of programStmts(program))
     for (const region of regionsOf(stmt)) yield region.stmts;
 }
 
@@ -93,9 +95,8 @@ export function findStmt(program: Program, id: NodeId): StmtAt | undefined {
 
 /** The region a place names, or undefined when the program has none there. */
 export function findRegion(program: Program, place: Place): Stmt[] | undefined {
-  if (place.parent === "main") return program.main;
-  const fn = program.functions.find((f) => f.id === place.parent);
-  if (fn) return fn.body;
+  const routine = findRoutine(program, place.parent);
+  if (routine) return routineStmts(program, routine);
   const found = findStmt(program, place.parent);
   return found && regionsOf(found.stmt).find((r) => r.slot === place.slot)?.stmts;
 }
@@ -108,7 +109,7 @@ function getRegion(program: Program, place: Place): Stmt[] {
 
 /** The statement or expression block with this id; throws when the program has none. */
 function getBlock(program: Program, id: NodeId): Stmt | Expr {
-  for (const { stmt } of programStmts(program)) {
+  for (const stmt of programStmts(program)) {
     if (stmt.id === id) return stmt;
     for (const { expr } of childSlots(stmt)) {
       for (const e of allExprs(expr)) if (e.id === id) return e;
@@ -268,7 +269,7 @@ export function renameName(program: Program, from: Name, to: Name): Program {
       }
     }
   };
-  for (const { stmt } of programStmts(next)) {
+  for (const stmt of programStmts(next)) {
     renameIdSlots(stmt);
     for (const { expr: root } of childSlots(stmt))
       for (const expr of allExprs(root)) renameIdSlots(expr);

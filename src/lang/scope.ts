@@ -2,8 +2,8 @@
 // and whether a place lies inside a loop or a function.
 // Registry-driven: slots, `loop`, and regions, never a kind.
 import { getBlockDef, keyOf } from "@/blocks/registry";
-import type { Expr, Name, NodeId, Place, Program, Stmt } from "./types";
-import { childSlots, isExpr, regionsOf, variableOf } from "./walk";
+import type { Expr, Name, NodeId, Place, Program, RegionParent, Stmt } from "./types";
+import { childSlots, findRoutine, isExpr, regionsOf, variableOf } from "./walk";
 
 type Bag = Record<string, unknown>;
 
@@ -78,9 +78,9 @@ export function visibleAt(program: Program, id: NodeId): Name[] | undefined {
 }
 
 /** The statement whose region holds each statement; a top-level statement maps to its routine. */
-function parents(program: Program): Map<NodeId, NodeId | "main"> {
-  const map = new Map<NodeId, NodeId | "main">();
-  const walk = (stmts: Stmt[], parent: NodeId | "main") => {
+function parents(program: Program): Map<NodeId, RegionParent> {
+  const map = new Map<NodeId, RegionParent>();
+  const walk = (stmts: Stmt[], parent: RegionParent) => {
     for (const stmt of stmts) {
       map.set(stmt.id, parent);
       for (const region of regionsOf(stmt)) walk(region.stmts, stmt.id);
@@ -94,7 +94,6 @@ function parents(program: Program): Map<NodeId, NodeId | "main"> {
 /** Whether a statement at `place` would be inside a loop body and inside a function. */
 export function placeContext(program: Program, place: Place): { loop: boolean; fn: boolean } {
   const up = parents(program);
-  const functions = new Set(program.functions.map((fn) => fn.id));
   const stmts = new Map<NodeId, Stmt>();
   const index = (list: Stmt[]) => {
     for (const stmt of list) {
@@ -106,8 +105,8 @@ export function placeContext(program: Program, place: Place): { loop: boolean; f
   for (const fn of program.functions) index(fn.body);
 
   let loop = false;
-  let at: NodeId | "main" | undefined = place.parent;
-  while (at !== undefined && at !== "main" && !functions.has(at)) {
+  let at: RegionParent | undefined = place.parent;
+  while (at !== undefined && findRoutine(program, at) === undefined) {
     const stmt = stmts.get(at);
     if (stmt && getBlockDef(keyOf(stmt)).loop) loop = true;
     at = up.get(at);

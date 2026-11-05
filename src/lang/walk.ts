@@ -1,6 +1,6 @@
 // Traversal driven by each block's slots, so no module lists block kinds.
 import { getBlockDef, keyOf } from "@/blocks/registry";
-import type { Expr, FunctionDef, Block, NodeId, Program, Stmt } from "./types";
+import type { Expr, Block, FunctionDef, NodeId, Program, Routine, Stmt } from "./types";
 
 type Bag = Record<string, unknown>;
 
@@ -107,16 +107,32 @@ export function* idsUnder(stmts: Stmt[]): Generator<NodeId, void, void> {
   }
 }
 
-export type StmtSite = { stmt: Stmt; fn: FunctionDef | null };
+/** The function that `routine` names, or "main"; undefined for a routine that names no function. */
+export function findRoutine(program: Program, routine: Routine): FunctionDef | "main" | undefined {
+  if (routine === "main") return "main";
+  return program.functions.find((fn) => fn.id === routine);
+}
 
-/** Every statement in the program with the function it belongs to (null for main). */
-export function* programStmts(program: Program): Generator<StmtSite, void, void> {
-  for (const fn of program.functions) for (const stmt of allStmts(fn.body)) yield { stmt, fn };
-  for (const stmt of allStmts(program.main)) yield { stmt, fn: null };
+/** The function that `routine` names, or "main"; throws for a routine that names no function. */
+export function getRoutine(program: Program, routine: Routine): FunctionDef | "main" {
+  const found = findRoutine(program, routine);
+  if (found === undefined) throw new Error(`no function ${routine}`);
+  return found;
+}
+
+/** The statements of a routine: `main`'s, or a function's body. */
+export function routineStmts(program: Program, routine: FunctionDef | "main"): Stmt[] {
+  return routine === "main" ? program.main : routine.body;
+}
+
+/** Every statement in the program: the functions' first, then `main`'s, each pre-order. */
+export function* programStmts(program: Program): Generator<Stmt, void, void> {
+  for (const fn of program.functions) yield* allStmts(fn.body);
+  yield* allStmts(program.main);
 }
 
 export function* programExprs(program: Program): Generator<Expr, void, void> {
-  for (const { stmt } of programStmts(program)) yield* stmtExprs(stmt);
+  for (const stmt of programStmts(program)) yield* stmtExprs(stmt);
 }
 
 /**
@@ -126,7 +142,7 @@ export function* programExprs(program: Program): Generator<Expr, void, void> {
 export function ownersById(program: Program): Map<NodeId, NodeId> {
   const owners = new Map<NodeId, NodeId>();
   for (const fn of program.functions) owners.set(fn.id, fn.id);
-  for (const { stmt } of programStmts(program)) {
+  for (const stmt of programStmts(program)) {
     owners.set(stmt.id, stmt.id);
     for (const expr of stmtExprs(stmt)) owners.set(expr.id, stmt.id);
   }
@@ -149,7 +165,7 @@ export function diamondConditions(program: Program): Map<NodeId, NodeId> {
   let found = conditions.get(program);
   if (!found) {
     found = new Map();
-    for (const { stmt } of programStmts(program)) {
+    for (const stmt of programStmts(program)) {
       const condition = conditionOf(stmt);
       if (condition) found.set(condition.expr.id, stmt.id);
     }
@@ -164,7 +180,7 @@ export function diamondConditions(program: Program): Map<NodeId, NodeId> {
  */
 export function bodyStmts(program: Program): Map<NodeId, NodeId[]> {
   const bodies = new Map<NodeId, NodeId[]>();
-  for (const { stmt } of programStmts(program)) {
+  for (const stmt of programStmts(program)) {
     const regions = regionsOf(stmt);
     if (regions.length === 0) continue;
     const ids: NodeId[] = [];
@@ -181,7 +197,7 @@ export function blocksById(program: Program): Map<NodeId, Block> {
   let index = indexes.get(program);
   if (!index) {
     index = new Map();
-    for (const { stmt } of programStmts(program)) {
+    for (const stmt of programStmts(program)) {
       index.set(stmt.id, stmt);
       for (const expr of stmtExprs(stmt)) index.set(expr.id, expr);
     }

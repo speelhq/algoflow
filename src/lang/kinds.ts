@@ -4,8 +4,8 @@
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import { isFloatData } from "./data";
 import { assignedValue, declaredBy } from "./scope";
-import type { Data, Expr, Name, Kind, NodeId, Program, Stmt } from "./types";
-import { allStmts, variableOf } from "./walk";
+import type { Data, Expr, Name, Kind, NodeId, Program, Routine, Stmt } from "./types";
+import { allStmts, getRoutine, idsUnder, routineStmts, variableOf } from "./walk";
 
 /** The kind of a value written as Data. */
 export function dataKind(data: Data): Kind {
@@ -26,19 +26,24 @@ export function exprKind(expr: Expr, variables: Kinds): Kind | undefined {
   return getBlockDef(keyOf(expr)).yields?.(expr, (inner) => exprKind(inner, variables));
 }
 
-/** `main`, or the function whose body holds statement `id`. */
-export function routineOf(program: Program, id: NodeId): "main" | NodeId {
+/**
+ * The routine that holds node `id`: a function holds itself and every node of its body, and
+ * `main` every node of its own. Throws for a node id the program doesn't hold.
+ */
+export function routineOf(program: Program, id: NodeId): Routine {
   for (const fn of program.functions) {
-    for (const stmt of allStmts(fn.body)) if (stmt.id === id) return fn.id;
+    if (fn.id === id) return fn.id;
+    for (const inner of idsUnder(fn.body)) if (inner === id) return fn.id;
   }
-  return "main";
+  for (const inner of idsUnder(program.main)) if (inner === id) return "main";
+  throw new Error(`no node ${id}`);
 }
 
 type Scope = { kinds: Map<Name, Kind>; setters: Map<Name, Stmt> };
 
 const memo = new WeakMap<Program, Map<string, Scope>>();
 
-function scope(program: Program, routine: "main" | NodeId): Scope {
+function scope(program: Program, routine: Routine): Scope {
   let routines = memo.get(program);
   if (!routines) {
     routines = new Map();
@@ -46,17 +51,17 @@ function scope(program: Program, routine: "main" | NodeId): Scope {
   }
   const known = routines.get(routine);
   if (known) return known;
-  const fn = program.functions.find((candidate) => candidate.id === routine);
+  const routineDef = getRoutine(program, routine);
   const kinds = new Map<Name, Kind>();
   const setters = new Map<Name, Stmt>();
   const assigned = new Set<Name>();
-  if (!fn) {
+  if (routineDef === "main") {
     for (const input of program.inputs) {
       kinds.set(input.name, input.kind);
       assigned.add(input.name);
     }
   }
-  for (const stmt of allStmts(fn ? fn.body : program.main)) {
+  for (const stmt of allStmts(routineStmts(program, routineDef))) {
     const def = getBlockDef(keyOf(stmt));
     for (const { name, role } of declaredBy(stmt)) {
       if (!setters.has(name)) setters.set(name, stmt);
@@ -78,11 +83,11 @@ function scope(program: Program, routine: "main" | NodeId): Scope {
 }
 
 /** The kinds of the variables of `main` or of one function, by its id. */
-export function variableKinds(program: Program, routine: "main" | NodeId): Kinds {
+export function variableKinds(program: Program, routine: Routine): Kinds {
   return scope(program, routine).kinds;
 }
 
 /** The statement that first sets each variable of `main` or of one function. */
-export function firstSetters(program: Program, routine: "main" | NodeId): ReadonlyMap<Name, Stmt> {
+export function firstSetters(program: Program, routine: Routine): ReadonlyMap<Name, Stmt> {
   return scope(program, routine).setters;
 }

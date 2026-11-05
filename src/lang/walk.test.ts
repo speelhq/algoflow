@@ -1,7 +1,16 @@
 // Every node maps to the statement that contains it.
 import { describe, expect, it } from "vitest";
 import { ast, program, tid } from "@/blocks/testing";
-import { bodyStmts, conditionOf, diamondConditions, ownersById, paramArg } from "./walk";
+import {
+  bodyStmts,
+  conditionOf,
+  diamondConditions,
+  findRoutine,
+  getRoutine,
+  ownersById,
+  paramArg,
+  routineStmts,
+} from "./walk";
 
 const { assign, num, bin, v, if_, for_, while_, print, ret, call } = ast;
 
@@ -69,5 +78,19 @@ describe("bodyStmts", () => {
     expect(bodies.get(loop.id)).toEqual([branch.id, hit.id, miss.id, tail.id]);
     expect(bodies.get(branch.id)).toEqual([hit.id, miss.id]);
     expect([...bodies.keys()]).toEqual([loop.id, branch.id]);
+  });
+});
+
+describe("routines", () => {
+  it("finds a routine's function, or main, and nothing for a routine that names no function", () => {
+    const fn = { id: "fun000000004", name: "main", params: [], body: [] };
+    const p = program([], { functions: [fn] });
+    expect(findRoutine(p, "main")).toBe("main");
+    expect(findRoutine(p, fn.id)).toBe(p.functions[0]);
+    expect(findRoutine(p, tid())).toBeUndefined();
+    expect(getRoutine(p, fn.id)).toBe(p.functions[0]);
+    expect(() => getRoutine(p, tid())).toThrow();
+    expect(routineStmts(p, "main")).toBe(p.main);
+    expect(routineStmts(p, getRoutine(p, fn.id))).toBe(p.functions[0]?.body);
   });
 });
