@@ -4,7 +4,7 @@
 // and what a click on a chart node does in each mode.
 import { validate } from "@/lang/validate";
 import type { NodeId } from "@/lang/types";
-import { ownersById } from "@/lang/walk";
+import { ownerOf } from "@/lang/walk";
 import { useEditor } from "@/store/editor";
 import { currentMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
@@ -18,7 +18,7 @@ function readyToRun(): boolean {
   editor.showSolution(false);
   const [first] = validate(program);
   if (!first) return true;
-  editor.lead(ownersById(program).get(first.nodeId) ?? first.nodeId, first);
+  editor.lead(ownerOf(program, first.nodeId), first);
   return false;
 }
 

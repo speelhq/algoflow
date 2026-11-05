@@ -1,9 +1,9 @@
 // The explanation line at the foot of the editor: what the list highlights or the caret
 // is in, as a name and runs of text; undefined leaves the block's help.
 import { t } from "@/i18n/t";
-import { routineOf, firstSetters, variableKinds } from "@/lang/kinds";
+import { firstSetters, variableKinds } from "@/lang/kinds";
 import type { Expr, Name, Kind, NodeId, Program } from "@/lang/types";
-import { getRoutine, isEmptyExpr } from "@/lang/walk";
+import { getRoutine, isEmptyExpr, routineOf } from "@/lang/walk";
 import {
   parenthesized,
   notationOf,

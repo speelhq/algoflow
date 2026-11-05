@@ -170,20 +170,6 @@ export function* programExprs(program: Program): Generator<Expr, void, void> {
   for (const stmt of programStmts(program)) yield* stmtExprs(stmt);
 }
 
-/**
- * The node that owns each block's diagnostics and selection. Expressions map to their
- * statement; statements and functions map to themselves.
- */
-export function ownersById(program: Program): Map<NodeId, NodeId> {
-  const owners = new Map<NodeId, NodeId>();
-  for (const fn of program.functions) owners.set(fn.id, fn.id);
-  for (const stmt of programStmts(program)) {
-    owners.set(stmt.id, stmt.id);
-    for (const expr of stmtExprs(stmt)) owners.set(expr.id, stmt.id);
-  }
-  return owners;
-}
-
 /** The condition a diamond asks: the slot its block's `branch` or `check` names, and what it holds. */
 export function conditionOf(block: Block): SlotExpr | undefined {
   const chart = getBlockDef(keyOf(block)).chart;
@@ -225,20 +211,75 @@ export function bodyStmts(program: Program): Map<NodeId, NodeId[]> {
   return bodies;
 }
 
-const indexes = new WeakMap<Program, Map<NodeId, Block>>();
+/** Where a node stands: its owner (`chart.md`, Shapes) and the routine that holds it. */
+type Standing = { owner: NodeId; routine: Routine };
+type NodeIndex = { blocks: Map<NodeId, Block>; standings: Map<NodeId, Standing> };
 
-/** Every statement and expression of the program by id; one pass per Program object. */
-export function blocksById(program: Program): Map<NodeId, Block> {
+const indexes = new WeakMap<Program, NodeIndex>();
+
+/**
+ * Every block and function of the program by id, in one pass per Program object: a function owns
+ * itself and is its own routine, a statement owns itself, and an expression's owner is its
+ * statement.
+ */
+function nodeIndex(program: Program): NodeIndex {
   let index = indexes.get(program);
   if (!index) {
-    index = new Map();
-    for (const stmt of programStmts(program)) {
-      index.set(stmt.id, stmt);
-      for (const expr of stmtExprs(stmt)) index.set(expr.id, expr);
+    const blocks = new Map<NodeId, Block>();
+    const standings = new Map<NodeId, Standing>();
+    const add = (stmts: Stmt[], routine: Routine) => {
+      for (const stmt of allStmts(stmts)) {
+        blocks.set(stmt.id, stmt);
+        standings.set(stmt.id, { owner: stmt.id, routine });
+        for (const expr of stmtExprs(stmt)) {
+          blocks.set(expr.id, expr);
+          standings.set(expr.id, { owner: stmt.id, routine });
+        }
+      }
+    };
+    for (const fn of program.functions) {
+      standings.set(fn.id, { owner: fn.id, routine: fn.id });
+      add(fn.body, fn.id);
     }
+    add(program.main, "main");
+    index = { blocks, standings };
     indexes.set(program, index);
   }
   return index;
+}
+
+/** Where node `id` stands; throws for a node id the program doesn't hold. */
+function standingOf(program: Program, id: NodeId): Standing {
+  const standing = nodeIndex(program).standings.get(id);
+  if (!standing) throw new Error(`no node ${id}`);
+  return standing;
+}
+
+/** Every statement and expression of the program by id. */
+export function blocksById(program: Program): Map<NodeId, Block> {
+  return nodeIndex(program).blocks;
+}
+
+/**
+ * The owner of node `id`, the statement or function that stands for it on a chart (`chart.md`,
+ * Shapes). Throws for a node id the program doesn't hold.
+ */
+export function ownerOf(program: Program, id: NodeId): NodeId {
+  return standingOf(program, id).owner;
+}
+
+/**
+ * The routine that holds node `id`: a function holds itself and every node of its body, and
+ * `main` every node of its own. Throws for a node id the program doesn't hold.
+ */
+export function routineOf(program: Program, id: NodeId): Routine {
+  return standingOf(program, id).routine;
+}
+
+/** Whether node `id` is a statement of the program, a block that owns itself. */
+export function isStatement(program: Program, id: NodeId): boolean {
+  const { blocks, standings } = nodeIndex(program);
+  return blocks.has(id) && standings.get(id)?.owner === id;
 }
 
 /** Every NodeId in the program: functions, statements, expressions. */

@@ -1,6 +1,7 @@
 // Every node maps to the statement that contains it.
 import { describe, expect, it } from "vitest";
 import { ast, program, tid } from "@/blocks/testing";
+import { removeFunction } from "./edit";
 import {
   bodyStmts,
   conditionOf,
@@ -8,8 +9,10 @@ import {
   emptySlots,
   findRoutine,
   getRoutine,
-  ownersById,
+  isStatement,
+  ownerOf,
   paramArg,
+  routineOf,
   routineStmts,
   slotsHoldingNothing,
 } from "./walk";
@@ -57,22 +60,52 @@ describe("paramArg", () => {
   });
 });
 
-describe("ownersById", () => {
-  it("maps expressions to their statement and statements and functions to themselves", () => {
-    const cond = bin("==", v("n"), num(1));
-    const inner = print(v("n"));
-    const branch = if_(cond, [inner]);
-    const body = ret(bin("+", v("a"), num(1)));
-    const fn = { id: tid(), name: "inc", params: ["a"], body: [body] };
-    const p = program([assign("n", num(1)), branch], { functions: [fn] });
-    const owners = ownersById(p);
+describe("the node index", () => {
+  const cond = bin("==", v("n"), num(1));
+  const inner = print(v("n"));
+  const branch = if_(cond, [inner]);
+  const value = bin("+", v("a"), num(1));
+  const body = ret(value);
+  const fn = { id: "fun000000003", name: "inc", params: ["a"], body: [body] };
+  const p = program([assign("n", num(1)), branch], { functions: [fn] });
 
-    expect(owners.get(cond.id)).toBe(branch.id);
-    expect(owners.get(cond.kind === "binop" ? cond.left.id : "")).toBe(branch.id);
-    expect(owners.get(inner.id)).toBe(inner.id);
-    expect(owners.get(body.id)).toBe(body.id);
-    expect(owners.get(fn.id)).toBe(fn.id);
-    if (body.kind === "return" && body.value) expect(owners.get(body.value.id)).toBe(body.id);
+  it("gives an expression its statement as owner, and a statement or a function itself", () => {
+    expect(ownerOf(p, cond.id)).toBe(branch.id);
+    expect(ownerOf(p, cond.kind === "binop" ? cond.left.id : "")).toBe(branch.id);
+    expect(ownerOf(p, inner.id)).toBe(inner.id);
+    expect(ownerOf(p, value.id)).toBe(body.id);
+    expect(ownerOf(p, body.id)).toBe(body.id);
+    expect(ownerOf(p, fn.id)).toBe(fn.id);
+  });
+
+  it("gives the routine of an expression, of a statement, and of a function", () => {
+    expect(routineOf(p, value.id)).toBe(fn.id);
+    expect(routineOf(p, body.id)).toBe(fn.id);
+    expect(routineOf(p, fn.id)).toBe(fn.id);
+    expect(routineOf(p, cond.id)).toBe("main");
+    expect(routineOf(p, inner.id)).toBe("main");
+  });
+
+  it("throws for a node the program doesn't hold, such as one of a deleted function", () => {
+    const deleted = removeFunction(p, fn.id);
+    for (const id of [tid(), value.id, fn.id]) {
+      expect(() => ownerOf(deleted, id)).toThrow();
+      expect(() => routineOf(deleted, id)).toThrow();
+    }
+  });
+
+  it("counts a statement as a statement, and neither an expression nor a function", () => {
+    expect([inner.id, branch.id, body.id].map((id) => isStatement(p, id))).toEqual([
+      true,
+      true,
+      true,
+    ]);
+    expect([cond.id, value.id, fn.id, tid()].map((id) => isStatement(p, id))).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ]);
   });
 });
 

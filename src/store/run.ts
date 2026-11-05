@@ -10,7 +10,7 @@ import { firstDifference, watchStep, type WatchStep } from "@/challenges/rows";
 import { seedOf, type Test } from "@/challenges/types";
 import type { Data, Name, NodeId, Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
-import { bodyStmts, diamondConditions, blocksById, ownersById } from "@/lang/walk";
+import { bodyStmts, diamondConditions, blocksById, isStatement, ownerOf } from "@/lang/walk";
 import { clamp } from "@/lib/utils";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import { outcomeOf } from "@/runtime/outcome";
@@ -101,7 +101,6 @@ let runner: Runner | null = null;
 let steps: Steps | null = null;
 let origin: Origin | null = null;
 let findings: Findings | null = null;
-let owners = new Map<NodeId, NodeId>();
 /** Each diamond's condition, with its statement: the condition's `compare` marks the diamond. */
 let conditions = new Map<NodeId, NodeId>();
 let bodies = new Map<NodeId, NodeId[]>();
@@ -296,7 +295,7 @@ export const useRun = create<RunState>()((set, get) => {
       prints: findings?.prints ?? NO_PRINTS,
       lastEvent: p.lastEvent,
       pass: p.lastEvent?.type === "loop" ? (p.passes.get(p.lastEvent.nodeId) ?? null) : null,
-      activeId: focus === undefined ? null : (owners.get(focus) ?? focus),
+      activeId: focus === undefined || !origin ? null : ownerOf(origin.program, focus),
       state,
       frame: state ? state.frames.length - 1 : 0,
       stdout: runner?.stdout() ?? [],
@@ -370,7 +369,6 @@ export const useRun = create<RunState>()((set, get) => {
       if (!made) return;
       origin = from;
       findings = made;
-      owners = ownersById(from.program);
       conditions = diamondConditions(from.program);
       bodies = bodyStmts(from.program);
       loops = loopBodies(from.program, bodies);
@@ -440,8 +438,10 @@ export const useRun = create<RunState>()((set, get) => {
     },
 
     setBreakpoint(id) {
-      if (!running()) return;
-      breakpoint = id === null ? null : (owners.get(id) ?? id);
+      if (!running() || !origin) return;
+      // The breakpoint is a statement's `NodeId` (`interpreter.md`, Controls).
+      if (id !== null && !isStatement(origin.program, id)) throw new Error(`${id} is no statement`);
+      breakpoint = id;
       set({ breakpoint });
     },
 

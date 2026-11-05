@@ -20,7 +20,7 @@ import { PathBar } from "@/ui/chart/PathBar";
 import { Connector } from "@/ui/editor/BlockMenu";
 import { apply } from "@/ui/editor/edits";
 import { accepts, tryMove } from "@/ui/editor/moves";
-import { DiagnosticMessage, flaggedStatements } from "@/ui/editor/diagnostics";
+import { DiagnosticMessage, flaggedOwners } from "@/ui/editor/diagnostics";
 import { BlockEditor } from "@/ui/editor/BlockEditor";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/primitives/button";
@@ -173,7 +173,7 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
   const { paint: painted, narration: narrated } = useRunPaint(chart, mine, mode);
   const empty = mine.main.length === 0;
   const flags = useMemo(() => {
-    const flagged = flaggedStatements(mine);
+    const flagged = flaggedOwners(mine);
     return {
       owners: new Set(flagged.keys()),
       // oxlint-disable-next-line react/no-unstable-nested-components -- a render function, not a component
