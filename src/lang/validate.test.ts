@@ -156,6 +156,8 @@ describe("validate (language.md, Validation)", () => {
     const fn = { id: "f0000000000f", name: "f", params: ["a", "b"], body: [] };
     expect(codes(program([exprStmt(call("f", num(1)))], { functions: [fn] }))).toEqual(["E_ARITY"]);
     expect(codes(program([exprStmt(call("f", num(1), num(2)))], { functions: [fn] }))).toEqual([]);
+    // A builtin with no argument fails once, by its parameters, as one with too few does.
+    expect(codes(program([exprStmt(call("abs"))]))).toEqual(["E_ARITY"]);
   });
 
   it("E_UNKNOWN_CALL: unknown function", () => {
@@ -168,7 +170,7 @@ describe("validate (language.md, Validation)", () => {
     expect(codes(program([exprStmt(call("f"))], { functions: [fn] }))).toEqual([]);
   });
 
-  it("E_EMPTY_SLOT: a required slot left empty, naming the slot", () => {
+  it("E_EMPTY_SLOT: an empty slot, naming the slot", () => {
     const value = assign("x", empty());
     expect(validate(program([value]))).toEqual([
       { nodeId: value.id, code: "E_EMPTY_SLOT", params: { slot: "value" } },

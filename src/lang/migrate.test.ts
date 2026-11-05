@@ -85,7 +85,7 @@ describe("migrate", () => {
     expect(() => migrate(noId)).toThrow(/^main\[0\]\.args\[0\]\.id/);
   });
 
-  it("rejects a missing required value, a name that is no text, and a region that is no list", () => {
+  it("rejects a missing value that isn't optional, a name that is no text, and a region that is no list", () => {
     type Stored = { main: Array<Record<string, unknown>> };
     const noValue = json(program([assign("x", num(1))])) as Stored;
     delete noValue.main[0]!.value;
@@ -153,14 +153,13 @@ describe("migrate", () => {
     expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target\.index: expected an expression/);
   });
 
-  it("refuses an expression whose required name or list holds nothing, at its path", () => {
+  it("refuses an expression whose name holds nothing, at its path", () => {
     const stored = (value: unknown) => json(program([assign("x", value as never)]));
     expect(() => migrate(stored(v("")))).toThrow(
       /^main\[0\]\.value\.name: expected the slot filled/,
     );
-    expect(() => migrate(stored(ast.call("abs")))).toThrow(
-      /^main\[0\]\.value\.args: expected the slot filled/,
-    );
+    // A call with too few arguments is a fault validate() reports (E_ARITY).
+    expect(() => migrate(stored(ast.call("abs")))).not.toThrow();
     expect(() => migrate(stored(bin("+", num(1), ast.call("f"))))).not.toThrow();
     // A statement's name holds nothing until the learner fills it in its name field.
     expect(() => migrate(json(program([for_("", num(0), num(3), [])])))).not.toThrow();

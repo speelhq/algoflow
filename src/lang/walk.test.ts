@@ -38,10 +38,9 @@ describe("emptySlots", () => {
 });
 
 describe("slotsHoldingNothing", () => {
-  it("names the required names and lists that hold nothing", () => {
+  it("names the names that hold nothing; a list with no item holds a list", () => {
     expect(slotsHoldingNothing(for_("", num(0), num(3), []))).toEqual(["var"]);
-    expect(slotsHoldingNothing(call("abs"))).toEqual(["args"]);
-    // A list with no item holds nothing only where its slot is required.
+    expect(slotsHoldingNothing(call("abs"))).toEqual([]);
     expect(slotsHoldingNothing(print())).toEqual([]);
     expect(slotsHoldingNothing(for_("i", num(0), num(3), []))).toEqual([]);
   });

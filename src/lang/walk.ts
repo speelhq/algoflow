@@ -1,5 +1,5 @@
 // Traversal driven by each block's slots, so no module lists block kinds.
-import { getBlockDef, keyOf, type Slot } from "@/blocks/registry";
+import { getBlockDef, keyOf } from "@/blocks/registry";
 import type { Expr, Block, FunctionDef, NodeId, Program, Routine, Stmt } from "./types";
 
 type Bag = Record<string, unknown>;
@@ -65,9 +65,9 @@ export function childSlots(block: Block): SlotExpr[] {
 export type EmptySlot = { block: Block; slot: string; index?: number };
 
 /**
- * The empty slots of a block and of every expression in its slots: each required slot that holds
- * nothing, then each slot or item that holds `empty`, and the empty slots of the expressions the
- * others hold, in slot order.
+ * The empty slots of a block and of every expression in its slots: first its names that hold
+ * nothing, then, in slot order, each slot or item that holds `empty` and the empty slots of the
+ * expressions that the others hold.
  */
 export function emptySlots(block: Block): EmptySlot[] {
   const out: EmptySlot[] = slotsHoldingNothing(block).map((slot) => ({ block, slot }));
@@ -78,22 +78,12 @@ export function emptySlots(block: Block): EmptySlot[] {
   return out;
 }
 
-/**
- * The required slots of a block that hold nothing: a name `""`, or a list with no item
- * (`blocks.md`, The block definition, Slots).
- */
+/** The slots of a block that hold nothing: each name that is `""` (`blocks.md`, Slots). */
 export function slotsHoldingNothing(block: Block): string[] {
   const bag = block as unknown as Bag;
   return getBlockDef(keyOf(block))
-    .slots.filter((slot) => slot.required && holdsNothing(slot, bag[slot.name]))
+    .slots.filter((slot) => slot.role === "name" && bag[slot.name] === "")
     .map((slot) => slot.name);
-}
-
-function holdsNothing(slot: Slot, value: unknown): boolean {
-  return (
-    (slot.role === "name" && value === "") ||
-    (slot.role === "exprs" && Array.isArray(value) && value.length === 0)
-  );
 }
 
 /** Direct expression children of a statement or expression, in slot order. */

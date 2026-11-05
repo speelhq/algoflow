@@ -30,7 +30,10 @@ export function nameOf(stmt: Stmt, slot: string): string | undefined {
 }
 
 /** The target slot a field edits, which its line keeps a target in (`editor.md`, Targets). */
-export function targetSlot(stmt: Stmt, field: Field): Slot | undefined {
+export function targetSlot(
+  stmt: Stmt,
+  field: Field,
+): Extract<Slot, { role: "target" }> | undefined {
   const slot = getBlockDef(keyOf(stmt)).slots.find((each) => each.name === field.slot);
   return slot?.role === "target" ? slot : undefined;
 }

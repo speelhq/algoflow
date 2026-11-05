@@ -147,7 +147,8 @@ const precedenceOf = (expr: Expr) => getBlockDef(keyOf(expr)).precedence?.(expr)
 export function bindsAt(block: Block, slot: string): number | undefined {
   const def = getBlockDef(keyOf(block));
   const own = def.shape === "expr" ? def.precedence?.(block as Expr) : undefined;
-  return own ?? (def.slots.find((s) => s.name === slot)?.atom ? PRECEDENCE.atom : undefined);
+  const found = def.slots.find((s) => s.name === slot);
+  return own ?? (found?.role === "expr" && found.atom ? PRECEDENCE.atom : undefined);
 }
 
 /** Whether `child`, the value `held` places, is put in parentheses: as the emitter does. */

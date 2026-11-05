@@ -14,8 +14,6 @@ import type {
 import type { Event, Ref, RuntimeCode } from "@/runtime/types";
 import type { Category } from "./categories";
 
-export type SlotRole = "expr" | "exprs" | "name" | "body" | "target" | "text";
-
 /** What a call-like expression invokes; `builtin` and `method` arity comes from `params`. */
 export type Callee = {
   name: Name;
@@ -58,15 +56,25 @@ export function expectedArgs(params: readonly Param[], got: number): number | un
   return undefined;
 }
 
-export type Slot = {
-  name: string;
-  role: SlotRole;
-  required?: boolean;
-  /** Its value binds as an atom: an operation there is parenthesized (the list of an item). */
-  atom?: true;
-  /** A `target` slot that declares the variable its target is (`assign`'s). */
-  binds?: true;
-};
+/** One part of a block that the learner fills or edits, with the marks its role takes. */
+export type Slot =
+  | {
+      name: string;
+      role: "expr";
+      /** It may hold no expression (`return`'s value). */
+      optional?: true;
+      /** Its value binds as an atom: an operation there is parenthesized (the list of an item). */
+      atom?: true;
+    }
+  | {
+      name: string;
+      role: "target";
+      /** It declares the variable its target is (`assign`'s). */
+      binds?: true;
+    }
+  | { name: string; role: "exprs" | "name" | "body" | "text" };
+
+export type SlotRole = Slot["role"];
 
 /** The groups of the value list, in its order. */
 export type ValueGroup = "values" | "conditions" | "calculate" | "items" | "compare" | "convert";

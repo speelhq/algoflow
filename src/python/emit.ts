@@ -46,8 +46,10 @@ const ctx: EmitContext = {
   slot(block, name) {
     const expr = (block as unknown as Record<string, Expr>)[name];
     if (!expr) throw new Error(`no expression in slot ${name}`);
-    const atom = getBlockDef(keyOf(block)).slots.find((slot) => slot.name === name)?.atom;
-    return atom ? ctx.operand(expr, PRECEDENCE.atom, "left") : ctx.expr(expr);
+    const found = getBlockDef(keyOf(block)).slots.find((slot) => slot.name === name);
+    return found?.role === "expr" && found.atom
+      ? ctx.operand(expr, PRECEDENCE.atom, "left")
+      : ctx.expr(expr);
   },
   region(stmts: Stmt[]): PyLine {
     return { region: stmts };

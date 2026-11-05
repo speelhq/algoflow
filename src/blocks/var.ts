@@ -5,7 +5,7 @@ import { defineExpr } from "./types";
 export const variable = defineExpr<"var">({
   key: "var",
   category: "basic",
-  slots: [{ name: "name", role: "name", required: true }],
+  slots: [{ name: "name", role: "name" }],
   create: () => ({ id: newId(), kind: "var", name: "" }),
   *run(block, ctx) {
     return (yield* ctx.read(block, block.id)).value;

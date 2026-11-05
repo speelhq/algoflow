@@ -8,8 +8,8 @@ export const swap = defineStmt<"swap">({
   key: "swap",
   category: "list",
   slots: [
-    { name: "a", role: "target", required: true },
-    { name: "b", role: "target", required: true },
+    { name: "a", role: "target" },
+    { name: "b", role: "target" },
   ],
   create: () => ({ id: newId(), kind: "swap", a: emptyExpr(), b: emptyExpr() }),
   *run(block, ctx) {
