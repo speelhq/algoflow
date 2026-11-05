@@ -47,6 +47,7 @@ Clicking `Start name(params)` opens the function's editor, which holds:
 - the ordered parameters, with controls that add and remove one
 - `Delete function`
 - `Move to module…` (`modules.md`, Operations)
+- the function's diagnostics (Editing on the chart, Diagnostics)
 
 The `Start` terminal is the function's signature, so its editor holds
 the function's own operations, and the path bar only navigates.
@@ -226,6 +227,12 @@ A click selects one block. These keys work on the selection:
 - Ctrl/Cmd+D duplicates it
 - Esc closes the editor and clears the selection
 
+The selection holds a block only, never a function, and only
+`Delete function` in the function's editor removes a function (Charts and
+the path bar, Functions and classes). Selecting a function was rejected,
+because Delete and Backspace would then either do nothing to it or remove
+at one key press a definition whose calls stay on other charts.
+
 Generated chart nodes can't be selected on their own: clicking one
 selects the loop block, whose editor holds the variable and the bounds.
 The slots drawn on a generated chart node are the loop's slots, so
@@ -250,6 +257,10 @@ shows the message and, when `fix` is set, a button that applies the fix.
 Its owner's editor shows the same message and button at its top. A chart
 node shows no dot for `E_EMPTY_SLOT`, because the empty slot's `…`
 (`editor.md`, Value line, Empty slots) already shows it.
+
+A function's diagnostic shows on that function's `Start` chart node, and
+the function's editor shows its message. For example: `E_DUPLICATE_NAME`
+for two parameters of one name.
 
 ## Zoom and highlight
 
