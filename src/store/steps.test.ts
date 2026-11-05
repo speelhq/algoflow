@@ -69,7 +69,7 @@ describe("steps (interpreter.md, Steps and batches)", () => {
     const at = types(all).indexOf("write");
     expect(types(all).slice(at)).toEqual(["write", "call", "enter", "return", "write", "done"]);
     const write = all[at] as Step;
-    expect(write.state?.frames.map((frame) => frame.fn)).toEqual(["main"]);
+    expect(write.state?.frames.map((frame) => frame.routine)).toEqual(["main"]);
     // Every other step is shown with the runner's own state.
     expect(all.filter((step) => "event" in step && step.state !== undefined)).toEqual([write]);
   });

@@ -15,7 +15,7 @@ const CALL_DEPTH_LIMIT = 200;
 
 export function run(program: Program, inputs: Readonly<Record<Name, Data>>, seed: number): Runner {
   const heap: Heap = new Map();
-  const frames: Frame[] = [{ fn: "main", vars: new Map() }];
+  const frames: Frame[] = [{ routine: "main", vars: new Map() }];
   const random = createRandom(seed);
   const stdout: string[] = [];
   const functions = new Map(program.functions.map((fn) => [fn.name, fn]));
@@ -81,7 +81,7 @@ export function run(program: Program, inputs: Readonly<Record<Name, Data>>, seed
         const arg = args[i];
         if (arg) vars.set(param, arg);
       }
-      frames.push({ fn, callNodeId: nodeId, vars });
+      frames.push({ routine: def.id, callNodeId: nodeId, vars });
       yield { type: "call", nodeId, fn, args };
       const signal = yield* ctx.exec(def.body);
       const value: Value = signal?.kind === "return" ? signal.value : { t: "none" };
