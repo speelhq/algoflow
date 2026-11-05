@@ -153,6 +153,19 @@ describe("migrate", () => {
     expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target\.index: expected an expression/);
   });
 
+  it("refuses an expression whose required name or list holds nothing, at its path", () => {
+    const stored = (value: unknown) => json(program([assign("x", value as never)]));
+    expect(() => migrate(stored(v("")))).toThrow(
+      /^main\[0\]\.value\.name: expected the slot filled/,
+    );
+    expect(() => migrate(stored(ast.call("abs")))).toThrow(
+      /^main\[0\]\.value\.args: expected the slot filled/,
+    );
+    expect(() => migrate(stored(bin("+", num(1), ast.call("f"))))).not.toThrow();
+    // A statement's name holds nothing until the learner fills it in its name field.
+    expect(() => migrate(json(program([for_("", num(0), num(3), [])])))).not.toThrow();
+  });
+
   it("refuses a literal field its block would not make, at its path", () => {
     const valueOf = (expr: unknown) => json(program([assign("x", expr as never)]));
     const at = (fields: Record<string, unknown>, of: unknown) => {
