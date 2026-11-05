@@ -34,7 +34,7 @@ const PAD = 24;
 
 type Props = {
   chart: ChartLayout;
-  /** The statement outlined as selected, and the one outlined from a Python line. */
+  /** The statement outlined as selected, and the owner outlined from a Python line. */
   selectedId?: NodeId | null;
   hoveredId?: NodeId | null;
   /** A click on a statement's chart node (or a generated chart node of it), with the slot and empty slot clicked. */

@@ -27,7 +27,10 @@ export type Shape = "terminal" | "input" | "box" | "diamond" | "junction";
 export type ChartNode = {
   /** A statement's id, `<id>:init|check|update|junction|merge`, `start`, `end`, or `input:<name>`. */
   id: string;
-  /** The statement a click selects and a step highlights; null for terminals and inputs. */
+  /**
+   * Its owner, the statement or function that stands for it (`chart.md`, Shapes): a function
+   * chart's `Start` has its function; `main`'s `Start`, `End`, and inputs have none.
+   */
   owner: NodeId | null;
   role:
     | "start"
@@ -631,7 +634,7 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
   const startText = fn
     ? t("chart.startFn", { name: fn.name, params: fn.params.join(SEPARATOR) })
     : t("chart.start");
-  const start = builder.node("start", null, "start", "terminal", startText, 0);
+  const start = builder.node("start", fn ? fn.id : null, "start", "terminal", startText, 0);
   frag.nodes.push(start);
   let flow: Stub = { from: start.id, points: [{ x: 0, y: start.h }], place: null };
   let y = start.h + GAP_Y;

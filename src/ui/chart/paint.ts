@@ -26,10 +26,16 @@ export type Paint = {
   breakpoint: string | null;
 };
 
-/** The chart node that stands for a statement: a counted loop's check, else its own chart node. */
+/**
+ * The chart node that stands for an owner: a counted loop's check, else a statement's own chart
+ * node, or a function's `Start`.
+ */
 export function nodeFor(nodes: readonly ChartNode[], owner: NodeId): ChartNode | undefined {
   const own = nodes.filter((node) => node.owner === owner);
-  return own.find((node) => node.role === "check") ?? own.find((node) => node.role === "stmt");
+  return (
+    own.find((node) => node.role === "check") ??
+    own.find((node) => node.role === "stmt" || node.role === "start")
+  );
 }
 
 /** The current chart node: a counted loop's init on its `enter`, its check on its other events. */
