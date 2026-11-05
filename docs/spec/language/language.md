@@ -10,7 +10,7 @@ persists.
 
 Identifiers are the names in a program. A name has one of two forms:
 
-- A variable, function, parameter, or field name matches
+- A variable, function, parameter, or attribute name matches
   `/^[a-z_][a-z0-9_]*$/`.
 - A class name matches `/^[A-Z][A-Za-z0-9]*$/`.
 
@@ -39,8 +39,8 @@ export type Program = {
   main: Stmt[];
 };
 export type InputDecl = { name: Name; kind: Kind };
-export type ClassDef = { id: NodeId; name: Name; fields: Field[] };
-export type Field = { name: Name; default: Data }; // Semantics, Objects
+export type ClassDef = { id: NodeId; name: Name; attributes: Attribute[] };
+export type Attribute = { name: Name; default: Data }; // Semantics, Objects
 export type FunctionDef = { id: NodeId; name: Name; params: Name[]; body: Stmt[] };
 export type Routine = "main" | NodeId; // `main`, or a function by its node id
 export type NodeId = string; // 12-char nanoid
@@ -58,6 +58,11 @@ Within a program, node ids are unique.
 
 Function names, class names, and input names are unique within a program,
 and they don't collide with each other.
+
+A member of a class or of an object is an attribute, as Python calls it
+when it reports a missing one with `AttributeError`. Field was rejected
+as its name, because a field is the place in the block editor where the
+learner types (`editor.md`, Block editor).
 
 A routine is `main` or a function. Each routine has its own statements
 and variables.
@@ -88,7 +93,7 @@ export type Data =
   | boolean
   | null
   | Data[]
-  | { $cls: string; $id?: number; [field: string]: Data } // object (expectations, module cases, a Module page's arguments)
+  | { $cls: string; $id?: number; [attr: string]: Data } // object (expectations, module cases, a Module page's arguments)
   | { [key: string]: Data }; // dict; int keys are written "$int:3"
 ```
 
@@ -129,7 +134,7 @@ convert back to itself. `$int:0` is canonical, and `$int:-0` is not.
 
 `migrate()` reads a stored or imported program (Storage). It rejects a
 field that the block's definition wouldn't make (`fieldsError`;
-`blocks.md`, The block definition) and a class field default that isn't
+`blocks.md`, The block definition) and an attribute default that isn't
 canonical `Data`, and it reports the path of the fault.
 
 `migrate()` and `validate()` catch different faults, depending on who
@@ -165,10 +170,10 @@ definition exists:
 `migrate()` and `pnpm check` each report the path of the fault.
 
 Until then, only a hand-written file can hold a class or an object.
-`migrate()` and `pnpm check` reject such a file rather than read what they
-can, because reading it would need code for identity, cycles,
-constructors, and field defaults that no learner reaches. Rejecting it
-also keeps a `$cls` record from passing as a dict.
+`migrate()` and `pnpm check` reject such a file rather than read what
+they can, because reading it would need code for identity, cycles,
+constructors, and attribute defaults that no learner reaches. Rejecting
+it also keeps a `$cls` record from passing as a dict.
 
 ## Run-time values
 
@@ -189,7 +194,7 @@ export type HeapId = number;
 export type HeapEntry =
   | { kind: "list"; items: Value[] }
   | { kind: "dict"; entries: Map<string, Value> } // "i:3" for int 3, "s:ab" for str "ab"
-  | { kind: "obj"; cls: Name; fields: Map<Name, Value> };
+  | { kind: "obj"; cls: Name; attributes: Map<Name, Value> };
 export type Heap = Map<HeapId, HeapEntry>;
 ```
 
@@ -239,9 +244,9 @@ region in a slot of role `body` (`blocks.md`, Slots).
 
 ### Targets
 
-A target is an expression that names where a value is stored: a `var`, an
-`index`, a `key`, or a `field`. Each of these is a block definition that
-declares `locate` (`blocks.md`, The block definition).
+A target is an expression that names where a value is stored: a `var`,
+an `index`, a `key`, or an `attribute`. Each of these is a block
+definition that declares `locate` (`blocks.md`, The block definition).
 
 A `target` slot holds one target, or `empty` while it is an empty slot
 (Expressions, Empty slots). `migrate()` rejects any other expression in a
@@ -270,7 +275,7 @@ export type Expr =
   | (E & { kind: "unop"; op: "neg" | "not"; operand: Expr })
   | (E & { kind: "index"; list: Expr; index: Expr })
   | (E & { kind: "key"; dict: Expr; key: Expr })
-  | (E & { kind: "field"; obj: Expr; field: Name })
+  | (E & { kind: "attribute"; obj: Expr; attr: Name })
   | (E & { kind: "list"; items: Expr[] })
   | (E & { kind: "dict"; entries: Array<{ key: Expr; value: Expr }> })
   | (E & { kind: "new"; cls: Name; args: Expr[] })
@@ -383,18 +388,18 @@ values, Int range), is stricter and ends in an error:
 A bound of `1.0` is rejected too, because CPython 3.12 and later raise
 `TypeError` for any `float` bound, and `pnpm check` requires that version.
 
-### Objects (`new`, `field`)
+### Objects (`new`, `attribute`)
 
 | Rule | Example |
 | --- | --- |
-| `new C(args)` sets every field to a fresh copy of its default, then assigns args in field order; too many args → `E_ARITY` | |
-| `o.f` without field `f` → `E_FIELD` | |
-| `v.f` where `v` isn't an object → `E_FIELD`, with the type name of `v` as `cls` | `n.x` with `n = 3` |
-| a field default is a number, string, boolean, `null`, `[]`, or `{}` | |
+| `new C(args)` sets every attribute to a fresh copy of its default, then assigns args in attribute order; too many args → `E_ARITY` | |
+| `o.f` without attribute `f` → `E_ATTRIBUTE` | |
+| `v.f` where `v` isn't an object → `E_ATTRIBUTE`, with the type name of `v` as `cls` | `n.x` with `n = 3` |
+| an attribute default is a number, string, boolean, `null`, `[]`, or `{}` | |
 
-A value that isn't an object fails with `E_FIELD`, not `E_TYPE`, because
-the fault is a field it doesn't have. `E_TYPE` would name a second operand
-where there is none.
+A value that isn't an object fails with `E_ATTRIBUTE`, not `E_TYPE`,
+because the fault is an attribute it doesn't have. `E_TYPE` would name a
+second operand where there is none.
 
 ### Values and the run (`src/runtime`)
 
@@ -428,7 +433,7 @@ the variable that its target names, and it doesn't read that variable.
 
 Two kinds of target read their expressions before the value is stored:
 
-- an item, a key, or a field in a binding slot
+- an item, a key, or an attribute in a binding slot
 - every target of a slot that doesn't bind
 
 The loop statement itself assigns its `for` or `foreach` variable, in the
@@ -440,7 +445,7 @@ exists.
 
 A function sees only its parameters and its body.
 
-A field default sees nothing.
+An attribute default sees nothing.
 
 ### Declaring a name before a compound statement
 
@@ -509,17 +514,17 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 | `E_ARITY`          | wrong argument count                                        | `name`, `expected`, `got` |
 | `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`                    |
 | `E_EMPTY_SLOT`     | an empty slot (prevents execution)                          | `slot`                    |
-| `E_DEFAULT`        | a field default that Semantics, Objects doesn't allow       | `field`                   |
+| `E_DEFAULT`        | an attribute default that Semantics, Objects doesn't allow  | `attr`                    |
 | `E_DUPLICATE_ID`   | two nodes share a node id (Program)                         |                           |
 
 ## Edits
 
-`edit.ts` exports pure functions that return a new `Program`: `insertStmt`,
-`moveStmt`, `removeStmt`, `duplicateStmt`, `setSlot`, `setExpr`,
-`insertItem`, `removeItem`, `renameName`, `setCaption`, `addFunction`,
-`removeFunction`, `addClass`, `removeClass`, `setFields`, `setParams`, and
-`hoistAssign`. `insertItem` and `removeItem` add and remove an item of an
-`exprs` slot.
+`edit.ts` exports pure functions that return a new `Program`:
+`insertStmt`, `moveStmt`, `removeStmt`, `duplicateStmt`, `setSlot`,
+`setExpr`, `insertItem`, `removeItem`, `renameName`, `setCaption`,
+`addFunction`, `removeFunction`, `addClass`, `removeClass`,
+`setAttributes`, `setParams`, and `hoistAssign`. `insertItem` and
+`removeItem` add and remove an item of an `exprs` slot.
 
 Every edit keeps node ids unique.
 

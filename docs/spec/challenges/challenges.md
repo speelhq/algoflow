@@ -173,7 +173,7 @@ Equality compares:
 - strings, booleans, and none exactly
 - lists element by element
 - dicts by key set and values
-- objects by class, field set, and field values
+- objects by class, attribute set, and attribute values
 
 No list, dict, or object compares by identity.
 

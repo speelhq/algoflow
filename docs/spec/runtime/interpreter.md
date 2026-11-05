@@ -90,11 +90,11 @@ export type Ref =
   | { var: Name }
   | { heap: HeapId; index: number }
   | { heap: HeapId; key: string }
-  | { heap: HeapId; field: Name };
+  | { heap: HeapId; attr: Name };
 ```
 
 A ref is a place in the run's state: a variable, a list item, a dict
-entry, or an object field.
+entry, or an object's attribute.
 
 `Done` counts the run:
 
@@ -123,8 +123,8 @@ A `swap` emits the events of its two places in Python's order
 The runner emits a `read` in two cases:
 
 - The context's `read` (Block definitions) emits one when it reads an
-  item, a key, or a field, whether the runner evaluates an expression or
-  a `swap` reads its places.
+  item, a key, or an attribute, whether the runner evaluates an
+  expression or a `swap` reads its places.
 - `in` on a list emits one, with one ref for each item the `in`
   compares.
 
@@ -141,7 +141,7 @@ These block definitions emit `write`, directly or through the context's
 - `insert`
 - `pop`, with the removed index and value
 - `delete`
-- `new`, one `write` for each field it sets
+- `new`, one `write` for each attribute it sets
 
 The `write` of a `swap` carries in `from` the place where the `swap` read
 the value it writes, so the driver can recognize an exchange (Steps and
@@ -189,14 +189,14 @@ lists the codes, what raises each, and its params:
 | `E_UNDEFINED`  | reading a variable never assigned (a loop that ran no iteration, `language.md`, Scope) | `name` |
 | `E_INDEX`      | a list index (`language.md`, Semantics, Values and the run) | `index`, `length` |
 | `E_KEY`        | a missing dict key (same)                         | `key`                     |
-| `E_FIELD`      | a missing field (`language.md`, Semantics, Objects) | `cls`, `field`          |
+| `E_ATTRIBUTE`  | a missing attribute (`language.md`, Semantics, Objects) | `cls`, `attr`       |
 | `E_TYPE`       | `+` mixing `str` and a number, ordering a number with a `str`, a dict key, a `for` bound, a `randint` bound, a list index that isn't an `int` or an item of a value that isn't a list, a `sum` item that isn't a number (`language.md`, Semantics) | `left`, `right` |
 | `E_VALUE`      | `abs`, `int`, `float`, `len`, `sum`, or unary `-` of a value of a type it doesn't take | `op`, `type` |
 | `E_NUMBER_TEXT`| `int` or `float` of a text that isn't such a number | `op`, `text`     |
 | `E_EMPTY_RANGE`| `randint(a, b)` with `a > b`                      | `a`, `b`                  |
 | `E_DIV_ZERO`   | division or modulo by zero; zero to a negative power | |
 | `E_POP_EMPTY`  | `pop` on an empty list |                           |
-| `E_ARITY`      | `new` with more arguments than fields             | `name`, `expected`, `got` |
+| `E_ARITY`      | `new` with more arguments than attributes         | `name`, `expected`, `got` |
 | `E_RECURSION`  | a call deeper than 200 frames (Runner)            |                           |
 | `E_EVENT_LIMIT`| the 1,000,000th event (Runner)                    |                           |
 

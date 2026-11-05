@@ -225,7 +225,7 @@ The narration names a location by the variable that holds it in the
 frame the event ran in. It writes the location as the chart writes it:
 
 - an item as `nums[2]`
-- a field as `node.next`
+- an attribute as `node.next`
 - a dict's key as `counts["a"]`
 
 A list that no variable of that frame references is `a list`
