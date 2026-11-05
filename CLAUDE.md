@@ -129,8 +129,9 @@ its own.
 
 Write commit messages in Conventional Commits form:
 
-- an imperative subject under 50 characters that names the concrete
-  change, such as `fix(ui): keep the spaces a text holds`
+- an imperative subject that names the concrete change, such as
+  `fix(ui): keep the spaces a text holds`, in about 50 characters and at
+  most 72, because GitHub cuts a longer subject short in its lists
 - a scope that is a folder of `src/`, or `scripts`, `docs`, or `ci`
 - a body only when the reason isn't evident from the subject
 - no trailers, including `Co-Authored-By`

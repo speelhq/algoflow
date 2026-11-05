@@ -24,10 +24,10 @@ describe("commitProblems", () => {
     ]);
   });
 
-  it("refuses a subject of 50 characters or more", () => {
-    const subject = `fix: ${"a".repeat(45)}`;
-    expect(check(subject.slice(0, 49))).toEqual([]);
-    expect(check(subject)).toEqual(["the subject has 50 characters, more than 49"]);
+  it("refuses a subject of more than 72 characters", () => {
+    const subject = `fix: ${"a".repeat(68)}`;
+    expect(check(subject.slice(0, 72))).toEqual([]);
+    expect(check(subject)).toEqual(["the subject has 73 characters, more than 72"]);
   });
 
   it("refuses a message ending in trailers, and a fixup or squash left unfolded", () => {

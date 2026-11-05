@@ -17,8 +17,8 @@ const TYPES: ReadonlySet<string> = new Set([
   "style",
   "test",
 ]);
-/** A subject is under 50 characters. */
-const LONGEST = 49;
+/** A subject aims at about 50 characters, and GitHub cuts one past 72 short in its lists. */
+const LONGEST = 72;
 const SUBJECT = /^([a-z]+)(?:\(([^()]*)\))?!?: \S/;
 /** A trailer line as git reads one: a token, a colon, and a value. */
 const TRAILER = /^[A-Za-z0-9][A-Za-z0-9-]*: /;
