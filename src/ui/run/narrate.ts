@@ -126,10 +126,14 @@ export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
         params: { a: refText(event.a, frame, heap), b: refText(event.b, frame, heap) },
       };
     case "loop":
-      return event.var !== undefined && event.value
+      return event.ref !== undefined && event.value
         ? {
             key: "run.narrate.loop",
-            params: { pass: ctx.pass ?? 1, var: event.var, value: valueText(event.value, heap) },
+            params: {
+              pass: ctx.pass ?? 1,
+              what: refText(event.ref, frame, heap),
+              value: valueText(event.value, heap),
+            },
           }
         : { key: "run.narrate.loopPlain", params: { pass: ctx.pass ?? 1 } };
     case "print":

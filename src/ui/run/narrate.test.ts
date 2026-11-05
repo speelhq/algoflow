@@ -127,6 +127,13 @@ describe("narrate", () => {
     expect(told(p, "return")).toBe("f returned 4");
   });
 
+  it("loop: a loop's target is written as a location, an item by the variable that holds it", () => {
+    const { program: p, inputs } = withInputs({ nums: [4, 9] }, [
+      ast.forTo(ast.item(v("nums"), num(1)), num(7), num(9), []),
+    ]);
+    expect(told(p, "loop", 2, inputs)).toBe("Pass 2: nums[1] is 8");
+  });
+
   it("read, swap, and write name an item as the blocks write it, by the variable that holds it", () => {
     const { program: p, inputs } = withInputs({ nums: [4, 9, 5], x: 5 }, [
       if_(bin("in", v("x"), v("nums")), []),

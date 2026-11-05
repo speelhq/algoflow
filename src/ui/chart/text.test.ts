@@ -70,10 +70,9 @@ describe("templatePieces and placeholderValue", () => {
     expect(placeholderValue(nth, "index")).toMatchObject({ binds: undefined });
     expect(placeholderValue(call("max", left), "b")).toBeUndefined();
     expect(placeholderValue(print(left), "args")).toEqual({ role: "exprs", items: [left] });
-    expect(placeholderValue(for_("i", num(0), num(3), []), "var")).toEqual({
-      role: "name",
-      name: "i",
-    });
+    // A loop's variable is a target, held as the expression it is.
+    const loop = for_("i", num(0), num(3), []);
+    expect(placeholderValue(loop, "var")).toMatchObject({ role: "expr", expr: { name: "i" } });
     expect(placeholderValue(for_("i", num(0), num(3), []), "body")).toBeUndefined();
   });
 });
@@ -177,10 +176,11 @@ describe("notation", () => {
     expect(hasEmptySlot(for_("i", num(0), num(3), []))).toBe(false);
   });
 
-  it("draws a statement's name that holds nothing as `…`, and an empty value by its notation", () => {
-    const loop = for_("", num(0), num(3), []);
+  it("draws an empty value by its notation, `…`, a loop's empty variable as any other", () => {
+    const variable = empty();
+    const loop = ast.forTo(variable, num(0), num(3), []);
     expect(notationParts(loop)).toEqual([
-      { text: "…", empty: true, slot: "var" },
+      { text: "…", empty: true, emptyId: variable.id, slot: "var" },
       { text: " ← " },
       { text: "0", slot: "start" },
     ]);

@@ -1,7 +1,7 @@
-// The names a binding target's line offers (`editor.md`, Name list; Targets):
-// the problem's expected variables under `This problem`, the routine's other variables under
-// `Variables`, each kept while one of its words begins with the text typed, and a typed name
-// none of them is offered as a new variable.
+// The names a binding target's line offers (`editor.md`, Name list; Targets): the problem's
+// expected variables under `This problem`, the routine's other variables under `Variables`, each
+// kept while one of its words begins with the word typed, and a typed name none of them is
+// offered as a new variable.
 import { declaredBy } from "@/lang/scope";
 import type { Name, Program, Routine } from "@/lang/types";
 import { isValidName } from "@/lang/validate";
@@ -43,31 +43,4 @@ export function routineNames(
 /** Whether a typed name is offered as a new variable: a name that none of `known` is. */
 export function isNewName(typed: string, known: readonly Name[]): boolean {
   return typed !== "" && !known.includes(typed) && isValidName(typed);
-}
-
-/** A name, or a new variable. */
-export type NameRow = { kind: "name"; name: Name } | { kind: "new"; name: Name };
-export type NameSection = { group: "problem" | "variables" | "new"; rows: NameRow[] };
-
-/** The sections of a name field's list for the text typed. */
-export function nameSections({ asked, names }: RoutineNames, typed: string): NameSection[] {
-  // A whole name comes first.
-  const kept = (list: readonly Name[]): NameRow[] =>
-    list
-      .filter((name) => matchesName(name, typed))
-      .toSorted((a, b) => Number(b === typed) - Number(a === typed))
-      .map((name) => ({ kind: "name", name }));
-  const sections: NameSection[] = [
-    { group: "problem", rows: kept(asked) },
-    { group: "variables", rows: kept(names) },
-  ];
-  if (isNewName(typed, [...asked, ...names])) {
-    sections.push({ group: "new", rows: [{ kind: "new", name: typed }] });
-  }
-  return sections.filter((section) => section.rows.length > 0);
-}
-
-/** What a name field keeps of typed text: the characters a name may have, no digit first. */
-export function nameChars(text: string): string {
-  return text.replace(/[^a-z0-9_]/g, "").replace(/^[0-9]+/, "");
 }

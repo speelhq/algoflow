@@ -65,12 +65,11 @@ export function childSlots(block: Block): SlotExpr[] {
 export type EmptySlot = { block: Block; slot: string; index?: number };
 
 /**
- * The empty slots of a block and of every expression in its slots: first its names that hold
- * nothing, then, in slot order, each slot or item that holds `empty` and the empty slots of the
- * expressions that the others hold.
+ * The empty slots of a block and of every expression in its slots, in slot order: each slot or
+ * item that holds `empty`, and the empty slots of the expressions that the others hold.
  */
 export function emptySlots(block: Block): EmptySlot[] {
-  const out: EmptySlot[] = slotsHoldingNothing(block).map((slot) => ({ block, slot }));
+  const out: EmptySlot[] = [];
   for (const { slot, expr, index } of childSlots(block)) {
     if (!isEmptyExpr(expr)) out.push(...emptySlots(expr));
     else out.push(index === undefined ? { block, slot } : { block, slot, index });
@@ -78,12 +77,9 @@ export function emptySlots(block: Block): EmptySlot[] {
   return out;
 }
 
-/** The slots of a block that hold nothing: each name that is `""` (`blocks.md`, Slots). */
-export function slotsHoldingNothing(block: Block): string[] {
-  const bag = block as unknown as Bag;
-  return getBlockDef(keyOf(block))
-    .slots.filter((slot) => slot.role === "name" && bag[slot.name] === "")
-    .map((slot) => slot.name);
+/** Whether a value is an empty slot or holds one, at any depth. */
+export function holdsEmptySlot(expr: Expr): boolean {
+  return isEmptyExpr(expr) || emptySlots(expr).length > 0;
 }
 
 /** Direct expression children of a statement or expression, in slot order. */

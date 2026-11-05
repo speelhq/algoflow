@@ -41,7 +41,7 @@
       {
         "id": "sum-loop-001",
         "kind": "for",
-        "var": "i",
+        "var": { "id": "sum-lvar-001", "kind": "var", "name": "i" },
         "start": { "id": "sum-one0-001", "kind": "num", "value": 1, "float": false, "raw": "1" },
         "stop": {
           "id": "sum-stop-001",

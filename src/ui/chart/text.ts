@@ -6,15 +6,7 @@
 import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Block, NodeId, Value } from "@/lang/types";
-import {
-  conditionOf,
-  emptySlots,
-  isEmptyExpr,
-  isExpr,
-  paramArg,
-  slotsHoldingNothing,
-  variableOf,
-} from "@/lang/walk";
+import { conditionOf, emptySlots, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/walk";
 import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
 import type { Generated, BlockDef, Side } from "@/blocks/types";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
@@ -269,20 +261,16 @@ export function exprText(expr: Expr, writing: Writing = {}): string {
 
 /**
  * What one slot of a statement holds, as the chart writes it, each part naming the slot. A slot
- * that holds nothing is drawn as `…`; one that holds `empty`, by that expression's notation.
- * Only a statement's slot holds nothing (`language.md`, Data, Faults that `migrate()` rejects).
+ * that holds `empty` is drawn by that expression's notation, `…`.
  */
 export function slotParts(block: Block, name: string): Part[] {
   const parts = (): Part[] => {
-    if (slotsHoldingNothing(block).includes(name)) return [{ text: emptyNotation(), empty: true }];
     const held = placeholderValue(block, name);
     switch (held?.role) {
       case "expr":
         return held.expr ? operandParts(held.expr, held, {}) : [];
       case "exprs":
         return listParts(held.items, (item) => exprParts(item));
-      case "name":
-        return [{ text: held.name, variable: true }];
       case "literal":
       case "operator":
         return [{ text: held.text }];

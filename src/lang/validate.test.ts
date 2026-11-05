@@ -99,9 +99,9 @@ describe("validate (language.md, Validation)", () => {
   });
 
   it("E_BAD_NAME: the name pattern, the reserved words", () => {
-    for (const bad of ["Foo", "2x", "for", "len", "my-var", ""]) {
-      const p = program([assign(bad, num(1))]);
-      expect(codes(p), bad).toContain(bad === "" ? "E_EMPTY_SLOT" : "E_BAD_NAME");
+    for (const bad of ["Foo", "2x", "for", "len", "my-var"]) {
+      expect(codes(program([assign(bad, num(1))])), bad).toContain("E_BAD_NAME");
+      expect(codes(program([for_(bad, num(0), num(1), [])])), bad).toContain("E_BAD_NAME");
     }
     expect(codes(program([assign("total_2", num(1))]))).toEqual([]);
     const fn = { id: "f0000000000f", name: "Twice", params: [], body: [] };
@@ -179,7 +179,7 @@ describe("validate (language.md, Validation)", () => {
       code: "E_EMPTY_SLOT",
       params: { slot: "cond" },
     });
-    expect(validate(program([for_("", num(0), num(1), [])]))[0]).toMatchObject({
+    expect(validate(program([ast.forTo(empty(), num(0), num(1), [])]))[0]).toMatchObject({
       code: "E_EMPTY_SLOT",
       params: { slot: "var" },
     });

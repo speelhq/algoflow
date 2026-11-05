@@ -54,7 +54,7 @@
       {
         "id": "fzb-loop-001",
         "kind": "for",
-        "var": "i",
+        "var": { "id": "fzb-lvar-001", "kind": "var", "name": "i" },
         "start": { "id": "fzb-one0-001", "kind": "num", "value": 1, "float": false, "raw": "1" },
         "stop": {
           "id": "fzb-stop-001",

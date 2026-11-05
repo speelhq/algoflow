@@ -12,7 +12,7 @@ import {
   type Program,
   type Stmt,
 } from "./types";
-import { boundVariables, declaredBy } from "./scope";
+import { declaredBy } from "./scope";
 import { emptySlots, programIds, regionsOf, stmtExprs, variableOf } from "./walk";
 
 export function isValidName(name: string): boolean {
@@ -139,7 +139,7 @@ class Collector {
   }
 
   private reads(stmt: Stmt, visible: Set<Name>, inner: Map<Name, NodeId>): void {
-    const bound = new Set(boundVariables(stmt));
+    const bound = new Set(declaredBy(stmt).map((declared) => declared.target));
     for (const expr of stmtExprs(stmt)) {
       if (bound.has(expr)) continue;
       const name = variableOf(expr);
