@@ -90,6 +90,21 @@ describe("editor session", () => {
     expect(valueKey(session, { key: "Escape", shiftKey: false }, [], ctx, "").taken).toBe(false);
   });
 
+  it("Tab and Shift+Tab reach the empty slot inside the value the editor opens with selected", () => {
+    const field: Field = { slot: "args", role: "expr", index: 0 };
+    const typed = press(openSession(print(empty()), field, null), "abs(").session.line?.root;
+    if (!typed) throw new Error("no value typed");
+    const slot = typed.kind === "call" ? typed.args[0] : undefined;
+    expect(slot?.kind).toBe("empty");
+    // The editor opened again on `print(abs(…))` selects `abs(…)`.
+    const reopened = openSession(print(typed), field, null);
+    expect(reopened.line?.selected).toBe(true);
+    for (const shiftKey of [false, true]) {
+      const moved = valueKey(reopened, { key: "Tab", shiftKey }, [], ctx, ")");
+      expect([moved.session.line?.caret, moved.after]).toEqual([{ at: slot?.id }, undefined]);
+    }
+  });
+
   it("a key the line refuses after its value, beginning the words after the field, moves on", () => {
     const stmt = assign("total", num(1));
     const field: Field = { slot: "value", role: "expr" };
