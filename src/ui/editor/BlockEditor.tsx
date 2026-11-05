@@ -487,8 +487,8 @@ export function BlockEditor({ id }: { id: NodeId }) {
   const closeEditor = useEditor((s) => s.closeEditor);
   // The chart node's box, which the editor is placed beside; it is no control of its own.
   const [anchor, setAnchor] = useState<Element | null>(null);
-  const block = blocksById(program).get(id);
-  if (!block || !("kind" in block) || getBlockDef(keyOf(block)).shape !== "stmt") return null;
+  // The selection holds a statement of the open program (`useEditor`).
+  const stmt = blocksById(program).get(id) as Stmt;
   return (
     <Popover
       open
@@ -522,7 +522,7 @@ export function BlockEditor({ id }: { id: NodeId }) {
           >
             <Body
               key={`${id}:${slot ?? ""}:${emptyId ?? ""}`}
-              stmt={block as Stmt}
+              stmt={stmt}
               program={program}
               initial={{ slot, emptyId }}
             />

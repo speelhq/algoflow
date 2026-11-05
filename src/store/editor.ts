@@ -3,6 +3,8 @@
 // whether the canvas shows the solution, and the diagnostic Run or Submit led to.
 import { create } from "zustand";
 import type { Diagnostic, NodeId } from "@/lang/types";
+import { isStatement } from "@/lang/walk";
+import { useProgram } from "./program";
 
 export type PanelTab = "problem" | "result" | "python";
 
@@ -36,6 +38,15 @@ export type EditorState = {
   open: (tab: PanelTab) => void;
 };
 
+/**
+ * `id`, when it is a statement of the open program; the selection holds a statement only
+ * (`chart.md`, Editing on the chart, Selection and keys), so any other node id throws.
+ */
+function selectable(id: NodeId): NodeId {
+  if (!isStatement(useProgram.getState().program, id)) throw new Error(`${id} is no statement`);
+  return id;
+}
+
 export const useEditor = create<EditorState>()((set) => ({
   tab: "problem",
   selectedId: null,
@@ -48,7 +59,7 @@ export const useEditor = create<EditorState>()((set) => ({
   setTab: (tab) => set({ tab }),
   select: (id, slot, edit = true, emptyId) =>
     set({
-      selectedId: id,
+      selectedId: id === null ? null : selectable(id),
       slot: slot ?? null,
       emptyId: emptyId ?? null,
       editing: id !== null && edit,
@@ -59,7 +70,7 @@ export const useEditor = create<EditorState>()((set) => ({
   showSolution: (shown) => set({ solution: shown }),
   lead: (owner, diagnostic) =>
     set({
-      selectedId: owner,
+      selectedId: selectable(owner),
       slot: null,
       emptyId: null,
       editing: true,
@@ -78,3 +89,10 @@ export const useEditor = create<EditorState>()((set) => ({
       diagnostic: null,
     }),
 }));
+
+// An undo or a redo can remove the selected statement, and the selection then clears, so it
+// always holds a statement of the open program.
+useProgram.subscribe(({ program }) => {
+  const { selectedId, select } = useEditor.getState();
+  if (selectedId !== null && !isStatement(program, selectedId)) select(null);
+});

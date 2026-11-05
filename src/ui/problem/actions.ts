@@ -1,10 +1,10 @@
-// The page's Run. With diagnostics present it does not start: it selects the
-// first diagnostic's statement and shows its message. Run acts on the learner's
+// The page's Run. With diagnostics present it does not start: it selects the statement that
+// owns the first diagnostic and shows its message, or clears the selection for a function's. Run acts on the learner's
 // program, so a shown solution gives way to the learner's program first. The play button's action,
 // and what a click on a chart node does in each mode.
 import { validate } from "@/lang/validate";
 import type { NodeId } from "@/lang/types";
-import { ownerOf } from "@/lang/walk";
+import { isStatement, ownerOf } from "@/lang/walk";
 import { useEditor } from "@/store/editor";
 import { currentMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
@@ -18,7 +18,10 @@ function readyToRun(): boolean {
   editor.showSolution(false);
   const [first] = validate(program);
   if (!first) return true;
-  editor.lead(ownerOf(program, first.nodeId), first);
+  const owner = ownerOf(program, first.nodeId);
+  // A function's diagnostic belongs to the function's editor, which is not built yet.
+  if (isStatement(program, owner)) editor.lead(owner, first);
+  else editor.select(null);
   return false;
 }
 
@@ -73,6 +76,8 @@ export function startSubmit(): void {
  * and selects; in build mode it selects; on the shown solution it does nothing.
  */
 export function clickChartNode(owner: NodeId, slot?: string, emptyId?: NodeId): void {
+  // A function's `Start` opens the function's editor, which is not built yet.
+  if (!isStatement(useProgram.getState().program, owner)) return;
   const run = useRun.getState();
   switch (currentMode()) {
     case "running":
