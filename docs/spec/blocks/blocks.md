@@ -27,7 +27,7 @@ export type BlockDef = {
   hidden?: boolean; // not in the block menu (`empty`, `expr`)
   zeroLike?(block: Expr): Expr; // a literal block's zero of the same type (`hoistAssign`)
   callee?(block: Expr): Callee; // a call-like block's callee and argument count
-  create(): Stmt | Expr; // required slots hold `empty` (`language.md`, Expressions)
+  create(): Stmt | Expr; // an expression slot it gives no value holds `empty` (`language.md`, Expressions)
   run: StmtRunner | ExprRunner; // `interpreter.md`, Block definitions
 
   python(block: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // `emitter.md`: stmt → lines, expr → text
@@ -51,13 +51,10 @@ export type Callee = {
   argc: number;
   family: "builtin" | "function" | "class" | "method"; // builtin, method: arity from `params`
 };
-export type Slot = {
-  name: string;
-  role: "expr" | "exprs" | "name" | "body" | "target" | "text";
-  required?: boolean; // Slots
-  atom?: true; // its value binds as an atom (Notation)
-  binds?: true; // a `target` slot that declares the variable its target is (`language.md`, Scope)
-};
+export type Slot = // Slots
+  | { name: string; role: "expr"; optional?: true; atom?: true } // atom: its value binds as an atom (Notation)
+  | { name: string; role: "target"; binds?: true } // binds: declares the variable its target is (`language.md`, Scope)
+  | { name: string; role: "exprs" | "name" | "body" | "literal" | "operator" };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
 export type ValueEntry = {
   name: string; // "" for the block's own label and help, else block.<key>.<name>.label / .help
@@ -72,7 +69,7 @@ export type ValueEntry = {
 ### Slots
 
 A slot is one part of a block that the learner fills or edits. It has
-one of six roles:
+one of seven roles:
 
 - `expr` holds one expression.
 - `exprs` holds an ordered list of expressions.
@@ -80,24 +77,35 @@ one of six roles:
 - `body` holds a region (`language.md`, Program).
 - `target` holds one target (`language.md`, Statements). The emitter and
   the chart write it as the expression it is.
-- `text` holds a literal field of an expression: `num.value`,
-  `str.value`, or an operator.
+- `literal` holds the literal of an expression: `num.value` or
+  `str.value`.
+- `operator` holds the operator of an expression: `binop.op` or
+  `unop.op`.
 
-No statement has a `text` slot, because a statement's literal text would
-be a comment, and a caption takes the place of comments
-(`editor.md`, Captions).
+A literal and an operator take two roles, because the learner types a
+literal and chooses an operator (`editor.md`, Texts; Value list,
+Choosing). One role for both was rejected, because the editor would then
+tell them apart by guessing from the block.
 
-`required` marks a slot that the program needs filled before it runs.
+No statement has a `literal` slot, because a statement's literal would be
+a comment, and a caption takes the place of comments (`editor.md`,
+Captions).
 
-A required `name` slot that holds `""`, and a required `exprs` slot with
-no item, are empty slots (`language.md`, Expressions, Empty slots).
+No statement has an `operator` slot, because the block editor edits an
+operator only inside a value line (`editor.md`, Value list, Choosing).
 
-A required `expr` or `target` slot always holds an expression, `empty`
-until one is chosen.
+`optional` marks an `expr` slot that may hold no expression, such as the
+value of `return` (`editor.md`, Block editor).
 
-Only an `expr`, `target`, `name`, or `exprs` slot declares `required`,
-because a `text` slot always holds the literal that its block writes
-(`fieldsError`), and a `body` slot may hold no statement.
+Every other `expr` slot, and every `target` slot, always holds an
+expression.
+
+A `name` slot that holds `""` is an empty slot (`language.md`,
+Expressions, Empty slots).
+
+An `exprs` slot with no item is no empty slot. A list that must hold an
+item was rejected, because a builtin's parameters already say how many
+arguments it takes (Parameters), and `abs()` would fail twice.
 
 ### Parameters
 
@@ -278,10 +286,10 @@ learner needs to choose and understand a block definition come in the
 learner's language, unlike a notation (`pages.md`, Catalogs): the label,
 the help, the value list, the explanation line, and the narration.
 
-### Text slots
+### Literals and operators
 
-`text(block, slot)` writes a `text` slot, and defaults to the slot's
-string value.
+`text(block, slot)` writes a `literal` or an `operator` slot, and
+defaults to the slot's string value.
 
 `num` writes `raw`.
 

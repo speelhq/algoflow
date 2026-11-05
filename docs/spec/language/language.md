@@ -139,13 +139,13 @@ can only come from editing the file by hand:
 
 - an unknown kind
 - a missing field
-- a literal that the block's definition wouldn't make
+- a field that the block's definition wouldn't make
 - a `Data` value that isn't canonical
-- an expression whose required name or list holds nothing (`blocks.md`,
-  The block definition, Slots)
+- an expression whose `name` slot holds `""` (`blocks.md`, The block
+  definition, Slots)
 
 `migrate()` rejects a file with one of those faults, so `validate()` never
-reads a literal field. `migrate()` rejects the file because there is no
+reads a field that `fieldsError` checks. `migrate()` rejects the file because there is no
 node to fix those faults on.
 
 ### Classes and objects before `new` exists
@@ -297,14 +297,15 @@ export type BinOp =
 ### Empty slots
 
 An empty slot is a slot that still needs filling: an expression slot or
-an item that holds `{ kind: "empty" }`, or a required name or list
-that holds nothing (`blocks.md`, The block definition, Slots).
+an item that holds `{ kind: "empty" }`, or a `name` slot that holds
+`""` (`blocks.md`, The block definition, Slots).
 `validate()` reports each empty slot as `E_EMPTY_SLOT` with the slot's
 name.
 
 Each consumer handles the `empty` expression in its own way:
 
-- `create()` fills every required expression slot with it.
+- `create()` fills with it every expression slot that it gives no value
+  and that isn't `optional`. For example: a new `for` starts at `0`.
 - The emitter writes `...` for it.
 - The interpreter never executes it.
 
@@ -503,7 +504,7 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 | `E_RETURN_OUTSIDE` | `return` in `main`                                          |                           |
 | `E_ARITY`          | wrong argument count                                        | `name`, `expected`, `got` |
 | `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`                    |
-| `E_EMPTY_SLOT`     | required slot empty (prevents execution)                    | `slot`                    |
+| `E_EMPTY_SLOT`     | an empty slot (prevents execution)                          | `slot`                    |
 | `E_DEFAULT`        | a field default that Semantics, Objects doesn't allow       | `field`                   |
 | `E_DUPLICATE_ID`   | two nodes share a node id (Program)                         |                           |
 
