@@ -4,8 +4,8 @@
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import { isFloatData } from "./data";
 import { assignedValue, declaredBy } from "./scope";
-import type { Data, Expr, Name, Kind, NodeId, Program, Routine, Stmt } from "./types";
-import { allStmts, getRoutine, idsUnder, routineStmts, variableOf } from "./walk";
+import type { Data, Expr, Name, Kind, Program, Routine, Stmt } from "./types";
+import { allStmts, getRoutine, routineStmts, variableOf } from "./walk";
 
 /** The kind of a value written as Data. */
 export function dataKind(data: Data): Kind {
@@ -24,19 +24,6 @@ export function exprKind(expr: Expr, variables: Kinds): Kind | undefined {
   const name = variableOf(expr);
   if (name !== undefined) return variables.get(name);
   return getBlockDef(keyOf(expr)).yields?.(expr, (inner) => exprKind(inner, variables));
-}
-
-/**
- * The routine that holds node `id`: a function holds itself and every node of its body, and
- * `main` every node of its own. Throws for a node id the program doesn't hold.
- */
-export function routineOf(program: Program, id: NodeId): Routine {
-  for (const fn of program.functions) {
-    if (fn.id === id) return fn.id;
-    for (const inner of idsUnder(fn.body)) if (inner === id) return fn.id;
-  }
-  for (const inner of idsUnder(program.main)) if (inner === id) return "main";
-  throw new Error(`no node ${id}`);
 }
 
 type Scope = { kinds: Map<Name, Kind>; setters: Map<Name, Stmt> };

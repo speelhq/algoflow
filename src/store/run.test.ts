@@ -431,8 +431,9 @@ describe("run store", () => {
     const loop = useProgram.getState().program.main[0];
     const printer = loop?.kind === "for" ? loop.body[0] : undefined;
     const arg = printer?.kind === "print" ? printer.args[0] : undefined;
-    run().setBreakpoint(arg?.id ?? null);
-    expect(run().breakpoint).toBe(printer?.id); // an expression's id means its statement
+    expect(() => run().setBreakpoint(arg?.id ?? null)).toThrow(); // a statement's id only
+    run().setBreakpoint(printer?.id ?? null);
+    expect(run().breakpoint).toBe(printer?.id);
     run().play();
     vi.advanceTimersByTime(5000);
     expect(run()).toMatchObject({ status: "paused", step: 3 });

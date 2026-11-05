@@ -3,17 +3,19 @@ import { errorText, t } from "@/i18n/t";
 import { hoistAssign } from "@/lang/edit";
 import type { Diagnostic, NodeId, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
-import { ownersById } from "@/lang/walk";
+import { ownerOf } from "@/lang/walk";
 import { Button } from "@/ui/primitives/button";
 import { apply } from "./edits";
 
-/** The diagnostics chart nodes show, by statement: no empty slot, whose `…` already shows it. */
-export function flaggedStatements(program: Program): Map<NodeId, Diagnostic[]> {
-  const owners = ownersById(program);
+/**
+ * The diagnostics chart nodes show, by owner, a statement or a function (`chart.md`, Shapes): no
+ * empty slot, whose `…` already shows it.
+ */
+export function flaggedOwners(program: Program): Map<NodeId, Diagnostic[]> {
   const flagged = new Map<NodeId, Diagnostic[]>();
   for (const d of validate(program)) {
     if (d.code === "E_EMPTY_SLOT") continue;
-    const owner = owners.get(d.nodeId) ?? d.nodeId;
+    const owner = ownerOf(program, d.nodeId);
     flagged.set(owner, [...(flagged.get(owner) ?? []), d]);
   }
   return flagged;
@@ -37,9 +39,9 @@ export function editorDiagnostics(
   id: NodeId,
   led: Diagnostic | null,
 ): Diagnostic[] {
-  const shown = flaggedStatements(program).get(id) ?? [];
+  const shown = flaggedOwners(program).get(id) ?? [];
   const still = led ? validate(program).find((d) => sameDiagnostic(d, led)) : undefined;
-  const owner = still ? (ownersById(program).get(still.nodeId) ?? still.nodeId) : undefined;
+  const owner = still ? ownerOf(program, still.nodeId) : undefined;
   return still && owner === id && !shown.includes(still) ? [still, ...shown] : shown;
 }
 
