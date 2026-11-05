@@ -1,10 +1,11 @@
 // The emitted code with line numbers; keywords, strings, numbers, and comments are
-// colored. Hovering a line outlines its chart node, clicking it selects its block, the selected
+// colored. Hovering a line outlines its owner's chart node, clicking it selects its block, the selected
 // block's lines are highlighted, and while running the current statement's line is too.
 import { useEffect, useMemo, useRef } from "react";
 import { caseInputs } from "@/challenges/cases";
 import { t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
+import { isStatement } from "@/lang/walk";
 import { emit } from "@/python/emit";
 import { useEditor } from "@/store/editor";
 import { inRun, useMode } from "@/store/mode";
@@ -63,8 +64,9 @@ export function PythonTab() {
     const out = () => setHovered(null);
     const click = (event: MouseEvent) => {
       const owner = ownerAt(event);
-      // A line selects its node, which the chart outlines; the editor opens from the chart.
-      if (owner !== null) select(owner, undefined, false);
+      // A line selects its statement, which the chart outlines; the editor opens from the chart.
+      // A `def` line's owner is its function, which is never selected.
+      if (owner !== null) select(isStatement(program, owner) ? owner : null, undefined, false);
     };
     element.addEventListener("mouseover", over);
     element.addEventListener("mouseleave", out);
@@ -75,7 +77,7 @@ export function PythonTab() {
       element.removeEventListener("click", click);
       setHovered(null); // the tab may unmount while a line is hovered
     };
-  }, [owners, setHovered, select]);
+  }, [owners, program, setHovered, select]);
 
   return (
     <div className="flex flex-col gap-3" data-testid="python-tab">
