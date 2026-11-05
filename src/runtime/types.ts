@@ -1,5 +1,5 @@
 // No third-party imports.
-import type { Heap, HeapId, Name, NodeId, Value } from "@/lang/types";
+import type { Heap, HeapId, Name, NodeId, Routine, Value } from "@/lang/types";
 
 export type Runner = {
   next(): Event | Done;
@@ -13,7 +13,8 @@ export type Done =
   | { type: "error"; error: RuntimeError; events: number };
 
 export type State = { frames: Frame[]; heap: Heap };
-export type Frame = { fn: Name | "main"; callNodeId?: NodeId; vars: Map<Name, Value> };
+/** `routine`: by node id, since `main` is also a function's name (`interpreter.md`, Runner). */
+export type Frame = { routine: Routine; callNodeId?: NodeId; vars: Map<Name, Value> };
 
 export const RUNTIME_CODES = [
   "E_UNDEFINED",

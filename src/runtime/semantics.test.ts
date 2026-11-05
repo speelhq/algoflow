@@ -1,7 +1,16 @@
 // What the runtime itself decides: the int range and the sign of zero, the rules under Values and
 // the run of language.md, the params a runtime error carries, and the event rules.
 import { describe, expect, it } from "vitest";
-import { ast, evalExpr, eventTypes, program, runAll, varData, withInputs } from "@/blocks/testing";
+import {
+  ast,
+  evalExpr,
+  eventTypes,
+  program,
+  runAll,
+  tid,
+  varData,
+  withInputs,
+} from "@/blocks/testing";
 import { run, EVENT_LIMIT } from "./run";
 import { floatRepr, strRepr } from "./values";
 
@@ -25,6 +34,7 @@ const {
   if_,
   list,
   item,
+  ret,
 } = ast;
 
 describe("values and the run", () => {
@@ -205,8 +215,16 @@ describe("event rules", () => {
   it("state() exposes the main frame and heap; stdout() the printed lines", () => {
     const result = runAll(program([assign("x", num(1)), print(v("x"))]));
     expect(result.state.frames).toHaveLength(1);
-    expect(result.state.frames[0]?.fn).toBe("main");
+    expect(result.state.frames[0]?.routine).toBe("main");
     expect(result.stdout).toEqual(["1"]);
+  });
+
+  it("a frame of a function named main names that function, not main", () => {
+    const fn = { id: tid(), name: "main", params: [], body: [ret(num(1))] };
+    const runner = run(program([exprStmt(call("main"))], { functions: [fn] }), {}, 1);
+    let event = runner.next();
+    while (event.type !== "call") event = runner.next();
+    expect(runner.state().frames.map((frame) => frame.routine)).toEqual(["main", fn.id]);
   });
 });
 
