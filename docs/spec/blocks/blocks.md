@@ -35,7 +35,7 @@ export type BlockDef = {
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined; // `language.md`, Data
   text?(block: Stmt | Expr, slot: string): string; // Notation
   yields?(block: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
-  declares?: Kind; // the kind of the variable its `name` slot names (`language.md`, Kinds)
+  declares?: Kind; // a loop's: the kind of the variable its binding target names (`language.md`, Kinds)
   locate?(block: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>; // a target's place (`interpreter.md`, Block definitions)
   entries?: ValueEntry[]; // the entries of the value list (Value list entries)
   chart?:
@@ -53,7 +53,7 @@ export type Callee = {
 };
 export type Slot = // Slots
   | { name: string; role: "expr"; optional?: true; atom?: true } // atom: its value binds as an atom (Notation)
-  | { name: string; role: "target"; binds?: true } // binds: declares the variable its target is (`language.md`, Scope)
+  | { name: string; role: "target"; binds?: true; stores?: string } // binds: declares the variable its target is (`language.md`, Scope); stores: the slot whose value it stores
   | { name: string; role: "exprs" | "name" | "body" | "literal" | "operator" };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
 export type ValueEntry = {
@@ -100,8 +100,16 @@ value of `return` (`editor.md`, Block editor).
 Every other `expr` slot, and every `target` slot, always holds an
 expression.
 
-A `name` slot that holds `""` is an empty slot (`language.md`,
-Expressions, Empty slots).
+No statement has a `name` slot, because a statement names a variable in a
+`target` slot, as Python's assignment and `for` do. A `name` slot of a
+statement would be a second form of an empty slot, one with no node id.
+
+A binding `target` slot names in `stores` the expression slot whose value
+it stores. For example: `assign`'s `target` stores `value`. A loop's
+binding slot has no `stores`, because each pass gives its value, and the
+loop's `declares` gives that value's kind (`language.md`, Kinds). Taking
+the value from the statement's first expression slot was rejected,
+because a `for`'s first expression slot is its start.
 
 An `exprs` slot with no item is no empty slot. A list that must hold an
 item was rejected, because a builtin's parameters already say how many
@@ -180,9 +188,9 @@ text, and `<x>` stands for an emitted slot.
 | `swap`     | list     | a, b                   | `swap({a}, {b})`                                                                                                    | `<a>, <b> = <b>, <a>`                                                               |
 | `delete`   | list     | target                 | `del {target}`                                                                                                      | `del <target>`                                                                      |
 
-A new `for` has no variable name, because `create()` receives no context,
-and filling in the first unused name of `i`, `j`, and `k` would be a
-special case.
+A new `for`'s variable is an empty slot, because `create()` receives no
+context, and filling in the first unused name of `i`, `j`, and `k` would
+be a special case.
 
 ## Expressions
 

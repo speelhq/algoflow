@@ -1,4 +1,4 @@
-// The names a name field and a binding target's line offer (`editor.md`, Name fields; Targets):
+// The names a binding target's line offers (`editor.md`, Name list; Targets):
 // the problem's expected variables under `This problem`, the routine's other variables under
 // `Variables`, each kept while one of its words begins with the text typed, and a typed name
 // none of them is offered as a new variable.

@@ -189,7 +189,7 @@ In run mode, the narration line describes the event of the step
 | `compare` | the comparison as the chart writes it (`blocks.md`, Notation), with every variable that holds a number, a text, a boolean, or none written as its value in the frame the event ran in, then `is` and the comparison's value (`3 < 10 is True`); for a diamond's whole condition, its question and answer (below) |
 | `write` | `i is now 3` |
 | `swap` | `Swapped nums[1] and nums[2]` |
-| `loop` | `Pass 3: i is 3`, or without a variable `Pass 3` |
+| `loop` | `Pass 3: i is 3`, with the loop's target written as a location (Locations), or without a target `Pass 3` |
 | `print` | `Printed "Fizz"` |
 | `call` | `Calling f(2)` |
 | `return` | `f returned 4`, which is the only narration of a module call (`interpreter.md`, Steps and batches) |

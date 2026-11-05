@@ -4,7 +4,8 @@ The editor writes a program's blocks: the block menu inserts a statement
 block at a connector, and the block editor edits that block's slots in
 place. This file states the block menu, the block editor, value lines and
 their lists, what Backspace removes and what keys insert, target
-slots, name fields, captions, the explanation line, and the verification.
+slots, the name list, captions, the explanation line, and the
+verification.
 
 ## Block menu
 
@@ -91,21 +92,21 @@ every chart node and hide the statements above the one being built.
 
 The canvas draws the editor at 100 % whatever the chart's zoom.
 
-While a value list or a name list is shown (Value list; Name fields), the
-editor and its parts keep fixed heights:
+While a value list is shown (Value list), the editor and its parts keep
+fixed heights:
 
 - The editor is 480 px high, or as high as the canvas less its margins
   when the canvas is lower.
 - The explanation line is four lines high, the height of the longest
   help.
-- The value list or the name list takes the height that the editor's
-  other parts leave, and it scrolls within that height.
+- The value list takes the height that the editor's other parts leave,
+  and it scrolls within that height.
 
 The heights are fixed so that the editor, placed by its height, moves
-neither when typing shortens either list nor when the highlight changes
+neither when typing shortens the list nor when the highlight changes
 the explanation line.
 
-Either list scrolls a highlighted row into sight only when no part of
+The value list scrolls a highlighted row into sight only when no part of
 that row is in sight, so no row moves under the pointer.
 
 In a canvas lower than the editor's other parts and a few rows, the
@@ -120,8 +121,7 @@ From top to bottom, the editor holds:
   icon buttons beside it, and `Open <name>` when the block calls a
   function or constructs a class
 - the block's notation, with its slots editable in place
-- the value list or the name list of the focused slot (Value list; Name
-  fields)
+- the value list of the focused slot (Value list)
 - the explanation line (Explanation line)
 
 A separator divides each of the caption field, the notation, and that
@@ -134,7 +134,6 @@ it opens the module's Module page (`modules.md`, Operations).
 
 The notation has its slots editable in place, each as its role chooses:
 
-- `name`: a name field (Name fields)
 - `expr` and `target`: a value line (Value line; Targets)
 - an optional `expr` left empty: `+ value` (`editor.addValue`), which adds
   its value line
@@ -147,12 +146,14 @@ edited in place.
 
 A field is a place in the editor where the learner types: a field of the
 notation, a text field in a value line, or the caption field. Each
-`name`, `expr`, and `target` slot of the notation is a field of the
-notation, and so is each item of an `exprs` slot.
+`expr` and `target` slot of the notation is a field of the notation, and
+so is each item of an `exprs` slot.
 
-A loop's editor edits the variable and the bounds of a `for`, the list of
-a `foreach`, or the condition of a `while`. The generated chart nodes
-(`chart.md`, Shapes) change with what the editor sets.
+A loop's editor edits the variable and the bounds of a `for`, the
+variable and the list of a `foreach`, or the condition of a `while`. A
+loop's variable is a target that binds, edited in a target's line
+(Targets). The generated chart nodes (`chart.md`, Shapes) change with
+what the editor sets.
 
 Clicking a slot drawn on the chart node opens the editor with that slot
 focused. When the editor opens otherwise, the first field that holds an
@@ -300,8 +301,6 @@ the value:
 
 Clicking an empty slot on the chart node opens the editor focused on it.
 
-A chart node draws an empty name slot with the same `…`.
-
 A chart node draws nothing for an `exprs` slot with no item.
 
 A diamond whose condition is empty shows the `…` without `?`.
@@ -364,7 +363,7 @@ groups:
 
 Hovering a row highlights it.
 
-A value list or a name list with no row reads `editor.noItems`.
+A value list with no row reads `editor.noItems`.
 
 Each group's name says what the learner does with a value, not the block
 category. `Combine`, `Other`, `Totals`, `Order`, and `Functions` were
@@ -587,16 +586,15 @@ So the learner types `nums[j]` as the chart writes it, and `[` after a
 variable of any kind makes an item of it, a parameter included. For
 example: `heap[i]`.
 
-A name field offering an item form of a variable was rejected, because it
-would repeat what a value line does after a value, and it would offer the
-form only for a variable whose kind is known, so a parameter would never
-get one.
+A list of names that offered an item form of each variable was rejected,
+because it would repeat what a value line does after a value, and it
+would offer the form only for a variable whose kind is known, so a
+parameter would never get one.
 
 The value list of a target's line holds:
 
 - where the whole target is an empty slot, in a slot with `binds` set
-  (`blocks.md`, The block definition): the names a name field offers,
-  `This problem` first, with `New variable <name>` (Name fields)
+  (`blocks.md`, The block definition): the name list (Name list)
 - where the whole target is an empty slot, in a slot without `binds`:
   the variables visible at the block
 - after the target's variable: the entries that keep a target. For
@@ -610,16 +608,15 @@ A target's value list, where the whole target is an empty slot, ends
 with no `Show all`, because every name it could list is in it.
 
 In a target's line, Enter or a click that chooses a row and leaves the
-target with no empty slot moves the keyboard to the next field, as
-choosing a name in a name field does. So `total`, Enter, and the
-value are typed in turn. Staying in the line was rejected, because a
+target with no empty slot moves the keyboard to the next field. So
+`total`, Enter, and the value are typed in turn. Staying in the line was rejected, because a
 target is a name far more often than an item, and a second Enter there
 would close the editor before its value.
 
-## Name fields
+## Name list
 
-A `name` slot is a name field with the name list below it. The name list
-holds:
+The name list is what a binding target's line offers where its whole
+target is an empty slot (Targets). It holds:
 
 - in `main`: the names of the `expect.variables` of the challenge's first
   test, in that order, under `This problem`, then main's other variables
@@ -637,25 +634,10 @@ names the problem needs. For example: `i`, `count`, `found`.
 
 Each name shows its kind (`language.md`, Kinds).
 
-Typing in a name field keeps the names that the text typed matches, as a
-value line matches a name (Value line, Words). The name list also offers
-a typed name that it doesn't hold and that `language.md`, Identifiers,
-allows, as `New variable <name>`.
-
-In a name field:
-
-- ↑ and ↓ move the highlight.
-- Choosing a name moves the keyboard to the next field.
-- Enter chooses the highlighted name, or else the name typed.
-- In a name field not typed in, Enter keeps its name and moves to the
-  next field, or closes the editor after the last one.
-
-The name field sets a name when it is chosen, not with every key, because
-setting it with every key would give `t`, `to`, and `tot` values on the
-way to `total`.
-
-A name field keeps only the characters a name may hold (`language.md`,
-Identifiers).
+The name list keeps the names that the word typed matches, as a value
+line matches a name (Value line, Words). It also offers a typed name that
+it doesn't hold and that `language.md`, Identifiers, allows, as
+`New variable <name>`.
 
 ## Captions
 
@@ -687,7 +669,7 @@ would draw Python's `#` on the chart.
 ## Explanation line
 
 The explanation line at the foot of the editor explains what the value
-list or the name list highlights or the caret is in:
+list highlights or the caret is in:
 
 | What it explains | What the line shows |
 | --- | --- |
@@ -700,7 +682,6 @@ list or the name list highlights or the caret is in:
 | inside an operation's slot | the operation's name (the entry offered after the kind of the value in its first slot, `Join with another list` for `+` after a list) and its notation with every slot as its value, parenthesized as the chart parenthesizes it, an empty one as `…`, and the slot the caret is in underlined (`dp[…]`, its `…` underlined) |
 | a refused key | its message (Backspace and keys) |
 | a word that matches nothing | the closest name (Value line), or `editor.nothingLike` when none is close |
-| a name field with nothing highlighted | `editor.explain.name` |
 | anything else | the block definition's help (`block.<key>.help`) |
 
 The line shows a slot by its value rather than naming it in words,
@@ -716,5 +697,5 @@ The tests of `src/ui/editor` cover:
   functions offered
 - a value line's typing, keys, choosing, Backspace, moving, and value list
 - what a target's line takes and lists
-- the name list and what a name field keeps
+- the name list
 - the explanation line
