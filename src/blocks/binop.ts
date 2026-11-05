@@ -115,7 +115,7 @@ export const binop = defineExpr<"binop">({
   key: "binop",
   category: "basic",
   slots: [
-    { name: "op", role: "text", required: true },
+    { name: "op", role: "text" },
     { name: "left", role: "expr", required: true },
     { name: "right", role: "expr", required: true },
   ],
