@@ -1,8 +1,9 @@
 // The taken path, marks, current chart node, and breakpoint drawn while running.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/blocks/testing";
-import { estimatedWidth, layout } from "./layout";
+import { estimatedWidth } from "./layout";
 import { currentNode, paint, type RunView } from "./paint";
+import { laidOut } from "./testing";
 
 const { bin, for_, if_, num, print, str, v } = ast;
 
@@ -10,7 +11,7 @@ const yes = print(str("zero"));
 const branch = if_(bin("==", v("i"), num(0)), [yes], [print(v("i"))]);
 const loop = for_("i", num(0), num(3), [branch]);
 const after = print(str("done"));
-const chart = layout(program([loop, after]), {
+const chart = laidOut(program([loop, after]), {
   routine: "main",
   inputs: {},
   measure: estimatedWidth,
@@ -78,7 +79,7 @@ describe("paint", () => {
   it("takes a loop's No edge into a following loop's junction once control is there", () => {
     const first = for_("i", num(0), num(2), [print(v("i"))]);
     const second = for_("j", num(0), num(2), [print(v("j"))]);
-    const twice = layout(program([first, second]), {
+    const twice = laidOut(program([first, second]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
@@ -96,7 +97,7 @@ describe("paint", () => {
     const stop = ast.brk();
     const jumpy = for_("i", num(0), num(3), [if_(bin("==", v("i"), num(1)), [stop])]);
     const next = print(str("done"));
-    const drawn = layout(program([jumpy, next]), {
+    const drawn = laidOut(program([jumpy, next]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,

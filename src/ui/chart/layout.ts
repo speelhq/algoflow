@@ -8,8 +8,8 @@
 // Reads `def.chart`, `def.requires`, and the regions of a statement, never a kind.
 import { t } from "@/i18n/t";
 import { inputValue } from "@/lang/data";
-import type { Data, Name, NodeId, Place, Program, Stmt } from "@/lang/types";
-import { regionsOf } from "@/lang/walk";
+import type { Data, Name, NodeId, Place, Program, RegionParent, Routine, Stmt } from "@/lang/types";
+import { findRoutine, regionsOf, routineStmts } from "@/lang/walk";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import {
   generatedParts,
@@ -78,8 +78,7 @@ export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: numbe
 /** The width of `text` in px as the chart draws it; a variable is drawn bold. */
 export type Measure = (text: string, shape: Shape, bold?: boolean) => number;
 export type LayoutOptions = {
-  /** `main` or a function's id. */
-  routine: "main" | NodeId;
+  routine: Routine;
   /** The values the Input chart nodes show: the chosen case's. */
   inputs: Readonly<Record<Name, Data>>;
   measure: Measure;
@@ -313,7 +312,7 @@ class Builder {
     return region.out;
   }
 
-  region(stmts: Stmt[], parent: NodeId | "main", slot: Slot): Frag {
+  region(stmts: Stmt[], parent: RegionParent, slot: Slot): Frag {
     const frag = emptyFrag();
     let y = 0;
     let flow: Stub | null = null;
@@ -618,10 +617,15 @@ class Builder {
   }
 }
 
-/** The chart of `main` or of one function, every chart node and edge placed. */
-export function layout(program: Program, opts: LayoutOptions): ChartLayout {
+/**
+ * The chart of `main` or of one function, every chart node and edge placed; undefined for a
+ * routine that names no function.
+ */
+export function layout(program: Program, opts: LayoutOptions): ChartLayout | undefined {
+  const routine = findRoutine(program, opts.routine);
+  if (routine === undefined) return undefined;
+  const fn = routine === "main" ? undefined : routine;
   const builder = new Builder(program, opts.measure);
-  const fn = program.functions.find((candidate) => candidate.id === opts.routine);
   const frag = emptyFrag();
 
   const startText = fn
@@ -643,10 +647,9 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout {
     half = Math.max(half, node.w / 2);
   }
 
-  const body = fn
-    ? builder.region(fn.body, fn.id, "body")
-    : builder.region(program.main, "main", "main");
-  const first: Place = { parent: fn ? fn.id : "main", slot: fn ? "body" : "main", index: 0 };
+  const slot = fn ? "body" : "main";
+  const body = builder.region(routineStmts(program, routine), opts.routine, slot);
+  const first: Place = { parent: opts.routine, slot, index: 0 };
   let tail: Stub | null;
   if (body.entry === null) tail = { ...flow, place: first };
   else {

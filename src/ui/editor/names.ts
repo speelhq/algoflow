@@ -3,9 +3,9 @@
 // `Variables`, each kept while one of its words begins with the text typed, and a typed name
 // none of them is offered as a new variable.
 import { declaredBy } from "@/lang/scope";
-import type { Name, NodeId, Program } from "@/lang/types";
+import type { Name, Program, Routine } from "@/lang/types";
 import { isValidName } from "@/lang/validate";
-import { allStmts } from "@/lang/walk";
+import { allStmts, getRoutine, routineStmts } from "@/lang/walk";
 
 /** The words of a name: split at spaces, `_`, and `-`. */
 function wordsOf(name: string): string[] {
@@ -27,13 +27,14 @@ export type RoutineNames = { asked: readonly Name[]; names: readonly Name[] };
  */
 export function routineNames(
   program: Program,
-  routine: "main" | NodeId,
+  routine: Routine,
   asked: readonly Name[],
 ): RoutineNames {
-  const fn = program.functions.find((candidate) => candidate.id === routine);
-  const problem = fn ? [] : [...new Set(asked)];
-  const names = new Set<Name>(fn ? fn.params : program.inputs.map((input) => input.name));
-  for (const stmt of allStmts(fn ? fn.body : program.main)) {
+  const def = getRoutine(program, routine);
+  const main = def === "main";
+  const problem = main ? [...new Set(asked)] : [];
+  const names = new Set<Name>(main ? program.inputs.map((input) => input.name) : def.params);
+  for (const stmt of allStmts(routineStmts(program, def))) {
     for (const { name } of declaredBy(stmt)) names.add(name);
   }
   return { asked: problem, names: [...names].filter((name) => !problem.includes(name)) };
