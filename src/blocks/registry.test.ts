@@ -39,14 +39,6 @@ describe("registry", () => {
     );
   });
 
-  it("only an expr, target, name, or exprs slot declares required", () => {
-    const declared = [...BLOCK_DEFS.values()].flatMap((def) =>
-      def.slots.filter((slot) => slot.required).map((slot) => slot.role),
-    );
-    expect(declared.length).toBeGreaterThan(0);
-    for (const role of declared) expect(["expr", "target", "name", "exprs"]).toContain(role);
-  });
-
   it("break jumps out of the innermost loop and continue into its next pass", () => {
     expect(BLOCK_DEFS.get("break")?.chart).toEqual({ jump: "exit" });
     expect(BLOCK_DEFS.get("continue")?.chart).toEqual({ jump: "next" });

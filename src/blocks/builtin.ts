@@ -33,7 +33,7 @@ export function defineBuiltin(def: BuiltinDef): BlockDef {
   return defineExpr<"call">({
     key: builtinKey(def.name),
     category: def.category,
-    slots: [{ name: "args", role: "exprs", required: true }],
+    slots: [{ name: "args", role: "exprs" }],
     params: def.params,
     callee: (block) => ({
       name: def.name,

@@ -9,8 +9,8 @@ export const index = defineExpr<"index">({
   key: "index",
   category: "list",
   slots: [
-    { name: "list", role: "expr", required: true, atom: true },
-    { name: "index", role: "expr", required: true },
+    { name: "list", role: "expr", atom: true },
+    { name: "index", role: "expr" },
   ],
   create: () => ({ id: newId(), kind: "index", list: emptyExpr(), index: emptyExpr() }),
   *run(block, ctx) {

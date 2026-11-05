@@ -116,8 +116,8 @@ export const binop = defineExpr<"binop">({
   category: "basic",
   slots: [
     { name: "op", role: "text" },
-    { name: "left", role: "expr", required: true },
-    { name: "right", role: "expr", required: true },
+    { name: "left", role: "expr" },
+    { name: "right", role: "expr" },
   ],
   precedence: (block) => binopPrecedence((block as Binop).op),
   create: () => ({ id: newId(), kind: "binop", op: "+", left: emptyExpr(), right: emptyExpr() }),

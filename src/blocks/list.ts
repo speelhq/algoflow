@@ -9,7 +9,6 @@ const empty = () => ({ id: newId(), kind: "list" as const, items: [] });
 export const list = defineExpr<"list">({
   key: "list",
   category: "list",
-  // A list with no item is a value of its own (`Empty list`), so its items are not required.
   slots: [{ name: "items", role: "exprs" }],
   create: empty,
   zeroLike: empty,

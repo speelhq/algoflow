@@ -54,7 +54,7 @@ function checkFields(block: Record<string, unknown>, path: string): void {
 
 /**
  * The raw expression values of a block, by the registry's slot roles (no `isExpr` filtering);
- * a required expression absent and a name that is no string are rejected here.
+ * an absent expression that isn't optional and a name that is no string are rejected here.
  */
 function rawChildren(
   block: Record<string, unknown>,
@@ -64,7 +64,8 @@ function rawChildren(
   for (const slot of getBlockDef(keyOf(block as unknown as Expr)).slots) {
     const value = block[slot.name];
     if (slot.role === "expr" || slot.role === "target") {
-      if (value !== undefined || slot.required) out.push({ value, path: `${path}.${slot.name}` });
+      const mayBeAbsent = slot.role === "expr" && slot.optional;
+      if (value !== undefined || !mayBeAbsent) out.push({ value, path: `${path}.${slot.name}` });
     } else if (slot.role === "name") {
       expectName(value, `${path}.${slot.name}`);
     } else if (slot.role === "exprs") {
@@ -84,8 +85,8 @@ function checkExpr(value: unknown, path: string): void {
     throw new MigrateError(`${path}.kind`, `unknown kind "${kind}"`);
   }
   checkFields(value, path);
-  // No edit leaves an expression's required name or list holding nothing, and a value line has
-  // no empty slot to fill it at.
+  // No edit leaves an expression's name holding nothing, and a value line has no empty slot to
+  // fill it at.
   const [nothing] = slotsHoldingNothing(value as unknown as Expr);
   if (nothing !== undefined)
     throw new MigrateError(`${path}.${nothing}`, "expected the slot filled");
