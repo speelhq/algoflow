@@ -5,14 +5,44 @@ import {
   bodyStmts,
   conditionOf,
   diamondConditions,
+  emptySlots,
   findRoutine,
   getRoutine,
   ownersById,
   paramArg,
   routineStmts,
+  slotsHoldingNothing,
 } from "./walk";
 
-const { assign, num, bin, v, if_, for_, while_, print, ret, call } = ast;
+const { assign, num, bin, v, if_, for_, while_, print, ret, call, empty } = ast;
+
+describe("emptySlots", () => {
+  it("lists every empty slot at any depth, with the block that holds it", () => {
+    const sum = bin("+", num(1), empty());
+    const loop = for_("", num(0), sum, []);
+    const abs = call("abs", empty());
+    const shown = print(num(1), empty(), abs);
+    expect(emptySlots(loop)).toEqual([
+      { block: loop, slot: "var" },
+      { block: sum, slot: "right" },
+    ]);
+    expect(emptySlots(shown)).toEqual([
+      { block: shown, slot: "args", index: 1 },
+      { block: abs, slot: "args", index: 0 },
+    ]);
+    expect(emptySlots(assign("x", bin("+", v("n"), num(1))))).toEqual([]);
+  });
+});
+
+describe("slotsHoldingNothing", () => {
+  it("names the required names and lists that hold nothing", () => {
+    expect(slotsHoldingNothing(for_("", num(0), num(3), []))).toEqual(["var"]);
+    expect(slotsHoldingNothing(call("abs"))).toEqual(["args"]);
+    // A list with no item holds nothing only where its slot is required.
+    expect(slotsHoldingNothing(print())).toEqual([]);
+    expect(slotsHoldingNothing(for_("i", num(0), num(3), []))).toEqual([]);
+  });
+});
 
 describe("paramArg", () => {
   it("finds the argument a builtin's parameter takes, with its position", () => {
