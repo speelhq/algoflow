@@ -2,21 +2,18 @@
 // names, empty slots, and field defaults.
 // Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
 import { builtinKey, getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
-import { expectedArgs, type BlockDef, type Slot } from "@/blocks/types";
+import { expectedArgs, type BlockDef } from "@/blocks/types";
 import {
   NAME_PATTERN,
   RESERVED,
   type Diagnostic,
-  type Expr,
   type Name,
   type NodeId,
   type Program,
   type Stmt,
 } from "./types";
 import { boundVariables, declaredBy } from "./scope";
-import { childSlots, isEmptyExpr, programIds, regionsOf, stmtExprs, variableOf } from "./walk";
-
-type Bag = Record<string, unknown>;
+import { emptySlots, programIds, regionsOf, stmtExprs, variableOf } from "./walk";
 
 export function isValidName(name: string): boolean {
   return NAME_PATTERN.test(name) && !RESERVED.has(name);
@@ -109,7 +106,7 @@ class Collector {
     const declared = new Set<Name>();
     for (const stmt of stmts) {
       const def = getBlockDef(keyOf(stmt));
-      this.slots(stmt, def);
+      this.slots(stmt);
       this.calls(stmt);
       this.reads(stmt, visible, inner);
       this.control(stmt, def, scope);
@@ -160,28 +157,8 @@ class Collector {
 
   // ------------------------------------------------------------ slots
 
-  private slots(stmt: Stmt, def: BlockDef): void {
-    this.requiredSlots(stmt, def, stmt.id);
-    const visit = (block: Stmt | Expr) => {
-      for (const { slot, expr } of childSlots(block)) {
-        if (isEmptyExpr(expr)) {
-          this.report(stmt.id, "E_EMPTY_SLOT", { slot });
-          continue;
-        }
-        this.requiredSlots(expr, getBlockDef(keyOf(expr)), stmt.id);
-        visit(expr);
-      }
-    };
-    visit(stmt);
-  }
-
-  private requiredSlots(block: Stmt | Expr, def: BlockDef, stmtId: NodeId): void {
-    const bag = block as unknown as Bag;
-    for (const slot of def.slots) {
-      if (slot.required && isEmptySlot(slot, bag[slot.name])) {
-        this.report(stmtId, "E_EMPTY_SLOT", { slot: slot.name });
-      }
-    }
+  private slots(stmt: Stmt): void {
+    for (const { slot } of emptySlots(stmt)) this.report(stmt.id, "E_EMPTY_SLOT", { slot });
   }
 
   // ------------------------------------------------------------ calls (E_ARITY, E_UNKNOWN_CALL)
@@ -214,22 +191,6 @@ class Collector {
         }
       }
     }
-  }
-}
-
-function isEmptySlot(slot: Slot, value: unknown): boolean {
-  switch (slot.role) {
-    case "expr":
-    case "target":
-      return value === undefined || value === null;
-    case "name":
-      return typeof value !== "string" || value === "";
-    case "text":
-      return value === undefined || value === "";
-    case "exprs":
-      return !Array.isArray(value) || value.length === 0;
-    default:
-      return false;
   }
 }
 
