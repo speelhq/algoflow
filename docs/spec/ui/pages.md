@@ -392,10 +392,11 @@ The tab's lines and the chart nodes are linked:
 - Hovering a line outlines its chart node, and hovering a `def` line
   outlines its function's `Start` chart node.
 - Selecting a block highlights its lines.
-- Clicking a line selects its block and, for a line in a function's
-  body, shows that function's chart (`chart.md`, Charts and the path
-  bar). Clicking a `def` line clears the selection (`chart.md`, Editing
-  on the chart, Selection and keys) and shows its function's chart.
+- Clicking a line selects its statement block and, for a line in a
+  function's body, shows that function's chart (`chart.md`, Charts and
+  the path bar). Clicking a `def` line clears the selection (`chart.md`,
+  Editing on the chart, Selection and keys) and shows its function's
+  chart.
 - In run mode, the line of the current statement is highlighted.
 
 `Copy` and a `.py` download act on the shown file.

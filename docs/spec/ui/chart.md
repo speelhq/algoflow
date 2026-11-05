@@ -138,13 +138,18 @@ definition's `chart` field (`blocks.md`, Chart shape):
 | `counted`| three generated chart nodes around the body: `i ← start`, the diamond `i < stop?`, and `i ← i + 1` (texts of the block definition's `counted`, `blocks.md`, Chart shape), drawn gray; the body and the back edge as for `check` |
 | `jump`   | a box with the notation whose edge leaves by the right and runs down a lane inside the extent of the innermost loop around it, in place of an edge to the next chart node: for `exit` past the loop, joining its `No` lane; for `next` into its next pass, at the update chart node of a `counted` loop and at the start of the back edge of a `check` loop; the edge carries the connector after it (Editing on the chart); outside every loop, a box as for an absent `chart` |
 
-A chart node carries the `NodeId` of its owner, the statement block that a
-click on the chart node selects in build mode and that a step highlights:
+The owner of a block or a function is the statement block or function that
+stands for it on a chart: a statement block and a function are their own
+owners, and an expression's owner is the statement block that holds it.
+
+A chart node carries the `NodeId` of its owner:
 
 - a generated chart node: its loop block
 - any other box or diamond: the statement block that it draws
 - a junction: the branch or loop block whose edges it joins
-- a terminal or an Input chart node: no owner
+- a function chart's `Start` terminal: the function
+- `main`'s `Start` terminal, an `End` terminal, or an Input chart node: no
+  owner
 
 ### Loops
 
@@ -220,14 +225,15 @@ No edge and no connector follow a branch whose regions all end in a
 
 ### Selection and keys
 
-A click selects one block. These keys work on the selection:
+A click on a chart node whose owner is a statement block (Shapes) selects
+that block. These keys work on the selection:
 
 - Delete and Backspace remove it, and a compound statement goes with
   its regions
 - Ctrl/Cmd+D duplicates it
 - Esc closes the editor and clears the selection
 
-The selection holds a block only, never a function, and only
+The selection holds a statement block only, never a function, and only
 `Delete function` in the function's editor removes a function (Charts and
 the path bar, Functions and classes). Selecting a function was rejected,
 because Delete and Backspace would then either do nothing to it or remove
@@ -279,11 +285,10 @@ The controls in the chart's corner:
 - `100%` shows the current scale, and clicking it resets the scale to
   100 %
 
-The chart highlights the chart node of the statement block that contains
-the `nodeId` of the step's event (`run.md`, Path and marks), because an
-expression has no chart node of its own. On an error, the chart
-highlights the chart node of the statement block that contains the
-failing block (`run.md`, Errors).
+The chart highlights the chart node of the owner of the `nodeId` of the
+step's event (Shapes; `run.md`, Path and marks), because an expression
+has no chart node of its own. On an error, the chart highlights the chart
+node of the failing block's owner (`run.md`, Errors).
 
 ## Verification
 
