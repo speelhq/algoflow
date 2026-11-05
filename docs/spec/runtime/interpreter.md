@@ -487,7 +487,7 @@ The driver publishes these fields:
 | `marks` | the last check result of each diamond in the shown frame's current pass (`run.md`, Path and marks) |
 | `taken` | the statements entered in the shown frame's current pass (`run.md`, Path and marks) |
 | `pass` | for a `loop` `lastEvent`, the number of that loop's passes since it was entered (`run.md`, Narration) |
-| `activeId` | the statement that contains `lastEvent`'s block, or, after an error, the failing block (`chart.md`, Zoom and highlight) |
+| `activeId` | the owner of `lastEvent`'s block, or, after an error, of the failing block (`chart.md`, Shapes; Zoom and highlight) |
 | `breakpoint` | a `NodeId` or none (Controls) |
 | `busy` | a boolean (Controls) |
 | `caseIndex` | the chosen case (`chart.md`, Input chart nodes) |

@@ -49,10 +49,13 @@ tests.
   functions that return a new `Program` (`edit.ts`), and the conversion
   between `Data` and `Value`, which places lists, dicts, and objects on the
   heap (`data.ts`). `validate()` returns `Diagnostic[]` and runs after every
-  edit and before every run. Never change a `Program` in place:
-  `validate()`, `refusedDefinitions()`, and `blocksById()` are memoized per
-  `Program` object, and the undo history keeps earlier programs. Its spec
-  is `docs/spec/language/language.md`.
+  edit and before every run. One index in `walk.ts` holds every block and
+  function of a program with its owner (`chart.md`, Shapes) and its
+  routine, and `blocksById()`, `ownerOf()`, and `routineOf()` read it.
+  Never change a `Program` in place: `validate()`,
+  `refusedDefinitions()`, and that index are memoized per `Program`
+  object, and the undo history keeps earlier programs. Its spec is
+  `docs/spec/language/language.md`.
 - `src/blocks`: one block definition (`BlockDef`) per file. It owns its slots,
   `create()`, `run` (what the interpreter does), `python()` (the exact
   Python it emits), and `chart` (`docs/spec/blocks/`). `registry.ts` is the
