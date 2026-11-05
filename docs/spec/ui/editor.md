@@ -302,8 +302,7 @@ Clicking an empty slot on the chart node opens the editor focused on it.
 
 A chart node draws an empty name slot with the same `…`.
 
-A chart node draws nothing for an `exprs` slot with no item, unless the
-slot is required.
+A chart node draws nothing for an `exprs` slot with no item.
 
 A diamond whose condition is empty shows the `…` without `?`.
 
