@@ -154,11 +154,11 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
   const chart = useMemo(
     () =>
       fonts
-        ? layout(program, {
+        ? (layout(program, {
             routine: "main",
             inputs: caseInputs(mine, caseIndex),
             measure: measureText,
-          })
+          }) ?? null)
         : null,
     [program, mine, caseIndex, fonts],
   );
