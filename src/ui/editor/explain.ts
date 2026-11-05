@@ -163,7 +163,8 @@ function operationParts(operation: Expr, current: Expr): Part[] {
         return held.items.flatMap((item, i) =>
           i === 0 ? [written(item)] : [{ text: SEPARATOR }, written(item)],
         );
-      case "text":
+      case "literal":
+      case "operator":
         return [{ text: held.text }];
       default:
         return [];

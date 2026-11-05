@@ -21,7 +21,7 @@ export type Callee = {
   family: "builtin" | "function" | "method";
 };
 
-/** A stored literal field its block would not write, and why. */
+/** A stored field its block would not write, and why. */
 export type FieldFault = { field: string; message: string };
 
 const BUILTIN = "call:";
@@ -72,7 +72,7 @@ export type Slot =
       /** It declares the variable its target is (`assign`'s). */
       binds?: true;
     }
-  | { name: string; role: "exprs" | "name" | "body" | "text" };
+  | { name: string; role: "exprs" | "name" | "body" | "literal" | "operator" };
 
 export type SlotRole = Slot["role"];
 
@@ -192,11 +192,11 @@ export type BlockDef = {
   /** The block's notation with `{slot}` placeholders, the same in every locale (Notation). */
   notation(block: Stmt | Expr): string;
   /**
-   * Which of a stored block's literal fields no edit could have written (an operator, a number's
-   * text), and why; undefined when its block would make them.
+   * Which of a stored block's fields no edit could have written (an operator, a number's text),
+   * and why; undefined when its block would make them.
    */
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined;
-  /** The notation's text of a `text` slot; default `String(block[slot])`. */
+  /** The notation's text of a `literal` or an `operator` slot; default `String(block[slot])`. */
   text?(block: Stmt | Expr, slot: string): string;
   /** How the chart draws the block's regions; absent = a box with the notation. */
   chart?: ChartShape;

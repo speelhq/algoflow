@@ -177,14 +177,14 @@ function operandParts(
 /**
  * What a placeholder of a block's notation or template holds: an expression slot, a target slot,
  * or a builtin's parameter (its argument, and the side it is on), a list of values, a name, or a
- * literal field as its block writes it. Undefined when the placeholder holds nothing drawn (a
- * body).
+ * literal or an operator as its block writes it. Undefined when the placeholder holds nothing
+ * drawn (a body).
  */
 export type Held =
   | { role: "expr"; expr: Expr | undefined; side: Side; binds: number | undefined }
   | { role: "exprs"; items: Expr[] }
   | { role: "name"; name: string }
-  | { role: "text"; text: string };
+  | { role: "literal" | "operator"; text: string };
 
 /** What the placeholder `name` of `block`'s notation or template holds. */
 export function placeholderValue(block: Block, name: string): Held | undefined {
@@ -210,8 +210,9 @@ export function placeholderValue(block: Block, name: string): Held | undefined {
       return { role: "exprs", items: Array.isArray(value) ? value.filter(isExpr) : [] };
     case "name":
       return { role: "name", name: typeof value === "string" ? value : "" };
-    case "text":
-      return { role: "text", text: textOf(block, def, name) };
+    case "literal":
+    case "operator":
+      return { role: slot.role, text: writtenText(block, def, name) };
     case "body":
       return undefined;
   }
@@ -234,7 +235,8 @@ export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
         return listParts(held.items, (item) => exprParts(item, writing));
       case "name":
         return [{ text: held.name }];
-      case "text":
+      case "literal":
+      case "operator":
         return [{ text: held.text }];
       default:
         return [];
@@ -251,7 +253,8 @@ function listParts(items: Expr[], write: (item: Expr) => Part[]): Part[] {
   );
 }
 
-function textOf(block: Block, def: BlockDef, slot: string): string {
+/** What the notation writes for a literal or an operator slot: `text()`, else its value. */
+function writtenText(block: Block, def: BlockDef, slot: string): string {
   const value = (block as unknown as Bag)[slot];
   return (
     def.text?.(block, slot) ||
@@ -280,7 +283,8 @@ export function slotParts(block: Block, name: string): Part[] {
         return listParts(held.items, (item) => exprParts(item));
       case "name":
         return [{ text: held.name, variable: true }];
-      case "text":
+      case "literal":
+      case "operator":
         return [{ text: held.text }];
       default:
         return [];

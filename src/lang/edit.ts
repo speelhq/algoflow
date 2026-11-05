@@ -162,12 +162,15 @@ export function duplicateStmt(program: Program, id: NodeId): Program {
 
 // ---------------------------------------------------------------- slots
 
-/** Sets a name or literal slot (`id` or `text`) of a statement or expression. */
+/**
+ * Sets a name slot of a statement or expression. A literal or an operator changes inside its
+ * value line, which replaces the expression (`setExpr`).
+ */
 export function setSlot(program: Program, id: NodeId, slot: string, value: string): Program {
   const next = clone(program);
   const block = getBlock(next, id);
   const spec = getBlockDef(keyOf(block)).slots.find((s) => s.name === slot);
-  if (spec?.role !== "name" && spec?.role !== "text") {
+  if (spec?.role !== "name") {
     throw new EditError(`block ${id} has no settable slot ${slot}`);
   }
   (block as unknown as Bag)[slot] = value;

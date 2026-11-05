@@ -4,7 +4,7 @@ import en from "@/i18n/en.json";
 import { flatten } from "@/i18n/flatten";
 import { CATEGORIES } from "./categories";
 import { BLOCK_DEFS } from "./registry";
-import type { ChartShape } from "./types";
+import type { BlockDef, ChartShape } from "./types";
 
 const keys = new Set(Object.keys(flatten(en)));
 
@@ -25,18 +25,14 @@ describe("registry", () => {
     expect(CATEGORIES).toEqual(["basic", "control", "list", "function", "dict"]);
   });
 
-  it("only an expression has a text slot", () => {
+  it("only an expression has a literal or an operator slot", () => {
+    const fixed = (def: BlockDef) =>
+      def.slots.filter((slot) => slot.role === "literal" || slot.role === "operator");
     const statements = [...BLOCK_DEFS.values()].filter((def) => def.shape === "stmt");
     expect(statements.length).toBeGreaterThan(0);
-    for (const def of statements) {
-      expect(
-        def.slots.filter((slot) => slot.role === "text"),
-        def.key,
-      ).toEqual([]);
-    }
-    expect([...BLOCK_DEFS.values()].some((def) => def.slots.some((s) => s.role === "text"))).toBe(
-      true,
-    );
+    for (const def of statements) expect(fixed(def), def.key).toEqual([]);
+    const roles = [...BLOCK_DEFS.values()].flatMap((def) => fixed(def).map((slot) => slot.role));
+    expect(new Set(roles)).toEqual(new Set(["literal", "operator"]));
   });
 
   it("break jumps out of the innermost loop and continue into its next pass", () => {

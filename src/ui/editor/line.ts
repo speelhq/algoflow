@@ -402,10 +402,15 @@ function fill(line: Line, made: Expr, text = false): Outcome {
   return done({ ...next, caret, word: "", ...(text ? { text: made.id } : {}) });
 }
 
-/** The slot of a value typed in a text field of its own (`Text`); a number is typed in the line. */
+/**
+ * The slot of a value typed in a text field of its own (`Text`): a literal that holds a string. A
+ * number is a literal that the learner types in the line.
+ */
 function textSlot(made: Expr): string | undefined {
-  if (isNumber(made) || slotValues(made).length > 0) return undefined;
-  return getBlockDef(keyOf(made)).slots.find((s) => s.role === "text")?.name;
+  const bag = made as unknown as Bag;
+  return getBlockDef(keyOf(made)).slots.find(
+    (s) => s.role === "literal" && typeof bag[s.name] === "string",
+  )?.name;
 }
 
 /** What a value typed in a text field of its own holds, or undefined for any other value. */
