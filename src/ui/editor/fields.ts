@@ -2,7 +2,7 @@
 // slot, and each item of a list of values, in the notation's reading order.
 import { blockText, t } from "@/i18n/t";
 import type { Expr, NodeId, Stmt } from "@/lang/types";
-import { allExprs, isEmptyExpr, isExpr } from "@/lang/walk";
+import { emptySlots, isExpr } from "@/lang/walk";
 import { getBlockDef, keyOf, type Slot } from "@/blocks/registry";
 import {
   generatedNotation,
@@ -109,11 +109,14 @@ export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
   return isExpr(item) ? item : undefined;
 }
 
-/** Whether a field holds an empty slot: its name is empty, or its value has one at any depth. */
+/** Whether a field holds an empty slot: the field's own slot, or one inside its value. */
 function holdsEmptySlot(stmt: Stmt, field: Field): boolean {
-  if (field.role === "name") return nameOf(stmt, field.slot) === "";
   const value = valueOf(stmt, field);
-  return value !== undefined && [...allExprs(value)].some(isEmptyExpr);
+  return emptySlots(stmt).some(({ block, slot, index }) =>
+    block === stmt
+      ? slot === field.slot && index === field.index
+      : value !== undefined && find(value, block.id) !== undefined,
+  );
 }
 
 /**

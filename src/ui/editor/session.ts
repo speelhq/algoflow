@@ -3,7 +3,7 @@
 // switched. Every change is a pure transition from one session to the next, returning the values
 // it writes, so a handler that makes several changes chains them on what each one returned.
 import type { Expr, NodeId, Stmt } from "@/lang/types";
-import { allExprs, isEmptyExpr } from "@/lang/walk";
+import { emptySlots, isEmptyExpr } from "@/lang/walk";
 import { sameField, valueOf, type Field } from "./fields";
 import {
   atEnd,
@@ -174,7 +174,8 @@ export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransi
   if (!line || switching) return taken(chooseRow(session, row, ctx));
   const chosen = choose(line, row, ctx);
   const { root } = chosen.line;
-  const whole = chosen.taken && ctx.target !== null && ![...allExprs(root)].some(isEmptyExpr);
+  const holdsEmptySlot = isEmptyExpr(root) || emptySlots(root).length > 0;
+  const whole = chosen.taken && ctx.target !== null && !holdsEmptySlot;
   return taken(commit(session, chosen.line), whole ? { go: 1 } : undefined);
 }
 
