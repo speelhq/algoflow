@@ -54,7 +54,7 @@ export type Callee = {
 export type Slot = {
   name: string;
   role: "expr" | "exprs" | "name" | "body" | "target" | "text";
-  required?: boolean;
+  required?: boolean; // Slots
   atom?: true; // its value binds as an atom (Notation)
   binds?: true; // a `target` slot that declares the variable its target is (`language.md`, Scope)
 };
@@ -86,6 +86,18 @@ one of six roles:
 No statement has a `text` slot, because a statement's literal text would
 be a comment, and a caption takes the place of comments
 (`editor.md`, Captions).
+
+`required` marks a slot that the program needs filled before it runs.
+
+A required `name` slot that holds `""`, and a required `exprs` slot with
+no item, are empty slots (`language.md`, Expressions, Empty slots).
+
+A required `expr` or `target` slot always holds an expression, `empty`
+until one is chosen.
+
+Only an `expr`, `target`, `name`, or `exprs` slot declares `required`,
+because a `text` slot always holds the literal that its block writes
+(`fieldsError`), and a `body` slot may hold no statement.
 
 ### Parameters
 
