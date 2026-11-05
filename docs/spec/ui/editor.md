@@ -128,7 +128,7 @@ A separator divides each of the caption field, the notation, and that
 list from the next.
 
 `Open <name>` shows the called function's chart or the constructed class's
-field table
+attribute table
 (`chart.md`, Charts and the path bar). For a module's function or class,
 it opens the module's Module page (`modules.md`, Operations).
 
@@ -450,9 +450,9 @@ Backspace removes:
 - a value typed by its characters: its last character
 - a name or another value chosen whole, or a text with no character: the
   value
-- an operator, the name of a call, the brackets of an item or of a dict's
-  key, or the dot of an object's field: the operation, and the value of
-  its first slot stays in its place
+- an operator, the name of a call, the brackets of an item or of a
+  dict's key, or the dot of an object's attribute: the operation, and
+  the value of its first slot stays in its place
 
 The last character of a value typed by its characters is:
 

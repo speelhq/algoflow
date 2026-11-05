@@ -188,22 +188,22 @@ special case.
 
 The expression block definitions:
 
-| key     | category | slots           | notation                                                            | Python                 |
-| ------- | -------- | --------------- | ------------------------------------------------------------------- | ---------------------- |
-| `num`   | basic    | value           | `{value}`                                                           | `raw`                  |
-| `str`   | basic    | value           | `"{value}"`                                                         | double-quoted, escaped |
-| `bool`  | basic    |                 | `True` / `False`                                                    | `True` / `False`       |
-| `none`  | basic    |                 | `None`                                                              | `None`                 |
-| `var`   | basic    | name            | `{name}`                                                            | `name`                 |
-| `binop` | basic    | op, left, right | `{left} {op} {right}` (Notation)                                    | infix (`emitter.md`)   |
-| `unop`  | basic    | op, operand     | `−{operand}` / `not {operand}`                                      | `-<x>` / `not <x>`     |
-| `index` | list     | list, index     | `{list}[{index}]`                                                   | `<list>[<index>]`      |
-| `list`  | list     | items           | `[{items}]`                                                         | `[<a>, <b>]`           |
-| `key`   | dict     | dict, key       | `{dict}[{key}]`                                                     | `<dict>[<key>]`        |
-| `dict`  | dict     | entries         | `{ {entries} }`                                                     | `{<k>: <v>, …}`        |
-| `field` | class    | obj, field      | `{obj}.{field}`                                                     | `<obj>.<field>`        |
-| `new`   | class    | cls, args       | `{cls}({args})`                                                     | `<Cls>(<args>)`        |
-| `call`  | function | fn, args        | `{fn}({args})`                                                      | `<fn>(<args>)`         |
+| key         | category | slots           | notation                                                            | Python                 |
+| ----------- | -------- | --------------- | ------------------------------------------------------------------- | ---------------------- |
+| `num`       | basic    | value           | `{value}`                                                           | `raw`                  |
+| `str`       | basic    | value           | `"{value}"`                                                         | double-quoted, escaped |
+| `bool`      | basic    |                 | `True` / `False`                                                    | `True` / `False`       |
+| `none`      | basic    |                 | `None`                                                              | `None`                 |
+| `var`       | basic    | name            | `{name}`                                                            | `name`                 |
+| `binop`     | basic    | op, left, right | `{left} {op} {right}` (Notation)                                    | infix (`emitter.md`)   |
+| `unop`      | basic    | op, operand     | `−{operand}` / `not {operand}`                                      | `-<x>` / `not <x>`     |
+| `index`     | list     | list, index     | `{list}[{index}]`                                                   | `<list>[<index>]`      |
+| `list`      | list     | items           | `[{items}]`                                                         | `[<a>, <b>]`           |
+| `key`       | dict     | dict, key       | `{dict}[{key}]`                                                     | `<dict>[<key>]`        |
+| `dict`      | dict     | entries         | `{ {entries} }`                                                     | `{<k>: <v>, …}`        |
+| `attribute` | class    | obj, attr       | `{obj}.{attr}`                                                      | `<obj>.<attr>`         |
+| `new`       | class    | cls, args       | `{cls}({args})`                                                     | `<Cls>(<args>)`        |
+| `call`      | function | fn, args        | `{fn}({args})`                                                      | `<fn>(<args>)`         |
 
 ## Builtin calls (`key = "call:<name>"`, shape expr)
 
@@ -249,9 +249,10 @@ menu).
 
 ## Classes
 
-The learner edits a class in its field table, which lists its fields in
-order, and adds, removes, and reorders fields there. Each field has a
-name and a default that `language.md`, Semantics, Objects, allows.
+The learner edits a class in its attribute table, which lists its
+attributes in order, and adds, removes, and reorders attributes there.
+Each attribute has a name and a default that `language.md`, Semantics,
+Objects, allows.
 
 The emitted form:
 
@@ -268,7 +269,7 @@ class Value:
 ```
 
 A `[]` or `{}` default uses the `None` idiom, and any other default is a
-literal. `__repr__` lists the fields in order, as `print` does
+literal. `__repr__` lists the attributes in order, as `print` does
 (`language.md`, Semantics, Calls).
 
 ## Notation
@@ -313,7 +314,7 @@ Every expression is one of these:
 
 - an operator between or before its values: `i % 15`, `not done`
 - a call: `len(nums)`, `f(x)`
-- an item, a key, or a field: `nums[i]`, `d["a"]`, `node.next`
+- an item, a key, or an attribute: `nums[i]`, `d["a"]`, `node.next`
 - a value
 
 No expression is written in the learner's language, so no rule of the
@@ -459,7 +460,7 @@ its own entries, because one block definition serves several groups:
 | `method:copy`     |            | Copy                    | items      | list                 |        |       |
 | `binop`           | `join`     | Join with another list  | items      | list                 | `+`    |       |
 | `key`             |            | Value at a key          | items      | dict                 |        |       |
-| `field`           |            | Field                   | items      | object               |        |       |
+| `attribute`       |            | Attribute               | items      | object               |        |       |
 | `binop`           | `eq`       | Equals                  | compare    | any                  | `=`    | `==`  |
 | `binop`           | `ne`       | Does not equal          | compare    | any                  | `≠`    | `!=`  |
 | `binop`           | `lt`       | Less than               | compare    | number, text         | `<`    | `<`   |
@@ -506,10 +507,10 @@ The expression block definitions give these kinds (`language.md`, Kinds):
 Where the table gives no kind, the expression has none, because a wrong
 kind would hide the entries that apply, while no kind lists every entry.
 
-`index`, `key`, `field`, and `method:pop` have no kind, because the kind
-of an item would need a list kind that names the kind of its items, and a
-kind doesn't hold that (`language.md`, Kinds). A `foreach` variable has
-no kind for the same reason.
+`index`, `key`, `attribute`, and `method:pop` have no kind, because the
+kind of an item would need a list kind that names the kind of its items,
+and a kind doesn't hold that (`language.md`, Kinds). A `foreach`
+variable has no kind for the same reason.
 
 ## Verification
 

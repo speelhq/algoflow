@@ -126,9 +126,9 @@ A learner module's canvas carries the band
 `Your module. Changes reach every program that uses it.` Edits persist
 under Storage, with the timing of `language.md`, Storage.
 
-A built-in module's charts and field tables are read-only. Its editors
-offer no editing, `Duplicate`, or `Delete`, and `▾` offers no `Add`. Its
-top bar has `Clone` (Operations).
+A built-in module's charts and attribute tables are read-only. Its
+editors offer no editing, `Duplicate`, or `Delete`, and `▾` offers no
+`Add`. Its top bar has `Clone` (Operations).
 
 ## Operations
 
@@ -205,9 +205,9 @@ was, a paused run included, and runs the one function with that call's
 arguments, so a bug in `heap_pop` shows up sooner than in hundreds of
 steps of `dijkstra`.
 
-Showing a module's charts and field tables within the program page was
-rejected because the program page would then need a second mode, where an
-edit changes a module that every program using it shares.
+Showing a module's charts and attribute tables within the program page
+was rejected because the program page would then need a second mode,
+where an edit changes a module that every program using it shares.
 
 The second window is a tab, because two tiled windows would each be
 narrower than 1280 px (`scope.md`, Product).

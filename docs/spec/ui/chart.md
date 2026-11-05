@@ -9,8 +9,9 @@ the verification.
 
 ## Charts and the path bar
 
-The canvas shows one chart or field table, and the path bar above it
-lists every chart and field table and shows the path to the one shown.
+The canvas shows one chart or attribute table, and the path bar above it
+lists every chart and attribute table and shows the path to the one
+shown.
 
 The application lays each chart out top-down as a flowchart, and it
 positions every chart node and routes every edge, so nothing is placed by
@@ -21,8 +22,8 @@ and doesn't fit a structured `Program`.
 
 ### One chart at a time
 
-The canvas shows one chart or field table at a time: the chart of
-`main`, the chart of one function, or the field table of one class
+The canvas shows one chart or attribute table at a time: the chart of
+`main`, the chart of one function, or the attribute table of one class
 (`blocks.md`, Classes). It shows one, because all charts side by side
 don't fit legibly in 960 px.
 
@@ -52,7 +53,7 @@ Clicking `Start name(params)` opens the function's editor, which holds:
 The `Start` terminal is the function's signature, so its editor holds
 the function's own operations, and the path bar only navigates.
 
-A class's field table carries in its header:
+A class's attribute table carries in its header:
 
 - the same name field
 - `Delete class`
@@ -73,20 +74,20 @@ The path bar holds two things:
 
 - a `▾` button, which lists `main`, every function, and every class of
   the program, then `Add function` and `Add class`
-- the path, with one segment per chart or field table. A segment reads
-  `main`, `name(params)` for a function, or the class name.
+- the path, with one segment per chart or attribute table. A segment
+  reads `main`, `name(params)` for a function, or the class name.
 
-Each listed chart or field table that holds a diagnostic and isn't shown
-carries a red dot, and so does the button while such a chart or field
-table exists.
+Each listed chart or attribute table that holds a diagnostic and isn't
+shown carries a red dot, and so does the button while such a chart or
+attribute table exists.
 
 In build mode, the path is the trail of `Open <name>` (`editor.md`, Block
 editor):
 
 - `Open <name>` appends a segment
-- clicking an earlier segment returns to that chart or field table with
-  the opened call block selected
-- choosing from `▾` resets the path to that one chart or field table
+- clicking an earlier segment returns to that chart or attribute table
+  with the opened call block selected
+- choosing from `▾` resets the path to that one chart or attribute table
 
 `run.md`, Call stack, states the path in run mode.
 

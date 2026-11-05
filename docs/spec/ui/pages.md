@@ -84,7 +84,7 @@ The panel (Panel) is on the left. Its width:
 The canvas is on the right. It holds, from top to bottom:
 
 - the path bar (`chart.md`, Charts and the path bar)
-- the chart, or a class's field table
+- the chart, or a class's attribute table
 - the narration line, in run mode (`run.md`, Narration)
 - the run bar (`run.md`, Run bar)
 

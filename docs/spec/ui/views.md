@@ -18,7 +18,7 @@ The `Result` tab chooses one view per variable by its value:
 | other list                  | summary: `length N`, first five, last five |
 | dict ≤ 50 entries           | key/value table                            |
 | larger dict                 | summary                                    |
-| obj                         | object card: class name and fields         |
+| obj                         | object card: class name and attributes     |
 
 Inline text is a value written on one line (`pages.md`, Values on one
 line).
@@ -39,8 +39,8 @@ When any variable of the shown frame references an object, the tab also
 draws one graph of every object reachable from the frame. The graph
 holds:
 
-- one card per object, with its class name and its scalar fields
-- one edge per field or list item whose value is a reference
+- one card per object, with its class name and its scalar attributes
+- one edge per attribute or list item whose value is a reference
 
 The tab lays the graph out top-down and places each object at the depth
 of its longest path from the roots.
