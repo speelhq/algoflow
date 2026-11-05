@@ -504,6 +504,24 @@ describe("layout texts", () => {
     expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // a Return leads to End
   });
 
+  it("gives a function chart's Start its function as owner, and main's terminals none", () => {
+    const f = fn("f", [ret(v("x"))]);
+    const p = program([print(num(1))], { functions: [f] });
+    const opts = { inputs: {}, measure: estimatedWidth };
+    const owners = (routine: Routine) =>
+      laidOut(p, { routine, ...opts })
+        .nodes.filter((node) => node.shape === "terminal")
+        .map((node) => [node.role, node.owner]);
+    expect(owners(f.id)).toEqual([
+      ["start", f.id],
+      ["end", null],
+    ]);
+    expect(owners("main")).toEqual([
+      ["start", null],
+      ["end", null],
+    ]);
+  });
+
   it("gives no chart for a routine that names no function, rather than main's", () => {
     const f = fn("f", [ret(num(0))]);
     const p = program([print(num(1))], { functions: [f] });

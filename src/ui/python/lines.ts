@@ -1,8 +1,11 @@
-// Which statement each emitted line belongs to, and which lines a statement covers.
+// The owner of each emitted line, and the lines a node covers.
 import type { NodeId } from "@/lang/types";
 import type { LineMap } from "@/python/emit";
 
-/** Line → the innermost statement whose range holds it (the emitter's ranges nest). */
+/**
+ * Line → its owner, the innermost statement or function whose range holds it (the emitter's
+ * ranges nest): a `def` line's owner is its function.
+ */
 export function lineOwners(map: LineMap): Map<number, NodeId> {
   const owners = new Map<number, { id: NodeId; span: number }>();
   for (const [id, { start, end }] of Object.entries(map)) {

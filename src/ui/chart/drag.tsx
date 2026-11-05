@@ -33,7 +33,8 @@ export function useNodeDrag(node: ChartNode, enabled: boolean) {
   const { setNodeRef, listeners } = useDraggable({
     id: node.id,
     data: { owner: node.owner, text: node.text },
-    disabled: !enabled || node.owner === null,
+    // Only a statement's chart node moves: a function chart's `Start` has an owner, but stays.
+    disabled: !enabled || node.owner === null || node.shape === "terminal",
   });
   return {
     setRef: (element: SVGGElement | null) => setNodeRef(element as unknown as HTMLElement | null),
