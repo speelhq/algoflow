@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { ast, program, tid } from "@/blocks/testing";
 import { isParseError, parse } from "@/python/parse";
+import { removeFunction } from "./edit";
 import { routineOf, dataKind, exprKind, firstSetters, variableKinds } from "./kinds";
 import type { Expr, Kind } from "./types";
 
@@ -134,6 +135,20 @@ describe("kinds", () => {
     expect(firstSetters(p, "main").get("x")).toBe(first);
     expect(routineOf(p, inner.id)).toBe("fun000000002");
     expect(routineOf(p, first.id)).toBe("main");
-    expect(routineOf(p, tid())).toBe("main");
+  });
+
+  it("gives the routine of an expression, of a function, and of no node the program holds", () => {
+    const value = v("y");
+    const inMain = num(1);
+    const p = program([assign("x", inMain)], {
+      functions: [{ id: "fun000000003", name: "g", params: ["y"], body: [print(value)] }],
+    });
+    expect(routineOf(p, value.id)).toBe("fun000000003");
+    expect(routineOf(p, "fun000000003")).toBe("fun000000003");
+    expect(routineOf(p, inMain.id)).toBe("main");
+    expect(() => routineOf(p, tid())).toThrow();
+    expect(() => routineOf(removeFunction(p, "fun000000003"), value.id)).toThrow();
+    expect(() => routineOf(removeFunction(p, "fun000000003"), "fun000000003")).toThrow();
+    expect(() => variableKinds(p, tid())).toThrow();
   });
 });

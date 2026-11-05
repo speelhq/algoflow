@@ -19,6 +19,8 @@ export type Program = {
 /** An input of the program: its name and kind; its value comes from the chosen case. */
 export type InputDecl = { name: Name; kind: Kind };
 export type FunctionDef = { id: NodeId; name: Name; params: Name[]; body: Stmt[] };
+/** `main`, or a function by its node id; `"main"` is never a node id, which has 12 characters. */
+export type Routine = "main" | NodeId;
 
 // ---------------------------------------------------------------- Data (JSON form)
 
@@ -151,9 +153,12 @@ export type Diagnostic = {
 
 // ---------------------------------------------------------------- Edits
 
-/** A statement position. `parent` is a compound statement's or a function's id, or "main". */
+/** What holds a region: a routine, or a compound statement by its node id. */
+// oxlint-disable-next-line typescript/no-duplicate-type-constituents -- a compound statement's id is a parent too, though `Routine` already spells `NodeId`
+export type RegionParent = Routine | NodeId;
+/** A statement position. */
 export type Place = {
-  parent: NodeId | "main";
+  parent: RegionParent;
   slot: "main" | "body" | "then" | "else";
   index: number;
 };
