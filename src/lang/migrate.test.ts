@@ -1,4 +1,4 @@
-// Import validates and migrates by version; it refuses a literal field its block would not make,
+// Import validates and migrates by version; it refuses a field its block would not make,
 // a class, and an object input.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/blocks/testing";
@@ -165,7 +165,7 @@ describe("migrate", () => {
     expect(() => migrate(json(program([for_("", num(0), num(3), [])])))).not.toThrow();
   });
 
-  it("refuses a literal field its block would not make, at its path", () => {
+  it("refuses a field its block would not make, at its path", () => {
     const valueOf = (expr: unknown) => json(program([assign("x", expr as never)]));
     const at = (fields: Record<string, unknown>, of: unknown) => {
       const p = valueOf(of) as { main: Array<{ value: Record<string, unknown> }> };

@@ -56,7 +56,7 @@ describe("templatePieces and placeholderValue", () => {
       binds: PRECEDENCE.additive,
     });
     expect(placeholderValue(sum, "right")).toMatchObject({ expr: right, side: "right" });
-    expect(placeholderValue(sum, "op")).toEqual({ role: "text", text: "+" });
+    expect(placeholderValue(sum, "op")).toEqual({ role: "operator", text: "+" });
     const max = call("max", left, right);
     expect(placeholderValue(max, "b")).toEqual({
       role: "expr",

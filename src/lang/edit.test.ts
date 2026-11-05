@@ -125,11 +125,11 @@ describe("edit", () => {
     expect(idsUnique(next)).toBe(true);
   });
 
-  it("setSlot sets id and text slots; expression and target slots are refused", () => {
+  it("setSlot sets a name slot; every other slot is refused", () => {
     const { p, loop, a } = sample();
     expect(lines(setSlot(p, loop.id, "var", "k"))[1]).toBe("for k in range(3):");
     const sum = bin("+", num(1), num(2));
-    expect(lines(setSlot(program([print(sum)]), sum.id, "op", "-"))).toEqual(["print(1 - 2)"]);
+    expect(() => setSlot(program([print(sum)]), sum.id, "op", "-")).toThrow(/no settable slot/);
     expect(() => setSlot(p, a.id, "value", "x")).toThrow(/no settable slot/);
     expect(() => setSlot(p, a.id, "target", "y")).toThrow(/no settable slot/);
   });

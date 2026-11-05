@@ -169,7 +169,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
             pieces.push(draw(item));
           });
           return;
-        case "text":
+        case "operator":
           pieces.push(
             <button
               key={`op${expr.id}`}

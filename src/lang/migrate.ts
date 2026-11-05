@@ -1,5 +1,5 @@
 // Import validates a program of the current `version`. It refuses what no edit could make: a
-// wrong shape, an unknown kind, a bad id, a literal field its block would not write, a class,
+// wrong shape, an unknown kind, a bad id, a field its block would not write, a class,
 // which no registered block definition constructs. What editing reaches is validate()'s job.
 import { getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
 import { normalizeCaption } from "./edit";
@@ -46,7 +46,7 @@ function expectNodeId(value: unknown, path: string): void {
   if (!isNodeId(value)) throw new MigrateError(path, "expected a 12-character node id");
 }
 
-/** A block's literal fields, as its block definition would write them. */
+/** The fields that `fieldsError` checks, as the block's definition would write them. */
 function checkFields(block: Record<string, unknown>, path: string): void {
   const fault = getBlockDef(keyOf(block as unknown as Expr)).fieldsError?.(block);
   if (fault) throw new MigrateError(`${path}.${fault.field}`, fault.message);

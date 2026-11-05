@@ -7,7 +7,7 @@ import { defineExpr } from "./types";
 export const num = defineExpr<"num">({
   key: "num",
   category: "basic",
-  slots: [{ name: "value", role: "text" }],
+  slots: [{ name: "value", role: "literal" }],
   create: () => ({ id: newId(), kind: "num", value: 0, float: false, raw: "0" }),
   zeroLike: (block) => ({
     id: newId(),

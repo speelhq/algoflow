@@ -6,7 +6,7 @@ import { defineExpr } from "./types";
 export const str = defineExpr<"str">({
   key: "str",
   category: "basic",
-  slots: [{ name: "value", role: "text" }],
+  slots: [{ name: "value", role: "literal" }],
   create: () => ({ id: newId(), kind: "str", value: "" }),
   fieldsError: (fields) =>
     typeof fields.value === "string" ? undefined : { field: "value", message: "expected a text" },

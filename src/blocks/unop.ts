@@ -17,7 +17,7 @@ export const unop = defineExpr<"unop">({
   key: "unop",
   category: "basic",
   slots: [
-    { name: "op", role: "text" },
+    { name: "op", role: "operator" },
     { name: "operand", role: "expr" },
   ],
   precedence: (block) => precedenceOf(block as Unop),
