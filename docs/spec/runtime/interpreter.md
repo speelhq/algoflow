@@ -31,13 +31,18 @@ export type Done =
   | { type: "done"; events: number; loops: number }
   | { type: "error"; error: RuntimeError; events: number };
 export type State = { frames: Frame[]; heap: Heap };
-export type Frame = { fn: Name | "main"; module?: Name; callNodeId?: NodeId; vars: Map<Name, Value> }; // Modules
+export type Frame = { routine: Routine; module?: Name; callNodeId?: NodeId; vars: Map<Name, Value> }; // Modules
 export type RuntimeError = {
   nodeId: NodeId;
   code: RuntimeCode;
   params: Record<string, string | number>;
 };
 ```
+
+A frame names its routine by its `Routine` (`language.md`, Program), not
+by the function's name, because `main` is a valid function name
+(`language.md`, Identifiers), and a frame of a function named `main` would
+then read as `main`'s.
 
 Each call of `next()` resumes the program's generator once, and each
 value the generator yields is one event.

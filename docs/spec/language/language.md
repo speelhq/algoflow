@@ -42,6 +42,7 @@ export type InputDecl = { name: Name; kind: Kind };
 export type ClassDef = { id: NodeId; name: Name; fields: Field[] };
 export type Field = { name: Name; default: Data }; // Semantics, Objects
 export type FunctionDef = { id: NodeId; name: Name; params: Name[]; body: Stmt[] };
+export type Routine = "main" | NodeId; // `main`, or a function by its node id
 export type NodeId = string; // 12-char nanoid
 export type Name = string;
 ```
@@ -60,6 +61,10 @@ and they don't collide with each other.
 
 A routine is `main` or a function. Each routine has its own statements
 and variables.
+
+In the code, a routine is a `Routine`: `"main"`, or the node id of a
+function. `"main"` is never a node id, because a node id has 12
+characters.
 
 A region is an ordered list of statements: `main`, a function's body, or
 the statements of a `body` slot (`blocks.md`, Slots).
@@ -513,9 +518,9 @@ Every edit keeps node ids unique.
 ### Statement positions
 
 `insertStmt` and `moveStmt` take a statement position,
-`Place = { parent: NodeId | "main"; slot: "main" | "body" | "then" | "else"; index: number }`.
-Its `parent` is `"main"`, a function's node id, or a compound statement's
-node id.
+`Place = { parent: RegionParent; slot: "main" | "body" | "then" | "else"; index: number }`,
+where `RegionParent = Routine | NodeId`. Its `parent` is a routine, or a
+compound statement's node id.
 
 `moveStmt` counts `index` in the destination region after it has removed
 the moved statement, because the chart computes the drop indicator
