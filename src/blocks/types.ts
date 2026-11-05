@@ -69,8 +69,13 @@ export type Slot =
   | {
       name: string;
       role: "target";
-      /** It declares the variable its target is (`assign`'s). */
+      /** It declares the variable its target is (`assign`'s, a loop's). */
       binds?: true;
+      /**
+       * The expression slot whose value it stores (`assign`'s `value`); none for a loop, whose
+       * passes give the value (`blocks.md`, Slots).
+       */
+      stores?: string;
     }
   | { name: string; role: "exprs" | "name" | "body" | "literal" | "operator" };
 
@@ -202,7 +207,7 @@ export type BlockDef = {
   chart?: ChartShape;
   /** The kind of the expression, given the kinds of the expressions inside it. */
   yields?: (block: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
-  /** The kind of the variable its `name` slot names. */
+  /** A loop's: the kind of the variable its binding target names (`language.md`, Kinds). */
   declares?: Kind;
   /** The entries of the value list. */
   entries?: readonly ValueEntry[];

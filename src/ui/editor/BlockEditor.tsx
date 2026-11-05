@@ -1,14 +1,14 @@
 // The block editor: a popover beside the selected block's chart node holding its caption field
-// with `Duplicate` and `Delete`, the block's notation with its slots editable in place (names
-// as name fields, values as value lines, lists of values with add and remove), the list of
-// the focused slot, and the explanation line. Reads slot roles, never a kind. The editing state
+// with `Duplicate` and `Delete`, the block's notation with its slots editable in place (values
+// and targets as value lines, lists of values with add and remove), the value list of the
+// focused slot, and the explanation line. Reads slot roles, never a kind. The editing state
 // is a session (`session.ts`) that only its transitions change.
 import { Copy, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { findChallenge } from "@/challenges";
 import { blockText, t } from "@/i18n/t";
-import { duplicateStmt, insertItem, removeItem, removeStmt, setExpr, setSlot } from "@/lang/edit";
+import { duplicateStmt, insertItem, removeItem, removeStmt, setExpr } from "@/lang/edit";
 import { variableKinds } from "@/lang/kinds";
 import { visibleAt } from "@/lang/scope";
 import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
@@ -24,13 +24,12 @@ import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics } from "./diagnostics";
 import { apply } from "./edits";
 import { EditorList } from "./EditorList";
-import { explainLine, explainName, helpParts, type Explanation } from "./explain";
+import { explainLine, helpParts, type Explanation } from "./explain";
 import {
   editedLines,
   fieldKey,
   fieldLabel,
   fieldsOf,
-  nameOf,
   sameField,
   startField,
   targetSlot,
@@ -39,30 +38,27 @@ import {
 } from "./fields";
 import { callableFunctions, lineTakes, matches, openLine, setText, type LineContext } from "./line";
 import { CaptionField } from "./CaptionField";
-import { routineNames, nameChars, type NameRow } from "./names";
+import { routineNames } from "./names";
 import { offersAll } from "./list";
-import { nameList, shownNameRow, valueList } from "./rows";
+import { valueList } from "./rows";
 import {
   clickInLine,
   commit,
   focusField,
   follow,
   highlightRow,
-  leaveName,
   openSession,
   pickRow,
   settleWord,
   shownHighlight,
   showAll,
-  stepHighlight,
   textEnded,
-  typeName,
   valueKey,
   type Click,
   type Session,
   type Transition,
 } from "./session";
-import { AddValue, NameField, ValueItems } from "./slots";
+import { AddValue, ValueItems } from "./slots";
 import { ValueLine } from "./ValueLine";
 import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 
@@ -91,7 +87,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   const routine = routineOf(program, stmt.id);
   const kinds = variableKinds(program, routine);
-  // The names the problem expects, which a name list and a binding target's list offer first.
+  // The names the problem expects, which a binding target's list offers first (`editor.md`, Name
+  // list).
   const asked = useMemo(
     () => Object.keys(findChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {}),
     [program.challengeId],
@@ -166,12 +163,12 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     const index = Array.isArray(items)
       ? items.findIndex((item) => isExpr(item) && item.id === empty.id)
       : -1;
-    enter(from, { slot, role: "expr", ...(list ? { index } : {}) }, null);
+    enter(from, { slot, ...(list ? { index } : {}) }, null);
   };
 
   // ------------------------------------------------------------ the value line
 
-  const values = focus?.role === "expr" ? valueList(session, ctx) : { rows: [], sections: [] };
+  const values = focus ? valueList(session, ctx) : { rows: [], sections: [] };
 
   const onValueKey = (event: KeyboardEvent<HTMLDivElement>) => {
     // Keys typed in a text field inside the line are the field's.
@@ -227,70 +224,14 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     );
   };
 
-  // ------------------------------------------------------------ names
-
-  const names = nameList(named, session.typed, kinds);
-
-  const chooseName = (field: Field, row: NameRow) => {
-    apply((p) => setSlot(p, stmt.id, field.slot, row.name));
-    go(leaveName(session), 1, field);
-  };
-
-  const onNameKey = (event: KeyboardEvent<HTMLInputElement>, field: Field, rows: NameRow[]) => {
-    const shown = shownNameRow(session, rows);
-    switch (event.key) {
-      case "ArrowDown":
-      case "ArrowUp":
-        event.preventDefault();
-        setSession(stepHighlight(session, rows.length, shown, event.key === "ArrowDown" ? 1 : -1));
-        return;
-      case "Enter": {
-        event.preventDefault();
-        const row = shown === null ? undefined : rows[shown];
-        if (row) return chooseName(field, row);
-        if (session.typed !== null) return;
-        if (sameField(fields.at(-1) ?? null, field)) return closeEditor();
-        return go(session, 1, field);
-      }
-      case "Tab":
-        event.preventDefault();
-        go(session, event.shiftKey ? -1 : 1, field);
-        return;
-      default:
-        return;
-    }
-  };
-
   // ------------------------------------------------------------ the notation
 
   const widget = (name: string): ReactNode => {
     const held = placeholderValue(stmt, name);
     switch (held?.role) {
-      case "name": {
-        const shownName = nameOf(stmt, name);
-        const field: Field = { slot: name, role: "name" };
-        const on = sameField(focus, field);
-        return shownName === undefined ? null : (
-          <NameField
-            key={name}
-            label={fieldLabel(stmt, field)}
-            name={shownName}
-            typed={on ? session.typed : null}
-            on={on}
-            register={register(field)}
-            onFocus={() => {
-              setFocused(field);
-              if (!sameField(focus, field)) enter(session, field, null);
-            }}
-            onBlur={() => setSession((s) => leaveName(s))}
-            onType={(text) => setSession((s) => typeName(s, nameChars(text)))}
-            onKey={(event) => onNameKey(event, field, names.rows)}
-          />
-        );
-      }
       case "expr":
         return held.expr ? (
-          lineWidget({ slot: name, role: "expr" }, held.expr)
+          lineWidget({ slot: name }, held.expr)
         ) : (
           <AddValue key={name} onAdd={() => addItem(session, name, null)} small={false} />
         );
@@ -299,7 +240,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           <ValueItems
             key={name}
             items={held.items}
-            line={(item, index) => lineWidget({ slot: name, role: "expr", index }, item)}
+            line={(item, index) => lineWidget({ slot: name, index }, item)}
             onRemove={(index) => {
               // A word still typed is chosen in its own item, and the lines are left, before the
               // items after it move.
@@ -343,31 +284,11 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   let list: ReactNode = null;
   let explanation: Explanation | undefined;
-  if (focus?.role === "name") {
-    const shown = shownNameRow(session, names.rows);
-    const row = shown === null ? undefined : names.rows[shown];
-    list = (
-      <EditorList
-        testId="name-list"
-        sections={names.sections}
-        highlight={shown}
-        enter={session.typed !== null}
-        onHighlight={(index) => setSession((s) => highlightRow(s, index))}
-        onChoose={(index) => {
-          const chosen = names.rows[index];
-          if (chosen) chooseName(focus, chosen);
-        }}
-      />
-    );
-    explanation = row
-      ? explainName(program, stmt.id, row.name, row.kind === "new")
-      : { name: "", parts: [{ text: t("editor.explain.name") }] };
-  } else if (focus?.role === "expr" && line) {
+  if (focus && line) {
     const { rows, sections } = values;
     const shown = shownHighlight(session, rows.length);
     list = (
       <EditorList
-        testId="value-list"
         sections={sections}
         highlight={shown}
         enter={line.word !== ""}

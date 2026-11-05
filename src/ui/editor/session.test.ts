@@ -45,10 +45,7 @@ describe("editor session", () => {
     const slot = empty();
     const stmt = assign("total", bin("+", v("x"), slot));
     const fields = fieldsOf(stmt);
-    expect(fields).toEqual([
-      { slot: "target", role: "expr" },
-      { slot: "value", role: "expr" },
-    ]);
+    expect(fields).toEqual([{ slot: "target" }, { slot: "value" }]);
     expect(startField(stmt, fields, { slot: null, emptyId: null })).toEqual(fields[1]);
     expect(startField(stmt, fields, { slot: "target", emptyId: null })).toEqual(fields[0]);
     const opened = openSession(stmt, fields[1] ?? null, slot.id);
@@ -57,7 +54,7 @@ describe("editor session", () => {
 
   it("a value typed is written once, when it changes the field's value", () => {
     const stmt = print(empty());
-    const field: Field = { slot: "args", role: "expr", index: 0 };
+    const field: Field = { slot: "args", index: 0 };
     const typed = press(openSession(stmt, field, null), "7");
     expect(typed.edits).toHaveLength(1);
     expect(typed.edits[0]).toMatchObject({ field, root: { kind: "num", value: 7 } });
@@ -67,7 +64,7 @@ describe("editor session", () => {
 
   it("`,` in a list item chooses the word and asks for the next item; the chain reads what it returned", () => {
     const stmt = print(empty());
-    const field: Field = { slot: "args", role: "expr", index: 0 };
+    const field: Field = { slot: "args", index: 0 };
     const word = press(openSession(stmt, field, null), "x");
     expect(word.edits).toEqual([]);
     const comma = valueKey(word.session, { key: ",", shiftKey: false }, [], ctx, "");
@@ -81,7 +78,7 @@ describe("editor session", () => {
 
   it("Tab past the line's last empty slot leaves for the next field; Enter with nothing chosen closes", () => {
     const stmt = assign("total", num(1));
-    const field: Field = { slot: "value", role: "expr" };
+    const field: Field = { slot: "value" };
     const session = openSession(stmt, field, null);
     expect(valueKey(session, { key: "Tab", shiftKey: false }, [], ctx, "").after).toEqual({
       go: 1,
@@ -91,7 +88,7 @@ describe("editor session", () => {
   });
 
   it("Tab and Shift+Tab reach the empty slot inside the value the editor opens with selected", () => {
-    const field: Field = { slot: "args", role: "expr", index: 0 };
+    const field: Field = { slot: "args", index: 0 };
     const typed = press(openSession(print(empty()), field, null), "abs(").session.line?.root;
     if (!typed) throw new Error("no value typed");
     const slot = typed.kind === "call" ? typed.args[0] : undefined;
@@ -107,7 +104,7 @@ describe("editor session", () => {
 
   it("a key the line refuses after its value, beginning the words after the field, moves on", () => {
     const stmt = assign("total", num(1));
-    const field: Field = { slot: "value", role: "expr" };
+    const field: Field = { slot: "value" };
     const typed = press(openSession(stmt, field, null), "x").session;
     expect(valueKey(typed, { key: "]", shiftKey: false }, [], ctx, "]").after).toEqual({ go: 1 });
     // Words that do not begin with the key, or a key the line takes, stay in the line.
@@ -121,7 +118,7 @@ describe("editor session", () => {
       target: { asked: ["total"], names: ["x"], binds: true },
     };
     const stmt = assignTo(empty(), num(1));
-    const field: Field = { slot: "target", role: "expr" };
+    const field: Field = { slot: "target" };
     const enter = { key: "Enter", shiftKey: false };
     const total = { kind: "variable", name: "total" } as const;
     const highlighted = { ...openSession(stmt, field, null), highlight: 0 };
@@ -150,7 +147,7 @@ describe("editor session", () => {
     expect(refused.after).toBeUndefined();
     expect(refused.edits).toEqual([]);
     // A value slot never moves on.
-    const value: Field = { slot: "value", role: "expr" };
+    const value: Field = { slot: "value" };
     const blank = assign("y", empty());
     const valueOpen = { ...openSession(blank, value, null), highlight: 0 };
     expect(valueKey(valueOpen, enter, [total], ctx, "").after).toBeUndefined();
@@ -158,7 +155,7 @@ describe("editor session", () => {
 
   it("Backspace in an empty text field removes the text, leaving an empty slot", () => {
     const stmt = print(empty());
-    const field: Field = { slot: "args", role: "expr", index: 0 };
+    const field: Field = { slot: "args", index: 0 };
     const text = allEntries().find((entry) => entry.id === "str");
     if (!text) throw new Error("no Text");
     // `Text` opens an empty text field, as the learner chooses it.
@@ -175,19 +172,19 @@ describe("editor session", () => {
 
   it("a value changed elsewhere reopens the line; focusing a field opens its value", () => {
     const stmt = assign("total", num(1));
-    const field: Field = { slot: "value", role: "expr" };
+    const field: Field = { slot: "value" };
     const session = openSession(stmt, field, null);
     expect(follow(session, stmt)).toBe(session);
     const undone = assign("total", num(2));
     undone.id = stmt.id;
     expect(follow(session, undone).line?.root).toMatchObject({ kind: "num", value: 2 });
-    const target: Field = { slot: "target", role: "expr" };
+    const target: Field = { slot: "target" };
     expect(focusField(session, stmt, target, null)).toMatchObject({
       focus: target,
       line: { root: { kind: "var", name: "total" }, selected: true },
     });
     // A field the statement no longer has, an item removed by an undo, leaves the keyboard.
-    const second: Field = { slot: "args", role: "expr", index: 1 };
+    const second: Field = { slot: "args", index: 1 };
     const two = print(num(1), num(2));
     const one = print(num(1));
     one.id = two.id;
@@ -200,7 +197,7 @@ describe("editor session", () => {
     expect(stepHighlight(session, 3, null, -1).highlight).toBe(2);
     expect(stepHighlight(session, 3, 2, 1).highlight).toBe(0);
     const stmt = print(empty());
-    const field: Field = { slot: "args", role: "expr", index: 0 };
+    const field: Field = { slot: "args", index: 0 };
     const both = chain(press(openSession(stmt, field, null), "1"), (s) => press(s, "2"));
     expect(both.edits.map((edit) => edit.root)).toMatchObject([{ value: 1 }, { value: 12 }]);
   });

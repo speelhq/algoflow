@@ -3,47 +3,33 @@
 // Registry-driven: slots, `loop`, and regions, never a kind.
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import type { Expr, Name, NodeId, Place, Program, RegionParent, Stmt } from "./types";
-import { childSlots, findRoutine, isExpr, regionsOf, variableOf } from "./walk";
+import { findRoutine, isExpr, regionsOf, variableOf } from "./walk";
 
 type Bag = Record<string, unknown>;
 
-export type Declared = { name: Name; role: "name" | "target" };
+/**
+ * A variable that a statement's binding target slot declares, with the expression whose value
+ * the slot stores (`stores`): `x` and `<value>` of `x = <value>`. A loop's has none, because its
+ * passes give the value (`blocks.md`, Slots).
+ */
+export type Declared = { name: Name; target: Expr; stores: Expr | undefined };
 
 /**
- * The variables a statement's binding target slots hold (`x` of `x = …`): each is declared
- * there, not read (`language.md`, Scope).
+ * The variables a statement's binding target slots hold (`x` of `x = …`, `i` of `for i in …`):
+ * each is declared there, not read (`language.md`, Scope).
  */
-export function boundVariables(stmt: Stmt): Expr[] {
-  const bag = stmt as unknown as Bag;
-  return getBlockDef(keyOf(stmt))
-    .slots.filter((slot) => slot.role === "target" && slot.binds)
-    .map((slot) => bag[slot.name])
-    .filter((value): value is Expr => isExpr(value) && variableOf(value) !== undefined);
-}
-
-/** Names a statement assigns in its own region: its bound variables and its loop variables. */
 export function declaredBy(stmt: Stmt): Declared[] {
   const bag = stmt as unknown as Bag;
-  const names: Declared[] = [];
+  const declared: Declared[] = [];
   for (const slot of getBlockDef(keyOf(stmt)).slots) {
-    const value = bag[slot.name];
-    if (slot.role === "name" && typeof value === "string" && value !== "") {
-      names.push({ name: value, role: "name" });
-    }
+    if (slot.role !== "target" || !slot.binds) continue;
+    const target = bag[slot.name];
+    const name = isExpr(target) ? variableOf(target) : undefined;
+    if (!isExpr(target) || name === undefined) continue;
+    const stored = slot.stores === undefined ? undefined : bag[slot.stores];
+    declared.push({ name, target, stores: isExpr(stored) ? stored : undefined });
   }
-  for (const variable of boundVariables(stmt)) {
-    const name = variableOf(variable);
-    if (name) names.push({ name, role: "target" });
-  }
-  return names;
-}
-
-/** The expression a statement with a binding target assigns: its expression slot (`x = <value>`). */
-export function assignedValue(stmt: Stmt): Expr | undefined {
-  const { slots } = getBlockDef(keyOf(stmt));
-  if (!slots.some((slot) => slot.role === "target" && slot.binds)) return undefined;
-  const slot = slots.find((candidate) => candidate.role === "expr");
-  return childSlots(stmt).find((child) => child.slot === slot?.name)?.expr;
+  return declared;
 }
 
 /** `names` with `latest` moved to the front, in their order. */

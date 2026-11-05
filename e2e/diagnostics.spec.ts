@@ -10,7 +10,7 @@ test("hovering a flagged chart node shows its message, and the fix applies", asy
   const loop = {
     id: "dgn-loop-001",
     kind: "for",
-    var: "i",
+    var: { id: "dgn-lvar-001", kind: "var", name: "i" },
     start: { id: "dgn-zero-001", kind: "num", value: 0, float: false, raw: "0" },
     stop: { id: "dgn-stop-001", kind: "num", value: 3, float: false, raw: "3" },
     body: [

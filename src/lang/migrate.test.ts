@@ -90,9 +90,9 @@ describe("migrate", () => {
     const noValue = json(program([assign("x", num(1))])) as Stored;
     delete noValue.main[0]!.value;
     expect(() => migrate(noValue)).toThrow(/^main\[0\]\.value: expected an expression/);
-    const badVar = json(program([for_("i", num(0), num(3), [])])) as Stored;
-    badVar.main[0]!.var = 3;
-    expect(() => migrate(badVar)).toThrow(/^main\[0\]\.var: expected a name/);
+    const badName = json(program([assign("x", v("n"))])) as Stored;
+    (badName.main[0]!.value as Record<string, unknown>).name = 3;
+    expect(() => migrate(badName)).toThrow(/^main\[0\]\.value\.name: expected a name/);
     const badRegion = json(program([for_("i", num(0), num(3), [])])) as Stored;
     badRegion.main[0]!.body = "nothing";
     expect(() => migrate(badRegion)).toThrow(/^main\[0\]\.body: expected an array/);
@@ -161,8 +161,15 @@ describe("migrate", () => {
     // A call with too few arguments is a fault validate() reports (E_ARITY).
     expect(() => migrate(stored(ast.call("abs")))).not.toThrow();
     expect(() => migrate(stored(bin("+", num(1), ast.call("f"))))).not.toThrow();
-    // A statement's name holds nothing until the learner fills it in its name field.
-    expect(() => migrate(json(program([for_("", num(0), num(3), [])])))).not.toThrow();
+  });
+
+  it("reads a loop's variable as a target, an empty slot until it is filled", () => {
+    const loop = (target: unknown) =>
+      json(program([ast.forTo(target as never, num(0), num(3), [])]));
+    expect(() => migrate(loop(ast.empty()))).not.toThrow();
+    expect(() => migrate(loop(ast.item(v("nums"), num(0))))).not.toThrow();
+    expect(() => migrate(loop("i"))).toThrow(/^main\[0\]\.var: expected an expression/);
+    expect(() => migrate(loop(num(1)))).toThrow(/^main\[0\]\.var: expected a target/);
   });
 
   it("refuses a field its block would not make, at its path", () => {

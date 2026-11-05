@@ -1,18 +1,22 @@
 // What is visible where; the places `loop` and `requires` allow; the value list's Variables.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/blocks/testing";
-import { assignedValue, placeContext, visibleAt } from "./scope";
+import { declaredBy, placeContext, visibleAt } from "./scope";
 
 const { assign, num, v, bin, print, for_, if_, while_, ret } = ast;
 
 describe("scope", () => {
-  it("the value a statement with a target assigns is its expression slot; others none", () => {
+  it("a binding target declares its variable with the value its slot stores; a loop's stores none", () => {
     const value = bin("+", v("a"), num(1));
-    expect(assignedValue(assign("a", value))).toBe(value);
-    const nine = num(9);
-    expect(assignedValue(ast.assignTo(ast.item(v("xs"), num(0)), nine))).toBe(nine);
-    expect(assignedValue(print(v("a")))).toBeUndefined();
-    expect(assignedValue(for_("i", num(0), num(3), []))).toBeUndefined();
+    const set = ast.assignTo(v("a"), value);
+    expect(declaredBy(set)).toEqual([{ name: "a", target: set.target, stores: value }]);
+    const loop = ast.forTo(v("i"), num(1), num(3), []);
+    expect(declaredBy(loop)).toEqual([{ name: "i", target: loop.var, stores: undefined }]);
+    // An item or an empty slot declares no variable, and a slot that doesn't bind none either.
+    expect(declaredBy(ast.assignTo(ast.item(v("xs"), num(0)), num(9)))).toEqual([]);
+    expect(declaredBy(ast.forTo(ast.empty(), num(0), num(3), []))).toEqual([]);
+    expect(declaredBy(ast.swap(v("a"), v("b")))).toEqual([]);
+    expect(declaredBy(print(v("a")))).toEqual([]);
   });
 
   it("names assigned before a statement are visible, the latest first", () => {

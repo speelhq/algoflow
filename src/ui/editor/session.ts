@@ -1,9 +1,9 @@
-// The block editor's editing session: the field that has the keyboard, its value line, the name
-// being typed, the list's highlight, whether the list shows every entry, and the operator being
-// switched. Every change is a pure transition from one session to the next, returning the values
-// it writes, so a handler that makes several changes chains them on what each one returned.
+// The block editor's editing session: the field that has the keyboard, its value line, the list's
+// highlight, whether the list shows every entry, and the operator being switched. Every change is
+// a pure transition from one session to the next, returning the values it writes, so a handler
+// that makes several changes chains them on what each one returned.
 import type { Expr, NodeId, Stmt } from "@/lang/types";
-import { emptySlots, isEmptyExpr } from "@/lang/walk";
+import { holdsEmptySlot } from "@/lang/walk";
 import { sameField, valueOf, type Field } from "./fields";
 import {
   atEnd,
@@ -27,7 +27,6 @@ import {
 export type Session = {
   focus: Field | null;
   line: Line | null;
-  typed: string | null;
   highlight: number | null;
   all: boolean;
   switching: NodeId | null;
@@ -53,7 +52,6 @@ export function openSession(stmt: Stmt, start: Field | null, emptyId: NodeId | n
   return {
     focus: start,
     line: root ? openLine(root, emptyId ?? undefined) : null,
-    typed: null,
     highlight: null,
     all: false,
     switching: null,
@@ -108,7 +106,6 @@ export function focusField(
   return {
     focus: field,
     line: opened && clicked && !clicked.op ? clickAt(opened, clicked.id) : opened,
-    typed: null,
     highlight: null,
     all: false,
     switching: clicked?.op ? clicked.id : null,
@@ -167,15 +164,14 @@ const taken = (transition: Transition, after?: After): KeyTransition =>
 
 /**
  * A row chosen by Enter or a click. In a target's line, a choice that leaves the target with no
- * empty slot moves on to the next field, as a name field's does (`editor.md`, Targets).
+ * empty slot moves on to the next field (`editor.md`, Targets).
  */
 export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransition {
   const { line, switching } = session;
   if (!line || switching) return taken(chooseRow(session, row, ctx));
   const chosen = choose(line, row, ctx);
   const { root } = chosen.line;
-  const holdsEmptySlot = isEmptyExpr(root) || emptySlots(root).length > 0;
-  const whole = chosen.taken && ctx.target !== null && !holdsEmptySlot;
+  const whole = chosen.taken && ctx.target !== null && !holdsEmptySlot(root);
   return taken(commit(session, chosen.line), whole ? { go: 1 } : undefined);
 }
 
@@ -259,16 +255,6 @@ export function textEnded(session: Session, key: TextEnd, ctx: LineContext): Key
   const moved = tab(ended.session.line ?? line, step, ctx);
   const after = chain(ended, (next) => commit(next, moved.line));
   return taken(after, moved.move ? { go: step } : undefined);
-}
-
-/** The name typed in a name field, as it keeps it. */
-export function typeName(session: Session, typed: string): Session {
-  return { ...session, typed, highlight: null };
-}
-
-/** A name field left: what was typed and not chosen is dropped. */
-export function leaveName(session: Session): Session {
-  return { ...session, typed: null };
 }
 
 /** The value list shows every entry. */

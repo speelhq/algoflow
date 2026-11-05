@@ -6,7 +6,7 @@ import { normalizeCaption } from "./edit";
 import { isNodeId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
 import { isRecord } from "./record";
-import { isEmptyExpr, isTarget, slotsHoldingNothing } from "./walk";
+import { isEmptyExpr, isTarget } from "./walk";
 
 export class MigrateError extends Error {
   constructor(
@@ -86,10 +86,11 @@ function checkExpr(value: unknown, path: string): void {
   }
   checkFields(value, path);
   // No edit leaves an expression's name holding nothing, and a value line has no empty slot to
-  // fill it at.
-  const [nothing] = slotsHoldingNothing(value as unknown as Expr);
-  if (nothing !== undefined)
-    throw new MigrateError(`${path}.${nothing}`, "expected the slot filled");
+  // fill it at (`language.md`, Data, Faults that `migrate()` rejects).
+  const nothing = getBlockDef(keyOf(value as unknown as Expr)).slots.find(
+    (slot) => slot.role === "name" && value[slot.name] === "",
+  );
+  if (nothing) throw new MigrateError(`${path}.${nothing.name}`, "expected the slot filled");
   for (const child of rawChildren(value, path)) checkExpr(child.value, child.path);
 }
 

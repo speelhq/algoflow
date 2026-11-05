@@ -63,7 +63,7 @@
         },
         "enter": {
           "keys": "Enter",
-          "action": "Choose the highlighted entry; in a name field not typed in, go to the next slot; else close the editor"
+          "action": "Choose the highlighted entry; in a target's line, when it leaves no empty slot, go to the next field; else close the editor"
         }
       }
     }
@@ -551,8 +551,7 @@
       "variablePlain": "A variable. It first gets a value in: {statement}.",
       "input": "A {kind} input of the problem.",
       "parameter": "A parameter: the value a call hands to this function.",
-      "newVariable": "Choosing it makes a new variable {name}, which gets its value here.",
-      "name": "The variable this block sets. Choose one below, or type a new name."
+      "newVariable": "Choosing it makes a new variable {name}, which gets its value here."
     }
   },
   "run": {
@@ -584,7 +583,7 @@
       "compare": "{condition} is {value}",
       "write": "{what} is now {value}",
       "swap": "Swapped {a} and {b}",
-      "loop": "Pass {pass}: {var} is {value}",
+      "loop": "Pass {pass}: {what} is {value}",
       "loopPlain": "Pass {pass}",
       "print": "Printed \"{text}\"",
       "call": "Calling {fn}({args})",

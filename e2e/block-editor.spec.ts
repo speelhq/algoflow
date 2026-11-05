@@ -40,9 +40,9 @@ test("FizzBuzz is built from an empty chart by typing and choosing, and accepted
   await expect(page.getByRole("button", { name: "Add your first block" })).toBeVisible();
 
   const loop = await insert(page, "main/main/0", "for");
-  // The variable's name field has the keyboard: a typed name is offered as a new variable.
+  // The variable's target line has the keyboard: a typed name is offered as a new variable.
   await keys(page, "i");
-  await expect(editor(page).getByTestId("name-list")).toContainText("New variable");
+  await expect(editor(page).getByTestId("value-list")).toContainText("New variable");
   await page.keyboard.press("Enter");
   // The start value is selected: a digit replaces it; Tab reaches the stop.
   await keys(page, "1");

@@ -1,9 +1,10 @@
 // What the value list and the name list know of a value before the program runs: an
 // expression's kind from its block's `yields`, and a variable's from its input's declared kind,
-// else the value of its first assignment, else the kind its loop block declares. Registry-driven.
+// else the value its first assignment stores, else the kind its loop block declares.
+// Registry-driven.
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import { isFloatData } from "./data";
-import { assignedValue, declaredBy } from "./scope";
+import { declaredBy } from "./scope";
 import type { Data, Expr, Name, Kind, Program, Routine, Stmt } from "./types";
 import { allStmts, getRoutine, routineStmts, variableOf } from "./walk";
 
@@ -50,17 +51,16 @@ function scope(program: Program, routine: Routine): Scope {
   }
   for (const stmt of allStmts(routineStmts(program, routineDef))) {
     const def = getBlockDef(keyOf(stmt));
-    for (const { name, role } of declaredBy(stmt)) {
+    for (const { name, stores } of declaredBy(stmt)) {
       if (!setters.has(name)) setters.set(name, stmt);
-      if (role === "name") {
+      if (stores === undefined) {
         // A loop's kind holds until an assignment says otherwise.
         if (!assigned.has(name) && !kinds.has(name) && def.declares) kinds.set(name, def.declares);
         continue;
       }
       if (assigned.has(name)) continue;
       assigned.add(name);
-      const value = assignedValue(stmt);
-      const kind = value ? exprKind(value, kinds) : undefined;
+      const kind = exprKind(stores, kinds);
       if (kind) kinds.set(name, kind);
     }
   }

@@ -2,7 +2,7 @@
 // every NodeId unique. Statements are addressed by id or by Place.
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import { newId } from "./id";
-import { assignedValue, declaredBy } from "./scope";
+import { declaredBy } from "./scope";
 import type { Expr, FunctionDef, Name, NodeId, Place, Program, Stmt } from "./types";
 import {
   allExprs,
@@ -163,21 +163,6 @@ export function duplicateStmt(program: Program, id: NodeId): Program {
 // ---------------------------------------------------------------- slots
 
 /**
- * Sets a name slot of a statement or expression. A literal or an operator changes inside its
- * value line, which replaces the expression (`setExpr`).
- */
-export function setSlot(program: Program, id: NodeId, slot: string, value: string): Program {
-  const next = clone(program);
-  const block = getBlock(next, id);
-  const spec = getBlockDef(keyOf(block)).slots.find((s) => s.name === slot);
-  if (spec?.role !== "name") {
-    throw new EditError(`block ${id} has no settable slot ${slot}`);
-  }
-  (block as unknown as Bag)[slot] = value;
-  return next;
-}
-
-/**
  * Sets an expression or target slot. For `exprs` slots `index` selects the item (appending
  * past the end).
  */
@@ -312,10 +297,10 @@ export function setParams(program: Program, id: NodeId, params: Name[]): Program
 function defaultFor(stmts: Stmt[], name: Name): Expr {
   const none = (): Expr => ({ id: newId(), kind: "none" });
   for (const stmt of allStmts(stmts)) {
-    if (!declaredBy(stmt).some((declared) => declared.role === "target" && declared.name === name))
-      continue;
-    const value = assignedValue(stmt);
-    return (value && getBlockDef(keyOf(value)).zeroLike?.(value)) ?? none();
+    const value = declaredBy(stmt).find(
+      (declared) => declared.name === name && declared.stores !== undefined,
+    )?.stores;
+    if (value) return getBlockDef(keyOf(value)).zeroLike?.(value) ?? none();
   }
   return none();
 }

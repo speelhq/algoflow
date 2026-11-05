@@ -25,14 +25,35 @@ describe("registry", () => {
     expect(CATEGORIES).toEqual(["basic", "control", "list", "function", "dict"]);
   });
 
-  it("only an expression has a literal or an operator slot", () => {
+  it("only an expression has a literal, an operator, or a name slot", () => {
     const fixed = (def: BlockDef) =>
-      def.slots.filter((slot) => slot.role === "literal" || slot.role === "operator");
+      def.slots.filter(
+        (slot) => slot.role === "literal" || slot.role === "operator" || slot.role === "name",
+      );
     const statements = [...BLOCK_DEFS.values()].filter((def) => def.shape === "stmt");
     expect(statements.length).toBeGreaterThan(0);
     for (const def of statements) expect(fixed(def), def.key).toEqual([]);
     const roles = [...BLOCK_DEFS.values()].flatMap((def) => fixed(def).map((slot) => slot.role));
-    expect(new Set(roles)).toEqual(new Set(["literal", "operator"]));
+    expect(new Set(roles)).toEqual(new Set(["literal", "operator", "name"]));
+  });
+
+  it("a binding slot stores an expression slot of its block, and a loop's stores none", () => {
+    const stored = [...BLOCK_DEFS.values()].flatMap((def) =>
+      def.slots.flatMap((slot) =>
+        slot.role === "target" && slot.binds ? [{ def, stores: slot.stores }] : [],
+      ),
+    );
+    expect(stored.map(({ def }) => def.key).toSorted()).toEqual(["assign", "for"]);
+    for (const { def, stores } of stored) {
+      if (def.loop) expect(stores, def.key).toBeUndefined();
+      else expect(def.slots.find((slot) => slot.name === stores)?.role, def.key).toBe("expr");
+    }
+    // Only a binding slot names what it stores.
+    for (const def of BLOCK_DEFS.values()) {
+      for (const slot of def.slots) {
+        if (slot.role === "target" && !slot.binds) expect(slot.stores, def.key).toBeUndefined();
+      }
+    }
   });
 
   it("break jumps out of the innermost loop and continue into its next pass", () => {

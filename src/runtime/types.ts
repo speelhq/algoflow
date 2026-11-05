@@ -43,7 +43,8 @@ export type Event =
   /** `from`: where a `swap` read the value it writes (`interpreter.md`, Events). */
   | { type: "write"; nodeId: NodeId; ref: Ref; value: Value; from?: Ref }
   | { type: "compare"; nodeId: NodeId; result: boolean }
-  | { type: "loop"; nodeId: NodeId; var?: Name; value?: Value }
+  /** `ref`: the place of a loop's target, where it stored `value` (`interpreter.md`, Events). */
+  | { type: "loop"; nodeId: NodeId; ref?: Ref; value?: Value }
   | { type: "call"; nodeId: NodeId; fn: Name; args: Value[] }
   | { type: "return"; nodeId: NodeId; fn: Name; value: Value }
   | { type: "print"; nodeId: NodeId; text: string };

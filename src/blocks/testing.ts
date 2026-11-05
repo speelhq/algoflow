@@ -82,7 +82,15 @@ export const ast = {
   for_: (variable: string, start: Expr, stop: Expr, body: Stmt[]): Stmt => ({
     id: tid(),
     kind: "for",
-    var: variable,
+    var: { id: tid(), kind: "var", name: variable },
+    start,
+    stop,
+    body,
+  }),
+  forTo: (target: Expr, start: Expr, stop: Expr, body: Stmt[]): Extract<Stmt, { kind: "for" }> => ({
+    id: tid(),
+    kind: "for",
+    var: target,
     start,
     stop,
     body,

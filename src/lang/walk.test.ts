@@ -14,7 +14,7 @@ import {
   paramArg,
   routineOf,
   routineStmts,
-  slotsHoldingNothing,
+  holdsEmptySlot,
 } from "./walk";
 
 const { assign, num, bin, v, if_, for_, while_, print, ret, call, empty } = ast;
@@ -22,7 +22,7 @@ const { assign, num, bin, v, if_, for_, while_, print, ret, call, empty } = ast;
 describe("emptySlots", () => {
   it("lists every empty slot at any depth, with the block that holds it", () => {
     const sum = bin("+", num(1), empty());
-    const loop = for_("", num(0), sum, []);
+    const loop = ast.forTo(empty(), num(0), sum, []);
     const abs = call("abs", empty());
     const shown = print(num(1), empty(), abs);
     expect(emptySlots(loop)).toEqual([
@@ -37,12 +37,13 @@ describe("emptySlots", () => {
   });
 });
 
-describe("slotsHoldingNothing", () => {
-  it("names the names that hold nothing; a list with no item holds a list", () => {
-    expect(slotsHoldingNothing(for_("", num(0), num(3), []))).toEqual(["var"]);
-    expect(slotsHoldingNothing(call("abs"))).toEqual([]);
-    expect(slotsHoldingNothing(print())).toEqual([]);
-    expect(slotsHoldingNothing(for_("i", num(0), num(3), []))).toEqual([]);
+describe("holdsEmptySlot", () => {
+  it("a value that is an empty slot or holds one at any depth; a list with no item holds none", () => {
+    expect(holdsEmptySlot(empty())).toBe(true);
+    expect(holdsEmptySlot(bin("+", num(1), call("abs", empty())))).toBe(true);
+    expect(holdsEmptySlot(bin("+", v("n"), num(1)))).toBe(false);
+    expect(holdsEmptySlot(call("abs"))).toBe(false);
+    expect(holdsEmptySlot(ast.list())).toBe(false);
   });
 });
 

@@ -1,8 +1,8 @@
-// The fields of a statement's notation in the block editor: each name slot, each value or target
-// slot, and each item of a list of values, in the notation's reading order.
+// The fields of a statement's notation in the block editor: each value or target slot, and each
+// item of a list of values, in the notation's reading order.
 import { blockText, t } from "@/i18n/t";
 import type { Expr, NodeId, Stmt } from "@/lang/types";
-import { emptySlots, isExpr } from "@/lang/walk";
+import { holdsEmptySlot, isExpr } from "@/lang/walk";
 import { getBlockDef, keyOf, type Slot } from "@/blocks/registry";
 import {
   generatedNotation,
@@ -13,8 +13,8 @@ import {
 } from "@/ui/chart/text";
 import { find } from "./line";
 
-/** One editable slot of the notation: a name, a value or a target, or an item of a list of values. */
-export type Field = { slot: string; role: "name" | "expr"; index?: number };
+/** One editable slot of the notation: a value or a target, or an item of a list of values. */
+export type Field = { slot: string; index?: number };
 
 export const fieldKey = (field: Field) => `${field.slot}:${field.index ?? ""}`;
 
@@ -22,12 +22,6 @@ type Bag = Record<string, unknown>;
 
 export const sameField = (a: Field | null, b: Field | null) =>
   a !== null && b !== null && fieldKey(a) === fieldKey(b);
-
-/** The name in a `name` slot. */
-export function nameOf(stmt: Stmt, slot: string): string | undefined {
-  const value = (stmt as unknown as Bag)[slot];
-  return typeof value === "string" ? value : undefined;
-}
 
 /** The target slot a field edits, which its line keeps a target in (`editor.md`, Targets). */
 export function targetSlot(
@@ -86,11 +80,8 @@ export function fieldsOf(stmt: Stmt): Field[] {
     if ("words" in piece || again) continue;
     const held = placeholderValue(stmt, piece.name);
     const slot = piece.name;
-    if (held?.role === "name") out.push({ slot, role: "name" });
-    else if (held?.role === "expr" && held.expr) out.push({ slot, role: "expr" });
-    else if (held?.role === "exprs") {
-      held.items.forEach((_, index) => out.push({ slot, role: "expr", index }));
-    }
+    if (held?.role === "expr" && held.expr) out.push({ slot });
+    else if (held?.role === "exprs") held.items.forEach((_, index) => out.push({ slot, index }));
   }
   return out;
 }
@@ -112,16 +103,6 @@ export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
   return isExpr(item) ? item : undefined;
 }
 
-/** Whether a field holds an empty slot: the field's own slot, or one inside its value. */
-function holdsEmptySlot(stmt: Stmt, field: Field): boolean {
-  const value = valueOf(stmt, field);
-  return emptySlots(stmt).some(({ block, slot, index }) =>
-    block === stmt
-      ? slot === field.slot && index === field.index
-      : value !== undefined && find(value, block.id) !== undefined,
-  );
-}
-
 /**
  * The field that takes the keyboard when the editor opens: the slot clicked on the chart node (the
  * item holding the empty slot clicked, when one was), else the first field that holds an empty
@@ -133,7 +114,14 @@ export function startField(
   clicked: { slot: string | null; emptyId: NodeId | null },
 ): Field | null {
   const { slot, emptyId } = clicked;
-  if (slot === null) return fields.find((field) => holdsEmptySlot(stmt, field)) ?? null;
+  if (slot === null) {
+    return (
+      fields.find((field) => {
+        const value = valueOf(stmt, field);
+        return value !== undefined && holdsEmptySlot(value);
+      }) ?? null
+    );
+  }
   const inSlot = fields.filter((field) => field.slot === slot);
   const holding =
     emptyId === null

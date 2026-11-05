@@ -199,7 +199,11 @@ describe("run store", () => {
     run().stepOnce();
     expect(run()).toMatchObject({ status: "paused", step: 1, lastEvent: { type: "enter" } });
     run().stepOnce();
-    expect(run()).toMatchObject({ step: 2, lastEvent: { type: "loop", var: "i" }, pass: 1 });
+    expect(run()).toMatchObject({
+      step: 2,
+      lastEvent: { type: "loop", ref: { var: "i" } },
+      pass: 1,
+    });
     expect(run().activeId).toBe(useProgram.getState().program.main[0]?.id);
     expect(run().state?.frames[0]?.vars.get("i")).toEqual({ t: "int", v: 0 });
   });

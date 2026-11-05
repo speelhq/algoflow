@@ -15,7 +15,6 @@ import {
   renameName,
   setExpr,
   setParams,
-  setSlot,
   setCaption,
 } from "./edit";
 import { unparse } from "@/python/emit";
@@ -52,7 +51,7 @@ describe("edit", () => {
       moveStmt: (p) => moveStmt(p, b.id, { parent: loop.id, slot: "body", index: 0 }),
       removeStmt: (p) => removeStmt(p, a.id),
       duplicateStmt: (p) => duplicateStmt(p, loop.id),
-      setSlot: (p) => setSlot(p, loop.id, "var", "k"),
+      setLoopTarget: (p) => setExpr(p, loop.id, "var", v("k")),
       setExpr: (p) => setExpr(p, b.id, "args", value, 0),
       setTarget: (p) => setExpr(p, a.id, "target", ast.item(value, structuredClone(value))),
       insertItem: (p) => insertItem(p, b.id, "args", 0, value),
@@ -125,13 +124,10 @@ describe("edit", () => {
     expect(idsUnique(next)).toBe(true);
   });
 
-  it("setSlot sets a name slot; every other slot is refused", () => {
-    const { p, loop, a } = sample();
-    expect(lines(setSlot(p, loop.id, "var", "k"))[1]).toBe("for k in range(3):");
-    const sum = bin("+", num(1), num(2));
-    expect(() => setSlot(program([print(sum)]), sum.id, "op", "-")).toThrow(/no settable slot/);
-    expect(() => setSlot(p, a.id, "value", "x")).toThrow(/no settable slot/);
-    expect(() => setSlot(p, a.id, "target", "y")).toThrow(/no settable slot/);
+  it("setExpr sets a loop's variable, a target as an assignment's is", () => {
+    const { p, loop } = sample();
+    expect(lines(setExpr(p, loop.id, "var", v("k")))[1]).toBe("for k in range(3):");
+    expect(lines(setExpr(p, loop.id, "var", ast.empty()))[1]).toBe("for ... in range(3):");
   });
 
   it("setCaption stores one trimmed line and removes an empty caption", () => {

@@ -1,5 +1,5 @@
-// The lists under the editor's fields: the value list of the focused value line (or, while an
-// operator is switched, the other operators of its group), and the name list of a name field.
+// The list under the editor's focused field: the value list of its value line, or, while an
+// operator is switched, the other operators of its group.
 import { t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
 import type { Name } from "@/lang/types";
@@ -8,7 +8,6 @@ import { allEntries, findEntry } from "./entries";
 import { functionLabel } from "./explain";
 import { find, type LineContext, type Row } from "./line";
 import { listRows, listSections, type ListGroup } from "./list";
-import { nameSections, type RoutineNames, type NameRow, type NameSection } from "./names";
 import type { Session } from "./session";
 
 /** A variable's kind as the lists name it. */
@@ -86,7 +85,8 @@ export function valueList(
   return { rows: listRows(listed), sections };
 }
 
-const SECTION_TITLES: Record<NameSection["group"], () => string> = {
+/** The titles of the name list's groups (`editor.md`, Name list). */
+const SECTION_TITLES: Record<"problem" | "variables" | "new", () => string> = {
   problem: () => t("editor.thisProblem"),
   variables: () => t("editor.lists.variables"),
   new: () => "",
@@ -97,37 +97,4 @@ function listTitle(group: ListGroup): string {
   return group === "problem" || group === "variables" || group === "new"
     ? SECTION_TITLES[group]()
     : t(`editor.lists.${group}`);
-}
-
-function nameItem(row: NameRow, kinds: Kinds): ListItem {
-  const key = `${row.kind}:${row.name}`;
-  switch (row.kind) {
-    case "name":
-      return { key, label: row.name, variable: true, note: kindName(kinds, row.name) };
-    case "new":
-      return { key, label: row.name, variable: true, lead: t("editor.newVariable") };
-  }
-}
-
-/** The rows of a name field's list for the name typed, and its sections as drawn. */
-export function nameList(
-  names: RoutineNames,
-  typed: string | null,
-  kinds: Kinds,
-): { rows: NameRow[]; sections: ListSection[] } {
-  const listed = nameSections(names, typed ?? "");
-  const sections = listed.map((section) => ({
-    title: SECTION_TITLES[section.group](),
-    items: section.rows.map((row) => nameItem(row, kinds)),
-  }));
-  return { rows: listed.flatMap((section) => section.rows), sections };
-}
-
-/** The name row highlighted: the one moved to, else while a name is typed the whole name or the first. */
-export function shownNameRow(session: Session, rows: readonly NameRow[]): number | null {
-  const { highlight, typed } = session;
-  if (highlight !== null && highlight < rows.length) return highlight;
-  if (!typed) return null;
-  const whole = rows.findIndex((row) => row.kind === "name" && row.name === typed);
-  return whole >= 0 ? whole : rows.length > 0 ? 0 : null;
 }

@@ -1,53 +1,10 @@
-// The editable slots of the editor's notation other than a value line: a name field, `+ value`,
-// and a list of values with a remove button on each item.
-import type { KeyboardEvent, ReactNode } from "react";
+// The editable slots of the editor's notation other than a value line: `+ value`, and a list of
+// values with a remove button on each item.
+import type { ReactNode } from "react";
 import { t } from "@/i18n/t";
 import { SEPARATOR } from "@/ui/chart/text";
 import type { Expr } from "@/lang/types";
 import { cn } from "@/lib/utils";
-
-/** A name slot: shown as the variable it names until it has the keyboard. */
-export function NameField({
-  label,
-  name,
-  typed,
-  on,
-  register,
-  onFocus,
-  onBlur,
-  onType,
-  onKey,
-}: {
-  label: string;
-  name: string;
-  /** What is typed while the field has the keyboard, else null. */
-  typed: string | null;
-  on: boolean;
-  register: (element: HTMLElement | null) => void;
-  onFocus: () => void;
-  onBlur: () => void;
-  onType: (text: string) => void;
-  onKey: (event: KeyboardEvent<HTMLInputElement>) => void;
-}) {
-  return (
-    <input
-      ref={register}
-      value={on && typed !== null ? typed : name}
-      aria-label={label}
-      className={cn(
-        "h-8 min-w-10 rounded-md border px-1.5 outline-none [field-sizing:content]",
-        on && "border-selection ring-1 ring-selection",
-        !on && name === "" && "border-dashed",
-        // A name not being edited reads as the variable it names.
-        !on && name !== "" && "border-transparent font-semibold text-variable",
-      )}
-      onFocus={onFocus}
-      onBlur={onBlur}
-      onChange={(event) => onType(event.target.value)}
-      onKeyDown={onKey}
-    />
-  );
-}
 
 /** `+ value`: adds an optional value, or an item at the end of a list. */
 export function AddValue({ onAdd, small }: { onAdd: () => void; small: boolean }) {
