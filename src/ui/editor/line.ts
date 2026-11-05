@@ -828,7 +828,11 @@ export function move(line: Line, step: -1 | 1): Outcome {
   return done(closeBehind({ ...line, caret: target, pending: undefined, refused: undefined }));
 }
 
-/** Tab and Shift+Tab: the next or previous empty slot, else the next or previous field. */
+/**
+ * Tab and Shift+Tab: the next or previous empty slot, else the next or previous field. A selected
+ * value is passed from its start by Tab and from its end by Shift+Tab, so its empty slots come
+ * first.
+ */
 export function tab(line: Line, step: -1 | 1, ctx: LineContext): Outcome {
   let current: Line = { ...line, pending: undefined, refused: undefined };
   if (current.word !== "") {
@@ -836,7 +840,7 @@ export function tab(line: Line, step: -1 | 1, ctx: LineContext): Outcome {
     current = exact ? choose(current, exact, ctx).line : { ...current, word: "" };
   }
   const all = stops(current.root);
-  const here = current.selected ? (step > 0 ? all.length - 1 : 0) : position(current);
+  const here = current.selected ? (step > 0 ? -1 : all.length) : position(current);
   const empties = all
     .map((stop, index) => ({ stop, index }))
     .filter(({ stop, index }) => "at" in stop && (step > 0 ? index > here : index < here));

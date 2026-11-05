@@ -484,6 +484,25 @@ describe("Backspace and moving", () => {
     expect(tab(second.line, 1, ctx).move).toBe("next");
     expect(tab(placed, -1, ctx).move).toBe("previous");
     expect(tab(openLine(ast.v("n")), 1, ctx).move).toBe("next");
+    expect(tab(openLine(ast.v("n")), -1, ctx).move).toBe("previous");
+  });
+
+  it("Tab on a selected value reaches its first empty slot, and Shift+Tab its last", () => {
+    const [low, high] = [ast.empty(), ast.empty()];
+    const selected = openLine(ast.bin("+", low, ast.bin("*", ast.v("n"), high)));
+    expect(selected.selected).toBe(true);
+    const forward = tab(selected, 1, ctx);
+    expect([forward.line.caret, forward.line.selected, forward.move]).toEqual([
+      { at: low.id },
+      false,
+      undefined,
+    ]);
+    const backward = tab(selected, -1, ctx);
+    expect([backward.line.caret, backward.line.selected, backward.move]).toEqual([
+      { at: high.id },
+      false,
+      undefined,
+    ]);
   });
 
   it("→ at the end of an operation's last slot leaves it", () => {
