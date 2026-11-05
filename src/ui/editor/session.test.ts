@@ -121,7 +121,11 @@ describe("editor session", () => {
       position.id,
     );
     expect(pickRow(atPosition, total, targetCtx).after).toEqual({ go: 1 });
-    // A choice that leaves an empty slot, or one the target refuses, keeps the keyboard.
+    // A choice that leaves an empty slot elsewhere in the target, or one the target refuses,
+    // keeps the keyboard.
+    const other = empty();
+    const unlisted = openSession(assignTo(ast.item(empty(), other), num(1)), field, other.id);
+    expect(pickRow(unlisted, total, targetCtx).after).toBeUndefined();
     const parentheses = pickRow(openSession(stmt, field, null), { kind: "parentheses" }, targetCtx);
     expect(parentheses.after).toBeUndefined();
     const text = allEntries().find((entry) => entry.id === "str");

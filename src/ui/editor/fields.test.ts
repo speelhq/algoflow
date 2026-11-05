@@ -80,6 +80,20 @@ describe("a target", () => {
     expect(startField(stmt, fields, { slot: "target", emptyId: position.id })).toEqual(fields[0]);
   });
 
+  it("gives the keyboard to the first field that holds an empty slot, at any depth", () => {
+    const opened = { slot: null, emptyId: null };
+    const deep = print(num(1), ast.call("abs", ast.empty()));
+    expect(startField(deep, fieldsOf(deep), opened)).toEqual({
+      slot: "args",
+      role: "expr",
+      index: 1,
+    });
+    const nameless = for_("", num(0), num(3), []);
+    expect(startField(nameless, fieldsOf(nameless), opened)).toEqual({ slot: "var", role: "name" });
+    const filled = print(num(1), ast.call("abs", v("n")));
+    expect(startField(filled, fieldsOf(filled), opened)).toBeNull();
+  });
+
   it("names the words after a field, which a key beginning them moves on from", () => {
     const stmt = assign("total", num(5));
     expect(wordsAfter(stmt, { slot: "target", role: "expr" })).toBe("←");

@@ -6,7 +6,15 @@
 import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Block, NodeId, Value } from "@/lang/types";
-import { conditionOf, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/walk";
+import {
+  conditionOf,
+  emptySlots,
+  isEmptyExpr,
+  isExpr,
+  paramArg,
+  slotsHoldingNothing,
+  variableOf,
+} from "@/lang/walk";
 import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
 import type { Generated, BlockDef, Side } from "@/blocks/types";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
@@ -256,30 +264,13 @@ export function exprText(expr: Expr, writing: Writing = {}): string {
 }
 
 /**
- * Whether the chart draws a slot as `…`: an empty expression or name, or a required list with no
- * item.
+ * What one slot of a statement holds, as the chart writes it, each part naming the slot. A slot
+ * that holds nothing is drawn as `…`; one that holds `empty`, by that expression's notation.
+ * Only a statement's slot holds nothing (`language.md`, Data, Faults that `migrate()` rejects).
  */
-function drawsEmpty(block: Block, def: BlockDef, name: string): boolean {
-  const slot = def.slots.find((s) => s.name === name);
-  const value = (block as unknown as Bag)[name];
-  switch (slot?.role) {
-    case "expr":
-    case "target":
-      return isEmptyExpr(value);
-    case "exprs":
-      // A list with no item is empty only where the slot is required.
-      return Array.isArray(value) && value.length === 0 && slot.required === true;
-    case "name":
-      return value === "";
-    default:
-      return false;
-  }
-}
-
-/** The parts of one slot of a statement, each naming the slot. */
-function stmtSlotParts(block: Block, def: BlockDef, name: string): Part[] {
+export function slotParts(block: Block, name: string): Part[] {
   const parts = (): Part[] => {
-    if (drawsEmpty(block, def, name)) return [{ text: emptyNotation(), empty: true }];
+    if (slotsHoldingNothing(block).includes(name)) return [{ text: emptyNotation(), empty: true }];
     const held = placeholderValue(block, name);
     switch (held?.role) {
       case "expr":
@@ -297,15 +288,9 @@ function stmtSlotParts(block: Block, def: BlockDef, name: string): Part[] {
   return parts().map((part) => ({ ...part, slot: name }));
 }
 
-/** What one slot of a statement holds, as the chart writes it. */
-export function slotParts(block: Block, slot: string): Part[] {
-  return stmtSlotParts(block, getBlockDef(keyOf(block)), slot);
-}
-
 /** A statement's notation, or a generated chart node's text, as parts, one or more per slot. */
 function stmtParts(notation: string, block: Block): Part[] {
-  const def = getBlockDef(keyOf(block));
-  return templateParts(notation, (name) => stmtSlotParts(block, def, name));
+  return templateParts(notation, (name) => slotParts(block, name));
 }
 
 /** A block's notation as parts: an expression as the chart writes it, a statement by its slots. */
@@ -321,8 +306,7 @@ export function notationText(block: Block): string {
 
 /** Whether a statement has an empty slot, at any depth of its slots. */
 export function hasEmptySlot(block: Block): boolean {
-  const def = getBlockDef(keyOf(block));
-  return def.slots.some((slot) => stmtSlotParts(block, def, slot.name).some((part) => part.empty));
+  return emptySlots(block).length > 0;
 }
 
 /**

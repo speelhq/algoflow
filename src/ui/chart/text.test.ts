@@ -13,6 +13,7 @@ import {
   inputParts,
   joinParts,
   placeholderValue,
+  slotParts,
   questionParts,
   hasEmptySlot,
   notationParts,
@@ -174,6 +175,24 @@ describe("notation", () => {
     // A counted loop's stop, which its notation (its init) does not write, counts too.
     expect(hasEmptySlot(for_("i", num(0), empty(), []))).toBe(true);
     expect(hasEmptySlot(for_("i", num(0), num(3), []))).toBe(false);
+  });
+
+  it("draws a statement's name that holds nothing as `…`, and an empty value by its notation", () => {
+    const loop = for_("", num(0), num(3), []);
+    expect(notationParts(loop)).toEqual([
+      { text: "…", empty: true, slot: "var" },
+      { text: " ← " },
+      { text: "0", slot: "start" },
+    ]);
+    expect(hasEmptySlot(loop)).toBe(true);
+    // An empty value carries its id, so a click on it opens the editor at it.
+    const hole = empty();
+    expect(slotParts(print(num(1), hole), "args").at(-1)).toEqual({
+      text: "…",
+      empty: true,
+      emptyId: hole.id,
+      slot: "args",
+    });
   });
 
   it("writes a variable as its value when the writing gives one", () => {
