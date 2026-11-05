@@ -141,6 +141,8 @@ can only come from editing the file by hand:
 - a missing field
 - a literal that the block's definition wouldn't make
 - a `Data` value that isn't canonical
+- an expression whose required name or list holds nothing (`blocks.md`,
+  The block definition, Slots)
 
 `migrate()` rejects a file with one of those faults, so `validate()` never
 reads a literal field. `migrate()` rejects the file because there is no
@@ -295,9 +297,10 @@ export type BinOp =
 ### Empty slots
 
 An empty slot is a slot that still needs filling: an expression slot or
-an item that holds `{ kind: "empty" }`, or a required name, text, or
-list that holds nothing. `validate()` reports each empty slot as
-`E_EMPTY_SLOT` with the slot's name.
+an item that holds `{ kind: "empty" }`, or a required name or list
+that holds nothing (`blocks.md`, The block definition, Slots).
+`validate()` reports each empty slot as `E_EMPTY_SLOT` with the slot's
+name.
 
 Each consumer handles the `empty` expression in its own way:
 
