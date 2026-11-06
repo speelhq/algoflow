@@ -138,7 +138,7 @@ it would have to strip a mark such as `n?`.
 only registry. Every other module reaches a block definition through it.
 
 No module other than a block definition's file and the registry's `keyOf`
-branches on `kind`, a builtin name, or a method name. Traversal,
+branches on a block's `type`, a builtin name, or a method name. Traversal,
 validation, the block menu, the value list, and the chart read a block
 definition's `slots`, `entries`, and flags instead.
 

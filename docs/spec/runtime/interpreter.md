@@ -236,7 +236,7 @@ context the runner gives it:
 
 ```ts
 export type Signal =
-  | undefined | { kind: "break" } | { kind: "continue" } | { kind: "return"; value: Value };
+  | undefined | { type: "break" } | { type: "continue" } | { type: "return"; value: Value };
 export type StmtRunner = (block: Stmt, ctx: RunContext) => Generator<Event, Signal, void>;
 export type ExprRunner = (block: Expr, ctx: RunContext) => Generator<Event, Value, void>;
 export type RunContext = {

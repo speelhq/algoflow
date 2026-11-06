@@ -174,7 +174,7 @@ reading the chart would follow it, while a chart node with no edge
 wouldn't say where control goes.
 
 Each block definition declares its jump, because the chart never
-branches on a block's kind (`blocks.md`, The block definition).
+branches on a block's type (`blocks.md`, The block definition).
 
 A block with `requires: "function"` has no edge to the next chart node:
 its edge runs to `End` along one vertical line on the right, and carries

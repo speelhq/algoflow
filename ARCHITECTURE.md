@@ -23,7 +23,7 @@ developer (`CLAUDE.md`, Judgment).
   `../`. Their tests may also import `vitest` and `@/i18n`. `.oxlintrc.json`
   enforces this.
 - Each block definition lives in its own file in `src/blocks/`, and no
-  other code branches on a block's kind or name (`docs/spec/blocks/`).
+  other code branches on a block's type or name (`docs/spec/blocks/`).
   Every consumer reads the block definition's declarations instead, so a
   new block definition works in the menu, the chart, and the editor with
   no other change.
