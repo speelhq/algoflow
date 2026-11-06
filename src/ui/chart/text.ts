@@ -1,4 +1,4 @@
-// A block's text as runs: its block's `notation()` with the block's slots filled in, the same in
+// A block's text as parts: its block's `notation()` with the block's slots filled in, the same in
 // every locale; a variable is drawn bold in its own color, and an empty slot as `…`, the `empty`
 // block's notation. Operators are parenthesized as the emitter does. Reads slot roles, `params`,
 // `notation`, `text`, `chart`, and `precedence` only, never a kind; a variable shown with its
@@ -41,9 +41,9 @@ export function blankTemplate(template: string): string {
 }
 
 /**
- * A run of a block's text: the template's own words, or what a slot holds (`slot` names the
+ * A part of a block's text: the template's own words, or what a slot holds (`slot` names the
  * statement's slot it belongs to). `variable` marks a variable's name, `empty` the `…` of an
- * empty slot, and `emptyId` the empty slot a click on the run opens.
+ * empty slot, and `emptyId` the empty slot a click on the part opens.
  */
 export type Part = {
   text: string;
@@ -95,7 +95,7 @@ export function templateParts(template: string, fill: (name: string) => Part[]):
   }
   const last = out.at(-1);
   if (last?.words) last.part.text = last.part.text.replace(/ $/, "");
-  // Adjacent words of one slot are one run.
+  // Adjacent words of one slot are one part.
   const merged: Part[] = [];
   for (const { part } of out) {
     const before = merged[merged.length - 1];
@@ -306,19 +306,19 @@ export function hasEmptySlot(block: Block): boolean {
  * The text a counted loop's generated chart node draws, with the loop's `{slot}` placeholders: its
  * check asked as every diamond asks its condition (`chart.condition`); none for another block.
  */
-export function generatedNotation(block: Block, part: Generated): string | undefined {
+export function generatedNotation(block: Block, which: Generated): string | undefined {
   const chart = getBlockDef(keyOf(block)).chart;
   if (!chart || !("counted" in chart)) return undefined;
-  const text = chart.counted[part];
-  if (part !== "check") return text;
+  const text = chart.counted[which];
+  if (which !== "check") return text;
   return templatePieces(t("chart.condition"))
     .map((piece) => ("words" in piece ? piece.words : text))
     .join("");
 }
 
 /** A counted loop's generated chart node as parts, its slots being the loop's; none for another. */
-export function generatedParts(block: Block, part: Generated): Part[] {
-  const notation = generatedNotation(block, part);
+export function generatedParts(block: Block, which: Generated): Part[] {
+  const notation = generatedNotation(block, which);
   return notation === undefined ? [] : stmtParts(notation, block);
 }
 

@@ -218,13 +218,13 @@ describe("diamonds and generated chart nodes", () => {
     expect(joinParts(questionParts(if_(expr("i % 15 == 0"), [])))).toBe("i % 15 = 0?");
     expect(joinParts(questionParts(if_(expr("abs(x) < 3"), [])))).toBe("abs(x) < 3?");
     expect(joinParts(questionParts(if_(empty(), [])))).toBe("…");
-    // The condition's runs name its slot; the `?` names none.
+    // The condition's parts name its slot; the `?` names none.
     expect(questionParts(if_(v("ok"), [])).map((part) => part.slot)).toEqual(["cond", undefined]);
   });
 
   it("a counted loop's generated chart nodes carry the loop's own slots", () => {
     const loop = for_("i", num(1), bin("+", v("n"), num(1)), []);
-    const drawn = (part: "init" | "check" | "update") => joinParts(generatedParts(loop, part));
+    const drawn = (which: "init" | "check" | "update") => joinParts(generatedParts(loop, which));
     expect(drawn("init")).toBe("i ← 1");
     // The check is asked as every diamond asks its condition.
     expect(drawn("check")).toBe("i < n + 1?");
