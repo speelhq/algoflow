@@ -76,7 +76,7 @@ describe("paint", () => {
     expect(no && p.edges.has(no.id)).toBe(true);
   });
 
-  it("takes a loop's No edge into a following loop's junction once control is there", () => {
+  it("takes a loop's No edge into a following loop's first chart node once control is there", () => {
     const first = for_("i", num(0), num(2), [print(v("i"))]);
     const second = for_("j", num(0), num(2), [print(v("j"))]);
     const twice = laidOut(program([first, second]), {

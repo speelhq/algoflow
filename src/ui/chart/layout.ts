@@ -25,7 +25,10 @@ import {
 export type Point = { x: number; y: number };
 export type Shape = "terminal" | "input" | "box" | "diamond" | "junction";
 export type ChartNode = {
-  /** A statement's id, `<id>:init|check|update|junction|merge`, `start`, `end`, or `input:<name>`. */
+  /**
+   * A statement's id, `<id>:init|check|update|top|merge|exit|next` for its other chart nodes,
+   * `start`, `end`, or `input:<name>`.
+   */
   id: string;
   /**
    * Its owner, the statement or function that stands for it (`chart.md`, Shapes): a function
@@ -40,7 +43,7 @@ export type ChartNode = {
     | "init"
     | "check"
     | "update"
-    | "junction"
+    | "top"
     | "merge"
     | "exit"
     | "next";
@@ -90,7 +93,7 @@ export type LayoutOptions = {
 const GAP_Y = 36;
 const GAP_X = 32;
 const LANE = 24;
-const JOIN = 20; // a junction to the diamond below it
+const JOIN = 20; // a loop's top to the diamond below it
 const HEIGHT: Record<Shape, number> = {
   terminal: 36,
   input: 40,
@@ -450,9 +453,9 @@ class Builder {
   }
 
   /**
-   * `checked` and `counted`: a junction above the diamond, Yes down into the body, a back
-   * edge up the left lane, No down the right lane and on past the loop. A counted loop adds
-   * its generated init before the junction and its update after the body.
+   * `checked` and `counted`: the loop's top, a junction above the diamond, Yes down into the
+   * body, a back edge up the left lane, No down the right lane and on past the loop. A counted
+   * loop adds its generated init before the top and its update after the body.
    */
   private loop(stmt: Stmt, slot: string, counted: boolean): Frag {
     const frag = emptyFrag();
@@ -472,13 +475,13 @@ class Builder {
       y = init.h + JOIN;
       widest = init.w / 2;
     }
-    const junction = this.node(`${stmt.id}:junction`, stmt.id, "junction", "junction", "", y);
+    const top = this.node(`${stmt.id}:top`, stmt.id, "top", "junction", "", y);
     const yJoin = y;
-    frag.nodes.push(junction);
+    frag.nodes.push(top);
     if (counted) {
       const init: Stub = { from: `${stmt.id}:init`, points: [{ x: 0, y: y - JOIN }], place: null };
-      frag.edges.push(edge(init, junction.id, [{ x: 0, y }]));
-    } else frag.entry = junction.id;
+      frag.edges.push(edge(init, top.id, [{ x: 0, y }]));
+    } else frag.entry = top.id;
 
     y += JOIN;
     const d = counted
@@ -493,7 +496,7 @@ class Builder {
       : this.diamond(stmt, y);
     frag.nodes.push(d);
     frag.edges.push(
-      edge({ from: junction.id, points: [{ x: 0, y: yJoin }], place: null }, d.id, [{ x: 0, y }]),
+      edge({ from: top.id, points: [{ x: 0, y: yJoin }], place: null }, d.id, [{ x: 0, y }]),
     );
 
     this.depth += 1;
@@ -559,7 +562,7 @@ class Builder {
           ),
         );
       }
-      if (tail) frag.edges.push(edge(tail, junction.id, up, { anchor: "first", back: true }));
+      if (tail) frag.edges.push(edge(tail, top.id, up, { anchor: "first", back: true }));
     } else if (nexts.length > 0) {
       // The next pass of a checked loop starts where the back edge does.
       const next = this.node(`${stmt.id}:next`, stmt.id, "next", "junction", "", yTurn);
@@ -580,9 +583,9 @@ class Builder {
       }
       if (tail) frag.edges.push(edge(tail, next.id, [{ x: 0, y: yTurn }]));
       const from: Stub = { from: next.id, points: [{ x: 0, y: yTurn }], place: null };
-      frag.edges.push(edge(from, junction.id, up.slice(1), { anchor: "first", back: true }));
+      frag.edges.push(edge(from, top.id, up.slice(1), { anchor: "first", back: true }));
     } else if (tail) {
-      frag.edges.push(edge(tail, junction.id, up, { anchor: "first", back: true }));
+      frag.edges.push(edge(tail, top.id, up, { anchor: "first", back: true }));
     }
 
     frag.height = yTurn + LANE;

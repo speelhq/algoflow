@@ -326,11 +326,11 @@ describe.each([
         }
         const counted = "counted" in form;
         const d = nodes.get(counted ? `${stmt.id}:check` : stmt.id);
-        const junction = nodes.get(`${stmt.id}:junction`);
-        if (!d || !junction) throw new Error(`loop ${stmt.id}`);
+        const top = nodes.get(`${stmt.id}:top`);
+        if (!d || !top) throw new Error(`loop ${stmt.id}`);
         expect(d.shape).toBe("diamond");
-        expect(center(junction)).toBe(center(d));
-        expect(junction.y).toBeLessThan(d.y);
+        expect(center(top)).toBe(center(d));
+        expect(top.y).toBeLessThan(d.y);
         const [yes] = out(d.id, "yes");
         const [no] = out(d.id, "no");
         if (!yes || !no) throw new Error(`loop ${stmt.id} edges`);
@@ -338,12 +338,12 @@ describe.each([
         expect(no.points[0]).toEqual({ x: d.x + d.w, y: d.y + d.h / 2 }); // No leaves to the right
         const bottom = Math.max(d.y + d.h, ...under.map((node) => node.y + node.h));
         expect(Math.max(...no.points.map((point) => point.y))).toBeGreaterThan(bottom);
-        const backs = chart.edges.filter((edge) => edge.to === junction.id && edge.back);
+        const backs = chart.edges.filter((edge) => edge.to === top.id && edge.back);
         expect(backs.length).toBeLessThanOrEqual(1);
         for (const back of backs) {
           const lane = Math.min(...back.points.map((point) => point.x));
           for (const node of [d, ...under]) expect(lane).toBeLessThan(node.x);
-          expect(back.points.at(-1)).toEqual({ x: center(junction), y: junction.y });
+          expect(back.points.at(-1)).toEqual({ x: center(top), y: top.y });
         }
         if (counted) {
           const init = nodes.get(`${stmt.id}:init`);
@@ -351,7 +351,7 @@ describe.each([
           if (!init || !update) throw new Error(`counted ${stmt.id}`);
           expect([init.generated, d.generated, update.generated]).toEqual([true, true, true]);
           expect([center(init), center(update)]).toEqual([center(d), center(d)]);
-          expect(init.y + init.h).toBeLessThan(junction.y);
+          expect(init.y + init.h).toBeLessThan(top.y);
           for (const node of under) expect(node.y + node.h).toBeLessThan(update.y);
           expect(backs.map((edge) => edge.from)).toEqual([update.id]);
         }
@@ -440,7 +440,7 @@ describe("layout of jumps", () => {
       { to: `${loop.id}:exit`, place: { parent: loop.id, slot: "body", index: 2 } },
     ]);
     const back = chart.edges.find((edge) => edge.back);
-    expect(back).toMatchObject({ from: `${loop.id}:next`, to: `${loop.id}:junction` });
+    expect(back).toMatchObject({ from: `${loop.id}:next`, to: `${loop.id}:top` });
   });
 
   it("a jump outside every loop is an ordinary box with an edge to the next chart node", () => {
