@@ -156,11 +156,14 @@ export function* programExprs(program: Program): Generator<Expr, void, void> {
   for (const stmt of programStmts(program)) yield* stmtExprs(stmt);
 }
 
-/** The condition a diamond asks: the slot its block's `branch` or `check` names, and what it holds. */
+/**
+ * The condition a diamond asks: the slot its block's `branch` or `checked` names, and what it
+ * holds.
+ */
 export function conditionOf(block: Block): SlotExpr | undefined {
   const chart = getBlockDef(keyOf(block)).chart;
-  if (!chart || !("branch" in chart || "check" in chart)) return undefined;
-  const slot = "branch" in chart ? chart.branch.cond : chart.check.cond;
+  if (!chart || !("branch" in chart || "checked" in chart)) return undefined;
+  const slot = "branch" in chart ? chart.branch.cond : chart.checked.cond;
   const value = (block as unknown as Bag)[slot];
   return isExpr(value) ? { slot, expr: value } : undefined;
 }

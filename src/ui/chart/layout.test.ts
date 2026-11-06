@@ -156,9 +156,9 @@ const leaves = (stmt: Stmt): boolean => {
 
 /** Something flows out of the bottom of the statement: not a Return or jump, nor a branch whose regions all leave. */
 function flows(stmt: Stmt): boolean {
-  const shape = getBlockDef(keyOf(stmt)).chart;
-  if (!shape || "jump" in shape) return !leaves(stmt);
-  if (!("branch" in shape)) return true; // a loop's No edge
+  const form = getBlockDef(keyOf(stmt)).chart;
+  if (!form || "jump" in form) return !leaves(stmt);
+  if (!("branch" in form)) return true; // a loop's No edge
   return regionsOf(stmt).some((region) => {
     const final = region.stmts.at(-1);
     return final === undefined || flows(final);
@@ -202,9 +202,9 @@ describe.each([
       expect(chart.nodes[0]?.role).toBe("start");
       expect(chart.nodes.at(-1)?.role).toBe("end");
       for (const stmt of allStmts(bodyOf(c))) {
-        const shape = getBlockDef(keyOf(stmt)).chart;
+        const form = getBlockDef(keyOf(stmt)).chart;
         const ids =
-          shape && "counted" in shape
+          form && "counted" in form
             ? ["init", "check", "update"].map((r) => `${stmt.id}:${r}`)
             : [stmt.id];
         for (const id of ids) expect(nodes.get(id)?.owner, id).toBe(stmt.id);
@@ -289,8 +289,8 @@ describe.each([
       const out = (id: string, label: "yes" | "no") =>
         chart.edges.filter((edge) => edge.from === id && edge.label === label);
       for (const stmt of allStmts(bodyOf(c))) {
-        const shape = getBlockDef(keyOf(stmt)).chart;
-        if (!shape || "jump" in shape) {
+        const form = getBlockDef(keyOf(stmt)).chart;
+        if (!form || "jump" in form) {
           expect(nodes.get(stmt.id)?.shape).toBe("box");
           continue;
         }
@@ -298,7 +298,7 @@ describe.each([
         const under = chart.nodes.filter(
           (node) => node.owner !== null && inside.some((s) => s.id === node.owner),
         );
-        if ("branch" in shape) {
+        if ("branch" in form) {
           const d = nodes.get(stmt.id);
           const [yes] = out(stmt.id, "yes");
           const [no] = out(stmt.id, "no");
@@ -315,7 +315,7 @@ describe.each([
             expect(center(merge)).toBe(center(d));
             for (const node of under) expect(node.y + node.h).toBeLessThan(merge.y);
             const bare =
-              regionsOf(stmt).find((region) => region.slot === shape.branch.no)?.stmts.length === 0;
+              regionsOf(stmt).find((region) => region.slot === form.branch.no)?.stmts.length === 0;
             if (bare)
               expect(no).toMatchObject({
                 to: merge.id,
@@ -324,7 +324,7 @@ describe.each([
           }
           continue;
         }
-        const counted = "counted" in shape;
+        const counted = "counted" in form;
         const d = nodes.get(counted ? `${stmt.id}:check` : stmt.id);
         const junction = nodes.get(`${stmt.id}:junction`);
         if (!d || !junction) throw new Error(`loop ${stmt.id}`);

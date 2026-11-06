@@ -67,7 +67,7 @@ describe("while (blocks.md)", () => {
   });
 
   it("a checked loop over `body`", () => {
-    expect(whileStmt.chart).toEqual({ check: { cond: "cond", body: "body" } });
+    expect(whileStmt.chart).toEqual({ checked: { cond: "cond", body: "body" } });
   });
 });
 
