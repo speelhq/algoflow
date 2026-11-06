@@ -113,8 +113,8 @@ pass. The path holds these edges:
 - a `No` edge, when its diamond's mark is `✗`
 - an unlabeled edge, when both its ends are on the path
 - once control has left a loop that has ended, the loop's `No` edge, when
-  what it leads to is on the path: a statement, the next loop's junction,
-  or a branch's merge
+  what it leads to is on the path: a statement, the first chart node of
+  the next loop, or a branch's merge
 
 The marks decide the labeled edges because the path holds both ends of a
 diamond's `Yes` and `No` edges whenever the diamond was entered.
