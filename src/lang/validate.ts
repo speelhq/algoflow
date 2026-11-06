@@ -143,7 +143,7 @@ class Collector {
     for (const expr of stmtExprs(stmt)) {
       if (bound.has(expr)) continue;
       const name = variableOf(expr);
-      if (name === undefined || name === "" || visible.has(name)) continue;
+      if (name === undefined || visible.has(name)) continue;
       const compound = inner.get(name);
       if (compound === undefined) this.report(stmt.id, "E_UNDEFINED", { name });
       else this.report(stmt.id, "E_DECLARE_FIRST", { name, compound }, "hoistAssign");
