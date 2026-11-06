@@ -123,7 +123,7 @@ describe("registry", () => {
       "bool | true | values |  |  | ",
       "bool | false | values |  |  | ",
       "none |  | values |  |  | ",
-      "list | empty | values |  |  | [",
+      "list | empty | values |  |  | []",
       "unop | not | conditions |  | not | not",
       "call:randint |  | calculate |  |  | randint",
       "index |  | items | list |  | [",
@@ -153,6 +153,14 @@ describe("registry", () => {
       "call:int |  | convert | number,text |  | int",
       "call:float |  | convert | number,text |  | float",
     ]);
+  });
+
+  it("no two entries name the same keys", () => {
+    const typed = [...BLOCK_DEFS.values()].flatMap((def) =>
+      (def.entries ?? []).flatMap((entry) => (entry.typed === undefined ? [] : [entry.typed])),
+    );
+    expect(typed.length).toBeGreaterThan(0);
+    expect(new Set(typed).size).toBe(typed.length);
   });
 
   it("a named entry has its label and help, and no help names the entry's keys", () => {

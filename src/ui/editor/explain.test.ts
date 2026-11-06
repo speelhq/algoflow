@@ -93,6 +93,9 @@ describe("explanation line", () => {
     if (!blank) throw new Error("no Empty list");
     const [one, two] = [makeEntry(blank), makeEntry(blank)];
     expect(labelOf(one, lists.kinds)).toBe("Empty list");
+    // `[` opens a list with an empty item, so the keys of `Empty list` are `[` then `]`.
+    const explained = explainLine(keys(""), ctx, { type: "entry", entry: blank }, p, target.id);
+    expect(explained?.parts.filter((part) => "key" in part)).toEqual([{ text: "[]", key: true }]);
     // Each made list has its own items, none shared with the block definition.
     expect(Reflect.get(one, "items")).not.toBe(Reflect.get(two, "items"));
   });
