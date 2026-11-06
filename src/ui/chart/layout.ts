@@ -73,10 +73,6 @@ export type ChartEdge = {
   place: Place | null;
   /** Where the `+` connector and the label sit: the middle of a vertical run of the edge. */
   anchor: Point;
-  /** A loop's return to its junction. */
-  back?: boolean;
-  /** A `Return` chart node's edge to `End`. */
-  jump?: boolean;
 };
 /** A run at `dx` from the chart node's left with width `w`, `dy` from its middle (a second line). */
 export type PlacedPart = Part & { dx: number; dy: number; w: number };
@@ -218,7 +214,7 @@ function edge(
   stub: Stub,
   to: string,
   rest: Point[],
-  opts: { anchor?: "first" | "last" | "start"; back?: boolean; jump?: boolean } = {},
+  opts: { anchor?: "first" | "last" | "start" } = {},
 ): ChartEdge {
   const points: Point[] = [];
   for (const point of [...stub.points, ...rest]) {
@@ -234,8 +230,6 @@ function edge(
     anchor: anchorOf(points, opts.anchor ?? "last"),
   };
   if (stub.label) made.label = stub.label;
-  if (opts.back) made.back = true;
-  if (opts.jump) made.jump = true;
   return made;
 }
 
@@ -562,7 +556,7 @@ class Builder {
           ),
         );
       }
-      if (tail) frag.edges.push(edge(tail, top.id, up, { anchor: "first", back: true }));
+      if (tail) frag.edges.push(edge(tail, top.id, up, { anchor: "first" }));
     } else if (nexts.length > 0) {
       // The next pass of a checked loop starts where the back edge does.
       const next = this.node(`${stmt.id}:next`, stmt.id, "next", "junction", "", yTurn);
@@ -583,9 +577,9 @@ class Builder {
       }
       if (tail) frag.edges.push(edge(tail, next.id, [{ x: 0, y: yTurn }]));
       const from: Stub = { from: next.id, points: [{ x: 0, y: yTurn }], place: null };
-      frag.edges.push(edge(from, top.id, up.slice(1), { anchor: "first", back: true }));
+      frag.edges.push(edge(from, top.id, up.slice(1), { anchor: "first" }));
     } else if (tail) {
-      frag.edges.push(edge(tail, top.id, up, { anchor: "first", back: true }));
+      frag.edges.push(edge(tail, top.id, up, { anchor: "first" }));
     }
 
     frag.height = yTurn + LANE;
@@ -683,7 +677,7 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
         { x: trunk, y: yEnd },
         { x: end.w / 2, y: yEnd },
       ];
-      frag.edges.push(edge(escape, end.id, into, { anchor: "start", jump: true }));
+      frag.edges.push(edge(escape, end.id, into, { anchor: "start" }));
     }
     right = trunk + 4;
   }
