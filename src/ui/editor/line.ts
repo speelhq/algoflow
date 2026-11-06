@@ -42,11 +42,35 @@ export type Line = {
   word: string;
   /** The first key of a two-key operator, and the line before that key applied. */
   pending?: { key: string; before?: Line };
-  /** The message of the key last refused. */
-  refused?: string;
+  /** The key last refused, until the next key or a click. */
+  refused?: Refusal;
   /** The text whose field is being typed in. */
   text?: NodeId;
 };
+
+/**
+ * A refused key or choice: what the caret shows in red, a key by its character or its name and a
+ * row by its keys; and the reason (`editor.md`, Backspace and keys, Refused keys).
+ */
+export type Refusal = { key: string; message: string };
+
+/** The reasons the line refuses a key, each with its message `editor.refused.<reason>`. */
+export type Reason =
+  | "number"
+  | "tooLarge"
+  | "afterValue"
+  | "member"
+  | "word"
+  | "open"
+  | "close"
+  | "lastArgument"
+  | "oneValue"
+  | "bracket"
+  | "noValue"
+  | "quote"
+  | "unused"
+  | "nothing"
+  | "delete";
 
 export type LineFunction = { name: Name; params: readonly Name[] };
 
@@ -65,6 +89,8 @@ export type LineContext = {
   functions: readonly LineFunction[];
   /** The target slot the line edits, or null for a slot that takes any value. */
   target: TargetLine | null;
+  /** The field is an item of an `exprs` slot, where `,` outside every call and list adds one. */
+  item: boolean;
 };
 
 /**
@@ -78,8 +104,16 @@ export type Row =
   | { type: "parentheses" }
   | { type: "function"; fn: LineFunction };
 
-/** What a key or a choice did: `move` leaves the line for the next or previous field or item. */
-export type Outcome = { line: Line; taken: boolean; move?: "next" | "previous" | "item" };
+/**
+ * What a key or a choice did: `move` leaves the line for the next or previous field or item, and
+ * `reason` is a refusal's reason until the key or the row that made it names it.
+ */
+export type Outcome = {
+  line: Line;
+  taken: boolean;
+  move?: "next" | "previous" | "item";
+  reason?: string;
+};
 
 // ---------------------------------------------------------------- the tree
 
@@ -340,7 +374,60 @@ function cleared(line: Line): Line {
 }
 
 const done = (line: Line): Outcome => ({ line, taken: true });
-const refused = (line: Line): Outcome => ({ line, taken: false });
+
+/** The line as it was, refusing with `message`; the key or the row that made it names it. */
+const refused = (line: Line, message: string): Outcome => ({
+  line: { ...line, refused: undefined },
+  taken: false,
+  reason: message,
+});
+
+/** The message of a reason (`editor.md`, Backspace and keys, Refused keys). */
+const because = (reason: Reason, params?: Record<string, string>): string =>
+  t(`editor.refused.${reason}`, params);
+
+/** The line as it was, taking nothing and showing nothing: ← and → at the line's ends. */
+const unmoved = (line: Line): Outcome => ({ line: { ...line, refused: undefined }, taken: false });
+
+/** A key as the caret shows it refused: its character, or its name when it shows none. */
+function keyName(key: string): string {
+  switch (key) {
+    case " ":
+      return t("editor.spaceKey");
+    case "Backspace":
+      return t("editor.backspaceKey");
+    case "Delete":
+      return t("editor.deleteKey");
+    default:
+      return key;
+  }
+}
+
+/** `outcome` with its refusal named by `shown`, what the caret shows; a named one stays. */
+function named(outcome: Outcome, shown: string): Outcome {
+  const { reason, ...rest } = outcome;
+  if (reason === undefined) return outcome;
+  return { ...rest, line: { ...outcome.line, refused: { key: shown, message: reason } } };
+}
+
+/** `outcome` with the key that produced it, shown at the caret when the key is refused. */
+const pressed = (outcome: Outcome, key: string): Outcome => named(outcome, keyName(key));
+
+/** A row as the caret shows it refused: by its keys, as typing them would show them. */
+function rowKeys(row: Row): string {
+  switch (row.type) {
+    case "variable":
+    case "new":
+      return row.name;
+    case "function":
+      return row.fn.name;
+    case "parentheses":
+      return PARENTHESES_KEY;
+    case "entry":
+      // An entry with no keys shows its name, until every entry has keys.
+      return row.entry.declared.typed ?? row.entry.label;
+  }
+}
 
 /** Whether the line's slot keeps `root`: any value, or in a target slot a target or empty slot. */
 function keeps(root: Expr, ctx: LineContext): boolean {
@@ -350,7 +437,7 @@ function keeps(root: Expr, ctx: LineContext): boolean {
 /** `outcome` where the line's slot keeps its value; else the line before it, refused with the reason. */
 function inSlot(line: Line, outcome: Outcome, ctx: LineContext): Outcome {
   if (!outcome.taken || keeps(outcome.line.root, ctx)) return outcome;
-  return refused({ ...line, refused: t("editor.notTarget") });
+  return refused(line, t("editor.notTarget"));
 }
 
 /** Whether the caret is at the whole value, which is then an empty slot. */
@@ -382,7 +469,8 @@ function withFirst(made: Expr, value: Expr): Expr {
  */
 function takeValue(line: Line, entry: Entry): Outcome {
   const last = lastValue(line);
-  if (!last) return refused(line);
+  // Every caller has a value before the caret.
+  if (!last) throw new Error("no value before the caret");
   const made = makeEntry(entry);
   const first = getBlockDef(keyOf(made)).slots.find((s) => s.role === "expr" || s.role === "exprs");
   const level = first ? bindsAt(made, first.name) : undefined;
@@ -393,7 +481,7 @@ function takeValue(line: Line, entry: Entry): Outcome {
       ? (valueBefore(line) ?? last)
       : bindAt(line, last, level);
   if (target === "chain") {
-    return refused({ ...line, refused: errorText({ code: "E_PARSE_CHAIN", params: {} }) });
+    return refused(line, errorText({ code: "E_PARSE_CHAIN", params: {} }));
   }
   const placed = withFirst(made, target);
   const next = replace(line, target.id, placed);
@@ -402,7 +490,8 @@ function takeValue(line: Line, entry: Entry): Outcome {
 
 /** A block made where a value is expected, filling the empty slot at the caret. */
 function fill(line: Line, made: Expr, text = false): Outcome {
-  if (!("at" in line.caret)) return refused(line);
+  // Every caller fills an empty slot.
+  if (!("at" in line.caret)) throw new Error("the caret is at no empty slot");
   const next = replace(line, line.caret.at, made);
   const caret = caretIn(made, null);
   return done({ ...next, caret, word: "", ...(text ? { text: made.id } : {}) });
@@ -428,7 +517,7 @@ export function textOf(expr: Expr): string | undefined {
 
 /** Chooses a row of the list at the caret, as the line's slot keeps it. */
 export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
-  return inSlot(line, chooseRow(line, row, ctx), ctx);
+  return named(inSlot(line, chooseRow(line, row, ctx), ctx), rowKeys(row));
 }
 
 function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
@@ -436,19 +525,22 @@ function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
   if (row.type === "entry" && takesValue(row.entry) && !atEmptySlot(base)) {
     // A refused choice leaves the line as it was, its word still to correct, with the reason.
     const placed = takeValue(base, row.entry);
-    return placed.taken ? placed : refused({ ...line, refused: placed.line.refused });
+    return placed.taken ? placed : { line, taken: false, reason: placed.reason };
   }
   if (base.selected) base = cleared(base);
-  if (!("at" in base.caret)) return refused(line);
+  // After a value, the list offers only entries that take it.
+  if (!("at" in base.caret)) throw new Error(`${row.type} chosen after a value`);
   switch (row.type) {
     case "variable":
     case "new": {
       const made = variableExpr(row.name);
-      return made ? fill(base, made) : refused(line);
+      if (!made) throw new Error(`${row.name} is no variable`);
+      return fill(base, made);
     }
     case "function": {
       const made = callExpr(row.fn, ctx.scope);
-      return made ? fill(base, made) : refused(line);
+      if (!made) throw new Error(`${row.fn.name} makes no call`);
+      return fill(base, made);
     }
     case "parentheses":
       return done({ ...base, open: [...base.open, base.caret.at] });
@@ -517,7 +609,7 @@ export function namesTarget(line: Line, ctx: LineContext): boolean {
 }
 
 /** The rows a word can name at the caret: where a value is expected, or after one. */
-export function wordRows(line: Line, ctx: LineContext): Row[] {
+function wordRows(line: Line, ctx: LineContext): Row[] {
   if (ctx.target && namesTarget(line, ctx)) return targetNames(line.word, ctx.target);
   if (atEmptySlot(line) || (line.selected && line.word !== "")) {
     return [
@@ -532,6 +624,49 @@ export function wordRows(line: Line, ctx: LineContext): Row[] {
     .filter(takesValue)
     .map((entry): Row => ({ type: "entry", entry }));
   return keptRows(line, after, ctx);
+}
+
+/** The edit distance of two words, ignoring case. */
+function distance(a: string, b: string): number {
+  const x = a.toLowerCase();
+  const y = b.toLowerCase();
+  let row = Array.from({ length: y.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= x.length; i += 1) {
+    const next = [i];
+    for (let j = 1; j <= y.length; j += 1) {
+      const cost = x[i - 1] === y[j - 1] ? 0 : 1;
+      next.push(Math.min((row[j] ?? 0) + 1, (next[j - 1] ?? 0) + 1, (row[j - 1] ?? 0) + cost));
+    }
+    row = next;
+  }
+  return row[y.length] ?? 0;
+}
+
+/** The closest name to a word that matches nothing: one letter in three may differ, one at least. */
+function closestName(line: Line, ctx: LineContext): string | undefined {
+  const allowed = Math.max(1, Math.floor(line.word.length / 3));
+  let best: { name: string; d: number } | undefined;
+  for (const row of wordRows(line, ctx)) {
+    const names =
+      row.type === "variable"
+        ? [row.name]
+        : row.type === "entry"
+          ? [row.entry.label]
+          : row.type === "function"
+            ? [row.fn.name]
+            : [];
+    for (const name of names) {
+      const d = distance(line.word, name);
+      if (d <= allowed && (!best || d < best.d)) best = { name, d };
+    }
+  }
+  return best?.name;
+}
+
+/** What the explanation line says of a word that matches nothing: the closest name, if one is close. */
+export function closestText(line: Line, ctx: LineContext): string {
+  const closest = closestName(line, ctx);
+  return closest ? t("editor.didYouMean", { name: closest }) : t("editor.nothingLike");
 }
 
 /** The rows matching the word typed: a whole name first, then, after a value, its kind's. */
@@ -592,16 +727,34 @@ const startsOperator = (key: string) =>
       entry.declared.typed?.startsWith(key),
   );
 
+/** A number's form as Python writes it: an int with no leading zero, or a float. */
+const NUMBER_FORM = /^(0+|[1-9][0-9]*|[0-9]+\.[0-9]*|\.[0-9]+)$/;
+
+/** Why `text` is no number: too large when it has a number's form, else a form Python rejects. */
+function numberReason(text: string): string {
+  return NUMBER_FORM.test(text) ? because("tooLarge", { text }) : because("number", { text });
+}
+
+/**
+ * Why the line takes a key that no row of the key table holds: a quote begins a text, and `.`
+ * after a word would begin a method or an attribute.
+ */
+function unknownKey(key: string): Reason {
+  if (key === '"' || key === "'") return "quote";
+  return key === "." ? "member" : "unused";
+}
+
 function typeDigit(line: Line, ch: string): Outcome {
   const base = line.selected ? cleared(line) : line;
   if ("at" in base.caret) {
     const made = numberOf(ch);
-    return made ? fill(base, made) : refused(line);
+    return made ? fill(base, made) : refused(line, numberReason(ch));
   }
   const last = find(base.root, base.caret.after);
-  if (!last || !isNumber(last)) return refused(line);
+  // After any other value, `.` would begin a method or an attribute, and a digit a second value.
+  if (!last || !isNumber(last)) return refused(line, because(ch === "." ? "member" : "afterValue"));
   const made = numberOf(exprText(last) + ch);
-  if (!made) return refused(line);
+  if (!made) return refused(line, numberReason(exprText(last) + ch));
   return done(replace(base, last.id, { ...made, id: last.id }));
 }
 
@@ -617,11 +770,11 @@ export function lineTakes(
 
 /** One key typed in the line, as the line's slot keeps it. */
 export function type(line: Line, key: string, ctx: LineContext): Outcome {
-  return inSlot(line, typeKey(line, key, ctx), ctx);
+  return pressed(inSlot(line, typeKey(line, key, ctx), ctx), key);
 }
 
 function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
-  if (key.length !== 1) return refused(line);
+  if (key.length !== 1) throw new Error(`${key} is no character`);
   let current: Line = { ...line, refused: undefined };
   if (/[A-Za-z_]/.test(key) || (current.word !== "" && /[0-9]/.test(key))) {
     if (current.word === "" && current.selected) current = cleared(current);
@@ -629,9 +782,16 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
   }
   if (current.word !== "") {
     // A space or a key of the table ends the word when it names one; else the word stays.
-    if (key !== " " && !ENDS_WORD.test(key)) return refused(line);
+    if (key !== " " && !ENDS_WORD.test(key)) return refused(line, because(unknownKey(key)));
     const exact = exactRow(current, ctx);
-    if (!exact) return refused(line);
+    if (!exact) {
+      // A word that matches nothing is refused with the closest name, which says more.
+      const reason =
+        matches(current, ctx).length > 0
+          ? because("word", { word: current.word })
+          : closestText(current, ctx);
+      return refused(line, reason);
+    }
     const chosen = choose(current, exact, ctx);
     // A call's `(` is the parenthesis the call already has.
     if (!chosen.taken || key === " " || (key === PARENTHESES_KEY && makesCall(exact)))
@@ -640,10 +800,12 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
   }
   if (key === " ") return done(current);
   if (current.pending) {
-    const entry = operatorTyped(current.pending.key + key);
+    const keys = current.pending.key + key;
+    const entry = operatorTyped(keys);
     const before = current.pending.before ?? current;
     current = { ...current, pending: undefined };
-    if (entry) return takeValue({ ...before, pending: undefined }, entry);
+    // A two-key operator refused shows both its keys, as choosing its row does.
+    if (entry) return pressed(takeValue({ ...before, pending: undefined }, entry), keys);
   }
   if (/[0-9.]/.test(key)) return typeDigit(current, key);
   const value = !atEmptySlot(current);
@@ -652,7 +814,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
       const base = current.selected ? cleared(current) : current;
       return "at" in base.caret
         ? done({ ...base, open: [...base.open, base.caret.at] })
-        : refused(line);
+        : refused(line, because("open"));
     }
     case ")": {
       const group = current.open.at(-1);
@@ -662,7 +824,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
       if (around && (group === undefined || (held && find(held, around.parent.id)))) {
         return done({ ...current, caret: { after: around.parent.id } });
       }
-      if (group === undefined) return refused(line);
+      if (group === undefined) return refused(line, because("close"));
       return done({
         ...current,
         open: current.open.slice(0, -1),
@@ -674,7 +836,11 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
       const around = current.selected
         ? undefined
         : enclosing(current, (expr) => isCall(expr) || isSequence(expr));
-      if (!around) return { line: current, taken: true, move: "item" };
+      if (!around) {
+        return ctx.item
+          ? { line: current, taken: true, move: "item" }
+          : refused(line, because("oneValue"));
+      }
       if (isSequence(around.parent)) {
         const { held, with: holding } = items(around.parent);
         const fresh = emptyExpr();
@@ -683,7 +849,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
         return done(closeBehind({ ...next, caret: { at: fresh.id } }));
       }
       const next = slotValues(around.parent)[around.index + 1];
-      if (!next) return refused(line);
+      if (!next) return refused(line, because("lastArgument"));
       const empty = [...allExprs(next)].find(isEmptyExpr);
       return done(closeBehind({ ...current, caret: empty ? { at: empty.id } : endOf(next) }));
     }
@@ -692,7 +858,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
       const around = current.selected
         ? undefined
         : enclosing(current, (expr) => closedBy(expr, "]"));
-      if (!around) return refused(line);
+      if (!around) return refused(line, because("bracket"));
       const list = isSequence(around.parent) ? items(around.parent) : undefined;
       const last = list?.held.at(-1);
       const trailing = list !== undefined && last !== undefined && isEmptyExpr(last);
@@ -704,7 +870,8 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
       if (!value || current.selected) {
         const base = current.selected ? cleared(current) : current;
         const sign = signExpr();
-        return sign ? fill(base, sign) : refused(line);
+        if (!sign) throw new Error("the parser makes no sign");
+        return fill(base, sign);
       }
       break;
     case "[": {
@@ -712,7 +879,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
       // keeps no list, so there `[` makes an item of the selected value instead.
       if (value && !current.selected) break;
       const made = listExpr();
-      if (!made) return refused(line);
+      if (!made) throw new Error("the parser makes no list");
       const opened = fill(current.selected ? cleared(current) : current, made);
       if (!current.selected || keeps(opened.line.root, ctx)) return opened;
       break;
@@ -723,7 +890,10 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
   const entry = value ? operatorTyped(key) : undefined;
   if (entry) return keyed(current, entry, key);
   if (value && startsOperator(key)) return done({ ...current, pending: { key } });
-  return refused(line);
+  return refused(
+    line,
+    because(startsOperator(key) || operatorTyped(key) ? "noValue" : unknownKey(key)),
+  );
 }
 
 /** The operator a key names, taking the value before the caret. */
@@ -754,9 +924,21 @@ function enclosing(
 
 // ---------------------------------------------------------------- removing and moving
 
+/** Delete removes a selected value as Backspace does; with nothing selected, it is refused. */
+export function deleteKey(line: Line, ctx: LineContext): Outcome {
+  if (line.selected) return backspace(line, ctx);
+  return pressed(refused(line, because("delete")), "Delete");
+}
+
 /** Backspace removes what is before the caret, as the line's slot keeps it. */
 export function backspace(line: Line, ctx: LineContext): Outcome {
-  return inSlot(line, removeBefore(line), ctx);
+  return pressed(inSlot(line, removeBefore(line), ctx), "Backspace");
+}
+
+/** Backspace that removes nothing and moves the caret left; at the line's first stop, refused. */
+function leftOf(current: Line, line: Line): Outcome {
+  const moved = move(current, -1);
+  return moved.taken ? moved : refused(line, because("nothing"));
 }
 
 function removeBefore(line: Line): Outcome {
@@ -766,7 +948,7 @@ function removeBefore(line: Line): Outcome {
   const { caret, root } = current;
   if ("after" in caret) {
     const last = find(root, caret.after);
-    if (!last) return refused(line);
+    if (!last) throw new Error(`the caret is after ${caret.after}, which the line does not hold`);
     if (isNumber(last) && exprText(last).length > 1) {
       const made = numberOf(exprText(last).slice(0, -1));
       if (made) return done(replace(current, last.id, { ...made, id: last.id }));
@@ -786,10 +968,11 @@ function removeBefore(line: Line): Outcome {
       // An operator ends in a slot, and a list in its last item: what is before the caret ends it.
       if (precedenceOf(last) !== undefined || isSequence(last)) {
         const end = own.at(-1);
-        return end ? removeBefore({ ...current, caret: endOf(end) }) : refused(line);
+        if (!end) throw new Error("an operation with a first value and no last one");
+        return removeBefore({ ...current, caret: endOf(end) });
       }
       // A call ends in its parenthesis; removing it would lose the value of a later argument.
-      if (own.slice(1).some((value) => !isEmptyExpr(value))) return move(current, -1);
+      if (own.slice(1).some((value) => !isEmptyExpr(value))) return leftOf(current, line);
       const next = replace(current, last.id, first);
       return done({ ...next, caret: endOf(first) });
     }
@@ -799,7 +982,7 @@ function removeBefore(line: Line): Outcome {
   if (current.open.at(-1) === caret.at)
     return done({ ...current, open: current.open.slice(0, -1) });
   const up = parentOf(root, caret.at);
-  if (!up) return refused(line);
+  if (!up) return refused(line, because("nothing"));
   const item = isSequence(up.parent) ? items(up.parent) : undefined;
   const at = item ? item.held.findIndex((each) => each.id === caret.at) : -1;
   const before = item?.held[at - 1];
@@ -810,9 +993,9 @@ function removeBefore(line: Line): Outcome {
   }
   const own = slotValues(up.parent);
   const [first] = own;
-  if (!first) return refused(line);
+  if (!first) throw new Error("an operation around the caret with no slot");
   // While a slot after the first holds a value, removing the operation would lose it.
-  if (own.slice(1).some((value) => !isEmptyExpr(value))) return move(current, -1);
+  if (own.slice(1).some((value) => !isEmptyExpr(value))) return leftOf(current, line);
   if (up.index === 0) {
     const next = replace(current, up.parent.id, first);
     return done({ ...next, caret: { at: first.id } });
@@ -831,7 +1014,7 @@ export function move(line: Line, step: -1 | 1): Outcome {
   const here = position(line);
   // → at the end of an operation's last slot leaves the operation.
   const target = all[here + step];
-  if (!target) return refused(line);
+  if (!target) return unmoved(line);
   return done(closeBehind({ ...line, caret: target, pending: undefined, refused: undefined }));
 }
 
@@ -865,7 +1048,15 @@ export function clickAt(line: Line, id: NodeId): Line {
   if (!clicked) return line;
   const caret: Caret = isEmptyExpr(clicked) ? { at: id } : endOf(clicked);
   const text = textSlot(clicked) === undefined ? undefined : id;
-  return closeBehind({ ...line, caret, selected: false, word: "", pending: undefined, text });
+  return closeBehind({
+    ...line,
+    caret,
+    selected: false,
+    word: "",
+    pending: undefined,
+    refused: undefined,
+    text,
+  });
 }
 
 /** The text being typed changes. */

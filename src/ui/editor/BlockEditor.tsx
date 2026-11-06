@@ -53,6 +53,7 @@ import {
   shownHighlight,
   showAll,
   textEnded,
+  unrefused,
   valueKey,
   type Click,
   type Session,
@@ -78,6 +79,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const session = follow(kept, stmt);
   if (session !== kept) setSession(session);
   const { focus, line } = session;
+  // How many keys were refused, so the live region reads a refusal that repeats the last one.
+  const [refusals, setRefusals] = useState(0);
   const [focused, setFocused] = useState<Field | null>(null);
 
   // The focused field takes the keyboard once it is drawn.
@@ -97,6 +100,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   // The focused target slot's line keeps a target and offers names (`editor.md`, Targets).
   const target = focus ? targetSlot(stmt, focus) : undefined;
   const binds = target ? target.binds === true : undefined;
+  // The focused field is an item of an `exprs` slot, where `,` adds the next item.
+  const itemField = focus?.index !== undefined;
   const ctx: LineContext = useMemo(() => {
     const variables = visibleAt(program, stmt.id) ?? [];
     return {
@@ -110,8 +115,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           : binds
             ? { ...named, binds }
             : { asked: [], names: variables, binds },
+      item: itemField,
     };
-  }, [program, stmt.id, kinds, binds, named]);
+  }, [program, stmt.id, kinds, binds, named, itemField]);
   const diagnostics = editorDiagnostics(program, stmt.id, led);
 
   // ------------------------------------------------------------ transitions
@@ -126,6 +132,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
       apply((p) => setExpr(p, stmt.id, field.slot, root, field.index), at);
     }
     setSession(transition.session);
+    if (transition.session.line?.refused) setRefusals((count) => count + 1);
     return transition.session;
   };
 
@@ -172,10 +179,18 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   const onValueKey = (event: KeyboardEvent<HTMLDivElement>) => {
     // Keys typed in a text field inside the line are the field's.
-    if (event.target instanceof HTMLInputElement || !lineTakes(event)) return;
+    if (event.target instanceof HTMLInputElement) return;
+    // A key the page takes still clears the key refused before it.
+    if (!lineTakes(event)) {
+      setSession(unrefused(session));
+      return;
+    }
     const next = focus ? wordsAfter(stmt, focus) : "";
     const result = valueKey(session, event, values.rows, ctx, next);
-    if (!result.taken) return;
+    if (!result.taken) {
+      setSession(result.session);
+      return;
+    }
     event.preventDefault();
     const left = run(result);
     const { after } = result;
@@ -387,13 +402,26 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
               key={i}
               className={cn(
                 "key" in part
-                  ? "rounded bg-muted px-1 font-mono text-[0.8rem]"
+                  ? cn(
+                      "rounded px-1 font-mono text-[0.8rem]",
+                      part.refused ? "bg-destructive/10 text-destructive" : "bg-muted",
+                    )
                   : part.underline && "underline underline-offset-2",
               )}
             >
               {part.text}
             </span>
           ))}
+        </span>
+      </div>
+      {/* Reads a refused key's reason, and nothing else of the explanation line. */}
+      <div role="status" className="sr-only" data-testid="refusal">
+        <span key={refusals}>
+          {line?.refused
+            ? helpParts(line.refused.message)
+                .map((part) => part.text)
+                .join("")
+            : ""}
         </span>
       </div>
     </div>

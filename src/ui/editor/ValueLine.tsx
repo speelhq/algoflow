@@ -36,8 +36,29 @@ type Props = {
   onTextEnd: (key: TextEnd) => void;
 };
 
-function Caret() {
-  return <span className="mx-px inline-block h-4 w-px animate-pulse bg-foreground align-middle" />;
+/**
+ * The caret; after it the first key of a two-key operator that inserts nothing alone, dimmed,
+ * and the key last refused in red (`editor.md`, Backspace and keys).
+ */
+function Caret({ pending, refused }: { pending: string | null; refused: string | null }) {
+  return (
+    <>
+      <span className="mx-px inline-block h-4 w-px animate-pulse bg-foreground align-middle" />
+      {pending !== null && (
+        <span data-testid="pending-key" className="text-muted-foreground">
+          {pending}
+        </span>
+      )}
+      {refused !== null && (
+        <span
+          data-testid="refused-key"
+          className="rounded bg-destructive/10 px-1 align-middle font-mono text-[0.8rem] text-destructive"
+        >
+          {refused}
+        </span>
+      )}
+    </>
+  );
 }
 
 export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(props, ref) {
@@ -47,6 +68,9 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
   const line = keys ? props.line : null;
   const focused = line !== null;
   const caret = line?.caret;
+  const refused = line?.refused?.key ?? null;
+  // A first key that inserted an operator (`<` of `<=`) is drawn as that operator already.
+  const pending = line?.pending && line.pending.before === undefined ? line.pending.key : null;
   const word = (
     <>
       {line && line.word !== "" && (
@@ -54,7 +78,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
           {line.word}
         </span>
       )}
-      <Caret />
+      <Caret pending={pending} refused={refused} />
     </>
   );
 
@@ -222,7 +246,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
       ) : (
         <>
           {draw(root)}
-          {line?.selected && <Caret />}
+          {line?.selected && <Caret pending={pending} refused={refused} />}
         </>
       )}
     </div>

@@ -10,6 +10,7 @@ import {
   backspace,
   choose,
   clickAt,
+  deleteKey,
   endText,
   find,
   move,
@@ -112,9 +113,18 @@ export function focusField(
   };
 }
 
+/**
+ * The session with no key shown refused: the next key or a click clears it (`editor.md`,
+ * Backspace and keys, Refused keys).
+ */
+export function unrefused(session: Session): Session {
+  const { line } = session;
+  return line?.refused ? { ...session, line: { ...line, refused: undefined } } : session;
+}
+
 /** A click in the focused field's line: the caret goes there, or the operator is to switch. */
 export function clickInLine(session: Session, clicked: Click): Session {
-  if (clicked.op) return { ...session, switching: clicked.id, highlight: null };
+  if (clicked.op) return { ...unrefused(session), switching: clicked.id, highlight: null };
   const { line } = session;
   return line ? { ...session, line: clickAt(line, clicked.id), switching: null } : session;
 }
@@ -180,15 +190,16 @@ export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransi
  * words the notation writes after the field (`)` after the last value of `print(…)`).
  */
 export function valueKey(
-  session: Session,
+  given: Session,
   key: { key: string; shiftKey: boolean },
   rows: readonly Row[],
   ctx: LineContext,
   next: string,
 ): KeyTransition {
+  const session = unrefused(given);
   const { line, focus } = session;
+  if (!line || !focus) return { ...still(session), taken: false };
   const left: KeyTransition = { ...still(session), taken: false };
-  if (!line || !focus) return left;
   const shown = shownHighlight(session, rows.length);
   switch (key.key) {
     case "Escape":
@@ -216,7 +227,7 @@ export function valueKey(
     case "Backspace":
       return taken(commit(session, backspace(line, ctx).line));
     case "Delete":
-      return taken(line.selected ? commit(session, backspace(line, ctx).line) : still(session));
+      return taken(commit(session, deleteKey(line, ctx).line));
     default: {
       if (key.key.length !== 1) return left;
       const typed = type(line, key.key, ctx);

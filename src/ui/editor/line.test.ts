@@ -10,6 +10,7 @@ import {
   callableFunctions,
   choose,
   clickAt,
+  deleteKey,
   endText,
   exactRow,
   lineTakes,
@@ -39,6 +40,8 @@ const ctx: LineContext = {
   scope: { functions: ["twice"] },
   functions: [{ name: "twice", params: ["x"] }],
   target: null,
+  // An item of an `exprs` slot, such as a value of `print`, where `,` adds the next item.
+  item: true,
 };
 
 const empty = () => openLine(ast.empty());
@@ -261,7 +264,10 @@ describe("typing", () => {
     const line = keys("i<n");
     const refused = type(line, "<", ctx);
     expect(refused.taken).toBe(false);
-    expect(refused.line.refused).toBe("Write a < b < c as a < b and b < c");
+    expect(refused.line.refused).toEqual({
+      key: "<",
+      message: "Write a < b < c as a < b and b < c",
+    });
     expect(py(keys("(i<n)==ok"))).toBe("(i < n) == ok");
   });
 
@@ -588,6 +594,7 @@ describe("a target's line (editor.md, Targets)", () => {
   const binding: LineContext = {
     ...ctx,
     target: { asked: ["total"], names: ["n", "nums"], binds: true },
+    item: false,
   };
   /** A slot that does not bind, in a function whose parameters `heap` and `i` have no kind. */
   const reading: LineContext = {
@@ -595,6 +602,7 @@ describe("a target's line (editor.md, Targets)", () => {
     variables: ["heap", "i"],
     kinds: new Map(),
     target: { asked: [], names: ["heap", "i"], binds: false },
+    item: false,
   };
   const typed = (text: string, context: LineContext, line: Line = empty()): Line => {
     let current = line;
@@ -615,7 +623,10 @@ describe("a target's line (editor.md, Targets)", () => {
     }
     const refused = type(typed("nums", binding), "+", binding);
     expect(refused.taken).toBe(false);
-    expect(refused.line.refused).toBe("Only a variable or an item of a list can be given a value");
+    expect(refused.line.refused).toEqual({
+      key: "+",
+      message: "Only a variable or an item of a list can be given a value",
+    });
     expect(py(refused.line)).toBe("nums");
     expect(py(typed("nums[-1]", binding))).toBe("nums[-1]");
     // Backspace at an item's empty position takes the item back to its variable.
@@ -672,13 +683,21 @@ describe("a target's line (editor.md, Targets)", () => {
     expect(groups(inside, false, binding).map(([group]) => group)).toContain("compare");
     const chained = choose(inside, entry("binop.lt"), binding);
     expect(chained.taken).toBe(false);
-    expect(chained.line.refused).toBe("Write a < b < c as a < b and b < c");
+    // A refused choice shows the row's keys, as typing them would.
+    expect(chained.line.refused).toEqual({
+      key: "<",
+      message: "Write a < b < c as a < b and b < c",
+    });
     // A word naming the refused entry stays to be corrected, as in a value line.
     for (const context of [binding, ctx]) {
       const word = type(raw("nums[i<n in"), " ", context);
       expect(word.taken).toBe(false);
       expect(word.line.word).toBe("in");
-      expect(word.line.refused).toBe("Write a < b < c as a < b and b < c");
+      // The refused choice is `in`, which the space chose, so the caret shows `in`.
+      expect(word.line.refused).toEqual({
+        key: "in",
+        message: "Write a < b < c as a < b and b < c",
+      });
     }
   });
 
@@ -714,5 +733,123 @@ describe("a target's line (editor.md, Targets)", () => {
     const listed = groups(inside, false, binding);
     expect(listed.map(([group]) => group)).toContain("calculate");
     expect(listed[0]).toEqual(["variables", ["i", "total", "n", "ok", "nums"]]);
+  });
+});
+
+describe("refused keys (editor.md, Backspace and keys, Refused keys)", () => {
+  /** What `key` typed on `line` leaves at the caret: the key refused and its reason. */
+  const refusal = (line: Line, key: string, context: LineContext = ctx) => {
+    const typed = type(line, key, context);
+    expect(typed.taken, key).toBe(false);
+    return typed.line.refused;
+  };
+
+  it("a number Python rejects, a number too large, and a digit after another value", () => {
+    expect(refusal(keys("0"), "7")).toEqual({
+      key: "7",
+      message: "Python doesn't read 07 as a number.",
+    });
+    expect(refusal(empty(), ".")?.message).toBe("Python doesn't read . as a number.");
+    expect(refusal(keys("900719925474099"), "2")?.message).toBe(
+      "9007199254740992 is too large for a number.",
+    );
+    expect(refusal(keys("i"), "5")?.message).toBe("Put an operation between two values.");
+  });
+
+  it("a key that ends a word that names nothing exactly, and a key no row holds after a word", () => {
+    expect(refusal(raw("tot"), "+")).toEqual({
+      key: "+",
+      message: "tot names nothing yet. Finish the name, or choose it from the list.",
+    });
+    expect(refusal(raw("nums"), ".")?.message).toBe("No method or attribute follows `.` here.");
+    // A word that matches nothing is refused with the closest name.
+    expect(refusal(raw("nn"), "+")?.message).toBe("Did you mean n?");
+    expect(refusal(raw("zzz"), "+")?.message).toBe(
+      "Nothing has this name. Check the spelling, or choose from the list.",
+    );
+  });
+
+  it("parentheses and brackets with nothing to open or close, and , after a call's last argument", () => {
+    expect(refusal(keys("i"), "(")?.message).toBe("`(` opens only where a value is expected.");
+    expect(refusal(keys("i"), ")")?.message).toBe("There is no `(` to close here.");
+    expect(refusal(keys("i"), "]")?.message).toBe("There is no `[` to close here.");
+    expect(refusal(raw("abs(i"), ",")?.message).toBe("This call takes no more values.");
+  });
+
+  it("an operator at an empty slot, a quote, and a key no row of the key table holds", () => {
+    expect(refusal(empty(), "*")).toEqual({
+      key: "*",
+      message: "An operation needs a value before it.",
+    });
+    expect(refusal(empty(), "=")?.message).toBe("An operation needs a value before it.");
+    for (const quote of ['"', "'"]) {
+      expect(refusal(empty(), quote)?.message).toBe("To write a text, choose Text in the list.");
+    }
+    expect(refusal(empty(), "@")?.message).toBe("This key isn't used in a value.");
+  });
+
+  it("`,` outside every call and list in a field that isn't an item, and Delete with nothing selected", () => {
+    expect(refusal(keys("i"), ",", { ...ctx, item: false })).toEqual({
+      key: ",",
+      message: "`,` separates the values of a list or a call, and there is none here.",
+    });
+    expect(type(keys("i"), ",", ctx).move).toBe("item");
+    const deleted = deleteKey(keys("i"), ctx);
+    expect(deleted.taken).toBe(false);
+    expect(deleted.line.refused?.key).toBe("Delete");
+    expect(py(deleteKey(openLine(ast.num(5)), ctx).line)).toBe("...");
+  });
+
+  it("Backspace with nothing before the caret shows its name", () => {
+    const removed = backspace(empty(), ctx);
+    expect(removed.taken).toBe(false);
+    expect(removed.line.refused).toEqual({
+      key: "Backspace",
+      message: "There is nothing before the caret to remove.",
+    });
+  });
+
+  it("Backspace that would only move the caret left, at the line's first stop", () => {
+    // `… + 1` with the caret at its first empty slot: a later slot holds a value.
+    let line = keys("i+1");
+    line = clickAt(line, (line.root as Extract<Expr, { type: "binop" }>).left.id);
+    line = backspace(line, ctx).line;
+    expect(py(line)).toBe("... + 1");
+    const removed = backspace(line, ctx);
+    expect(removed.taken).toBe(false);
+    expect(removed.line.refused?.message).toBe("There is nothing before the caret to remove.");
+  });
+
+  it("a space outside a word and ← and → at the line's ends show nothing", () => {
+    const spaced = type(keys("i"), " ", ctx);
+    expect(spaced.taken).toBe(true);
+    expect(spaced.line.refused).toBeUndefined();
+    const refused = type(keys("i"), ")", ctx).line;
+    for (const step of [-1, 1] as const) {
+      const moved = move(move(refused, step).line, step);
+      expect(moved.line.refused).toBeUndefined();
+    }
+  });
+
+  it("`.` after a value other than a number literal would begin a method or an attribute", () => {
+    expect(refusal(keys("nums"), ".")).toEqual({
+      key: ".",
+      message: "No method or attribute follows `.` here.",
+    });
+    expect(refusal(keys("i"), ".")?.message).toBe("No method or attribute follows `.` here.");
+    // After a number literal, `.` is the decimal point.
+    expect(type(keys("1"), ".", ctx).taken).toBe(true);
+  });
+
+  it("a choice refused by Enter or a click shows the row's keys, as typing them would", () => {
+    const typed = type(type(keys("i<n"), "=", ctx).line, "=", ctx).line.refused;
+    const chosen = choose(keys("i<n"), entry("binop.eq"), ctx).line.refused;
+    expect(chosen).toEqual({ key: "==", message: "Write a < b < c as a < b and b < c" });
+    expect(chosen).toEqual(typed);
+  });
+
+  it("a click clears the key refused", () => {
+    const refused = type(keys("i"), ")", ctx).line;
+    expect(clickAt(refused, refused.root.id).refused).toBeUndefined();
   });
 });

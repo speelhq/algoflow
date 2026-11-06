@@ -116,6 +116,34 @@ test("a typed word that names nothing is underlined with the closest name", asyn
   await expect(editor(page).getByTestId("explanation")).toContainText("Did you mean n?");
 });
 
+test("a refused key shows in red at the caret with its reason, until the next key", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/sum-to-n");
+  await insert(page, "main/main/0", "print");
+  await keys(page, ")");
+  await expect(editor(page).getByTestId("refused-key")).toHaveText(")");
+  await expect(editor(page).getByTestId("explanation")).toContainText(
+    "There is no ( to close here.",
+  );
+  await expect(editor(page).getByTestId("refusal")).toHaveText("There is no ( to close here.");
+  await keys(page, "1");
+  await expect(editor(page).getByTestId("refused-key")).toHaveCount(0);
+  await expect(editor(page).getByTestId("refusal")).toHaveText("");
+});
+
+test("the first key of == shows at the caret until the second", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/sum-to-n");
+  await insert(page, "main/main/0", "print");
+  await keys(page, "n=");
+  await expect(editor(page).getByTestId("pending-key")).toHaveText("=");
+  await keys(page, "=");
+  await expect(editor(page).getByTestId("pending-key")).toHaveCount(0);
+  await expect(chart(page)).toContainText("print(n = …)");
+});
+
 test("a caption shows on its chart node and as a comment in Python", async ({ page }) => {
   await seedProgress(page, {});
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
