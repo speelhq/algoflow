@@ -258,27 +258,72 @@ first match. For example: `an` after a comparison is `And`.
 Enter or a click chooses the highlighted match, and ↑ and ↓ move the
 highlight.
 
-A space or any key of the key table (Backspace and keys, Keys) ends the
-word:
+A word is held keys while it is typed (Held keys). A space or any key
+of the key table (Backspace and keys, Keys) ends it:
 
 - When the word names a variable or an entry exactly, that variable or
   entry is chosen, and the key then applies.
 - When the word names nothing exactly, or when the line refuses that
-  choice, the key isn't taken, and the word stays to be corrected.
+  choice, the word and the key are refused.
 
 So `totl+` doesn't become a `+` with nothing before it.
 
 Tab first chooses a word that names a variable or an entry exactly, and
 then moves the caret (Moving the caret).
 
-The line underlines a word that matches nothing, and the explanation line
-names the closest variable or entry (`editor.didYouMean`). For example:
+A word that matches nothing is refused as it is typed, and its reason is
+the closest variable or entry (`editor.didYouMean`). For example:
 `Did you mean total?`.
 
 The explanation line's `Did you mean` names a variable or an entry only
 when it differs from the word by at most one letter in three, or by one
 letter on a word of fewer than six letters, because two letters on a
 short word reach unrelated names. For example: `totl` and `Not`.
+
+### Held keys
+
+Held keys are keys that the line holds at a place in the value, typed
+and not yet in the value: a word being typed (Words), the first key of a
+two-key operator waiting for its second (Backspace and keys, Keys), and
+refused keys (Backspace and keys, Refused keys). The value holds no held
+keys, so neither the chart nor the program shows them.
+
+Held keys either wait or are refused:
+
+- They wait while they can still go into the value: a word that matches
+  a name, or `=` or `!` before its second key.
+- They are refused when they can't go into the value as they stand, for
+  the reason of their first key.
+
+The line draws held keys at their place, as they were typed, and
+underlines refused keys with a red wavy line, so one mark shows what the
+line hasn't taken. Drawing a waiting key dimmed was rejected, because a
+key drawn as typed already shows, and a word being typed, which waits
+the same way, isn't dimmed.
+
+The keys typed where refused keys stand join them, until a space or a
+move of the caret ends them. Keys typed after a space go on as the line
+takes them. For example: `nums. + 1` keeps the `.` after `nums`, and
+`+ 1` takes `nums`.
+
+Waiting keys that a refused key ends are refused with it, unless the
+key chose them (Words). For example: `i=0` refuses `=0`.
+
+Backspace with the caret at held keys removes the last of them, and the
+keys left are held as they would be if just typed: waiting while they
+can still go into the value, refused otherwise. For example: Backspace
+after the refused `tot+` leaves the word `tot`, which waits.
+
+While the line holds refused keys, a key that would leave the field is
+refused (`leave`), because leaving would drop them unseen: Enter that
+would close the editor, Tab past the line's last empty slot, and `,`
+that would add an item.
+
+A click on another field or outside the editor, or Esc, leaves the field
+and drops its held keys.
+
+With the caret at refused keys, the explanation line shows them, with
+the same line, and the reason of their first key (Explanation line).
 
 ### Modifier keys
 
@@ -446,6 +491,7 @@ insert what the chart writes.
 
 Backspace removes:
 
+- held keys at the caret: the last of them (Value line, Held keys)
 - a value typed by its characters: its last character
 - a name or another value chosen whole, or a text with no character: the
   value
@@ -511,6 +557,10 @@ Each entry names its keys (`typed`, `blocks.md`, Value list entries):
 A single `=` inserts nothing, so the line never reads Python's assignment
 as a comparison.
 
+`=` and `!` alone insert nothing: each waits as held keys for its second
+key (Value line, Held keys), and a second key that makes no operator
+with it is refused with it (`pair`, Refused keys).
+
 The line refuses a comparison typed after a comparison, and the
 explanation line shows the message of `E_PARSE_CHAIN`.
 
@@ -565,6 +615,65 @@ Every operator has a key where Python has one, so the `Python` tab later
 shows keys that the learner has typed.
 
 Parentheses aren't stored, so none is ever left unclosed.
+
+### Refused keys
+
+A key that the value line refuses doesn't change the value. It stays at
+its place as refused keys (Value line, Held keys), because a key that
+vanishes, or changes nothing and shows nothing, looks like a broken one.
+
+A refused choice, by Enter or a click, stays as its row's keys: an
+entry's keys, or its name while it has none, and a variable's or a
+function's name. Choosing a row and typing its keys keep the same refused
+keys, because they make the same edit. For example: `==` after `i < n`.
+
+Each reason has its own message (`editor.refused.<reason>`), which says
+what to type next:
+
+| Refused key | Reason |
+| --- | --- |
+| a digit or `.` that would make a number Python rejects (Value line, Numbers) | `number` |
+| a digit that would make an int outside the int range or a float beyond the largest float (Value line, Numbers) | `tooLarge` |
+| a digit after a value other than a number (Value line, Numbers) | `afterValue` |
+| `.` after a value other than a number, or after a word | `member` |
+| a key that ends a word that names nothing exactly (Value line, Words) | `word` |
+| `(` other than at an empty slot (Keys) | `open` |
+| `)` with no open pair and no call around the caret (Keys) | `close` |
+| `,` in a call, after its last argument (Keys) | `lastArgument` |
+| `,` outside every call and list, in a field that isn't an item of an `exprs` slot, where it doesn't move the keyboard to the next field (Keys) | `oneValue` |
+| `]` outside every list and item (Keys) | `bracket` |
+| a key that inserts an operation after a value, at an empty slot (Keys) | `noValue` |
+| `"` or `'` | `quote` |
+| any other character that no row of the key table holds (Keys) | `unused` |
+| a key after the first key of a two-key operator that makes no operator with it (Keys) | `pair` |
+
+A key that ends a word that matches nothing gives the closest name
+(`editor.didYouMean`, `editor.nothingLike`; Value line, Words) in place of
+`word`, because the closest name says what to type.
+
+The message of `quote` tells the learner to choose `Text`, because a
+learner who types a quote means to write a text, which only `Text`
+makes (Value line, Texts).
+
+A refused Backspace or Delete, and a key that would leave the field,
+keep nothing in the line. The explanation line shows the reason until
+the next key:
+
+| Refused key | Reason |
+| --- | --- |
+| Backspace with nothing before the caret that it removes (Backspace) | `nothing` |
+| Delete with no selected value (Backspace) | `delete` |
+| a key that would leave the field while it holds refused keys | `leave` |
+
+A space outside a word changes nothing and shows nothing, because a
+learner types the spaces that Python writes. For example: `i + 1`.
+
+← and → at the first and last stops of the line change nothing and show
+nothing, as in a text field.
+
+A live region reads the reason of each refusal once, and nothing else
+that the explanation line shows, so a screen reader announces a refusal
+without reading every highlight.
 
 ## Targets
 
@@ -678,8 +787,8 @@ list highlights or the caret is in:
 | a name set nowhere yet | that choosing it makes a new variable that gets its value there (`editor.explain.newVariable`) |
 | any other variable | its name with its kind and the statement that first gives it a value (`A number variable. It first gets a value in: i ← 1.`, `editor.explain.variablePlain` when it has no kind) |
 | inside an operation's slot | the operation's name (the entry offered after the kind of the value in its first slot, `Join with another list` for `+` after a list) and its notation with every slot as its value, parenthesized as the chart parenthesizes it, an empty one as `…`, and the slot the caret is in underlined (`dp[…]`, its `…` underlined) |
-| a refused key | its message (Backspace and keys) |
-| a word that matches nothing | the closest name (Value line), or `editor.nothingLike` when none is close |
+| refused keys at the caret | the keys with a red wavy line, then the reason of the first: for a word that matches nothing, the closest name (Value line, Words), or `editor.nothingLike` when none is close (Backspace and keys, Refused keys) |
+| a refused key that keeps nothing in the line | its reason, until the next key |
 | anything else | the block definition's help (`block.<key>.help`) |
 
 The line shows a slot by its value rather than naming it in words,
@@ -694,6 +803,8 @@ The tests of `src/ui/editor` cover:
 - the block menu's entries, order, disabled entries, search, and the
   functions offered
 - a value line's typing, keys, choosing, Backspace, moving, and value list
+- held keys: waiting, refused, joined, ended, and removed by Backspace
+- each reason of a refused key, with its message
 - what a target's line takes and lists
 - the name list
 - the explanation line

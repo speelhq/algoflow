@@ -709,8 +709,9 @@ Narration).
 
 The end-to-end suite draws, in each locale:
 
-- one screenshot per screen state: Problems, Build, Run, Wrong Answer,
-  Accepted, Solution, the Python tab, Run inside a function,
+- one screenshot per screen state: Problems, Build, a refused key in a
+  value line (`editor.md`, Backspace and keys, Refused keys), Run, Wrong
+  Answer, Accepted, Solution, the Python tab, Run inside a function,
   Playground, Modules, and Module
 - one per view (`views.md`): the views chosen by value, the object
   graph, and the views a learner switches to
