@@ -142,7 +142,8 @@ fixes the fault and where. `validate()` reports the faults that an edit
 can produce, and the learner fixes each of those on its node. Some faults
 can only come from editing the file by hand:
 
-- an unknown kind
+- a block of an unknown type
+- an input of an unknown kind
 - a missing field
 - a field that the block's definition wouldn't make
 - a `Data` value that isn't canonical
@@ -192,9 +193,9 @@ export type Value =
   | { t: "obj"; ref: HeapId };
 export type HeapId = number;
 export type HeapEntry =
-  | { kind: "list"; items: Value[] }
-  | { kind: "dict"; entries: Map<string, Value> } // "i:3" for int 3, "s:ab" for str "ab"
-  | { kind: "obj"; cls: Name; attributes: Map<Name, Value> };
+  | { type: "list"; items: Value[] }
+  | { type: "dict"; entries: Map<string, Value> } // "i:3" for int 3, "s:ab" for str "ab"
+  | { type: "obj"; cls: Name; attributes: Map<Name, Value> };
 export type Heap = Map<HeapId, HeapEntry>;
 ```
 
@@ -220,23 +221,23 @@ from Python, while a wrong `int` wouldn't show.
 
 ## Statements
 
-A statement is one of these kinds:
+A statement is one of these types:
 
 ```ts
 type S = { id: NodeId; caption?: string }; // Captions
 export type Stmt =
-  | (S & { kind: "assign"; target: Expr; value: Expr })
-  | (S & { kind: "delete"; target: Expr })
-  | (S & { kind: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
-  | (S & { kind: "for"; var: Expr; start: Expr; stop: Expr; body: Stmt[] })
-  | (S & { kind: "foreach"; var: Expr; list: Expr; body: Stmt[] })
-  | (S & { kind: "while"; cond: Expr; body: Stmt[] })
-  | (S & { kind: "break" })
-  | (S & { kind: "continue" })
-  | (S & { kind: "print"; args: Expr[] })
-  | (S & { kind: "return"; value?: Expr })
-  | (S & { kind: "expr"; expr: Expr })
-  | (S & { kind: "swap"; a: Expr; b: Expr });
+  | (S & { type: "assign"; target: Expr; value: Expr })
+  | (S & { type: "delete"; target: Expr })
+  | (S & { type: "if"; cond: Expr; then: Stmt[]; else: Stmt[] })
+  | (S & { type: "for"; var: Expr; start: Expr; stop: Expr; body: Stmt[] })
+  | (S & { type: "foreach"; var: Expr; list: Expr; body: Stmt[] })
+  | (S & { type: "while"; cond: Expr; body: Stmt[] })
+  | (S & { type: "break" })
+  | (S & { type: "continue" })
+  | (S & { type: "print"; args: Expr[] })
+  | (S & { type: "return"; value?: Expr })
+  | (S & { type: "expr"; expr: Expr })
+  | (S & { type: "swap"; a: Expr; b: Expr });
 ```
 
 A compound statement is a branch or a loop: a statement that holds a
@@ -260,27 +261,27 @@ rule of the expression in the emitter, the chart, and every traversal.
 
 ## Expressions
 
-An expression is one of these kinds:
+An expression is one of these types:
 
 ```ts
 type E = { id: NodeId };
 export type Expr =
-  | (E & { kind: "empty" }) // what an empty slot holds (Empty slots)
-  | (E & { kind: "num"; value: number; float: boolean; raw: string })
-  | (E & { kind: "str"; value: string })
-  | (E & { kind: "bool"; value: boolean })
-  | (E & { kind: "none" })
-  | (E & { kind: "var"; name: Name })
-  | (E & { kind: "binop"; op: BinOp; left: Expr; right: Expr })
-  | (E & { kind: "unop"; op: "neg" | "not"; operand: Expr })
-  | (E & { kind: "index"; list: Expr; index: Expr })
-  | (E & { kind: "key"; dict: Expr; key: Expr })
-  | (E & { kind: "attribute"; obj: Expr; attr: Name })
-  | (E & { kind: "list"; items: Expr[] })
-  | (E & { kind: "dict"; entries: Array<{ key: Expr; value: Expr }> })
-  | (E & { kind: "new"; cls: Name; args: Expr[] })
-  | (E & { kind: "call"; fn: Name; args: Expr[] })
-  | (E & { kind: "method"; obj: Expr; name: Name; args: Expr[] });
+  | (E & { type: "empty" }) // what an empty slot holds (Empty slots)
+  | (E & { type: "num"; value: number; float: boolean; raw: string })
+  | (E & { type: "str"; value: string })
+  | (E & { type: "bool"; value: boolean })
+  | (E & { type: "none" })
+  | (E & { type: "var"; name: Name })
+  | (E & { type: "binop"; op: BinOp; left: Expr; right: Expr })
+  | (E & { type: "unop"; op: "neg" | "not"; operand: Expr })
+  | (E & { type: "index"; list: Expr; index: Expr })
+  | (E & { type: "key"; dict: Expr; key: Expr })
+  | (E & { type: "attribute"; obj: Expr; attr: Name })
+  | (E & { type: "list"; items: Expr[] })
+  | (E & { type: "dict"; entries: Array<{ key: Expr; value: Expr }> })
+  | (E & { type: "new"; cls: Name; args: Expr[] })
+  | (E & { type: "call"; fn: Name; args: Expr[] })
+  | (E & { type: "method"; obj: Expr; name: Name; args: Expr[] });
 export type BinOp =
   | "+"
   | "-"
@@ -306,7 +307,7 @@ export type BinOp =
 ### Empty slots
 
 An empty slot is a slot that still needs filling: an expression slot or
-an item that holds `{ kind: "empty" }`.
+an item that holds `{ type: "empty" }`.
 `validate()` reports each empty slot as `E_EMPTY_SLOT` with the slot's
 name.
 
@@ -319,7 +320,7 @@ Each consumer handles the `empty` expression in its own way:
 - The interpreter never executes it.
 
 `Expr | null` was rejected because it would spread null checks through
-every block definition and the emitter, while an `empty` kind keeps `Expr`
+every block definition and the emitter, while an `empty` type keeps `Expr`
 a closed union.
 
 ## Semantics
