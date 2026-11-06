@@ -358,8 +358,8 @@ class Builder {
     if (!chart) return this.box(stmt, def.requires === "function" ? "end" : null);
     if ("jump" in chart) return this.box(stmt, this.depth > 0 ? chart.jump : null);
     if ("branch" in chart) return this.branch(stmt, chart.branch);
-    return "check" in chart
-      ? this.loop(stmt, chart.check.body, false)
+    return "checked" in chart
+      ? this.loop(stmt, chart.checked.body, false)
       : this.loop(stmt, chart.counted.body, true);
   }
 
@@ -450,7 +450,7 @@ class Builder {
   }
 
   /**
-   * `check` and `counted`: a junction above the diamond, Yes down into the body, a back
+   * `checked` and `counted`: a junction above the diamond, Yes down into the body, a back
    * edge up the left lane, No down the right lane and on past the loop. A counted loop adds
    * its generated init before the junction and its update after the body.
    */

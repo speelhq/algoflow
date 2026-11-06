@@ -148,16 +148,16 @@ export type EmitContext = {
   region(stmts: Stmt[]): PyLine;
 };
 
-// ---------------------------------------------------------------- chart shape
+// ---------------------------------------------------------------- chart form
 
 /**
  * How the chart draws a block definition's blocks: the slot of the condition its diamond asks and its body regions
  * by slot name (a branch, a checked loop, a counted loop with the texts of its generated chart nodes),
  * or where its edge jumps to (out of the innermost loop, or into its next pass).
  */
-export type ChartShape =
+export type ChartForm =
   | { branch: { cond: string; yes: string; no: string } }
-  | { check: { cond: string; body: string } }
+  | { checked: { cond: string; body: string } }
   | { counted: Counted }
   | { jump: "exit" | "next" };
 
@@ -204,7 +204,7 @@ export type BlockDef = {
   /** The notation's text of a `literal` or an `operator` slot; default `String(block[slot])`. */
   text?(block: Stmt | Expr, slot: string): string;
   /** How the chart draws the block's regions; absent = a box with the notation. */
-  chart?: ChartShape;
+  chart?: ChartForm;
   /** The kind of the expression, given the kinds of the expressions inside it. */
   yields?: (block: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
   /** A loop's: the kind of the variable its binding target names (`language.md`, Kinds). */

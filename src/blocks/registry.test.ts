@@ -4,20 +4,20 @@ import en from "@/i18n/en.json";
 import { flatten } from "@/i18n/flatten";
 import { CATEGORIES } from "./categories";
 import { BLOCK_DEFS } from "./registry";
-import type { BlockDef, ChartShape } from "./types";
+import type { BlockDef, ChartForm } from "./types";
 
 const keys = new Set(Object.keys(flatten(en)));
 
-function regionsIn(chart: ChartShape): string[] {
+function regionsIn(chart: ChartForm): string[] {
   if ("branch" in chart) return [chart.branch.yes, chart.branch.no];
   if ("jump" in chart) return [];
-  return "check" in chart ? [chart.check.body] : [chart.counted.body];
+  return "checked" in chart ? [chart.checked.body] : [chart.counted.body];
 }
 
-/** The slot a diamond's condition is in, for the shapes that draw one. */
-function conditionIn(chart: ChartShape): string | undefined {
+/** The slot a diamond's condition is in, for the forms that draw one. */
+function conditionIn(chart: ChartForm): string | undefined {
   if ("branch" in chart) return chart.branch.cond;
-  return "check" in chart ? chart.check.cond : undefined;
+  return "checked" in chart ? chart.checked.cond : undefined;
 }
 
 describe("registry", () => {
@@ -167,11 +167,11 @@ describe("registry", () => {
   });
 
   it("a chart names the body slots of its block, and a diamond's condition an expr slot", () => {
-    const shaped = [...BLOCK_DEFS.values()].filter((def) => def.chart);
-    expect(new Set(shaped.map((def) => def.key))).toEqual(
+    const drawn = [...BLOCK_DEFS.values()].filter((def) => def.chart);
+    expect(new Set(drawn.map((def) => def.key))).toEqual(
       new Set(["if", "while", "for", "break", "continue"]),
     );
-    for (const def of shaped) {
+    for (const def of drawn) {
       const regions = def.chart ? regionsIn(def.chart) : [];
       const bodies = def.slots.filter((slot) => slot.role === "body").map((slot) => slot.name);
       expect(new Set(regions)).toEqual(new Set(bodies));
