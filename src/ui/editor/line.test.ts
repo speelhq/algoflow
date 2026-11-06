@@ -61,17 +61,17 @@ const py = (line: Line) => unparse(line.root);
 const entry = (id: string): Row => {
   const found = allEntries().find((candidate) => candidate.id === id);
   if (!found) throw new Error(id);
-  return { kind: "entry", entry: found };
+  return { type: "entry", entry: found };
 };
 const groups = (line: Line, all = false, context: LineContext = ctx) =>
   listSections(line, context, all).map((section) => [
     section.group,
     section.rows.map((row) =>
-      row.kind === "entry"
+      row.type === "entry"
         ? row.entry.label
-        : row.kind === "variable" || row.kind === "new"
+        : row.type === "variable" || row.type === "new"
           ? row.name
-          : row.kind === "function"
+          : row.type === "function"
             ? row.fn.name
             : "( )",
     ),
@@ -273,11 +273,11 @@ describe("typing", () => {
 
   it("a word matches the start of a name's words or an entry's keys, the kind's first", () => {
     const after = raw("i==0 an");
-    expect(matches(after, ctx).map((row) => (row.kind === "entry" ? row.entry.label : ""))[0]).toBe(
+    expect(matches(after, ctx).map((row) => (row.type === "entry" ? row.entry.label : ""))[0]).toBe(
       "And",
     );
     const names = matches(raw("t"), ctx).map((row) =>
-      row.kind === "variable" ? row.name : row.kind === "entry" ? row.entry.label : row.kind,
+      row.type === "variable" ? row.name : row.type === "entry" ? row.entry.label : row.type,
     );
     // Where a value is expected, the calls are offered too (`As text` is `str`).
     expect(names).toEqual([
@@ -289,10 +289,10 @@ describe("typing", () => {
       "As text",
       "function",
     ]);
-    expect(exactRow(raw("i"), ctx)).toEqual({ kind: "variable", name: "i" });
+    expect(exactRow(raw("i"), ctx)).toEqual({ type: "variable", name: "i" });
     expect(matches(raw("i%"), ctx)).toEqual([]);
     expect(
-      matches(raw("n mult"), ctx).map((row) => row.kind === "entry" && row.entry.label),
+      matches(raw("n mult"), ctx).map((row) => row.type === "entry" && row.entry.label),
     ).toEqual(["Multiply"]);
   });
 });
@@ -318,8 +318,8 @@ describe("choosing", () => {
     expect(py(placed)).toBe("... + ...");
     const random = choose(empty(), entry("call:randint"), ctx).line;
     expect(py(random)).toBe("random.randint(..., ...)");
-    expect(py(choose(empty(), { kind: "variable", name: "n" }, ctx).line)).toBe("n");
-    expect(py(choose(empty(), { kind: "function", fn: ctx.functions[0]! }, ctx).line)).toBe(
+    expect(py(choose(empty(), { type: "variable", name: "n" }, ctx).line)).toBe("n");
+    expect(py(choose(empty(), { type: "function", fn: ctx.functions[0]! }, ctx).line)).toBe(
       "twice(...)",
     );
     expect(py(choose(empty(), entry("bool.false"), ctx).line)).toBe("False");
@@ -464,7 +464,7 @@ describe("Backspace and moving", () => {
       scope: { functions: ["twice", "three"] },
       functions: [...ctx.functions, three],
     };
-    const placed = choose(empty(), { kind: "function", fn: three }, wide).line;
+    const placed = choose(empty(), { type: "function", fn: three }, wide).line;
     const second = tab(keys("1", placed), 1, wide).line;
     const third = tab(keys("2", second), 1, wide).line;
     expect(py(third)).toBe("three(1, 2, ...)");
@@ -538,7 +538,7 @@ describe("the list", () => {
   });
 
   it("after a value of no known kind every entry that takes one; Show all lists every entry", () => {
-    const unknown = choose(empty(), { kind: "function", fn: ctx.functions[0]! }, ctx).line;
+    const unknown = choose(empty(), { type: "function", fn: ctx.functions[0]! }, ctx).line;
     const left = move(unknown, 1).line;
     expect(groups(left).map(([group]) => group)).toEqual([
       "conditions",
@@ -636,7 +636,7 @@ describe("a target's line (editor.md, Targets)", () => {
       ["variables", ["n", "nums"]],
     ]);
     const to = raw("to", empty());
-    expect(matches(to, binding).map((row) => [row.kind, "name" in row ? row.name : ""])).toEqual([
+    expect(matches(to, binding).map((row) => [row.type, "name" in row ? row.name : ""])).toEqual([
       ["variable", "total"],
       ["new", "to"],
     ]);

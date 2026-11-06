@@ -72,11 +72,11 @@ export type LineContext = {
  * parentheses, or a function of the program.
  */
 export type Row =
-  | { kind: "variable"; name: Name }
-  | { kind: "new"; name: Name }
-  | { kind: "entry"; entry: Entry }
-  | { kind: "parentheses" }
-  | { kind: "function"; fn: LineFunction };
+  | { type: "variable"; name: Name }
+  | { type: "new"; name: Name }
+  | { type: "entry"; entry: Entry }
+  | { type: "parentheses" }
+  | { type: "function"; fn: LineFunction };
 
 /** What a key or a choice did: `move` leaves the line for the next or previous field or item. */
 export type Outcome = { line: Line; taken: boolean; move?: "next" | "previous" | "item" };
@@ -427,14 +427,14 @@ export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
 
 function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
   let base: Line = { ...line, word: "", refused: undefined, pending: undefined };
-  if (row.kind === "entry" && takesValue(row.entry) && !atEmptySlot(base)) {
+  if (row.type === "entry" && takesValue(row.entry) && !atEmptySlot(base)) {
     // A refused choice leaves the line as it was, its word still to correct, with the reason.
     const placed = takeValue(base, row.entry);
     return placed.taken ? placed : refused({ ...line, refused: placed.line.refused });
   }
   if (base.selected) base = cleared(base);
   if (!("at" in base.caret)) return refused(line);
-  switch (row.kind) {
+  switch (row.type) {
     case "variable":
     case "new": {
       const made = variableExpr(row.name);
@@ -456,7 +456,7 @@ function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
 // ---------------------------------------------------------------- words
 
 function rowName(row: Row): string {
-  switch (row.kind) {
+  switch (row.type) {
     case "variable":
     case "new":
       return row.name;
@@ -471,7 +471,7 @@ function rowName(row: Row): string {
 
 /** Whether the row is named exactly by the word: its name, or the entry's keys. */
 function namesExactly(row: Row, word: string): boolean {
-  if (row.kind === "entry" && row.entry.declared.typed === word) return true;
+  if (row.type === "entry" && row.entry.declared.typed === word) return true;
   return rowName(row).toLowerCase() === word.toLowerCase();
 }
 
@@ -481,8 +481,8 @@ function namesExactly(row: Row, word: string): boolean {
  */
 function targetNames(word: string, target: TargetLine): Row[] {
   const names = [...target.asked, ...target.names];
-  const rows = names.map((name): Row => ({ kind: "variable", name }));
-  if (target.binds && isNewName(word, names)) rows.push({ kind: "new", name: word });
+  const rows = names.map((name): Row => ({ type: "variable", name }));
+  if (target.binds && isNewName(word, names)) rows.push({ type: "new", name: word });
   return rows;
 }
 
@@ -515,16 +515,16 @@ export function wordRows(line: Line, ctx: LineContext): Row[] {
   if (ctx.target && namesTarget(line, ctx)) return targetNames(line.word, ctx.target);
   if (atEmptySlot(line) || (line.selected && line.word !== "")) {
     return [
-      ...ctx.variables.map((name): Row => ({ kind: "variable", name })),
+      ...ctx.variables.map((name): Row => ({ type: "variable", name })),
       ...allEntries()
         .filter((entry) => !takesValue(entry) || entry.call)
-        .map((entry): Row => ({ kind: "entry", entry })),
-      ...ctx.functions.map((fn): Row => ({ kind: "function", fn })),
+        .map((entry): Row => ({ type: "entry", entry })),
+      ...ctx.functions.map((fn): Row => ({ type: "function", fn })),
     ];
   }
   const after = allEntries()
     .filter(takesValue)
-    .map((entry): Row => ({ kind: "entry", entry }));
+    .map((entry): Row => ({ type: "entry", entry }));
   return keptRows(line, after, ctx);
 }
 
@@ -536,15 +536,15 @@ export function matches(line: Line, ctx: LineContext): Row[] {
   const found = wordRows(line, ctx).filter(
     (row) =>
       matchesName(rowName(row), word) ||
-      (row.kind === "entry" && (row.entry.declared.typed ?? "").startsWith(word)),
+      (row.type === "entry" && (row.entry.declared.typed ?? "").startsWith(word)),
   );
   // A new variable comes last: a name the program has is the likelier one meant.
   const rank = (row: Row) =>
-    row.kind === "new"
+    row.type === "new"
       ? 3
       : namesExactly(row, word)
         ? 0
-        : kind !== undefined && row.kind === "entry" && row.entry.declared.on?.includes(kind)
+        : kind !== undefined && row.type === "entry" && row.entry.declared.on?.includes(kind)
           ? 1
           : 2;
   return found
@@ -732,7 +732,7 @@ function keyed(line: Line, entry: Entry, key: string): Outcome {
 }
 
 /** Whether a row makes a call: a function of the program, or an entry whose block is one. */
-const makesCall = (row: Row) => row.kind === "function" || (row.kind === "entry" && row.entry.call);
+const makesCall = (row: Row) => row.type === "function" || (row.type === "entry" && row.entry.call);
 
 /** The innermost operation `is` accepts with a slot that holds the caret, and that slot's value. */
 function enclosing(

@@ -147,7 +147,7 @@ export function stepHighlight(
 export function chooseRow(session: Session, row: Row, ctx: LineContext): Transition {
   const { line, switching } = session;
   if (!line) return still(session);
-  if (switching && row.kind === "entry") {
+  if (switching && row.type === "entry") {
     return commit(session, switchTo(line, switching, row.entry));
   }
   return commit(session, choose(line, row, ctx).line);

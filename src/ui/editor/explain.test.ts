@@ -42,7 +42,7 @@ describe("explanation line", () => {
     const explained = explainLine(
       keys("i"),
       ctx,
-      { kind: "entry", entry: remainder },
+      { type: "entry", entry: remainder },
       p,
       target.id,
     );
@@ -51,7 +51,7 @@ describe("explanation line", () => {
     expect(shown(explained)?.[1]).toMatch(/is 1\. Type %\.$/);
     const text = allEntries().find((entry) => entry.id === "str");
     if (!text) throw new Error("no Text");
-    const plain = explainLine(keys(""), ctx, { kind: "entry", entry: text }, p, target.id);
+    const plain = explainLine(keys(""), ctx, { type: "entry", entry: text }, p, target.id);
     expect(shown(plain)?.[1]).toBe("A piece of text, typed without quotes.");
   });
 
