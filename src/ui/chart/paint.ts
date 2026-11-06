@@ -1,6 +1,6 @@
 // What the chart draws while running, derived from the driver state
 // and the layout: the taken path, the ✓ / ✗ marks, the current chart node, and the breakpoint.
-// Chart nodes are matched to statements through `owner` and `role`, never through a kind.
+// Chart nodes are matched to statements through `owner` and `role`, never through a type.
 import type { NodeId } from "@/lang/types";
 import type { StepEvent } from "@/store/steps";
 import type { ChartLayout, ChartNode } from "./layout";

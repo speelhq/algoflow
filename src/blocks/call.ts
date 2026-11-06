@@ -10,9 +10,9 @@ export const call = defineExpr<"call">({
     { name: "fn", role: "name" },
     { name: "args", role: "exprs" },
   ],
-  create: () => ({ id: newId(), kind: "call", fn: "", args: [] }),
+  create: () => ({ id: newId(), type: "call", fn: "", args: [] }),
   callee: (block) =>
-    block.kind === "call"
+    block.type === "call"
       ? { name: block.fn, argc: block.args.length, family: "function" }
       : { name: "", argc: 0, family: "function" },
   *run(block, ctx) {

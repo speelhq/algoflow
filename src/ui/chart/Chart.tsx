@@ -1,5 +1,5 @@
 // The flowchart as SVG from `layout()`. Shapes come from `ChartNode.shape`
-// and never from a block kind; generated chart nodes are gray. An HTML layer over the SVG,
+// and never from a block type; generated chart nodes are gray. An HTML layer over the SVG,
 // under the same scale, holds the parts a learner interacts with (the Input chart nodes' menus,
 // the connectors, the editor) and a diagnostic's card beside its chart node.
 import {

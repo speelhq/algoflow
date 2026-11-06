@@ -1,7 +1,7 @@
 // The block editor: a popover beside the selected block's chart node holding its caption field
 // with `Duplicate` and `Delete`, the block's notation with its slots editable in place (values
 // and targets as value lines, lists of values with add and remove), the value list of the
-// focused slot, and the explanation line. Reads slot roles, never a kind. The editing state
+// focused slot, and the explanation line. Reads slot roles, never a type. The editing state
 // is a session (`session.ts`) that only its transitions change.
 import { Copy, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";

@@ -8,13 +8,13 @@ export const num = defineExpr<"num">({
   key: "num",
   category: "basic",
   slots: [{ name: "value", role: "literal" }],
-  create: () => ({ id: newId(), kind: "num", value: 0, float: false, raw: "0" }),
+  create: () => ({ id: newId(), type: "num", value: 0, float: false, raw: "0" }),
   zeroLike: (block) => ({
     id: newId(),
-    kind: "num",
+    type: "num",
     value: 0,
-    float: block.kind === "num" && block.float,
-    raw: block.kind === "num" && block.float ? "0.0" : "0",
+    float: block.type === "num" && block.float,
+    raw: block.type === "num" && block.float ? "0.0" : "0",
   }),
   fieldsError: (fields) => {
     const literal = typeof fields.raw === "string" ? numberLiteral(fields.raw) : undefined;

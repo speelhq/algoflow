@@ -28,7 +28,7 @@ function nameOf(ref: number, frame: Frame | undefined, heap: Heap): string {
   for (const [name, value] of frame?.vars ?? []) {
     if ("ref" in value && value.ref === ref) return name;
   }
-  return t(heap.get(ref)?.kind === "dict" ? "run.narrate.ref.dict" : "run.narrate.ref.list");
+  return t(heap.get(ref)?.type === "dict" ? "run.narrate.ref.dict" : "run.narrate.ref.list");
 }
 
 /** A position or a key as the block of its value writes it. */
@@ -44,11 +44,11 @@ function literal(data: Data): Expr {
  */
 function refText(ref: Ref, frame: Frame | undefined, heap: Heap): string {
   if ("var" in ref) return ref.var;
-  const holder: Expr = { id: "", kind: "var", name: nameOf(ref.heap, frame, heap) };
+  const holder: Expr = { id: "", type: "var", name: nameOf(ref.heap, frame, heap) };
   const target: Expr =
     "index" in ref
-      ? { id: "", kind: "index", list: holder, index: literal(ref.index) }
-      : { id: "", kind: "key", dict: holder, key: literal(toData(keyValue(ref.key), heap)) };
+      ? { id: "", type: "index", list: holder, index: literal(ref.index) }
+      : { id: "", type: "key", dict: holder, key: literal(toData(keyValue(ref.key), heap)) };
   return exprText(target);
 }
 

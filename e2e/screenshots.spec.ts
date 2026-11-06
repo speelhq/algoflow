@@ -80,7 +80,7 @@ test("Wrong Answer", async ({ page }) => {
   await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
   const program = solutionOf("fizzbuzz");
   const [loop] = program.main as Array<Record<string, unknown>>;
-  if (loop) loop.start = { id: "fzb-one0-001", kind: "num", value: 0, float: false, raw: "0" };
+  if (loop) loop.start = { id: "fzb-one0-001", type: "num", value: 0, float: false, raw: "0" };
   await seedProgram(page, "fizzbuzz", program);
   await page.goto("/#/p/fizzbuzz");
   await page.getByTestId("tab-result").click();

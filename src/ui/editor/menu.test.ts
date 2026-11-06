@@ -48,8 +48,8 @@ describe("block menu", () => {
       ["double(…)", undefined],
     ]);
     const stmt = last?.entries[0]?.create();
-    expect(stmt).toMatchObject({ kind: "expr", expr: { kind: "call", fn: "double" } });
-    expect(stmt?.kind === "expr" && stmt.expr.kind === "call" && stmt.expr.args).toHaveLength(1);
+    expect(stmt).toMatchObject({ type: "expr", expr: { type: "call", fn: "double" } });
+    expect(stmt?.type === "expr" && stmt.expr.type === "call" && stmt.expr.args).toHaveLength(1);
   });
 
   it("a function no call can name is not offered: a word of the language, a builtin's name", () => {

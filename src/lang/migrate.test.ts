@@ -39,11 +39,11 @@ describe("migrate", () => {
     );
   });
 
-  it("refuses an expression of a kind no registered block definition has, at its path", () => {
+  it("refuses an expression of a type no registered block definition has, at its path", () => {
     const keyed = asStored(program([assign("x", num(1))]));
     const stmt = (keyed.main as Array<Record<string, unknown>>)[0]!;
-    stmt.value = { id: "k0000000000k", kind: "key", dict: v("d"), key: str("a") };
-    expect(() => migrate(keyed)).toThrow(/^main\[0\]\.value\.kind: unknown kind "key"/);
+    stmt.value = { id: "k0000000000k", type: "key", dict: v("d"), key: str("a") };
+    expect(() => migrate(keyed)).toThrow(/^main\[0\]\.value\.type: unknown type "key"/);
   });
 
   it("refuses an expression that is no target in a target slot, which no edit makes", () => {
@@ -69,15 +69,15 @@ describe("migrate", () => {
     );
   });
 
-  it("rejects unknown statement and expression kinds and nodes without ids", () => {
+  it("rejects unknown statement and expression types and nodes without ids", () => {
     const bad = json(program([assign("x", num(1))])) as { main: Array<Record<string, unknown>> };
-    bad.main[0]!.kind = "lambda";
-    expect(() => migrate(bad)).toThrow(/^main\[0\]\.kind: unknown kind "lambda"/);
+    bad.main[0]!.type = "lambda";
+    expect(() => migrate(bad)).toThrow(/^main\[0\]\.type: unknown type "lambda"/);
     const badExpr = json(program([assign("x", bin("+", num(1), num(2)))])) as {
       main: Array<{ value: { right: Record<string, unknown> } }>;
     };
-    badExpr.main[0]!.value.right.kind = "await";
-    expect(() => migrate(badExpr)).toThrow(/^main\[0\]\.value\.right\.kind/);
+    badExpr.main[0]!.value.right.type = "await";
+    expect(() => migrate(badExpr)).toThrow(/^main\[0\]\.value\.right\.type/);
     const noId = json(program([print(num(1))])) as {
       main: Array<{ args: Array<Record<string, unknown>> }>;
     };
@@ -102,11 +102,11 @@ describe("migrate", () => {
     expect(migrate(json(bare))).toEqual(bare);
   });
 
-  it("rejects a statement of a kind no block reads, at any depth", () => {
+  it("rejects a statement of a type no block reads, at any depth", () => {
     const p = program([for_("i", num(0), num(3), [print(v("i"))])]);
     const stored = json(p) as { main: Array<Record<string, unknown>> };
-    (stored.main[0]!.body as unknown[]).unshift({ id: "c0000000000c", kind: "comment" });
-    expect(() => migrate(stored)).toThrow(/^main\[0\]\.body\[0\]\.kind: unknown kind "comment"/);
+    (stored.main[0]!.body as unknown[]).unshift({ id: "c0000000000c", type: "comment" });
+    expect(() => migrate(stored)).toThrow(/^main\[0\]\.body\[0\]\.type: unknown type "comment"/);
   });
 
   it("stores a statement's caption as an edit does and rejects one that is not one line of text", () => {
@@ -147,9 +147,9 @@ describe("migrate", () => {
     expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target: expected an expression/);
     delete badTarget.main[0]!.target;
     expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target: expected an expression/);
-    badTarget.main[0]!.target = { id: "t0000000000t", kind: "var", name: 3 };
+    badTarget.main[0]!.target = { id: "t0000000000t", type: "var", name: 3 };
     expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target\.name: expected a name/);
-    badTarget.main[0]!.target = { id: "t0000000000t", kind: "index", list: v("xs") };
+    badTarget.main[0]!.target = { id: "t0000000000t", type: "index", list: v("xs") };
     expect(() => migrate(badTarget)).toThrow(/^main\[0\]\.target\.index: expected an expression/);
   });
 

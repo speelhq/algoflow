@@ -53,32 +53,32 @@
     "main": [
       {
         "id": "fzb-loop-001",
-        "kind": "for",
-        "var": { "id": "fzb-lvar-001", "kind": "var", "name": "i" },
-        "start": { "id": "fzb-one0-001", "kind": "num", "value": 1, "float": false, "raw": "1" },
+        "type": "for",
+        "var": { "id": "fzb-lvar-001", "type": "var", "name": "i" },
+        "start": { "id": "fzb-one0-001", "type": "num", "value": 1, "float": false, "raw": "1" },
         "stop": {
           "id": "fzb-stop-001",
-          "kind": "binop",
+          "type": "binop",
           "op": "+",
-          "left": { "id": "fzb-nvar-001", "kind": "var", "name": "n" },
-          "right": { "id": "fzb-one0-002", "kind": "num", "value": 1, "float": false, "raw": "1" }
+          "left": { "id": "fzb-nvar-001", "type": "var", "name": "n" },
+          "right": { "id": "fzb-one0-002", "type": "num", "value": 1, "float": false, "raw": "1" }
         },
         "body": [
           {
             "id": "fzb-if15-001",
-            "kind": "if",
+            "type": "if",
             "cond": {
               "id": "fzb-eq15-001",
-              "kind": "binop",
+              "type": "binop",
               "op": "==",
               "left": {
                 "id": "fzb-md15-001",
-                "kind": "binop",
+                "type": "binop",
                 "op": "%",
-                "left": { "id": "fzb-ivar-001", "kind": "var", "name": "i" },
+                "left": { "id": "fzb-ivar-001", "type": "var", "name": "i" },
                 "right": {
                   "id": "fzb-n15x-001",
-                  "kind": "num",
+                  "type": "num",
                   "value": 15,
                   "float": false,
                   "raw": "15"
@@ -86,7 +86,7 @@
               },
               "right": {
                 "id": "fzb-zero-001",
-                "kind": "num",
+                "type": "num",
                 "value": 0,
                 "float": false,
                 "raw": "0"
@@ -95,26 +95,26 @@
             "then": [
               {
                 "id": "fzb-prfb-001",
-                "kind": "print",
-                "args": [{ "id": "fzb-txfb-001", "kind": "str", "value": "FizzBuzz" }]
+                "type": "print",
+                "args": [{ "id": "fzb-txfb-001", "type": "str", "value": "FizzBuzz" }]
               }
             ],
             "else": [
               {
                 "id": "fzb-if03-001",
-                "kind": "if",
+                "type": "if",
                 "cond": {
                   "id": "fzb-eq03-001",
-                  "kind": "binop",
+                  "type": "binop",
                   "op": "==",
                   "left": {
                     "id": "fzb-md03-001",
-                    "kind": "binop",
+                    "type": "binop",
                     "op": "%",
-                    "left": { "id": "fzb-ivar-002", "kind": "var", "name": "i" },
+                    "left": { "id": "fzb-ivar-002", "type": "var", "name": "i" },
                     "right": {
                       "id": "fzb-n03x-001",
-                      "kind": "num",
+                      "type": "num",
                       "value": 3,
                       "float": false,
                       "raw": "3"
@@ -122,7 +122,7 @@
                   },
                   "right": {
                     "id": "fzb-zero-002",
-                    "kind": "num",
+                    "type": "num",
                     "value": 0,
                     "float": false,
                     "raw": "0"
@@ -131,26 +131,26 @@
                 "then": [
                   {
                     "id": "fzb-prfz-001",
-                    "kind": "print",
-                    "args": [{ "id": "fzb-txfz-001", "kind": "str", "value": "Fizz" }]
+                    "type": "print",
+                    "args": [{ "id": "fzb-txfz-001", "type": "str", "value": "Fizz" }]
                   }
                 ],
                 "else": [
                   {
                     "id": "fzb-if05-001",
-                    "kind": "if",
+                    "type": "if",
                     "cond": {
                       "id": "fzb-eq05-001",
-                      "kind": "binop",
+                      "type": "binop",
                       "op": "==",
                       "left": {
                         "id": "fzb-md05-001",
-                        "kind": "binop",
+                        "type": "binop",
                         "op": "%",
-                        "left": { "id": "fzb-ivar-003", "kind": "var", "name": "i" },
+                        "left": { "id": "fzb-ivar-003", "type": "var", "name": "i" },
                         "right": {
                           "id": "fzb-n05x-001",
-                          "kind": "num",
+                          "type": "num",
                           "value": 5,
                           "float": false,
                           "raw": "5"
@@ -158,7 +158,7 @@
                       },
                       "right": {
                         "id": "fzb-zero-003",
-                        "kind": "num",
+                        "type": "num",
                         "value": 0,
                         "float": false,
                         "raw": "0"
@@ -167,15 +167,15 @@
                     "then": [
                       {
                         "id": "fzb-prbz-001",
-                        "kind": "print",
-                        "args": [{ "id": "fzb-txbz-001", "kind": "str", "value": "Buzz" }]
+                        "type": "print",
+                        "args": [{ "id": "fzb-txbz-001", "type": "str", "value": "Buzz" }]
                       }
                     ],
                     "else": [
                       {
                         "id": "fzb-prnt-001",
-                        "kind": "print",
-                        "args": [{ "id": "fzb-ivar-004", "kind": "var", "name": "i" }]
+                        "type": "print",
+                        "args": [{ "id": "fzb-ivar-004", "type": "var", "name": "i" }]
                       }
                     ]
                   }

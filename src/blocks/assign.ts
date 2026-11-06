@@ -10,7 +10,7 @@ export const assign = defineStmt<"assign">({
     { name: "target", role: "target", binds: true, stores: "value" },
     { name: "value", role: "expr" },
   ],
-  create: () => ({ id: newId(), kind: "assign", target: emptyExpr(), value: emptyExpr() }),
+  create: () => ({ id: newId(), type: "assign", target: emptyExpr(), value: emptyExpr() }),
   *run(block, ctx) {
     const value = yield* ctx.eval(block.value);
     yield* ctx.store(block.target, value, block.id);

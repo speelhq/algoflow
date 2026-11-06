@@ -170,7 +170,7 @@ describe("program store", () => {
     localStorage.clear();
     useProgram.getState().edit(withMain(next, [print(num(2))]));
     useProgram.getState().load("play-abcdefghijkl");
-    expect(stored("bare")).toMatchObject({ main: [{ kind: "print" }] });
+    expect(stored("bare")).toMatchObject({ main: [{ type: "print" }] });
   });
 
   it("a Playground program has a play- id, and its saves are indexed by time", () => {

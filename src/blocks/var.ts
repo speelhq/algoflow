@@ -6,7 +6,7 @@ export const variable = defineExpr<"var">({
   key: "var",
   category: "basic",
   slots: [{ name: "name", role: "name" }],
-  create: () => ({ id: newId(), kind: "var", name: "" }),
+  create: () => ({ id: newId(), type: "var", name: "" }),
   *run(block, ctx) {
     return (yield* ctx.read(block, block.id)).value;
   },

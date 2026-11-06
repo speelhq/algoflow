@@ -86,7 +86,7 @@ describe("registry", () => {
 
   it("binop writes school symbols, and Python's where school has none", () => {
     const binop = BLOCK_DEFS.get("binop");
-    const block = (op: string) => ({ id: "b", kind: "binop", op }) as never;
+    const block = (op: string) => ({ id: "b", type: "binop", op }) as never;
     const school = ["+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">="];
     expect(school.map((op) => binop?.text?.(block(op), "op"))).toEqual([
       "+",

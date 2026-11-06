@@ -2,7 +2,7 @@
 // grouped by category in menu order, each in registration order, those whose `requires`
 // the place does not meet disabled with the reason, then the program's functions a call can
 // name, as calls. Reads `shape`, `hidden`, `category`, `requires`, and the notation of a
-// block's `create()`, never a kind.
+// block's `create()`, never a type.
 import { blockText, t } from "@/i18n/t";
 import { placeContext } from "@/lang/scope";
 import type { Place, Program, Stmt } from "@/lang/types";
@@ -67,7 +67,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
 function callStatement(program: Program, fn: LineFunction): Stmt {
   const call = callExpr(fn, parseScope(program));
   if (!call) throw new Error(`"${fn.name}" is no function of the program`);
-  const statement = getBlockDef("expr").create() as Extract<Stmt, { kind: "expr" }>;
+  const statement = getBlockDef("expr").create() as Extract<Stmt, { type: "expr" }>;
   return { ...statement, expr: call };
 }
 

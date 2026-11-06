@@ -6,7 +6,7 @@ import { isNumber, makeNumber, truthy } from "@/runtime/values";
 import { defineExpr } from "./types";
 import { emptyExpr } from "./empty";
 
-type Unop = Extract<Expr, { kind: "unop" }>;
+type Unop = Extract<Expr, { type: "unop" }>;
 
 /** Each operator with its precedence. */
 const OPS: Record<Unop["op"], number> = { neg: PRECEDENCE.unary, not: PRECEDENCE.not };
@@ -21,7 +21,7 @@ export const unop = defineExpr<"unop">({
     { name: "operand", role: "expr" },
   ],
   precedence: (block) => precedenceOf(block as Unop),
-  create: () => ({ id: newId(), kind: "unop", op: "neg", operand: emptyExpr() }),
+  create: () => ({ id: newId(), type: "unop", op: "neg", operand: emptyExpr() }),
   fieldsError: (fields) =>
     typeof fields.op === "string" && Object.hasOwn(OPS, fields.op)
       ? undefined

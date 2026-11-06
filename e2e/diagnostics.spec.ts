@@ -9,23 +9,23 @@ test.beforeEach(async ({ page }) => {
 test("hovering a flagged chart node shows its message, and the fix applies", async ({ page }) => {
   const loop = {
     id: "dgn-loop-001",
-    kind: "for",
-    var: { id: "dgn-lvar-001", kind: "var", name: "i" },
-    start: { id: "dgn-zero-001", kind: "num", value: 0, float: false, raw: "0" },
-    stop: { id: "dgn-stop-001", kind: "num", value: 3, float: false, raw: "3" },
+    type: "for",
+    var: { id: "dgn-lvar-001", type: "var", name: "i" },
+    start: { id: "dgn-zero-001", type: "num", value: 0, float: false, raw: "0" },
+    stop: { id: "dgn-stop-001", type: "num", value: 3, float: false, raw: "3" },
     body: [
       {
         id: "dgn-sets-001",
-        kind: "assign",
-        target: { id: "dgn-tgt-0001", kind: "var", name: "total" },
-        value: { id: "dgn-ivar-001", kind: "var", name: "i" },
+        type: "assign",
+        target: { id: "dgn-tgt-0001", type: "var", name: "total" },
+        value: { id: "dgn-ivar-001", type: "var", name: "i" },
       },
     ],
   };
   const out = {
     id: "dgn-prnt-001",
-    kind: "print",
-    args: [{ id: "dgn-tvar-001", kind: "var", name: "total" }],
+    type: "print",
+    args: [{ id: "dgn-tvar-001", type: "var", name: "total" }],
   };
   await seedProgram(page, "fizzbuzz", programWith([loop, out]));
   await page.goto("/#/p/fizzbuzz");
@@ -41,9 +41,9 @@ test("hovering a flagged chart node shows its message, and the fix applies", asy
 test("an empty slot shows no dot, only its `…`", async ({ page }) => {
   const assign = {
     id: "dgn-asg0-001",
-    kind: "assign",
-    target: { id: "dgn-tgt-0002", kind: "var", name: "x" },
-    value: { id: "dgn-emp0-001", kind: "empty" },
+    type: "assign",
+    target: { id: "dgn-tgt-0002", type: "var", name: "x" },
+    value: { id: "dgn-emp0-001", type: "empty" },
   };
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");

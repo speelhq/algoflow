@@ -6,7 +6,7 @@ export const none = defineExpr<"none">({
   key: "none",
   category: "basic",
   slots: [],
-  create: () => ({ id: newId(), kind: "none" }),
+  create: () => ({ id: newId(), type: "none" }),
   *run() {
     return { t: "none" };
   },

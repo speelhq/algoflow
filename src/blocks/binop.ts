@@ -19,7 +19,7 @@ import {
 import { defineExpr, type RunContext } from "./types";
 import { emptyExpr } from "./empty";
 
-type Binop = Extract<Expr, { kind: "binop" }>;
+type Binop = Extract<Expr, { type: "binop" }>;
 
 /** The kinds `<`, `≤`, `>`, and `≥` order. */
 const ORDERED = ["number", "text"] as const;
@@ -85,7 +85,7 @@ function* membership(
 ): Generator<Event, boolean, void> {
   if (r.t === "list") {
     const entry = getHeapEntry(ctx.heap, r.ref);
-    if (entry.kind !== "list") return false;
+    if (entry.type !== "list") return false;
     const refs: Ref[] = [];
     let found = false;
     for (let i = 0; i < entry.items.length; i += 1) {
@@ -102,7 +102,7 @@ function* membership(
     const key = dictKey(l);
     if (key === undefined) return typeError(block.id, l, r, ctx);
     const entry = getHeapEntry(ctx.heap, r.ref);
-    return entry.kind === "dict" && entry.entries.has(key);
+    return entry.type === "dict" && entry.entries.has(key);
   }
   if (r.t === "str") {
     if (l.t !== "str") return typeError(block.id, l, r, ctx);
@@ -120,7 +120,7 @@ export const binop = defineExpr<"binop">({
     { name: "right", role: "expr" },
   ],
   precedence: (block) => binopPrecedence((block as Binop).op),
-  create: () => ({ id: newId(), kind: "binop", op: "+", left: emptyExpr(), right: emptyExpr() }),
+  create: () => ({ id: newId(), type: "binop", op: "+", left: emptyExpr(), right: emptyExpr() }),
   fieldsError: (fields) =>
     typeof fields.op === "string" && isBinOp(fields.op)
       ? undefined

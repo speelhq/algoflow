@@ -38,7 +38,7 @@ describe("toValue / toData", () => {
     const list = toValue([1, [2, 3]], heap);
     expect(list).toEqual({ t: "list", ref: 2 });
     expect(heap.get(1)).toEqual({
-      kind: "list",
+      type: "list",
       items: [
         { t: "int", v: 2 },
         { t: "int", v: 3 },
@@ -47,7 +47,7 @@ describe("toValue / toData", () => {
     const dict = toValue({ a: 1, "$int:3": "x" }, heap);
     expect(dict.t).toBe("dict");
     const entry = heap.get(3);
-    expect(entry?.kind === "dict" && [...entry.entries.keys()]).toEqual(["s:a", "i:3"]);
+    expect(entry?.type === "dict" && [...entry.entries.keys()]).toEqual(["s:a", "i:3"]);
     expect(roundTrip({ a: 1, "$int:3": "x" })).toEqual({ a: 1, "$int:3": "x" });
   });
 

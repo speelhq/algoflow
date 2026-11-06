@@ -188,9 +188,9 @@ test("Run with a diagnostic leads to its node instead of running", async ({ page
   await seedProgress(page, {});
   const assign = {
     id: "asg-empty-01",
-    kind: "assign",
-    target: { id: "run-tgt-0001", kind: "var", name: "x" },
-    value: { id: "val-empty-01", kind: "empty" },
+    type: "assign",
+    target: { id: "run-tgt-0001", type: "var", name: "x" },
+    value: { id: "val-empty-01", type: "empty" },
   };
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");
@@ -214,18 +214,18 @@ test("a runtime error outlines its chart node and says its message, and playback
   await seedProgress(page, {});
   const num = (id: string, value: number) => ({
     id,
-    kind: "num",
+    type: "num",
     value,
     float: false,
     raw: `${value}`,
   });
   const divide = {
     id: "asg-divz-001",
-    kind: "assign",
-    target: { id: "run-tgt-0002", kind: "var", name: "x" },
+    type: "assign",
+    target: { id: "run-tgt-0002", type: "var", name: "x" },
     value: {
       id: "div-divz-001",
-      kind: "binop",
+      type: "binop",
       op: "/",
       left: num("one-divz-001", 1),
       right: num("zro-divz-001", 0),
@@ -246,8 +246,8 @@ test("a run that never ends reports it before playback", async ({ page }) => {
   await seedProgress(page, {});
   const loop = {
     id: "whl-endless1",
-    kind: "while",
-    cond: { id: "cnd-endless1", kind: "bool", value: true },
+    type: "while",
+    cond: { id: "cnd-endless1", type: "bool", value: true },
     body: [],
   };
   await seedProgram(page, "fizzbuzz", programWith([loop]));

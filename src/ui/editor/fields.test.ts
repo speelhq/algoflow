@@ -72,7 +72,7 @@ describe("a target", () => {
     const fields = fieldsOf(stmt);
     const fresh = getBlockDef("assign").create() as Stmt;
     expect(startField(fresh, fieldsOf(fresh), { slot: null, emptyId: null })).toEqual(fields[0]);
-    const position = (stmt.target as Extract<typeof stmt.target, { kind: "index" }>).index;
+    const position = (stmt.target as Extract<typeof stmt.target, { type: "index" }>).index;
     expect(startField(stmt, fields, { slot: "target", emptyId: position.id })).toEqual(fields[0]);
   });
 

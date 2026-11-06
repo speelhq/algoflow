@@ -1,5 +1,5 @@
 // The entries of the value list as the blocks declare them: each with its block, its
-// label and help, and how it makes its expression. Reads `entries` and `create()`, never a kind.
+// label and help, and how it makes its expression. Reads `entries` and `create()`, never a type.
 import { exprKind, type Kinds } from "@/lang/kinds";
 import type { Expr } from "@/lang/types";
 import { childSlots } from "@/lang/walk";

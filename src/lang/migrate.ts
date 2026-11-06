@@ -1,5 +1,5 @@
 // Import validates a program of the current `version`. It refuses what no edit could make: a
-// wrong shape, an unknown kind, a bad id, a field its block would not write, a class,
+// wrong shape, an unknown type, a bad id, a field its block would not write, a class,
 // which no registered block definition constructs. What editing reaches is validate()'s job.
 import { getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
 import { normalizeCaption } from "./edit";
@@ -80,9 +80,9 @@ function rawChildren(
 function checkExpr(value: unknown, path: string): void {
   if (!isRecord(value)) throw new MigrateError(path, "expected an expression");
   expectNodeId(value.id, `${path}.id`);
-  const kind = expectString(value.kind, `${path}.kind`);
+  const type = expectString(value.type, `${path}.type`);
   if (!hasBlockDef(keyOf(value as unknown as Expr))) {
-    throw new MigrateError(`${path}.kind`, `unknown kind "${kind}"`);
+    throw new MigrateError(`${path}.type`, `unknown type "${type}"`);
   }
   checkFields(value, path);
   // No edit leaves an expression's name holding nothing, and a value line has no empty slot to
@@ -100,7 +100,7 @@ function checkStmts(value: unknown, path: string): void {
     const at = `${path}[${i}]`;
     if (!isRecord(stmt)) throw new MigrateError(at, "expected a statement");
     expectNodeId(stmt.id, `${at}.id`);
-    const kind = expectString(stmt.kind, `${at}.kind`);
+    const type = expectString(stmt.type, `${at}.type`);
     if ("caption" in stmt) {
       if (typeof stmt.caption !== "string" || /[\n\r]/.test(stmt.caption)) {
         throw new MigrateError(`${at}.caption`, "expected one line of text");
@@ -110,21 +110,21 @@ function checkStmts(value: unknown, path: string): void {
       if (caption === "") delete stmt.caption;
       else stmt.caption = caption;
     }
-    if (!hasBlockDef(kind) || getBlockDef(kind).shape !== "stmt") {
-      throw new MigrateError(`${at}.kind`, `unknown kind "${kind}"`);
+    if (!hasBlockDef(type) || getBlockDef(type).shape !== "stmt") {
+      throw new MigrateError(`${at}.type`, `unknown type "${type}"`);
     }
     checkFields(stmt, at);
     for (const child of rawChildren(stmt, at)) checkExpr(child.value, child.path);
     // A target slot holds a target, or `empty` while it is an empty slot: no edit makes any
     // other value there.
-    for (const slot of getBlockDef(kind).slots) {
+    for (const slot of getBlockDef(type).slots) {
       const held = stmt[slot.name] as Expr;
       if (slot.role === "target" && !isEmptyExpr(held) && !isTarget(held)) {
         throw new MigrateError(`${at}.${slot.name}`, "expected a target");
       }
     }
     // Every region by the block's slots: `regionsOf` passes over one that is no array.
-    for (const slot of getBlockDef(kind).slots) {
+    for (const slot of getBlockDef(type).slots) {
       if (slot.role === "body") checkStmts(stmt[slot.name], `${at}.${slot.name}`);
     }
   });

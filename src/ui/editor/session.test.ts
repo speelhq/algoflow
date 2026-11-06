@@ -57,7 +57,7 @@ describe("editor session", () => {
     const field: Field = { slot: "args", index: 0 };
     const typed = press(openSession(stmt, field, null), "7");
     expect(typed.edits).toHaveLength(1);
-    expect(typed.edits[0]).toMatchObject({ field, root: { kind: "num", value: 7 } });
+    expect(typed.edits[0]).toMatchObject({ field, root: { type: "num", value: 7 } });
     const line = typed.session.line;
     expect(line && commit(typed.session, line).edits).toEqual([]);
   });
@@ -69,7 +69,7 @@ describe("editor session", () => {
     expect(word.edits).toEqual([]);
     const comma = valueKey(word.session, { key: ",", shiftKey: false }, [], ctx, "");
     expect(comma.after).toEqual({ addItem: 1 });
-    expect(comma.edits).toMatchObject([{ field, root: { kind: "var", name: "x" } }]);
+    expect(comma.edits).toMatchObject([{ field, root: { type: "var", name: "x" } }]);
     // Leaving the line from the session the key returned writes nothing more; from the session
     // before it, the word would be chosen and written a second time.
     expect(settleWord(comma.session, ctx).edits).toEqual([]);
@@ -91,8 +91,8 @@ describe("editor session", () => {
     const field: Field = { slot: "args", index: 0 };
     const typed = press(openSession(print(empty()), field, null), "abs(").session.line?.root;
     if (!typed) throw new Error("no value typed");
-    const slot = typed.kind === "call" ? typed.args[0] : undefined;
-    expect(slot?.kind).toBe("empty");
+    const slot = typed.type === "call" ? typed.args[0] : undefined;
+    expect(slot?.type).toBe("empty");
     // The editor opened again on `print(abs(…))` selects `abs(…)`.
     const reopened = openSession(print(typed), field, null);
     expect(reopened.line?.selected).toBe(true);
@@ -124,7 +124,7 @@ describe("editor session", () => {
     const highlighted = { ...openSession(stmt, field, null), highlight: 0 };
     const chosen = valueKey(highlighted, enter, [total], targetCtx, "←");
     expect(chosen.after).toEqual({ go: 1 });
-    expect(chosen.edits).toMatchObject([{ field, root: { kind: "var", name: "total" } }]);
+    expect(chosen.edits).toMatchObject([{ field, root: { type: "var", name: "total" } }]);
     // A name filling an item's position completes the target and moves on too.
     const position = empty();
     const atPosition = openSession(
@@ -162,12 +162,12 @@ describe("editor session", () => {
     const editing = chooseRow(openSession(stmt, field, null), { kind: "entry", entry: text }, ctx);
     expect(editing.session.line?.text).toBeDefined();
     const transition = textEnded(editing.session, "Backspace", ctx);
-    expect(transition.session.line?.root.kind).toBe("empty");
+    expect(transition.session.line?.root.type).toBe("empty");
     expect(transition.session.line?.text).toBeUndefined();
-    expect(transition.edits.at(-1)?.root.kind).toBe("empty");
+    expect(transition.edits.at(-1)?.root.type).toBe("empty");
     // Once the field has ended, Backspace from it removes nothing more.
     const ended = textEnded(editing.session, "Enter", ctx).session;
-    expect(textEnded(ended, "Backspace", ctx).session.line?.root.kind).toBe("str");
+    expect(textEnded(ended, "Backspace", ctx).session.line?.root.type).toBe("str");
   });
 
   it("a value changed elsewhere reopens the line; focusing a field opens its value", () => {
@@ -177,11 +177,11 @@ describe("editor session", () => {
     expect(follow(session, stmt)).toBe(session);
     const undone = assign("total", num(2));
     undone.id = stmt.id;
-    expect(follow(session, undone).line?.root).toMatchObject({ kind: "num", value: 2 });
+    expect(follow(session, undone).line?.root).toMatchObject({ type: "num", value: 2 });
     const target: Field = { slot: "target" };
     expect(focusField(session, stmt, target, null)).toMatchObject({
       focus: target,
-      line: { root: { kind: "var", name: "total" }, selected: true },
+      line: { root: { type: "var", name: "total" }, selected: true },
     });
     // A field the statement no longer has, an item removed by an undo, leaves the keyboard.
     const second: Field = { slot: "args", index: 1 };

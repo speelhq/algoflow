@@ -201,7 +201,7 @@ class Parser {
     for (let op = this.binopAt(level); op !== undefined; op = this.binopAt(level)) {
       const pos = this.take().pos;
       const right = next();
-      left = this.block(pos, { id: newId(), kind: "binop", op, left, right });
+      left = this.block(pos, { id: newId(), type: "binop", op, left, right });
     }
     return left;
   }
@@ -217,7 +217,7 @@ class Parser {
   private not(): Expr {
     if (this.isWord("not")) {
       const pos = this.take().pos;
-      return this.block(pos, { id: newId(), kind: "unop", op: "not", operand: this.not() });
+      return this.block(pos, { id: newId(), type: "unop", op: "not", operand: this.not() });
     }
     return this.cmp();
   }
@@ -229,7 +229,7 @@ class Parser {
     const pos = this.take().pos;
     const right = this.arith();
     if (this.binopAt(PRECEDENCE.compare) !== undefined) fail("E_PARSE_CHAIN", this.peek().pos);
-    return this.block(pos, { id: newId(), kind: "binop", op, left, right });
+    return this.block(pos, { id: newId(), type: "binop", op, left, right });
   }
 
   private arith(): Expr {
@@ -243,7 +243,7 @@ class Parser {
   private factor(): Expr {
     if (this.isOp("-")) {
       const pos = this.take().pos;
-      return this.block(pos, { id: newId(), kind: "unop", op: "neg", operand: this.factor() });
+      return this.block(pos, { id: newId(), type: "unop", op: "neg", operand: this.factor() });
     }
     return this.power();
   }
@@ -253,7 +253,7 @@ class Parser {
     const op = this.binopAt(PRECEDENCE.power);
     if (op !== undefined) {
       const pos = this.take().pos;
-      return this.block(pos, { id: newId(), kind: "binop", op, left: base, right: this.factor() });
+      return this.block(pos, { id: newId(), type: "binop", op, left: base, right: this.factor() });
     }
     return base;
   }
@@ -284,7 +284,7 @@ class Parser {
         const pos = this.take().pos;
         const index = this.or();
         this.expectOp("]");
-        expr = this.block(pos, { id: newId(), kind: "index", list: expr, index });
+        expr = this.block(pos, { id: newId(), type: "index", list: expr, index });
       } else if (this.isOp(".")) {
         this.take();
         const name = this.take();
@@ -296,7 +296,7 @@ class Parser {
         expr = this.resolveMethod(expr, name, args);
       } else if (this.isOp("(")) {
         const open = this.take();
-        if (expr.kind !== "var") fail("E_PARSE_SYNTAX", open.pos);
+        if (expr.type !== "var") fail("E_PARSE_SYNTAX", open.pos);
         const args = this.args(")");
         expr = this.resolveCall(expr.name, start, args);
       } else {
@@ -306,21 +306,21 @@ class Parser {
   }
 
   private resolveCall(name: string, position: number, args: Expr[]): Expr {
-    if (hasBlockDef(builtinKey(name))) return { id: newId(), kind: "call", fn: name, args };
+    if (hasBlockDef(builtinKey(name))) return { id: newId(), type: "call", fn: name, args };
     if (this.scope.functions.includes(name)) {
-      return this.block(position, { id: newId(), kind: "call", fn: name, args });
+      return this.block(position, { id: newId(), type: "call", fn: name, args });
     }
     return fail("E_UNKNOWN_CALL", position, { name });
   }
 
   /** Builtin aliases and method calls. */
   private resolveMethod(obj: Expr, name: Token, args: Expr[]): Expr {
-    if (obj.kind === "var") {
+    if (obj.type === "var") {
       const fn = this.aliases.get(`${obj.name}.${name.text}`);
-      if (fn) return { id: newId(), kind: "call", fn, args };
+      if (fn) return { id: newId(), type: "call", fn, args };
     }
     if (hasBlockDef(methodKey(name.text))) {
-      return { id: newId(), kind: "method", obj, name: name.text, args };
+      return { id: newId(), type: "method", obj, name: name.text, args };
     }
     return fail("E_UNKNOWN_CALL", name.pos, { name: name.text });
   }
@@ -331,17 +331,17 @@ class Parser {
       case "num": {
         const literal = numberLiteral(token.text);
         if (!literal) return fail("E_PARSE_SYNTAX", token.pos);
-        return { id: newId(), kind: "num", ...literal, raw: token.text };
+        return { id: newId(), type: "num", ...literal, raw: token.text };
       }
       case "str":
-        return { id: newId(), kind: "str", value: token.value };
+        return { id: newId(), type: "str", value: token.value };
       case "name":
         if (token.text === "True" || token.text === "False") {
-          return { id: newId(), kind: "bool", value: token.text === "True" };
+          return { id: newId(), type: "bool", value: token.text === "True" };
         }
-        if (token.text === "None") return { id: newId(), kind: "none" };
+        if (token.text === "None") return { id: newId(), type: "none" };
         if (KEYWORDS.has(token.text)) return fail("E_PARSE_SYNTAX", token.pos);
-        return { id: newId(), kind: "var", name: token.text };
+        return { id: newId(), type: "var", name: token.text };
       case "op":
         if (token.text === "(") {
           const inner = this.or();
@@ -349,7 +349,7 @@ class Parser {
           return inner;
         }
         if (token.text === "[") {
-          return this.block(token.pos, { id: newId(), kind: "list", items: this.args("]") });
+          return this.block(token.pos, { id: newId(), type: "list", items: this.args("]") });
         }
         if (token.text === "{") return this.dict(token.pos);
         return fail("E_PARSE_SYNTAX", token.pos);
@@ -362,7 +362,7 @@ class Parser {
     const entries: Array<{ key: Expr; value: Expr }> = [];
     if (this.isOp("}")) {
       this.take();
-      return this.block(pos, { id: newId(), kind: "dict", entries });
+      return this.block(pos, { id: newId(), type: "dict", entries });
     }
     for (;;) {
       const key = this.or();
@@ -374,7 +374,7 @@ class Parser {
         continue;
       }
       this.expectOp("}");
-      return this.block(pos, { id: newId(), kind: "dict", entries });
+      return this.block(pos, { id: newId(), type: "dict", entries });
     }
   }
 }

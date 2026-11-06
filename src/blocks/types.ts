@@ -1,14 +1,14 @@
 // BlockDef plus the runner and emitter contracts that block definitions implement.
 import type {
   Expr,
-  ExprKind,
+  ExprType,
   Heap,
   Name,
   Kind,
   NodeId,
   Program,
   Stmt,
-  StmtKind,
+  StmtType,
   Value,
 } from "@/lang/types";
 import type { Event, Ref, RuntimeCode } from "@/runtime/types";
@@ -103,9 +103,9 @@ export type ValueEntry = {
 
 export type Signal =
   | undefined
-  | { kind: "break" }
-  | { kind: "continue" }
-  | { kind: "return"; value: Value };
+  | { type: "break" }
+  | { type: "continue" }
+  | { type: "return"; value: Value };
 
 export type RunContext = {
   program: Program;
@@ -218,12 +218,12 @@ export type BlockDef = {
   locate?(block: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
 };
 
-type StmtOf<K extends StmtKind> = Extract<Stmt, { kind: K }>;
-type ExprOf<K extends ExprKind> = Extract<Expr, { kind: K }>;
+type StmtOf<K extends StmtType> = Extract<Stmt, { type: K }>;
+type ExprOf<K extends ExprType> = Extract<Expr, { type: K }>;
 
 type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "yields" | "locate";
 
-type StmtDef<K extends StmtKind> = Omit<BlockDef, Generic> & {
+type StmtDef<K extends StmtType> = Omit<BlockDef, Generic> & {
   create(): StmtOf<K>;
   run(block: StmtOf<K>, ctx: RunContext): Generator<Event, Signal, void>;
   python(block: StmtOf<K>, ctx: EmitContext): PyLine[];
@@ -231,7 +231,7 @@ type StmtDef<K extends StmtKind> = Omit<BlockDef, Generic> & {
   text?(block: StmtOf<K>, slot: string): string;
 };
 
-type ExprDef<K extends ExprKind> = Omit<BlockDef, Generic> & {
+type ExprDef<K extends ExprType> = Omit<BlockDef, Generic> & {
   create(): ExprOf<K>;
   run(block: ExprOf<K>, ctx: RunContext): Generator<Event, Value, void>;
   python(block: ExprOf<K>, ctx: EmitContext): string;
@@ -241,10 +241,10 @@ type ExprDef<K extends ExprKind> = Omit<BlockDef, Generic> & {
   locate?(block: ExprOf<K>, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
 };
 
-export function defineStmt<K extends StmtKind>(def: StmtDef<K>): BlockDef {
+export function defineStmt<K extends StmtType>(def: StmtDef<K>): BlockDef {
   return { shape: "stmt", ...def } as unknown as BlockDef;
 }
 
-export function defineExpr<K extends ExprKind>(def: ExprDef<K>): BlockDef {
+export function defineExpr<K extends ExprType>(def: ExprDef<K>): BlockDef {
   return { shape: "expr", ...def } as unknown as BlockDef;
 }

@@ -8,9 +8,9 @@ export const continueStmt = defineStmt<"continue">({
   requires: "loop",
   chart: { jump: "next" },
   slots: [],
-  create: () => ({ id: newId(), kind: "continue" }),
+  create: () => ({ id: newId(), type: "continue" }),
   *run() {
-    return { kind: "continue" };
+    return { type: "continue" };
   },
   python: () => ["continue"],
   notation: () => "continue",

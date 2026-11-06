@@ -12,7 +12,7 @@ export const index = defineExpr<"index">({
     { name: "list", role: "expr", atom: true },
     { name: "index", role: "expr" },
   ],
-  create: () => ({ id: newId(), kind: "index", list: emptyExpr(), index: emptyExpr() }),
+  create: () => ({ id: newId(), type: "index", list: emptyExpr(), index: emptyExpr() }),
   *run(block, ctx) {
     return (yield* ctx.read(block, block.id)).value;
   },

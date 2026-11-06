@@ -32,8 +32,8 @@ test("a Playground program runs to its output, with no case selector and no Expe
   const id = "play-sayhello0001";
   const say = {
     id: "pgr-prnt-001",
-    kind: "print",
-    args: [{ id: "pgr-text-001", kind: "str", value: "hi" }],
+    type: "print",
+    args: [{ id: "pgr-text-001", type: "str", value: "hi" }],
   };
   await seedProgram(page, id, { ...programWith([say]), title: "Say hi" });
   await seedPlayground(page, { [id]: { edited: 0 } });
@@ -115,7 +115,7 @@ test("an edit on a problem is saved and restored on reload", async ({ page }) =>
   await expect(page.getByTestId("chart")).toContainText("print(…)");
   await expect
     .poll(() => page.evaluate(() => localStorage.getItem("algoflow:program:fizzbuzz")))
-    .toContain('"kind":"print"');
+    .toContain('"type":"print"');
   await page.reload();
   await expect(page.getByTestId("chart")).toContainText("print(…)");
 });

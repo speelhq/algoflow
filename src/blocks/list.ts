@@ -4,7 +4,7 @@ import { newId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { defineExpr } from "./types";
 
-const empty = () => ({ id: newId(), kind: "list" as const, items: [] });
+const empty = () => ({ id: newId(), type: "list" as const, items: [] });
 
 export const list = defineExpr<"list">({
   key: "list",
@@ -15,7 +15,7 @@ export const list = defineExpr<"list">({
   *run(block, ctx) {
     const items: Value[] = [];
     for (const item of block.items) items.push(yield* ctx.eval(item));
-    return { t: "list", ref: alloc(ctx.heap, { kind: "list", items }) };
+    return { t: "list", ref: alloc(ctx.heap, { type: "list", items }) };
   },
   python: (block, ctx) => `[${block.items.map((item) => ctx.expr(item)).join(", ")}]`,
   notation: () => "[{items}]",

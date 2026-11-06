@@ -6,7 +6,7 @@ import { typeName } from "@/runtime/values";
 import { defineStmt, type Counted } from "./types";
 import { emptyExpr } from "./empty";
 
-const isZero = (expr: Expr) => expr.kind === "num" && !expr.float && expr.value === 0;
+const isZero = (expr: Expr) => expr.type === "num" && !expr.float && expr.value === 0;
 
 /** The generated chart nodes in the order a `for` runs them, written in the notation. */
 const COUNTED: Counted = {
@@ -30,9 +30,9 @@ export const forStmt = defineStmt<"for">({
   ],
   create: () => ({
     id: newId(),
-    kind: "for",
+    type: "for",
     var: emptyExpr(),
-    start: { id: newId(), kind: "num", value: 0, float: false, raw: "0" },
+    start: { id: newId(), type: "num", value: 0, float: false, raw: "0" },
     stop: emptyExpr(),
     body: [],
   }),
@@ -52,8 +52,8 @@ export const forStmt = defineStmt<"for">({
       ctx.save(ref, value);
       yield { type: "loop", nodeId: block.id, ref, value };
       const signal = yield* ctx.exec(block.body);
-      if (signal?.kind === "break") break;
-      if (signal?.kind === "return") return signal;
+      if (signal?.type === "break") break;
+      if (signal?.type === "return") return signal;
     }
     return undefined;
   },

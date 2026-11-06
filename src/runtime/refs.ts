@@ -8,8 +8,8 @@ import { getHeapEntry } from "./values";
 export function valueAt(ref: Ref, vars: ReadonlyMap<Name, Value>, heap: Heap): Value | undefined {
   if ("var" in ref) return vars.get(ref.var);
   const entry = heap.get(ref.heap);
-  if ("index" in ref) return entry?.kind === "list" ? entry.items[ref.index] : undefined;
-  return entry?.kind === "dict" ? entry.entries.get(ref.key) : undefined;
+  if ("index" in ref) return entry?.type === "list" ? entry.items[ref.index] : undefined;
+  return entry?.type === "dict" ? entry.entries.get(ref.key) : undefined;
 }
 
 /** Writes `value` at `ref`, a variable in `vars`. */
@@ -19,8 +19,8 @@ export function setValueAt(ref: Ref, value: Value, vars: Map<Name, Value>, heap:
     return;
   }
   const entry = getHeapEntry(heap, ref.heap);
-  if ("index" in ref && entry.kind === "list") entry.items[ref.index] = value;
-  else if ("key" in ref && entry.kind === "dict") entry.entries.set(ref.key, value);
+  if ("index" in ref && entry.type === "list") entry.items[ref.index] = value;
+  else if ("key" in ref && entry.type === "dict") entry.entries.set(ref.key, value);
   else throw new Error(`ref does not fit heap entry ${ref.heap}`);
 }
 
