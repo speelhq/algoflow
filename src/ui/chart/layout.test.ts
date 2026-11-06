@@ -185,6 +185,17 @@ function crosses(a: { x: number; y: number }, b: { x: number; y: number }, node:
   return x1 > node.x + 1 && x0 < node.x + node.w - 1 && y1 > node.y + 1 && y0 < node.y + node.h - 1;
 }
 
+/** A loop's back edges: those into its top from below; the edge from above enters the loop. */
+function backEdges(chart: ChartLayout, top: ChartNode): ChartEdge[] {
+  const ys = new Map(chart.nodes.map((node) => [node.id, node.y]));
+  return chart.edges.filter((edge) => {
+    if (edge.to !== top.id) return false;
+    const y = ys.get(edge.from);
+    if (y === undefined) throw new Error(`no chart node ${edge.from}`);
+    return y > top.y;
+  });
+}
+
 function segments(edge: ChartEdge) {
   return edge.points.slice(1).map((point, i) => [edge.points[i] ?? point, point] as const);
 }
@@ -338,7 +349,7 @@ describe.each([
         expect(no.points[0]).toEqual({ x: d.x + d.w, y: d.y + d.h / 2 }); // No leaves to the right
         const bottom = Math.max(d.y + d.h, ...under.map((node) => node.y + node.h));
         expect(Math.max(...no.points.map((point) => point.y))).toBeGreaterThan(bottom);
-        const backs = chart.edges.filter((edge) => edge.to === top.id && edge.back);
+        const backs = backEdges(chart, top);
         expect(backs.length).toBeLessThanOrEqual(1);
         for (const back of backs) {
           const lane = Math.min(...back.points.map((point) => point.x));
@@ -439,19 +450,20 @@ describe("layout of jumps", () => {
     expect(jumpsOf(chart, stop.id)).toMatchObject([
       { to: `${loop.id}:exit`, place: { parent: loop.id, slot: "body", index: 2 } },
     ]);
-    const back = chart.edges.find((edge) => edge.back);
-    expect(back).toMatchObject({ from: `${loop.id}:next`, to: `${loop.id}:top` });
+    const top = chart.nodes.find((node) => node.id === `${loop.id}:top`);
+    if (!top) throw new Error(`no top of ${loop.id}`);
+    expect(backEdges(chart, top).map((edge) => edge.from)).toEqual([`${loop.id}:next`]);
   });
 
   it("a jump outside every loop is an ordinary box with an edge to the next chart node", () => {
     const stop = brk();
-    const chart = laidOut(program([stop, print(num(1))]), {
+    const after = print(num(1));
+    const chart = laidOut(program([stop, after]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
     });
-    expect(jumpsOf(chart, stop.id)).toHaveLength(1);
-    expect(jumpsOf(chart, stop.id)[0]?.jump).toBeUndefined();
+    expect(jumpsOf(chart, stop.id).map((edge) => edge.to)).toEqual([after.id]);
   });
 });
 
@@ -487,8 +499,10 @@ describe("layout texts", () => {
   });
 
   it("a diamond asks its condition; a function chart starts with its signature and has no inputs", () => {
-    const check = if_(bin("==", bin("%", v("x"), num(15)), num(0)), [ret(v("x"))]);
-    const f = fn("f", [check, ret(num(0))]);
+    const found = ret(v("x"));
+    const fallback = ret(num(0));
+    const check = if_(bin("==", bin("%", v("x"), num(15)), num(0)), [found]);
+    const f = fn("f", [check, fallback]);
     const chart = laidOut(
       program([], { functions: [f], inputs: [{ name: "n", kind: "number" }] }),
       {
@@ -500,8 +514,8 @@ describe("layout texts", () => {
     expect(chart.nodes[0]?.text).toBe("Start f(x)");
     expect(chart.nodes.some((node) => node.role === "input")).toBe(false);
     expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe("x % 15 = 0?");
-    const jumps = chart.edges.filter((edge) => edge.jump);
-    expect(jumps.map((edge) => edge.to)).toEqual(["end", "end"]); // a Return leads to End
+    const returns = chart.edges.filter((edge) => [found.id, fallback.id].includes(edge.from));
+    expect(returns.map((edge) => edge.to)).toEqual(["end", "end"]); // a Return leads to End
   });
 
   it("gives a function chart's Start its function as owner, and main's terminals none", () => {
