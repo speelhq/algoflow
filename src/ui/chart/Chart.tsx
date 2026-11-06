@@ -295,14 +295,14 @@ export function Chart(props: Props) {
   } = props;
   const edited = editor && selectedId ? nodeFor(chart.nodes, selectedId) : undefined;
   const scroller = useRef<HTMLDivElement>(null);
-  const region = useElementWidth(scroller);
+  const available = useElementWidth(scroller);
   const [zoom, setZoom] = useState<number | null>(null);
-  const scale = zoom ?? fitScale(region, chart.width + 2 * PAD);
+  const scale = zoom ?? fitScale(available, chart.width + 2 * PAD);
   const width = (chart.width + 2 * PAD) * scale;
   const height = (chart.height + 2 * PAD) * scale;
   // The chart is centered; while an editor is open, room for it is added on the chart node's right
   // where the canvas has none, and the canvas scrolls to show it.
-  const offset = Math.max(0, (region - width) / 2);
+  const offset = Math.max(0, (available - width) / 2);
   const editorEnd = edited
     ? offset + (PAD + edited.x + edited.w) * scale + EDITOR_WIDTH + 2 * EDITOR_GAP
     : 0;
@@ -310,9 +310,9 @@ export function Chart(props: Props) {
   useLayoutEffect(() => {
     const element = scroller.current;
     if (!element || editorEnd === 0) return;
-    const short = editorEnd - (element.scrollLeft + region);
+    const short = editorEnd - (element.scrollLeft + available);
     if (short > 0) element.scrollLeft += short;
-  }, [editorEnd, region]);
+  }, [editorEnd, available]);
 
   // One delegated listener: a click on any part of a chart node selects the statement it belongs to.
   const svg = useRef<SVGSVGElement>(null);

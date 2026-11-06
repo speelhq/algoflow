@@ -1,4 +1,4 @@
-// The Problem page: the top bar, then two regions, the panel and the canvas. Its route has
+// The Problem page: the top bar, then two parts, the panel and the canvas. Its route has
 // opened the problem's program before it draws (`route.ts`).
 import { findChallenge, type Challenge } from "@/challenges";
 import { localized, t } from "@/i18n/t";

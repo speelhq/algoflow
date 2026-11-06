@@ -1,6 +1,6 @@
 // The rows of one case; the first difference and the step Watch this case opens at.
 import { describe, expect, it } from "vitest";
-import { firstDifference, resultRows, watchStep } from "./rows";
+import { firstDifferingRow, resultRows, watchStep } from "./rows";
 
 describe("resultRows", () => {
   it("aligns Output and Expected line by line, with a blank cell where one side has no line", () => {
@@ -30,22 +30,22 @@ describe("resultRows", () => {
   it("a case with no expectation has output rows only, and none differs", () => {
     const rows = resultRows(undefined, { stdout: ["a"], vars: { x: 1 } });
     expect(rows).toEqual({ output: [{ line: 1, actual: "a", differs: false }], variables: [] });
-    expect(firstDifference(rows)).toBeNull();
+    expect(firstDifferingRow(rows)).toBeNull();
   });
 });
 
-describe("firstDifference and watchStep", () => {
+describe("firstDifferingRow and watchStep", () => {
   it("the first output row that differs, or else the first variable row that differs", () => {
     const both = resultRows(
       { stdout: ["1", "2"], variables: { a: 1, b: 2 } },
       { stdout: ["1", "x"], vars: { a: 0, b: 0 } },
     );
-    expect(firstDifference(both)).toEqual({ kind: "output", line: 2 });
+    expect(firstDifferingRow(both)).toEqual({ kind: "output", line: 2 });
     const variable = resultRows(
       { stdout: ["1"], variables: { a: 1, b: 2 } },
       { stdout: ["1"], vars: { a: 1, b: 0 } },
     );
-    expect(firstDifference(variable)).toEqual({ kind: "variable", name: "b" });
+    expect(firstDifferingRow(variable)).toEqual({ kind: "variable", name: "b" });
   });
 
   it("opens at the print of the differing line, else at the last step of the run", () => {

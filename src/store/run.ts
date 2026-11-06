@@ -6,7 +6,7 @@
 import { create } from "zustand";
 import { caseInputs, caseOf } from "@/challenges/cases";
 import { judge, type TestResult } from "@/challenges/judge";
-import { firstDifference, watchStep, type WatchStep } from "@/challenges/rows";
+import { firstDifferingRow, watchStep, type WatchStep } from "@/challenges/rows";
 import { seedOf, type Test } from "@/challenges/types";
 import type { Data, Name, NodeId, Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
@@ -223,7 +223,7 @@ function atBreakpoint(): boolean {
 
 /** The print of the verdict's first differing line, or the last step of the run. */
 function differenceOf(verdict: TestResult | null, prints: number[], total: number): Difference {
-  const first = verdict?.status === "fail" ? firstDifference(verdict.rows) : null;
+  const first = verdict?.status === "fail" ? firstDifferingRow(verdict.rows) : null;
   return watchStep(first, prints, total);
 }
 

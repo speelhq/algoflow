@@ -5,7 +5,7 @@
 // Before any run: the selector, the chosen case's `Expected`, and `result.empty`.
 import { useMemo } from "react";
 import type { Challenge } from "@/challenges";
-import { firstDifference, resultRows } from "@/challenges/rows";
+import { firstDifferingRow, resultRows } from "@/challenges/rows";
 import { t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { mainVars } from "@/runtime/outcome";
@@ -132,7 +132,7 @@ function RunResult({ challenge }: { challenge: Challenge | undefined }) {
       }),
     [test, idle, stdout, state],
   );
-  const marked = verdict ? firstDifference(rows) : null;
+  const differingRow = verdict ? firstDifferingRow(rows) : null;
 
   return (
     <div className="space-y-4" data-testid="result-tab">
@@ -150,7 +150,7 @@ function RunResult({ challenge }: { challenge: Challenge | undefined }) {
       )}
       <ResultRows
         rows={rows}
-        marked={marked}
+        differingRow={differingRow}
         expected={test?.expect.stdout !== undefined}
         printed={idle || verdict ? undefined : stdout.length}
       />
