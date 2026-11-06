@@ -445,7 +445,7 @@ its own entries, because one block definition serves several groups:
 | `bool`            | `true`     | True                    | values     |                      |        |       |
 | `bool`            | `false`    | False                   | values     |                      |        |       |
 | `none`            |            | None                    | values     |                      |        |       |
-| `list`            | `empty`    | Empty list              | values     |                      |        | `[`   |
+| `list`            | `empty`    | Empty list              | values     |                      |        | `[]`  |
 | `dict`            |            | Empty dict              | values     |                      |        |       |
 | `unop`            | `not`      | Not                     | conditions |                      | `not`  | `not` |
 | `binop`           | `and`      | And                     | conditions | truefalse            | `and`  | `and` |
@@ -483,6 +483,13 @@ its own entries, because one block definition serves several groups:
 `binop` entries preset `op`, and `bool` entries preset `value`. `list`'s
 `empty` presets no item, so a list with items is named by the block
 definition's own label, `List`.
+
+No two entries name the same keys, so a typed key inserts one entry at
+most.
+
+`list`'s `empty` names `[]`, not `[`, because `[` opens a list with an
+empty item and `]` then removes it (`editor.md`, Backspace and keys,
+Keys).
 
 The help of `and` says that it is true when both sides are. The help of
 `or` says that it is true when one side or both are, because in everyday
