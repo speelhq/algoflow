@@ -427,7 +427,7 @@ When Tab enters a field of the notation, or the editor opens on it, the
 field's value is selected:
 
 - A typed value replaces it: a digit, a word, a `-` sign, a parenthesis,
-  or a bracket.
+  or a bracket, except `[` in a target slot (Backspace and keys, Keys).
 - Backspace removes it.
 - A key that names an entry after a value takes the selected value into
   the entry's first slot. For example: with `n` selected, `*` gives
@@ -508,18 +508,6 @@ Each entry names its keys (`typed`, `blocks.md`, Value list entries):
 | `%` `//` `**`           | as typed                                         |
 | `and` `or` `not` `in`   | as typed                                         |
 
-When two entries name a key, the key inserts the first entry that applies
-at the caret and that the slot keeps (Targets). The entry that fills an
-empty slot comes before the one that takes a value, and a selected value
-counts as both. Typing a refused key again as if the caret were after the
-selected value was rejected, because a selected `0` then `.` would give
-`0.`, which replacing a selected value avoids (Value list, Selected
-values).
-
-So `[` is `Empty list` where a value is expected and in place of a
-selected value. It is `Item at a position` after a value, and on a
-target's selected value, because a target slot keeps no list.
-
 A single `=` inserts nothing, so the line never reads Python's assignment
 as a comparison.
 
@@ -527,7 +515,7 @@ The line refuses a comparison typed after a comparison, and the
 explanation line shows the message of `E_PARSE_CHAIN`.
 
 At an empty slot, a key that inserts an operation after a value inserts
-nothing, except `-`.
+nothing, except `-` and `[`.
 
 `(` opens parentheses only at an empty slot.
 
@@ -543,8 +531,18 @@ A `,` acts on the innermost call or list around the caret:
   call's parentheses a `,` separates its arguments, as in Python, never
   the values around the call
 
-`[` at an empty slot inserts a list with one empty item and puts the
-caret at it.
+`[` at an empty slot names no entry: it inserts a list with one empty
+item, a `List` (`blocks.md`, Value list entries), and puts the caret at
+it. `[` inserting an empty list was rejected, because a learner
+typing `[1, 2]` types the first item right after `[` and would then need
+the caret inside an empty list, which no other key gives.
+
+In place of a selected value (Value list, Selected values), `[` inserts
+that list too, except in a target slot, which keeps no list (Targets):
+there `[` inserts `Item at a position` on the selected value. Typing any
+other refused key again as if the caret were after the selected value
+was rejected, because a selected `0` then `.` would give `0.`, which
+replacing a selected value avoids.
 
 After a value, `[` inserts an item of that value whose position is an
 empty slot (`Item at a position`), which binds as Value list, Choosing,
