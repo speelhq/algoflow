@@ -1,7 +1,7 @@
 // `Output` beside `Expected`, aligned line by line with a blank cell where
 // a side has no line, then every expected variable beside its expected value. The first
-// row that differs is marked; nothing else about the difference is said.
-import type { FirstDifference, Rows } from "@/challenges/rows";
+// row that differs is highlighted; nothing else about the difference is said.
+import type { FirstDifferingRow, Rows } from "@/challenges/rows";
 import { t } from "@/i18n/t";
 import type { Data } from "@/lang/types";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ import { assignmentText, dataText } from "@/ui/chart/text";
 type Props = {
   rows: Rows;
   /** Shown only once a verdict exists. */
-  marked: FirstDifference | null;
+  differingRow: FirstDifferingRow | null;
   /** A test that ended in a runtime error shows its message in place of `Output`. */
   error?: string;
   /** Whether the case has expectations to show beside the output. */
@@ -26,7 +26,7 @@ function assignment(name: string, value: Data | undefined): string {
   return value === undefined ? "" : assignmentText(name, dataText(value));
 }
 
-export function ResultRows({ rows, marked, error, expected, printed }: Props) {
+export function ResultRows({ rows, differingRow, error, expected, printed }: Props) {
   return (
     <div className="space-y-3" data-testid="result-rows">
       <div className={cn("grid gap-x-2 text-xs", expected ? "grid-cols-2" : "grid-cols-1")}>
@@ -62,7 +62,7 @@ export function ResultRows({ rows, marked, error, expected, printed }: Props) {
           data-testid="output-rows"
         >
           {rows.output.map((row) => {
-            const first = marked?.kind === "output" && marked.line === row.line;
+            const first = differingRow?.kind === "output" && differingRow.line === row.line;
             return (
               <div
                 key={row.line}
@@ -93,7 +93,7 @@ export function ResultRows({ rows, marked, error, expected, printed }: Props) {
       {rows.variables.length > 0 && (
         <div className="grid grid-cols-2 rounded-lg border py-1" data-testid="variable-rows">
           {rows.variables.map((row) => {
-            const first = marked?.kind === "variable" && marked.name === row.name;
+            const first = differingRow?.kind === "variable" && differingRow.name === row.name;
             return (
               <div
                 key={row.name}

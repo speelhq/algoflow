@@ -4,10 +4,10 @@ import { clamp } from "@/lib/utils";
 
 const ZOOM = { min: 0.25, max: 2, step: 1.25 } as const;
 
-/** The scale at which `width` fits `region`; 1 when it already fits. */
-export function fitScale(region: number, width: number): number {
-  if (!(region > 0) || !(width > 0)) return 1;
-  return clamp(region / width, ZOOM.min, 1);
+/** The scale at which `width` fits the `available` width; 1 when it already fits. */
+export function fitScale(available: number, width: number): number {
+  if (!(available > 0) || !(width > 0)) return 1;
+  return clamp(available / width, ZOOM.min, 1);
 }
 
 export function zoomStep(scale: number, direction: 1 | -1): number {

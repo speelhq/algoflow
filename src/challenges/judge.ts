@@ -2,7 +2,7 @@
 // row of the `Result` tab differs.
 import type { Outcome } from "@/runtime/outcome";
 import type { RuntimeError } from "@/runtime/types";
-import { firstDifference, resultRows, type Rows } from "./rows";
+import { firstDifferingRow, resultRows, type Rows } from "./rows";
 import type { Test } from "./types";
 
 export type TestResult =
@@ -13,5 +13,5 @@ export type TestResult =
 export function judge(test: Test, outcome: Outcome): TestResult {
   if (outcome.done.type === "error") return { status: "error", error: outcome.done.error };
   const rows = resultRows(test.expect, outcome);
-  return firstDifference(rows) === null ? { status: "pass" } : { status: "fail", rows };
+  return firstDifferingRow(rows) === null ? { status: "pass" } : { status: "fail", rows };
 }

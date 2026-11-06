@@ -1,11 +1,11 @@
 // The submission in the `Result` tab. A wrong answer is its rows and
 // nothing else: the title, `k of n cases passed`, one chip per case, the selected
-// case's rows with the first difference marked, and `▶ Watch this case`. An accepted one
+// case's rows with the first differing row highlighted, and `▶ Watch this case`. An accepted one
 // says what comes next.
 import { useMemo } from "react";
 import type { Challenge } from "@/challenges";
 import { nextProblem } from "@/challenges/next";
-import { firstDifference, resultRows } from "@/challenges/rows";
+import { firstDifferingRow, resultRows } from "@/challenges/rows";
 import { errorText, localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor";
@@ -69,7 +69,7 @@ function Chips({ challenge }: { challenge: Challenge }) {
   );
 }
 
-/** The selected case's rows, its first difference marked, or its error message. */
+/** The selected case's rows, the first differing one highlighted, or its error message. */
 function SelectedRows({ challenge }: { challenge: Challenge }) {
   const selected = useTests((s) => s.selected);
   const result = useTests((s) => s.results[s.selected]);
@@ -83,7 +83,7 @@ function SelectedRows({ challenge }: { challenge: Challenge }) {
   return (
     <ResultRows
       rows={rows}
-      marked={result.status === "fail" ? firstDifference(rows) : null}
+      differingRow={result.status === "fail" ? firstDifferingRow(rows) : null}
       error={result.status === "error" ? errorText(result.error) : undefined}
       expected={test.expect.stdout !== undefined}
     />

@@ -1,4 +1,4 @@
-// The left region: the `Problem`, `Result`, and `Python` tabs (no `Problem` without a
+// The left part: the `Problem`, `Result`, and `Python` tabs (no `Problem` without a
 // challenge), resizable
 // from 280 px to half the viewport, collapsible to a 40 px rail; width and state persist.
 import type { Challenge } from "@/challenges";
