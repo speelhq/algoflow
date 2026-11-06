@@ -119,7 +119,7 @@ edges.
 
 A generated chart node is one of the three chart nodes that the chart
 draws for a `counted` loop's init, check, and update (`blocks.md`, Chart
-shape).
+form).
 
 A chart node has one of five shapes:
 
@@ -129,15 +129,15 @@ A chart node has one of five shapes:
 - `box` or `diamond`: a statement block or a generated chart node
 
 A statement block's chart nodes take their shapes from its block
-definition's `chart` field (`blocks.md`, Chart shape):
+definition's `chart` field (`blocks.md`, Chart form):
 
 | `chart`  | Rendering                                                                                                                                                                                                                 |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | absent   | a rounded box with the block's notation (`blocks.md`, Notation)                                                                                                                                                           |
 | `branch` | a diamond with the condition; the `yes` region to the right joined by a `Yes` edge, the `no` region below joined by a `No` edge, both merging below; an empty `no` region is a bare `No` edge                            |
-| `check`  | a diamond with the condition; `Yes` leads down into the body, whose last chart node returns by a back edge to a junction above the diamond; `No` leads on past the loop                                                        |
-| `counted`| three generated chart nodes around the body: `i ← start`, the diamond `i < stop?`, and `i ← i + 1` (texts of the block definition's `counted`, `blocks.md`, Chart shape), drawn gray; the body and the back edge as for `check` |
-| `jump`   | a box with the notation whose edge leaves by the right and runs down a lane inside the extent of the innermost loop around it, in place of an edge to the next chart node: for `exit` past the loop, joining its `No` lane; for `next` into its next pass, at the update chart node of a `counted` loop and at the start of the back edge of a `check` loop; the edge carries the connector after it (Editing on the chart); outside every loop, a box as for an absent `chart` |
+| `checked`| a diamond with the condition; `Yes` leads down into the body, whose last chart node returns by a back edge to the loop's top, a junction above the diamond; `No` leads on past the loop                                                        |
+| `counted`| three generated chart nodes around the body: `i ← start`, the diamond `i < stop?`, and `i ← i + 1` (texts of the block definition's `counted`, `blocks.md`, Chart form), drawn gray; the body and the back edge as for `checked` |
+| `jump`   | a box with the notation whose edge leaves by the right and runs down a lane inside the extent of the innermost loop around it, in place of an edge to the next chart node: for `exit` past the loop, joining its `No` lane; for `next` into its next pass, at the update chart node of a `counted` loop and at the start of the back edge of a `checked` loop; the edge carries the connector after it (Editing on the chart); outside every loop, a box as for an absent `chart` |
 
 The owner of a block or a function is the statement block or function that
 stands for it on a chart: a statement block and a function are their own
@@ -155,8 +155,8 @@ A chart node carries the `NodeId` of its owner:
 ### Loops
 
 Init, check, body, and update are the order in which a `for` runs, and
-`while` has the same shape without the init and the update, so one
-form serves every loop. The `counted` form draws a `for` in that
+`while` runs the same way without the init and the update, so the
+chart draws every loop alike. The `counted` form draws a `for` in that
 order. The loop-limit pair of JIS X 0121 and ISO 5807, the counted
 loop of Japanese textbooks and the FE exam, was rejected, and so was a
 dashed container, because both hide the check.
@@ -182,11 +182,12 @@ the connector after it.
 
 ### Diamonds
 
-The text of a `branch` or `check` diamond is its condition as the chart
-writes it (`blocks.md`, Notation), followed by `?` (`chart.condition`).
-For example: `i < n + 1?`, `i % 15 = 0?`. A block with a caption shows
-its caption instead (`editor.md`, Captions). A condition template writes
-a condition in words. For example: `is divisible by`, `equals`.
+The text of a `branch` or `checked` diamond is its condition as the
+chart writes it (`blocks.md`, Notation), followed by `?`
+(`chart.condition`). For example: `i < n + 1?`, `i % 15 = 0?`. A block
+with a caption shows its caption instead (`editor.md`, Captions). A
+condition template writes a condition in words. For example:
+`is divisible by`, `equals`.
 Condition templates were rejected, because they name only the
 conditions they list, and they would write a condition in words beside
 the notation that every other chart node uses, while the condition

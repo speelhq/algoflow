@@ -40,9 +40,9 @@ export type BlockDef = {
   entries?: ValueEntry[]; // the entries of the value list (Value list entries)
   chart?:
     | { branch: { cond: string; yes: string; no: string } }
-    | { check: { cond: string; body: string } }
+    | { checked: { cond: string; body: string } }
     | { counted: { body: string; init: string; check: string; update: string } }
-    | { jump: "exit" | "next" }; // Chart shape
+    | { jump: "exit" | "next" }; // Chart form
 };
 export type Param = { name: string; optional?: true }; // `name` as the notation writes it
 export type FieldFault = { field: string; message: string }; // a stored field no edit writes
@@ -157,7 +157,7 @@ provides the same keys:
   the help of a value list entry with a `name`
 - `block.<key>.init`, `block.<key>.check`, and `block.<key>.update`: the
   texts of a counted loop's generated chart nodes, for a loop whose texts
-  aren't notation (Chart shape)
+  aren't notation (Chart form)
 
 The hidden `empty` block definition has its label and help.
 
@@ -177,7 +177,7 @@ text, and `<x>` stands for an emitted slot.
 | ---------- | -------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
 | `assign`   | basic    | target, value          | `{target} ← {value}`                                                                                                | `<target> = <value>`                                                                |
 | `if`       | control  | cond, then, else       | `{cond}` (its diamond, `chart.md`, Shapes)                                                                          | `if <cond>:` … `else:` (else omitted when empty; empty region → `pass`)             |
-| `for`      | control  | var, start, stop, body | `{var} ← {start}`, its init (Chart shape)                                                                           | `for <var> in range(<stop>):` when start is `num` 0, else `range(<start>, <stop>):` |
+| `for`      | control  | var, start, stop, body | `{var} ← {start}`, its init (Chart form)                                                                            | `for <var> in range(<stop>):` when start is `num` 0, else `range(<start>, <stop>):` |
 | `foreach`  | list     | var, list, body        | `for {var} in {list}`                                                                                               | `for <var> in <list>:`                                                              |
 | `while`    | control  | cond, body             | `{cond}` (its diamond)                                                                                              | `while <cond>:`                                                                     |
 | `break`    | control  |                        | `break`                                                                                                             | `break`                                                                             |
@@ -239,15 +239,15 @@ alias, and the emitter adds `import <module>` (`emitter.md`).
 
 The methods:
 
-| name     | on   | shape | args       | notation                                  | Python                       |
-| -------- | ---- | ----- | ---------- | ----------------------------------------- | ---------------------------- |
-| `append` | list | stmt  | x          | `{a}.append({x})`                         | `<a>.append(<x>)`            |
-| `insert` | list | stmt  | i, x       | `{a}.insert({i}, {x})`                    | `<a>.insert(<i>, <x>)`       |
-| `pop`    | list | expr  | i?         | `{a}.pop()` / `{a}.pop({i})`              | `<a>.pop()` / `<a>.pop(<i>)` |
-| `copy`   | list | expr  |            | `{a}.copy()`                              | `<a>.copy()`                 |
-| `sort`   | list | stmt  |            | `{a}.sort()`                              | `<a>.sort()`                 |
-| `get`    | dict | expr  | k, default | `{d}.get({k}, {default})`                 | `<d>.get(<k>, <default>)`    |
-| `keys`   | dict | expr  |            | `{d}.keys()`                              | `list(<d>.keys())`           |
+| name     | on   | used as | args       | notation                                  | Python                       |
+| -------- | ---- | ------- | ---------- | ----------------------------------------- | ---------------------------- |
+| `append` | list | stmt    | x          | `{a}.append({x})`                         | `<a>.append(<x>)`            |
+| `insert` | list | stmt    | i, x       | `{a}.insert({i}, {x})`                    | `<a>.insert(<i>, <x>)`       |
+| `pop`    | list | expr    | i?         | `{a}.pop()` / `{a}.pop({i})`              | `<a>.pop()` / `<a>.pop(<i>)` |
+| `copy`   | list | expr    |            | `{a}.copy()`                              | `<a>.copy()`                 |
+| `sort`   | list | stmt    |            | `{a}.sort()`                              | `<a>.sort()`                 |
+| `get`    | dict | expr    | k, default | `{d}.get({k}, {default})`                 | `<d>.get(<k>, <default>)`    |
+| `keys`   | dict | expr    |            | `{d}.keys()`                              | `list(<d>.keys())`           |
 
 Method statements (`append`, `insert`, `sort`) are `expr` statements that
 wrap a `method` expression. The block menu lists them as statements.
@@ -387,7 +387,7 @@ pieces.
 A block is drawn as its notation writes it, with no capital letter
 added.
 
-## Chart shape
+## Chart form
 
 A block definition with body regions, or one that sends control somewhere
 other than the next statement in a loop, declares `chart` (`chart.md`,
@@ -395,7 +395,7 @@ Shapes). The chart draws every other block as a box with its notation.
 `chart` doesn't affect the interpreter or the emitter.
 
 - `if` declares `{ branch: { cond: "cond", yes: "then", no: "else" } }`.
-- `while` declares `{ check: { cond: "cond", body: "body" } }`, where
+- `while` declares `{ checked: { cond: "cond", body: "body" } }`, where
   `cond` names the slot of the condition its diamond asks.
 - `for` and `foreach` declare `counted`, which names their body and the
   texts of their generated chart nodes.
