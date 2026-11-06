@@ -53,7 +53,10 @@ export type ChartNode = {
   text: string;
   /** What the chart node draws without its caption, shown on hover where it shows its caption instead. */
   title?: string;
-  /** The text in runs, each at `dx` from the chart node's left with width `w`; a slot's run names it. */
+  /**
+   * The text in parts, each at `dx` from the chart node's left with width `w`; a slot's part names
+   * it.
+   */
   parts: PlacedPart[];
   /** Top-left corner; a junction is a point (`w = h = 0`). */
   x: number;
@@ -71,10 +74,12 @@ export type ChartEdge = {
   points: Point[];
   /** Where a block inserted on this edge goes; null where none can. */
   place: Place | null;
-  /** Where the `+` connector and the label sit: the middle of a vertical run of the edge. */
+  /** Where the `+` connector and the label sit: the middle of a vertical segment of the edge. */
   anchor: Point;
 };
-/** A run at `dx` from the chart node's left with width `w`, `dy` from its middle (a second line). */
+/**
+ * A part at `dx` from the chart node's left with width `w`, `dy` from its middle (a second line).
+ */
 export type PlacedPart = Part & { dx: number; dy: number; w: number };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
 /** The width of `text` in px as the chart draws it; a variable is drawn bold. */
@@ -110,26 +115,26 @@ export const LINE = 16;
 const BREAK: Part = { text: " " };
 
 /**
- * Runs split into two lines at the space that makes the longer line shortest; a space inside
+ * Parts split into two lines at the space that makes the longer line shortest; a space inside
  * a variable is never one. One line when there is no space to split at.
  */
-function inTwo(runs: Part[], width: (part: Part) => number): Part[][] {
+function inTwo(parts: Part[], width: (part: Part) => number): Part[][] {
   let best: { lines: Part[][]; longest: number } | undefined;
-  runs.forEach((run, r) => {
-    if (run.variable) return;
-    for (let k = run.text.indexOf(" "); k >= 0; k = run.text.indexOf(" ", k + 1)) {
-      const head = run.text.slice(0, k).trimEnd();
-      const rest = run.text.slice(k + 1).trimStart();
+  parts.forEach((part, p) => {
+    if (part.variable) return;
+    for (let k = part.text.indexOf(" "); k >= 0; k = part.text.indexOf(" ", k + 1)) {
+      const head = part.text.slice(0, k).trimEnd();
+      const rest = part.text.slice(k + 1).trimStart();
       // The space stays at the end of the first line, drawn with no width, so the text reads on.
-      const first = [...runs.slice(0, r), ...(head ? [{ ...run, text: head }] : []), BREAK];
-      const second = [...(rest ? [{ ...run, text: rest }] : []), ...runs.slice(r + 1)];
+      const first = [...parts.slice(0, p), ...(head ? [{ ...part, text: head }] : []), BREAK];
+      const second = [...(rest ? [{ ...part, text: rest }] : []), ...parts.slice(p + 1)];
       if (first.length === 1 || second.length === 0) continue;
-      const sum = (line: Part[]) => line.reduce((total, part) => total + width(part), 0);
+      const sum = (line: Part[]) => line.reduce((total, each) => total + width(each), 0);
       const longest = Math.max(sum(first), sum(second));
       if (!best || longest < best.longest) best = { lines: [first, second], longest };
     }
   });
-  return best?.lines ?? [runs];
+  return best?.lines ?? [parts];
 }
 
 /** Where a flow that leaves its region goes: `End`, past its loop, or into the loop's next pass. */
@@ -195,18 +200,19 @@ function shift(frag: Frag, dx: number, dy: number): Frag {
 }
 
 /**
- * The middle of the first or last vertical run; of the first segment when there is none, and
- * for `start` (a flow leaving sideways, whose vertical run is far from its chart node).
+ * The middle of the first or last vertical segment; of the first segment when there is none,
+ * and for `start` (a flow leaving sideways, whose vertical segment is far from its chart node).
  */
 function anchorOf(points: Point[], which: "first" | "last" | "start"): Point {
-  const runs: Array<[Point, Point]> = [];
+  const vertical: Array<[Point, Point]> = [];
   for (let i = 1; i < points.length; i += 1) {
     const a = points[i - 1];
     const b = points[i];
-    if (a && b && a.x === b.x && a.y !== b.y) runs.push([a, b]);
+    if (a && b && a.x === b.x && a.y !== b.y) vertical.push([a, b]);
   }
-  const run = which === "start" ? undefined : which === "first" ? runs[0] : runs[runs.length - 1];
-  const [a, b] = run ?? [points[0] ?? { x: 0, y: 0 }, points[1] ?? last(points)];
+  const segment =
+    which === "start" ? undefined : which === "first" ? vertical[0] : vertical[vertical.length - 1];
+  const [a, b] = segment ?? [points[0] ?? { x: 0, y: 0 }, points[1] ?? last(points)];
   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
 }
 
@@ -250,14 +256,14 @@ class Builder {
     content: string | Part[],
     y: number,
   ): ChartNode {
-    const runs =
+    const unplaced =
       typeof content === "string" ? (content === "" ? [] : [{ text: content }]) : content;
     const measured = (part: Part) =>
       part === BREAK
         ? 0
         : this.measure(part.text, shape, part.variable) + (part.empty ? 2 * PILL : 0);
-    const whole = runs.reduce((sum, part) => sum + measured(part), 0);
-    const lines = shape === "diamond" && whole > WRAP ? inTwo(runs, measured) : [runs];
+    const whole = unplaced.reduce((sum, part) => sum + measured(part), 0);
+    const lines = shape === "diamond" && whole > WRAP ? inTwo(unplaced, measured) : [unplaced];
     const lineWidths = lines.map((line) => line.reduce((sum, part) => sum + measured(part), 0));
     const width = Math.max(0, ...lineWidths);
     const padded =
@@ -279,7 +285,7 @@ class Builder {
         return placed;
       });
     });
-    const text = joinParts(runs);
+    const text = joinParts(unplaced);
     return { id, owner, role, shape, generated, text, parts, x: -w / 2, y, w, h: HEIGHT[shape] };
   }
 
@@ -315,12 +321,12 @@ class Builder {
   region(stmts: Stmt[], parent: RegionParent, slot: Slot): Frag {
     const frag = emptyFrag();
     let y = 0;
-    let flow: Stub | null = null;
+    let out: Stub | null = null;
     for (const [index, stmt] of stmts.entries()) {
       const child = shift(this.statement(stmt), 0, y);
-      if (flow && child.entry !== null) {
+      if (out && child.entry !== null) {
         frag.edges.push(
-          edge({ ...flow, place: { parent, slot, index } }, child.entry, [{ x: 0, y }]),
+          edge({ ...out, place: { parent, slot, index } }, child.entry, [{ x: 0, y }]),
         );
       }
       frag.entry ??= child.entry;
@@ -335,10 +341,10 @@ class Builder {
       frag.left = Math.max(frag.left, child.left);
       frag.right = Math.max(frag.right, child.right);
       frag.height = y + child.height;
-      flow = child.out;
+      out = child.out;
       y += child.height + GAP_Y;
     }
-    frag.out = flow && { ...flow, place: { parent, slot, index: stmts.length } };
+    frag.out = out && { ...out, place: { parent, slot, index: stmts.length } };
     for (const escape of frag.escapes)
       escape.points.push({ x: frag.right, y: last(escape.points).y });
     return frag;
@@ -502,7 +508,7 @@ class Builder {
     const passing = body.escapes.filter((escape) => escape.to !== "exit" && escape.to !== "next");
     const yBody = y + d.h + GAP_Y;
     const yesStub: Stub = { from: d.id, label: "yes", points: [{ x: 0, y: y + d.h }], place: null };
-    let tail = this.enter(yesStub, body, { x: 0, y: yBody }, frag, stmt.id, slot as Slot);
+    let out = this.enter(yesStub, body, { x: 0, y: yBody }, frag, stmt.id, slot as Slot);
     let bottom = yBody + body.height;
     let half = d.w / 2;
     let update: ChartNode | null = null;
@@ -518,8 +524,8 @@ class Builder {
         yUpdate,
       );
       frag.nodes.push(update);
-      if (tail) frag.edges.push(edge(tail, update.id, [{ x: 0, y: yUpdate }]));
-      tail = { from: update.id, points: [{ x: 0, y: yUpdate + update.h }], place: null };
+      if (out) frag.edges.push(edge(out, update.id, [{ x: 0, y: yUpdate }]));
+      out = { from: update.id, points: [{ x: 0, y: yUpdate + update.h }], place: null };
       bottom = yUpdate + update.h;
       half = Math.max(half, update.w / 2);
     }
@@ -556,7 +562,7 @@ class Builder {
           ),
         );
       }
-      if (tail) frag.edges.push(edge(tail, top.id, up, { anchor: "first" }));
+      if (out) frag.edges.push(edge(out, top.id, up, { anchor: "first" }));
     } else if (nexts.length > 0) {
       // The next pass of a checked loop starts where the back edge does.
       const next = this.node(`${stmt.id}:next`, stmt.id, "next", "junction", "", yTurn);
@@ -575,11 +581,11 @@ class Builder {
           ),
         );
       }
-      if (tail) frag.edges.push(edge(tail, next.id, [{ x: 0, y: yTurn }]));
+      if (out) frag.edges.push(edge(out, next.id, [{ x: 0, y: yTurn }]));
       const from: Stub = { from: next.id, points: [{ x: 0, y: yTurn }], place: null };
       frag.edges.push(edge(from, top.id, up.slice(1), { anchor: "first" }));
-    } else if (tail) {
-      frag.edges.push(edge(tail, top.id, up, { anchor: "first" }));
+    } else if (out) {
+      frag.edges.push(edge(out, top.id, up, { anchor: "first" }));
     }
 
     frag.height = yTurn + LANE;
@@ -633,7 +639,7 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
     : t("chart.start");
   const start = builder.node("start", fn ? fn.id : null, "start", "terminal", startText, 0);
   frag.nodes.push(start);
-  let flow: Stub = { from: start.id, points: [{ x: 0, y: start.h }], place: null };
+  let out: Stub | null = { from: start.id, points: [{ x: 0, y: start.h }], place: null };
   let y = start.h + GAP_Y;
   let half = start.w / 2;
 
@@ -641,8 +647,8 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
     const parts = inputParts(input.name, inputValue(opts.inputs, input.name));
     const node = builder.node(`input:${input.name}`, null, "input", "input", parts, y);
     frag.nodes.push(node);
-    frag.edges.push(edge(flow, node.id, [{ x: 0, y }]));
-    flow = { from: node.id, points: [{ x: 0, y: y + node.h }], place: null };
+    frag.edges.push(edge(out, node.id, [{ x: 0, y }]));
+    out = { from: node.id, points: [{ x: 0, y: y + node.h }], place: null };
     y += node.h + GAP_Y;
     half = Math.max(half, node.w / 2);
   }
@@ -650,19 +656,18 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
   const slot = fn ? "body" : "main";
   const body = builder.region(routineStmts(program, routine), opts.routine, slot);
   const first: Place = { parent: opts.routine, slot, index: 0 };
-  let tail: Stub | null;
-  if (body.entry === null) tail = { ...flow, place: first };
+  if (body.entry === null) out = { ...out, place: first };
   else {
     shift(body, 0, y);
     frag.nodes.push(...body.nodes);
-    frag.edges.push(edge({ ...flow, place: first }, body.entry, [{ x: 0, y }]), ...body.edges);
-    tail = body.out;
+    frag.edges.push(edge({ ...out, place: first }, body.entry, [{ x: 0, y }]), ...body.edges);
+    out = body.out;
     y += body.height + GAP_Y;
   }
 
   const end = builder.node("end", null, "end", "terminal", t("chart.end"), y);
   frag.nodes.push(end);
-  if (tail) frag.edges.push(edge(tail, end.id, [{ x: 0, y }]));
+  if (out) frag.edges.push(edge(out, end.id, [{ x: 0, y }]));
   half = Math.max(half, end.w / 2);
 
   // Every Return leads to End, down one trunk to the right of the whole chart.

@@ -596,7 +596,7 @@ describe("layout texts", () => {
     expect(new Set(one.map((part) => part.dy))).toEqual(new Set([0]));
   });
 
-  it("a variable's run is measured bold", () => {
+  it("a variable's part is measured bold", () => {
     const measure: Measure = (text, _shape, bold) => text.length * (bold ? 10 : 5);
     const shown = print(v("abc"));
     const chart = laidOut(program([shown]), { routine: "main", inputs: {}, measure });
