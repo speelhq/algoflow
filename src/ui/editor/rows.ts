@@ -17,7 +17,7 @@ function kindName(kinds: Kinds, name: Name): string | undefined {
 }
 
 function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
-  switch (row.kind) {
+  switch (row.type) {
     case "variable":
       return {
         key: `v:${row.name}:${index}`,
@@ -62,7 +62,7 @@ function switchRows(session: Session, kinds: Kinds): { rows: Row[]; sections: Li
         entry.def === current.def &&
         entry.declared.group === current.declared.group,
     )
-    .map((entry): Row => ({ kind: "entry", entry }));
+    .map((entry): Row => ({ type: "entry", entry }));
   const title = t(`editor.lists.${current.declared.group}`);
   const items = rows.map((row, index) => rowItem(row, index, kinds));
   return { rows, sections: rows.length > 0 ? [{ title, items }] : [] };

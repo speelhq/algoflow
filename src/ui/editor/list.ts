@@ -25,7 +25,7 @@ export type Section = { group: ListGroup; rows: Row[] };
 
 /** The group a row is listed under: among a target's names, one the problem expects under `This problem`. */
 function groupOf(row: Row, asked: readonly string[]): ListGroup {
-  switch (row.kind) {
+  switch (row.type) {
     case "variable":
       return asked.includes(row.name) ? "problem" : "variables";
     case "new":
@@ -53,12 +53,12 @@ function expected(ctx: LineContext, all: boolean): Row[] {
   const last = offered.findLastIndex(
     (entry) => entry.declared.group === "calculate" && !takesValue(entry),
   );
-  const entries = offered.map((entry): Row => ({ kind: "entry", entry }));
-  entries.splice(last + 1, 0, { kind: "parentheses" });
+  const entries = offered.map((entry): Row => ({ type: "entry", entry }));
+  entries.splice(last + 1, 0, { type: "parentheses" });
   return [
-    ...ctx.variables.map((name): Row => ({ kind: "variable", name })),
+    ...ctx.variables.map((name): Row => ({ type: "variable", name })),
     ...entries,
-    ...ctx.functions.map((fn): Row => ({ kind: "function", fn })),
+    ...ctx.functions.map((fn): Row => ({ type: "function", fn })),
   ];
 }
 
@@ -69,7 +69,7 @@ function after(kind: Kind | undefined, all: boolean): Row[] {
       (entry) =>
         takesValue(entry) && (all || kind === undefined || entry.declared.on?.includes(kind)),
     )
-    .map((entry): Row => ({ kind: "entry", entry }));
+    .map((entry): Row => ({ type: "entry", entry }));
 }
 
 /** The list's sections at the caret, or the matches of the word typed, in their rank. */

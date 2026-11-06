@@ -120,7 +120,7 @@ describe("editor session", () => {
     const stmt = assignTo(empty(), num(1));
     const field: Field = { slot: "target" };
     const enter = { key: "Enter", shiftKey: false };
-    const total = { kind: "variable", name: "total" } as const;
+    const total = { type: "variable", name: "total" } as const;
     const highlighted = { ...openSession(stmt, field, null), highlight: 0 };
     const chosen = valueKey(highlighted, enter, [total], targetCtx, "←");
     expect(chosen.after).toEqual({ go: 1 });
@@ -138,12 +138,12 @@ describe("editor session", () => {
     const other = empty();
     const unlisted = openSession(assignTo(ast.item(empty(), other), num(1)), field, other.id);
     expect(pickRow(unlisted, total, targetCtx).after).toBeUndefined();
-    const parentheses = pickRow(openSession(stmt, field, null), { kind: "parentheses" }, targetCtx);
+    const parentheses = pickRow(openSession(stmt, field, null), { type: "parentheses" }, targetCtx);
     expect(parentheses.after).toBeUndefined();
     const text = allEntries().find((entry) => entry.id === "str");
     if (!text) throw new Error("no Text");
     const named = openSession(assignTo(v("x"), num(1)), field, null);
-    const refused = pickRow(named, { kind: "entry", entry: text }, targetCtx);
+    const refused = pickRow(named, { type: "entry", entry: text }, targetCtx);
     expect(refused.after).toBeUndefined();
     expect(refused.edits).toEqual([]);
     // A value slot never moves on.
@@ -159,7 +159,7 @@ describe("editor session", () => {
     const text = allEntries().find((entry) => entry.id === "str");
     if (!text) throw new Error("no Text");
     // `Text` opens an empty text field, as the learner chooses it.
-    const editing = chooseRow(openSession(stmt, field, null), { kind: "entry", entry: text }, ctx);
+    const editing = chooseRow(openSession(stmt, field, null), { type: "entry", entry: text }, ctx);
     expect(editing.session.line?.text).toBeDefined();
     const transition = textEnded(editing.session, "Backspace", ctx);
     expect(transition.session.line?.root.type).toBe("empty");

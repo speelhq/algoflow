@@ -82,10 +82,10 @@ function typedHelp(help: string, keys: string | undefined): ExplanationPart[] {
 
 /** The row's explanation. */
 function explainRow(row: Row, program: Program, at: NodeId): Explanation {
-  switch (row.kind) {
+  switch (row.type) {
     case "variable":
     case "new":
-      return explainName(program, at, row.name, row.kind === "new");
+      return explainName(program, at, row.name, row.type === "new");
     case "entry":
       return { name: row.entry.label, parts: typedHelp(row.entry.help, row.entry.declared.typed) };
     case "parentheses":
@@ -125,11 +125,11 @@ function closestName(line: Line, ctx: LineContext): string | undefined {
   let best: { name: string; d: number } | undefined;
   for (const row of wordRows(line, ctx)) {
     const names =
-      row.kind === "variable"
+      row.type === "variable"
         ? [row.name]
-        : row.kind === "entry"
+        : row.type === "entry"
           ? [row.entry.label]
-          : row.kind === "function"
+          : row.type === "function"
             ? [row.fn.name]
             : [];
     for (const name of names) {
