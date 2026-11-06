@@ -295,7 +295,7 @@ export function setParams(program: Program, id: NodeId, params: Name[]): Program
 
 /** The zero-like literal of the first value assigned to `name` inside `stmts`, else None. */
 function defaultFor(stmts: Stmt[], name: Name): Expr {
-  const none = (): Expr => ({ id: newId(), kind: "none" });
+  const none = (): Expr => ({ id: newId(), type: "none" });
   for (const stmt of allStmts(stmts)) {
     const value = declaredBy(stmt).find(
       (declared) => declared.name === name && declared.stores !== undefined,
@@ -312,8 +312,8 @@ export function hoistAssign(program: Program, compound: NodeId, name: Name): Pro
   const inner = regionsOf(stmt).flatMap((r) => r.stmts);
   const assign: Stmt = {
     id: newId(),
-    kind: "assign",
-    target: { id: newId(), kind: "var", name },
+    type: "assign",
+    target: { id: newId(), type: "var", name },
     value: defaultFor(inner, name),
   };
   region.splice(index, 0, assign);

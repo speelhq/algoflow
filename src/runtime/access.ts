@@ -24,7 +24,7 @@ export function asList(
     });
   }
   const entry = getHeapEntry(ctx.heap, list.ref);
-  if (entry.kind !== "list") throw new Error("list ref is not a list");
+  if (entry.type !== "list") throw new Error("list ref is not a list");
   return { ref: list.ref, items: entry.items };
 }
 

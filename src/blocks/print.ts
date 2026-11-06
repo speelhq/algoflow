@@ -10,7 +10,7 @@ export const print = defineStmt<"print">({
   key: "print",
   category: "basic",
   slots: [{ name: "args", role: "exprs" }],
-  create: () => ({ id: newId(), kind: "print", args: [emptyExpr()] }),
+  create: () => ({ id: newId(), type: "print", args: [emptyExpr()] }),
   *run(block, ctx) {
     const values: Value[] = [];
     for (const arg of block.args) values.push(yield* ctx.eval(arg));

@@ -1,16 +1,16 @@
-// Traversal driven by each block's slots, so no module lists block kinds.
+// Traversal driven by each block's slots, so no module lists block types.
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import type { Expr, Block, FunctionDef, NodeId, Program, Routine, Stmt } from "./types";
 
 type Bag = Record<string, unknown>;
 
 export function isExpr(value: unknown): value is Expr {
-  return typeof value === "object" && value !== null && "kind" in value && "id" in value;
+  return typeof value === "object" && value !== null && "type" in value && "id" in value;
 }
 
 /** What an empty slot holds: the one expression that is no block a learner chooses. */
 export function isEmptyExpr(value: unknown): boolean {
-  return isExpr(value) && value.kind === "empty";
+  return isExpr(value) && value.type === "empty";
 }
 
 /** Whether an expression names where a value is stored: its block declares `locate`. */

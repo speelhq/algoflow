@@ -18,15 +18,15 @@ const ctx = {
   },
 } as unknown as RunContext;
 
-function call(argc: number): Extract<Expr, { kind: "call" }> {
+function call(argc: number): Extract<Expr, { type: "call" }> {
   const args = Array.from({ length: argc }, (_, i): Expr => ({
     id: `arg00000000${i}`,
-    kind: "num",
+    type: "num",
     value: 1,
     float: false,
     raw: "1",
   }));
-  return { id: "call00000001", kind: "call", fn: "probe", args };
+  return { id: "call00000001", type: "call", fn: "probe", args };
 }
 
 function run(argc: number): Value {
@@ -55,6 +55,6 @@ describe("builtin argument counts", () => {
   });
 
   it("a new builtin holds one empty argument per parameter not marked optional", () => {
-    expect(probe.create()).toMatchObject({ kind: "call", fn: "probe", args: [{ kind: "empty" }] });
+    expect(probe.create()).toMatchObject({ type: "call", fn: "probe", args: [{ type: "empty" }] });
   });
 });

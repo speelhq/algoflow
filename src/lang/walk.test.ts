@@ -71,7 +71,7 @@ describe("the node index", () => {
 
   it("gives an expression its statement as owner, and a statement or a function itself", () => {
     expect(ownerOf(p, cond.id)).toBe(branch.id);
-    expect(ownerOf(p, cond.kind === "binop" ? cond.left.id : "")).toBe(branch.id);
+    expect(ownerOf(p, cond.type === "binop" ? cond.left.id : "")).toBe(branch.id);
     expect(ownerOf(p, inner.id)).toBe(inner.id);
     expect(ownerOf(p, value.id)).toBe(body.id);
     expect(ownerOf(p, body.id)).toBe(body.id);
@@ -122,7 +122,7 @@ describe("conditionOf and diamondConditions", () => {
     expect(diamondConditions(p)).toEqual(
       new Map([
         [asked.id, branch.id],
-        [loop.kind === "while" ? loop.cond.id : "", loop.id],
+        [loop.type === "while" ? loop.cond.id : "", loop.id],
       ]),
     );
     expect(diamondConditions(p)).toBe(diamondConditions(p));

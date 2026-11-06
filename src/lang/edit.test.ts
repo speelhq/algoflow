@@ -45,7 +45,7 @@ describe("edit", () => {
     const { p: base, a, loop, inner, b } = sample();
     const start = addFunction(base, "f", ["a"]);
     const fn = start.functions[0]!;
-    const value = (inner as Extract<Stmt, { kind: "assign" }>).value;
+    const value = (inner as Extract<Stmt, { type: "assign" }>).value;
     const edits: Record<string, (p: Program) => Program> = {
       insertStmt: (p) => insertStmt(p, loop, { parent: "main", slot: "main", index: 0 }),
       moveStmt: (p) => moveStmt(p, b.id, { parent: loop.id, slot: "body", index: 0 }),
@@ -146,21 +146,21 @@ describe("edit", () => {
     expect(lines(setExpr(p, a.id, "value", num(42)))[0]).toBe("x = 42");
     expect(lines(setExpr(p, b.id, "args", str("done"), 0))[3]).toBe('print("done")');
     expect(lines(setExpr(p, b.id, "args", str("more")))[3]).toBe('print(x, "more")');
-    const binop = (inner as Extract<Stmt, { kind: "assign" }>).value;
+    const binop = (inner as Extract<Stmt, { type: "assign" }>).value;
     expect(lines(setExpr(p, binop.id, "right", num(2)))[2]).toBe("    x = x + 2");
-    const reused = setExpr(p, a.id, "value", (inner as Extract<Stmt, { kind: "assign" }>).value);
+    const reused = setExpr(p, a.id, "value", (inner as Extract<Stmt, { type: "assign" }>).value);
     expect(idsUnique(reused)).toBe(true);
-    expect(unparse((reused.main[0] as Extract<Stmt, { kind: "assign" }>).value)).toBe("x + i");
+    expect(unparse((reused.main[0] as Extract<Stmt, { type: "assign" }>).value)).toBe("x + i");
   });
 
   it("setExpr keeps the ids of the expression it wraps", () => {
     const { p, a } = sample();
-    const value = (a as Extract<Stmt, { kind: "assign" }>).value;
+    const value = (a as Extract<Stmt, { type: "assign" }>).value;
     const wrapped = bin("+", value, ast.empty());
     const next = setExpr(p, a.id, "value", wrapped);
-    const placed = (next.main[0] as Extract<Stmt, { kind: "assign" }>).value;
+    const placed = (next.main[0] as Extract<Stmt, { type: "assign" }>).value;
     expect(placed.id).toBe(wrapped.id);
-    expect(placed.kind === "binop" && placed.left.id).toBe(value.id);
+    expect(placed.type === "binop" && placed.left.id).toBe(value.id);
     expect(idsUnique(next)).toBe(true);
   });
 

@@ -62,11 +62,11 @@ export function truthy(value: Value, heap: Heap): boolean {
       return false;
     case "list": {
       const entry = getHeapEntry(heap, value.ref);
-      return entry.kind === "list" && entry.items.length > 0;
+      return entry.type === "list" && entry.items.length > 0;
     }
     case "dict": {
       const entry = getHeapEntry(heap, value.ref);
-      return entry.kind === "dict" && entry.entries.size > 0;
+      return entry.type === "dict" && entry.entries.size > 0;
     }
   }
 }
@@ -110,7 +110,7 @@ export function equals(a: Value, b: Value, heap: Heap): boolean {
     case "list": {
       const x = getHeapEntry(heap, a.ref);
       const y = getHeapEntry(heap, (b as typeof a).ref);
-      if (x.kind !== "list" || y.kind !== "list") return false;
+      if (x.type !== "list" || y.type !== "list") return false;
       return (
         x.items.length === y.items.length &&
         x.items.every((item, i) => equals(item, y.items[i] ?? { t: "none" }, heap))
@@ -119,7 +119,7 @@ export function equals(a: Value, b: Value, heap: Heap): boolean {
     case "dict": {
       const x = getHeapEntry(heap, a.ref);
       const y = getHeapEntry(heap, (b as typeof a).ref);
-      if (x.kind !== "dict" || y.kind !== "dict") return false;
+      if (x.type !== "dict" || y.type !== "dict") return false;
       if (x.entries.size !== y.entries.size) return false;
       for (const [key, item] of x.entries) {
         const other = y.entries.get(key);
@@ -201,11 +201,11 @@ export function writeValue(value: Value, heap: Heap, scalar: (value: Value) => s
   switch (value.t) {
     case "list": {
       const entry = getHeapEntry(heap, value.ref);
-      return entry.kind === "list" ? `[${entry.items.map(write).join(", ")}]` : "[]";
+      return entry.type === "list" ? `[${entry.items.map(write).join(", ")}]` : "[]";
     }
     case "dict": {
       const entry = getHeapEntry(heap, value.ref);
-      if (entry.kind !== "dict") return "{}";
+      if (entry.type !== "dict") return "{}";
       const parts = [...entry.entries].map(
         ([key, item]) => `${scalar(keyValue(key))}: ${write(item)}`,
       );

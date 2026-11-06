@@ -4,7 +4,7 @@ import { getHeapEntry } from "@/runtime/values";
 import { defineBuiltin } from "./builtin";
 
 const countOf = (entry: HeapEntry): number =>
-  entry.kind === "list" ? entry.items.length : entry.entries.size;
+  entry.type === "list" ? entry.items.length : entry.entries.size;
 
 export const len = defineBuiltin({
   name: "len",

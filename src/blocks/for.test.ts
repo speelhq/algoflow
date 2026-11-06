@@ -26,10 +26,10 @@ describe("for (blocks.md)", () => {
 
   it("a new for's variable is an empty slot, and it starts at 0", () => {
     expect(forStmt.create()).toMatchObject({
-      kind: "for",
-      var: { kind: "empty" },
-      start: { kind: "num", value: 0, raw: "0" },
-      stop: { kind: "empty" },
+      type: "for",
+      var: { type: "empty" },
+      start: { type: "num", value: 0, raw: "0" },
+      stop: { type: "empty" },
       body: [],
     });
     expect(forStmt.slots[0]).toEqual({ name: "var", role: "target", binds: true });

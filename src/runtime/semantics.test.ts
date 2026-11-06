@@ -179,7 +179,7 @@ describe("event rules", () => {
       { type: "compare", nodeId: compared.id, result: true },
     ]);
     const negated = not(bin("<", num(1), num(2)));
-    const inner = negated.kind === "unop" ? negated.operand.id : "";
+    const inner = negated.type === "unop" ? negated.operand.id : "";
     const result = runAll(program([if_(negated, [])]));
     expect(result.events.filter((e) => e.type === "compare")).toEqual([
       { type: "compare", nodeId: inner, result: true },

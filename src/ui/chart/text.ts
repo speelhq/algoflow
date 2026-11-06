@@ -1,7 +1,7 @@
 // A block's text as parts: its block's `notation()` with the block's slots filled in, the same in
 // every locale; a variable is drawn bold in its own color, and an empty slot as `…`, the `empty`
 // block's notation. Operators are parenthesized as the emitter does. Reads slot roles, `params`,
-// `notation`, `text`, `chart`, and `precedence` only, never a kind; a variable shown with its
+// `notation`, `text`, `chart`, and `precedence` only, never a type; a variable shown with its
 // value is written by the `assign` block's notation.
 import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";

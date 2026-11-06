@@ -22,30 +22,30 @@ function err(text: string, scope: ParseScope = NO_DEFINITIONS): ParseError {
 
 describe("parse", () => {
   it("parses literals with raw number text and decoded strings", () => {
-    expect(ok("1e3")).toMatchObject({ kind: "num", value: 1000, float: true, raw: "1e3" });
-    expect(ok("42")).toMatchObject({ kind: "num", value: 42, float: false, raw: "42" });
-    expect(ok(".5")).toMatchObject({ kind: "num", value: 0.5, float: true });
-    expect(ok("'a\\nb'")).toMatchObject({ kind: "str", value: "a\nb" });
-    expect(ok('"say \\"hi\\""')).toMatchObject({ kind: "str", value: 'say "hi"' });
-    expect(ok("True")).toMatchObject({ kind: "bool", value: true });
-    expect(ok("None")).toMatchObject({ kind: "none" });
-    expect(ok("total")).toMatchObject({ kind: "var", name: "total" });
+    expect(ok("1e3")).toMatchObject({ type: "num", value: 1000, float: true, raw: "1e3" });
+    expect(ok("42")).toMatchObject({ type: "num", value: 42, float: false, raw: "42" });
+    expect(ok(".5")).toMatchObject({ type: "num", value: 0.5, float: true });
+    expect(ok("'a\\nb'")).toMatchObject({ type: "str", value: "a\nb" });
+    expect(ok('"say \\"hi\\""')).toMatchObject({ type: "str", value: 'say "hi"' });
+    expect(ok("True")).toMatchObject({ type: "bool", value: true });
+    expect(ok("None")).toMatchObject({ type: "none" });
+    expect(ok("total")).toMatchObject({ type: "var", name: "total" });
   });
 
   it("builds the grammar's precedence levels", () => {
     expect(ok("a or b and not c == d + e * -f ** 2")).toMatchObject({
-      kind: "binop",
+      type: "binop",
       op: "or",
       right: {
         op: "and",
         right: {
-          kind: "unop",
+          type: "unop",
           op: "not",
           operand: {
             op: "==",
             right: {
               op: "+",
-              right: { op: "*", right: { kind: "unop", op: "neg", operand: { op: "**" } } },
+              right: { op: "*", right: { type: "unop", op: "neg", operand: { op: "**" } } },
             },
           },
         },
@@ -65,30 +65,30 @@ describe("parse", () => {
   it("rejects number text CPython rejects and decodes \\x escapes", () => {
     expect(err("0777")).toEqual({ code: "E_PARSE_SYNTAX", position: 0 });
     expect(err("1 + 007")).toEqual({ code: "E_PARSE_SYNTAX", position: 4 });
-    expect(ok("00")).toMatchObject({ kind: "num", value: 0, raw: "00" });
-    expect(ok("0.5")).toMatchObject({ kind: "num", value: 0.5 });
-    expect(ok('"a\\x41\\x01"')).toMatchObject({ kind: "str", value: "aA" });
+    expect(ok("00")).toMatchObject({ type: "num", value: 0, raw: "00" });
+    expect(ok("0.5")).toMatchObject({ type: "num", value: 0.5 });
+    expect(ok('"a\\x41\\x01"')).toMatchObject({ type: "str", value: "aA" });
   });
 
   it("an int literal outside the int range is a syntax error at its token", () => {
-    expect(ok("9007199254740991")).toMatchObject({ kind: "num", value: 2 ** 53 - 1, float: false });
+    expect(ok("9007199254740991")).toMatchObject({ type: "num", value: 2 ** 53 - 1, float: false });
     expect(err("1 + 9007199254740992")).toEqual({ code: "E_PARSE_SYNTAX", position: 4 });
     expect(err("-9007199254740992")).toEqual({ code: "E_PARSE_SYNTAX", position: 1 });
-    expect(ok("9007199254740993.0")).toMatchObject({ kind: "num", float: true });
+    expect(ok("9007199254740993.0")).toMatchObject({ type: "num", float: true });
   });
 
   it("gives every block an id and no mark of how it was made", () => {
     const expr = ok("a + b");
     expect(expr.id).toHaveLength(12);
-    expect(Object.keys(expr).toSorted()).toEqual(["id", "kind", "left", "op", "right"]);
+    expect(Object.keys(expr).toSorted()).toEqual(["id", "left", "op", "right", "type"]);
   });
 });
 
 describe("call resolution", () => {
   it("resolves a builtin or a user function by name, else E_UNKNOWN_CALL", () => {
     const scope = { functions: ["fib"] };
-    expect(ok("abs(x)", scope)).toMatchObject({ kind: "call", fn: "abs" });
-    expect(ok("fib(n)", scope)).toMatchObject({ kind: "call", fn: "fib" });
+    expect(ok("abs(x)", scope)).toMatchObject({ type: "call", fn: "abs" });
+    expect(ok("fib(n)", scope)).toMatchObject({ type: "call", fn: "fib" });
     expect(err("nope(1)", scope)).toEqual({
       code: "E_UNKNOWN_CALL",
       position: 0,
@@ -100,7 +100,7 @@ describe("call resolution", () => {
   });
 
   it("accepts the Python aliases of builtins", () => {
-    expect(ok("random.randint(1, 6)")).toMatchObject({ kind: "call", fn: "randint" });
+    expect(ok("random.randint(1, 6)")).toMatchObject({ type: "call", fn: "randint" });
     expect(unparse(ok("random.randint(1, 6)"))).toBe("random.randint(1, 6)");
   });
 
@@ -160,20 +160,20 @@ function generator(seed: number) {
     switch (choice) {
       case 0: {
         const raw = pick(RAWS);
-        return { id: id(), kind: "num", value: Number(raw), float: /[.eE]/.test(raw), raw };
+        return { id: id(), type: "num", value: Number(raw), float: /[.eE]/.test(raw), raw };
       }
       case 1:
-        return { id: id(), kind: "str", value: pick(STRINGS) };
+        return { id: id(), type: "str", value: pick(STRINGS) };
       case 2:
-        return { id: id(), kind: "bool", value: rand() < 0.5 };
+        return { id: id(), type: "bool", value: rand() < 0.5 };
       case 3:
-        return { id: id(), kind: "none" };
+        return { id: id(), type: "none" };
       case 4:
-        return { id: id(), kind: "var", name: pick(NAMES) };
+        return { id: id(), type: "var", name: pick(NAMES) };
       case 5:
         return {
           id: id(),
-          kind: "binop",
+          type: "binop",
           op: pick(BINOPS),
           left: gen(depth - 1),
           right: gen(depth - 1),
@@ -181,23 +181,23 @@ function generator(seed: number) {
       case 6:
         return {
           id: id(),
-          kind: "unop",
+          type: "unop",
           op: rand() < 0.5 ? "neg" : "not",
           operand: gen(depth - 1),
         };
       case 7:
         return {
           id: id(),
-          kind: "list",
+          type: "list",
           items: Array.from({ length: Math.floor(rand() * 3) }, () => gen(depth - 1)),
         };
       case 8:
-        return { id: id(), kind: "index", list: gen(depth - 1), index: gen(depth - 1) };
+        return { id: id(), type: "index", list: gen(depth - 1), index: gen(depth - 1) };
       default: {
         const def = pick(BUILTINS);
         return {
           id: id(),
-          kind: "call",
+          type: "call",
           fn: def.key.slice(5),
           args: (def.params ?? []).map(() => gen(depth - 1)),
         };

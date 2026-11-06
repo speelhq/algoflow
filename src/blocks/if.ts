@@ -15,7 +15,7 @@ export const ifStmt = defineStmt<"if">({
   ],
   create: () => ({
     id: newId(),
-    kind: "if",
+    type: "if",
     cond: emptyExpr(),
     then: [],
     else: [],

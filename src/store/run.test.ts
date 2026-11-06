@@ -409,7 +409,7 @@ describe("run store", () => {
     const items = () => (list && "ref" in list ? kept?.heap.get(list.ref) : undefined);
     expect(kept?.frames[0]?.vars.get("x")).toEqual({ t: "int", v: 1 });
     expect(items()).toEqual({
-      kind: "list",
+      type: "list",
       items: [
         { t: "int", v: 4 },
         { t: "int", v: 5 },
@@ -420,7 +420,7 @@ describe("run store", () => {
     expect(run().state).not.toBe(kept);
     expect(kept?.frames[0]?.vars.get("x")).toEqual({ t: "int", v: 1 });
     expect(items()).toEqual({
-      kind: "list",
+      type: "list",
       items: [
         { t: "int", v: 4 },
         { t: "int", v: 5 },
@@ -433,8 +433,8 @@ describe("run store", () => {
   it("Play and Skip pause at each enter of the breakpoint; Play from it moves on", async () => {
     await paused();
     const loop = useProgram.getState().program.main[0];
-    const printer = loop?.kind === "for" ? loop.body[0] : undefined;
-    const arg = printer?.kind === "print" ? printer.args[0] : undefined;
+    const printer = loop?.type === "for" ? loop.body[0] : undefined;
+    const arg = printer?.type === "print" ? printer.args[0] : undefined;
     expect(() => run().setBreakpoint(arg?.id ?? null)).toThrow(); // a statement's id only
     run().setBreakpoint(printer?.id ?? null);
     expect(run().breakpoint).toBe(printer?.id);

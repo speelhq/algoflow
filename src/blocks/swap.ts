@@ -11,7 +11,7 @@ export const swap = defineStmt<"swap">({
     { name: "a", role: "target" },
     { name: "b", role: "target" },
   ],
-  create: () => ({ id: newId(), kind: "swap", a: emptyExpr(), b: emptyExpr() }),
+  create: () => ({ id: newId(), type: "swap", a: emptyExpr(), b: emptyExpr() }),
   *run(block, ctx) {
     // Python reads `b` then `a`, then finds `a` again and writes it, then `b`.
     const second = yield* ctx.read(block.b, block.id);

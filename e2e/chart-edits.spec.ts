@@ -91,9 +91,9 @@ test("a block dragged onto another connector moves there", async ({ page }) => {
 test("a drop that takes break out of its loop is refused with a tooltip", async ({ page }) => {
   const loop = {
     id: "drg-loop-001",
-    kind: "while",
-    cond: { id: "drg-cond-001", kind: "bool", value: true },
-    body: [{ id: "drg-stop-001", kind: "break" }],
+    type: "while",
+    cond: { id: "drg-cond-001", type: "bool", value: true },
+    body: [{ id: "drg-stop-001", type: "break" }],
   };
   await seedProgram(page, "fizzbuzz", programWith([loop]));
   await page.goto("/#/p/fizzbuzz");

@@ -33,38 +33,38 @@
     "main": [
       {
         "id": "cnt-init-001",
-        "kind": "assign",
-        "target": { "id": "cnt-tgt-0001", "kind": "var", "name": "k" },
-        "value": { "id": "cnt-nvar-001", "kind": "var", "name": "n" }
+        "type": "assign",
+        "target": { "id": "cnt-tgt-0001", "type": "var", "name": "k" },
+        "value": { "id": "cnt-nvar-001", "type": "var", "name": "n" }
       },
       {
         "id": "cnt-loop-001",
-        "kind": "while",
+        "type": "while",
         "cond": {
           "id": "cnt-ge00-001",
-          "kind": "binop",
+          "type": "binop",
           "op": ">=",
-          "left": { "id": "cnt-kvar-001", "kind": "var", "name": "k" },
-          "right": { "id": "cnt-zero-001", "kind": "num", "value": 0, "float": false, "raw": "0" }
+          "left": { "id": "cnt-kvar-001", "type": "var", "name": "k" },
+          "right": { "id": "cnt-zero-001", "type": "num", "value": 0, "float": false, "raw": "0" }
         },
         "body": [
           {
             "id": "cnt-prnt-001",
-            "kind": "print",
-            "args": [{ "id": "cnt-kvar-002", "kind": "var", "name": "k" }]
+            "type": "print",
+            "args": [{ "id": "cnt-kvar-002", "type": "var", "name": "k" }]
           },
           {
             "id": "cnt-decr-001",
-            "kind": "assign",
-            "target": { "id": "cnt-tgt-0002", "kind": "var", "name": "k" },
+            "type": "assign",
+            "target": { "id": "cnt-tgt-0002", "type": "var", "name": "k" },
             "value": {
               "id": "cnt-mins-001",
-              "kind": "binop",
+              "type": "binop",
               "op": "-",
-              "left": { "id": "cnt-kvar-003", "kind": "var", "name": "k" },
+              "left": { "id": "cnt-kvar-003", "type": "var", "name": "k" },
               "right": {
                 "id": "cnt-one0-001",
-                "kind": "num",
+                "type": "num",
                 "value": 1,
                 "float": false,
                 "raw": "1"

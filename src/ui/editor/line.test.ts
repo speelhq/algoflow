@@ -106,7 +106,7 @@ describe("typing", () => {
     expect(py(keys("07"))).toBe("0");
     expect(py(keys("1..5"))).toBe("1.5");
     expect(py(keys("i 5"))).toBe("i");
-    expect(keys("i 5").root).toMatchObject({ kind: "var", name: "i" });
+    expect(keys("i 5").root).toMatchObject({ type: "var", name: "i" });
   });
 
   it("a digit that would make an int outside the int range is not taken", () => {
@@ -156,7 +156,7 @@ describe("typing", () => {
 
   it("a click inside an open parenthesis keeps it open; a call's ( is its own and ) leaves it", () => {
     const opened = raw("i*(5");
-    const clicked = clickAt(opened, (opened.root as Extract<Expr, { kind: "binop" }>).right.id);
+    const clicked = clickAt(opened, (opened.root as Extract<Expr, { type: "binop" }>).right.id);
     expect(clicked.open).toHaveLength(1);
     expect(py(keys("+1", clicked))).toBe("i * (5 + 1)");
     expect(py(keys("twice(i)+1"))).toBe("twice(i) + 1");
@@ -188,9 +188,9 @@ describe("typing", () => {
     expect(type(keys("1"), ",", ctx).move).toBe("item");
     // A filled next argument takes the caret at its end.
     const filled = keys("min(i,n+1)");
-    const [first, second] = (filled.root as Extract<Expr, { kind: "call" }>).args;
+    const [first, second] = (filled.root as Extract<Expr, { type: "call" }>).args;
     const moved = type(clickAt(filled, first?.id ?? ""), ",", ctx).line;
-    const one = (second as Extract<Expr, { kind: "binop" }>).right;
+    const one = (second as Extract<Expr, { type: "binop" }>).right;
     expect(moved.caret).toEqual({ after: one.id });
   });
 
@@ -410,7 +410,7 @@ describe("Backspace and moving", () => {
     const added = raw("[4,");
     const removed = back(added);
     expect(py(removed)).toBe("[4]");
-    const [four] = (removed.root as Extract<Expr, { kind: "list" }>).items;
+    const [four] = (removed.root as Extract<Expr, { type: "list" }>).items;
     expect(removed.caret).toEqual({ after: four?.id });
     // The only empty item left goes with its list.
     expect(py(back(raw("[")))).toBe("...");
@@ -448,12 +448,12 @@ describe("Backspace and moving", () => {
     const opened = choose(keys("i*("), entry("binop.add"), ctx).line;
     const filled = keys("3", tab(opened, 1, ctx).line);
     expect(py(filled)).toBe("i * (... + 3)");
-    const sum = (filled.root as Extract<Expr, { kind: "binop" }>).right;
-    const first = clickAt(filled, (sum as Extract<Expr, { kind: "binop" }>).left.id);
+    const sum = (filled.root as Extract<Expr, { type: "binop" }>).right;
+    const first = clickAt(filled, (sum as Extract<Expr, { type: "binop" }>).left.id);
     const after = backspace(first, ctx).line;
     expect(py(after)).toBe("i * (... + 3)");
     expect(after.caret).toEqual({
-      after: (filled.root as Extract<Expr, { kind: "binop" }>).left.id,
+      after: (filled.root as Extract<Expr, { type: "binop" }>).left.id,
     });
   });
 
@@ -608,7 +608,7 @@ describe("a target's line (editor.md, Targets)", () => {
   it("refuses a key that would leave no target, with the reason; inside an item any value", () => {
     for (const key of ["-", "5", "[", "("]) {
       const step = type(empty(), key, binding);
-      expect(step.taken && step.line.root.kind !== "empty", key).toBe(false);
+      expect(step.taken && step.line.root.type !== "empty", key).toBe(false);
     }
     const refused = type(typed("nums", binding), "+", binding);
     expect(refused.taken).toBe(false);

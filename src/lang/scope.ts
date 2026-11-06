@@ -1,6 +1,6 @@
 // What the editor asks of a program's structure: the names visible at a statement,
 // and whether a place lies inside a loop or a function.
-// Registry-driven: slots, `loop`, and regions, never a kind.
+// Registry-driven: slots, `loop`, and regions, never a type.
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import type { Expr, Name, NodeId, Place, Program, RegionParent, Stmt } from "./types";
 import { findRoutine, isExpr, regionsOf, variableOf } from "./walk";

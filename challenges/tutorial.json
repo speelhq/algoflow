@@ -41,10 +41,10 @@
     "main": [
       {
         "id": "tut-prnt-001",
-        "kind": "print",
+        "type": "print",
         "args": [
-          { "id": "tut-text-001", "kind": "str", "value": "Hello," },
-          { "id": "tut-name-001", "kind": "var", "name": "name" }
+          { "id": "tut-text-001", "type": "str", "value": "Hello," },
+          { "id": "tut-name-001", "type": "var", "name": "name" }
         ]
       }
     ]

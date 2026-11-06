@@ -5,7 +5,7 @@
 // No edge. A fragment's lanes lie inside its own extents, so nested lanes never collide.
 // A `Return` and a jump leave by the right: a `Return` for `End`, a jump for its loop, whose
 // `next` lane and `No` lane take it to the next pass or past the loop.
-// Reads `def.chart`, `def.requires`, and the regions of a statement, never a kind.
+// Reads `def.chart`, `def.requires`, and the regions of a statement, never a type.
 import { t } from "@/i18n/t";
 import { inputValue } from "@/lang/data";
 import type { Data, Name, NodeId, Place, Program, RegionParent, Routine, Stmt } from "@/lang/types";

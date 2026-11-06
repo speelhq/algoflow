@@ -8,9 +8,9 @@ export const breakStmt = defineStmt<"break">({
   requires: "loop",
   chart: { jump: "exit" },
   slots: [],
-  create: () => ({ id: newId(), kind: "break" }),
+  create: () => ({ id: newId(), type: "break" }),
   *run() {
-    return { kind: "break" };
+    return { type: "break" };
   },
   python: () => ["break"],
   notation: () => "break",

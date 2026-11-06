@@ -7,10 +7,10 @@ export const str = defineExpr<"str">({
   key: "str",
   category: "basic",
   slots: [{ name: "value", role: "literal" }],
-  create: () => ({ id: newId(), kind: "str", value: "" }),
+  create: () => ({ id: newId(), type: "str", value: "" }),
   fieldsError: (fields) =>
     typeof fields.value === "string" ? undefined : { field: "value", message: "expected a text" },
-  zeroLike: () => ({ id: newId(), kind: "str", value: "" }),
+  zeroLike: () => ({ id: newId(), type: "str", value: "" }),
   *run(block) {
     return { t: "str", v: block.value };
   },

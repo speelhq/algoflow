@@ -25,7 +25,7 @@ export type BuiltinDef = {
   /** The call's kind, given its arguments. */
   yields?: (args: Expr[], kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
   entries?: readonly ValueEntry[];
-  evaluate(args: Value[], block: Extract<Expr, { kind: "call" }>, ctx: RunContext): Value;
+  evaluate(args: Value[], block: Extract<Expr, { type: "call" }>, ctx: RunContext): Value;
 };
 
 export function defineBuiltin(def: BuiltinDef): BlockDef {
@@ -37,7 +37,7 @@ export function defineBuiltin(def: BuiltinDef): BlockDef {
     params: def.params,
     callee: (block) => ({
       name: def.name,
-      argc: block.kind === "call" ? block.args.length : 0,
+      argc: block.type === "call" ? block.args.length : 0,
       family: "builtin",
     }),
     ...(def.module ? { aliases: [callee], imports: def.module } : {}),
@@ -47,7 +47,7 @@ export function defineBuiltin(def: BuiltinDef): BlockDef {
     ...(def.yields ? { yields: (block, kindOf) => def.yields?.(block.args, kindOf) } : {}),
     create: () => ({
       id: newId(),
-      kind: "call",
+      type: "call",
       fn: def.name,
       args: def.params.filter((param) => !param.optional).map(() => emptyExpr()),
     }),

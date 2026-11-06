@@ -132,7 +132,7 @@ export function toValue(data: Data, heap: Heap): Value {
   if (data === null) return { t: "none" };
   if (Array.isArray(data)) {
     const items = data.map((item) => toValue(item, heap));
-    return { t: "list", ref: alloc(heap, { kind: "list", items }) };
+    return { t: "list", ref: alloc(heap, { type: "list", items }) };
   }
   if (isFloatData(data)) return { t: "float", v: floatOf(data) };
   const entries = new Map<string, Value>();
@@ -142,7 +142,7 @@ export function toValue(data: Data, heap: Heap): Value {
     const stands = dataKey(key);
     entries.set(typeof stands === "number" ? `i:${stands}` : `s:${stands}`, toValue(item, heap));
   }
-  return { t: "dict", ref: alloc(heap, { kind: "dict", entries }) };
+  return { t: "dict", ref: alloc(heap, { type: "dict", entries }) };
 }
 
 export function toData(value: Value, heap: Heap): Data {
@@ -167,7 +167,7 @@ export function toData(value: Value, heap: Heap): Data {
 }
 
 function entryToData(entry: HeapEntry, heap: Heap): Data {
-  if (entry.kind === "list") return entry.items.map((item) => toData(item, heap));
+  if (entry.type === "list") return entry.items.map((item) => toData(item, heap));
   const out: Record<string, Data> = {};
   for (const [key, item] of entry.entries) {
     out[key.startsWith("i:") ? `${INT_KEY}${key.slice(2)}` : key.slice(2)] = toData(item, heap);

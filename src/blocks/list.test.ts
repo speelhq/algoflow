@@ -33,8 +33,8 @@ describe("list (blocks.md)", () => {
   });
 
   it("is created empty, and its zero is an empty list", () => {
-    expect(listBlock.create()).toMatchObject({ kind: "list", items: [] });
-    expect(listBlock.zeroLike?.(list(num(1)))).toMatchObject({ kind: "list", items: [] });
+    expect(listBlock.create()).toMatchObject({ type: "list", items: [] });
+    expect(listBlock.zeroLike?.(list(num(1)))).toMatchObject({ type: "list", items: [] });
   });
 });
 

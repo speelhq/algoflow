@@ -23,9 +23,9 @@ export type Steps = { next(keep: boolean): Step | Done };
 /** A published state is a copy; values are immutable records, so one level suffices. */
 export function copyState({ frames, heap }: State): State {
   const entry = (each: HeapEntry): HeapEntry =>
-    each.kind === "list"
-      ? { kind: "list", items: [...each.items] }
-      : { kind: "dict", entries: new Map(each.entries) };
+    each.type === "list"
+      ? { type: "list", items: [...each.items] }
+      : { type: "dict", entries: new Map(each.entries) };
   return {
     frames: frames.map((frame) => ({ ...frame, vars: new Map(frame.vars) })),
     heap: new Map([...heap].map(([id, each]) => [id, entry(each)])),

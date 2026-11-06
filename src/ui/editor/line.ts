@@ -4,7 +4,7 @@
 // Blocks are made by the parser (a variable, a number, a sign, a call) or by an entry's
 // block (`create()` with its preset), and read through their slots, their notation (the caret
 // moves in reading order, and a call ends with its parenthesis), and `precedence`, so this file
-// names no block kind. A target slot's line keeps a target (`editor.md`, Targets).
+// names no block type. A target slot's line keeps a target (`editor.md`, Targets).
 import { errorText, t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
 import { exprKind } from "@/lang/kinds";

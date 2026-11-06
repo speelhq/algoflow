@@ -84,7 +84,7 @@ export function run(program: Program, inputs: Readonly<Record<Name, Data>>, seed
       frames.push({ routine: def.id, callNodeId: nodeId, vars });
       yield { type: "call", nodeId, fn, args };
       const signal = yield* ctx.exec(def.body);
-      const value: Value = signal?.kind === "return" ? signal.value : { t: "none" };
+      const value: Value = signal?.type === "return" ? signal.value : { t: "none" };
       yield { type: "return", nodeId, fn, value };
       frames.pop();
       return value;

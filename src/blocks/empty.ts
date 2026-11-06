@@ -6,8 +6,8 @@ import type { Event } from "@/runtime/types";
 import { defineExpr } from "./types";
 
 /** A new empty expression slot's value, as every block's `create()` and the editor make one. */
-export function emptyExpr(): Extract<Expr, { kind: "empty" }> {
-  return { id: newId(), kind: "empty" };
+export function emptyExpr(): Extract<Expr, { type: "empty" }> {
+  return { id: newId(), type: "empty" };
 }
 
 export const empty = defineExpr<"empty">({

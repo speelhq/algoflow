@@ -82,12 +82,12 @@ export function getBlockDef(key: string): BlockDef {
   return def;
 }
 
-/** Registry key of a block: its kind, or `call:<fn>` / `method:<name>` for builtins. */
+/** Registry key of a block: its type, or `call:<fn>` / `method:<name>` for builtins. */
 export function keyOf(block: Block): string {
-  if (block.kind === "call")
+  if (block.type === "call")
     return BLOCK_DEFS.has(builtinKey(block.fn)) ? builtinKey(block.fn) : "call";
-  if (block.kind === "method") return methodKey(block.name);
-  return block.kind;
+  if (block.type === "method") return methodKey(block.name);
+  return block.type;
 }
 
 /** Block menu entries of one category, in registration order. */

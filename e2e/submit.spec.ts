@@ -26,7 +26,7 @@ function fromZero(): Record<string, unknown> {
   const program = solutionOf("fizzbuzz");
   const main = program.main as Array<Record<string, unknown>>;
   const loop = main[0] ?? {};
-  loop.start = { id: "fzb-one0-001", kind: "num", value: 0, float: false, raw: "0" };
+  loop.start = { id: "fzb-one0-001", type: "num", value: 0, float: false, raw: "0" };
   return program;
 }
 
@@ -110,18 +110,18 @@ test("Wrong Answer shows the rows only, and Watch opens at the first difference"
 test("a test that ends in an error shows its message in place of Output", async ({ page }) => {
   const num = (id: string, value: number) => ({
     id,
-    kind: "num",
+    type: "num",
     value,
     float: false,
     raw: `${value}`,
   });
   const divide = {
     id: "div-asgn-001",
-    kind: "assign",
-    target: { id: "sub-tgt-0001", kind: "var", name: "x" },
+    type: "assign",
+    target: { id: "sub-tgt-0001", type: "var", name: "x" },
     value: {
       id: "div-binp-001",
-      kind: "binop",
+      type: "binop",
       op: "/",
       left: num("div-left-001", 1),
       right: num("div-zero-001", 0),

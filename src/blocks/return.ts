@@ -7,10 +7,10 @@ export const returnStmt = defineStmt<"return">({
   category: "function",
   requires: "function",
   slots: [{ name: "value", role: "expr", optional: true }],
-  create: () => ({ id: newId(), kind: "return" }),
+  create: () => ({ id: newId(), type: "return" }),
   *run(block, ctx) {
     const value = block.value ? yield* ctx.eval(block.value) : { t: "none" as const };
-    return { kind: "return", value };
+    return { type: "return", value };
   },
   python: (block, ctx) => [block.value ? `return ${ctx.expr(block.value)}` : "return"],
   // With no value its slot draws nothing (`return`), and the editor offers `+ value` for it.

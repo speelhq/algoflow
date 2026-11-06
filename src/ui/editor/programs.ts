@@ -20,7 +20,7 @@ function inputAssignment(name: Name, data: Data): Stmt {
   const value = parseData(data);
   if (isParseError(value))
     throw new Error(`no block writes the value of input ${name}: ${JSON.stringify(data)}`);
-  const assign = getBlockDef("assign").create() as Extract<Stmt, { kind: "assign" }>;
+  const assign = getBlockDef("assign").create() as Extract<Stmt, { type: "assign" }>;
   const target = variableExpr(name);
   if (!target) throw new Error(`input ${name} is no variable name`);
   return { ...assign, target, value };
