@@ -302,6 +302,12 @@ function signExpr(): Expr | undefined {
   return made && mapSlotValues(made, () => emptyExpr());
 }
 
+/** A list with one empty item (`[…]`), as `[` opens it. */
+function listExpr(): Expr | undefined {
+  const made = parsed("[a]", NO_DEFINITIONS);
+  return made && mapSlotValues(made, () => emptyExpr());
+}
+
 /** A call of one of the program's functions, its arguments empty slots. */
 export function callExpr(fn: LineFunction, scope: ParseScope): Expr | undefined {
   const made = parsed(`${fn.name}(${fn.params.map(() => "a").join(", ")})`, scope);
@@ -573,17 +579,17 @@ export const PARENTHESES_KEY = "(";
 const ENDS_WORD = /^[-+*/%<>=!(),[\]]$/;
 
 /**
- * The entries whose `typed` is `typed`, the one that fills an empty slot before the one that
- * takes a value.
+ * The entry taking a value whose `typed` is `typed`: an operator's keys. A key inserts no other
+ * entry: a word names the entries whose keys are a word, and `[` then `]` gives `Empty list`.
  */
-const entriesTyped = (typed: string) =>
-  allEntries()
-    .filter((entry) => entry.declared.typed === typed)
-    .toSorted((a, b) => Number(takesValue(a)) - Number(takesValue(b)));
-const startsTyped = (key: string) =>
+const operatorTyped = (typed: string) =>
+  allEntries().find((entry) => takesValue(entry) && entry.declared.typed === typed);
+const startsOperator = (key: string) =>
   allEntries().some(
     (entry) =>
-      (entry.declared.typed ?? "").length > key.length && entry.declared.typed?.startsWith(key),
+      takesValue(entry) &&
+      (entry.declared.typed ?? "").length > key.length &&
+      entry.declared.typed?.startsWith(key),
   );
 
 function typeDigit(line: Line, ch: string): Outcome {
@@ -634,7 +640,7 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
   }
   if (key === " ") return done(current);
   if (current.pending) {
-    const entry = entriesTyped(current.pending.key + key).find(takesValue);
+    const entry = operatorTyped(current.pending.key + key);
     const before = current.pending.before ?? current;
     current = { ...current, pending: undefined };
     if (entry) return takeValue({ ...before, pending: undefined }, entry);
@@ -701,33 +707,29 @@ function typeKey(line: Line, key: string, ctx: LineContext): Outcome {
         return sign ? fill(base, sign) : refused(line);
       }
       break;
+    case "[": {
+      // At an empty slot or in place of a selected value, a list with an empty item; a target
+      // keeps no list, so there `[` makes an item of the selected value instead.
+      if (value && !current.selected) break;
+      const made = listExpr();
+      if (!made) return refused(line);
+      const opened = fill(current.selected ? cleared(current) : current, made);
+      if (!current.selected || keeps(opened.line.root, ctx)) return opened;
+      break;
+    }
     default:
       break;
   }
-  // Of the entries the key names that apply at the caret, the first the slot keeps; a selected
-  // value is both an empty slot and a value (`editor.md`, Backspace and keys).
-  const applying = entriesTyped(key)
-    .filter((entry) => (takesValue(entry) ? value : !value || current.selected))
-    .map((entry) => keyed(current, entry, key));
-  const inserted =
-    applying.find((outcome) => outcome.taken && keeps(outcome.line.root, ctx)) ?? applying[0];
-  if (inserted) return inserted;
-  if (value && startsTyped(key)) return done({ ...current, pending: { key } });
+  const entry = value ? operatorTyped(key) : undefined;
+  if (entry) return keyed(current, entry, key);
+  if (value && startsOperator(key)) return done({ ...current, pending: { key } });
   return refused(line);
 }
 
-/**
- * The entry a key names, inserted at the caret: filling the empty slot or the selected value's
- * place (a list opens with an empty item, `[`), or taking the value before it.
- */
+/** The operator a key names, taking the value before the caret. */
 function keyed(line: Line, entry: Entry, key: string): Outcome {
-  if (!takesValue(entry)) {
-    const base = line.selected ? cleared(line) : line;
-    const made = makeEntry(entry);
-    return fill(base, isSequence(made) ? items(made).with([emptyExpr()]) : made);
-  }
   const placed = takeValue(line, entry);
-  if (placed.taken && startsTyped(key)) placed.line.pending = { key, before: line };
+  if (placed.taken && startsOperator(key)) placed.line.pending = { key, before: line };
   return placed;
 }
 

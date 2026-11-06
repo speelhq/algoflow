@@ -20,6 +20,7 @@ export const list = defineExpr<"list">({
   python: (block, ctx) => `[${block.items.map((item) => ctx.expr(item)).join(", ")}]`,
   notation: () => "[{items}]",
   yields: () => "list",
-  // `Empty list` names only a list with no item; one with items is named `List`.
-  entries: [{ name: "empty", group: "values", typed: "[", preset: { items: [] } }],
+  // `Empty list` names only a list with no item, which `[` then `]` types; one with items is
+  // named `List`.
+  entries: [{ name: "empty", group: "values", typed: "[]", preset: { items: [] } }],
 });

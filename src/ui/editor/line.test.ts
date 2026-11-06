@@ -4,7 +4,7 @@ import type { Expr, Kind } from "@/lang/types";
 import { ast, program } from "@/blocks/testing";
 import { unparse } from "@/python/emit";
 import { exprText } from "@/ui/chart/text";
-import { allEntries, takesValue } from "./entries";
+import { allEntries, labelOf, takesValue } from "./entries";
 import {
   backspace,
   callableFunctions,
@@ -200,8 +200,11 @@ describe("typing", () => {
     expect(py(keys("[[1,2],[3]]"))).toBe("[[1, 2], [3]]");
     expect(py(keys("[abs(i),2]"))).toBe("[abs(i), 2]");
     expect(py(raw("["))).toBe("[...]");
-    // `]` removes an empty item at the end first, so `[` then `]` is an empty list.
-    expect(py(keys("[]"))).toBe("[]");
+    // `]` removes an empty item at the end first, so `[` then `]`, the keys of `Empty list`, is
+    // an empty list.
+    const typed = allEntries().find((candidate) => candidate.id === "list.empty")?.declared.typed;
+    expect(typed).toBe("[]");
+    expect(labelOf(keys(typed ?? "").root, ctx.kinds)).toBe("Empty list");
     expect(py(keys("[4,]"))).toBe("[4]");
     const left = keys("[1]");
     expect(left.caret).toEqual({ after: left.root.id });
@@ -656,7 +659,7 @@ describe("a target's line (editor.md, Targets)", () => {
     expect(py(type(selected, "[", ctx).line)).toBe("[...]");
   });
 
-  it("tries no key again but one two entries name: `.` after a selected `0` is refused anywhere", () => {
+  it("tries no key again but `[` on a target: `.` after a selected `0` is refused anywhere", () => {
     const zero = openLine(ast.num(0));
     expect(zero.selected).toBe(true);
     expect(type(zero, ".", ctx).taken).toBe(false);
