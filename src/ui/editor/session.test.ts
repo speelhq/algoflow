@@ -15,6 +15,7 @@ import {
   stepHighlight,
   chain,
   chooseRow,
+  clickInLine,
   textEnded,
   valueKey,
   type Session,
@@ -29,6 +30,7 @@ const ctx: LineContext = {
   scope: { functions: [] },
   functions: [],
   target: null,
+  item: true,
 };
 
 /** Each key of `keys` pressed in turn, every press on the session the one before left. */
@@ -76,6 +78,54 @@ describe("editor session", () => {
     expect(settleWord(word.session, ctx).edits).toHaveLength(1);
   });
 
+  it("refused keys stay until Backspace and keep the keyboard in the field; a notice goes at the next key", () => {
+    const stmt = assign("total", empty());
+    const field: Field = { slot: "value" };
+    const one: LineContext = { ...ctx, item: false };
+    const typed = press(openSession(stmt, field, null), "x ").session;
+    const deleted = valueKey(typed, { key: "Delete", shiftKey: false }, [], one, "");
+    expect(deleted.edits).toEqual([]);
+    expect(deleted.session.line?.notice).toBe(
+      "Select a value to remove it with `Delete`, or remove what is before the caret with `Backspace`.",
+    );
+    const next = valueKey(deleted.session, { key: "ArrowDown", shiftKey: false }, [], one, "");
+    expect(next.session.line?.notice).toBeUndefined();
+    // `,` in a field of one value stays, refused, after the word it ends, which is chosen.
+    const word = press(openSession(stmt, field, null), "x");
+    const ended = valueKey(word.session, { key: ",", shiftKey: false }, [], one, "");
+    expect(ended.edits).toMatchObject([{ field, root: { type: "var", name: "x" } }]);
+    expect(ended.after).toBeUndefined();
+    expect(ended.session.line?.refused).toMatchObject([
+      {
+        text: ",",
+        message: "This place holds one value. To join values, type an operator such as `+`.",
+      },
+    ]);
+    // While refused keys stay, Enter and Tab don't leave the field, and say why.
+    const leave = "Remove the red keys with `Backspace` before you leave this value.";
+    for (const key of ["Enter", "Tab"]) {
+      const left = valueKey(ended.session, { key, shiftKey: false }, [], one, "");
+      expect(left.after, key).toBeUndefined();
+      expect(left.session.line?.notice, key).toBe(leave);
+    }
+    // Backspace removes them.
+    const back = valueKey(ended.session, { key: "Backspace", shiftKey: false }, [], one, "");
+    expect(back.session.line?.refused).toEqual([]);
+    expect(back.edits).toEqual([]);
+    // A click on an operator clears a notice and keeps refused keys.
+    const sum = press(openSession(stmt, field, null), "x+1)").session;
+    const plus = sum.line?.root.id ?? "";
+    expect(clickInLine(sum, { id: plus, op: true }).line?.refused).toMatchObject([{ text: ")" }]);
+  });
+
+  it("`,` after the whole value of a field moves on where the notation writes `,` next", () => {
+    const stmt = assign("total", empty());
+    const field: Field = { slot: "value" };
+    const one: LineContext = { ...ctx, item: false };
+    const typed = press(openSession(stmt, field, null), "x").session;
+    expect(valueKey(typed, { key: ",", shiftKey: false }, [], one, ", ").after).toEqual({ go: 1 });
+  });
+
   it("Tab past the line's last empty slot leaves for the next field; Enter with nothing chosen closes", () => {
     const stmt = assign("total", num(1));
     const field: Field = { slot: "value" };
@@ -116,6 +166,7 @@ describe("editor session", () => {
     const targetCtx: LineContext = {
       ...ctx,
       target: { asked: ["total"], names: ["x"], binds: true },
+      item: false,
     };
     const stmt = assignTo(empty(), num(1));
     const field: Field = { slot: "target" };

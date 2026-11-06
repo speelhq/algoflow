@@ -116,6 +116,44 @@ test("a typed word that names nothing is underlined with the closest name", asyn
   await expect(editor(page).getByTestId("explanation")).toContainText("Did you mean n?");
 });
 
+test("a refused key stays in red where it was typed, until Backspace removes it", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/sum-to-n");
+  await insert(page, "main/main/0", "print");
+  const refused = editor(page).getByTestId("refused-text");
+  const reason = "There is no [ to close. Type [ first.";
+  await keys(page, "n]+");
+  await expect(refused).toHaveText("]+");
+  await expect(editor(page).getByTestId("explanation")).toContainText(reason);
+  await expect(editor(page).getByTestId("refusal")).toHaveText(reason);
+  // While refused keys stay, Enter doesn't close the editor, and says why.
+  await page.keyboard.press("Enter");
+  await expect(editor(page)).toBeVisible();
+  await expect(editor(page).getByTestId("explanation")).toContainText(
+    "Remove the red keys with Backspace before you leave this value.",
+  );
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Backspace");
+  await expect(refused).toHaveCount(0);
+  // After a space, typing goes on, and the refused `.` stays where it was typed.
+  await keys(page, ". +1");
+  await expect(refused).toHaveText(".");
+  await expect(chart(page)).toContainText("print(n + 1)");
+});
+
+test("the first key of == shows at the caret until the second", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/sum-to-n");
+  await insert(page, "main/main/0", "print");
+  await keys(page, "n=");
+  await expect(editor(page).getByTestId("pending-key")).toHaveText("=");
+  await keys(page, "=");
+  await expect(editor(page).getByTestId("pending-key")).toHaveCount(0);
+  await expect(chart(page)).toContainText("print(n = …)");
+});
+
 test("a caption shows on its chart node and as a comment in Python", async ({ page }) => {
   await seedProgress(page, {});
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
@@ -293,6 +331,8 @@ test("an item of a variable of no known kind is set by keys alone; no other valu
   await expect(editor(page).getByTestId("explanation")).toContainText(
     "Only a variable or an item of a list can be given a value",
   );
+  // The refused key stays until Backspace removes it.
+  await page.keyboard.press("Backspace");
   await keys(page, "row[1]");
   await page.keyboard.press("Tab");
   await keys(page, "9");

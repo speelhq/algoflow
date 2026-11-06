@@ -16,7 +16,7 @@ import {
   templatePieces,
   SEPARATOR,
 } from "@/ui/chart/text";
-import { slotValues, textOf, type Line } from "./line";
+import { slotValues, textOf, type Caret as CaretPlace, type Line } from "./line";
 import type { TextEnd } from "./session";
 
 type Props = {
@@ -36,8 +36,21 @@ type Props = {
   onTextEnd: (key: TextEnd) => void;
 };
 
-function Caret() {
-  return <span className="mx-px inline-block h-4 w-px animate-pulse bg-foreground align-middle" />;
+/**
+ * The caret, and after it the first key of a two-key operator that inserts nothing alone, dimmed
+ * (`editor.md`, Backspace and keys).
+ */
+function Caret({ pending }: { pending: string | null }) {
+  return (
+    <>
+      <span className="mx-px inline-block h-4 w-px animate-pulse bg-foreground align-middle" />
+      {pending !== null && (
+        <span data-testid="pending-key" className="text-muted-foreground">
+          {pending}
+        </span>
+      )}
+    </>
+  );
 }
 
 export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(props, ref) {
@@ -47,6 +60,25 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
   const line = keys ? props.line : null;
   const focused = line !== null;
   const caret = line?.caret;
+  /** The keys refused at `at`, where they were typed, with a red wavy line as a word that names nothing. */
+  const refusedText = (at: CaretPlace): ReactNode => {
+    const held = line?.refused.find((text) =>
+      "at" in at
+        ? "at" in text.at && text.at.at === at.at
+        : "after" in text.at && text.at.after === at.after,
+    );
+    return held ? (
+      <span
+        key={`refused:${"at" in at ? at.at : at.after}`}
+        data-testid="refused-text"
+        className="whitespace-pre underline decoration-destructive decoration-wavy"
+      >
+        {held.text}
+      </span>
+    ) : null;
+  };
+  // A first key that inserted an operator (`<` of `<=`) is drawn as that operator already.
+  const pending = line?.pending && line.pending.before === undefined ? line.pending.key : null;
   const word = (
     <>
       {line && line.word !== "" && (
@@ -54,7 +86,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
           {line.word}
         </span>
       )}
-      <Caret />
+      <Caret pending={pending} />
     </>
   );
 
@@ -72,6 +104,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
         )}
         onClick={() => props.onClickAt(expr.id, false)}
       >
+        {refusedText({ at: expr.id })}
         {here ? word : null}
       </button>
     );
@@ -141,7 +174,10 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
     return (
       <span key={expr.id} className="inline">
         {parentheses && <span className="text-muted-foreground">(</span>}
+        {/* Keys refused at a slot that a value has filled since stay before that value. */}
+        {!isEmptyExpr(expr) && refusedText({ at: expr.id })}
         {body}
+        {refusedText({ after: expr.id })}
         {after && open && word}
         {parentheses && <span className="text-muted-foreground">)</span>}
         {after && !open && word}
@@ -222,7 +258,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
       ) : (
         <>
           {draw(root)}
-          {line?.selected && <Caret />}
+          {line?.selected && <Caret pending={pending} />}
         </>
       )}
     </div>

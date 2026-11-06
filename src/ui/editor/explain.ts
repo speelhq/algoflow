@@ -18,17 +18,18 @@ import {
 import { labelOf } from "./entries";
 import {
   PARENTHESES_KEY,
+  closestText,
   find,
   matches,
   parentOf,
-  wordRows,
+  refusedAt,
   type Line,
   type LineContext,
   type Row,
 } from "./line";
 
-/** A part of an explanation: a part of a block's text, or a key to type. */
-export type ExplanationPart = Part | { text: string; key: true };
+/** A part of an explanation: a part of a block's text, or a key to type, or the key refused. */
+export type ExplanationPart = Part | { text: string; key: true; refused?: true };
 
 export type Explanation = {
   /** What is explained: a name, drawn as a variable when it is one. */
@@ -103,43 +104,6 @@ export function functionLabel(fn: { name: string; params: readonly string[] }): 
   return `${fn.name}(${fn.params.length > 0 ? emptyNotation() : ""})`;
 }
 
-/** The edit distance of two words, ignoring case. */
-function distance(a: string, b: string): number {
-  const x = a.toLowerCase();
-  const y = b.toLowerCase();
-  let row = Array.from({ length: y.length + 1 }, (_, j) => j);
-  for (let i = 1; i <= x.length; i += 1) {
-    const next = [i];
-    for (let j = 1; j <= y.length; j += 1) {
-      const cost = x[i - 1] === y[j - 1] ? 0 : 1;
-      next.push(Math.min((row[j] ?? 0) + 1, (next[j - 1] ?? 0) + 1, (row[j - 1] ?? 0) + cost));
-    }
-    row = next;
-  }
-  return row[y.length] ?? 0;
-}
-
-/** The closest name to a word that matches nothing: one letter in three may differ, one at least. */
-function closestName(line: Line, ctx: LineContext): string | undefined {
-  const allowed = Math.max(1, Math.floor(line.word.length / 3));
-  let best: { name: string; d: number } | undefined;
-  for (const row of wordRows(line, ctx)) {
-    const names =
-      row.type === "variable"
-        ? [row.name]
-        : row.type === "entry"
-          ? [row.entry.label]
-          : row.type === "function"
-            ? [row.fn.name]
-            : [];
-    for (const name of names) {
-      const d = distance(line.word, name);
-      if (d <= allowed && (!best || d < best.d)) best = { name, d };
-    }
-  }
-  return best?.name;
-}
-
 /** The operation one of whose slots holds the caret, and that slot's value. */
 function operationAt(line: Line): { operation: Expr; value: Expr } | undefined {
   if (line.selected) return undefined;
@@ -184,17 +148,21 @@ export function explainLine(
   program: Program,
   at: NodeId,
 ): Explanation | undefined {
-  if (line.refused) return { name: "", parts: [{ text: line.refused }] };
-  if (line.word !== "" && matches(line, ctx).length === 0) {
-    const closest = closestName(line, ctx);
+  // A refused key with no character says why; refused keys at the caret show in red with why.
+  if (line.notice) return { name: "", parts: helpParts(line.notice) };
+  const here = refusedAt(line);
+  if (here) {
     return {
-      name: line.word,
+      name: "",
       parts: [
-        {
-          text: closest ? t("editor.didYouMean", { name: closest }) : t("editor.nothingLike"),
-        },
+        { text: here.text, key: true, refused: true },
+        { text: " " },
+        ...helpParts(here.message),
       ],
     };
+  }
+  if (line.word !== "" && matches(line, ctx).length === 0) {
+    return { name: line.word, parts: [{ text: closestText(line, ctx) }] };
   }
   if (highlighted) return explainRow(highlighted, program, at);
   const inside = operationAt(line);

@@ -76,6 +76,16 @@ test.describe("FizzBuzz", () => {
   });
 });
 
+test("A refused key", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/sum-to-n");
+  await page.locator('[data-testid="connector"][data-place="main/main/0"]').click();
+  await page.getByTestId("block-menu").locator('[data-entry="print"]').click();
+  await page.keyboard.type("n]+");
+  await expect(page.getByTestId("refused-text")).toHaveText("]+");
+  await page.screenshot({ path: shot("refused-key"), animations: "disabled" });
+});
+
 test("Wrong Answer", async ({ page }) => {
   await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
   const program = solutionOf("fizzbuzz");

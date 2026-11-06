@@ -18,6 +18,7 @@ const ctx: LineContext = {
   scope: { functions: [] },
   functions: [],
   target: null,
+  item: false,
 };
 
 function keys(text: string, settled = true): Line {
@@ -112,9 +113,13 @@ describe("explanation line", () => {
 
   it("a refused key's message; else nothing, which leaves the block's help", () => {
     const refused = type(keys("i<n"), "<", ctx).line;
-    expect(shown(explainLine(refused, ctx, undefined, p, target.id))?.[1]).toBe(
-      "Write a < b < c as a < b and b < c",
-    );
+    // The key refused, in red, then its reason.
+    const explained = explainLine(refused, ctx, undefined, p, target.id);
+    expect(explained?.parts.slice(0, 2)).toEqual([
+      { text: "<", key: true, refused: true },
+      { text: " " },
+    ]);
+    expect(shown(explained)?.[1]).toBe("< Write a < b < c as a < b and b < c");
     expect(explainLine(openLine(v("n")), ctx, undefined, p, target.id)).toBeUndefined();
   });
 });

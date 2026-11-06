@@ -10,10 +10,12 @@ import {
   backspace,
   choose,
   clickAt,
+  deleteKey,
   endText,
   find,
   move,
   openLine,
+  refuseLeaving,
   settle,
   switchTo,
   tab,
@@ -112,9 +114,21 @@ export function focusField(
   };
 }
 
+/**
+ * The session with no notice of a refused Backspace or Delete: the next key or a click clears it
+ * (`editor.md`, Backspace and keys, Refused keys).
+ */
+export function quiet(session: Session): Session {
+  const { line } = session;
+  return line?.notice ? { ...session, line: { ...line, notice: undefined } } : session;
+}
+
+/** Whether the line holds refused keys, which keep the keyboard in its field. */
+const holdsRefused = (line: Line): boolean => line.refused.length > 0;
+
 /** A click in the focused field's line: the caret goes there, or the operator is to switch. */
 export function clickInLine(session: Session, clicked: Click): Session {
-  if (clicked.op) return { ...session, switching: clicked.id, highlight: null };
+  if (clicked.op) return { ...quiet(session), switching: clicked.id, highlight: null };
   const { line } = session;
   return line ? { ...session, line: clickAt(line, clicked.id), switching: null } : session;
 }
@@ -171,7 +185,8 @@ export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransi
   if (!line || switching) return taken(chooseRow(session, row, ctx));
   const chosen = choose(line, row, ctx);
   const { root } = chosen.line;
-  const whole = chosen.taken && ctx.target !== null && !holdsEmptySlot(root);
+  const whole =
+    chosen.taken && ctx.target !== null && !holdsEmptySlot(root) && !holdsRefused(chosen.line);
   return taken(commit(session, chosen.line), whole ? { go: 1 } : undefined);
 }
 
@@ -180,15 +195,16 @@ export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransi
  * words the notation writes after the field (`)` after the last value of `print(…)`).
  */
 export function valueKey(
-  session: Session,
+  given: Session,
   key: { key: string; shiftKey: boolean },
   rows: readonly Row[],
   ctx: LineContext,
   next: string,
 ): KeyTransition {
+  const session = quiet(given);
   const { line, focus } = session;
+  if (!line || !focus) return { ...still(session), taken: false };
   const left: KeyTransition = { ...still(session), taken: false };
-  if (!line || !focus) return left;
   const shown = shownHighlight(session, rows.length);
   switch (key.key) {
     case "Escape":
@@ -205,30 +221,38 @@ export function valueKey(
     case "Tab": {
       const step = key.shiftKey ? -1 : 1;
       const moved = tab(line, step, ctx);
+      // Refused keys keep the keyboard in the field, so they aren't left behind unseen.
+      if (moved.move && holdsRefused(line)) {
+        return taken(still({ ...session, line: refuseLeaving(line) }));
+      }
       return taken(commit(session, moved.line), moved.move ? { go: step } : undefined);
     }
     case "Enter": {
       const row = shown === null ? undefined : rows[shown];
       if (row) return pickRow(session, row, ctx);
       if (line.word !== "") return taken(commit(session, settle(line, ctx)));
+      if (holdsRefused(line)) return taken(still({ ...session, line: refuseLeaving(line) }));
       return taken(still(session), "close");
     }
     case "Backspace":
       return taken(commit(session, backspace(line, ctx).line));
     case "Delete":
-      return taken(line.selected ? commit(session, backspace(line, ctx).line) : still(session));
+      return taken(commit(session, deleteKey(line, ctx).line));
     default: {
       if (key.key.length !== 1) return left;
       const typed = type(line, key.key, ctx);
       // A key the line refuses after the whole value, its word chosen, beginning the words that
       // follow the field, moves on to the next field, as the notation goes on there.
-      if (!typed.taken && next !== "" && next.startsWith(key.key)) {
+      if (!typed.taken && !holdsRefused(line) && next !== "" && next.startsWith(key.key)) {
         const settled = settle(line, ctx);
         if (atEnd(settled)) return taken(commit(session, settled), { go: 1 });
       }
       // `,` in an item of a list adds the next item.
       const { index } = focus;
       const item = typed.move === "item" && index !== undefined;
+      if (item && holdsRefused(line)) {
+        return taken(still({ ...session, line: refuseLeaving(line) }));
+      }
       return taken(commit(session, typed.line), item ? { addItem: index + 1 } : undefined);
     }
   }
@@ -254,7 +278,7 @@ export function textEnded(session: Session, key: TextEnd, ctx: LineContext): Key
   const step = key === "Tab" ? 1 : -1;
   const moved = tab(ended.session.line ?? line, step, ctx);
   const after = chain(ended, (next) => commit(next, moved.line));
-  return taken(after, moved.move ? { go: step } : undefined);
+  return taken(after, moved.move && !holdsRefused(moved.line) ? { go: step } : undefined);
 }
 
 /** The value list shows every entry. */
