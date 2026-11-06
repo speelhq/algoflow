@@ -386,8 +386,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
               // oxlint-disable-next-line react/no-array-index-key -- parts are positional
               key={i}
               className={cn(
-                part.underline && "underline underline-offset-2",
-                part.slot === "key" && "rounded bg-muted px-1 font-mono text-[0.8rem]",
+                "key" in part
+                  ? "rounded bg-muted px-1 font-mono text-[0.8rem]"
+                  : part.underline && "underline underline-offset-2",
               )}
             >
               {part.text}

@@ -27,19 +27,23 @@ import {
   type Row,
 } from "./line";
 
+/** A part of an explanation: a part of a block's text, or a key to type. */
+export type ExplanationPart = Part | { text: string; key: true };
+
 export type Explanation = {
   /** What is explained: a name, drawn as a variable when it is one. */
   name: string;
   variable?: boolean;
-  /** The explanation; a run in backticks is a key to type. */
-  parts: Part[];
+  parts: ExplanationPart[];
 };
 
-/** A help text, its runs in backticks marked as keys. */
-export function helpParts(text: string): Part[] {
+/** A help text, each piece in backticks a key to type. */
+export function helpParts(text: string): ExplanationPart[] {
   return text
     .split("`")
-    .map((piece, i): Part => (i % 2 === 1 ? { text: piece, slot: "key" } : { text: piece }))
+    .map((piece, i): ExplanationPart =>
+      i % 2 === 1 ? { text: piece, key: true } : { text: piece },
+    )
     .filter((part) => part.text !== "");
 }
 
@@ -72,7 +76,7 @@ export function explainName(program: Program, at: NodeId, name: Name, isNew: boo
 }
 
 /** A help followed, when keys insert what it explains, by how to type them. */
-function typedHelp(help: string, keys: string | undefined): Part[] {
+function typedHelp(help: string, keys: string | undefined): ExplanationPart[] {
   return helpParts(keys === undefined ? help : `${help} ${t("editor.typeKeys", { keys })}`);
 }
 
