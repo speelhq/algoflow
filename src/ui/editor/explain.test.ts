@@ -47,7 +47,7 @@ describe("explanation line", () => {
       target.id,
     );
     expect(explained?.name).toBe("Remainder");
-    expect(explained?.parts.at(-2)).toEqual({ text: "%", slot: "key" });
+    expect(explained?.parts.at(-2)).toEqual({ text: "%", key: true });
     expect(shown(explained)?.[1]).toMatch(/is 1\. Type %\.$/);
     const text = allEntries().find((entry) => entry.id === "str");
     if (!text) throw new Error("no Text");
@@ -71,7 +71,7 @@ describe("explanation line", () => {
   it("inside an operation's slot: its name and its template with that slot underlined", () => {
     const explained = explainLine(keys("total+"), ctx, undefined, p, target.id);
     expect(shown(explained)).toEqual(["Add", "total + …"]);
-    expect(explained?.parts.find((part) => part.underline)?.text).toBe("…");
+    expect(explained?.parts.find((part) => "underline" in part && part.underline)?.text).toBe("…");
     // A slot's value is parenthesized as the chart parenthesizes it.
     expect(shown(explainLine(keys("(i+n)//"), ctx, undefined, p, target.id))).toEqual([
       "Whole-number quotient",
