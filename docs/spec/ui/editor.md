@@ -511,6 +511,10 @@ Each entry names its keys (`typed`, `blocks.md`, Value list entries):
 A single `=` inserts nothing, so the line never reads Python's assignment
 as a comparison.
 
+The first key of a two-key operator that inserts nothing alone, `=` or
+`!`, shows at the caret, dimmed, until the next key, because a key that
+shows nothing looks like a broken one.
+
 The line refuses a comparison typed after a comparison, and the
 explanation line shows the message of `E_PARSE_CHAIN`.
 
@@ -565,6 +569,61 @@ Every operator has a key where Python has one, so the `Python` tab later
 shows keys that the learner has typed.
 
 Parentheses aren't stored, so none is ever left unclosed.
+
+### Refused keys
+
+A key that the value line refuses changes nothing.
+
+The caret shows the refused key in red until the next key or a click,
+because a key that changes nothing and shows nothing looks like a broken
+one.
+
+The caret shows a space, and a key that has no character, by its name
+(`editor.spaceKey`, `editor.backspaceKey`, `editor.deleteKey`).
+
+The caret shows a refused two-key operator by both its keys, and a
+refused choice, by Enter or a click, by its row's keys: an entry by its
+keys, or by its name while it has none, and a variable or a function by
+its name. Choosing a row and typing its keys show the same refusal,
+because they make the same edit. For example: `==` after `i < n`.
+
+Each reason has its own message (`editor.refused.<reason>`):
+
+| Refused key | Reason |
+| --- | --- |
+| a digit or `.` that would make a number Python rejects (Value line, Numbers) | `number` |
+| a digit that would make an int outside the int range or a float beyond the largest float (Value line, Numbers) | `tooLarge` |
+| a digit after a value other than a number (Value line, Numbers) | `afterValue` |
+| `.` after a value other than a number, or after a word | `member` |
+| a key that ends a word that names nothing exactly (Value line, Words) | `word` |
+| `(` other than at an empty slot (Keys) | `open` |
+| `)` with no open pair and no call around the caret (Keys) | `close` |
+| `,` in a call, after its last argument (Keys) | `lastArgument` |
+| `,` outside every call and list, in a field that isn't an item of an `exprs` slot, where it doesn't move the keyboard to the next field (Keys) | `oneValue` |
+| `]` outside every list and item (Keys) | `bracket` |
+| a key that inserts an operation after a value, or the first key of one, at an empty slot (Keys) | `noValue` |
+| `"` or `'` | `quote` |
+| any other character that no row of the key table holds (Keys) | `unused` |
+| Backspace with nothing before the caret that it removes (Backspace) | `nothing` |
+| Delete with no selected value (Backspace) | `delete` |
+
+A key that ends a word that matches nothing shows the closest name
+(`editor.didYouMean`, `editor.nothingLike`; Value line, Words) in place of
+`word`, because the closest name says what to type.
+
+The message of `quote` tells the learner to choose `Text`, because a
+learner who types a quote means to write a text, which only `Text`
+makes (Value line, Texts).
+
+A space outside a word changes nothing and shows nothing, because a
+learner types the spaces that Python writes. For example: `i + 1`.
+
+← and → at the first and last stops of the line change nothing and show
+nothing, as in a text field.
+
+A live region reads the reason of a refused key and nothing else that
+the explanation line shows, so a screen reader announces a refusal
+without reading every highlight.
 
 ## Targets
 
@@ -678,7 +737,7 @@ list highlights or the caret is in:
 | a name set nowhere yet | that choosing it makes a new variable that gets its value there (`editor.explain.newVariable`) |
 | any other variable | its name with its kind and the statement that first gives it a value (`A number variable. It first gets a value in: i ← 1.`, `editor.explain.variablePlain` when it has no kind) |
 | inside an operation's slot | the operation's name (the entry offered after the kind of the value in its first slot, `Join with another list` for `+` after a list) and its notation with every slot as its value, parenthesized as the chart parenthesizes it, an empty one as `…`, and the slot the caret is in underlined (`dp[…]`, its `…` underlined) |
-| a refused key | its message (Backspace and keys) |
+| a refused key | the key in red, then its reason (Backspace and keys, Refused keys) |
 | a word that matches nothing | the closest name (Value line), or `editor.nothingLike` when none is close |
 | anything else | the block definition's help (`block.<key>.help`) |
 
@@ -694,6 +753,7 @@ The tests of `src/ui/editor` cover:
 - the block menu's entries, order, disabled entries, search, and the
   functions offered
 - a value line's typing, keys, choosing, Backspace, moving, and value list
+- each reason of a refused key, with its message
 - what a target's line takes and lists
 - the name list
 - the explanation line
