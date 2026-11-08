@@ -30,11 +30,10 @@ A session reads a design through this link, with its Artifact tool.
 
 The Design artifact holds these pages:
 
-| Page                 | Holds                                                     |
-| -------------------- | --------------------------------------------------------- |
-| `Screens`            | a design of each screen and state, in the table below     |
+| Page                 | Holds                                                        |
+| -------------------- | ------------------------------------------------------------ |
+| `Screens`            | a design of each screen and state, in the table below        |
 | `Block editor lines` | the block editor's lines, one per statement block definition |
-| `Redesign studies`   | the first drafts of the screens, and the studies of the loop notation, the variables card, and functions |
 
 An issue or the spec names a design by its page and its title. For
 example: the design `5 Run: the moment on the chart, the state in Result`
