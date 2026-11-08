@@ -713,10 +713,11 @@ The end-to-end suite draws, in each locale:
   Run, Wrong Answer, Accepted, Solution, the Python tab, Run inside a
   function, Playground, a Playground program, Modules, and Module
 - one screenshot per state of a part that opens over the canvas: the
-  block menu, the Input chart node's menu, a diagnostic's message, and
-  the block editor while it names a variable, where a value is
-  expected, while a value is typed, after a number, after a list, after
-  a check, and while it sets an item
+  block menu, the block menu with the program's own functions, the Input
+  chart node's menu, a diagnostic's message, and the block editor while
+  it names a variable, where a value is expected, while a value is
+  typed, after a number, after a list, after a check, and while it sets
+  an item
 - one per view (`views.md`): the views chosen by value, the object
   graph, and the views a learner switches to
 
