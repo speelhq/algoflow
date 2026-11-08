@@ -1,6 +1,6 @@
-// One screenshot per screen state, written to e2e/screenshots/ for review by
-// `pnpm screenshots` and under test-results/ by any other run. Drawn at 1280 × 800, the size of
-// a design on the page Screens (docs/design/README.md).
+// One screenshot per screen state, and per state of a part that opens over the canvas, written to
+// e2e/screenshots/ for review by `pnpm screenshots` and under test-results/ by any other run. Drawn
+// at 1280 × 800, the size that docs/design/README.md gives a design and its screenshot.
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import {
@@ -88,6 +88,20 @@ test.describe("FizzBuzz", () => {
     );
     await page.screenshot({ path: shot("python"), animations: "disabled" });
   });
+
+  test("Block menu", async ({ page }) => {
+    await page.goto("/#/p/fizzbuzz");
+    await page.locator('[data-testid="connector"][data-place="main/main/0"]').click();
+    await expect(page.getByTestId("block-menu")).toBeVisible();
+    await page.screenshot({ path: shot("block-menu"), animations: "disabled" });
+  });
+
+  test("Input chart node's menu", async ({ page }) => {
+    await page.goto("/#/p/fizzbuzz");
+    await page.getByTestId("input-chart-node").click();
+    await expect(page.getByRole("menuitem", { name: "n ← 3" })).toBeVisible();
+    await page.screenshot({ path: shot("input-menu"), animations: "disabled" });
+  });
 });
 
 test("Wrong Answer", async ({ page }) => {
@@ -122,22 +136,16 @@ test("Playground", async ({ page }) => {
   await page.screenshot({ path: shot("playground"), animations: "disabled" });
 });
 
-test("Block menu", async ({ page }) => {
+test("Block menu with the program's own functions", async ({ page }) => {
   await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  const greet = { id: "shf-func-001", name: "greet", params: ["name"], body: [] };
+  await seedProgram(page, "fizzbuzz", { ...solutionOf("fizzbuzz"), functions: [greet] });
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-testid="connector"][data-place="main/main/0"]').click();
-  await expect(page.getByTestId("block-menu")).toBeVisible();
-  await page.screenshot({ path: shot("block-menu"), animations: "disabled" });
-});
-
-test("Input chart node's menu", async ({ page }) => {
-  await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
-  await page.goto("/#/p/fizzbuzz");
-  await page.getByTestId("input-chart-node").click();
-  await expect(page.getByRole("menuitem", { name: "n ← 3" })).toBeVisible();
-  await page.screenshot({ path: shot("input-menu"), animations: "disabled" });
+  const own = page.getByRole("region", { name: "This program" });
+  await own.scrollIntoViewIfNeeded();
+  await expect(own.getByRole("button", { name: /greet/ })).toBeInViewport();
+  await page.screenshot({ path: shot("block-menu-program"), animations: "disabled" });
 });
 
 test("Diagnostic", async ({ page }) => {
@@ -179,7 +187,23 @@ test.describe("Block editor", () => {
   test.beforeEach(async ({ page }) => {
     await seedProgress(page, { "sum-to-n": { status: "attempted", hints: 0, solution: false } });
     const [init, loop] = solutionOf("sum-to-n").main as Array<Record<string, unknown>>;
-    await seedProgram(page, "sum-to-n", programWith([init, { ...loop, body: [] }]));
+    const nums = {
+      id: "she-nums-001",
+      type: "assign",
+      target: { id: "she-tgt-0001", type: "var", name: "nums" },
+      value: {
+        id: "she-list-001",
+        type: "list",
+        items: [3, 1, 2].map((value, i) => ({
+          id: `she-item-00${i}`,
+          type: "num",
+          value,
+          float: false,
+          raw: String(value),
+        })),
+      },
+    };
+    await seedProgram(page, "sum-to-n", programWith([init, nums, { ...loop, body: [] }]));
     await page.goto("/#/p/sum-to-n");
   });
 
@@ -241,8 +265,8 @@ test.describe("Block editor", () => {
 
   test("setting an item", async ({ page }) => {
     await insert(page, "assign");
-    await page.keyboard.type("n[");
-    await expect(editor(page).getByTestId("editor-notation")).toContainText("n[");
+    await page.keyboard.type("nums[");
+    await expect(editor(page).getByTestId("editor-notation")).toContainText("nums[");
     await page.screenshot({ path: shot("editor-item"), animations: "disabled" });
   });
 });

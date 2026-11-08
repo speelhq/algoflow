@@ -9,7 +9,9 @@ either proposes it (`CLAUDE.md`, Judgment).
 Once a screen is built, its screenshot in `e2e/screenshots/` records how
 it looks, because a pull request's diff, a review bot in CI, and anyone
 the Design artifact isn't shared with can't open a design. Nobody changes
-a built screen's design again.
+a built screen's design again. A new look for a built screen is a new
+design, and once it is built, the table below names it in place of the
+old one.
 
 The spec, not a design, records an option the developer rejected, with
 its reason (`docs/spec/README.md`, Reasons), because the spec is read in a
@@ -78,8 +80,8 @@ is built (`CLAUDE.md`, Judgment).
 
 ## Screens
 
-Each design on the page `Screens` is drawn at 1280 × 800, the size at
-which `e2e/screenshots.spec.ts` draws each screenshot.
+Each design on the page `Screens`, and each screenshot, is 1280 × 800, so
+a screenshot can be laid beside its design.
 
 | Design                                                         | Screenshot               | Spec (`docs/spec/`) |
 | -------------------------------------------------------------- | ------------------------ | ------------------- |
@@ -105,9 +107,6 @@ which `e2e/screenshots.spec.ts` draws each screenshot.
 | 14 Build: the Input node lists the problem's cases             | `input-menu.png`         | `chart.md`, Input chart nodes |
 | 15 Build: a red dot, its message, and its fix                  | `diagnostic.png`         | `chart.md`, Editing on the chart |
 | 17 Playground program: a title, Run, and Export                | `playground-program.png` | `pages.md`, Pages and routes |
-| 18 Build: the + menu lists the program's own functions         |                          | `editor.md`, Block menu |
+| 18 Build: the + menu lists the program's own functions         | `block-menu-program.png` | `editor.md`, Block menu |
 
 A design with no screenshot draws a screen that isn't built yet.
-
-The designs on this page use a hand-drawn typeface, so they read as
-drafts. The application uses the typeface of `src/ui/theme.css`.
