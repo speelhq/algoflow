@@ -1,6 +1,7 @@
 // One screenshot per screen state, written to e2e/screenshots/ for review by
 // `pnpm screenshots` and under test-results/ by any other run. Drawn at 1280 × 800, the size of
 // a design on the page Screens (docs/design/README.md).
+import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { programWith, seedPlayground, seedProgram, seedProgress, solutionOf } from "./seed";
 
@@ -106,4 +107,149 @@ test("Playground", async ({ page }) => {
   await page.goto("/#/play");
   await expect(page.getByTestId("playground-row")).toHaveCount(4);
   await page.screenshot({ path: shot("playground"), animations: "disabled" });
+});
+
+test("Block menu", async ({ page }) => {
+  await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  await page.locator('[data-testid="connector"][data-place="main/main/0"]').click();
+  await expect(page.getByTestId("block-menu")).toBeVisible();
+  await page.screenshot({ path: shot("block-menu"), animations: "disabled" });
+});
+
+test("Input chart node's menu", async ({ page }) => {
+  await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  await page.getByTestId("input-chart-node").click();
+  await expect(page.getByRole("menuitem", { name: "n ← 3" })).toBeVisible();
+  await page.screenshot({ path: shot("input-menu"), animations: "disabled" });
+});
+
+test("Diagnostic", async ({ page }) => {
+  await seedProgress(page, {});
+  const loop = {
+    id: "shd-loop-001",
+    type: "for",
+    var: { id: "shd-lvar-001", type: "var", name: "i" },
+    start: { id: "shd-zero-001", type: "num", value: 0, float: false, raw: "0" },
+    stop: { id: "shd-stop-001", type: "num", value: 3, float: false, raw: "3" },
+    body: [
+      {
+        id: "shd-sets-001",
+        type: "assign",
+        target: { id: "shd-tgt-0001", type: "var", name: "total" },
+        value: { id: "shd-ivar-001", type: "var", name: "i" },
+      },
+    ],
+  };
+  const out = {
+    id: "shd-prnt-001",
+    type: "print",
+    args: [{ id: "shd-tvar-001", type: "var", name: "total" }],
+  };
+  await seedProgram(page, "fizzbuzz", programWith([loop, out]));
+  await page.goto("/#/p/fizzbuzz");
+  await page.locator('[data-chart-node="shd-prnt-001"]').hover();
+  await expect(page.getByTestId("diagnostic-message")).toBeVisible();
+  await page.screenshot({ path: shot("diagnostic"), animations: "disabled" });
+});
+
+test("Playground program", async ({ page }) => {
+  await seedProgress(page, {});
+  const id = "play-squares000001";
+  const square = {
+    id: "shp-prnt-001",
+    type: "print",
+    args: [
+      {
+        id: "shp-mult-001",
+        type: "binop",
+        op: "*",
+        left: { id: "shp-num0-001", type: "num", value: 7, float: false, raw: "7" },
+        right: { id: "shp-num0-002", type: "num", value: 7, float: false, raw: "7" },
+      },
+    ],
+  };
+  await seedProgram(page, id, { ...programWith([square]), title: "Sum of squares" });
+  await seedPlayground(page, { [id]: { edited: 0 } });
+  await page.goto(`/#/play/${id}`);
+  await expect(page.getByTestId("chart")).toBeVisible();
+  await page.screenshot({ path: shot("playground-program"), animations: "disabled" });
+});
+
+test.describe("Block editor", () => {
+  const editor = (page: Page) => page.getByTestId("block-editor");
+  const list = (page: Page) => editor(page).getByTestId("value-list");
+
+  test.beforeEach(async ({ page }) => {
+    await seedProgress(page, { "sum-to-n": { status: "attempted", hints: 0, solution: false } });
+    const [init, loop] = solutionOf("sum-to-n").main as Array<Record<string, unknown>>;
+    await seedProgram(page, "sum-to-n", programWith([init, { ...loop, body: [] }]));
+    await page.goto("/#/p/sum-to-n");
+  });
+
+  /** Inserts the block `entry` into the loop's empty body, which opens its editor. */
+  async function insert(page: Page, entry: string): Promise<void> {
+    await page.locator('[data-testid="connector"][data-place="sum-loop-001/body/0"]').click();
+    await page.getByTestId("block-menu").locator(`[data-entry="${entry}"]`).click();
+    await expect(editor(page)).toBeVisible();
+  }
+
+  test("choosing a variable", async ({ page }) => {
+    await insert(page, "assign");
+    await page.keyboard.type("to");
+    await expect(list(page)).toContainText("New variable");
+    await page.screenshot({ path: shot("editor-name"), animations: "disabled" });
+  });
+
+  test("where a value is expected", async ({ page }) => {
+    await insert(page, "assign");
+    await page.keyboard.type("total");
+    await page.keyboard.press("Enter");
+    await expect(list(page)).toContainText("Variables");
+    await page.screenshot({ path: shot("editor-value"), animations: "disabled" });
+  });
+
+  test("typing", async ({ page }) => {
+    await insert(page, "assign");
+    await page.keyboard.type("total");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("total+i");
+    await expect(list(page)).toBeVisible();
+    await page.screenshot({ path: shot("editor-typing"), animations: "disabled" });
+  });
+
+  test("after a number", async ({ page }) => {
+    await insert(page, "assign");
+    await page.keyboard.type("total");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("1");
+    await expect(list(page)).toContainText("Add");
+    await page.screenshot({ path: shot("editor-number"), animations: "disabled" });
+  });
+
+  test("after a list", async ({ page }) => {
+    await insert(page, "assign");
+    await page.keyboard.type("total");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("[1,2]");
+    await expect(list(page)).toContainText("Items");
+    await page.screenshot({ path: shot("editor-list"), animations: "disabled" });
+  });
+
+  test("after a check", async ({ page }) => {
+    await insert(page, "if");
+    await page.keyboard.type("i%3==0");
+    await expect(list(page)).toContainText("And");
+    await page.screenshot({ path: shot("editor-check"), animations: "disabled" });
+  });
+
+  test("setting an item", async ({ page }) => {
+    await insert(page, "assign");
+    await page.keyboard.type("n[");
+    await expect(editor(page).getByTestId("editor-notation")).toContainText("n[");
+    await page.screenshot({ path: shot("editor-item"), animations: "disabled" });
+  });
 });
