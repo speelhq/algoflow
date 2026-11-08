@@ -24,7 +24,7 @@ Judgment).
    you may shape the design so that it can take that scope.
 2. Read `docs/spec/README.md`, and the whole spec file of every statement
    the issue cites.
-3. For a screen, read `docs/design/README.md` and the screen's artboard.
+3. For a screen, read `docs/design/README.md` and the screen's design.
 4. Read every source file and test the change touches, in full.
 5. Check that every name, path, and statement the issue treats as existing
    is still in the files, and propose an edit of the issue for each one
@@ -42,11 +42,12 @@ Judgment).
    commits), propose a split and wait, because a pull request that stands
    alone is never stacked or retargeted, is reviewed while it is small, and
    can be released as soon as it merges.
-2. If the work would change an approach, the spec, or an artboard, or it
+2. If the work would change an approach, the spec, or a design, or it
    conflicts with the spec, propose and wait (`CLAUDE.md`, Judgment).
-   Handle a screen state that no artboard draws, or a difference from the
-   artboard that the code can't follow, as `docs/design/README.md`
-   describes, and don't build it until that is settled.
+   Build a screen state that no design draws when the spec settles its
+   look, and show its screenshot in the pull request, where the developer
+   decides its look. When the spec leaves its look open, propose and wait
+   (`docs/design/README.md`, Making a design).
 3. If the issue's `Waits on` line names an open issue or pull request,
    wait for it.
 4. Propose a choice the spec doesn't cover as a statement, with its reason
@@ -63,7 +64,7 @@ Judgment).
    that challenge.
 4. For a screen, `e2e/screenshots.spec.ts` draws its states and
    `pnpm screenshots` writes them to `e2e/screenshots/`. Look at each image
-   beside its artboard.
+   beside its design.
 
 ## 4. Review
 

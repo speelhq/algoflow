@@ -52,7 +52,7 @@ only to find code, run a reproduction, or list review candidates
 rely on it, because an agent reads excerpts, and its summary can still
 sound as if it had read all of the code.
 
-Leave decisions that change an approach, the spec, or an artboard to the
+Leave decisions that change an approach, the spec, or a design to the
 developer, and propose them instead: what is done now and why, the
 alternatives, and the one you recommend and why. Build nothing that
 depends on a proposal until the developer decides. If a task conflicts

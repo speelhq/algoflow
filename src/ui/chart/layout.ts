@@ -107,7 +107,7 @@ const HEIGHT: Record<Shape, number> = {
 export const estimatedWidth: Measure = (text) => text.length * 7.2;
 /** Room on each side of an empty slot's text for its dashed outline. */
 export const PILL = 8;
-/** A diamond's text wider than this is drawn on two lines, as the boards draw it. */
+/** A diamond's text wider than this is drawn on two lines, as the designs draw it. */
 const WRAP = 150;
 /** The distance between the two lines of a diamond's text. */
 export const LINE = 16;

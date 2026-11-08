@@ -24,7 +24,7 @@ The other commands are in `CLAUDE.md`.
 | Path              | Holds                                                          |
 | ----------------- | -------------------------------------------------------------- |
 | `docs/spec/`      | the specification, one folder per area, with its reasons       |
-| `docs/design/`    | the artboards the screens are built from                       |
+| `docs/design/`    | how a design is made and kept, and each screen's design        |
 | `src/`            | the application (`ARCHITECTURE.md` maps it)                    |
 | `challenges/`     | the problems and the study plans, as JSON                      |
 | `scripts/`        | `pnpm check` and `pnpm commits`                                |
