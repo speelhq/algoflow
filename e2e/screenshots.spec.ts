@@ -3,7 +3,14 @@
 // a design on the page Screens (docs/design/README.md).
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { programWith, seedPlayground, seedProgram, seedProgress, solutionOf } from "./seed";
+import {
+  declareFirstProgram,
+  programWith,
+  seedPlayground,
+  seedProgram,
+  seedProgress,
+  solutionOf,
+} from "./seed";
 
 /** Where the screenshot `name` goes: the tracked folder only when snapshots are being updated. */
 function shot(name: string): string {
@@ -13,6 +20,12 @@ function shot(name: string): string {
 }
 
 test.use({ viewport: { width: 1280, height: 800 } });
+
+test("First launch", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Add your first block" })).toBeVisible();
+  await page.screenshot({ path: shot("first-launch"), animations: "disabled" });
+});
 
 test("Problems", async ({ page }) => {
   await seedProgress(page, {
@@ -129,29 +142,9 @@ test("Input chart node's menu", async ({ page }) => {
 
 test("Diagnostic", async ({ page }) => {
   await seedProgress(page, {});
-  const loop = {
-    id: "shd-loop-001",
-    type: "for",
-    var: { id: "shd-lvar-001", type: "var", name: "i" },
-    start: { id: "shd-zero-001", type: "num", value: 0, float: false, raw: "0" },
-    stop: { id: "shd-stop-001", type: "num", value: 3, float: false, raw: "3" },
-    body: [
-      {
-        id: "shd-sets-001",
-        type: "assign",
-        target: { id: "shd-tgt-0001", type: "var", name: "total" },
-        value: { id: "shd-ivar-001", type: "var", name: "i" },
-      },
-    ],
-  };
-  const out = {
-    id: "shd-prnt-001",
-    type: "print",
-    args: [{ id: "shd-tvar-001", type: "var", name: "total" }],
-  };
-  await seedProgram(page, "fizzbuzz", programWith([loop, out]));
+  await seedProgram(page, "fizzbuzz", declareFirstProgram());
   await page.goto("/#/p/fizzbuzz");
-  await page.locator('[data-chart-node="shd-prnt-001"]').hover();
+  await page.locator('[data-chart-node="dgn-prnt-001"]').hover();
   await expect(page.getByTestId("diagnostic-message")).toBeVisible();
   await page.screenshot({ path: shot("diagnostic"), animations: "disabled" });
 });
@@ -172,7 +165,7 @@ test("Playground program", async ({ page }) => {
       },
     ],
   };
-  await seedProgram(page, id, { ...programWith([square]), title: "Sum of squares" });
+  await seedProgram(page, id, { ...programWith([square]), title: "Seven squared" });
   await seedPlayground(page, { [id]: { edited: 0 } });
   await page.goto(`/#/play/${id}`);
   await expect(page.getByTestId("chart")).toBeVisible();
@@ -217,7 +210,7 @@ test.describe("Block editor", () => {
     await page.keyboard.type("total");
     await page.keyboard.press("Enter");
     await page.keyboard.type("total+i");
-    await expect(list(page)).toBeVisible();
+    await expect(editor(page).getByTestId("editor-notation")).toContainText("total + i");
     await page.screenshot({ path: shot("editor-typing"), animations: "disabled" });
   });
 

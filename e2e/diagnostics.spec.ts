@@ -1,33 +1,13 @@
 // A chart node with a diagnostic shows a red dot; hovering shows the message and its fix.
 import { expect, test } from "./fixtures";
-import { programWith, seedProgram, seedProgress } from "./seed";
+import { declareFirstProgram, programWith, seedProgram, seedProgress } from "./seed";
 
 test.beforeEach(async ({ page }) => {
   await seedProgress(page, {});
 });
 
 test("hovering a flagged chart node shows its message, and the fix applies", async ({ page }) => {
-  const loop = {
-    id: "dgn-loop-001",
-    type: "for",
-    var: { id: "dgn-lvar-001", type: "var", name: "i" },
-    start: { id: "dgn-zero-001", type: "num", value: 0, float: false, raw: "0" },
-    stop: { id: "dgn-stop-001", type: "num", value: 3, float: false, raw: "3" },
-    body: [
-      {
-        id: "dgn-sets-001",
-        type: "assign",
-        target: { id: "dgn-tgt-0001", type: "var", name: "total" },
-        value: { id: "dgn-ivar-001", type: "var", name: "i" },
-      },
-    ],
-  };
-  const out = {
-    id: "dgn-prnt-001",
-    type: "print",
-    args: [{ id: "dgn-tvar-001", type: "var", name: "total" }],
-  };
-  await seedProgram(page, "fizzbuzz", programWith([loop, out]));
+  await seedProgram(page, "fizzbuzz", declareFirstProgram());
   await page.goto("/#/p/fizzbuzz");
   await expect(page.getByTestId("red-dot")).toHaveCount(1);
   await page.locator('[data-chart-node="dgn-prnt-001"]').hover();
