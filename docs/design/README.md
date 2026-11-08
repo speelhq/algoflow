@@ -81,35 +81,33 @@ is built (`CLAUDE.md`, Judgment).
 Each design on the page `Screens` is drawn at 1280 × 800, the size at
 which `e2e/screenshots.spec.ts` draws each screenshot.
 
-| Design                                                         | Screenshot       | Spec (`docs/spec/`) |
-| -------------------------------------------------------------- | ---------------- | ------------------- |
-| 1 Problems: one section per plan                               | `problems.png`   | `pages.md`, Pages and routes; Problems page |
-| 2 Build: first launch, an empty chart                          | `build.png`      | `pages.md`, Page layout; Problem tab; First launch; `chart.md`, Editing on the chart |
-| 3 Build: the + menu lists statements only                      |                  | `editor.md`, Block menu; `chart.md`, Shapes |
-| 4 Build: editing a block, choosing a variable                  |                  | `editor.md`, Block editor; Name list; Captions |
-| 4B Build: where a value is expected                            |                  | `editor.md`, Value line; Value list |
-| 4C Build: typing, and the text becomes blocks                  |                  | `editor.md`, Value line; Backspace and keys |
-| 4D Build: after a number, and a named check                    |                  | `editor.md`, Value list; Captions; Explanation line |
-| 4E Build: after a list, what can be done with it               |                  | `editor.md`, Value list; `blocks.md`, Value list entries |
-| 4F Build: an unnamed check, then And or Or                     |                  | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Notation |
-| 4G Build: set one item of a list                               |                  | `editor.md`, Value list; Name list; Explanation line |
-| 5 Run: the moment on the chart, the state in Result            | `run.png`        | `run.md`, Run bar; Path and marks; Narration; `pages.md`, Result tab |
-| 6 Submit: Wrong Answer, and a way to the cause                 | `wrong.png`      | `run.md`, Submission |
-| 7 Submit: Accepted, with what comes next                       | `accepted.png`   | `run.md`, Submission |
-| 8 Solution: read-only in the canvas                            | `solution.png`   | `pages.md`, Problem tab |
-| 9 Run inside functions: the path bar is the call stack         |                  | `run.md`, Call stack |
-| 10 Module page: run one function, keep cases, Test             |                  | `modules.md`, Resolution; Pages; Cases |
-| 11 Python tab: a line and its block                            | `python.png`     | `pages.md`, Python tab |
-| 12 Python tab: a program that uses a module                    |                  | `pages.md`, Python tab; `emitter.md` |
-| 13 Playground: many programs, the last edited first            | `playground.png` | `pages.md`, Playground page |
-| 14 Build: the Input node lists the problem's cases             |                  | `chart.md`, Input chart nodes |
-| 15 Build: a red dot, its message, and its fix                  |                  | `chart.md`, Editing on the chart |
-| 17 Playground program: a title, Run, and Export                |                  | `pages.md`, Pages and routes |
-| 18 Build: the + menu lists the program's own functions         |                  | `editor.md`, Block menu |
+| Design                                                         | Screenshot               | Spec (`docs/spec/`) |
+| -------------------------------------------------------------- | ------------------------ | ------------------- |
+| 1 Problems: one section per plan                               | `problems.png`           | `pages.md`, Pages and routes; Problems page |
+| 2 Build: first launch, an empty chart                          | `build.png`              | `pages.md`, Page layout; Problem tab; First launch; `chart.md`, Editing on the chart |
+| 3 Build: the + menu lists statements only                      | `block-menu.png`         | `editor.md`, Block menu; `chart.md`, Shapes |
+| 4 Build: editing a block, choosing a variable                  | `editor-name.png`        | `editor.md`, Block editor; Name list; Captions |
+| 4B Build: where a value is expected                            | `editor-value.png`       | `editor.md`, Value line; Value list |
+| 4C Build: typing, and the text becomes blocks                  | `editor-typing.png`      | `editor.md`, Value line; Backspace and keys |
+| 4D Build: after a number, and a named check                    | `editor-number.png`      | `editor.md`, Value list; Captions; Explanation line |
+| 4E Build: after a list, what can be done with it               | `editor-list.png`        | `editor.md`, Value list; `blocks.md`, Value list entries |
+| 4F Build: an unnamed check, then And or Or                     | `editor-check.png`       | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Notation |
+| 4G Build: set one item of a list                               | `editor-item.png`        | `editor.md`, Value list; Name list; Explanation line |
+| 5 Run: the moment on the chart, the state in Result            | `run.png`                | `run.md`, Run bar; Path and marks; Narration; `pages.md`, Result tab |
+| 6 Submit: Wrong Answer, and a way to the cause                 | `wrong.png`              | `run.md`, Submission |
+| 7 Submit: Accepted, with what comes next                       | `accepted.png`           | `run.md`, Submission |
+| 8 Solution: read-only in the canvas                            | `solution.png`           | `pages.md`, Problem tab |
+| 9 Run inside functions: the path bar is the call stack         |                          | `run.md`, Call stack |
+| 10 Module page: run one function, keep cases, Test             |                          | `modules.md`, Resolution; Pages; Cases |
+| 11 Python tab: a line and its block                            | `python.png`             | `pages.md`, Python tab |
+| 12 Python tab: a program that uses a module                    |                          | `pages.md`, Python tab; `emitter.md` |
+| 13 Playground: many programs, the last edited first            | `playground.png`         | `pages.md`, Playground page |
+| 14 Build: the Input node lists the problem's cases             | `input-menu.png`         | `chart.md`, Input chart nodes |
+| 15 Build: a red dot, its message, and its fix                  | `diagnostic.png`         | `chart.md`, Editing on the chart |
+| 17 Playground program: a title, Run, and Export                | `playground-program.png` | `pages.md`, Pages and routes |
+| 18 Build: the + menu lists the program's own functions         |                          | `editor.md`, Block menu |
 
-A built screen with no screenshot in the table has none in
-`e2e/screenshots.spec.ts` yet, so its design stays the record of its look
-until the suite draws it.
+A design with no screenshot draws a screen that isn't built yet.
 
 The designs on this page use a hand-drawn typeface, so they read as
 drafts. The application uses the typeface of `src/ui/theme.css`.
