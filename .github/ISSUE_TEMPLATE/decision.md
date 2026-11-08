@@ -19,7 +19,7 @@ labels: decision
 
 <!-- Number each option. Say what it does and what it would require of
      the spec and the code. Quote any reason that constrains the choice and
-     is already recorded in docs/spec or shown on an artboard. If the code
+     is already recorded in docs/spec or drawn in a design. If the code
      shows the gap, add an Observed section before Options with the inputs,
      the actions, and what appeared.
      Example: 1. **Keep the message.** A long run that ends is still
@@ -39,6 +39,6 @@ labels: decision
 
 <!-- List the conditions that close the issue, one per item. Include
      these: the spec states the choice, with its reason where
-     docs/spec/README.md, Reasons, asks for one. For a screen that no
-     artboard shows, the artboard is also exported to docs/design/ and
-     listed in its README. -->
+     docs/spec/README.md, Reasons, asks for one. For a screen, the chosen
+     option is a design in the Design artifact, as docs/design/README.md,
+     Making a design, states. -->

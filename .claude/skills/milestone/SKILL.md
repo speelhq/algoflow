@@ -1,6 +1,6 @@
 ---
 name: milestone
-description: Plan or close one release milestone (vX.Y.Z) - split its Scope into issues and check its artboards, or confirm its exit criterion on main, tag it, and publish the release. Use when asked to plan, start, or finish a release or milestone.
+description: Plan or close one release milestone (vX.Y.Z) - split its Scope into issues and check its designs, or confirm its exit criterion on main, tag it, and publish the release. Use when asked to plan, start, or finish a release or milestone.
 argument-hint: <vX.Y.Z> [close]
 ---
 
@@ -14,7 +14,7 @@ description also holds the scope, in a paragraph that starts with
 `Scope:`, and the split replaces that paragraph with a pointer to the
 issues, because replacing the paragraph keeps the scope in one place and
 shows that the split is done. The issues wait for the plan because issues
-written months ahead would describe screens whose artboards aren't settled.
+written months ahead would describe screens whose designs aren't settled.
 A release closes when its exit criterion holds on `main`, which is then
 tagged `vX.Y.Z` with a GitHub release.
 
@@ -35,13 +35,14 @@ GitHub UI.
    isn't due yet.
 3. Read `docs/spec/README.md`, the whole spec file of every statement that
    the scope and the open issues cite, and, for a screen,
-   `docs/design/README.md` and the screen's artboard.
-4. Check that every screen the release builds, and every state of one (an
-   open menu, a card, a dialog), has its artboard in `docs/design/`. File
-   each missing one as a `decision` issue of this release, as
-   `docs/design/README.md` describes. Propose any change to an approach,
-   the spec, or an artboard (`CLAUDE.md`, Judgment) before work starts on
-   an issue that depends on it.
+   `docs/design/README.md` and the screen's design.
+4. Note each screen the release builds, and each state of one (an open
+   menu, a card, a dialog), that no design draws. When the spec leaves its
+   look open, it goes through Making a design before its issue starts;
+   otherwise its pull request shows its screenshot
+   (`docs/design/README.md`). Propose any change to an approach, the spec,
+   or a design (`CLAUDE.md`, Judgment) before work starts on an issue that
+   depends on it.
 5. While the description has a paragraph that starts with `Scope:`, split
    it into issues: one for each part a person can see working, each sized
    for one pull request (`CLAUDE.md`, Issues and commits). Give each issue
@@ -49,7 +50,7 @@ GitHub UI.
    problems), the part's statements cited under Spec, and its share of the
    exit criterion under Done when. File a choice that the scope needs first
    as a `decision` issue. End the Summary of each issue that waits on
-   another issue, such as a `decision` issue from this step or step 4,
+   another issue, such as a `decision` issue from this step,
    with the line `Waits on #n.` (`.claude/rules/github.md`). Check that
    every item of `Scope` is in exactly one issue, then replace the
    paragraph with `Split into the issues of this milestone.`

@@ -7,9 +7,9 @@ paths:
 
 Before you change a screen, read the spec that `ARCHITECTURE.md`, Code
 map, names for its part, and `pages.md`. Before you build one, also read
-`docs/design/README.md` and the screen's artboard, the exported PNG. Work
-from the PNG because the Claude Design files open only for the people they
-are shared with, and a pull request can't review or diff them.
+`docs/design/README.md` and the screen's design, through the link that
+file holds. Once the screen is built, its screenshot in `e2e/screenshots/`
+records how it looks.
 
 - oxlint's `jsx-a11y` rejects mouse and click handlers on `li`, `tr`, and
   `ol`. Use one delegated listener with `data-*` attributes instead.

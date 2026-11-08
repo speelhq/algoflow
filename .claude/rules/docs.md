@@ -3,7 +3,7 @@ paths:
   - "docs/**"
 ---
 
-# The specification and the artboards
+# The specification and the designs
 
 Before you change the spec, read `docs/spec/README.md`, which explains how
 to write a statement and its reason and how one statement refers to
