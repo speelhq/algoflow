@@ -84,7 +84,7 @@ which `e2e/screenshots.spec.ts` draws each screenshot.
 | Design                                                         | Screenshot               | Spec (`docs/spec/`) |
 | -------------------------------------------------------------- | ------------------------ | ------------------- |
 | 1 Problems: one section per plan                               | `problems.png`           | `pages.md`, Pages and routes; Problems page |
-| 2 Build: first launch, an empty chart                          | `build.png`              | `pages.md`, Page layout; Problem tab; First launch; `chart.md`, Editing on the chart |
+| 2 Build: first launch, an empty chart                          | `first-launch.png`       | `pages.md`, Page layout; Problem tab; First launch; `chart.md`, Editing on the chart |
 | 3 Build: the + menu lists statements only                      | `block-menu.png`         | `editor.md`, Block menu; `chart.md`, Shapes |
 | 4 Build: editing a block, choosing a variable                  | `editor-name.png`        | `editor.md`, Block editor; Name list; Captions |
 | 4B Build: where a value is expected                            | `editor-value.png`       | `editor.md`, Value line; Value list |

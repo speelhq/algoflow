@@ -35,6 +35,34 @@ export async function seedPlayground(
   }, JSON.stringify(index));
 }
 
+/**
+ * A program whose print reads `total`, which a loop's body first assigns: its print carries the
+ * diagnostic `E_DECLARE_FIRST`, with a fix, on the chart node `dgn-prnt-001`.
+ */
+export function declareFirstProgram(): Record<string, unknown> {
+  const loop = {
+    id: "dgn-loop-001",
+    type: "for",
+    var: { id: "dgn-lvar-001", type: "var", name: "i" },
+    start: { id: "dgn-zero-001", type: "num", value: 0, float: false, raw: "0" },
+    stop: { id: "dgn-stop-001", type: "num", value: 3, float: false, raw: "3" },
+    body: [
+      {
+        id: "dgn-sets-001",
+        type: "assign",
+        target: { id: "dgn-tgt-0001", type: "var", name: "total" },
+        value: { id: "dgn-ivar-001", type: "var", name: "i" },
+      },
+    ],
+  };
+  const out = {
+    id: "dgn-prnt-001",
+    type: "print",
+    args: [{ id: "dgn-tvar-001", type: "var", name: "total" }],
+  };
+  return programWith([loop, out]);
+}
+
 /** A stored program for problem id with main as given (opening the problem restores challengeId and inputs). */
 export function programWith(main: unknown[]): Record<string, unknown> {
   return { version: 1, title: "", inputs: [], classes: [], functions: [], main };
