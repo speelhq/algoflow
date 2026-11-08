@@ -46,8 +46,8 @@ A session makes a design in these steps:
    be able to tell on it at a glance.
 2. List what a learner already knows from everyday applications that
    applies to the screen, such as a field that takes typing, gray text in
-   an empty field, and a red border with its reason, and the components
-   of `src/ui/primitives` that already draw it.
+   an empty field, and a red border with its reason. Name the component
+   of `src/ui/primitives` that already draws each one.
 3. Find how other tools solve the same problem, from each tool's own
    documentation or screens rather than from memory, and write what to
    take from each and what not, with the reason.
