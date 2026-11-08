@@ -709,9 +709,9 @@ Narration).
 
 The end-to-end suite draws, in each locale:
 
-- one screenshot per screen state: Problems, Build, Run, Wrong Answer,
-  Accepted, Solution, the Python tab, Run inside a function,
-  Playground, a Playground program, Modules, and Module
+- one screenshot per screen state: Problems, the first launch, Build,
+  Run, Wrong Answer, Accepted, Solution, the Python tab, Run inside a
+  function, Playground, a Playground program, Modules, and Module
 - one screenshot per state of a part that opens over the canvas: the
   block menu, the Input chart node's menu, a diagnostic's message, and
   the block editor while it names a variable, where a value is
