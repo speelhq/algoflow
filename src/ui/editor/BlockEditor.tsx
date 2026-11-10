@@ -361,7 +361,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         </Button>
       </div>
       <div
-        className="flex flex-col gap-1.5 border-b p-2.5 text-[0.95rem]"
+        className="flex flex-col gap-1.5 border-b p-2.5 font-mono text-[0.95rem]"
         data-testid="editor-notation"
       >
         {notation}

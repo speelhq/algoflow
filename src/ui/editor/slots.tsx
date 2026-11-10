@@ -12,7 +12,7 @@ export function AddValue({ onAdd, small }: { onAdd: () => void; small: boolean }
     <button
       type="button"
       className={cn(
-        "h-7 cursor-pointer rounded-full border border-dashed px-2.5 text-muted-foreground hover:bg-muted",
+        "h-7 cursor-pointer rounded-full border border-dashed px-2.5 font-sans text-muted-foreground hover:bg-muted",
         small && "text-sm",
       )}
       onClick={onAdd}

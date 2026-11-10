@@ -121,7 +121,7 @@ function Accepted({ challenge }: { challenge: Challenge }) {
   return (
     <>
       {first?.done.type === "done" && (
-        <p className="font-mono text-xs" data-testid="events-loops">
+        <p className="text-xs" data-testid="events-loops">
           {t("result.eventsLoops", { events: first.done.events, loops: first.done.loops })}
         </p>
       )}

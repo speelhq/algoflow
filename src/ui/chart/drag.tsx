@@ -17,6 +17,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { NodeId, Place } from "@/lang/types";
 import { cn } from "@/lib/utils";
 import type { ChartEdge, ChartNode } from "./layout";
+import { chartFont } from "./measure";
+import type { Part } from "./text";
 
 export type Moves = {
   /** Moves `owner` to `place`; the reason it is refused, or null when it applied. */
@@ -25,14 +27,14 @@ export type Moves = {
   accepts: (owner: NodeId, place: Place) => boolean;
 };
 
-type Dragged = { owner: NodeId; text: string };
+type Dragged = { owner: NodeId; parts: Part[] };
 type Refusal = { edge: string; text: string };
 
 /** The listeners that make a chart node draggable, and the ref they need; inert when disabled. */
 export function useNodeDrag(node: ChartNode, enabled: boolean) {
   const { setNodeRef, listeners } = useDraggable({
     id: node.id,
-    data: { owner: node.owner, text: node.text },
+    data: { owner: node.owner, parts: node.parts },
     // Only a statement's chart node moves: a function chart's `Start` has an owner, but stays.
     disabled: !enabled || node.owner === null || node.shape === "terminal",
   });
@@ -89,7 +91,7 @@ export function ChartDrag(props: {
 
   const start = (event: DragStartEvent) => {
     const data = event.active.data.current as Partial<Dragged> | undefined;
-    if (data?.owner) setDragged({ owner: data.owner, text: data.text ?? "" });
+    if (data?.owner) setDragged({ owner: data.owner, parts: data.parts ?? [] });
   };
   const end = (event: DragEndEvent) => {
     const owner = dragged?.owner;
@@ -113,8 +115,13 @@ export function ChartDrag(props: {
       {children({ dragged: dragged?.owner ?? null, refusal })}
       <DragOverlay dropAnimation={null}>
         {dragged && (
-          <div className="rounded-lg border bg-background px-3 py-2 text-sm whitespace-nowrap shadow-md">
-            {dragged.text}
+          <div className="rounded-lg border bg-background px-3 py-2 whitespace-pre font-mono shadow-md">
+            {dragged.parts.map((part, i) => (
+              // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+              <span key={i} style={chartFont(part)}>
+                {part.text}
+              </span>
+            ))}
           </div>
         )}
       </DragOverlay>

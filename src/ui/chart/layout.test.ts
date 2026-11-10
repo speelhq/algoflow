@@ -21,7 +21,7 @@ import { laidOut } from "./testing";
 
 const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont } = ast;
 
-const wide: Measure = (text) => text.length * 14.4;
+const wide: Measure = (part) => part.text.length * 14.4;
 
 const lt = (name: string, n: number) => bin("<", v(name), num(n));
 const chain = (depth: number): Stmt =>
@@ -571,7 +571,7 @@ describe("layout texts", () => {
   });
 
   it("a long diamond's text is drawn on two lines, split at a space between words", () => {
-    const measure: Measure = (text) => text.length * 7;
+    const measure: Measure = (part) => part.text.length * 7;
     const divides = (by: number) => bin("==", bin("%", v("i"), num(by)), num(0));
     const check = if_(bin("and", divides(15), bin("<", v("i"), ast.empty())), []);
     const short = if_(divides(15), []);
@@ -597,7 +597,7 @@ describe("layout texts", () => {
   });
 
   it("a variable's part is measured bold", () => {
-    const measure: Measure = (text, _shape, bold) => text.length * (bold ? 10 : 5);
+    const measure: Measure = (part) => part.text.length * (part.variable ? 10 : 5);
     const shown = print(v("abc"));
     const chart = laidOut(program([shown]), { routine: "main", inputs: {}, measure });
     const parts = chart.nodes.find((n) => n.id === shown.id)?.parts ?? [];
@@ -606,6 +606,26 @@ describe("layout texts", () => {
       ["abc", 30, true],
       [")", 5, undefined],
     ]);
+  });
+
+  it("a caption and the catalog's words are words, and code is not (pages.md, Typefaces)", () => {
+    const named = { ...print(v("n")), caption: "Show it" };
+    const chart = laidOut(program([named, if_(bin("<", v("n"), num(3)), [])]), {
+      routine: "main",
+      inputs: { n: 15 },
+      measure: estimatedWidth,
+    });
+    const words = chart.nodes.map((node) =>
+      node.parts.map((part) => `${part.words ? "words" : "code"}:${part.text}`),
+    );
+    expect(words).toEqual(
+      expect.arrayContaining([
+        ["words:Start"],
+        ["words:Show it"],
+        ["code:n", "code: < 3", "words:?"],
+        ["words:End"],
+      ]),
+    );
   });
 
   it("an empty main offers its one connector between Start and End", () => {

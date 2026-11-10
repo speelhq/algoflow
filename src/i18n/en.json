@@ -440,7 +440,7 @@
   },
   "chart": {
     "start": "Start",
-    "startFn": "Start {name}({params})",
+    "startFn": "Start {signature}",
     "end": "End",
     "input": {
       "text": "Input {assignment}",

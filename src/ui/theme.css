@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/jetbrains-mono";
 
 /* `dark:` applies only under `.dark`, which the app never sets, so the primitives' dark styles
    stay off whatever the system's color scheme. */
@@ -10,6 +11,9 @@
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: "Geist Variable", sans-serif;
+  --font-mono: "JetBrains Mono Variable", monospace;
+  /* No ligature, which would draw `!=` as `≠` (`pages.md`, Typefaces). */
+  --font-mono--font-feature-settings: "calt" 0, "liga" 0;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
