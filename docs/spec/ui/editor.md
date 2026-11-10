@@ -230,7 +230,7 @@ slot in its place.
 A typed word is a letter or `_` followed by letters, digits, and `_`. It
 matches a name one of whose words starts with it, or an entry's keys,
 because a match inside a word is never the name meant. For example:
-`multiply` matches the entry `× Multiply`, and `i` doesn't match
+`multiply` matches the entry `* Multiply`, and `i` doesn't match
 `first`.
 
 A word matches these names:
@@ -348,7 +348,7 @@ After a value of no known kind, the value list holds every entry that
 takes a value.
 
 An entry with a symbol shows the symbol before its name. For example:
-`× Multiply`.
+`* Multiply`.
 
 The groups always come in this order: `Variables`, `Values`,
 `Conditions`, `Calculate`, `Items`, `Compare`, `Convert`,
@@ -405,7 +405,7 @@ moves to the first of them.
 
 Clicking an operator in the line lists the other entries of its block
 definition in its group, and choosing one replaces it. For example: `<`
-to `≤`, `+` to `Remainder`.
+to `<=`, `+` to `Remainder`.
 
 ### Moving the caret
 
@@ -431,7 +431,7 @@ field's value is selected:
 - Backspace removes it.
 - A key that names an entry after a value takes the selected value into
   the entry's first slot. For example: with `n` selected, `*` gives
-  `n × …`.
+  `n * …`.
 
 A typed value replaces a selected value, because a field of the notation
 reached by Tab already holds a value, which a caret after it would
@@ -495,18 +495,15 @@ Delete removes a selected value as Backspace does.
 
 Each entry names its keys (`typed`, `blocks.md`, Value list entries):
 
-| Typed                   | Inserts                                          |
-| ----------------------- | ------------------------------------------------ |
-| `+` `<` `>`             | as typed                                         |
-| `-`                     | `−`; at an empty slot, the sign of what follows  |
-| `*` `/`                 | `×` `÷`                                          |
-| `==` `!=` `<=` `>=`     | `=` `≠` `≤` `≥`                                  |
-| `(`                     | a pair of parentheses, the caret inside them; after a call's name, the call's own |
-| `[` `,` `]`             | a list's pair of brackets; `,` between its items; `]` leaves it; after a value, `[` an item of it (`nums[…]`) |
-| `,` in a call           | the call's next argument                         |
-| `,` in an `exprs` slot  | the next value of the slot (Block editor)        |
-| `%` `//` `**`           | as typed                                         |
-| `and` `or` `not` `in`   | as typed                                         |
+| Typed                         | Inserts                                          |
+| ----------------------------- | ------------------------------------------------ |
+| `+` `-` `*` `/` `%` `//` `**` | as typed; at an empty slot, `-` is the sign of what follows |
+| `==` `!=` `<` `<=` `>` `>=`   | as typed                                         |
+| `and` `or` `not` `in`         | as typed                                         |
+| `(`                           | a pair of parentheses, the caret inside them; after a call's name, the call's own |
+| `[` `,` `]`                   | a list's pair of brackets; `,` between its items; `]` leaves it; after a value, `[` an item of it (`nums[…]`) |
+| `,` in a call                 | the call's next argument                         |
+| `,` in an `exprs` slot        | the next value of the slot (Block editor)        |
 
 A single `=` inserts nothing, so the line never reads Python's assignment
 as a comparison.

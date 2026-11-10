@@ -163,8 +163,8 @@ dashed container, because both hide the check.
 
 The check reads `i < stop?` and shows the bound as the learner wrote
 it, as the emitted `range` does. An inclusive `Repeat i from 1 to n`
-and a display-only `Is i ≤ n?` were rejected, because they would mix
-`<` and `≤` across loops.
+and a display-only `Is i <= n?` were rejected, because they would mix
+`<` and `<=` across loops.
 
 ### Jumps and `Return`
 
@@ -184,7 +184,7 @@ the connector after it.
 
 The text of a `branch` or `checked` diamond is its condition as the
 chart writes it (`blocks.md`, Notation), followed by `?`
-(`chart.condition`). For example: `i < n + 1?`, `i % 15 = 0?`. A block
+(`chart.condition`). For example: `i < n + 1?`, `i % 15 == 0?`. A block
 with a caption shows its caption instead (`editor.md`, Captions). A
 condition template writes a condition in words. For example:
 `is divisible by`, `equals`.

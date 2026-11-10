@@ -61,7 +61,7 @@ export type ValueEntry = {
   group: "values" | "conditions" | "calculate" | "items" | "compare" | "convert"; // `editor.md`, Value list
   on?: Kind[]; // offered after a value of these kinds, which it takes as its first expression
   preset?: Record<string, unknown>; // slot values set on the block's create() (binop `op`)
-  symbol?: string; // shown before the name in the value list (`×`)
+  symbol?: string; // shown before the name in the value list (`*`)
   typed?: string; // what typed in a value line inserts it (`editor.md`, Backspace and keys)
 };
 ```
@@ -204,7 +204,7 @@ The expression block definitions:
 | `none`      | basic    |                 | `None`                                                              | `None`                 |
 | `var`       | basic    | name            | `{name}`                                                            | `name`                 |
 | `binop`     | basic    | op, left, right | `{left} {op} {right}` (Notation)                                    | infix (`emitter.md`)   |
-| `unop`      | basic    | op, operand     | `−{operand}` / `not {operand}`                                      | `-<x>` / `not <x>`     |
+| `unop`      | basic    | op, operand     | `-{operand}` / `not {operand}`                                      | `-<x>` / `not <x>`     |
 | `index`     | list     | list, index     | `{list}[{index}]`                                                   | `<list>[<index>]`      |
 | `list`      | list     | items           | `[{items}]`                                                         | `[<a>, <b>]`           |
 | `key`       | dict     | dict, key       | `{dict}[{key}]`                                                     | `<dict>[<key>]`        |
@@ -302,16 +302,7 @@ defaults to the slot's string value.
 
 `num` writes `raw`.
 
-`binop`'s `op` writes a symbol for each of these operators, and it writes
-`%`, `//`, `**`, `and`, `or`, and `in` as Python does:
-
-- `-` → `−`
-- `*` → `×`
-- `/` → `÷`
-- `==` → `=`
-- `!=` → `≠`
-- `<=` → `≤`
-- `>=` → `≥`
+`binop`'s `op` writes each operator as Python writes it (Symbols).
 
 The notation of the hidden `empty` block is `…`, which draws an empty slot
 (`editor.md`, Value line, Empty slots).
@@ -341,18 +332,20 @@ declaration.
 
 ### Symbols
 
-Comparison and arithmetic keep the symbols a learner knows from school:
-`=`, `≠`, `≤`, `×`, `÷`. An operation that school has no symbol for is
-written with Python's symbol, `%`, `//`, or `**`, and named in words in
-the value list. An operation written in words, such as
-`(remainder of i divided by 15) = 0`, was rejected because it needs
-parentheses of its own. It also carries one language's word order into
-every translation, and it is a second notation that the learner gives up
-for Python.
+Comparison and arithmetic are written with Python's symbols, such as
+`==`, `!=`, `<=`, `*`, and `/`. These were rejected:
+
+- the symbols of school, such as `=`, `≠`, `≤`, `×`, and `÷`, because
+  the learner would read one symbol and type another
+- an operation written in words, such as
+  `(remainder of i divided by 15) == 0`, because it needs parentheses
+  of its own, carries one language's word order into every
+  translation, and is a second notation that the learner gives up for
+  Python
 
 A variable gets a value with `←`, the first time and every time after,
-because no adult reads the arrow as an equation, and `=` keeps its school
-meaning, to compare. For example: `total ← 0`. A first assignment has no
+because no adult reads the arrow as an equation, as a learner reads
+Python's `=`. For example: `total ← 0`. A first assignment has no
 form of its own, because Python has none, and a separate `create` form
 would draw one statement two ways.
 
@@ -452,9 +445,9 @@ its own entries, because one block definition serves several groups:
 | `binop`           | `or`       | Or                      | conditions | truefalse            | `or`   | `or`  |
 | `call:randint`    |            | Random whole number     | calculate  |                      |        | `randint` |
 | `binop`           | `add`      | Add                     | calculate  | number, text         | `+`    | `+`   |
-| `binop`           | `sub`      | Subtract                | calculate  | number               | `−`    | `-`   |
-| `binop`           | `mul`      | Multiply                | calculate  | number               | `×`    | `*`   |
-| `binop`           | `div`      | Divide                  | calculate  | number               | `÷`    | `/`   |
+| `binop`           | `sub`      | Subtract                | calculate  | number               | `-`    | `-`   |
+| `binop`           | `mul`      | Multiply                | calculate  | number               | `*`    | `*`   |
+| `binop`           | `div`      | Divide                  | calculate  | number               | `/`    | `/`   |
 | `binop`           | `mod`      | Remainder               | calculate  | number               | `%`    | `%`   |
 | `binop`           | `floorDiv` | Whole-number quotient   | calculate  | number               | `//`   | `//`  |
 | `binop`           | `pow`      | Power                   | calculate  | number               | `**`   | `**`  |
@@ -469,12 +462,12 @@ its own entries, because one block definition serves several groups:
 | `binop`           | `join`     | Join with another list  | items      | list                 | `+`    |       |
 | `key`             |            | Value at a key          | items      | dict                 |        |       |
 | `attribute`       |            | Attribute               | items      | object               |        |       |
-| `binop`           | `eq`       | Equals                  | compare    | any                  | `=`    | `==`  |
-| `binop`           | `ne`       | Does not equal          | compare    | any                  | `≠`    | `!=`  |
+| `binop`           | `eq`       | Equals                  | compare    | any                  | `==`   | `==`  |
+| `binop`           | `ne`       | Does not equal          | compare    | any                  | `!=`   | `!=`  |
 | `binop`           | `lt`       | Less than               | compare    | number, text         | `<`    | `<`   |
-| `binop`           | `le`       | At most                 | compare    | number, text         | `≤`    | `<=`  |
+| `binop`           | `le`       | At most                 | compare    | number, text         | `<=`   | `<=`  |
 | `binop`           | `gt`       | Greater than            | compare    | number, text         | `>`    | `>`   |
-| `binop`           | `ge`       | At least                | compare    | number, text         | `≥`    | `>=`  |
+| `binop`           | `ge`       | At least                | compare    | number, text         | `>=`   | `>=`  |
 | `binop`           | `in`       | Is in a list            | compare    | any                  | `in`   | `in`  |
 | `call:str`        |            | As text                 | convert    | any                  |        | `str` |
 | `call:int`        |            | As whole number         | convert    | number, text         |        | `int` |
@@ -505,7 +498,7 @@ The expression block definitions give these kinds (`language.md`, Kinds):
 | `str` | a text |
 | `bool` | a true/false value |
 | `none` | none |
-| `unop` | a true/false value for `not`, and a number for `−` |
+| `unop` | a true/false value for `not`, and a number for `-` |
 | `binop`, a comparison or `in` | a true/false value |
 | `binop`, `and` or `or` | the kind of both values when they agree |
 | `binop`, `+` | the kind of both values when they agree and aren't true/false |
