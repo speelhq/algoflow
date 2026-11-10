@@ -84,26 +84,6 @@ describe("registry", () => {
     }
   });
 
-  it("binop writes school symbols, and Python's where school has none", () => {
-    const binop = BLOCK_DEFS.get("binop");
-    const block = (op: string) => ({ id: "b", type: "binop", op }) as never;
-    const school = ["+", "-", "*", "/", "==", "!=", "<", "<=", ">", ">="];
-    expect(school.map((op) => binop?.text?.(block(op), "op"))).toEqual([
-      "+",
-      "−",
-      "×",
-      "÷",
-      "=",
-      "≠",
-      "<",
-      "≤",
-      ">",
-      "≥",
-    ]);
-    const python = ["%", "//", "**", "and", "or", "in"];
-    expect(python.map((op) => binop?.text?.(block(op), "op"))).toEqual(python);
-  });
-
   it("expression blocks declare the value list's entries in the table's order", () => {
     const any = "number,text,truefalse,none,list,dict";
     const rows = [...BLOCK_DEFS.values()].flatMap((def) =>
@@ -132,19 +112,19 @@ describe("registry", () => {
       "binop | and | conditions | truefalse | and | and",
       "binop | or | conditions | truefalse | or | or",
       "binop | add | calculate | number,text | + | +",
-      "binop | sub | calculate | number | − | -",
-      "binop | mul | calculate | number | × | *",
-      "binop | div | calculate | number | ÷ | /",
+      "binop | sub | calculate | number | - | -",
+      "binop | mul | calculate | number | * | *",
+      "binop | div | calculate | number | / | /",
       "binop | mod | calculate | number | % | %",
       "binop | floorDiv | calculate | number | // | //",
       "binop | pow | calculate | number | ** | **",
       "binop | join | items | list | + | ",
-      `binop | eq | compare | ${any} | = | ==`,
-      `binop | ne | compare | ${any} | ≠ | !=`,
+      `binop | eq | compare | ${any} | == | ==`,
+      `binop | ne | compare | ${any} | != | !=`,
       "binop | lt | compare | number,text | < | <",
-      "binop | le | compare | number,text | ≤ | <=",
+      "binop | le | compare | number,text | <= | <=",
       "binop | gt | compare | number,text | > | >",
-      "binop | ge | compare | number,text | ≥ | >=",
+      "binop | ge | compare | number,text | >= | >=",
       `binop | in | compare | ${any} | in | in`,
       "call:abs |  | calculate | number |  | abs",
       "call:max |  | calculate | number,text |  | max",

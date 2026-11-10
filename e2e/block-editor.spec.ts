@@ -56,7 +56,7 @@ test("FizzBuzz is built from an empty chart by typing and choosing, and accepted
   await keys(page, "i%15==0");
   await expect(editor(page).getByTestId("explanation")).toContainText("Equals");
   await page.keyboard.press("Enter");
-  await expect(chart(page)).toContainText("i % 15 = 0?");
+  await expect(chart(page)).toContainText("i % 15 == 0?");
   await printText(page, `${fifteen}/then/0`, "FizzBuzz");
 
   const three = await insert(page, `${fifteen}/else/0`, "if");
@@ -125,8 +125,8 @@ test("a caption shows on its chart node and as a comment in Python", async ({ pa
   await expect(chart(page)).toContainText("Is i a multiple of 15?");
   // The chart node draws the caption in place of its condition, which its hover title keeps.
   const node = page.locator('[data-chart-node="fzb-if15-001"]');
-  await expect(node.locator("text", { hasText: "i % 15 = 0?" })).toHaveCount(0);
-  await expect(node.locator("title")).toHaveText("i % 15 = 0?");
+  await expect(node.locator("text", { hasText: "i % 15 == 0?" })).toHaveCount(0);
+  await expect(node.locator("title")).toHaveText("i % 15 == 0?");
   await page.keyboard.press("Escape");
   await page.getByTestId("tab-python").click();
   await expect(page.getByTestId("python-code")).toContainText("    # Is i a multiple of 15?");

@@ -9,7 +9,7 @@ export type ListItem = {
   label: string;
   /** Drawn as a variable: a bold word in the variable color. */
   variable?: boolean;
-  /** Before the name, in its own column (`×`). */
+  /** Before the name, in its own column (`*`). */
   symbol?: string;
   /** After the name, at the right (a variable's kind). */
   note?: string;

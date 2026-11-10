@@ -21,7 +21,7 @@ import { emptyExpr } from "./empty";
 
 type Binop = Extract<Expr, { type: "binop" }>;
 
-/** The kinds `<`, `≤`, `>`, and `≥` order. */
+/** The kinds `<`, `<=`, `>`, and `>=` order. */
 const ORDERED = ["number", "text"] as const;
 
 function arithmetic(block: Binop, l: Value, r: Value, ctx: RunContext): Value {
@@ -150,8 +150,6 @@ export const binop = defineExpr<"binop">({
     return `${ctx.operand(block.left, precedence, "left")} ${block.op} ${ctx.operand(block.right, precedence, "right")}`;
   },
   notation: () => "{left} {op} {right}",
-  // The symbols taught at school, and Python's where school has none (`%`, `//`, `**`, `in`).
-  text: (block, slot) => (slot === "op" ? (CANVAS_OPS[block.op] ?? block.op) : ""),
   yields: (block, kindOf) => {
     if (isComparison(block.op)) return "truefalse";
     const left = kindOf(block.left);
@@ -195,7 +193,7 @@ export const binop = defineExpr<"binop">({
       group: "calculate",
       on: ["number"],
       preset: { op: "-" },
-      symbol: "−",
+      symbol: "-",
       typed: "-",
     },
     {
@@ -203,7 +201,7 @@ export const binop = defineExpr<"binop">({
       group: "calculate",
       on: ["number"],
       preset: { op: "*" },
-      symbol: "×",
+      symbol: "*",
       typed: "*",
     },
     {
@@ -211,7 +209,7 @@ export const binop = defineExpr<"binop">({
       group: "calculate",
       on: ["number"],
       preset: { op: "/" },
-      symbol: "÷",
+      symbol: "/",
       typed: "/",
     },
     {
@@ -239,22 +237,12 @@ export const binop = defineExpr<"binop">({
       typed: "**",
     },
     { name: "join", group: "items", on: ["list"], preset: { op: "+" }, symbol: "+" },
-    { name: "eq", group: "compare", on: KINDS, preset: { op: "==" }, symbol: "=", typed: "==" },
-    { name: "ne", group: "compare", on: KINDS, preset: { op: "!=" }, symbol: "≠", typed: "!=" },
+    { name: "eq", group: "compare", on: KINDS, preset: { op: "==" }, symbol: "==", typed: "==" },
+    { name: "ne", group: "compare", on: KINDS, preset: { op: "!=" }, symbol: "!=", typed: "!=" },
     { name: "lt", group: "compare", on: ORDERED, preset: { op: "<" }, symbol: "<", typed: "<" },
-    { name: "le", group: "compare", on: ORDERED, preset: { op: "<=" }, symbol: "≤", typed: "<=" },
+    { name: "le", group: "compare", on: ORDERED, preset: { op: "<=" }, symbol: "<=", typed: "<=" },
     { name: "gt", group: "compare", on: ORDERED, preset: { op: ">" }, symbol: ">", typed: ">" },
-    { name: "ge", group: "compare", on: ORDERED, preset: { op: ">=" }, symbol: "≥", typed: ">=" },
+    { name: "ge", group: "compare", on: ORDERED, preset: { op: ">=" }, symbol: ">=", typed: ">=" },
     { name: "in", group: "compare", on: KINDS, preset: { op: "in" }, symbol: "in", typed: "in" },
   ],
 });
-
-const CANVAS_OPS: Partial<Record<Binop["op"], string>> = {
-  "-": "−",
-  "*": "×",
-  "/": "÷",
-  "==": "=",
-  "!=": "≠",
-  "<=": "≤",
-  ">=": "≥",
-};

@@ -513,7 +513,7 @@ describe("layout texts", () => {
     );
     expect(chart.nodes[0]?.text).toBe("Start f(x)");
     expect(chart.nodes.some((node) => node.role === "input")).toBe(false);
-    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe("x % 15 = 0?");
+    expect(chart.nodes.find((node) => node.id === check.id)?.text).toBe("x % 15 == 0?");
     const returns = chart.edges.filter((edge) => [found.id, fallback.id].includes(edge.from));
     expect(returns.map((edge) => edge.to)).toEqual(["end", "end"]); // a Return leads to End
   });
@@ -590,8 +590,8 @@ describe("layout texts", () => {
           .trimEnd(),
       );
     };
-    expect(chart.nodes.find((n) => n.id === check.id)?.text).toBe("i % 15 = 0 and i < …?");
-    expect(lines(check.id)).toEqual(["i % 15 = 0", "and i < …?"]);
+    expect(chart.nodes.find((n) => n.id === check.id)?.text).toBe("i % 15 == 0 and i < …?");
+    expect(lines(check.id)).toEqual(["i % 15 == 0", "and i < …?"]);
     const one = chart.nodes.find((n) => n.id === short.id)?.parts ?? [];
     expect(new Set(one.map((part) => part.dy))).toEqual(new Set([0]));
   });

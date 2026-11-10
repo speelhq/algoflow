@@ -35,7 +35,7 @@ test("FizzBuzz from the list to Accepted, Python, and the next problem", async (
   await page.goto("/#/");
   await page.getByTestId("problem-row-fizzbuzz").click();
   await expect(page).toHaveTitle("FizzBuzz — AlgoFlow");
-  await expect(page.getByTestId("chart")).toContainText("i % 15 = 0?");
+  await expect(page.getByTestId("chart")).toContainText("i % 15 == 0?");
 
   await page.getByRole("button", { name: "▶ Run" }).click();
   await expect(page.getByTestId("position")).toBeVisible();

@@ -90,13 +90,12 @@ describe("notation", () => {
     ]);
   });
 
-  it("writes only school symbols, and names builtin arguments by parameter", () => {
-    expect(exprText(bin("*", num(2, "2.50"), bin("/", v("a"), v("b"))))).toBe("2.50 × (a ÷ b)");
-    expect(
-      ["a - b", "a == b", "a != b", "a <= b", "a >= b", "a < b"].map((t) => exprText(expr(t))),
-    ).toEqual(["a − b", "a = b", "a ≠ b", "a ≤ b", "a ≥ b", "a < b"]);
+  it("writes each operator as Python does, and names builtin arguments by parameter", () => {
+    expect(exprText(bin("*", num(2, "2.50"), bin("/", v("a"), v("b"))))).toBe("2.50 * (a / b)");
+    const ops = "+ - * / // % ** == != < <= > >= and or in".split(" ");
+    expect(ops.map((op) => exprText(expr(`a ${op} b`)))).toEqual(ops.map((op) => `a ${op} b`));
     expect(exprText(bool(false))).toBe("False");
-    expect(exprText(neg(v("x")))).toBe("−x");
+    expect(exprText(neg(v("x")))).toBe("-x");
     expect(exprText(call("f", num(1), v("n")))).toBe("f(1, n)");
   });
 
@@ -115,20 +114,20 @@ describe("notation", () => {
   });
 
   it("parenthesizes operators among themselves exactly where the emitter would", () => {
-    expect(exprText(expr("(a + b) * c"))).toBe("(a + b) × c");
-    expect(exprText(expr("a + b * c"))).toBe("a + b × c");
-    expect(exprText(expr("a - (b - c)"))).toBe("a − (b − c)");
-    expect(exprText(expr("-(a + b)"))).toBe("−(a + b)");
+    expect(exprText(expr("(a + b) * c"))).toBe("(a + b) * c");
+    expect(exprText(expr("a + b * c"))).toBe("a + b * c");
+    expect(exprText(expr("a - (b - c)"))).toBe("a - (b - c)");
+    expect(exprText(expr("-(a + b)"))).toBe("-(a + b)");
     expect(exprText(expr("a < b and b < c"))).toBe("a < b and b < c");
   });
 
   it("parenthesizes no call and no argument of one, and every operator as the emitter does", () => {
-    expect(exprText(expr("i % 15 == 0"))).toBe("i % 15 = 0");
+    expect(exprText(expr("i % 15 == 0"))).toBe("i % 15 == 0");
     expect(exprText(expr("(i + 1) % 3"))).toBe("(i + 1) % 3");
     expect(exprText(expr("abs(i % 3)"))).toBe("abs(i % 3)");
     expect(exprText(expr("min(a, abs(b))"))).toBe("min(a, abs(b))");
-    expect(exprText(expr("-x ** 2"))).toBe("−x ** 2");
-    expect(exprText(expr("(-x) ** 2"))).toBe("(−x) ** 2");
+    expect(exprText(expr("-x ** 2"))).toBe("-x ** 2");
+    expect(exprText(expr("(-x) ** 2"))).toBe("(-x) ** 2");
     expect(exprText(not(bin("<", v("a"), v("b"))))).toBe("not a < b");
     expect(exprText(expr("not (a and b)"))).toBe("not (a and b)");
     expect(exprText(expr("f(abs(x), y)"))).toBe("f(abs(x), y)");
@@ -141,9 +140,9 @@ describe("notation", () => {
     expect(exprText(expr("nums[i + 1]"))).toBe("nums[i + 1]");
     expect(exprText(expr("nums[j] > nums[j + 1]"))).toBe("nums[j] > nums[j + 1]");
     expect(exprText(expr("(a + b)[0]"))).toBe("(a + b)[0]");
-    expect(exprText(expr("(-xs)[0]"))).toBe("(−xs)[0]");
-    expect(exprText(expr("-xs[0]"))).toBe("−xs[0]");
-    expect(exprText(expr("len(nums) - 1"))).toBe("len(nums) − 1");
+    expect(exprText(expr("(-xs)[0]"))).toBe("(-xs)[0]");
+    expect(exprText(expr("-xs[0]"))).toBe("-xs[0]");
+    expect(exprText(expr("len(nums) - 1"))).toBe("len(nums) - 1");
     expect(notationText(assignTo(item(v("nums"), v("i")), num(0)))).toBe("nums[i] ← 0");
   });
 
@@ -197,7 +196,7 @@ describe("notation", () => {
 
   it("writes a variable as its value when the writing gives one", () => {
     const values: Record<string, string> = { i: "3" };
-    expect(exprText(expr("i % 15 == 0"), { value: (name) => values[name] })).toBe("3 % 15 = 0");
+    expect(exprText(expr("i % 15 == 0"), { value: (name) => values[name] })).toBe("3 % 15 == 0");
   });
 
   it("keeps the spaces a text holds, and leaves no space where a slot holds nothing", () => {
@@ -215,7 +214,7 @@ describe("notation", () => {
 
 describe("diamonds and generated chart nodes", () => {
   it("a diamond is its condition followed by ?, or the `…` without it", () => {
-    expect(joinParts(questionParts(if_(expr("i % 15 == 0"), [])))).toBe("i % 15 = 0?");
+    expect(joinParts(questionParts(if_(expr("i % 15 == 0"), [])))).toBe("i % 15 == 0?");
     expect(joinParts(questionParts(if_(expr("abs(x) < 3"), [])))).toBe("abs(x) < 3?");
     expect(joinParts(questionParts(if_(empty(), [])))).toBe("…");
     // The condition's parts name its slot; the `?` names none.
