@@ -93,7 +93,7 @@ export type ValueEntry = {
   on?: readonly Kind[];
   /** Slot values set on the block's `create()` (binop `op`). */
   preset?: Record<string, unknown>;
-  /** Shown before the name in the list (`×`). */
+  /** Shown before the name in the list (`*`). */
   symbol?: string;
   /** What typed in a value line inserts it. */
   typed?: string;

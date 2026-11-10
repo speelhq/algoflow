@@ -24,7 +24,7 @@ test("FizzBuzz draws its loop's generated chart nodes, diamonds as questions, an
   await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   const chart = page.getByTestId("chart");
-  for (const text of ["i ← 1", "i < n + 1?", "i ← i + 1", "i % 15 = 0?"]) {
+  for (const text of ["i ← 1", "i < n + 1?", "i ← i + 1", "i % 15 == 0?"]) {
     await expect(chart.locator("text", { hasText: text }).first()).toBeVisible();
   }
   await expect(chart.locator("text", { hasText: /^Yes$/ })).toHaveCount(4);
@@ -73,7 +73,7 @@ test("Show solution draws the solution read-only; Back to my program returns", a
   await page.getByRole("button", { name: "Show solution" }).click();
   await expect(page.getByTestId("solution-band")).toContainText("Solution");
   await expect(page.getByTestId("connector")).toHaveCount(0);
-  await expect(page.getByTestId("chart")).toContainText("i % 15 = 0?");
+  await expect(page.getByTestId("chart")).toContainText("i % 15 == 0?");
   await expect(page.getByTestId("input-chart-node")).toHaveCount(0);
   await page.getByRole("button", { name: "Back to my program" }).click();
   await expect(page.getByTestId("solution-band")).toHaveCount(0);
@@ -97,7 +97,7 @@ test("Load into my program replaces the program with the solution as one undoabl
   await page.getByRole("button", { name: "Show solution" }).click();
   await page.getByRole("button", { name: "Load into my program" }).click();
   await expect(page.getByTestId("solution-band")).toHaveCount(0);
-  await expect(page.getByTestId("chart")).toContainText("i % 15 = 0?");
+  await expect(page.getByTestId("chart")).toContainText("i % 15 == 0?");
   await expect(page.getByTestId("connector").first()).toBeVisible();
   await page.getByRole("button", { name: "Undo" }).click();
   await expect(page.getByTestId("chart").locator("[data-chart-node]")).toHaveCount(3);

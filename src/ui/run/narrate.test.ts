@@ -42,7 +42,7 @@ describe("narrate", () => {
     const check = if_(bin("==", bin("%", v("i"), num(3)), num(0)), []);
     const p = program([assign("i", num(6)), check, while_(bin(">", v("i"), num(9)), [])]);
     expect(told(p, "enter", 1)).toBe("Running i ← 6");
-    expect(told(p, "enter", 2)).toBe("Checking i % 3 = 0");
+    expect(told(p, "enter", 2)).toBe("Checking i % 3 == 0");
     expect(told(p, "enter", 3)).toBe("Checking i > 9");
     expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("Running i ← 1");
   });
@@ -59,7 +59,7 @@ describe("narrate", () => {
       if_(bin("==", v("n"), num(5)), []),
     ]);
     expect(told(p, "compare", 1)).toBe("4 + 1 > 3? Yes");
-    expect(told(p, "compare", 2)).toBe("4 = 5? No");
+    expect(told(p, "compare", 2)).toBe("4 == 5? No");
   });
 
   it("compare: FizzBuzz at i = 3 writes its operations as the chart does", () => {
@@ -68,8 +68,8 @@ describe("narrate", () => {
       if_(bin("==", bin("%", v("i"), num(15)), num(0)), []),
       if_(bin("==", bin("%", bin("+", v("i"), num(1)), num(2)), num(0)), []),
     ]);
-    expect(told(p, "compare", 1)).toBe("3 % 15 = 0? No");
-    expect(told(p, "compare", 2)).toBe("(3 + 1) % 2 = 0? Yes");
+    expect(told(p, "compare", 1)).toBe("3 % 15 == 0? No");
+    expect(told(p, "compare", 2)).toBe("(3 + 1) % 2 == 0? Yes");
   });
 
   it("compare: any other comparison, such as a side of and, says its value as the blocks write it", () => {
@@ -81,10 +81,10 @@ describe("narrate", () => {
     ]);
     expect(told(p, "compare", 1)).toBe("1 < 2 is True");
     expect(told(p, "compare", 3)).toBe("1 < 2 and 1 < 9? Yes");
-    expect(told(p, "compare", 4)).toBe("1 ≠ 1 is False");
+    expect(told(p, "compare", 4)).toBe("1 != 1 is False");
     const negated = program([assign("a", num(1)), while_(not(bin(">=", v("a"), num(1))), [])]);
-    expect(told(negated, "compare", 1)).toBe("1 ≥ 1 is True");
-    expect(told(negated, "compare", 2)).toBe("not 1 ≥ 1? No");
+    expect(told(negated, "compare", 1)).toBe("1 >= 1 is True");
+    expect(told(negated, "compare", 2)).toBe("not 1 >= 1? No");
   });
 
   it("compare: a condition that is one variable keeps its name; inside one it is a value", () => {
@@ -105,8 +105,8 @@ describe("narrate", () => {
       if_(bin("==", v("done"), bool(false)), []),
       if_(bin("!=", v("name"), none()), []),
     ]);
-    expect(told(p, "compare", 1)).toBe("True = False? No");
-    expect(told(p, "compare", 2)).toBe('"Fizz" ≠ None? Yes');
+    expect(told(p, "compare", 1)).toBe("True == False? No");
+    expect(told(p, "compare", 2)).toBe('"Fizz" != None? Yes');
   });
 
   it("write, loop, print, call, and return", () => {

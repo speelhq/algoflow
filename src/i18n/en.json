@@ -322,7 +322,7 @@
       },
       "or": {
         "label": "Or",
-        "help": "True when one side or both sides are true. Example: i = 3 or i = 5 is true when i is 3 and when i is 5."
+        "help": "True when one side or both sides are true. Example: i == 3 or i == 5 is true when i is 3 and when i is 5."
       },
       "add": {
         "label": "Add",
@@ -330,15 +330,15 @@
       },
       "sub": {
         "label": "Subtract",
-        "help": "Takes the right number away from the left one. Example: 7 − 2 is 5."
+        "help": "Takes the right number away from the left one. Example: 7 - 2 is 5."
       },
       "mul": {
         "label": "Multiply",
-        "help": "Multiplies two numbers. Example: 4 × 3 is 12."
+        "help": "Multiplies two numbers. Example: 4 * 3 is 12."
       },
       "div": {
         "label": "Divide",
-        "help": "Divides the left number by the right one; the result is a decimal. Example: 7 ÷ 2 is 3.5."
+        "help": "Divides the left number by the right one; the result is a decimal. Example: 7 / 2 is 3.5."
       },
       "mod": {
         "label": "Remainder",
@@ -358,11 +358,11 @@
       },
       "eq": {
         "label": "Equals",
-        "help": "True when both sides are the same value. Example: 2 + 2 = 4 is true."
+        "help": "True when both sides are the same value. Example: 2 + 2 == 4 is true."
       },
       "ne": {
         "label": "Does not equal",
-        "help": "True when the two sides are different values. Example: 3 ≠ 4 is true."
+        "help": "True when the two sides are different values. Example: 3 != 4 is true."
       },
       "lt": {
         "label": "Less than",
@@ -370,7 +370,7 @@
       },
       "le": {
         "label": "At most",
-        "help": "True when the left value is smaller than the right one or equal to it. Example: 4 ≤ 4 is true."
+        "help": "True when the left value is smaller than the right one or equal to it. Example: 4 <= 4 is true."
       },
       "gt": {
         "label": "Greater than",
@@ -378,7 +378,7 @@
       },
       "ge": {
         "label": "At least",
-        "help": "True when the left value is larger than the right one or equal to it. Example: 4 ≥ 4 is true."
+        "help": "True when the left value is larger than the right one or equal to it. Example: 4 >= 4 is true."
       },
       "in": {
         "label": "Is in a list",
@@ -399,7 +399,7 @@
     },
     "index": {
       "label": "Item at a position",
-      "help": "One item of a list, found by its position. Positions start at 0, and −1 is the last item. Example: [4, 9, 2][0] is 4."
+      "help": "One item of a list, found by its position. Positions start at 0, and -1 is the last item. Example: [4, 9, 2][0] is 4."
     },
     "call:len": {
       "label": "Count",

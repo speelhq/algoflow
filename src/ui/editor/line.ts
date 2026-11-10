@@ -296,7 +296,7 @@ export function variableExpr(name: Name): Expr | undefined {
   return made && variableOf(made) === name ? made : undefined;
 }
 
-/** A sign before the empty slot it leaves (`−…`). */
+/** A sign before the empty slot it leaves (`-…`). */
 function signExpr(): Expr | undefined {
   const made = parsed("-a", NO_DEFINITIONS);
   return made && mapSlotValues(made, () => emptyExpr());
