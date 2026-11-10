@@ -184,7 +184,7 @@ In run mode, the narration line describes the event of the step
 
 | What happened | Sentence |
 | --- | --- |
-| `enter` | `Checking i % 3 = 0` for a condition, and otherwise `Running` and its notation (`Running total ← total + i`) |
+| `enter` | `Checking i % 3 == 0` for a condition, and otherwise `Running` and its notation (`Running total ← total + i`) |
 | `read` | `Read nums[2]: 5`, or for several items `Read 3 items of nums` |
 | `compare` | the comparison as the chart writes it (`blocks.md`, Notation), with every variable that holds a number, a text, a boolean, or none written as its value in the frame the event ran in, then `is` and the comparison's value (`3 < 10 is True`); for a diamond's whole condition, its question and answer (below) |
 | `write` | `i is now 3` |
@@ -213,7 +213,7 @@ say a third time what the mark and the edge show, with a word found
 nowhere on the chart.
 
 The narration writes the condition as it writes a comparison
-(Narration). For example: `3 % 15 = 0? No`, `3 < 15 + 1? Yes`.
+(Narration). For example: `3 % 15 == 0? No`, `3 < 15 + 1? Yes`.
 
 A condition that is one variable instead keeps its name, because its
 value in its place would drop the question. For example: `found? Yes`,

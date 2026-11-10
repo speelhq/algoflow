@@ -5,7 +5,7 @@ This file states the pages and their routes, the layout of the Problem
 page, the modes, Help and `⋯`, the Problems page, the Playground page,
 the panel and its tabs, the first launch, the keyboard, the messages,
 the catalogs and the Japanese texts, how a value is written on one
-line, and the verification.
+line, the typefaces, and the verification.
 
 ## Pages and routes
 
@@ -118,10 +118,10 @@ The Problem page, during a run, looks like this:
 │ Variables           │                 i ← 1                          │
 │  n ← 15   i ← 3     │            ◇ i < n + 1? ──No──▶ ● End          │
 │ Output   Expected   │              Yes                               │
-│  1        1         │            ◇ i % 15 = 0? ✗                     │
+│  1        1         │            ◇ i % 15 == 0? ✗                    │
 │  2        2         │              No …                              │
 │           Fizz      ├────────────────────────────────────────────────┤
-│                     │ 3 % 15 = 0? No                                 │
+│                     │ 3 % 15 == 0? No                                │
 │                     │ ❚❚ |◀ ▶| ⤼ ▶▶ ━●━ 23 of 124  Slow Normal Fast ■│
 └─────────────────────┴────────────────────────────────────────────────┘
 ```
@@ -704,6 +704,24 @@ The narration states a variable and its value in a sentence (`run.md`,
 Narration).
 
 `Output` shows what `print` printed, as Python's `str()` writes it.
+
+## Typefaces
+
+The typefaces tell a program's code from the words around it:
+
+- JetBrains Mono draws code that stands alone: a notation, a value
+  line, a value list entry's symbol, a value on one line (Values on one
+  line), the `Python` tab, a challenge text's `` `code` `` (Panel,
+  Problem tab), and the keys that the explanation line names.
+- Geist draws words: a catalog's text, a caption, and a sentence with
+  the code it holds, such as the narration and the explanation line.
+
+Geist was rejected for code, because it draws `l`, `1`, and `I` nearly
+alike.
+
+JetBrains Mono draws no ligature, because a ligature would draw `!=` as
+`≠` and `<=` as `≤`, the symbols of school that `blocks.md`, Notation,
+Symbols, rejects.
 
 ## Verification
 
