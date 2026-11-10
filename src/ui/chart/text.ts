@@ -43,10 +43,13 @@ export function blankTemplate(template: string): string {
 /**
  * A part of a block's text: the template's own words, or what a slot holds (`slot` names the
  * statement's slot it belongs to). `variable` marks a variable's name, `empty` the `…` of an
- * empty slot, and `emptyId` the empty slot a click on the part opens.
+ * empty slot, `emptyId` the empty slot a click on the part opens, and `words` a text of a catalog
+ * or a caption, which is drawn in Geist where code is drawn in JetBrains Mono (`pages.md`,
+ * Typefaces).
  */
 export type Part = {
   text: string;
+  words?: boolean;
   slot?: string;
   empty?: boolean;
   emptyId?: NodeId;
@@ -78,23 +81,36 @@ export type Writing = { value?: (name: string) => string | undefined };
  * part left with no text is dropped.
  */
 export function templateParts(template: string, fill: (name: string) => Part[]): Part[] {
+  return piecesParts(template, fill, (text) => ({ text }));
+}
+
+/** A catalog's template as parts, as `templateParts` makes them, its own words marked `words`. */
+export function catalogParts(template: string, fill: (name: string) => Part[]): Part[] {
+  return piecesParts(template, fill, (text) => ({ text, words: true }));
+}
+
+function piecesParts(
+  template: string,
+  fill: (name: string) => Part[],
+  ownPart: (text: string) => Part,
+): Part[] {
   const parts = templatePieces(template).flatMap((piece) =>
     "words" in piece
-      ? [{ part: { text: piece.words }, words: true }]
-      : fill(piece.name).map((part) => ({ part, words: false })),
+      ? [{ part: ownPart(piece.words), own: true }]
+      : fill(piece.name).map((part) => ({ part, own: false })),
   );
-  const out: { part: Part; words: boolean }[] = [];
-  for (const { part, words } of parts) {
+  const out: { part: Part; own: boolean }[] = [];
+  for (const { part, own } of parts) {
     const before = out.at(-1)?.part.text ?? "";
     let text = part.text;
-    if (words) {
+    if (own) {
       text = text.replace(/\s+/g, " ");
       if (before === "" || before.endsWith(" ")) text = text.replace(/^ /, "");
     }
-    if (text !== "") out.push({ part: { ...part, text }, words });
+    if (text !== "") out.push({ part: { ...part, text }, own });
   }
   const last = out.at(-1);
-  if (last?.words) last.part.text = last.part.text.replace(/ $/, "");
+  if (last?.own) last.part.text = last.part.text.replace(/ $/, "");
   // Adjacent words of one slot are one part.
   const merged: Part[] = [];
   for (const { part } of out) {
@@ -103,6 +119,7 @@ export function templateParts(template: string, fill: (name: string) => Part[]):
       before &&
       plain(before) &&
       plain(part) &&
+      before.words === part.words &&
       before.slot === part.slot &&
       before.emptyId === part.emptyId
     ) {
@@ -316,10 +333,20 @@ export function generatedNotation(block: Block, which: Generated): string | unde
     .join("");
 }
 
-/** A counted loop's generated chart node as parts, its slots being the loop's; none for another. */
+/**
+ * A counted loop's generated chart node as parts, its slots being the loop's, its check asked as
+ * a diamond asks; none for another block.
+ */
 export function generatedParts(block: Block, which: Generated): Part[] {
-  const notation = generatedNotation(block, which);
-  return notation === undefined ? [] : stmtParts(notation, block);
+  const chart = getBlockDef(keyOf(block)).chart;
+  if (!chart || !("counted" in chart)) return [];
+  const parts = stmtParts(chart.counted[which], block);
+  return which === "check" ? asked(parts) : parts;
+}
+
+/** A condition asked as a diamond asks it (`chart.condition`): `i < n?`. */
+function asked(condition: Part[]): Part[] {
+  return catalogParts(t("chart.condition"), () => condition);
 }
 
 /** A diamond's text: its condition followed by `?`, or the `…` without it. */
@@ -328,7 +355,7 @@ export function questionParts(block: Block): Part[] {
   if (!condition) return [];
   const parts = exprParts(condition.expr).map((part) => ({ ...part, slot: condition.slot }));
   if (isEmptyExpr(condition.expr)) return parts;
-  return templateParts(t("chart.condition"), () => parts);
+  return asked(parts);
 }
 
 /** A value as the blocks write it: a text in quotes, the rest as `str()` (`True`, `None`). */
@@ -367,5 +394,5 @@ export function assignmentText(name: string, value: string): string {
 
 /** An Input chart node's text, its name a variable (`Input n ← 15`). */
 export function inputParts(name: string, value: Data): Part[] {
-  return templateParts(t("chart.input.text"), () => assignmentParts(name, dataText(value)));
+  return catalogParts(t("chart.input.text"), () => assignmentParts(name, dataText(value)));
 }

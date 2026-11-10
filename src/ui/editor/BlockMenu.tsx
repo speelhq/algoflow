@@ -56,11 +56,14 @@ function Entries({ place, done }: { place: Place; done: () => void }) {
                 onClick={() => choose(entry)}
               >
                 <span>
-                  {entry.label}
+                  {/* A call's label is its code (`BlockMenuEntry`). */}
+                  <span className={cn(entry.notation === undefined && "font-mono")}>
+                    {entry.label}
+                  </span>
                   {entry.notation !== undefined && (
                     <>
                       {" "}
-                      <span className="ml-1 text-muted-foreground">{entry.notation}</span>
+                      <span className="ml-1 font-mono text-muted-foreground">{entry.notation}</span>
                     </>
                   )}
                 </span>

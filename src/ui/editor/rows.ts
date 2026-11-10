@@ -39,7 +39,7 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
         ...(row.entry.declared.symbol ? { symbol: row.entry.declared.symbol } : {}),
       };
     case "function":
-      return { key: `f:${row.fn.name}`, label: functionLabel(row.fn) };
+      return { key: `f:${row.fn.name}`, label: functionLabel(row.fn), code: true };
     case "parentheses":
       return {
         key: "parentheses",

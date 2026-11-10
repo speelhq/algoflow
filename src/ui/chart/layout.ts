@@ -12,6 +12,7 @@ import type { Data, Name, NodeId, Place, Program, RegionParent, Routine, Stmt } 
 import { findRoutine, regionsOf, routineStmts } from "@/lang/walk";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import {
+  catalogParts,
   generatedParts,
   hasEmptySlot,
   inputParts,
@@ -82,8 +83,8 @@ export type ChartEdge = {
  */
 export type PlacedPart = Part & { dx: number; dy: number; w: number };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
-/** The width of `text` in px as the chart draws it; a variable is drawn bold. */
-export type Measure = (text: string, shape: Shape, bold?: boolean) => number;
+/** The width of a part's text in px, in the typeface and weight the chart draws it in. */
+export type Measure = (part: Part) => number;
 export type LayoutOptions = {
   routine: Routine;
   /** The values the Input chart nodes show: the chosen case's. */
@@ -104,7 +105,7 @@ const HEIGHT: Record<Shape, number> = {
 };
 
 /** A width estimated from the length of the text, where no font can measure it. */
-export const estimatedWidth: Measure = (text) => text.length * 7.2;
+export const estimatedWidth: Measure = (part) => part.text.length * 7.2;
 /** Room on each side of an empty slot's text for its dashed outline. */
 export const PILL = 8;
 /** A diamond's text wider than this is drawn on two lines, as the designs draw it. */
@@ -253,15 +254,11 @@ class Builder {
     owner: NodeId | null,
     role: ChartNode["role"],
     shape: Shape,
-    content: string | Part[],
+    unplaced: Part[],
     y: number,
   ): ChartNode {
-    const unplaced =
-      typeof content === "string" ? (content === "" ? [] : [{ text: content }]) : content;
     const measured = (part: Part) =>
-      part === BREAK
-        ? 0
-        : this.measure(part.text, shape, part.variable) + (part.empty ? 2 * PILL : 0);
+      part === BREAK ? 0 : this.measure(part) + (part.empty ? 2 * PILL : 0);
     const whole = unplaced.reduce((sum, part) => sum + measured(part), 0);
     const lines = shape === "diamond" && whole > WRAP ? inTwo(unplaced, measured) : [unplaced];
     const lineWidths = lines.map((line) => line.reduce((sum, part) => sum + measured(part), 0));
@@ -304,7 +301,7 @@ class Builder {
     if (stmt.caption === undefined || hasEmptySlot(stmt)) {
       return this.node(id, stmt.id, role, shape, parts, y);
     }
-    const node = this.node(id, stmt.id, role, shape, [{ text: stmt.caption }], y);
+    const node = this.node(id, stmt.id, role, shape, [{ text: stmt.caption, words: true }], y);
     return { ...node, title: joinParts(parts) };
   }
 
@@ -427,7 +424,7 @@ class Builder {
     const yesOut = this.enter(yesStub, yes, { x: xYes, y: top }, frag, stmt.id, slots.yes as Slot);
 
     if (noOut || yesOut) {
-      const merge = this.node(`${stmt.id}:merge`, stmt.id, "merge", "junction", "", yMerge);
+      const merge = this.node(`${stmt.id}:merge`, stmt.id, "merge", "junction", [], yMerge);
       frag.nodes.push(merge);
       if (noOut) frag.edges.push(edge(noOut, merge.id, [{ x: 0, y: yMerge }]));
       if (yesOut) {
@@ -475,7 +472,7 @@ class Builder {
       y = init.h + JOIN;
       widest = init.w / 2;
     }
-    const top = this.node(`${stmt.id}:top`, stmt.id, "top", "junction", "", y);
+    const top = this.node(`${stmt.id}:top`, stmt.id, "top", "junction", [], y);
     const yJoin = y;
     frag.nodes.push(top);
     if (counted) {
@@ -565,7 +562,7 @@ class Builder {
       if (out) frag.edges.push(edge(out, top.id, up, { anchor: "first" }));
     } else if (nexts.length > 0) {
       // The next pass of a checked loop starts where the back edge does.
-      const next = this.node(`${stmt.id}:next`, stmt.id, "next", "junction", "", yTurn);
+      const next = this.node(`${stmt.id}:next`, stmt.id, "next", "junction", [], yTurn);
       frag.nodes.push(next);
       for (const escape of nexts) {
         toLane(escape, xNext);
@@ -602,7 +599,7 @@ class Builder {
     };
     if (exits.length > 0) {
       // `No` and every exit meet below the loop, and what follows starts there.
-      const exit = this.node(`${stmt.id}:exit`, stmt.id, "exit", "junction", "", frag.height);
+      const exit = this.node(`${stmt.id}:exit`, stmt.id, "exit", "junction", [], frag.height);
       frag.nodes.push(exit);
       frag.edges.push(edge(no, exit.id, []));
       for (const escape of exits) {
@@ -634,10 +631,10 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
   const builder = new Builder(program, opts.measure);
   const frag = emptyFrag();
 
-  const startText = fn
-    ? t("chart.startFn", { name: fn.name, params: fn.params.join(SEPARATOR) })
-    : t("chart.start");
-  const start = builder.node("start", fn ? fn.id : null, "start", "terminal", startText, 0);
+  const startParts = fn
+    ? catalogParts(t("chart.startFn"), () => [{ text: `${fn.name}(${fn.params.join(SEPARATOR)})` }])
+    : [{ text: t("chart.start"), words: true }];
+  const start = builder.node("start", fn ? fn.id : null, "start", "terminal", startParts, 0);
   frag.nodes.push(start);
   let out: Stub | null = { from: start.id, points: [{ x: 0, y: start.h }], place: null };
   let y = start.h + GAP_Y;
@@ -665,7 +662,14 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
     y += body.height + GAP_Y;
   }
 
-  const end = builder.node("end", null, "end", "terminal", t("chart.end"), y);
+  const end = builder.node(
+    "end",
+    null,
+    "end",
+    "terminal",
+    [{ text: t("chart.end"), words: true }],
+    y,
+  );
   frag.nodes.push(end);
   if (out) frag.edges.push(edge(out, end.id, [{ x: 0, y }]));
   half = Math.max(half, end.w / 2);

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor";
 import { inRun, useMode } from "@/store/mode";
 import { HINTS, useProgress } from "@/store/progress";
-import { assignmentText, dataText, inputParts, joinParts } from "@/ui/chart/text";
+import { assignmentText, dataText, inputParts } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { foldLines } from "@/ui/text/fold";
 import { Markdown } from "@/ui/text/MarkdownText";
@@ -32,23 +32,34 @@ function Example({ challenge }: { challenge: Challenge }) {
       <Heading>{t("problem.example")}</Heading>
       <div className="rounded-lg border p-3 font-mono text-xs leading-5" data-testid="example">
         {Object.entries(test.inputs).map(([name, value]) => (
-          <div key={name}>{joinParts(inputParts(name, value))}</div>
+          <div key={name}>
+            {inputParts(name, value).map((part, i) => (
+              // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+              <span key={i} className={cn(part.words && "font-sans")}>
+                {part.text}
+              </span>
+            ))}
+          </div>
         ))}
         {test.expect.stdout && (
           <>
-            <div className="mt-1 text-muted-foreground">{t("problem.exampleOutput")}</div>
+            <div className="mt-1 font-sans text-muted-foreground">{t("problem.exampleOutput")}</div>
             {stdout.shown.map((line, i) => (
               // oxlint-disable-next-line react/no-array-index-key -- output lines may repeat
               <div key={i}>{line === "" ? " " : line}</div>
             ))}
             {stdout.more > 0 && (
-              <div className="text-muted-foreground">{t("problem.fold", { n: stdout.more })}</div>
+              <div className="font-sans text-muted-foreground">
+                {t("problem.fold", { n: stdout.more })}
+              </div>
             )}
           </>
         )}
         {variables.length > 0 && (
           <>
-            <div className="mt-1 text-muted-foreground">{t("problem.exampleVariables")}</div>
+            <div className="mt-1 font-sans text-muted-foreground">
+              {t("problem.exampleVariables")}
+            </div>
             {variables.map(([name, value]) => (
               <div key={name}>{assignmentText(name, dataText(value))}</div>
             ))}

@@ -26,7 +26,7 @@ import {
 import { ChartDrag, DropZone, useNodeDrag, type Moves } from "./drag";
 import { PILL, type ChartEdge, type ChartLayout, type ChartNode } from "./layout";
 import { nodeFor, type Paint } from "./paint";
-import { CHART_FONT } from "./measure";
+import { chartFont } from "./measure";
 import { fitScale, zoomStep } from "./zoom";
 
 /** Margin around the chart, in chart units. */
@@ -167,11 +167,12 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
         ) : null,
       )}
       {node.parts.length > 0 && (
+        // `font-mono` holds the feature settings that each part inherits; each part sets its own font.
         <text
           y={node.y + node.h / 2}
           dominantBaseline="central"
-          className={cn("fill-foreground", node.generated && "fill-muted-foreground")}
-          style={{ font: CHART_FONT, whiteSpace: "pre" }}
+          className={cn("fill-foreground font-mono", node.generated && "fill-muted-foreground")}
+          style={{ whiteSpace: "pre" }}
         >
           {node.parts.map((part, i) => (
             <tspan
@@ -183,8 +184,9 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
               data-empty-id={part.emptyId}
               className={cn(
                 part.empty && "fill-muted-foreground",
-                part.variable && "fill-variable font-semibold",
+                part.variable && "fill-variable",
               )}
+              style={chartFont(part)}
             >
               {part.text}
             </tspan>
@@ -236,7 +238,7 @@ function InputMenu(props: { label: string; cases: NonNullable<Props["cases"]> })
         <DropdownMenuContent>
           {cases.labels.map((text, index) => (
             // oxlint-disable-next-line react/no-array-index-key -- a case is its index in the tests
-            <DropdownMenuItem key={index} onClick={() => cases.choose(index)}>
+            <DropdownMenuItem key={index} className="font-mono" onClick={() => cases.choose(index)}>
               {text}
             </DropdownMenuItem>
           ))}

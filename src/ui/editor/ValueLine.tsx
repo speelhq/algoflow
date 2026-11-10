@@ -202,7 +202,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
       aria-label={label}
       data-value-line
       className={cn(
-        "inline-flex min-h-8 max-w-full flex-wrap items-center gap-y-1 rounded-md border px-2 py-1 whitespace-pre-wrap outline-none",
+        "inline-flex min-h-8 max-w-full flex-wrap items-center gap-y-1 rounded-md border px-2 py-1 font-mono whitespace-pre-wrap outline-none",
         focused
           ? "border-selection ring-1 ring-selection"
           : "border-dashed border-muted-foreground/60",
@@ -218,7 +218,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
       }}
     >
       {empty ? (
-        <span className="text-muted-foreground">{t("editor.valueLine.hint")}</span>
+        <span className="font-sans text-muted-foreground">{t("editor.valueLine.hint")}</span>
       ) : (
         <>
           {draw(root)}

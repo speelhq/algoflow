@@ -51,7 +51,7 @@ export function HelpDialog({ open, onOpenChange }: Props) {
           <tbody>
             {KEYS.map((key) => (
               <tr key={key} className="border-t">
-                <td className="py-1 pr-4 font-mono text-xs whitespace-nowrap">
+                <td className="py-1 pr-4 text-xs whitespace-nowrap">
                   {t(`app.help.keys.${key}.keys`)}
                 </td>
                 <td className="py-1">{t(`app.help.keys.${key}.action`)}</td>

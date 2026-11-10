@@ -233,7 +233,7 @@ describe("diamonds and generated chart nodes", () => {
 
   it("an Input chart node's name is a variable", () => {
     expect(inputParts("n", 15)).toEqual([
-      { text: "Input " },
+      { text: "Input ", words: true },
       { text: "n", variable: true },
       { text: " ← 15" },
     ]);

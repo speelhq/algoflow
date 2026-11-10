@@ -111,7 +111,7 @@ export function RunBar() {
               aria-label={t("run.position.label")}
               data-testid="position"
             />
-            <span className="font-mono text-sm whitespace-nowrap" data-testid="position-text">
+            <span className="text-sm whitespace-nowrap tabular-nums" data-testid="position-text">
               {t("run.position.text", { k: step, n: total })}
             </span>
             <Speed />
