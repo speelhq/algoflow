@@ -7,18 +7,18 @@ import { PRECEDENCE } from "@/python/precedence";
 import { run } from "@/runtime/run";
 import {
   assignmentText,
-  exprParts,
+  exprSpans,
   exprText,
-  generatedParts,
-  inputParts,
-  joinParts,
+  generatedSpans,
+  inputSpans,
+  joinSpans,
   placeholderValue,
-  slotParts,
-  questionParts,
+  slotSpans,
+  questionSpans,
   hasEmptySlot,
-  notationParts,
+  notationSpans,
   notationText,
-  templatePieces,
+  notationTokens,
   valueText,
 } from "./text";
 
@@ -33,15 +33,19 @@ function expr(python: string): Expr {
   return parsed;
 }
 
-describe("templatePieces and placeholderValue", () => {
+describe("notationTokens and placeholderValue", () => {
   it("reads a template or a notation as its own text and placeholders, in order", () => {
-    expect(templatePieces("{target} ← {value}")).toEqual([
-      { name: "target" },
-      { words: " ← " },
-      { name: "value" },
+    expect(notationTokens("{target} ← {value}")).toEqual([
+      { placeholder: "target" },
+      { text: " ← " },
+      { placeholder: "value" },
     ]);
-    expect(templatePieces("abs({x})")).toEqual([{ words: "abs(" }, { name: "x" }, { words: ")" }]);
-    expect(templatePieces("break")).toEqual([{ words: "break" }]);
+    expect(notationTokens("abs({x})")).toEqual([
+      { text: "abs(" },
+      { placeholder: "x" },
+      { text: ")" },
+    ]);
+    expect(notationTokens("break")).toEqual([{ text: "break" }]);
   });
 
   it("gives what a placeholder holds: a slot, a parameter's argument with its side, or nothing", () => {
@@ -147,22 +151,22 @@ describe("notation", () => {
   });
 
   it("a target is written as the expression it is, its empty slots as `…`", () => {
-    const parts = notationParts(assignTo(item(v("nums"), empty()), num(0)));
-    expect(joinParts(parts)).toBe("nums[…] ← 0");
-    expect(parts.find((part) => part.text === "nums")).toMatchObject({ variable: true });
-    expect(parts.filter((part) => part.emptyId !== undefined)).toHaveLength(1);
+    const spans = notationSpans(assignTo(item(v("nums"), empty()), num(0)));
+    expect(joinSpans(spans)).toBe("nums[…] ← 0");
+    expect(spans.find((span) => span.text === "nums")).toMatchObject({ variable: true });
+    expect(spans.filter((span) => span.emptyId !== undefined)).toHaveLength(1);
   });
 
   it("marks variables, and an empty slot at any depth", () => {
     const slot = empty();
-    const parts = exprParts(bin("+", v("total"), slot));
-    expect(parts).toEqual([
+    const spans = exprSpans(bin("+", v("total"), slot));
+    expect(spans).toEqual([
       { text: "total", variable: true },
       { text: " + " },
       { text: "…", empty: true, emptyId: slot.id },
     ]);
     const set = assign("total", bin("+", v("total"), slot));
-    expect(notationParts(set).map((part) => [part.text, part.slot])).toEqual([
+    expect(notationSpans(set).map((span) => [span.text, span.slot])).toEqual([
       ["total", "target"],
       [" ← ", undefined],
       ["total", "value"],
@@ -178,7 +182,7 @@ describe("notation", () => {
   it("draws an empty value by its notation, `…`, a loop's empty variable as any other", () => {
     const variable = empty();
     const loop = ast.forTo(variable, num(0), num(3), []);
-    expect(notationParts(loop)).toEqual([
+    expect(notationSpans(loop)).toEqual([
       { text: "…", empty: true, emptyId: variable.id, slot: "var" },
       { text: " ← " },
       { text: "0", slot: "start" },
@@ -186,7 +190,7 @@ describe("notation", () => {
     expect(hasEmptySlot(loop)).toBe(true);
     // An empty value carries its id, so a click on it opens the editor at it.
     const hole = empty();
-    expect(slotParts(print(num(1), hole), "args").at(-1)).toEqual({
+    expect(slotSpans(print(num(1), hole), "args").at(-1)).toEqual({
       text: "…",
       empty: true,
       emptyId: hole.id,
@@ -208,22 +212,22 @@ describe("notation", () => {
   it("adds no capital to a block", () => {
     expect(notationText(print(v("i")))).toBe("print(i)");
     expect(notationText(ast.brk())).toBe("break");
-    expect(joinParts(questionParts(if_(bin("<", v("i"), v("n")), [])))).toBe("i < n?");
+    expect(joinSpans(questionSpans(if_(bin("<", v("i"), v("n")), [])))).toBe("i < n?");
   });
 });
 
 describe("diamonds and generated chart nodes", () => {
   it("a diamond is its condition followed by ?, or the `…` without it", () => {
-    expect(joinParts(questionParts(if_(expr("i % 15 == 0"), [])))).toBe("i % 15 == 0?");
-    expect(joinParts(questionParts(if_(expr("abs(x) < 3"), [])))).toBe("abs(x) < 3?");
-    expect(joinParts(questionParts(if_(empty(), [])))).toBe("…");
-    // The condition's parts name its slot; the `?` names none.
-    expect(questionParts(if_(v("ok"), [])).map((part) => part.slot)).toEqual(["cond", undefined]);
+    expect(joinSpans(questionSpans(if_(expr("i % 15 == 0"), [])))).toBe("i % 15 == 0?");
+    expect(joinSpans(questionSpans(if_(expr("abs(x) < 3"), [])))).toBe("abs(x) < 3?");
+    expect(joinSpans(questionSpans(if_(empty(), [])))).toBe("…");
+    // The condition's spans name its slot; the `?` names none.
+    expect(questionSpans(if_(v("ok"), [])).map((span) => span.slot)).toEqual(["cond", undefined]);
   });
 
   it("a counted loop's generated chart nodes carry the loop's own slots", () => {
     const loop = for_("i", num(1), bin("+", v("n"), num(1)), []);
-    const drawn = (which: "init" | "check" | "update") => joinParts(generatedParts(loop, which));
+    const drawn = (which: "init" | "check" | "update") => joinSpans(generatedSpans(loop, which));
     expect(drawn("init")).toBe("i ← 1");
     // The check is asked as every diamond asks its condition.
     expect(drawn("check")).toBe("i < n + 1?");
@@ -232,7 +236,7 @@ describe("diamonds and generated chart nodes", () => {
   });
 
   it("an Input chart node's name is a variable", () => {
-    expect(inputParts("n", 15)).toEqual([
+    expect(inputSpans("n", 15)).toEqual([
       { text: "Input " },
       { text: "n", variable: true },
       { text: " ← 15" },
@@ -241,7 +245,7 @@ describe("diamonds and generated chart nodes", () => {
 
   it("a variable shown with its value keeps the spaces of a text", () => {
     expect(assignmentText("s", '"a  b"')).toBe('s ← "a  b"');
-    expect(joinParts(inputParts("s", "a  b"))).toBe('Input s ← "a  b"');
+    expect(joinSpans(inputSpans("s", "a  b"))).toBe('Input s ← "a  b"');
   });
 });
 

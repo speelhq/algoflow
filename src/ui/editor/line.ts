@@ -21,7 +21,7 @@ import {
   exprText,
   isCall,
   placeholderValue,
-  templatePieces,
+  notationTokens,
 } from "@/ui/chart/text";
 import { allEntries, makeEntry, takesValue, type Entry } from "./entries";
 import { isNewName, matchesName, type RoutineNames } from "./names";
@@ -89,9 +89,9 @@ export type Outcome = { line: Line; taken: boolean; move?: "next" | "previous" |
  * the slot order's (`withFirst`).
  */
 export function slotValues(expr: Expr): Expr[] {
-  return templatePieces(notationOf(expr)).flatMap((piece) => {
-    if ("words" in piece) return [];
-    const held = placeholderValue(expr, piece.name);
+  return notationTokens(notationOf(expr)).flatMap((token) => {
+    if ("text" in token) return [];
+    const held = placeholderValue(expr, token.placeholder);
     if (held?.role === "expr") return held.expr ? [held.expr] : [];
     return held?.role === "exprs" ? held.items : [];
   });

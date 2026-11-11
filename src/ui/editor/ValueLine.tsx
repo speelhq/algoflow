@@ -13,7 +13,7 @@ import {
   notationOf,
   exprText,
   placeholderValue,
-  templatePieces,
+  notationTokens,
   SEPARATOR,
 } from "@/ui/chart/text";
 import { slotValues, textOf, type Line } from "./line";
@@ -151,14 +151,14 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
 
   const operation = (expr: Expr): ReactNode => {
     const pieces: ReactNode[] = [];
-    templatePieces(notationOf(expr)).forEach((piece, i) => {
-      if ("words" in piece) {
-        // oxlint-disable-next-line react/no-array-index-key -- a notation's pieces keep their order
-        if (piece.words.trim() !== "") pieces.push(<span key={`w${i}`}>{piece.words}</span>);
+    notationTokens(notationOf(expr)).forEach((token, i) => {
+      if ("text" in token) {
+        // oxlint-disable-next-line react/no-array-index-key -- a notation's tokens keep their order
+        if (token.text.trim() !== "") pieces.push(<span key={`w${i}`}>{token.text}</span>);
         else pieces.push(" ");
         return;
       }
-      const held = placeholderValue(expr, piece.name);
+      const held = placeholderValue(expr, token.placeholder);
       switch (held?.role) {
         case "expr":
           if (held.expr) pieces.push(draw(held.expr, held));
@@ -184,7 +184,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
           );
           return;
         case "name":
-          pieces.push(<span key={`name:${piece.name}`}>{held.name}</span>);
+          pieces.push(<span key={`name:${token.placeholder}`}>{held.name}</span>);
           return;
         default:
           return;

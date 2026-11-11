@@ -12,15 +12,15 @@ import { findRoutine, regionsOf, routineStmts } from "@/lang/walk";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import {
   CHART_TEXT,
-  generatedParts,
+  generatedSpans,
   hasEmptySlot,
-  inputParts,
-  joinParts,
-  questionParts,
-  notationParts,
-  type Part,
+  inputSpans,
+  joinSpans,
+  questionSpans,
+  notationSpans,
+  type NotationSpan,
   SEPARATOR,
-  templateParts,
+  filledSpans,
 } from "./text";
 
 export type Point = { x: number; y: number };
@@ -55,10 +55,10 @@ export type ChartNode = {
   /** What the chart node draws without its caption, shown on hover where it shows its caption instead. */
   title?: string;
   /**
-   * The text in parts, each at `dx` from the chart node's left with width `w`; a slot's part names
+   * The text in spans, each at `dx` from the chart node's left with width `w`; a slot's span names
    * it.
    */
-  parts: PlacedPart[];
+  spans: PlacedSpan[];
   /** Top-left corner; a junction is a point (`w = h = 0`). */
   x: number;
   y: number;
@@ -79,12 +79,12 @@ export type ChartEdge = {
   anchor: Point;
 };
 /**
- * A part at `dx` from the chart node's left with width `w`, `dy` from its middle (a second line).
+ * A span at `dx` from the chart node's left with width `w`, `dy` from its middle (a second line).
  */
-export type PlacedPart = Part & { dx: number; dy: number; w: number };
+export type PlacedSpan = NotationSpan & { dx: number; dy: number; w: number };
 export type ChartLayout = { nodes: ChartNode[]; edges: ChartEdge[]; width: number; height: number };
-/** The width of a part's text in px, in the typeface and weight the chart draws it in. */
-export type Measure = (part: Part) => number;
+/** The width of a span's text in px, in the typeface and weight the chart draws it in. */
+export type Measure = (span: NotationSpan) => number;
 export type LayoutOptions = {
   routine: Routine;
   /** The values the Input chart nodes show: the chosen case's. */
@@ -105,7 +105,7 @@ const HEIGHT: Record<Shape, number> = {
 };
 
 /** A width estimated from the length of the text, where no font can measure it. */
-export const estimatedWidth: Measure = (part) => part.text.length * 7.2;
+export const estimatedWidth: Measure = (span) => span.text.length * 7.2;
 /** Room on each side of an empty slot's text for its dashed outline. */
 export const PILL = 8;
 /** A diamond's text wider than this is drawn on two lines, as the designs draw it. */
@@ -113,29 +113,29 @@ const WRAP = 150;
 /** The distance between the two lines of a diamond's text. */
 export const LINE = 16;
 
-const BREAK: Part = { text: " " };
+const BREAK: NotationSpan = { text: " " };
 
 /**
- * Parts split into two lines at the space that makes the longer line shortest; a space inside
+ * Spans split into two lines at the space that makes the longer line shortest; a space inside
  * a variable is never one. One line when there is no space to split at.
  */
-function inTwo(parts: Part[], width: (part: Part) => number): Part[][] {
-  let best: { lines: Part[][]; longest: number } | undefined;
-  parts.forEach((part, p) => {
-    if (part.variable) return;
-    for (let k = part.text.indexOf(" "); k >= 0; k = part.text.indexOf(" ", k + 1)) {
-      const head = part.text.slice(0, k).trimEnd();
-      const rest = part.text.slice(k + 1).trimStart();
+function inTwo(spans: NotationSpan[], width: (span: NotationSpan) => number): NotationSpan[][] {
+  let best: { lines: NotationSpan[][]; longest: number } | undefined;
+  spans.forEach((span, p) => {
+    if (span.variable) return;
+    for (let k = span.text.indexOf(" "); k >= 0; k = span.text.indexOf(" ", k + 1)) {
+      const head = span.text.slice(0, k).trimEnd();
+      const rest = span.text.slice(k + 1).trimStart();
       // The space stays at the end of the first line, drawn with no width, so the text reads on.
-      const first = [...parts.slice(0, p), ...(head ? [{ ...part, text: head }] : []), BREAK];
-      const second = [...(rest ? [{ ...part, text: rest }] : []), ...parts.slice(p + 1)];
+      const first = [...spans.slice(0, p), ...(head ? [{ ...span, text: head }] : []), BREAK];
+      const second = [...(rest ? [{ ...span, text: rest }] : []), ...spans.slice(p + 1)];
       if (first.length === 1 || second.length === 0) continue;
-      const sum = (line: Part[]) => line.reduce((total, each) => total + width(each), 0);
+      const sum = (line: NotationSpan[]) => line.reduce((total, each) => total + width(each), 0);
       const longest = Math.max(sum(first), sum(second));
       if (!best || longest < best.longest) best = { lines: [first, second], longest };
     }
   });
-  return best?.lines ?? [parts];
+  return best?.lines ?? [spans];
 }
 
 /** Where a flow that leaves its region goes: `End`, past its loop, or into the loop's next pass. */
@@ -254,14 +254,14 @@ class Builder {
     owner: NodeId | null,
     role: ChartNode["role"],
     shape: Shape,
-    unplaced: Part[],
+    unplaced: NotationSpan[],
     y: number,
   ): ChartNode {
-    const measured = (part: Part) =>
-      part === BREAK ? 0 : this.measure(part) + (part.empty ? 2 * PILL : 0);
-    const whole = unplaced.reduce((sum, part) => sum + measured(part), 0);
+    const measured = (span: NotationSpan) =>
+      span === BREAK ? 0 : this.measure(span) + (span.empty ? 2 * PILL : 0);
+    const whole = unplaced.reduce((sum, span) => sum + measured(span), 0);
     const lines = shape === "diamond" && whole > WRAP ? inTwo(unplaced, measured) : [unplaced];
-    const lineWidths = lines.map((line) => line.reduce((sum, part) => sum + measured(part), 0));
+    const lineWidths = lines.map((line) => line.reduce((sum, span) => sum + measured(span), 0));
     const width = Math.max(0, ...lineWidths);
     const padded =
       shape === "diamond"
@@ -273,36 +273,36 @@ class Builder {
             : Math.max(96, width + 32);
     const w = 2 * Math.ceil(padded / 2);
     const generated = role === "init" || role === "check" || role === "update";
-    const parts = lines.flatMap((line, index) => {
+    const spans = lines.flatMap((line, index) => {
       let dx = (w - (lineWidths[index] ?? 0)) / 2;
       const dy = (index - (lines.length - 1) / 2) * LINE;
-      return line.map((part) => {
-        const placed: PlacedPart = { ...part, dx, dy, w: measured(part) };
+      return line.map((span) => {
+        const placed: PlacedSpan = { ...span, dx, dy, w: measured(span) };
         dx += placed.w;
         return placed;
       });
     });
-    const text = joinParts(unplaced);
-    return { id, owner, role, shape, generated, text, parts, x: -w / 2, y, w, h: HEIGHT[shape] };
+    const text = joinSpans(unplaced);
+    return { id, owner, role, shape, generated, text, spans, x: -w / 2, y, w, h: HEIGHT[shape] };
   }
 
   /**
    * A statement's chart node: its caption alone when it has one and no empty slot,
-   * with `parts`, what it draws without its caption, as the title; otherwise `parts`.
+   * with `spans`, what it draws without its caption, as the title; otherwise `spans`.
    */
   private captioned(
     stmt: Stmt,
     id: string,
     role: ChartNode["role"],
     shape: Shape,
-    parts: Part[],
+    spans: NotationSpan[],
     y: number,
   ): ChartNode {
     if (stmt.caption === undefined || hasEmptySlot(stmt)) {
-      return this.node(id, stmt.id, role, shape, parts, y);
+      return this.node(id, stmt.id, role, shape, spans, y);
     }
     const node = this.node(id, stmt.id, role, shape, [{ text: stmt.caption }], y);
-    return { ...node, title: joinParts(parts) };
+    return { ...node, title: joinSpans(spans) };
   }
 
   /** Places `region` with its entry at `at` and joins `stub` to it; returns what flows out. */
@@ -365,8 +365,8 @@ class Builder {
 
   /** A box; `leaves` names where its edge goes when it is not to the next chart node. */
   private box(stmt: Stmt, leaves: Leave | null): Frag {
-    const parts = notationParts(stmt);
-    const node = this.captioned(stmt, stmt.id, "stmt", "box", parts, 0);
+    const spans = notationSpans(stmt);
+    const node = this.captioned(stmt, stmt.id, "stmt", "box", spans, 0);
     const half = node.w / 2;
     return {
       left: half,
@@ -384,7 +384,7 @@ class Builder {
   }
 
   private diamond(stmt: Stmt, y: number): ChartNode {
-    return this.captioned(stmt, stmt.id, "stmt", "diamond", questionParts(stmt), y);
+    return this.captioned(stmt, stmt.id, "stmt", "diamond", questionSpans(stmt), y);
   }
 
   /** `branch`: Yes to the right, No below on the axis, both merging below. */
@@ -464,7 +464,7 @@ class Builder {
         stmt.id,
         "init",
         "box",
-        generatedParts(stmt, "init"),
+        generatedSpans(stmt, "init"),
         0,
       );
       frag.nodes.push(init);
@@ -487,7 +487,7 @@ class Builder {
           `${stmt.id}:check`,
           "check",
           "diamond",
-          generatedParts(stmt, "check"),
+          generatedSpans(stmt, "check"),
           y,
         )
       : this.diamond(stmt, y);
@@ -517,7 +517,7 @@ class Builder {
         stmt.id,
         "update",
         "box",
-        generatedParts(stmt, "update"),
+        generatedSpans(stmt, "update"),
         yUpdate,
       );
       frag.nodes.push(update);
@@ -631,20 +631,20 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
   const builder = new Builder(program, opts.measure);
   const frag = emptyFrag();
 
-  const startParts = fn
-    ? templateParts(CHART_TEXT.startFn, () => [
+  const startSpans = fn
+    ? filledSpans(CHART_TEXT.functionStart, () => [
         { text: `${fn.name}(${fn.params.join(SEPARATOR)})` },
       ])
     : [{ text: CHART_TEXT.start }];
-  const start = builder.node("start", fn ? fn.id : null, "start", "terminal", startParts, 0);
+  const start = builder.node("start", fn ? fn.id : null, "start", "terminal", startSpans, 0);
   frag.nodes.push(start);
   let out: Stub | null = { from: start.id, points: [{ x: 0, y: start.h }], place: null };
   let y = start.h + GAP_Y;
   let half = start.w / 2;
 
   for (const input of fn ? [] : program.inputs) {
-    const parts = inputParts(input.name, inputValue(opts.inputs, input.name));
-    const node = builder.node(`input:${input.name}`, null, "input", "input", parts, y);
+    const spans = inputSpans(input.name, inputValue(opts.inputs, input.name));
+    const node = builder.node(`input:${input.name}`, null, "input", "input", spans, y);
     frag.nodes.push(node);
     frag.edges.push(edge(out, node.id, [{ x: 0, y }]));
     out = { from: node.id, points: [{ x: 0, y: y + node.h }], place: null };

@@ -33,8 +33,8 @@ describe("the notation the editor shows", () => {
   it("is a counted loop's init and check, its variable a field at its first place only", () => {
     const loop = for_("i", num(1), v("n"), []);
     const lines = editedLines(loop).map((line) =>
-      line.map(({ piece, again }) =>
-        "words" in piece ? piece.words : `${again ? "=" : ""}{${piece.name}}`,
+      line.map(({ token, again }) =>
+        "text" in token ? token.text : `${again ? "=" : ""}{${token.placeholder}}`,
       ),
     );
     expect(lines).toEqual([
@@ -45,8 +45,10 @@ describe("the notation the editor shows", () => {
   });
 
   it("keeps a return's value slot with no value, which the editor offers as `+ value`", () => {
-    const pieces = editedLines(ret()).flat();
-    expect(pieces.some(({ piece }) => "name" in piece && piece.name === "value")).toBe(true);
+    const tokens = editedLines(ret()).flat();
+    expect(
+      tokens.some(({ token }) => "placeholder" in token && token.placeholder === "value"),
+    ).toBe(true);
     expect(fieldsOf(ret())).toEqual([]);
   });
 

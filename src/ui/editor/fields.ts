@@ -8,8 +8,8 @@ import {
   generatedNotation,
   placeholderValue,
   SEPARATOR,
-  templatePieces,
-  type Piece,
+  notationTokens,
+  type NotationToken,
 } from "@/ui/chart/text";
 import { find } from "./line";
 
@@ -43,20 +43,22 @@ export function wordsAfter(stmt: Stmt, field: Field): string {
   if (field.index !== undefined && Array.isArray(items) && field.index < items.length - 1) {
     return SEPARATOR.trim();
   }
-  const pieces = editedLines(stmt)
+  const tokens = editedLines(stmt)
     .flat()
-    .map(({ piece }) => piece);
-  const at = pieces.findIndex((piece) => "name" in piece && piece.name === field.slot);
-  const next = pieces[at + 1];
-  return at >= 0 && next && "words" in next ? next.words.trim() : "";
+    .map(({ token }) => token);
+  const at = tokens.findIndex(
+    (token) => "placeholder" in token && token.placeholder === field.slot,
+  );
+  const next = tokens[at + 1];
+  return at >= 0 && next && "text" in next ? next.text.trim() : "";
 }
 
 /**
- * The lines the editor shows, each as its pieces: a counted loop's init and check (`i ← 1`,
+ * The lines the editor shows, each as its tokens: a counted loop's init and check (`i ← 1`,
  * `i < n + 1?`), else the block's notation. `again` marks a slot written before, which is drawn
  * as its value rather than as a field.
  */
-export function editedLines(stmt: Stmt): { piece: Piece; again: boolean }[][] {
+export function editedLines(stmt: Stmt): { token: NotationToken; again: boolean }[][] {
   const init = generatedNotation(stmt, "init");
   const check = generatedNotation(stmt, "check");
   const notations =
@@ -65,10 +67,10 @@ export function editedLines(stmt: Stmt): { piece: Piece; again: boolean }[][] {
       : [getBlockDef(keyOf(stmt)).notation(stmt)];
   const seen = new Set<string>();
   return notations.map((notation) =>
-    templatePieces(notation).map((piece) => {
-      const again = "name" in piece && seen.has(piece.name);
-      if ("name" in piece) seen.add(piece.name);
-      return { piece, again };
+    notationTokens(notation).map((token) => {
+      const again = "placeholder" in token && seen.has(token.placeholder);
+      if ("placeholder" in token) seen.add(token.placeholder);
+      return { token, again };
     }),
   );
 }
@@ -76,10 +78,10 @@ export function editedLines(stmt: Stmt): { piece: Piece; again: boolean }[][] {
 /** The fields of the notation, in its reading order. */
 export function fieldsOf(stmt: Stmt): Field[] {
   const out: Field[] = [];
-  for (const { piece, again } of editedLines(stmt).flat()) {
-    if ("words" in piece || again) continue;
-    const held = placeholderValue(stmt, piece.name);
-    const slot = piece.name;
+  for (const { token, again } of editedLines(stmt).flat()) {
+    if ("text" in token || again) continue;
+    const held = placeholderValue(stmt, token.placeholder);
+    const slot = token.placeholder;
     if (held?.role === "expr" && held.expr) out.push({ slot });
     else if (held?.role === "exprs") held.items.forEach((_, index) => out.push({ slot, index }));
   }

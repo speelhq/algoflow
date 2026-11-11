@@ -17,8 +17,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { NodeId, Place } from "@/lang/types";
 import { cn } from "@/lib/utils";
 import type { ChartEdge, ChartNode } from "./layout";
-import { chartFont } from "./measure";
-import type { Part } from "./text";
+import { chartSpanFont } from "./measure";
+import type { NotationSpan } from "./text";
 
 export type Moves = {
   /** Moves `owner` to `place`; the reason it is refused, or null when it applied. */
@@ -27,14 +27,14 @@ export type Moves = {
   accepts: (owner: NodeId, place: Place) => boolean;
 };
 
-type Dragged = { owner: NodeId; parts: Part[] };
+type Dragged = { owner: NodeId; spans: NotationSpan[] };
 type Refusal = { edge: string; text: string };
 
 /** The listeners that make a chart node draggable, and the ref they need; inert when disabled. */
 export function useNodeDrag(node: ChartNode, enabled: boolean) {
   const { setNodeRef, listeners } = useDraggable({
     id: node.id,
-    data: { owner: node.owner, parts: node.parts },
+    data: { owner: node.owner, spans: node.spans },
     // Only a statement's chart node moves: a function chart's `Start` has an owner, but stays.
     disabled: !enabled || node.owner === null || node.shape === "terminal",
   });
@@ -91,7 +91,7 @@ export function ChartDrag(props: {
 
   const start = (event: DragStartEvent) => {
     const data = event.active.data.current as Partial<Dragged> | undefined;
-    if (data?.owner) setDragged({ owner: data.owner, parts: data.parts ?? [] });
+    if (data?.owner) setDragged({ owner: data.owner, spans: data.spans ?? [] });
   };
   const end = (event: DragEndEvent) => {
     const owner = dragged?.owner;
@@ -116,10 +116,10 @@ export function ChartDrag(props: {
       <DragOverlay dropAnimation={null}>
         {dragged && (
           <div className="rounded-lg border bg-background px-3 py-2 whitespace-pre font-mono shadow-md">
-            {dragged.parts.map((part, i) => (
-              // oxlint-disable-next-line react/no-array-index-key -- parts are positional
-              <span key={i} style={chartFont(part)}>
-                {part.text}
+            {dragged.spans.map((nodeSpan, i) => (
+              // oxlint-disable-next-line react/no-array-index-key -- spans are positional
+              <span key={i} style={chartSpanFont(nodeSpan)}>
+                {nodeSpan.text}
               </span>
             ))}
           </div>

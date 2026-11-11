@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor";
 import { inRun, useMode } from "@/store/mode";
 import { HINTS, useProgress } from "@/store/progress";
-import { assignmentText, dataText, inputParts, joinParts } from "@/ui/chart/text";
+import { assignmentText, dataText, inputSpans, joinSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { foldLines } from "@/ui/text/fold";
 import { Markdown } from "@/ui/text/MarkdownText";
@@ -32,7 +32,7 @@ function Example({ challenge }: { challenge: Challenge }) {
       <Heading>{t("problem.example")}</Heading>
       <div className="rounded-lg border p-3 font-mono text-xs leading-5" data-testid="example">
         {Object.entries(test.inputs).map(([name, value]) => (
-          <div key={name}>{joinParts(inputParts(name, value))}</div>
+          <div key={name}>{joinSpans(inputSpans(name, value))}</div>
         ))}
         {test.expect.stdout && (
           <>

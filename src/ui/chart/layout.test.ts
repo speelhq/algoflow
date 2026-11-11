@@ -22,7 +22,7 @@ import { laidOut } from "./testing";
 
 const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont } = ast;
 
-const wide: Measure = (part) => part.text.length * 14.4;
+const wide: Measure = (span) => span.text.length * 14.4;
 
 const lt = (name: string, n: number) => bin("<", v(name), num(n));
 const chain = (depth: number): Stmt =>
@@ -572,7 +572,7 @@ describe("layout texts", () => {
   });
 
   it("a long diamond's text is drawn on two lines, split at a space between words", () => {
-    const measure: Measure = (part) => part.text.length * 7;
+    const measure: Measure = (span) => span.text.length * 7;
     const divides = (by: number) => bin("==", bin("%", v("i"), num(by)), num(0));
     const check = if_(bin("and", divides(15), bin("<", v("i"), ast.empty())), []);
     const short = if_(divides(15), []);
@@ -582,27 +582,27 @@ describe("layout texts", () => {
       measure,
     });
     const lines = (id: string) => {
-      const parts = chart.nodes.find((n) => n.id === id)?.parts ?? [];
+      const spans = chart.nodes.find((n) => n.id === id)?.spans ?? [];
       return [-LINE / 2, LINE / 2].map((dy) =>
-        parts
-          .filter((part) => part.dy === dy)
-          .map((part) => part.text)
+        spans
+          .filter((span) => span.dy === dy)
+          .map((span) => span.text)
           .join("")
           .trimEnd(),
       );
     };
     expect(chart.nodes.find((n) => n.id === check.id)?.text).toBe("i % 15 == 0 and i < …?");
     expect(lines(check.id)).toEqual(["i % 15 == 0", "and i < …?"]);
-    const one = chart.nodes.find((n) => n.id === short.id)?.parts ?? [];
-    expect(new Set(one.map((part) => part.dy))).toEqual(new Set([0]));
+    const one = chart.nodes.find((n) => n.id === short.id)?.spans ?? [];
+    expect(new Set(one.map((span) => span.dy))).toEqual(new Set([0]));
   });
 
-  it("a variable's part is measured bold", () => {
-    const measure: Measure = (part) => part.text.length * (part.variable ? 10 : 5);
+  it("a variable's span is measured bold", () => {
+    const measure: Measure = (span) => span.text.length * (span.variable ? 10 : 5);
     const shown = print(v("abc"));
     const chart = laidOut(program([shown]), { routine: "main", inputs: {}, measure });
-    const parts = chart.nodes.find((n) => n.id === shown.id)?.parts ?? [];
-    expect(parts.map((part) => [part.text, part.w, part.variable])).toEqual([
+    const spans = chart.nodes.find((n) => n.id === shown.id)?.spans ?? [];
+    expect(spans.map((span) => [span.text, span.w, span.variable])).toEqual([
       ["print(", 30, undefined],
       ["abc", 30, true],
       [")", 5, undefined],

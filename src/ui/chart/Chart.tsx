@@ -26,7 +26,7 @@ import {
 import { ChartDrag, DropZone, useNodeDrag, type Moves } from "./drag";
 import { PILL, type ChartEdge, type ChartLayout, type ChartNode } from "./layout";
 import { nodeFor, type Paint } from "./paint";
-import { chartFont } from "./measure";
+import { chartSpanFont } from "./measure";
 import { fitScale, zoomStep } from "./zoom";
 
 /** Margin around the chart, in chart units. */
@@ -152,43 +152,43 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
     >
       {node.title !== undefined && <title>{node.title}</title>}
       <NodeShape node={node} />
-      {node.parts.map((part, i) =>
-        part.empty ? (
+      {node.spans.map((span, i) =>
+        span.empty ? (
           <rect
-            // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+            // oxlint-disable-next-line react/no-array-index-key -- spans are positional
             key={`pill${i}`}
-            x={node.x + part.dx + 2}
-            y={node.y + node.h / 2 + part.dy - 11}
-            width={part.w - 4}
+            x={node.x + span.dx + 2}
+            y={node.y + node.h / 2 + span.dy - 11}
+            width={span.w - 4}
             height={22}
             rx={11}
             className="fill-background stroke-muted-foreground [stroke-dasharray:4_3]"
           />
         ) : null,
       )}
-      {node.parts.length > 0 && (
-        // `font-mono` holds the feature settings that each part inherits; each part sets its own font.
+      {node.spans.length > 0 && (
+        // `font-mono` holds the feature settings that each span inherits; each span sets its own font.
         <text
           y={node.y + node.h / 2}
           dominantBaseline="central"
           className={cn("fill-foreground font-mono", node.generated && "fill-muted-foreground")}
           style={{ whiteSpace: "pre" }}
         >
-          {node.parts.map((part, i) => (
+          {node.spans.map((span, i) => (
             <tspan
-              // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+              // oxlint-disable-next-line react/no-array-index-key -- spans are positional
               key={i}
-              x={node.x + part.dx + (part.empty ? PILL : 0)}
-              y={node.y + node.h / 2 + part.dy}
-              data-block-slot={part.slot}
-              data-empty-id={part.emptyId}
+              x={node.x + span.dx + (span.empty ? PILL : 0)}
+              y={node.y + node.h / 2 + span.dy}
+              data-block-slot={span.slot}
+              data-empty-id={span.emptyId}
               className={cn(
-                part.empty && "fill-muted-foreground",
-                part.variable && "fill-variable",
+                span.empty && "fill-muted-foreground",
+                span.variable && "fill-variable",
               )}
-              style={chartFont(part)}
+              style={chartSpanFont(span)}
             >
-              {part.text}
+              {span.text}
             </tspan>
           ))}
         </text>
@@ -324,8 +324,8 @@ export function Chart(props: Props) {
     const click = (event: MouseEvent) => {
       const target = event.target instanceof Element ? event.target : null;
       const owner = target?.closest<SVGGElement>("[data-owner]")?.dataset.owner;
-      const part = target?.closest<SVGElement>("[data-block-slot]");
-      if (owner) onSelect(owner, part?.dataset.blockSlot, part?.dataset.emptyId);
+      const span = target?.closest<SVGElement>("[data-block-slot]");
+      if (owner) onSelect(owner, span?.dataset.blockSlot, span?.dataset.emptyId);
     };
     element.addEventListener("click", click);
     return () => element.removeEventListener("click", click);
