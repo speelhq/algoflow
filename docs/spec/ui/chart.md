@@ -128,6 +128,13 @@ A chart node has one of five shapes:
 - `junction`: a point where edges join
 - `box` or `diamond`: a statement block or a generated chart node
 
+No chart node's text comes from a catalog. `Start`, `End`, the `Input`
+of an Input chart node, and a diamond's `?` are the same in every
+locale, as a notation is, and a caption is the learner's own text
+(`editor.md`, Captions). Translating `Start`, `End`, and `Input` was
+rejected, because a chart node would then hold the learner's language
+beside the notation, in two typefaces (`pages.md`, Typefaces).
+
 A statement block's chart nodes take their shapes from its block
 definition's `chart` field (`blocks.md`, Chart form):
 
@@ -183,9 +190,9 @@ the connector after it.
 ### Diamonds
 
 The text of a `branch` or `checked` diamond is its condition as the
-chart writes it (`blocks.md`, Notation), followed by `?`
-(`chart.condition`). For example: `i < n + 1?`, `i % 15 == 0?`. A block
-with a caption shows its caption instead (`editor.md`, Captions). A
+chart writes it (`blocks.md`, Notation), followed by `?`. For example:
+`i < n + 1?`, `i % 15 == 0?`. A block with a caption shows its caption
+instead (`editor.md`, Captions). A
 condition template writes a condition in words. For example:
 `is divisible by`, `equals`.
 Condition templates were rejected, because they name only the

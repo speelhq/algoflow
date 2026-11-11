@@ -279,7 +279,8 @@ The `Problem` tab shows, in order:
 - a `Solution` row with `Show solution`
 
 `Example` shows the first test's inputs and its expected output, one
-line per value.
+line per value. It writes each input as its Input chart node does
+(`chart.md`, Input chart nodes). For example: `Input n ← 15`.
 
 An output of more than eight lines in `Example` folds to its first five
 and `… n more`.
@@ -576,12 +577,12 @@ key, because TypeScript doesn't check what it yields, and its pattern
 would match a whole namespace.
 
 The check doesn't report a key left behind when a member leaves a
-family whose template literal remains, or when a named value list entry, a
-slot's name, or a generated chart node's text leaves a registered block
-definition, because a family's members
-are a type, which the check doesn't read without the type checker, and
-naming a block definition's keys one by one would copy `blocks.md`,
-Catalog keys, into the check, beside the code that builds them.
+family whose template literal remains, or when a named value list entry
+or a slot's name leaves a registered block definition, because a
+family's members are a type, which the check doesn't read without the
+type checker, and naming a block definition's keys one by one would copy
+`blocks.md`, Catalog keys, into the check, beside the code that builds
+them.
 
 The check does report a removed block definition's keys.
 
@@ -589,10 +590,9 @@ The check does report a removed block definition's keys.
 
 ### Japanese
 
-The Japanese locale writes a label, a value list entry, a button, and a
-`foreach`'s generated chart nodes in plain form or as a noun, the way a
-command is named. For example: `block.binop.mod.label` and
-`editor.addValue`. It writes `help` texts, explanations, messages, and
+The Japanese locale writes a label, a value list entry, and a button in
+plain form or as a noun, the way a command is named. For example:
+`block.binop.mod.label` and `editor.addValue`. It writes `help` texts, explanations, messages, and
 the narration in polite form, because they are spoken to the learner.
 
 A `help` text gives a term's technical word in parentheses. For
@@ -709,19 +709,29 @@ Narration).
 
 The typefaces tell a program's code from the words around it:
 
-- JetBrains Mono draws code that stands alone: a notation, a value
-  line, a value list entry's symbol, a value on one line (Values on one
-  line), the `Python` tab, a challenge text's `` `code` `` (Panel,
-  Problem tab), and the keys that the explanation line names.
-- Geist draws words: a catalog's text, a caption, and a sentence with
-  the code it holds, such as the narration and the explanation line.
+- JetBrains Mono draws every chart node's text, a caption included, and
+  code that stands alone: a notation, a value line, a value list entry's
+  symbol, a value on one line (Values on one line), the `Python` tab, a
+  challenge text's `` `code` `` (Panel, Problem tab), and the keys that
+  the explanation line names.
+- Geist draws words: a catalog's text, a caption in its field, and a
+  sentence with the code it holds, such as the narration and the
+  explanation line.
 
-Geist was rejected for code, because it draws `l`, `1`, and `I` nearly
-alike.
+These were rejected:
 
-JetBrains Mono draws no ligature, because a ligature would draw `!=` as
-`≠` and `<=` as `≤`, the symbols of school that `blocks.md`, Notation,
-Symbols, rejects.
+- Geist for code, because it draws `l`, `1`, and `I` nearly alike
+- Geist for a caption on its chart node, because the chart would then
+  draw its chart nodes in two typefaces
+
+JetBrains Mono follows two more rules:
+
+- It draws no ligature, because a ligature would draw `!=` as `≠` and
+  `<=` as `≤`, the symbols of school that `blocks.md`, Notation,
+  Symbols, rejects.
+- It draws the `←`, `→`, and `↔` in the text that Geist draws, because
+  Geist holds none of them, and a fallback font draws them differently
+  on each system.
 
 ## Verification
 
