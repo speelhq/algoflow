@@ -155,9 +155,6 @@ provides the same keys:
   `value`.
 - `block.<key>.<name>.label` and `block.<key>.<name>.help`: the label and
   the help of a value list entry with a `name`
-- `block.<key>.init`, `block.<key>.check`, and `block.<key>.update`: the
-  texts of a counted loop's generated chart nodes, for a loop whose texts
-  aren't notation (Chart form)
 
 The hidden `empty` block definition has its label and help.
 
@@ -396,27 +393,17 @@ Shapes). The chart draws every other block as a box with its notation.
   `{ jump: "next" }`. The edge of `break` leads out of the innermost loop,
   and the edge of `continue` leads into the loop's next pass.
 
-The texts of a counted loop's generated chart nodes, with `{slot}`
-placeholders:
+A counted loop's block definition declares the texts of its generated
+chart nodes as notation, with `{slot}` placeholders, the same in every
+locale (`chart.md`, Shapes):
 
 | key       | init                    | check                     | update               |
 | --------- | ----------------------- | ------------------------- | -------------------- |
 | `for`     | `{var} ← {start}`       | `{var} < {stop}`          | `{var} ← {var} + 1`  |
-| `foreach` | `First item of {list}`  | `{list} has another item` | `{var} ← next item` |
 
 The chart draws a check the way it asks every diamond's condition
 (`chart.md`, Shapes), so a diamond's `?` follows one rule. For example:
 `i < n + 1?`.
-
-The texts of `for` are notation: the block definition declares them, and
-they are the same in every locale.
-
-The texts of `foreach` hold words, because Python keeps the position
-hidden, so the loop's generated chart nodes have no expression to write.
-
-The texts of `foreach` are its catalog keys `block.foreach.init`,
-`check`, and `update`, translated. They are the only chart node texts in
-words.
 
 A counted loop's own notation names it in the block menu and the editor.
 `for`'s notation is its init.
