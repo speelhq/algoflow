@@ -5,24 +5,18 @@ import { estimatedWidth, type Measure } from "./layout";
 import type { Part } from "./text";
 
 /**
- * The font stack of a part's typeface, a variable of `src/ui/theme.css`: code in JetBrains Mono
- * and words in Geist (`pages.md`, Typefaces).
+ * The font stack every chart node's text is drawn in (`pages.md`, Typefaces), a variable of
+ * `src/ui/theme.css` that the chart's `font-mono` class also reads.
  */
-function typeface(part: Part): "--typeface-words" | "--typeface-code" {
-  return part.words ? "--typeface-words" : "--typeface-code";
-}
+const STACK = "--typeface-code";
 
 /**
- * The font a part is drawn in: its typeface, and bold for a variable's name. A style sets it part
- * by part, because the `font` shorthand would reset the feature settings that turn ligatures off.
+ * A part's weight and size, bold for a variable's name; its family is the chart's `font-mono`.
+ * A style sets them one by one, because the `font` shorthand would reset the feature settings
+ * that turn ligatures off.
  */
-export function chartFont(part: Part): {
-  fontFamily: string;
-  fontWeight: number;
-  fontSize: number;
-} {
+export function chartFont(part: Part): { fontWeight: number; fontSize: number } {
   return {
-    fontFamily: `var(${typeface(part)})`,
     fontWeight: part.variable ? 600 : 400,
     fontSize: 13,
   };
@@ -47,14 +41,15 @@ if (typeof document !== "undefined") {
 
 export const measureText: Measure = (part) => {
   const { fontWeight, fontSize } = chartFont(part);
-  const stack = typeface(part);
-  const key = `${stack} ${fontWeight} ${fontSize}|${part.text}`;
+  const key = `${fontWeight} ${fontSize}|${part.text}`;
   const known = widths.get(key);
   if (known !== undefined) return known;
   context ??= document.createElement("canvas").getContext("2d");
   if (!context) return estimatedWidth(part);
-  // A canvas reads no `var()`, so it takes the stack's value from the document.
-  const family = getComputedStyle(document.documentElement).getPropertyValue(stack);
+  // A canvas reads no `var()`, so it takes the stack's value from the document. Before the
+  // stylesheet applies the value is empty, and an estimate stands in, uncached.
+  const family = getComputedStyle(document.documentElement).getPropertyValue(STACK);
+  if (family.trim() === "") return estimatedWidth(part);
   context.font = `${fontWeight} ${fontSize}px ${family}`;
   const width = context.measureText(part.text).width;
   widths.set(key, width);
