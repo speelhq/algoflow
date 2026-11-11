@@ -5,9 +5,16 @@ import { estimatedWidth, type Measure } from "./layout";
 import type { Part } from "./text";
 
 /**
- * The font a part is drawn in: code in JetBrains Mono and words in Geist (`pages.md`,
- * Typefaces), a variable's name bold. A style sets it part by part, because the `font` shorthand
- * would reset the feature settings that turn ligatures off.
+ * The font stack of a part's typeface, a variable of `src/ui/theme.css`: code in JetBrains Mono
+ * and words in Geist (`pages.md`, Typefaces).
+ */
+function typeface(part: Part): "--typeface-words" | "--typeface-code" {
+  return part.words ? "--typeface-words" : "--typeface-code";
+}
+
+/**
+ * The font a part is drawn in: its typeface, and bold for a variable's name. A style sets it part
+ * by part, because the `font` shorthand would reset the feature settings that turn ligatures off.
  */
 export function chartFont(part: Part): {
   fontFamily: string;
@@ -15,9 +22,7 @@ export function chartFont(part: Part): {
   fontSize: number;
 } {
   return {
-    fontFamily: part.words
-      ? '"Geist Variable", sans-serif'
-      : '"JetBrains Mono Variable", monospace',
+    fontFamily: `var(${typeface(part)})`,
     fontWeight: part.variable ? 600 : 400,
     fontSize: 13,
   };
@@ -41,14 +46,16 @@ if (typeof document !== "undefined") {
 }
 
 export const measureText: Measure = (part) => {
-  const { fontFamily, fontWeight, fontSize } = chartFont(part);
-  const font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-  const key = `${font}|${part.text}`;
+  const { fontWeight, fontSize } = chartFont(part);
+  const stack = typeface(part);
+  const key = `${stack} ${fontWeight} ${fontSize}|${part.text}`;
   const known = widths.get(key);
   if (known !== undefined) return known;
   context ??= document.createElement("canvas").getContext("2d");
   if (!context) return estimatedWidth(part);
-  context.font = font;
+  // A canvas reads no `var()`, so it takes the stack's value from the document.
+  const family = getComputedStyle(document.documentElement).getPropertyValue(stack);
+  context.font = `${fontWeight} ${fontSize}px ${family}`;
   const width = context.measureText(part.text).width;
   widths.set(key, width);
   return width;

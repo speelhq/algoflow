@@ -4,14 +4,44 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/jetbrains-mono";
 
+/* `←`, `→`, and `↔`, which neither package's subsets hold, drawn from JetBrains Mono in both typefaces
+   (`pages.md`, Typefaces). A family of its own, second in both font stacks, because a face added
+   to a package's family competes with that family's faces by weight, and Chromium then draws
+   from one face or the other, not both. Each file is cut from JetBrains Mono 2.242 with fontTools:
+   `pyftsubset <font> --unicodes=U+2190,U+2192,U+2194 --layout-features= --name-IDs='*' --flavor=woff2`,
+   from JetBrainsMono-Regular (400) and JetBrainsMono-SemiBold (600); `fonts/OFL.txt` is its license. */
+@font-face {
+  font-family: "JetBrains Mono Arrows";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/jetbrains-mono-arrows-400.woff2") format("woff2");
+  unicode-range: U+2190, U+2192, U+2194;
+}
+@font-face {
+  font-family: "JetBrains Mono Arrows";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./fonts/jetbrains-mono-arrows-600.woff2") format("woff2");
+  unicode-range: U+2190, U+2192, U+2194;
+}
+
+/* Each typeface's font stack, which the `font-mono` and `font-sans` utilities and the chart's
+   measure read (`src/ui/chart/measure.ts`). */
+:root {
+  --typeface-code: "JetBrains Mono Variable", "JetBrains Mono Arrows", monospace;
+  --typeface-words: "Geist Variable", "JetBrains Mono Arrows", sans-serif;
+}
+
 /* `dark:` applies only under `.dark`, which the app never sets, so the primitives' dark styles
    stay off whatever the system's color scheme. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: "Geist Variable", sans-serif;
-  --font-mono: "JetBrains Mono Variable", monospace;
+  --font-sans: var(--typeface-words);
+  --font-mono: var(--typeface-code);
   /* No ligature, which would draw `!=` as `≠` (`pages.md`, Typefaces). */
   --font-mono--font-feature-settings: "calt" 0, "liga" 0;
   --color-ring: var(--ring);
