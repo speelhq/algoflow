@@ -1,12 +1,12 @@
-// A challenge text as paragraphs of inline runs: `code`, **bold**, *italic*, and
+// A challenge text as paragraphs of inline spans: `code`, **bold**, *italic*, and
 // plain text. Anything else is plain text, shown as written.
 
-export type Run = { kind: "text" | "code" | "bold" | "italic"; text: string };
+export type MarkdownSpan = { kind: "text" | "code" | "bold" | "italic"; text: string };
 
 const INLINE = /`([^`]+)`|\*\*([^*]+)\*\*|\*([^*\s][^*]*)\*/g;
 
-function runs(paragraph: string): Run[] {
-  const out: Run[] = [];
+function spans(paragraph: string): MarkdownSpan[] {
+  const out: MarkdownSpan[] = [];
   let at = 0;
   for (const match of paragraph.matchAll(INLINE)) {
     if (match.index > at) out.push({ kind: "text", text: paragraph.slice(at, match.index) });
@@ -21,10 +21,10 @@ function runs(paragraph: string): Run[] {
 }
 
 /** Paragraphs are separated by a blank line; a single line break stays inside its paragraph. */
-export function markdown(source: string): Run[][] {
+export function markdown(source: string): MarkdownSpan[][] {
   return source
     .split(/\n[ \t]*\n/)
     .map((paragraph) => paragraph.trim())
     .filter((paragraph) => paragraph !== "")
-    .map(runs);
+    .map(spans);
 }

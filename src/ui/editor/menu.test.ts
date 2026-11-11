@@ -2,7 +2,7 @@
 // functions a call can name.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/blocks/testing";
-import { blankTemplate } from "@/ui/chart/text";
+import { notationWithEmptySlots } from "@/ui/chart/text";
 import { menuGroups, searchMenu } from "./menu";
 
 const { v, while_ } = ast;
@@ -67,7 +67,7 @@ describe("block menu", () => {
   });
 
   it("an entry reads as the block's label followed by its notation with … for each slot", () => {
-    expect(blankTemplate("{var} ← {start}")).toBe("… ← …");
+    expect(notationWithEmptySlots("{var} ← {start}")).toBe("… ← …");
     const entries = menuGroups(program([]), MAIN).flatMap((group) => group.entries);
     const read = (id: string) => {
       const entry = entries.find((e) => e.id === id);

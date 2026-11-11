@@ -18,13 +18,13 @@ import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
 import { parseScope } from "@/python/parse";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
-import { placeholderValue, slotParts } from "@/ui/chart/text";
+import { placeholderValue, slotSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics } from "./diagnostics";
 import { apply } from "./edits";
 import { EditorList } from "./EditorList";
-import { explainLine, helpParts, type Explanation } from "./explain";
+import { explainLine, helpSpans, type Explanation } from "./explain";
 import {
   editedLines,
   fieldKey,
@@ -257,23 +257,23 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   // A counted loop shows its init and its check, one line each, as the chart draws them; a slot
   // written again is drawn as its value.
-  const notation = editedLines(stmt).map((pieces, l) => (
+  const notation = editedLines(stmt).map((tokens, l) => (
     // oxlint-disable-next-line react/no-array-index-key -- the lines keep their order
     <div key={l} className="flex flex-wrap items-center gap-1.5">
-      {pieces.map(({ piece, again }, i) => {
-        if ("words" in piece) {
-          const text = piece.words.trim();
-          // oxlint-disable-next-line react/no-array-index-key -- a notation's pieces keep their order
+      {tokens.map(({ token, again }, i) => {
+        if ("text" in token) {
+          const text = token.text.trim();
+          // oxlint-disable-next-line react/no-array-index-key -- a notation's tokens keep their order
           return text === "" ? null : <span key={`t${i}`}>{text}</span>;
         }
-        if (!again) return widget(piece.name);
-        return slotParts(stmt, piece.name).map((part, j) => (
+        if (!again) return widget(token.placeholder);
+        return slotSpans(stmt, token.placeholder).map((slotSpan, j) => (
           <span
-            // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+            // oxlint-disable-next-line react/no-array-index-key -- spans are positional
             key={`v${i}:${j}`}
-            className={cn(part.variable && "font-semibold text-variable")}
+            className={cn(slotSpan.variable && "font-semibold text-variable")}
           >
-            {part.text}
+            {slotSpan.text}
           </span>
         ));
       })}
@@ -316,7 +316,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   }
   explanation ??= {
     name: blockText(def.key, "label"),
-    parts: helpParts(blockText(def.key, "help")),
+    spans: helpSpans(blockText(def.key, "help")),
   };
 
   return (
@@ -381,17 +381,17 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           </span>
         )}
         <span>
-          {explanation.parts.map((part, i) => (
+          {explanation.spans.map((span, i) => (
             <span
-              // oxlint-disable-next-line react/no-array-index-key -- parts are positional
+              // oxlint-disable-next-line react/no-array-index-key -- spans are positional
               key={i}
               className={cn(
-                "key" in part
+                "key" in span
                   ? "rounded bg-muted px-1 font-mono text-[0.8rem]"
-                  : part.underline && "underline underline-offset-2",
+                  : span.underline && "underline underline-offset-2",
               )}
             >
-              {part.text}
+              {span.text}
             </span>
           ))}
         </span>

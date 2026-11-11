@@ -1,23 +1,25 @@
-// The font of each part of the chart's text, and its width for `layout()`, measured in that font.
+// The font of each span of the chart's text, and its width for `layout()`, measured in that font.
 // Widths depend on the loaded fonts, so the cache is cleared each time fonts finish loading.
 import { useSyncExternalStore } from "react";
 import { estimatedWidth, type Measure } from "./layout";
-import type { Part } from "./text";
+import type { NotationSpan } from "./text";
+
+/** The font stack every chart node's text is drawn in (`pages.md`, Typefaces), a variable of `src/ui/theme.css`. */
+const CODE_STACK_VARIABLE = "--typeface-code";
 
 /**
- * The font stack every chart node's text is drawn in (`pages.md`, Typefaces), a variable of
- * `src/ui/theme.css` that the chart's `font-mono` class also reads.
+ * The font a chart span is drawn in: the code stack, bold for a variable's name. A style sets it
+ * part by part, because the `font` shorthand would reset the feature settings that turn ligatures
+ * off.
  */
-const STACK = "--typeface-code";
-
-/**
- * A part's weight and size, bold for a variable's name; its family is the chart's `font-mono`.
- * A style sets them one by one, because the `font` shorthand would reset the feature settings
- * that turn ligatures off.
- */
-export function chartFont(part: Part): { fontWeight: number; fontSize: number } {
+export function chartSpanFont(span: NotationSpan): {
+  fontFamily: string;
+  fontWeight: number;
+  fontSize: number;
+} {
   return {
-    fontWeight: part.variable ? 600 : 400,
+    fontFamily: `var(${CODE_STACK_VARIABLE})`,
+    fontWeight: span.variable ? 600 : 400,
     fontSize: 13,
   };
 }
@@ -39,19 +41,19 @@ if (typeof document !== "undefined") {
   void document.fonts.ready.then(fontsLoaded);
 }
 
-export const measureText: Measure = (part) => {
-  const { fontWeight, fontSize } = chartFont(part);
-  const key = `${fontWeight} ${fontSize}|${part.text}`;
+export const measureText: Measure = (span) => {
+  const { fontWeight, fontSize } = chartSpanFont(span);
+  const key = `${fontWeight} ${fontSize}|${span.text}`;
   const known = widths.get(key);
   if (known !== undefined) return known;
   context ??= document.createElement("canvas").getContext("2d");
-  if (!context) return estimatedWidth(part);
+  if (!context) return estimatedWidth(span);
   // A canvas reads no `var()`, so it takes the stack's value from the document. Before the
   // stylesheet applies the value is empty, and an estimate stands in, uncached.
-  const family = getComputedStyle(document.documentElement).getPropertyValue(STACK);
-  if (family.trim() === "") return estimatedWidth(part);
+  const family = getComputedStyle(document.documentElement).getPropertyValue(CODE_STACK_VARIABLE);
+  if (family.trim() === "") return estimatedWidth(span);
   context.font = `${fontWeight} ${fontSize}px ${family}`;
-  const width = context.measureText(part.text).width;
+  const width = context.measureText(span.text).width;
   widths.set(key, width);
   return width;
 };

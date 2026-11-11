@@ -27,7 +27,7 @@ function keys(text: string, settled = true): Line {
 }
 
 const shown = (explained: ReturnType<typeof explainLine>) =>
-  explained && [explained.name, explained.parts.map((part) => part.text).join("")];
+  explained && [explained.name, explained.spans.map((span) => span.text).join("")];
 
 const target = print(empty());
 const p = program(
@@ -47,7 +47,7 @@ describe("explanation line", () => {
       target.id,
     );
     expect(explained?.name).toBe("Remainder");
-    expect(explained?.parts.at(-2)).toEqual({ text: "%", key: true });
+    expect(explained?.spans.at(-2)).toEqual({ text: "%", key: true });
     expect(shown(explained)?.[1]).toMatch(/is 1\. Type %\.$/);
     const text = allEntries().find((entry) => entry.id === "str");
     if (!text) throw new Error("no Text");
@@ -71,7 +71,7 @@ describe("explanation line", () => {
   it("inside an operation's slot: its name and its template with that slot underlined", () => {
     const explained = explainLine(keys("total+"), ctx, undefined, p, target.id);
     expect(shown(explained)).toEqual(["Add", "total + …"]);
-    expect(explained?.parts.find((part) => "underline" in part && part.underline)?.text).toBe("…");
+    expect(explained?.spans.find((span) => "underline" in span && span.underline)?.text).toBe("…");
     // A slot's value is parenthesized as the chart parenthesizes it.
     expect(shown(explainLine(keys("(i+n)//"), ctx, undefined, p, target.id))).toEqual([
       "Whole-number quotient",
@@ -95,7 +95,7 @@ describe("explanation line", () => {
     expect(labelOf(one, lists.kinds)).toBe("Empty list");
     // `[` opens a list with an empty item, so the keys of `Empty list` are `[` then `]`.
     const explained = explainLine(keys(""), ctx, { type: "entry", entry: blank }, p, target.id);
-    expect(explained?.parts.filter((part) => "key" in part)).toEqual([{ text: "[]", key: true }]);
+    expect(explained?.spans.filter((span) => "key" in span)).toEqual([{ text: "[]", key: true }]);
     // Each made list has its own items, none shared with the block definition.
     expect(Reflect.get(one, "items")).not.toBe(Reflect.get(two, "items"));
   });

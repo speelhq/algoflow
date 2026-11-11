@@ -1,5 +1,5 @@
 // The explanation line at the foot of the editor: what the list highlights or the caret
-// is in, as a name and parts of text; undefined leaves the block's help.
+// is in, as a name and spans of text; undefined leaves the block's help.
 import { t } from "@/i18n/t";
 import { firstSetters, variableKinds } from "@/lang/kinds";
 import type { Expr, Name, Kind, NodeId, Program } from "@/lang/types";
@@ -11,8 +11,8 @@ import {
   emptyNotation,
   placeholderValue,
   notationText,
-  templateParts,
-  type Part,
+  filledSpans,
+  type NotationSpan,
   SEPARATOR,
 } from "@/ui/chart/text";
 import { labelOf } from "./entries";
@@ -27,24 +27,24 @@ import {
   type Row,
 } from "./line";
 
-/** A part of an explanation: a part of a block's text, or a key to type. */
-export type ExplanationPart = Part | { text: string; key: true };
+/** A span of an explanation: a span of a block's text, or a key to type. */
+export type ExplanationSpan = NotationSpan | { text: string; key: true };
 
 export type Explanation = {
   /** What is explained: a name, drawn as a variable when it is one. */
   name: string;
   variable?: boolean;
-  parts: ExplanationPart[];
+  spans: ExplanationSpan[];
 };
 
 /** A help text, each piece in backticks a key to type. */
-export function helpParts(text: string): ExplanationPart[] {
+export function helpSpans(text: string): ExplanationSpan[] {
   return text
     .split("`")
-    .map((piece, i): ExplanationPart =>
+    .map((piece, i): ExplanationSpan =>
       i % 2 === 1 ? { text: piece, key: true } : { text: piece },
     )
-    .filter((part) => part.text !== "");
+    .filter((span) => span.text !== "");
 }
 
 const kindName = (kind: Kind) => t(`editor.kind.${kind}`);
@@ -72,12 +72,12 @@ export function explainName(program: Program, at: NodeId, name: Name, isNew: boo
   const text = isNew
     ? t("editor.explain.newVariable", { name })
     : explainVariable(program, at, name);
-  return { name, variable: true, parts: [{ text }] };
+  return { name, variable: true, spans: [{ text }] };
 }
 
 /** A help followed, when keys insert what it explains, by how to type them. */
-function typedHelp(help: string, keys: string | undefined): ExplanationPart[] {
-  return helpParts(keys === undefined ? help : `${help} ${t("editor.typeKeys", { keys })}`);
+function typedHelp(help: string, keys: string | undefined): ExplanationSpan[] {
+  return helpSpans(keys === undefined ? help : `${help} ${t("editor.typeKeys", { keys })}`);
 }
 
 /** The row's explanation. */
@@ -87,14 +87,14 @@ function explainRow(row: Row, program: Program, at: NodeId): Explanation {
     case "new":
       return explainName(program, at, row.name, row.type === "new");
     case "entry":
-      return { name: row.entry.label, parts: typedHelp(row.entry.help, row.entry.declared.typed) };
+      return { name: row.entry.label, spans: typedHelp(row.entry.help, row.entry.declared.typed) };
     case "parentheses":
       return {
         name: t("editor.parentheses.label"),
-        parts: typedHelp(t("editor.parentheses.help"), PARENTHESES_KEY),
+        spans: typedHelp(t("editor.parentheses.help"), PARENTHESES_KEY),
       };
     case "function":
-      return { name: functionLabel(row.fn), parts: [{ text: t("editor.ownFunction") }] };
+      return { name: functionLabel(row.fn), spans: [{ text: t("editor.ownFunction") }] };
   }
 }
 
@@ -150,12 +150,12 @@ function operationAt(line: Line): { operation: Expr; value: Expr } | undefined {
 }
 
 /** An operation's notation with the caret's slot underlined and every other empty slot `…`. */
-function operationParts(operation: Expr, current: Expr): Part[] {
-  const written = (value: Expr): Part => {
+function operationSpans(operation: Expr, current: Expr): NotationSpan[] {
+  const written = (value: Expr): NotationSpan => {
     const text = isEmptyExpr(value) ? emptyNotation() : exprText(value);
     return value === current ? { text, underline: true } : { text };
   };
-  return templateParts(notationOf(operation), (name) => {
+  return filledSpans(notationOf(operation), (name) => {
     const held = placeholderValue(operation, name);
     switch (held?.role) {
       case "expr":
@@ -184,12 +184,12 @@ export function explainLine(
   program: Program,
   at: NodeId,
 ): Explanation | undefined {
-  if (line.refused) return { name: "", parts: [{ text: line.refused }] };
+  if (line.refused) return { name: "", spans: [{ text: line.refused }] };
   if (line.word !== "" && matches(line, ctx).length === 0) {
     const closest = closestName(line, ctx);
     return {
       name: line.word,
-      parts: [
+      spans: [
         {
           text: closest ? t("editor.didYouMean", { name: closest }) : t("editor.nothingLike"),
         },
@@ -201,6 +201,6 @@ export function explainLine(
   if (!inside) return undefined;
   return {
     name: labelOf(inside.operation, ctx.kinds),
-    parts: operationParts(inside.operation, inside.value),
+    spans: operationSpans(inside.operation, inside.value),
   };
 }

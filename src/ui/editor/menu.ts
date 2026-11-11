@@ -9,7 +9,7 @@ import type { Place, Program, Stmt } from "@/lang/types";
 import { getBlockDef, menuBlockDefs } from "@/blocks/registry";
 import { CATEGORIES, type Category } from "@/blocks/categories";
 import { parseScope } from "@/python/parse";
-import { blankTemplate } from "@/ui/chart/text";
+import { notationWithEmptySlots } from "@/ui/chart/text";
 import { functionLabel } from "./explain";
 import { callableFunctions, callExpr, type LineFunction } from "./line";
 
@@ -40,7 +40,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
         const entry: BlockMenuEntry = {
           id: def.key,
           label: blockText(def.key, "label"),
-          notation: blankTemplate(def.notation(def.create())),
+          notation: notationWithEmptySlots(def.notation(def.create())),
           help: blockText(def.key, "help"),
           create: () => def.create() as Stmt,
         };

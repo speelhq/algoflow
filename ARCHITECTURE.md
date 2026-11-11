@@ -132,7 +132,7 @@ tests.
   The chart is an SVG flowchart with a computed layout
   (`src/ui/chart/layout.ts`). Chart node text and the narration are plain
   strings from `src/ui/chart/text.ts` and `src/ui/run/narrate.ts`, and
-  `text.ts` is the only code that splits a notation into its pieces. The
+  `text.ts` is the only code that splits a notation into its tokens. The
   block editor's state is a session that changes only through pure
   transitions (`src/ui/editor/session.ts`). A variable's view is chosen by
   the type of its value alone, never by block or challenge

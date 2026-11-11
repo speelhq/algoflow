@@ -1,4 +1,4 @@
-// A block's text as parts: its block's `notation()` with the block's slots filled in, the same in
+// A block's text as spans: its block's `notation()` with the block's slots filled in, the same in
 // every locale; a variable is drawn bold in its own color, and an empty slot as `…`, the `empty`
 // block's notation. Operators are parenthesized as the emitter does. Reads slot roles, `params`,
 // `notation`, `text`, `chart`, and `precedence` only, never a type; a variable shown with its
@@ -13,38 +13,39 @@ import { str, writeValue } from "@/runtime/values";
 
 type Bag = Record<string, unknown>;
 
-/** A piece of a notation or a template: its own text, or a placeholder naming a slot or a param. */
-export type Piece = { words: string } | { name: string };
+/** A token of a notation or a template: its own text, or a placeholder naming a slot or a param. */
+export type NotationToken = { text: string } | { placeholder: string };
 
 /**
  * A notation or a template as its own text and its placeholders in reading order: the one
  * reading of either.
  */
-export function templatePieces(template: string): Piece[] {
-  const pieces: Piece[] = [];
+export function notationTokens(template: string): NotationToken[] {
+  const tokens: NotationToken[] = [];
   let at = 0;
   for (const found of template.matchAll(/\{(\w+)\}/g)) {
-    if (found.index > at) pieces.push({ words: template.slice(at, found.index) });
-    pieces.push({ name: found[1] ?? "" });
+    if (found.index > at) tokens.push({ text: template.slice(at, found.index) });
+    tokens.push({ placeholder: found[1] ?? "" });
     at = found.index + found[0].length;
   }
-  if (at < template.length) pieces.push({ words: template.slice(at) });
-  return pieces;
+  if (at < template.length) tokens.push({ text: template.slice(at) });
+  return tokens;
 }
 
 /** A template with every placeholder written as `…`, the `empty` block's notation. */
-export function blankTemplate(template: string): string {
-  return templatePieces(template)
-    .map((piece) => ("words" in piece ? piece.words : emptyNotation()))
+export function notationWithEmptySlots(template: string): string {
+  return notationTokens(template)
+    .map((token) => ("text" in token ? token.text : emptyNotation()))
     .join("");
 }
 
 /**
- * A part of a block's text: the template's own words, or what a slot holds (`slot` names the
+ * A span of a block's text: the template's own words, or what a slot holds (`slot` names the
  * statement's slot it belongs to). `variable` marks a variable's name, `empty` the `…` of an
- * empty slot, and `emptyId` the empty slot a click on the part opens.
+ * empty slot, and `emptyId` the empty slot a click on the span opens. A caption takes its chart
+ * node's place as a span with text alone (`chart.md`, Shapes).
  */
-export type Part = {
+export type NotationSpan = {
   text: string;
   slot?: string;
   empty?: boolean;
@@ -54,9 +55,9 @@ export type Part = {
   underline?: boolean;
 };
 
-/** The text the parts spell. */
-export function joinParts(parts: readonly Part[]): string {
-  return parts.map((part) => part.text).join("");
+/** The text the spans spell. */
+export function joinSpans(spans: readonly NotationSpan[]): string {
+  return spans.map((span) => span.text).join("");
 }
 
 /** An empty slot's value, whose block's notation is `…`. */
@@ -71,47 +72,50 @@ export function emptyNotation(): string {
 export type Writing = { value?: (name: string) => string | undefined };
 
 /**
- * A template as parts, each placeholder replaced by the parts `fill` gives. The template's own
- * words have their spaces collapsed as in a sentence, so a placeholder that holds nothing leaves
+ * A template as spans, each placeholder replaced by the spans `fill` gives. The template's own
+ * text has its spaces collapsed as in a sentence, so a placeholder that holds nothing leaves
  * no double or edge space; what a placeholder holds keeps its text, a text's spaces included. A
- * part left with no text is dropped.
+ * span left with no text is dropped.
  */
-export function templateParts(template: string, fill: (name: string) => Part[]): Part[] {
-  const parts = templatePieces(template).flatMap((piece) =>
-    "words" in piece
-      ? [{ part: { text: piece.words }, words: true }]
-      : fill(piece.name).map((part) => ({ part, words: false })),
+export function filledSpans(
+  template: string,
+  fill: (name: string) => NotationSpan[],
+): NotationSpan[] {
+  const spans = notationTokens(template).flatMap((token) =>
+    "text" in token
+      ? [{ span: { text: token.text }, own: true }]
+      : fill(token.placeholder).map((span) => ({ span, own: false })),
   );
-  const out: { part: Part; words: boolean }[] = [];
-  for (const { part, words } of parts) {
-    const before = out.at(-1)?.part.text ?? "";
-    let text = part.text;
-    if (words) {
+  const out: { span: NotationSpan; own: boolean }[] = [];
+  for (const { span, own } of spans) {
+    const before = out.at(-1)?.span.text ?? "";
+    let text = span.text;
+    if (own) {
       text = text.replace(/\s+/g, " ");
       if (before === "" || before.endsWith(" ")) text = text.replace(/^ /, "");
     }
-    if (text !== "") out.push({ part: { ...part, text }, words });
+    if (text !== "") out.push({ span: { ...span, text }, own });
   }
   const last = out.at(-1);
-  if (last?.words) last.part.text = last.part.text.replace(/ $/, "");
-  // Adjacent words of one slot are one part.
-  const merged: Part[] = [];
-  for (const { part } of out) {
+  if (last?.own) last.span.text = last.span.text.replace(/ $/, "");
+  // Adjacent text of one slot is one span.
+  const merged: NotationSpan[] = [];
+  for (const { span } of out) {
     const before = merged[merged.length - 1];
     if (
       before &&
       plain(before) &&
-      plain(part) &&
-      before.slot === part.slot &&
-      before.emptyId === part.emptyId
+      plain(span) &&
+      before.slot === span.slot &&
+      before.emptyId === span.emptyId
     ) {
-      before.text += part.text;
-    } else if (part.text !== "") merged.push({ ...part });
+      before.text += span.text;
+    } else if (span.text !== "") merged.push({ ...span });
   }
   return merged;
 }
 
-const plain = (part: Part) => !part.variable && !part.empty && !part.underline;
+const plain = (span: NotationSpan) => !span.variable && !span.empty && !span.underline;
 
 /** A block's notation (`blocks.md`, Notation). */
 export function notationOf(block: Block): string {
@@ -120,8 +124,8 @@ export function notationOf(block: Block): string {
 
 /** Whether an expression's notation ends with `closer`: a call's `)`, a list's or an item's `]`. */
 export function closedBy(expr: Expr, closer: ")" | "]"): boolean {
-  const last = templatePieces(notationOf(expr)).at(-1);
-  return last !== undefined && "words" in last && last.words.endsWith(closer);
+  const last = notationTokens(notationOf(expr)).at(-1);
+  return last !== undefined && "text" in last && last.text.endsWith(closer);
 }
 
 /** Whether an expression is a call: its notation ends with its own parenthesis (`abs({x})`). */
@@ -151,18 +155,18 @@ export function parenthesized(
   return own !== undefined && held.binds !== undefined && needsParens(own, held.binds, held.side);
 }
 
-function inParentheses(parts: Part[]): Part[] {
-  return [{ text: "(" }, ...parts, { text: ")" }];
+function inParentheses(spans: NotationSpan[]): NotationSpan[] {
+  return [{ text: "(" }, ...spans, { text: ")" }];
 }
 
-/** The parts of the value `held` places. */
-function operandParts(
+/** The spans of the value `held` places. */
+function operandSpans(
   child: Expr,
   held: { binds: number | undefined; side: Side },
   writing: Writing,
-): Part[] {
-  const parts = exprParts(child, writing);
-  return parenthesized(child, held) ? inParentheses(parts) : parts;
+): NotationSpan[] {
+  const spans = exprSpans(child, writing);
+  return parenthesized(child, held) ? inParentheses(spans) : spans;
 }
 
 /**
@@ -210,20 +214,20 @@ export function placeholderValue(block: Block, name: string): Held | undefined {
 }
 
 /** An expression as the chart writes it. */
-export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
+export function exprSpans(expr: Expr, writing: Writing = {}): NotationSpan[] {
   if (isEmptyExpr(expr)) return [{ text: emptyNotation(), empty: true, emptyId: expr.id }];
   const name = variableOf(expr);
   if (name !== undefined) {
     const value = writing.value?.(name);
     return value === undefined ? [{ text: name, variable: true }] : [{ text: value }];
   }
-  return templateParts(notationOf(expr), (placeholderName) => {
+  return filledSpans(notationOf(expr), (placeholderName) => {
     const held = placeholderValue(expr, placeholderName);
     switch (held?.role) {
       case "expr":
-        return held.expr ? operandParts(held.expr, held, writing) : [];
+        return held.expr ? operandSpans(held.expr, held, writing) : [];
       case "exprs":
-        return listParts(held.items, (item) => exprParts(item, writing));
+        return listSpans(held.items, (item) => exprSpans(item, writing));
       case "name":
         return [{ text: held.name }];
       case "literal":
@@ -238,7 +242,7 @@ export function exprParts(expr: Expr, writing: Writing = {}): Part[] {
 /** What separates items, arguments, and parameters, as Python separates them, in every locale. */
 export const SEPARATOR = ", ";
 
-function listParts(items: Expr[], write: (item: Expr) => Part[]): Part[] {
+function listSpans(items: Expr[], write: (item: Expr) => NotationSpan[]): NotationSpan[] {
   return items.flatMap((item, i) =>
     i === 0 ? write(item) : [{ text: SEPARATOR }, ...write(item)],
   );
@@ -255,21 +259,21 @@ function writtenText(block: Block, def: BlockDef, slot: string): string {
 
 /** The text of an expression as the chart writes it. */
 export function exprText(expr: Expr, writing: Writing = {}): string {
-  return joinParts(exprParts(expr, writing));
+  return joinSpans(exprSpans(expr, writing));
 }
 
 /**
- * What one slot of a statement holds, as the chart writes it, each part naming the slot. A slot
+ * What one slot of a statement holds, as the chart writes it, each span naming the slot. A slot
  * that holds `empty` is drawn by that expression's notation, `…`.
  */
-export function slotParts(block: Block, name: string): Part[] {
-  const parts = (): Part[] => {
+export function slotSpans(block: Block, name: string): NotationSpan[] {
+  const spans = (): NotationSpan[] => {
     const held = placeholderValue(block, name);
     switch (held?.role) {
       case "expr":
-        return held.expr ? operandParts(held.expr, held, {}) : [];
+        return held.expr ? operandSpans(held.expr, held, {}) : [];
       case "exprs":
-        return listParts(held.items, (item) => exprParts(item));
+        return listSpans(held.items, (item) => exprSpans(item));
       case "literal":
       case "operator":
         return [{ text: held.text }];
@@ -277,23 +281,23 @@ export function slotParts(block: Block, name: string): Part[] {
         return [];
     }
   };
-  return parts().map((part) => ({ ...part, slot: name }));
+  return spans().map((span) => ({ ...span, slot: name }));
 }
 
-/** A statement's notation, or a generated chart node's text, as parts, one or more per slot. */
-function stmtParts(notation: string, block: Block): Part[] {
-  return templateParts(notation, (name) => slotParts(block, name));
+/** A statement's notation, or a generated chart node's text, as spans, one or more per slot. */
+function stmtSpans(notation: string, block: Block): NotationSpan[] {
+  return filledSpans(notation, (name) => slotSpans(block, name));
 }
 
-/** A block's notation as parts: an expression as the chart writes it, a statement by its slots. */
-export function notationParts(block: Block): Part[] {
+/** A block's notation as spans: an expression as the chart writes it, a statement by its slots. */
+export function notationSpans(block: Block): NotationSpan[] {
   const def = getBlockDef(keyOf(block));
-  return def.shape === "expr" ? exprParts(block as Expr) : stmtParts(def.notation(block), block);
+  return def.shape === "expr" ? exprSpans(block as Expr) : stmtSpans(def.notation(block), block);
 }
 
 /** A block's notation as text. */
 export function notationText(block: Block): string {
-  return joinParts(notationParts(block));
+  return joinSpans(notationSpans(block));
 }
 
 /** Whether a statement has an empty slot, at any depth of its slots. */
@@ -308,12 +312,12 @@ export function hasEmptySlot(block: Block): boolean {
 export const CHART_TEXT = {
   start: "Start",
   /** A function chart's `Start`: `Start double(x)`. */
-  startFn: "Start {signature}",
+  functionStart: "Start {signature}",
   end: "End",
   /** An Input chart node: `Input n ← 15`. */
   input: "Input {assignment}",
   /** A diamond asks its condition: `i < n?`. */
-  asked: "{condition}?",
+  question: "{condition}?",
 };
 
 /**
@@ -325,24 +329,24 @@ export function generatedNotation(block: Block, which: Generated): string | unde
   if (!chart || !("counted" in chart)) return undefined;
   const text = chart.counted[which];
   if (which !== "check") return text;
-  return templatePieces(CHART_TEXT.asked)
-    .map((piece) => ("words" in piece ? piece.words : text))
+  return notationTokens(CHART_TEXT.question)
+    .map((token) => ("text" in token ? token.text : text))
     .join("");
 }
 
-/** A counted loop's generated chart node as parts, its slots being the loop's; none for another. */
-export function generatedParts(block: Block, which: Generated): Part[] {
+/** A counted loop's generated chart node as spans, its slots being the loop's; none for another. */
+export function generatedSpans(block: Block, which: Generated): NotationSpan[] {
   const notation = generatedNotation(block, which);
-  return notation === undefined ? [] : stmtParts(notation, block);
+  return notation === undefined ? [] : stmtSpans(notation, block);
 }
 
 /** A diamond's text: its condition followed by `?`, or the `…` without it. */
-export function questionParts(block: Block): Part[] {
+export function questionSpans(block: Block): NotationSpan[] {
   const condition = conditionOf(block);
   if (!condition) return [];
-  const parts = exprParts(condition.expr).map((part) => ({ ...part, slot: condition.slot }));
-  if (isEmptyExpr(condition.expr)) return parts;
-  return templateParts(CHART_TEXT.asked, () => parts);
+  const spans = exprSpans(condition.expr).map((span) => ({ ...span, slot: condition.slot }));
+  if (isEmptyExpr(condition.expr)) return spans;
+  return filledSpans(CHART_TEXT.question, () => spans);
 }
 
 /** A value as the blocks write it: a text in quotes, the rest as `str()` (`True`, `None`). */
@@ -365,8 +369,8 @@ const ASSIGN = getBlockDef("assign").create();
  * A variable shown with its value, written as an assignment writes it (`n ← 15`): its name in
  * the target's place, a variable, and the value's text in the value's.
  */
-export function assignmentParts(name: string, value: string): Part[] {
-  return templateParts(notationOf(ASSIGN), (placeholderName) =>
+export function assignmentSpans(name: string, value: string): NotationSpan[] {
+  return filledSpans(notationOf(ASSIGN), (placeholderName) =>
     getBlockDef(keyOf(ASSIGN)).slots.find((slot) => slot.name === placeholderName)?.role ===
     "target"
       ? [{ text: name, variable: true }]
@@ -376,10 +380,10 @@ export function assignmentParts(name: string, value: string): Part[] {
 
 /** A variable shown with its value, as text (`n ← 15`). */
 export function assignmentText(name: string, value: string): string {
-  return joinParts(assignmentParts(name, value));
+  return joinSpans(assignmentSpans(name, value));
 }
 
 /** An Input chart node's text, its name a variable (`Input n ← 15`). */
-export function inputParts(name: string, value: Data): Part[] {
-  return templateParts(CHART_TEXT.input, () => assignmentParts(name, dataText(value)));
+export function inputSpans(name: string, value: Data): NotationSpan[] {
+  return filledSpans(CHART_TEXT.input, () => assignmentSpans(name, dataText(value)));
 }
