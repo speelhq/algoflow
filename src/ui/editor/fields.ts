@@ -34,8 +34,7 @@ export function targetSlot(
 
 /**
  * The words the notation writes right after a field (`)` after the last value of `print(…)`),
- * which a key that begins them, typed after the field's value, moves on from (`editor.md`,
- * Backspace and keys).
+ * which a key that begins them, typed after the field's value, moves on from.
  */
 export function wordsAfter(stmt: Stmt, field: Field): string {
   // After an item of a list of values other than its last, the notation writes their separator.

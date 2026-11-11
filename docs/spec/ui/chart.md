@@ -270,8 +270,10 @@ change makes that drop valid.
 A chart node with a diagnostic shows a red dot. Hovering the chart node
 shows the message and, when `fix` is set, a button that applies the fix.
 Its owner's editor shows the same message and button at its top. A chart
-node shows no dot for `E_EMPTY_SLOT`, because the empty slot's `…`
-(`editor.md`, Value line, Empty slots) already shows it.
+node shows no dot for a draft, an empty slot included (`language.md`,
+Expressions, Drafts), and its owner's editor shows no message at its top
+for one (`run.md`, Run bar, Starting a run; `editor.md`, Value line,
+Drafts).
 
 A function's diagnostic shows on that function's `Start` chart node, and
 the function's editor shows its message. For example: `E_DUPLICATE_NAME`

@@ -92,11 +92,16 @@ Each emitted file:
 ## Expressions
 
 This section states where the emitter writes parentheses and how it
-writes a literal and an `empty` expression.
+writes a literal and a draft.
 
 `unparse(expr)` writes one expression as the emitter writes it in a file.
 
-The emitter writes an `empty` expression as `...`.
+The emitter writes a draft (`language.md`, Expressions, Drafts) as its
+text rather than as `...`, so the `Python` tab shows the text that the
+learner is correcting.
+
+The emitter writes a draft with no text as `...`, Python's own mark for
+code still to be written.
 
 ### Parentheses
 

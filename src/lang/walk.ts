@@ -61,7 +61,7 @@ export function childSlots(block: Block): SlotExpr[] {
   return out;
 }
 
-/** An empty slot (`language.md`, Expressions, Empty slots): slot `slot` of `block`, or its item `index`. */
+/** An empty slot (`language.md`, Expressions, Drafts): slot `slot` of `block`, or its item `index`. */
 export type EmptySlot = { block: Block; slot: string; index?: number };
 
 /**

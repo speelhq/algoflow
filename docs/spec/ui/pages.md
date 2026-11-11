@@ -386,7 +386,7 @@ else.
 The tab writes the inputs with the values of the chosen case
 (`chart.md`, Input chart nodes).
 
-Python text appears nowhere else.
+No other part of the page shows the Python file.
 
 The tab's lines and the chart nodes are linked:
 
@@ -436,10 +436,10 @@ A Problem page and a Playground program answer these keys:
 | Shift+→                      | Step over (run mode)                |
 | Ctrl/Cmd+→                   | Skip (run mode)                     |
 | Esc                          | close menu or editor, clear selection; in run mode, clear the breakpoint before the run has ended, else Stop |
-| Tab, Shift+Tab               | next, previous empty slot of a value line, then field (`editor.md`, Value list) |
+| Tab, Shift+Tab               | next, previous field of the block editor (`editor.md`, Block editor) |
 | ↑, ↓                         | move the highlight in the editor's list (`editor.md`, Value list) |
-| ←, →                         | previous, next value or empty slot of a value line (`editor.md`, Value list) |
-| Enter                        | choose the highlighted entry, and in a target's line, when it leaves no empty slot, go to the next field (`editor.md`, Targets); else close the editor |
+| ←, →                         | previous, next character of a value line's text (`editor.md`, Value line, Keys) |
+| Enter                        | choose the highlighted entry, and in a target's line, when it leaves a target, go to the next field (`editor.md`, Targets); else close the editor |
 
 ## Messages
 
@@ -592,7 +592,7 @@ The check does report a removed block definition's keys.
 
 The Japanese locale writes a label, a value list entry, and a button in
 plain form or as a noun, the way a command is named. For example:
-`block.binop.mod.label` and `editor.addValue`. It writes `help` texts, explanations, messages, and
+`block.binop.mod.label` and `editor.duplicate`. It writes `help` texts, explanations, messages, and
 the narration in polite form, because they are spoken to the learner.
 
 A `help` text gives a term's technical word in parentheses. For

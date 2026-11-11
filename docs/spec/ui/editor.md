@@ -3,9 +3,8 @@
 The editor writes a program's blocks: the block menu inserts a statement
 block at a connector, and the block editor edits that block's slots in
 place. This file states the block menu, the block editor, value lines and
-their lists, what Backspace removes and what keys insert, target
-slots, the name list, captions, the explanation line, and the
-verification.
+their lists, target slots, the name list, captions, the explanation
+line, and the verification.
 
 ## Block menu
 
@@ -26,8 +25,9 @@ Each category keeps a fixed order, with `assign`, `print`, `if`, `for`,
 and `while` first in their categories.
 
 An entry reads as the block definition's label followed by its notation,
-with every slot written `…`. For example: `Set variable  … ← …`,
-`Print  print(…)`, `For loop  … ← …`, `For each loop  for … in …`.
+with every slot written as its hint (`blocks.md`, Notation, Drawing). For
+example: `Set variable  variable ← value`, `Print  print(values)`,
+`For loop  variable ← start`, `For each loop  for variable in list`.
 
 The menu lists a block definition whose `requires` the connector doesn't
 meet as disabled, with the reason (`menu.requires.loop`,
@@ -52,7 +52,10 @@ functions as calls.
 
 Learner modules come before built-in ones.
 
-Choosing an entry inserts its block and opens the block editor on it.
+Choosing an entry inserts its block and opens the block editor on it. A
+slot of the block that holds an operation holds the text that a choice of
+that operation writes (Value list, Choosing). For example: a method
+statement holds `.append()`, and a call of a function holds `greet()`.
 
 Expression block definitions aren't in this menu: value lines offer them
 (Value list).
@@ -134,20 +137,19 @@ it opens the module's Module page (`modules.md`, Operations).
 
 The notation has its slots editable in place, each as its role chooses:
 
-- `expr` and `target`: a value line (Value line; Targets)
-- an optional `expr` left empty: `+ value` (`editor.addValue`), which adds
-  its value line
-- `exprs`: value lines separated by commas, each with a remove button
-  (`editor.removeValue.label`), followed by `+ value`, which adds one
+- `expr`, `target`, and `exprs`: a value line (Value line; Targets)
 - `body`: not shown
 
 For example: a `for`'s init and check, `i ← 1` and `i < n + 1?`, are
 edited in place.
 
+An optional `expr` slot holds no value while its value line has no text.
+An `exprs` slot's value line holds its values separated by commas, and
+the slot holds no item while the line has no text.
+
 A field is a place in the editor where the learner types: a field of the
-notation, a text field in a value line, or the caption field. Each
-`expr` and `target` slot of the notation is a field of the notation, and
-so is each item of an `exprs` slot.
+notation, or the caption field. Each `expr`, `target`, and `exprs` slot
+of the notation is one field of the notation, its value line.
 
 A loop's editor edits the variable and the bounds of a `for`, the
 variable and the list of a `foreach`, or the condition of a `while`. A
@@ -155,10 +157,19 @@ loop's variable is a target that binds, edited in a target's line
 (Targets). The generated chart nodes (`chart.md`, Shapes) change with
 what the editor sets.
 
-Clicking a slot drawn on the chart node opens the editor with that slot
-focused. When the editor opens otherwise, the first field that holds an
-empty slot takes the keyboard. When there is none, the keyboard stays with the
-chart, so Delete removes the block (`chart.md`, Editing on the chart).
+Clicking a slot drawn on the chart node opens the editor on that slot.
+When the editor opens, a field takes the keyboard:
+
+- on a slot clicked on the chart node: that slot's field
+- on a block that the block menu has just inserted: its first field, with
+  the caret where a choice would put it (Value list, Choosing)
+- otherwise: the first field that holds a draft
+
+When no field takes it, the keyboard stays with the chart, so Delete
+removes the block (`chart.md`, Editing on the chart).
+
+Tab and Shift+Tab move the keyboard to the next and previous field of the
+notation.
 
 An edit applies at once.
 
@@ -173,65 +184,99 @@ the block definition's label and the slot's name
 symbols before a field name nothing a screen reader can say. For example:
 the field after `←` in a `Set variable` block is named
 `Set variable, value`, and the field after `print(` is named
-`Print, value`.
+`Print, values`.
 
 ## Value line
 
-A value line edits one expression and writes it as the chart writes it
-(`blocks.md`, Notation):
+A value line is a text field that edits one slot of a statement as
+text. It writes the slot's value as the emitter writes it (`emitter.md`,
+Expressions), and a draft as its text (`language.md`, Expressions,
+Drafts). While it has the keyboard, it keeps the text as the learner
+typed it, spaces included.
 
-- a variable as a bold word in the variable color
-- an operator as its symbol
-- an empty slot as a dashed box (Empty slots)
+These editors were rejected:
 
-A chip editor was rejected, because it nests a box per operation. A value
-of three operations would be three levels of boxes, whereas a line reads
-left to right as the chart writes it.
+- a chip editor, because it nests a box per operation. A value of three
+  operations would be three levels of boxes, whereas a line reads left to
+  right.
+- a line that edits the value at each key and keeps the keys that are no
+  value yet beside it, because every state between two values would need
+  rules of its own for drawing, Backspace, the caret, and undo, while a
+  text field keeps what was typed. For example: a word being typed, `=`
+  before `==`, and a `)` typed too early.
+
+Each change to the text, apart from text still being composed (Keys),
+edits the program. The slot takes the value that the text writes, or the
+text as a draft when the text writes no value that the slot keeps
+(`parser.md`; Targets).
+
+A value line holds one line of text. A line break pasted into it
+becomes a space, as in a caption (`language.md`, Captions).
 
 A value's slots are the places in the expressions it holds that hold an
-expression: each `expr` slot, and each item of an `exprs` slot. An empty
-slot is a slot that still needs filling (`language.md`, Expressions,
-Empty slots).
+expression: each `expr` slot, and each item of an `exprs` slot.
 
-### Numbers
+### Keys
 
-Typed digits make a number.
+A value line takes the keys of a text field: every key types its
+character, and ←, →, Home, End, and a click move the caret, with Shift to
+select.
 
-A `-` typed at an empty slot before the digits makes the number
-negative. The sign is typed rather than chosen from the value list,
-because `found = -1` is the most common negative a learner types.
+Backspace and Delete remove the selected text, or else one character,
+not a whole name, because a name that the learner typed is corrected by
+its letters.
+
+A key that the keyboard table names acts as the table states (`pages.md`,
+Keyboard). Any other key with Ctrl or Cmd acts as a text field's. For
+example: Ctrl/Cmd+V pastes.
+
+Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z undo and redo the program, not the text
+field, because each change to the text edits the program, so the line's
+undo is the program's undo.
+
+A value line takes an input method's composition as a text field does,
+so a learner types with a Japanese input method on.
+
+While the input method composes, every key is the composition's, Enter,
+Esc, and the arrows included. The composed text edits the program once
+the composition ends.
+
+### Selected text
+
+When Tab enters a field that holds a value, or the editor opens on it,
+the field's text is selected, except in a block that the block menu has
+just inserted (Block editor). The text is selected because a field
+reached by Tab already holds a value, which a caret after it would
+extend. For example: a new `for` holds `0`, which would become `01`.
+
+Every typed character replaces the selected text, as in a text field,
+because a field that kept its text for some keys and replaced it for
+others would leave the learner to guess which. For example: with `n`
+selected, `*` gives `*`, not `n * `.
+
+A field that holds a draft takes the keyboard with the caret at the end
+of its text, except in a block that the block menu has just inserted.
+
+### Numbers and texts
 
 The parser reads `-1` as the negation of `1`, as Python does, so
 `-3 ** 2` keeps Python's meaning.
 
-A digit or `.` isn't taken in these cases:
+A number that Python rejects, such as `07`, or one beyond the int range
+or the largest float (`parser.md`, Grammar), is a draft with the
+parser's error.
 
-- when it would make a number that Python rejects. For example: `07`,
-  `1..`.
-- when it follows a value other than a number
-- for a digit (`parser.md`), when it would make an int outside the int
-  range (`language.md`, Run-time values) or a float beyond the largest
-  float
-
-### Texts
-
-The learner enters a text only through the value list's `Text`, which
-places a text field in the line. Enter, Tab, or leaving the field ends the
-text, so the learner types the text without quotes and can't leave one
-out.
-
-A click on a text in the line opens its field again, holding the text.
-
-Backspace in an empty text field removes the text and leaves an empty
-slot in its place.
+The learner types a text as Python writes it, between `"` or `'`. The
+value line writes a text in double quotes, as the emitter does
+(`emitter.md`, Literals).
 
 ### Words
 
-A typed word is a letter or `_` followed by letters, digits, and `_`. It
-matches a name one of whose words starts with it, or an entry's keys,
-because a match inside a word is never the name meant. For example:
-`multiply` matches the entry `* Multiply`, and `i` doesn't match
-`first`.
+The word being typed is the name that ends at the caret, outside a text:
+a letter or `_` followed by letters, digits, and `_`. It matches a name
+one of whose words starts with it, or an entry's keys, because a match
+inside a word is never the name meant. For example: `multiply` matches
+the entry `* Multiply`, and `i` doesn't match `first`.
 
 A word matches these names:
 
@@ -239,37 +284,17 @@ A word matches these names:
   there, and every call. For example: `abs`, `str`.
 - after a value: every entry that takes a value
 
-The learner can type a call in two places:
+After a value, the word follows a space. For example: `x abs`, with
+`Absolute value` chosen, gives `abs(x)` (Value list, Choosing).
 
-- where a value is expected: as the chart writes it. For example:
-  `abs(x)`.
-- after a value: as the value is built. For example: `x` then `abs`.
-
-Offering a call only after its value was rejected, because it would
-refuse what a learner copies from the chart.
-
-While the word is unfinished, its matches replace the value list's
-groups.
+While a word is typed, its matches replace the value list's groups.
 
 A name that equals the word comes first among the matches. After a value,
 the entries for the value's kind come next, because Enter chooses the
 first match. For example: `an` after a comparison is `And`.
 
-Enter or a click chooses the highlighted match, and ↑ and ↓ move the
-highlight.
-
-A space or any key of the key table (Backspace and keys, Keys) ends the
-word:
-
-- When the word names a variable or an entry exactly, that variable or
-  entry is chosen, and the key then applies.
-- When the word names nothing exactly, or when the line refuses that
-  choice, the key isn't taken, and the word stays to be corrected.
-
-So `totl+` doesn't become a `+` with nothing before it.
-
-Tab first chooses a word that names a variable or an entry exactly, and
-then moves the caret (Moving the caret).
+Enter or a click chooses the highlighted match, which replaces the word.
+↑ and ↓ move the highlight.
 
 The line underlines a word that matches nothing, and the explanation line
 names the closest variable or entry (`editor.didYouMean`). For example:
@@ -280,39 +305,48 @@ when it differs from the word by at most one letter in three, or by one
 letter on a word of fewer than six letters, because two letters on a
 short word reach unrelated names. For example: `totl` and `Not`.
 
-### Modifier keys
+### Drafts
 
-A value line takes the keys typed without Ctrl or Cmd. It also takes the
-characters that AltGr makes, because AltGr is how several keyboard
-layouts type `[` and `{`.
-
-Every other key acts as the keyboard table states (`pages.md`, Keyboard),
-as it does outside the editor, because a value line, unlike a text field,
-edits the program at each key, so the line's undo is the program's undo.
+A value line shows a draft's text as typed. Once `Run` or `Submit` leads
+to the draft (`run.md`, Run bar, Starting a run), the line underlines its
+text from the error's position (`parser.md`, Errors), or all of it for
+`E_NOT_TARGET`. The explanation line then shows the error's message.
 
 ### Empty slots
 
-The value line and the chart node draw each empty slot at any depth of
-the value:
+A value line with no text shows its slot's hint (`blocks.md`, Notation,
+Drawing), or `optional` for an optional slot, whether it has the
+keyboard or not. For example: the two fields of an assignment read
+`variable` and `value`.
 
-- in the value line: a dashed box
-- on the chart node: a dashed `…`, the `empty` block's notation
-  (`blocks.md`, Notation)
+`optional` is the same in every locale, for the reason that a hint is
+(`blocks.md`, Notation, Drawing).
 
-Clicking an empty slot on the chart node opens the editor focused on it.
+Clicking an empty slot's hint (`language.md`, Expressions, Drafts) on a
+chart node opens the editor focused on its slot.
 
-A chart node draws nothing for an `exprs` slot with no item.
+A chart node draws nothing for an `exprs` slot with no item, or for an
+optional slot with no value.
 
-A diamond whose condition is empty shows the `…` without `?`.
-
-A value line that is one empty slot reads `type or choose`
-(`editor.valueLine.hint`) while it doesn't have the keyboard.
+A diamond whose condition is empty shows its hint without `?`.
 
 ## Value list
 
 The value list is the list below a value line. It offers the entries that
 the learner can choose at the caret, in groups chosen by what is before
 the caret.
+
+The value list reads the text before the caret, less the word being typed
+(Value line, Words), from the innermost parenthesis or bracket still open
+there. While text is selected, it reads the text before the selection
+(Value line, Selected text). That text gives one of three places:
+
+- where it is empty or ends with an operator or a `,`: a value is
+  expected
+- inside a text: the value list holds no row and reads `editor.inText`,
+  which says to end the text with its quote, because no entry can be
+  chosen inside a text
+- anywhere else: after a value
 
 Where a value is expected, the value list holds:
 
@@ -326,8 +360,9 @@ Where a value is expected, the value list holds:
 - `Your functions`: the program's own functions as calls, then
   `Modules ▸`
 
-In `Your functions`, each function is labeled `name(…)`, or `name()` when
-it has no parameter, and explained by `editor.ownFunction`.
+In `Your functions`, each function is labeled as its call, each
+parameter written as its hint (`blocks.md`, Notation, Drawing), and
+explained by `editor.ownFunction`. For example: `greet(name)`, `roll()`.
 
 `Modules ▸` opens the same module groups as the block menu's `Modules ▸`
 (Block menu).
@@ -342,7 +377,8 @@ these groups:
 - `Compare` and `Convert` for every kind
 
 The expression before the caret is the largest operation with a
-precedence that ends at the caret, within the innermost parentheses.
+precedence that ends at the caret, within the innermost parenthesis or
+bracket still open before the caret.
 
 After a value of no known kind, the value list holds every entry that
 takes a value.
@@ -363,7 +399,7 @@ groups:
 
 Hovering a row highlights it.
 
-A value list with no row reads `editor.noItems`.
+A value list with no row reads `editor.noItems`, except inside a text.
 
 Each group's name says what the learner does with a value, not the block
 category. `Combine`, `Other`, `Totals`, `Order`, and `Functions` were
@@ -379,12 +415,11 @@ An entry chosen after a value takes that value into its first slot:
 
 - An operator stands between the value before the caret and the next one.
   It binds by the precedence of `emitter.md` within the innermost
-  parentheses. An operator is an entry whose block definition has a
-  precedence.
+  parenthesis or bracket still open. An operator is an entry whose block
+  definition has a precedence.
 - An entry whose first slot binds as an atom (`blocks.md`, Notation)
-  takes the value just before the caret, as Python binds it, whether
-  chosen or typed. For example: `Item at a position` makes
-  `i + nums[…]`.
+  takes the value just before the caret, as Python binds it. For example:
+  `Item at a position` after `i + nums` makes `i + nums[]`.
 - Any other entry takes the expression before the caret whose kind chose
   the value list, because the value list offered the entry for that
   expression. For example: `i < n` followed by `As text` gives
@@ -394,192 +429,37 @@ The learner builds a value left to right, as it is typed and read,
 because choosing `abs` first would make the learner build the value again
 inside it.
 
-An entry chosen where a value is expected fills that empty slot:
+A choice writes the entry, as the emitter writes it, in place of the
+value it takes or of the word being typed. The value it takes goes into
+the entry's first slot, and each slot that the choice doesn't fill holds
+nothing. A separator that only such slots follow is left out. The caret
+goes where the first slot that the choice doesn't fill is, or after the
+text when there is none. For example:
 
-- An entry that takes a value fills the slot with its operation.
-- A call of a function with no parameter, a variable, or a value fills
-  the slot.
+- `len(nums)` after `nums`, the caret after it
+- `total + ` after `total`
+- `nums[]` after `nums`, the caret inside the brackets
+- `random.randint()`, the caret inside the parentheses, where a value is
+  expected
+- `""`, the caret between the quotes, for `Text`
+- `()`, the caret inside, for `( )`
 
-The empty slots that a choice leaves appear in the line, and the caret
-moves to the first of them.
+While text is selected, a choice writes the entry in place of the
+selection.
 
-Clicking an operator in the line lists the other entries of its block
-definition in its group, and choosing one replaces it. For example: `<`
-to `<=`, `+` to `Remainder`.
-
-### Moving the caret
-
-The caret moves:
-
-- with Tab and Shift+Tab, between the empty slots of the line and, past
-  its last or first empty slot, to the next or previous field of the
-  notation
-- with → at the end of an operation's last slot, out of the operation
-- with ← and →, while no word is typed, to the previous or next value or
-  empty slot
-- with a click, after the value clicked or at the empty slot clicked
-
-Parentheses that the caret leaves behind close.
-
-### Selected values
-
-When Tab enters a field of the notation, or the editor opens on it, the
-field's value is selected:
-
-- A typed value replaces it: a digit, a word, a `-` sign, a parenthesis,
-  or a bracket, except `[` in a target slot (Backspace and keys, Keys).
-- Backspace removes it.
-- A key that names an entry after a value takes the selected value into
-  the entry's first slot. For example: with `n` selected, `*` gives
-  `n * …`.
-
-A typed value replaces a selected value, because a field of the notation
-reached by Tab already holds a value, which a caret after it would
-extend. For example: a new `for` holds `0`, which would become `01`.
-
-## Backspace and keys
-
-Backspace removes what is before the caret. Keys typed in a value line
-insert what the chart writes.
-
-### Backspace
-
-Backspace removes:
-
-- a value typed by its characters: its last character
-- a name or another value chosen whole, or a text with no character: the
-  value
-- an operator, the name of a call, the brackets of an item or of a
-  dict's key, or the dot of an object's attribute: the operation, and
-  the value of its first slot stays in its place
-
-The last character of a value typed by its characters is:
-
-- of a number: a digit
-- of a text: one character as the text field counts characters
-
-Backspace removes a one-digit number whole.
-
-After Backspace removes a text's character, the text field opens on the
-rest, empty or not.
-
-Backspace removes a name whole rather than by its letters, because a name
-is replaced far more often than corrected, and a correction is chosen
-from the value list.
-
-Backspace removes an operation only when no slot after the first holds a
-value, because removing the operation would also remove those values. For
-example: `f(a, b, …)` keeps `b`.
-
-At an empty slot, Backspace acts this way:
-
-- at an operation's first slot, while a later slot holds a value: it
-  removes nothing and moves the caret left
-- at a later slot, when no slot after the first holds a value: it
-  removes the operation and keeps the value of its first slot
-- at a later slot, when a slot after the first holds a value: it removes
-  nothing and moves the caret to the end of the slot before it
-
-In and after a list, Backspace acts this way:
-
-- at an empty item, other than the first: it removes that item
-  and puts the caret at the end of the item before it
-- after a list that holds an item: it removes from the end of the list's
-  last item, because removing the list there would lose the items typed
-  before
-- after an empty list: it removes the list
-
-Delete removes a selected value as Backspace does.
-
-### Keys
-
-Each entry names its keys (`typed`, `blocks.md`, Value list entries):
-
-| Typed                         | Inserts                                          |
-| ----------------------------- | ------------------------------------------------ |
-| `+` `-` `*` `/` `%` `//` `**` | as typed; at an empty slot, `-` is the sign of what follows |
-| `==` `!=` `<` `<=` `>` `>=`   | as typed                                         |
-| `and` `or` `not` `in`         | as typed                                         |
-| `(`                           | a pair of parentheses, the caret inside them; after a call's name, the call's own |
-| `[` `,` `]`                   | a list's pair of brackets; `,` between its items; `]` leaves it; after a value, `[` an item of it (`nums[…]`) |
-| `,` in a call                 | the call's next argument                         |
-| `,` in an `exprs` slot        | the next value of the slot (Block editor)        |
-
-A single `=` inserts nothing, so the line never reads Python's assignment
-as a comparison.
-
-The line refuses a comparison typed after a comparison, and the
-explanation line shows the message of `E_PARSE_CHAIN`.
-
-At an empty slot, a key that inserts an operation after a value inserts
-nothing, except `-` and `[`.
-
-`(` opens parentheses only at an empty slot.
-
-`)` leaves the innermost call around the caret when no pair is open or
-the call begins inside the innermost open pair. Otherwise, it closes that
-pair. For example: in `2*(abs(i)-1)`, the first `)` leaves the call and
-the second closes the pair.
-
-A `,` acts on the innermost call or list around the caret:
-
-- in a list: `,` adds an empty item after the one the caret is in
-- in a call, after its last argument: the line refuses `,`, because inside a
-  call's parentheses a `,` separates its arguments, as in Python, never
-  the values around the call
-
-`[` at an empty slot names no entry: it inserts a list with one empty
-item, a `List` (`blocks.md`, Value list entries), and puts the caret at
-it. `[` inserting an empty list was rejected, because a learner
-typing `[1, 2]` types the first item right after `[` and would then need
-the caret inside an empty list, which no other key gives.
-
-In place of a selected value (Value list, Selected values), `[` inserts
-that list too, except in a target slot, which keeps no list (Targets):
-there `[` inserts `Item at a position` on the selected value. Typing any
-other refused key again as if the caret were after the selected value
-was rejected, because a selected `0` then `.` would give `0.`, which
-replacing a selected value avoids.
-
-After a value, `[` inserts an item of that value whose position is an
-empty slot (`Item at a position`), which binds as Value list, Choosing,
-states. So `nums[i]` is typed as the chart writes it.
-
-`]` leaves the innermost list or item around the caret. It first removes
-a list's empty item at the list's end, so `[` then `]` makes an empty
-list.
-
-With the caret after the whole value of a field, a key that begins the
-notation's text after that field, and that the line doesn't take, moves
-the keyboard to the next field. For example: `)` after the last value of
-`print(…)` moves to the next field.
-
-`**` and `//`, typed as two keys, become one operator that binds by its
-own precedence. For example: `2*3**2` multiplies 2 by 3 to the power
-of 2.
-
-Every operator has a key where Python has one, so the `Python` tab later
-shows keys that the learner has typed.
-
-Parentheses aren't stored, so none is ever left unclosed.
+A learner switches an operator by typing its keys, not by clicking it,
+because a click in a text field places the caret.
 
 ## Targets
 
-A `target` slot is a value line that keeps a target (`language.md`,
-Statements). It takes a key or a choice only when the line's value stays
-a target or an empty slot:
+A `target` slot is a value line whose text writes a target
+(`language.md`, Statements, Targets). Text that writes anything else
+stays a draft, which `validate()` reports as `E_NOT_TARGET`
+(`language.md`, Expressions, Drafts). The line's value list leaves out
+the rows whose choice would write no target.
 
-- Its value list leaves out only the rows whose choice would leave
-  neither a target nor an empty slot. It lists a row refused for another
-  reason, and it refuses that row as a value line does.
-- A key that would leave neither shows `editor.notTarget` on the
-  explanation line.
-- Inside a target's own slots, the line takes any value. For example:
-  the position of `nums[…]`.
-
-So the learner types `nums[j]` as the chart writes it, and `[` after a
-variable of any kind makes an item of it, a parameter included. For
-example: `heap[i]`.
+The learner types an item as Python writes it, of a variable of any kind,
+a parameter included. For example: `nums[j]`, `heap[i]`.
 
 A list of names that offered an item form of each variable was rejected,
 because it would repeat what a value line does after a value, and it
@@ -588,10 +468,11 @@ parameter would never get one.
 
 The value list of a target's line holds:
 
-- where the whole target is an empty slot, in a slot with `binds` set
-  (`blocks.md`, The block definition): the name list (Name list)
-- where the whole target is an empty slot, in a slot without `binds`:
-  the variables visible at the block
+- where the line's text is only the word being typed, or nothing, in a
+  slot with `binds` set (`blocks.md`, The block definition): the name
+  list (Name list)
+- where the line's text is only the word being typed, or nothing, in a
+  slot without `binds`: the variables visible at the block
 - after the target's variable: the entries that keep a target. For
   example: `Item at a position`.
 - inside the target's slots: a value line's value list, without
@@ -599,19 +480,20 @@ The value list of a target's line holds:
 
 The word typed names that `New variable <name>` row exactly.
 
-A target's value list, where the whole target is an empty slot, ends
-with no `Show all`, because every name it could list is in it.
+A target's value list, where the line's text is only the word being
+typed, or nothing, ends with no `Show all`, because every name it could
+list is in it.
 
-In a target's line, Enter or a click that chooses a row and leaves the
-target with no empty slot moves the keyboard to the next field. So
-`total`, Enter, and the value are typed in turn. Staying in the line was rejected, because a
-target is a name far more often than an item, and a second Enter there
-would close the editor before its value.
+In a target's line, Enter or a click that chooses a row and leaves a
+target in the line moves the keyboard to the next field. So `total`,
+Enter, and the value are typed in turn. Staying in the line was rejected,
+because a target is a name far more often than an item, and a second
+Enter there would close the editor before its value.
 
 ## Name list
 
-The name list is what a binding target's line offers where its whole
-target is an empty slot (Targets). It holds:
+The name list is what a binding target's line offers where the line's
+text is only the word being typed, or nothing (Targets). It holds:
 
 - in `main`: the names of the `expect.variables` of the challenge's first
   test, in that order, under `This problem`, then main's other variables
@@ -647,8 +529,9 @@ The learner types the caption in the editor's caption field
 The application never translates the caption and never asks for it.
 
 A chart node whose block has a caption shows the caption alone, in place
-of its notation or its question. While the block has an empty slot, the
-chart node shows its notation, with the `…` of each empty slot, instead.
+of its notation or its question. While a slot of the block holds a draft,
+the chart node shows its notation instead, with each draft's text or
+each empty slot's hint.
 
 A counted loop with a caption shows it on its check, and its other
 generated chart nodes keep their text.
@@ -668,21 +551,16 @@ list highlights or the caret is in:
 
 | What it explains | What the line shows |
 | --- | --- |
-| an entry | its name and its help (`blocks.md`, Catalog keys), followed, when keys insert it, by how to type them (`editor.typeKeys`: `Type %.`) |
+| an entry | its name and its help (`blocks.md`, Catalog keys), followed, when it has keys (`typed`), by how to type them (`editor.typeKeys`: `Type %.`) |
 | the parentheses | their label with `editor.parentheses.help`, and how to type them |
 | an input of the problem | its kind (`editor.explain.input`) |
 | a parameter | `editor.explain.parameter` |
 | a name set nowhere yet | that choosing it makes a new variable that gets its value there (`editor.explain.newVariable`) |
 | any other variable | its name with its kind and the statement that first gives it a value (`A number variable. It first gets a value in: i ← 1.`, `editor.explain.variablePlain` when it has no kind) |
-| inside an operation's slot | the operation's name (the entry offered after the kind of the value in its first slot, `Join with another list` for `+` after a list) and its notation with every slot as its value, parenthesized as the chart parenthesizes it, an empty one as `…`, and the slot the caret is in underlined (`dp[…]`, its `…` underlined) |
-| a refused key | its message (Backspace and keys) |
+| inside an operation's slot, read from the text before the caret as the value list reads it (Value list) | the operation's name (the entry offered after the kind of the value in its first slot, `Join with another list` for `+` after a list) and its notation with every slot as the text in it, parenthesized as the chart parenthesizes it, a slot with no text as its hint (`blocks.md`, Notation, Drawing), and the slot the caret is in underlined (`dp[value]`, its `value` underlined) |
+| a draft that `Run` or `Submit` led to | its error's message (Value line, Drafts) |
 | a word that matches nothing | the closest name (Value line), or `editor.nothingLike` when none is close |
 | anything else | the block definition's help (`block.<key>.help`) |
-
-The line shows a slot by its value rather than naming it in words,
-because naming a slot would need a name for every slot of every
-operation in every language. For example: the line shows `dp[…]` with its
-`…` underlined, not the word `position`.
 
 ## Verification
 
@@ -690,7 +568,7 @@ The tests of `src/ui/editor` cover:
 
 - the block menu's entries, order, disabled entries, search, and the
   functions offered
-- a value line's typing, keys, choosing, Backspace, moving, and value list
+- a value line's text, drafts, keys, choosing, moving, and value list
 - what a target's line takes and lists
 - the name list
 - the explanation line

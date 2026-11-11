@@ -89,7 +89,7 @@ a screenshot can be laid beside its design.
 | 3 Build: the + menu lists statements only                      | `block-menu.png`         | `editor.md`, Block menu; `chart.md`, Shapes |
 | 4 Build: editing a block, choosing a variable                  | `editor-name.png`        | `editor.md`, Block editor; Name list; Captions |
 | 4B Build: where a value is expected                            | `editor-value.png`       | `editor.md`, Value line; Value list |
-| 4C Build: typing, and the text becomes blocks                  | `editor-typing.png`      | `editor.md`, Value line; Backspace and keys |
+| 4C Build: typing, and the text becomes blocks                  | `editor-typing.png`      | `editor.md`, Value line; Value list |
 | 4D Build: after a number, and a named check                    | `editor-number.png`      | `editor.md`, Value list; Captions; Explanation line |
 | 4E Build: after a list, what can be done with it               | `editor-list.png`        | `editor.md`, Value list; `blocks.md`, Value list entries |
 | 4F Build: an unnamed check, then And or Or                     | `editor-check.png`       | `chart.md`, Shapes; `editor.md`, Value list; `blocks.md`, Notation |
