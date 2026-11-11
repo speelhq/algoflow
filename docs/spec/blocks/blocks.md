@@ -24,10 +24,10 @@ export type BlockDef = {
   precedence?(block: Expr): number; // `emitter.md`; undefined = atom
   loop?: boolean; // its body regions are loop bodies
   requires?: "loop" | "function"; // where the statement may appear (E_BREAK_OUTSIDE, E_RETURN_OUTSIDE)
-  hidden?: boolean; // not in the block menu (`empty`, `expr`)
+  hidden?: boolean; // not in the block menu (`draft`, `expr`)
   zeroLike?(block: Expr): Expr; // a literal block's zero of the same type (`hoistAssign`)
   callee?(block: Expr): Callee; // a call-like block's callee and argument count
-  create(): Stmt | Expr; // an expression slot it gives no value holds `empty` (`language.md`, Expressions)
+  create(): Stmt | Expr; // an expression slot it gives no value holds a draft with no text (`language.md`, Expressions, Drafts)
   run: StmtRunner | ExprRunner; // `interpreter.md`, Block definitions
 
   python(block: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // `emitter.md`: stmt → lines, expr → text
@@ -52,9 +52,10 @@ export type Callee = {
   family: "builtin" | "function" | "class" | "method"; // builtin, method: arity from `params`
 };
 export type Slot = // Slots
-  | { name: string; role: "expr"; optional?: true; atom?: true } // atom: its value binds as an atom (Notation)
-  | { name: string; role: "target"; binds?: true; stores?: string } // binds: declares the variable its target is (`language.md`, Scope); stores: the slot whose value it stores
-  | { name: string; role: "exprs" | "name" | "body" | "literal" | "operator" };
+  | { name: string; role: "expr"; hint?: string; optional?: true; atom?: true } // hint: the word that a statement's slot shows while it holds no text (Slots); atom: its value binds as an atom (Notation)
+  | { name: string; role: "target"; hint?: string; binds?: true; stores?: string } // binds: declares the variable its target is (`language.md`, Scope); stores: the slot whose value it stores
+  | { name: string; role: "exprs"; hint?: string }
+  | { name: string; role: "name" | "body" | "literal" | "operator" };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
 export type ValueEntry = {
   name: string; // "" for the block's own label and help, else block.<key>.<name>.label / .help
@@ -62,7 +63,7 @@ export type ValueEntry = {
   on?: Kind[]; // offered after a value of these kinds, which it takes as its first expression
   preset?: Record<string, unknown>; // slot values set on the block's create() (binop `op`)
   symbol?: string; // shown before the name in the value list (`*`)
-  typed?: string; // what typed in a value line inserts it (`editor.md`, Backspace and keys)
+  typed?: string; // its keys, which the explanation line shows and a typed word matches (`editor.md`, Explanation line; Value line, Words)
 };
 ```
 
@@ -82,23 +83,27 @@ one of seven roles:
 - `operator` holds the operator of an expression: `binop.op` or
   `unop.op`.
 
-A literal and an operator take two roles, because the learner types a
-literal and chooses an operator (`editor.md`, Texts; Value list,
-Choosing). One role for both was rejected, because the editor would then
-tell them apart by guessing from the block.
+One role for a literal and an operator was rejected, because an
+operator's value is a string too, so a text's literal could then be told
+from an operator only by the block's type (The registry). For example:
+`"Fizz"` and the `+` of `a + b` both hold a string.
 
 No statement has a `literal` slot, because a statement's literal would be
 a comment, and a caption takes the place of comments (`editor.md`,
 Captions).
 
 No statement has an `operator` slot, because the block editor edits an
-operator only inside a value line (`editor.md`, Value list, Choosing).
+operator only inside a value line's text (`editor.md`, Value line).
 
 `optional` marks an `expr` slot that may hold no expression, such as the
 value of `return` (`editor.md`, Block editor).
 
 Every other `expr` slot, and every `target` slot, always holds an
 expression.
+
+Every `expr`, `target`, and `exprs` slot of a statement declares `hint`,
+the word written in place of the slot while it holds no text, and no
+slot of an expression declares one (Notation, Drawing).
 
 No statement has a `name` slot, because a statement names a variable in a
 `target` slot, as Python's assignment and `for` do. A `name` slot of a
@@ -151,12 +156,14 @@ provides the same keys:
   the value list
 - `block.<key>.help`: its help
 - `block.<key>.slot.<slot>`: the name of each slot of a statement that
-  the editor shows as a field. For example, `block.assign.slot.value` is
-  `value`.
+  the editor shows as a field, which labels the field for assistive
+  technology (`editor.md`, Block editor). For example,
+  `block.assign.slot.target` is `variable`, and `block.assign.slot.value`
+  is `value`.
 - `block.<key>.<name>.label` and `block.<key>.<name>.help`: the label and
   the help of a value list entry with a `name`
 
-The hidden `empty` block definition has its label and help.
+The hidden `draft` block definition has its label and help.
 
 The explanation line writes an entry's keys from `typed` (`editor.md`,
 Explanation line). No help names its entry's keys, because a help that
@@ -167,23 +174,25 @@ A block's notation isn't a catalog key. It is the block definition's
 
 ## Statements
 
-The statement block definitions. The Python column is the exact emitted
-text, and `<x>` stands for an emitted slot.
+The statement block definitions. The hints column gives the `hint` of
+each `expr`, `target`, and `exprs` slot, in the order of the slots
+(Notation, Drawing). The Python column is the exact emitted text, and
+`<x>` stands for an emitted slot.
 
-| key        | category | slots                  | notation                                                                                                            | Python                                                                              |
-| ---------- | -------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `assign`   | basic    | target, value          | `{target} ← {value}`                                                                                                | `<target> = <value>`                                                                |
-| `if`       | control  | cond, then, else       | `{cond}` (its diamond, `chart.md`, Shapes)                                                                          | `if <cond>:` … `else:` (else omitted when empty; empty region → `pass`)             |
-| `for`      | control  | var, start, stop, body | `{var} ← {start}`, its init (Chart form)                                                                            | `for <var> in range(<stop>):` when start is `num` 0, else `range(<start>, <stop>):` |
-| `foreach`  | list     | var, list, body        | `for {var} in {list}`                                                                                               | `for <var> in <list>:`                                                              |
-| `while`    | control  | cond, body             | `{cond}` (its diamond)                                                                                              | `while <cond>:`                                                                     |
-| `break`    | control  |                        | `break`                                                                                                             | `break`                                                                             |
-| `continue` | control  |                        | `continue`                                                                                                          | `continue`                                                                          |
-| `print`    | basic    | args                   | `print({args})`                                                                                                     | `print(<a>, <b>)`                                                                   |
-| `return`   | function | value?                 | `return {value}`, drawn `return` with no value                                                                      | `return <value>` / `return`                                                         |
-| `expr`     | basic    | expr                   | `{expr}`                                                                                                            | `<expr>`                                                                            |
-| `swap`     | list     | a, b                   | `swap({a}, {b})`                                                                                                    | `<a>, <b> = <b>, <a>`                                                               |
-| `delete`   | list     | target                 | `del {target}`                                                                                                      | `del <target>`                                                                      |
+| key        | category | slots                  | hints                       | notation                                       | Python                                                                              |
+| ---------- | -------- | ---------------------- | --------------------------- | ---------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `assign`   | basic    | target, value          | `variable`, `value`         | `{target} ← {value}`                           | `<target> = <value>`                                                                |
+| `if`       | control  | cond, then, else       | `condition`                 | `{cond}` (its diamond, `chart.md`, Shapes)     | `if <cond>:` … `else:` (else omitted when empty; empty region → `pass`)             |
+| `for`      | control  | var, start, stop, body | `variable`, `start`, `stop` | `{var} ← {start}`, its init (Chart form)       | `for <var> in range(<stop>):` when start is `num` 0, else `range(<start>, <stop>):` |
+| `foreach`  | list     | var, list, body        | `variable`, `list`          | `for {var} in {list}`                          | `for <var> in <list>:`                                                              |
+| `while`    | control  | cond, body             | `condition`                 | `{cond}` (its diamond)                         | `while <cond>:`                                                                     |
+| `break`    | control  |                        |                             | `break`                                        | `break`                                                                             |
+| `continue` | control  |                        |                             | `continue`                                     | `continue`                                                                          |
+| `print`    | basic    | args                   | `values`                    | `print({args})`                                | `print(<a>, <b>)`                                                                   |
+| `return`   | function | value?                 | `value`                     | `return {value}`, drawn `return` with no value | `return <value>` / `return`                                                         |
+| `expr`     | basic    | expr                   | `expression`                | `{expr}`                                       | `<expr>`                                                                            |
+| `swap`     | list     | a, b                   | `first`, `second`           | `swap({a}, {b})`                               | `<a>, <b> = <b>, <a>`                                                               |
+| `delete`   | list     | target                 | `item`                      | `del {target}`                                 | `del <target>`                                                                      |
 
 A new `for`'s variable is an empty slot, because `create()` receives no
 context, and filling in the first unused name of `i`, `j`, and `k` would
@@ -279,10 +288,10 @@ literal. `__repr__` lists the attributes in order, as `print` does
 
 ## Notation
 
-The chart, the value line, the block menu, the explanation line, and the
-narration all write a block from its block definition's
-`notation(block)`: the notation column of the block definition tables,
-with `{slot}` placeholders.
+The chart, the block menu, the explanation line, and the narration all
+write a block from its block definition's `notation(block)`: the
+notation column of the block definition tables, with `{slot}`
+placeholders.
 
 A notation is the same in every locale, because the learner reads a block
 again at every step of a run, in whatever language they read.
@@ -301,8 +310,8 @@ defaults to the slot's string value.
 
 `binop`'s `op` writes each operator as Python writes it (Symbols).
 
-The notation of the hidden `empty` block is `…`, which draws an empty slot
-(`editor.md`, Value line, Empty slots).
+The notation of the hidden `draft` block is its text (`language.md`,
+Expressions, Drafts).
 
 ### The form of an expression
 
@@ -351,8 +360,8 @@ would draw one statement two ways.
 A builtin and a method are written as calls, named as Python names them.
 A builtin is written without its module. For example: `randint`.
 
-`print(…)`, `return`, `break`, `continue`, and `del` are written as
-Python writes them.
+`print`, `return`, `break`, `continue`, and `del` are written as Python
+writes them.
 
 `swap` is a call of its own. For example: `swap(nums[j], nums[j + 1])`.
 It names the two places it exchanges, and the `Python` tab writes it as
@@ -373,6 +382,34 @@ locale.
 On the chart and in the editor, a variable is written as a bold word in
 the variable color, never in a box, because a box would cut the block into
 pieces.
+
+A slot still to fill is written as its hint rather than as `…`, because
+a hint says what goes there, while `…` says only that something is
+missing.
+
+A hint is gray and never bold, so it never reads as a variable.
+
+A slot's hint is:
+
+- for a slot of a statement: its `hint` (Statements)
+- for an argument of a call of the program's or a module's function: the
+  parameter's name
+- for any other slot of an expression: `value`
+
+For example: an assignment whose value is an empty slot is drawn
+`total ← value`, and the explanation line writes `dp[value]`, not
+`dp[position]`.
+
+An expression's slot is written as `value` rather than as a name of its
+own, because the operation's name stands beside it wherever it is
+written and says what the value is for. For example: the explanation
+line writes `Item at a position` beside `dp[value]` (`editor.md`,
+Explanation line).
+
+A hint is a word of the notation, so it is the same in every locale
+(Notation). A hint in the learner's language was rejected, because a
+chart node would then hold that language beside the notation, in two
+typefaces (`pages.md`, Typefaces).
 
 A block is drawn as its notation writes it, with no capital letter
 added.
@@ -413,7 +450,7 @@ A counted loop's own notation names it in the block menu and the editor.
 Expression block definitions declare the entries of the value list
 (`editor.md`, Value list) in `entries`. The value list offers an entry with
 `on` after a value of those kinds, and the entry takes that value as the
-first expression it holds. An entry without `on` fills an empty slot
+first expression it holds. The value list offers an entry without `on`
 where a value is expected. Kinds are those of `language.md`, Kinds, and
 `any` in the `on` column means every kind. Each block definition declares
 its own entries, because one block definition serves several groups:
@@ -464,12 +501,8 @@ its own entries, because one block definition serves several groups:
 `empty` presets no item, so a list with items is named by the block
 definition's own label, `List`.
 
-No two entries name the same keys, so a typed key inserts one entry at
+No two entries name the same keys, so typed keys name one entry at
 most.
-
-`list`'s `empty` names `[]`, not `[`, because `[` opens a list with an
-empty item and `]` then removes it (`editor.md`, Backspace and keys,
-Keys).
 
 The help of `and` says that it is true when both sides are. The help of
 `or` says that it is true when one side or both are, because in everyday
@@ -511,8 +544,8 @@ variable has no kind for the same reason.
 
 Each block definition has these tests:
 
-- one that asserts its exact notation and its exact Python text, as the
-  block definition tables give them
+- one that asserts its exact notation, its exact Python text, and a
+  statement's hints, as the block definition tables give them
 - one that asserts its event sequence and result
 - one per rule filed under it (`language.md`, Semantics)
 - where it can fail, one error case

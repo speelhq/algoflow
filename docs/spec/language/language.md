@@ -149,14 +149,16 @@ can only come from editing the file by hand:
 - a `Data` value that isn't canonical
 - an expression whose `name` slot holds `""` (`blocks.md`, The block
   definition, Slots)
+- a draft that an expression holds, a draft beside other items of an
+  `exprs` slot, or a draft whose text isn't one line (Expressions,
+  Drafts)
 
 `migrate()` rejects a file with one of those faults, so `validate()` never
 reads a field that `fieldsError` checks. `migrate()` rejects the file
 because there is no node to fix those faults on. An expression whose
 `name` slot holds `""` is rejected although it has a node, because
-nothing there would show the fault: `E_EMPTY_SLOT` puts no dot on a chart
-node (`chart.md`, Editing on the chart, Diagnostics), and a value's slots
-are its expression slots only (`editor.md`, Value line).
+nothing there would show the fault: a field and a chart node write it as
+no text.
 
 ### Classes and objects before `new` exists
 
@@ -249,9 +251,9 @@ A target is an expression that names where a value is stored: a `var`,
 an `index`, a `key`, or an `attribute`. Each of these is a block
 definition that declares `locate` (`blocks.md`, The block definition).
 
-A `target` slot holds one target, or `empty` while it is an empty slot
-(Expressions, Empty slots). `migrate()` rejects any other expression in a
-`target` slot. No edit puts any other expression there (`editor.md`,
+A `target` slot holds one target, or a draft (Expressions, Drafts).
+`migrate()` rejects any other expression in a `target` slot. Text typed
+into a target's field that writes no target stays a draft (`editor.md`,
 Targets).
 
 A separate target type was rejected because Python reads a target as an
@@ -266,7 +268,7 @@ An expression is one of these types:
 ```ts
 type E = { id: NodeId };
 export type Expr =
-  | (E & { type: "empty" }) // what an empty slot holds (Empty slots)
+  | (E & { type: "draft"; text: string }) // text typed into a slot that is no value yet (Drafts)
   | (E & { type: "num"; value: number; float: boolean; raw: string })
   | (E & { type: "str"; value: string })
   | (E & { type: "bool"; value: boolean })
@@ -304,24 +306,61 @@ export type BinOp =
 `num.raw` is the literal's source text, and the emitter writes it. When
 `raw` contains `.`, `e`, or `E`, `float` is true.
 
-### Empty slots
+### Drafts
 
-An empty slot is a slot that still needs filling: an expression slot or
-an item that holds `{ type: "empty" }`.
-`validate()` reports each empty slot as `E_EMPTY_SLOT` with the slot's
-name.
+A draft is the text typed into a statement's slot that is no value of the
+slot yet: text that doesn't parse (`parser.md`), or, in a `target` slot,
+text that parses as no target (Statements, Targets). A draft holds
+`{ type: "draft", text }`, with the text as typed (`editor.md`, Value
+line).
 
-Each consumer handles the `empty` expression in its own way:
+Three alternatives were rejected:
 
-- `create()` fills with it every expression slot that it gives no value
-  and that isn't `optional`. For example: a new `for` starts at `0`, and
-  its variable is an empty slot.
-- The emitter writes `...` for it.
+- keeping the text only in the editor, with the slot left empty, because
+  the text would be lost when the field is left, and the chart and undo
+  would disagree with the field
+- storing the text of every slot and parsing its value from it, because
+  every consumer of a program, from the interpreter to `migrate()`, would
+  then read through the parser, while a draft is one expression
+- `Expr | null` for a slot still to fill, because it would spread null
+  checks through every block definition and the emitter, while a `draft`
+  type keeps `Expr` a closed union
+
+An empty slot is a slot that still needs filling: a slot whose draft has
+no text.
+
+In a program, only a statement's slot holds a draft: an `expr` or
+`target` slot as its value, or an `exprs` slot as its only item, when the
+slot's text doesn't parse as its values separated by commas. No
+expression holds a draft, because a field edits one slot of a statement
+as one text (`editor.md`, Block editor).
+
+Each consumer handles a draft in its own way:
+
+- `validate()` reports every draft (Validation): one with no text as
+  `E_EMPTY_SLOT` with the slot's name, one whose text doesn't parse by
+  the error that parsing it gives (`parser.md`, Errors), and one in a
+  `target` slot whose text parses as `E_NOT_TARGET`.
+- `migrate()` reads a draft whose text is a value of its slot as that
+  value, because a later release can register what the text names, and
+  rejecting the draft would discard the learner's program. For example: a
+  draft `nums.pop()` stored before `pop` was registered.
+- `migrate()` reads a draft with no text as no value in an optional slot,
+  and as no item in an `exprs` slot, as a field with no text holds them
+  (`editor.md`, Block editor).
+- `migrate()` rejects any other draft that no edit makes (Data, Faults
+  that `migrate()` rejects).
+- `create()` fills with a draft with no text every expression slot that
+  it gives no value and that isn't `optional`. For example: a new `for`
+  starts at `0`, and its variable is an empty slot.
+- What an expression's `create()` makes only gives the text that a choice
+  writes, in the value list or in the block menu (`editor.md`, Value
+  list, Choosing).
+- The emitter writes its text, or `...` when it has none (`emitter.md`,
+  Expressions).
+- The chart writes its text, or its hint when it has none (`blocks.md`,
+  Notation, Drawing).
 - The interpreter never executes it.
-
-`Expr | null` was rejected because it would spread null checks through
-every block definition and the emitter, while an `empty` type keeps `Expr`
-a closed union.
 
 ## Semantics
 
@@ -520,8 +559,11 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 | `E_BREAK_OUTSIDE`  | `break`/`continue` outside a loop                           |                           |
 | `E_RETURN_OUTSIDE` | `return` in `main`                                          |                           |
 | `E_ARITY`          | wrong argument count                                        | `name`, `expected`, `got` |
-| `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`                    |
-| `E_EMPTY_SLOT`     | an empty slot (prevents execution)                          | `slot`                    |
+| `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`, and for a draft `position` |
+| `E_EMPTY_SLOT`     | a draft with no text (Expressions, Drafts)                  | `slot`                    |
+| `E_PARSE_SYNTAX`   | a draft whose text doesn't parse (`parser.md`, Errors)      | `position`                |
+| `E_PARSE_CHAIN`    | a draft whose text chains a comparison (`parser.md`, Errors) | `position`               |
+| `E_NOT_TARGET`     | a draft in a `target` slot whose text parses (Expressions, Drafts) |                    |
 | `E_DEFAULT`        | an attribute default that Semantics, Objects doesn't allow  | `attr`                    |
 | `E_DUPLICATE_ID`   | two nodes share a node id (Program)                         |                           |
 

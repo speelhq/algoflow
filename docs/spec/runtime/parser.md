@@ -2,14 +2,18 @@
 
 The parser reads one Python expression as an `Expr`. The emitter's
 `unparse` writes an `Expr` back as text (`emitter.md`). This file states the
-grammar the parser reads, how it resolves a call, the errors it reports,
+grammar the parser reads, how it reads a call, the errors it reports,
 and the round trip between the parser and the emitter.
 
 ## Grammar
 
 `parse` reads one expression, or reports a parse error:
 
-`parse(text, scope): Expr | ParseError`
+`parse(text): Expr | ParseError`
+
+Whether a text parses depends only on the text and the registry, never
+on the program, so an edit elsewhere never turns a draft into a value or
+a value into a draft (`language.md`, Expressions, Drafts).
 
 The parser reads this grammar:
 
@@ -28,6 +32,9 @@ atom     := NUMBER | STRING | "True" | "False" | "None" | NAME
           | "[" args "]" | "{" (expr ":" expr ("," expr ":" expr)*)? "}" | "(" expr ")"
 args     := (expr ("," expr)*)?
 ```
+
+The parser reads the text of an `exprs` slot as `args`: its values
+separated by commas (`language.md`, Expressions, Drafts).
 
 In a string, the parser decodes `\xNN` escapes.
 
@@ -63,10 +70,17 @@ The parser reads no Python statement, for three reasons:
 
 ## Calls
 
-This section states how the parser resolves a call.
+This section states how the parser reads a call.
 
-The parser resolves `NAME(...)` in the order that `language.md`, Scope,
-Resolving a call, states. A name that resolves to nothing gives
+The parser reads `NAME(...)` by the form of `NAME` (`language.md`,
+Identifiers), whatever the program defines:
+
+- a class name: a `new` of that class
+- any other name: the builtin's call when `NAME` names a builtin, and
+  otherwise a call of the program's function `NAME`
+
+`validate()` resolves the call or the `new` (`language.md`, Scope,
+Resolving a call), and reports a name that resolves to nothing as
 `E_UNKNOWN_CALL`.
 
 The parser resolves `a.b(...)` to one of two things:
@@ -83,19 +97,20 @@ The parser reports one of three codes:
 
 - `E_PARSE_CHAIN`: a chained comparison
 - `E_PARSE_SYNTAX`: any other syntax error
-- `E_UNKNOWN_CALL`: a call that resolves to nothing (Calls)
+- `E_UNKNOWN_CALL`: an `a.b(...)` that names no method and no builtin's
+  alias (Calls)
 
-`E_PARSE_SYNTAX` and `E_PARSE_CHAIN` carry `position`.
+Each code carries `position`, where the parser stops, so a value line
+underlines a draft's text from there (`editor.md`, Value line, Drafts).
 
 ## Round trip
 
 This section states that the parser reads back what the emitter
 writes.
 
-For an expression `e` with no empty slot (`language.md`, Expressions,
-Empty slots), `parse(unparse(e))` in the scope of `e`'s program is `e`
-apart from each `NodeId`, so `unparse(parse(s))` is a fixed point of
-`unparse ∘ parse`.
+For an expression `e` that is no draft (`language.md`, Expressions,
+Drafts), `parse(unparse(e))` is `e` apart from each `NodeId`, so
+`unparse(parse(s))` is a fixed point of `unparse ∘ parse`.
 
 The round trip compares expressions, not texts, because only the
 expression shows a lost meaning. For example: `a - (b - c)` written as
