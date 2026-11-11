@@ -2,11 +2,11 @@
 import { describe, expect, it } from "vitest";
 import { chartFont } from "./measure";
 
-const MONO = '"JetBrains Mono Variable", monospace';
-const SANS = '"Geist Variable", sans-serif';
+const MONO = "var(--typeface-code)";
+const SANS = "var(--typeface-words)";
 
 describe("chartFont", () => {
-  it("draws code in JetBrains Mono, words in Geist, and a variable bold", () => {
+  it("names each part's typeface by the variable of its font stack, and a variable bold", () => {
     expect(chartFont({ text: "i + 1" })).toEqual({
       fontFamily: MONO,
       fontWeight: 400,
