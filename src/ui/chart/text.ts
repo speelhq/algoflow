@@ -3,7 +3,6 @@
 // block's notation. Operators are parenthesized as the emitter does. Reads slot roles, `params`,
 // `notation`, `text`, `chart`, and `precedence` only, never a type; a variable shown with its
 // value is written by the `assign` block's notation.
-import { t } from "@/i18n/t";
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Block, NodeId, Value } from "@/lang/types";
 import { conditionOf, emptySlots, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/walk";
@@ -43,13 +42,10 @@ export function blankTemplate(template: string): string {
 /**
  * A part of a block's text: the template's own words, or what a slot holds (`slot` names the
  * statement's slot it belongs to). `variable` marks a variable's name, `empty` the `…` of an
- * empty slot, `emptyId` the empty slot a click on the part opens, and `words` a text of a catalog
- * or a caption, which is drawn in Geist where code is drawn in JetBrains Mono (`pages.md`,
- * Typefaces).
+ * empty slot, and `emptyId` the empty slot a click on the part opens.
  */
 export type Part = {
   text: string;
-  words?: boolean;
   slot?: string;
   empty?: boolean;
   emptyId?: NodeId;
@@ -81,36 +77,23 @@ export type Writing = { value?: (name: string) => string | undefined };
  * part left with no text is dropped.
  */
 export function templateParts(template: string, fill: (name: string) => Part[]): Part[] {
-  return piecesParts(template, fill, (text) => ({ text }));
-}
-
-/** A catalog's template as parts, as `templateParts` makes them, its own words marked `words`. */
-export function catalogParts(template: string, fill: (name: string) => Part[]): Part[] {
-  return piecesParts(template, fill, (text) => ({ text, words: true }));
-}
-
-function piecesParts(
-  template: string,
-  fill: (name: string) => Part[],
-  ownPart: (text: string) => Part,
-): Part[] {
   const parts = templatePieces(template).flatMap((piece) =>
     "words" in piece
-      ? [{ part: ownPart(piece.words), own: true }]
-      : fill(piece.name).map((part) => ({ part, own: false })),
+      ? [{ part: { text: piece.words }, words: true }]
+      : fill(piece.name).map((part) => ({ part, words: false })),
   );
-  const out: { part: Part; own: boolean }[] = [];
-  for (const { part, own } of parts) {
+  const out: { part: Part; words: boolean }[] = [];
+  for (const { part, words } of parts) {
     const before = out.at(-1)?.part.text ?? "";
     let text = part.text;
-    if (own) {
+    if (words) {
       text = text.replace(/\s+/g, " ");
       if (before === "" || before.endsWith(" ")) text = text.replace(/^ /, "");
     }
-    if (text !== "") out.push({ part: { ...part, text }, own });
+    if (text !== "") out.push({ part: { ...part, text }, words });
   }
   const last = out.at(-1);
-  if (last?.own) last.part.text = last.part.text.replace(/ $/, "");
+  if (last?.words) last.part.text = last.part.text.replace(/ $/, "");
   // Adjacent words of one slot are one part.
   const merged: Part[] = [];
   for (const { part } of out) {
@@ -119,7 +102,6 @@ function piecesParts(
       before &&
       plain(before) &&
       plain(part) &&
-      before.words === part.words &&
       before.slot === part.slot &&
       before.emptyId === part.emptyId
     ) {
@@ -320,33 +302,38 @@ export function hasEmptySlot(block: Block): boolean {
 }
 
 /**
+ * The chart's own texts, the same in every locale as a notation is, so no chart node's text comes
+ * from a catalog (`chart.md`, Shapes).
+ */
+export const CHART_TEXT = {
+  start: "Start",
+  /** A function chart's `Start`: `Start double(x)`. */
+  startFn: "Start {signature}",
+  end: "End",
+  /** An Input chart node: `Input n ← 15`. */
+  input: "Input {assignment}",
+  /** A diamond asks its condition: `i < n?`. */
+  asked: "{condition}?",
+};
+
+/**
  * The text a counted loop's generated chart node draws, with the loop's `{slot}` placeholders: its
- * check asked as every diamond asks its condition (`chart.condition`); none for another block.
+ * check asked as every diamond asks its condition; none for another block.
  */
 export function generatedNotation(block: Block, which: Generated): string | undefined {
   const chart = getBlockDef(keyOf(block)).chart;
   if (!chart || !("counted" in chart)) return undefined;
   const text = chart.counted[which];
   if (which !== "check") return text;
-  return templatePieces(t("chart.condition"))
+  return templatePieces(CHART_TEXT.asked)
     .map((piece) => ("words" in piece ? piece.words : text))
     .join("");
 }
 
-/**
- * A counted loop's generated chart node as parts, its slots being the loop's, its check asked as
- * a diamond asks; none for another block.
- */
+/** A counted loop's generated chart node as parts, its slots being the loop's; none for another. */
 export function generatedParts(block: Block, which: Generated): Part[] {
-  const chart = getBlockDef(keyOf(block)).chart;
-  if (!chart || !("counted" in chart)) return [];
-  const parts = stmtParts(chart.counted[which], block);
-  return which === "check" ? asked(parts) : parts;
-}
-
-/** A condition asked as a diamond asks it (`chart.condition`): `i < n?`. */
-function asked(condition: Part[]): Part[] {
-  return catalogParts(t("chart.condition"), () => condition);
+  const notation = generatedNotation(block, which);
+  return notation === undefined ? [] : stmtParts(notation, block);
 }
 
 /** A diamond's text: its condition followed by `?`, or the `…` without it. */
@@ -355,7 +342,7 @@ export function questionParts(block: Block): Part[] {
   if (!condition) return [];
   const parts = exprParts(condition.expr).map((part) => ({ ...part, slot: condition.slot }));
   if (isEmptyExpr(condition.expr)) return parts;
-  return asked(parts);
+  return templateParts(CHART_TEXT.asked, () => parts);
 }
 
 /** A value as the blocks write it: a text in quotes, the rest as `str()` (`True`, `None`). */
@@ -394,5 +381,5 @@ export function assignmentText(name: string, value: string): string {
 
 /** An Input chart node's text, its name a variable (`Input n ← 15`). */
 export function inputParts(name: string, value: Data): Part[] {
-  return catalogParts(t("chart.input.text"), () => assignmentParts(name, dataText(value)));
+  return templateParts(CHART_TEXT.input, () => assignmentParts(name, dataText(value)));
 }

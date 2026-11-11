@@ -18,7 +18,9 @@ test("code is drawn in JetBrains Mono with no ligature, and words in Geist", asy
   const condition = await style(chart.locator("tspan", { hasText: "%" }).first());
   expect(condition.family).toContain("JetBrains Mono");
   expect(condition.features).toContain('"calt" 0');
-  expect((await style(chart.locator("tspan", { hasText: "Start" }))).family).toContain("Geist");
+  expect((await style(chart.locator("tspan", { hasText: "Start" }))).family).toContain(
+    "JetBrains Mono",
+  );
 
   const example = page.getByTestId("example");
   expect((await style(example.getByText("Output"))).family).toContain("Geist");

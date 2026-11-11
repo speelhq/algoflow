@@ -6,13 +6,12 @@
 // A `Return` and a jump leave by the right: a `Return` for `End`, a jump for its loop, whose
 // `next` lane and `No` lane take it to the next pass or past the loop.
 // Reads `def.chart`, `def.requires`, and the regions of a statement, never a type.
-import { t } from "@/i18n/t";
 import { inputValue } from "@/lang/data";
 import type { Data, Name, NodeId, Place, Program, RegionParent, Routine, Stmt } from "@/lang/types";
 import { findRoutine, regionsOf, routineStmts } from "@/lang/walk";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import {
-  catalogParts,
+  CHART_TEXT,
   generatedParts,
   hasEmptySlot,
   inputParts,
@@ -21,6 +20,7 @@ import {
   notationParts,
   type Part,
   SEPARATOR,
+  templateParts,
 } from "./text";
 
 export type Point = { x: number; y: number };
@@ -301,7 +301,7 @@ class Builder {
     if (stmt.caption === undefined || hasEmptySlot(stmt)) {
       return this.node(id, stmt.id, role, shape, parts, y);
     }
-    const node = this.node(id, stmt.id, role, shape, [{ text: stmt.caption, words: true }], y);
+    const node = this.node(id, stmt.id, role, shape, [{ text: stmt.caption }], y);
     return { ...node, title: joinParts(parts) };
   }
 
@@ -632,8 +632,10 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
   const frag = emptyFrag();
 
   const startParts = fn
-    ? catalogParts(t("chart.startFn"), () => [{ text: `${fn.name}(${fn.params.join(SEPARATOR)})` }])
-    : [{ text: t("chart.start"), words: true }];
+    ? templateParts(CHART_TEXT.startFn, () => [
+        { text: `${fn.name}(${fn.params.join(SEPARATOR)})` },
+      ])
+    : [{ text: CHART_TEXT.start }];
   const start = builder.node("start", fn ? fn.id : null, "start", "terminal", startParts, 0);
   frag.nodes.push(start);
   let out: Stub | null = { from: start.id, points: [{ x: 0, y: start.h }], place: null };
@@ -662,14 +664,7 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
     y += body.height + GAP_Y;
   }
 
-  const end = builder.node(
-    "end",
-    null,
-    "end",
-    "terminal",
-    [{ text: t("chart.end"), words: true }],
-    y,
-  );
+  const end = builder.node("end", null, "end", "terminal", [{ text: CHART_TEXT.end }], y);
   frag.nodes.push(end);
   if (out) frag.edges.push(edge(out, end.id, [{ x: 0, y }]));
   half = Math.max(half, end.w / 2);

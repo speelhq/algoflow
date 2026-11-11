@@ -17,6 +17,7 @@ import {
   type ChartNode,
   type Measure,
 } from "./layout";
+import { CHART_TEXT } from "./text";
 import { laidOut } from "./testing";
 
 const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont } = ast;
@@ -608,24 +609,19 @@ describe("layout texts", () => {
     ]);
   });
 
-  it("a caption and the catalog's words are words, and code is not (pages.md, Typefaces)", () => {
+  it("every chart node's text is the chart's own or the learner's, none from a catalog (chart.md, Shapes)", () => {
     const named = { ...print(v("n")), caption: "Show it" };
     const chart = laidOut(program([named, if_(bin("<", v("n"), num(3)), [])]), {
       routine: "main",
-      inputs: { n: 15 },
+      inputs: {},
       measure: estimatedWidth,
     });
-    const words = chart.nodes.map((node) =>
-      node.parts.map((part) => `${part.words ? "words" : "code"}:${part.text}`),
-    );
-    expect(words).toEqual(
-      expect.arrayContaining([
-        ["words:Start"],
-        ["words:Show it"],
-        ["code:n", "code: < 3", "words:?"],
-        ["words:End"],
-      ]),
-    );
+    expect(chart.nodes.filter((node) => node.text !== "").map((node) => node.text)).toEqual([
+      CHART_TEXT.start,
+      "Show it",
+      "n < 3?",
+      CHART_TEXT.end,
+    ]);
   });
 
   it("an empty main offers its one connector between Start and End", () => {

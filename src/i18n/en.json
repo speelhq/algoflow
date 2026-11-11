@@ -439,14 +439,9 @@
     }
   },
   "chart": {
-    "start": "Start",
-    "startFn": "Start {signature}",
-    "end": "End",
     "input": {
-      "text": "Input {assignment}",
       "icon": "▾"
     },
-    "condition": "{cond}?",
     "label": "Flowchart",
     "yes": "Yes",
     "no": "No",
