@@ -31,6 +31,8 @@ export type Moves = {
 /** The dragged chart node: its owner, and its text and grayness, which its ghost draws. */
 type Dragged = { owner: NodeId; spans: NotationSpan[]; generated: boolean };
 type Refusal = { edge: string; text: string };
+/** The owner being dragged, and the refused drop whose reason shows beside its connector. */
+export type DragState = { dragged: NodeId | null; refusal: Refusal | null };
 
 /** The listeners that make a chart node draggable, and the ref they need; inert when disabled. */
 export function useNodeDrag(node: ChartNode, enabled: boolean) {
@@ -79,7 +81,7 @@ const placeOf = (data: unknown): Place | undefined =>
 export function ChartDrag(props: {
   moves: Moves | undefined;
   edges: readonly ChartEdge[];
-  children: (state: { dragged: NodeId | null; refusal: Refusal | null }) => ReactNode;
+  children: (state: DragState) => ReactNode;
 }) {
   const { moves, edges, children } = props;
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
