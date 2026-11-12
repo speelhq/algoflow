@@ -350,9 +350,11 @@ Each consumer handles a draft in its own way:
   (`editor.md`, Block editor).
 - `migrate()` rejects any other draft that no edit makes (Data, Faults
   that `migrate()` rejects).
-- `create()` fills with a draft with no text every expression slot that
-  it gives no value and that isn't `optional`. For example: a new `for`
-  starts at `0`, and its variable is an empty slot.
+- `create()` fills with a draft with no text every `expr` and `target`
+  slot that it gives no value and that isn't `optional`. For example: a
+  new `for` starts at `0`, and its variable is an empty slot.
+- `create()` gives a statement's `exprs` slot no item, as a field with no
+  text holds it. For example: a new `print` writes `print()`.
 - What an expression's `create()` makes only gives the text that a choice
   writes, in the value list or in the block menu (`editor.md`, Value
   list, Choosing).
@@ -571,10 +573,8 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 
 `edit.ts` exports pure functions that return a new `Program`:
 `insertStmt`, `moveStmt`, `removeStmt`, `duplicateStmt`, `setExpr`,
-`insertItem`, `removeItem`, `renameName`, `setCaption`, `addFunction`,
-`removeFunction`, `addClass`, `removeClass`, `setAttributes`,
-`setParams`, and `hoistAssign`. `insertItem` and
-`removeItem` add and remove an item of an `exprs` slot.
+`renameName`, `setCaption`, `addFunction`, `removeFunction`, `addClass`,
+`removeClass`, `setAttributes`, `setParams`, and `hoistAssign`.
 
 Every edit keeps node ids unique.
 
@@ -593,8 +593,9 @@ on the list without the dragged block.
 compound statement, and inserts the assignment before that statement.
 That node id is the `compound` that `E_DECLARE_FIRST` reports.
 
-The other edits address nodes by node id. `setExpr` takes an item index
-for an `exprs` slot.
+The other edits address nodes by node id. `setExpr` sets an `exprs` slot
+to its items as a whole, because a field edits the slot as one text
+(`editor.md`, Block editor).
 
 ### History
 
