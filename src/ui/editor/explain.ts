@@ -43,7 +43,8 @@ export function helpSpans(text: string): ExplanationSpan[] {
     .filter((span) => span.text !== "");
 }
 
-const kindName = (kind: Kind) => t(`editor.kind.${kind}`);
+/** A kind as the editor names it (`language.md`, Kinds). */
+export const kindName = (kind: Kind) => t(`editor.kind.${kind}`);
 
 /** A variable of the routine that holds statement `at`: its kind and where it is first set. */
 export function explainVariable(program: Program, at: NodeId, name: Name): string {
