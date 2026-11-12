@@ -76,7 +76,7 @@ function itemAfterRemoval(focus: Field | null, slot: string, index: number): Fie
 
 function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initial: Initial }) {
   const def = getBlockDef(keyOf(stmt));
-  const led = useEditor((s) => s.diagnostic);
+  const led = useEditor((s) => s.ledDiagnostic);
   const typing = useEditor((s) => s.typing);
   const setTyping = useEditor((s) => s.setTyping);
   const select = useEditor((s) => s.select);

@@ -30,8 +30,11 @@ export type EditorState = {
   editing: boolean;
   hoveredId: NodeId | null;
   solution: boolean;
-  /** Shown beside its chart node until the selection changes. */
-  diagnostic: Diagnostic | null;
+  /**
+   * The diagnostic `Run` or `Submit` led to (`run.md`, Run bar, Starting a run), shown in its
+   * owner's editor until the selection changes.
+   */
+  ledDiagnostic: Diagnostic | null;
   /**
    * The statement a field of whose notation has the keyboard, which the learner hasn't finished
    * (`chart.md`, Editing on the chart, Diagnostics).
@@ -70,7 +73,7 @@ export const useEditor = create<EditorState>()((set) => ({
   editing: false,
   hoveredId: null,
   solution: false,
-  diagnostic: null,
+  ledDiagnostic: null,
   typing: null,
   setTab: (tab) => set({ tab }),
   select: (id, slot, edit = true, emptyId) =>
@@ -80,7 +83,7 @@ export const useEditor = create<EditorState>()((set) => ({
       emptyId: emptyId ?? null,
       insertedCaret: null,
       editing: id !== null && edit,
-      diagnostic: null,
+      ledDiagnostic: null,
     }),
   selectInserted: (id, caret) =>
     set({
@@ -89,7 +92,7 @@ export const useEditor = create<EditorState>()((set) => ({
       emptyId: null,
       insertedCaret: caret,
       editing: true,
-      diagnostic: null,
+      ledDiagnostic: null,
     }),
   closeEditor: () => set({ editing: false }),
   setTyping: (id) => set({ typing: id }),
@@ -102,7 +105,7 @@ export const useEditor = create<EditorState>()((set) => ({
       emptyId: null,
       insertedCaret: null,
       editing: true,
-      diagnostic,
+      ledDiagnostic: diagnostic,
       solution: false,
     }),
   open: (tab) =>
@@ -115,7 +118,7 @@ export const useEditor = create<EditorState>()((set) => ({
       editing: false,
       hoveredId: null,
       solution: false,
-      diagnostic: null,
+      ledDiagnostic: null,
     }),
 }));
 
