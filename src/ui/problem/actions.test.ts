@@ -22,7 +22,7 @@ describe("Run with diagnostics", () => {
     useProgram.setState({ program: program([shown]) });
     startRun();
     expect(useEditor.getState()).toMatchObject({ selectedId: shown.id, editing: true });
-    expect(useEditor.getState().diagnostic?.code).toBe("E_UNKNOWN_CALL");
+    expect(useEditor.getState().ledDiagnostic?.code).toBe("E_UNKNOWN_CALL");
     expect(useRun.getState().status).toBe("idle");
   });
 
@@ -32,7 +32,7 @@ describe("Run with diagnostics", () => {
     useProgram.setState({ program: program([shown], { functions: [twice] }) });
     useEditor.getState().select(shown.id);
     startRun();
-    expect(useEditor.getState()).toMatchObject({ selectedId: null, diagnostic: null });
+    expect(useEditor.getState()).toMatchObject({ selectedId: null, ledDiagnostic: null });
     expect(useRun.getState().status).toBe("idle");
     clickChartNode(twice.id);
     expect(useEditor.getState().selectedId).toBeNull();
