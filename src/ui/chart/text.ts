@@ -151,15 +151,10 @@ export function notationOf(block: Block): string {
   return getBlockDef(keyOf(block)).notation(block);
 }
 
-/** Whether an expression's notation ends with `closer`: a call's `)`, a list's or an item's `]`. */
-export function closedBy(expr: Expr, closer: ")" | "]"): boolean {
-  const last = notationTokens(notationOf(expr)).at(-1);
-  return last !== undefined && "text" in last && last.text.endsWith(closer);
-}
-
 /** Whether an expression is a call: its notation ends with its own parenthesis (`abs({x})`). */
 export function isCall(expr: Expr): boolean {
-  return closedBy(expr, ")");
+  const last = notationTokens(notationOf(expr)).at(-1);
+  return last !== undefined && "text" in last && last.text.endsWith(")");
 }
 
 const precedenceOf = (expr: Expr) => getBlockDef(keyOf(expr)).precedence?.(expr);

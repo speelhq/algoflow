@@ -59,7 +59,7 @@ export function isComparison(op: BinOp): boolean {
   return BINOP[op] === PRECEDENCE.compare;
 }
 
-export function levelAssociativity(level: number): Associativity {
+function levelAssociativity(level: number): Associativity {
   return ASSOCIATIVITY[level] ?? "left";
 }
 

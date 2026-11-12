@@ -10,9 +10,8 @@ import { getBlockDef, menuBlockDefs } from "@/blocks/registry";
 import { CATEGORIES, type Category } from "@/blocks/categories";
 import { joinSpans, notationWithHints, type NotationSpan } from "@/ui/chart/text";
 import { functionLabel } from "./explain";
-import { callableFunctions } from "./line";
 import { slotChoice, type Written } from "./caret";
-import { callExpr, type LineFunction } from "./choices";
+import { callableFunctions, callExpr, type LineFunction } from "./choices";
 import { textValue } from "./fields";
 
 export type BlockMenuEntry = {

@@ -4,13 +4,19 @@
 import { caseInputs } from "@/challenges/cases";
 import { inputValue } from "@/lang/data";
 import { migrate } from "@/lang/migrate";
-import type { Data, Name, Program, Stmt } from "@/lang/types";
+import type { Data, Expr, Name, Program, Stmt } from "@/lang/types";
+import { variableOf } from "@/lang/walk";
 import { getBlockDef } from "@/blocks/registry";
-import { isParseError, parseData } from "@/python/parse";
+import { isParseError, parse, parseData } from "@/python/parse";
 import { createPlaygroundProgram, useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { navigate } from "@/ui/app/route";
-import { variableExpr } from "./line";
+
+/** `name` as a variable. */
+function variableExpr(name: Name): Expr | undefined {
+  const made = parse(name);
+  return !isParseError(made) && variableOf(made) === name ? made : undefined;
+}
 
 /**
  * An input as the emitter writes it: `name = <value>`. A value the blocks cannot write throws,
