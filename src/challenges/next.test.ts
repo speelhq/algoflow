@@ -1,6 +1,6 @@
 // `Start` / `Continue` / no button; `Next problem →` and `Plan complete`.
 import { describe, expect, it, vi } from "vitest";
-import { nextProblem, planAction, type Status } from "./next";
+import { nextProblem, planAction, type FindStatus } from "./next";
 
 // A plan of the tests' own, so that no case depends on what the bundled plans hold.
 const course = ["tutorial", "sum-to-n", "fizzbuzz", "max-of-three", "countdown"];
@@ -9,7 +9,7 @@ vi.mock("./plans", () => ({
   planOf: () => ({ id: "course", title: { en: "" }, description: { en: "" }, problems: course }),
 }));
 
-function statuses(entries: Record<string, "attempted" | "solved">): Status {
+function statuses(entries: Record<string, "attempted" | "solved">): FindStatus {
   return (id) => entries[id];
 }
 
