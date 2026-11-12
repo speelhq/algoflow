@@ -164,7 +164,7 @@ class Collector {
    * parser's error, and one in a target slot whose text parses as no target.
    */
   private drafts(stmt: Stmt): void {
-    for (const { slot, role, draft, text } of draftSlots(stmt)) {
+    for (const { slot, role, expr: draft, text } of draftSlots(stmt)) {
       if (text === "") {
         this.report(draft.id, "E_EMPTY_SLOT", { slot });
         continue;

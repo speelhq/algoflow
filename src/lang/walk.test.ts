@@ -15,28 +15,21 @@ import {
   paramArg,
   routineOf,
   routineStmts,
-  holdsEmptySlot,
 } from "./walk";
 
 const { assign, num, bin, v, if_, for_, while_, print, ret, call, empty, draft } = ast;
 
 describe("draftSlots", () => {
-  it("lists every draft at any depth, with the block that holds it and its text", () => {
-    const right = empty();
-    const sum = bin("+", num(1), right);
+  it("lists the drafts in a statement's slots, with their slots and their texts", () => {
     const variable = empty();
-    const loop = ast.forTo(variable, num(0), sum, []);
-    const typed = draft("abs(");
-    const abs = call("abs", typed);
+    const loop = ast.forTo(variable, num(0), v("n"), []);
     const item = empty();
-    const shown = print(num(1), item, abs);
-    expect(draftSlots(loop)).toEqual([
-      { block: loop, slot: "var", role: "target", draft: variable, text: "" },
-      { block: sum, slot: "right", role: "expr", draft: right, text: "" },
-    ]);
+    const typed = draft("abs(");
+    const shown = print(num(1), item, typed);
+    expect(draftSlots(loop)).toEqual([{ slot: "var", role: "target", expr: variable, text: "" }]);
     expect(draftSlots(shown)).toEqual([
-      { block: shown, slot: "args", role: "exprs", index: 1, draft: item, text: "" },
-      { block: abs, slot: "args", role: "exprs", index: 0, draft: typed, text: "abs(" },
+      { slot: "args", role: "exprs", index: 1, expr: item, text: "" },
+      { slot: "args", role: "exprs", index: 2, expr: typed, text: "abs(" },
     ]);
     expect(draftSlots(assign("x", bin("+", v("n"), num(1))))).toEqual([]);
   });
@@ -47,17 +40,6 @@ describe("draftText", () => {
     expect(draftText(draft("1 +"))).toBe("1 +");
     expect(draftText(empty())).toBe("");
     expect(draftText(num(1))).toBeUndefined();
-  });
-});
-
-describe("holdsEmptySlot", () => {
-  it("a value that is an empty slot or holds one at any depth; a list with no item holds none", () => {
-    expect(holdsEmptySlot(empty())).toBe(true);
-    expect(holdsEmptySlot(bin("+", num(1), call("abs", empty())))).toBe(true);
-    expect(holdsEmptySlot(bin("+", v("n"), num(1)))).toBe(false);
-    expect(holdsEmptySlot(call("abs"))).toBe(false);
-    expect(holdsEmptySlot(ast.list())).toBe(false);
-    expect(holdsEmptySlot(draft("n +"))).toBe(false);
   });
 });
 

@@ -348,9 +348,9 @@ export function notationText(block: Block, program: Program): string {
   return joinSpans(notationSpans(block, program));
 }
 
-/** Whether a statement holds a draft, at any depth of its slots. */
-export function holdsDraft(block: Block): boolean {
-  return draftSlots(block).length > 0;
+/** Whether a statement holds a draft in one of its slots. */
+export function holdsDraft(stmt: Stmt): boolean {
+  return draftSlots(stmt).length > 0;
 }
 
 /**

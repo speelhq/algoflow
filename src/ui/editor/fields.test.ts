@@ -67,24 +67,27 @@ describe("the notation the editor shows", () => {
 
 describe("a target", () => {
   it("is a value field, its line keeping a target", () => {
-    const stmt = assignTo(ast.item(v("nums"), ast.empty()), num(5));
+    const stmt = assignTo(ast.item(v("nums"), v("i")), num(5));
     expect(fieldsOf(stmt)).toEqual([{ slot: "target" }, { slot: "value" }]);
     expect(valueOf(stmt, { slot: "target" })).toBe(stmt.target);
     expect(targetSlot(stmt, { slot: "target" })).toMatchObject({ binds: true });
     expect(targetSlot(stmt, { slot: "value" })).toBeUndefined();
-    // A new assignment's target is the first empty slot; a click on an item's position opens the
-    // target.
+    // A new assignment's target is the first empty slot; a click on the target opens it.
     const fields = fieldsOf(stmt);
     const fresh = getBlockDef("assign").create() as Stmt;
     expect(startField(fresh, fieldsOf(fresh), { slot: null, emptyId: null })).toEqual(fields[0]);
-    const position = (stmt.target as Extract<typeof stmt.target, { type: "index" }>).index;
-    expect(startField(stmt, fields, { slot: "target", emptyId: position.id })).toEqual(fields[0]);
+    expect(startField(stmt, fields, { slot: "target", emptyId: null })).toEqual(fields[0]);
   });
 
-  it("gives the keyboard to the first field that holds an empty slot, at any depth", () => {
+  it("gives the keyboard to the first field that holds a draft, or to the item clicked", () => {
     const opened = { slot: null, emptyId: null };
-    const deep = print(num(1), ast.call("abs", ast.empty()));
-    expect(startField(deep, fieldsOf(deep), opened)).toEqual({ slot: "args", index: 1 });
+    const added = print(num(1), ast.empty());
+    expect(startField(added, fieldsOf(added), opened)).toEqual({ slot: "args", index: 1 });
+    // A click on an item's empty slot opens that item.
+    const second = ast.empty();
+    const empties = print(ast.empty(), second);
+    const clicked = { slot: "args", emptyId: second.id };
+    expect(startField(empties, fieldsOf(empties), clicked)).toEqual({ slot: "args", index: 1 });
     // A loop's variable is a target, an empty slot until it is filled.
     const fresh = getBlockDef("for").create() as Stmt;
     expect(startField(fresh, fieldsOf(fresh), opened)).toEqual({ slot: "var" });
