@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { mainVars } from "@/runtime/outcome";
 import { inRun, useMode } from "@/store/mode";
 import { useRun } from "@/store/run";
-import { useTests } from "@/store/tests";
+import { useSubmission } from "@/store/submission";
 import { assignmentText, valueText } from "@/ui/chart/text";
 import {
   Select,
@@ -64,7 +64,7 @@ function CaseSelector({ challenge }: { challenge: Challenge }) {
 /** The case selector and `Submit`, which judges every case it lists. */
 function CaseBar({ challenge }: { challenge: Challenge }) {
   const runMode = inRun(useMode());
-  const submitting = useTests((s) => s.running);
+  const submitting = useSubmission((s) => s.submitting);
   return (
     <div className="flex items-center justify-between gap-2">
       <CaseSelector challenge={challenge} />
@@ -103,7 +103,7 @@ function Variables() {
 
 /** The submission, while one is shown, else the run of the chosen case. */
 export function ResultTab({ challenge }: { challenge?: Challenge }) {
-  const submitted = useTests((s) => s.running || s.results.length > 0);
+  const submitted = useSubmission((s) => s.submitting || s.results.length > 0);
   return (
     <div className="space-y-4">
       {challenge && <CaseBar challenge={challenge} />}

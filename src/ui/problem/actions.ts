@@ -10,7 +10,7 @@ import { currentMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
 import { useProgress } from "@/store/progress";
 import { useRun } from "@/store/run";
-import { useTests } from "@/store/tests";
+import { useSubmission } from "@/store/submission";
 
 /** Shows the solution on the canvas, and records that the learner saw it (`challenges.md`, Progress). */
 export function revealSolution(id: string): void {
@@ -34,7 +34,7 @@ function readyToRun(): boolean {
 
 export function startRun(opts?: { watch?: boolean }): void {
   if (!readyToRun()) return;
-  useTests.getState().reset();
+  useSubmission.getState().reset();
   useEditor.getState().setTab("result");
   void useRun.getState().run(opts);
 }
@@ -74,7 +74,7 @@ export function togglePlay(): void {
 export function startSubmit(): void {
   if (!readyToRun()) return;
   useEditor.getState().setTab("result");
-  void useTests.getState().submit();
+  void useSubmission.getState().submit();
 }
 
 /**
