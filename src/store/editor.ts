@@ -1,6 +1,7 @@
 // Editor-side UI state of a page: the panel tab, the selected node, whether its editor is
 // open and the slot a click on it chose, the node outlined from a hovered Python line,
-// whether the canvas shows the solution, and the diagnostic Run or Submit led to.
+// whether the canvas shows the solution, the diagnostic Run or Submit led to, and the statement
+// whose editor has a field with the keyboard.
 import { create } from "zustand";
 import type { Diagnostic, NodeId } from "@/lang/types";
 import { isStatement } from "@/lang/walk";
@@ -26,10 +27,16 @@ export type EditorState = {
   solution: boolean;
   /** Shown beside its chart node until the selection changes. */
   diagnostic: Diagnostic | null;
+  /**
+   * The statement a field of whose notation has the keyboard, which the learner hasn't finished
+   * (`chart.md`, Editing on the chart, Diagnostics).
+   */
+  typing: NodeId | null;
   setTab: (tab: PanelTab) => void;
   /** Selects a node and opens its editor, on `slot` (and `emptyId`) when clicked; `edit: false` only selects. */
   select: (id: NodeId | null, slot?: string, edit?: boolean, emptyId?: NodeId) => void;
   closeEditor: () => void;
+  setTyping: (id: NodeId | null) => void;
   setHovered: (id: NodeId | null) => void;
   showSolution: (shown: boolean) => void;
   /** Selects `owner`, the statement holding the diagnostic, and shows its message. */
@@ -56,6 +63,7 @@ export const useEditor = create<EditorState>()((set) => ({
   hoveredId: null,
   solution: false,
   diagnostic: null,
+  typing: null,
   setTab: (tab) => set({ tab }),
   select: (id, slot, edit = true, emptyId) =>
     set({
@@ -66,6 +74,7 @@ export const useEditor = create<EditorState>()((set) => ({
       diagnostic: null,
     }),
   closeEditor: () => set({ editing: false }),
+  setTyping: (id) => set({ typing: id }),
   setHovered: (id) => set({ hoveredId: id }),
   showSolution: (shown) => set({ solution: shown }),
   lead: (owner, diagnostic) =>
