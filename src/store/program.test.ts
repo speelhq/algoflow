@@ -139,15 +139,33 @@ describe("program store", () => {
   it("consecutive changes typed into one field form one entry", () => {
     useProgram.getState().load("bare");
     const opened = useProgram.getState().program;
-    useProgram.getState().edit(withMain(opened, [print(num(1))]), "node:value");
-    useProgram.getState().edit(withMain(opened, [print(num(12))]), "node:value");
-    useProgram.getState().edit(withMain(opened, [print(num(123))]), "node:value");
+    useProgram.getState().typeInto(withMain(opened, [print(num(1))]), "node:value");
+    useProgram.getState().typeInto(withMain(opened, [print(num(12))]), "node:value");
+    useProgram.getState().typeInto(withMain(opened, [print(num(123))]), "node:value");
     expect(useProgram.getState().past).toEqual([opened]);
-    useProgram.getState().edit(withMain(opened, [print(num(4))]), "other:value");
+    useProgram.getState().typeInto(withMain(opened, [print(num(4))]), "other:value");
     expect(useProgram.getState().past).toHaveLength(2);
     useProgram.getState().undo();
     useProgram.getState().undo();
     expect(useProgram.getState().program).toBe(opened);
+  });
+
+  it("an edit of no field, an undo, or a redo ends the entry typed into a field", () => {
+    useProgram.getState().load("bare");
+    const opened = useProgram.getState().program;
+    const typeNumber = (n: number) =>
+      useProgram.getState().typeInto(withMain(opened, [print(num(n))]), "node:value");
+    typeNumber(1);
+    useProgram.getState().edit(withMain(opened, [print(num(2)), print(num(2))]));
+    typeNumber(3);
+    expect(useProgram.getState().past).toHaveLength(3);
+    useProgram.getState().undo();
+    typeNumber(4);
+    expect(useProgram.getState().past).toHaveLength(3);
+    useProgram.getState().undo();
+    useProgram.getState().redo();
+    typeNumber(5);
+    expect(useProgram.getState().past).toHaveLength(4);
   });
 
   it("an edit is saved 500 ms after the last edit, and opening alone saves nothing", () => {

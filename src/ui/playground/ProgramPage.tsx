@@ -5,7 +5,7 @@ import { t } from "@/i18n/t";
 import { editable, useMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
 import { download } from "@/ui/app/download";
-import { apply } from "@/ui/editor/edits";
+import { applyTyped } from "@/ui/editor/edits";
 import { exportName } from "@/ui/editor/programs";
 import { useTitle } from "@/ui/hooks/useTitle";
 import { Button } from "@/ui/primitives/button";
@@ -29,7 +29,7 @@ function TitleField() {
       data-testid="program-title"
       onChange={(event) => {
         const next = event.target.value;
-        apply((program) => ({ ...program, title: next }), "title");
+        applyTyped((program) => ({ ...program, title: next }), "title");
       }}
     />
   );

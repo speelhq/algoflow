@@ -21,7 +21,7 @@ import { placeholderValue, slotSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics, ledDraft } from "./diagnostics";
-import { apply } from "./edits";
+import { apply, applyTyped } from "./edits";
 import { EditorList } from "./EditorList";
 import { explainDraft, explainEditor, explainLine, helpSpans, type Explanation } from "./explain";
 import {
@@ -183,7 +183,7 @@ function Body(props: {
   /** Writes a transition's values into the program and keeps the session it leaves. */
   const applyTransition = (transition: Transition): Session => {
     for (const { field, value } of transition.edits) {
-      apply((p) => setExpr(p, stmt.id, field.slot, value), `${stmt.id}:${field.slot}`);
+      applyTyped((p) => setExpr(p, stmt.id, field.slot, value), `${stmt.id}:${field.slot}`);
     }
     setSession(transition.session);
     return transition.session;

@@ -107,56 +107,69 @@ export type ProgramState = {
   /** Earlier programs, the latest last, and the programs undone, the next to redo last. */
   past: Program[];
   future: Program[];
+  /** The field the last change was typed into; null after any other change. */
+  lastField: string | null;
   /** Opens the program stored under `id` (the Problem and Playground program routes). */
   load: (id: string) => void;
+  /** Replaces the program as a history entry of its own, saved after the delay. */
+  edit: (next: Program) => void;
   /**
-   * Replaces the program as one history entry, saved after the delay; consecutive edits
-   * that name the same `field` (typing into one input) share one entry.
+   * Replaces the program with `next`, typed into `field`, saved after the delay. It joins the
+   * last history entry when the last change was typed into the same field (`language.md`,
+   * Edits, History).
    */
-  edit: (next: Program, field?: string) => void;
+  typeInto: (next: Program, field: string) => void;
   undo: () => void;
   redo: () => void;
 };
 
-/** The field of the last edit, while consecutive edits may share its history entry. */
-let lastField: string | undefined;
-
 export const useProgram = create<ProgramState>()((set, get) => {
-  const change = (program: Program, past: Program[], future: Program[]) => {
-    set({ program, past, future });
+  /** Sets the program and its history, and schedules the save. */
+  const replace = (
+    program: Program,
+    history: Pick<ProgramState, "past" | "future" | "lastField">,
+  ) => {
+    set({ program, ...history });
     scheduleSave(get().id, program);
+  };
+  /**
+   * Replaces the program with `next`, and makes or joins a history entry. `field` is the field
+   * `next` was typed into, or null.
+   */
+  const commit = (next: Program, field: string | null) => {
+    const { program, past, lastField } = get();
+    // An edit that changes nothing (a drop where the block already is) is no history entry.
+    if (next === program || JSON.stringify(next) === JSON.stringify(program)) return;
+    const shouldJoin = field !== null && field === lastField;
+    replace(next, {
+      past: shouldJoin ? past : [...past, program].slice(-HISTORY),
+      future: [],
+      lastField: field,
+    });
   };
   return {
     program: emptyProgram(),
     id: "",
     past: [],
     future: [],
+    lastField: null,
     load: (id) => {
       flushSave();
-      lastField = undefined;
-      set({ program: restore(id), id, past: [], future: [] });
+      set({ program: restore(id), id, past: [], future: [], lastField: null });
     },
-    edit: (next, field) => {
-      const { program, past } = get();
-      // An edit that changes nothing (a drop where the block already is) is no history entry.
-      if (next === program || JSON.stringify(next) === JSON.stringify(program)) return;
-      const joins = field !== undefined && field === lastField && past.length > 0;
-      lastField = field;
-      change(next, joins ? past : [...past, program].slice(-HISTORY), []);
-    },
+    edit: (next) => commit(next, null),
+    typeInto: (next, field) => commit(next, field),
     undo: () => {
       const { program, past, future } = get();
       const previous = past[past.length - 1];
       if (!previous) return;
-      lastField = undefined;
-      change(previous, past.slice(0, -1), [...future, program]);
+      replace(previous, { past: past.slice(0, -1), future: [...future, program], lastField: null });
     },
     redo: () => {
       const { program, past, future } = get();
       const next = future[future.length - 1];
       if (!next) return;
-      lastField = undefined;
-      change(next, [...past, program], future.slice(0, -1));
+      replace(next, { past: [...past, program], future: future.slice(0, -1), lastField: null });
     },
   };
 });

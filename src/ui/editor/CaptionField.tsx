@@ -3,7 +3,7 @@ import { useState } from "react";
 import { t } from "@/i18n/t";
 import { normalizeCaption, setCaption } from "@/lang/edit";
 import type { Stmt } from "@/lang/types";
-import { apply } from "./edits";
+import { applyTyped } from "./edits";
 import { oneLine } from "./fields";
 
 export function CaptionField({ stmt }: { stmt: Stmt }) {
@@ -25,7 +25,7 @@ export function CaptionField({ stmt }: { stmt: Stmt }) {
         onChange={(event) => {
           const next = oneLine(event.target.value);
           setTyped(next);
-          apply((p) => setCaption(p, stmt.id, next), `${stmt.id}:caption`);
+          applyTyped((p) => setCaption(p, stmt.id, next), `${stmt.id}:caption`);
         }}
       />
     </label>
