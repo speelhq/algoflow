@@ -62,6 +62,40 @@ function fail(code: ParseError["code"], position: number, params?: Record<string
   throw new Fail(params ? { code, position, params } : { code, position });
 }
 
+/** Scans the escape that starts at `i`, a backslash: the text it writes, and its length. */
+function scanEscape(text: string, i: number): { value: string; length: number } {
+  const next = text[i + 1] ?? "";
+  if (next === "x") {
+    const hex = text.slice(i + 2, i + 4);
+    if (/^[0-9a-fA-F]{2}$/.test(hex)) {
+      return { value: String.fromCharCode(Number.parseInt(hex, 16)), length: 4 };
+    }
+  }
+  return { value: ESCAPES[next] ?? `\\${next}`, length: 2 };
+}
+
+/**
+ * Scans the string literal whose opening quote is at `pos`, its escapes decoded; undefined when
+ * no matching quote closes it.
+ */
+function scanString(text: string, pos: number): Token | undefined {
+  const quote = text[pos];
+  let value = "";
+  let i = pos + 1;
+  while (i < text.length && text[i] !== quote) {
+    if (text[i] === "\\") {
+      const escape = scanEscape(text, i);
+      value += escape.value;
+      i += escape.length;
+    } else {
+      value += text[i];
+      i += 1;
+    }
+  }
+  if (i >= text.length) return undefined;
+  return { type: "str", text: text.slice(pos, i + 1), value, pos };
+}
+
 /** The text's tokens, and where a `"` or `'` that no matching quote closes opens, if one does. */
 function scan(text: string): { tokens: Token[]; unclosed?: number } {
   const tokens: Token[] = [];
@@ -81,26 +115,10 @@ function scan(text: string): { tokens: Token[]; unclosed?: number } {
       continue;
     }
     if (ch === '"' || ch === "'") {
-      let value = "";
-      let i = pos + 1;
-      while (i < text.length && text[i] !== ch) {
-        if (text[i] === "\\") {
-          const next = text[i + 1] ?? "";
-          if (next === "x" && /^[0-9a-fA-F]{2}$/.test(text.slice(i + 2, i + 4))) {
-            value += String.fromCharCode(Number.parseInt(text.slice(i + 2, i + 4), 16));
-            i += 4;
-            continue;
-          }
-          value += ESCAPES[next] ?? `\\${next}`;
-          i += 2;
-        } else {
-          value += text[i];
-          i += 1;
-        }
-      }
-      if (i >= text.length) return { tokens, unclosed: pos };
-      tokens.push({ type: "str", text: text.slice(pos, i + 1), value, pos });
-      pos = i + 1;
+      const literal = scanString(text, pos);
+      if (!literal) return { tokens, unclosed: pos };
+      tokens.push(literal);
+      pos += literal.text.length;
       continue;
     }
     const name = NAME.exec(rest);
@@ -529,15 +547,18 @@ export function parseClosed(text: string): Expr | ParseError {
   return attempt(() => new Parser([...tokens, ...closers, endAt(text.length)]).parseAll());
 }
 
+/** The parse of the largest expression before a caret: every expression in it, and its spans. */
+type ParsedSuffix = { exprs: readonly Expr[]; parser: Parser };
+
 /**
  * The largest expression that the tokens end with, with an empty slot at the caret where a value
  * is expected and each parenthesis and bracket still open closed.
  */
-function largestRead(
+function parseLargestSuffix(
   tokens: readonly Token[],
   caret: number,
   expected: boolean,
-): { root: Expr; parser: Parser } | undefined {
+): ParsedSuffix | undefined {
   for (let i = 0; i <= tokens.length; i += 1) {
     const suffix = tokens.slice(i);
     if (suffix.length === 0 && !expected) return undefined;
@@ -546,55 +567,84 @@ function largestRead(
     const closers = closersOf(suffix, caret);
     const parser = new Parser([...suffix, ...hole, ...closers, endAt(caret + 1)]);
     const root = attempt(() => parser.parseAll());
-    if (!isParseError(root)) return { root, parser };
+    if (!isParseError(root)) return { exprs: [...allExprs(root)], parser };
   }
   return undefined;
+}
+
+/** The operation one of whose slots holds `value`, among the expressions of a parse. */
+function findOperation(parsed: ParsedSuffix, value: Expr): CaretOperation | undefined {
+  const operation = parsed.exprs.find((expr) =>
+    childSlots(expr).some((slot) => slot.expr === value),
+  );
+  return operation && { operation, value };
+}
+
+/** An expression that ends at the caret, with its span, and whether it binds as an atom. */
+type EndingExpr = SpannedExpr & { isAtom: boolean };
+
+/**
+ * The expressions of a parse that end at `end`, the largest first. One in parentheses of its
+ * own ends there with them, and binds as an atom; one inside a parenthesis still open ends there
+ * without.
+ */
+function exprsEndingAt(parsed: ParsedSuffix, end: number): EndingExpr[] {
+  const { exprs, parser } = parsed;
+  return exprs
+    .map((expr) => {
+      const outer = parser.parenthesized.get(expr.id);
+      if (outer?.end === end) return { ...outer, expr, isAtom: true };
+      const span = parser.spans.get(expr.id);
+      if (span?.end !== end) return undefined;
+      const isAtom = getBlockDef(keyOf(expr)).precedence?.(expr) === undefined;
+      return { ...span, expr, isAtom };
+    })
+    .filter((ending) => ending !== undefined)
+    .toSorted((a, b) => a.start - b.start);
+}
+
+/** A value expected at the caret, in a slot of the operation that holds the empty slot there. */
+function readExpectedValue(parsed: ParsedSuffix): CaretReading {
+  const hole = parsed.exprs.find(isEmptyDraft);
+  const operation = hole && findOperation(parsed, hole);
+  return operation ? { place: "expected", operation } : { place: "expected" };
+}
+
+/**
+ * The caret after a value: the largest expression that ends where `caretText` ends and starts
+ * within it, the last part of it that binds as an atom, and the operation around the deepest
+ * expression that ends there.
+ */
+function readAfterValue(parsed: ParsedSuffix, caretText: Span): CaretReading {
+  const ending = exprsEndingAt(parsed, caretText.end);
+  const within = ending.filter((found) => found.start >= caretText.start);
+  const toSpannedExpr = ({ start, end, expr }: EndingExpr): SpannedExpr => ({ start, end, expr });
+  const before = within[0];
+  const atom = within.find((found) => found.isAtom);
+  if (!before || !atom) return { place: "none" };
+  const deepest = ending.at(-1);
+  const operation = deepest && findOperation(parsed, deepest.expr);
+  return {
+    place: "after",
+    before: toSpannedExpr(before),
+    atom: toSpannedExpr(atom),
+    ...(operation ? { operation } : {}),
+  };
 }
 
 /** What the parser reads in a text that ends at the caret (`parser.md`, Reading before a caret). */
 export function readBefore(text: string): CaretReading {
   const { tokens, unclosed } = scan(text);
   if (unclosed !== undefined) return { place: "text" };
-  // The text of the innermost parenthesis or bracket still open starts after it.
+  // The caret's text starts after the innermost parenthesis or bracket still open.
   const innermost = stillOpen(tokens).at(-1);
   const open = innermost ? innermost.pos + 1 : 0;
   const last = tokens.at(-1);
   const expected = last === undefined || last.pos < open || expectsValue(last);
-  const read = largestRead(tokens, text.length, expected);
-  if (!read) return expected ? { place: "expected" } : { place: "none" };
-  const { root, parser } = read;
-  const all = [...allExprs(root)];
-  const parentOf = (value: Expr): CaretOperation | undefined => {
-    const operation = all.find((expr) => childSlots(expr).some((slot) => slot.expr === value));
-    return operation && { operation, value };
-  };
-  if (expected) {
-    const hole = all.find(isEmptyDraft);
-    const operation = hole && parentOf(hole);
-    return operation ? { place: "expected", operation } : { place: "expected" };
-  }
-  // The expressions that end at the caret, the largest first. One in parentheses of its own ends
-  // there with them, and binds as an atom; one inside a parenthesis still open ends there without.
-  const end = text.trimEnd().length;
-  const ending = all
-    .map((expr) => {
-      const outer = parser.parenthesized.get(expr.id);
-      if (outer?.end === end) return { ...outer, expr, atom: true };
-      const span = parser.spans.get(expr.id);
-      const atom = getBlockDef(keyOf(expr)).precedence?.(expr) === undefined;
-      return span?.end === end ? { ...span, expr, atom } : undefined;
-    })
-    .filter((spanned) => spanned !== undefined)
-    .toSorted((a, b) => a.start - b.start);
-  const deepest = ending.at(-1);
-  const within = ending.filter((spanned) => spanned.start >= open);
-  const spanned = (found: (typeof ending)[number] | undefined): SpannedExpr | undefined =>
-    found && { start: found.start, end: found.end, expr: found.expr };
-  const before = spanned(within[0]);
-  const atom = spanned(within.find((found) => found.atom));
-  if (!before || !atom) return { place: "none" };
-  const operation = deepest && parentOf(deepest.expr);
-  return { place: "after", before, atom, ...(operation ? { operation } : {}) };
+  const parsed = parseLargestSuffix(tokens, text.length, expected);
+  if (!parsed) return expected ? { place: "expected" } : { place: "none" };
+  if (expected) return readExpectedValue(parsed);
+  return readAfterValue(parsed, { start: open, end: text.trimEnd().length });
 }
 
 /**
