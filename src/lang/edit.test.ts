@@ -5,12 +5,10 @@ import {
   addFunction,
   duplicateStmt,
   hoistAssign,
-  insertItem,
   insertStmt,
   findStmt,
   moveStmt,
   removeFunction,
-  removeItem,
   removeStmt,
   renameName,
   setExpr,
@@ -52,10 +50,8 @@ describe("edit", () => {
       removeStmt: (p) => removeStmt(p, a.id),
       duplicateStmt: (p) => duplicateStmt(p, loop.id),
       setLoopTarget: (p) => setExpr(p, loop.id, "var", v("k")),
-      setExpr: (p) => setExpr(p, b.id, "args", value, 0),
+      setExpr: (p) => setExpr(p, b.id, "args", [value, structuredClone(value)]),
       setTarget: (p) => setExpr(p, a.id, "target", ast.item(value, structuredClone(value))),
-      insertItem: (p) => insertItem(p, b.id, "args", 0, value),
-      removeItem: (p) => removeItem(p, b.id, "args", 0),
       renameName: (p) => renameName(p, "x", "total"),
       setCaption: (p) => setCaption(p, loop.id, "Count"),
       addFunction: (p) => addFunction(p, "g"),
@@ -141,11 +137,11 @@ describe("edit", () => {
     expect(() => setCaption(p, "missing00000", "x")).toThrow(/no statement/);
   });
 
-  it("setExpr replaces an expression slot, an exprs item, or a nested expression block", () => {
+  it("setExpr replaces an expression slot, an exprs slot's items, or a nested expression block", () => {
     const { p, a, inner, b } = sample();
     expect(lines(setExpr(p, a.id, "value", num(42)))[0]).toBe("x = 42");
-    expect(lines(setExpr(p, b.id, "args", str("done"), 0))[3]).toBe('print("done")');
-    expect(lines(setExpr(p, b.id, "args", str("more")))[3]).toBe('print(x, "more")');
+    expect(lines(setExpr(p, b.id, "args", [v("x"), str("more")]))[3]).toBe('print(x, "more")');
+    expect(lines(setExpr(p, b.id, "args", []))[3]).toBe("print()");
     const binop = (inner as Extract<Stmt, { type: "assign" }>).value;
     expect(lines(setExpr(p, binop.id, "right", num(2)))[2]).toBe("    x = x + 2");
     const reused = setExpr(p, a.id, "value", (inner as Extract<Stmt, { type: "assign" }>).value);
@@ -164,23 +160,15 @@ describe("edit", () => {
     expect(idsUnique(next)).toBe(true);
   });
 
-  it("insertItem puts an item at an index of an exprs slot; other slots and places are refused", () => {
-    const b = print(num(1), num(3));
-    const p = program([b]);
-    expect(lines(insertItem(p, b.id, "args", 1, num(2)))).toEqual(["print(1, 2, 3)"]);
-    expect(lines(insertItem(p, b.id, "args", 2, num(4)))).toEqual(["print(1, 3, 4)"]);
-    expect(() => insertItem(p, b.id, "args", 3, num(4))).toThrow(/no place/);
-    const { p: q, a } = sample();
-    expect(() => insertItem(q, a.id, "value", 0, num(4))).toThrow(/no place/);
-  });
-
-  it("removeItem removes one item of an exprs slot; other slots are refused", () => {
-    const b = print(num(1), num(2), num(3));
-    const p = program([b]);
-    expect(lines(removeItem(p, b.id, "args", 1))).toEqual(["print(1, 3)"]);
-    expect(() => removeItem(p, b.id, "args", 3)).toThrow(/no item/);
-    const { p: q, a } = sample();
-    expect(() => removeItem(q, a.id, "value", 0)).toThrow(/no item/);
+  it("setExpr keeps the ids of the items it replaces, and refuses a value of another role's shape", () => {
+    const { p, a, b } = sample();
+    const held = (b as Extract<Stmt, { type: "print" }>).args[0]!;
+    const next = setExpr(p, b.id, "args", [held, structuredClone(held)]);
+    const items = (next.main[2] as Extract<Stmt, { type: "print" }>).args;
+    expect(items[0]?.id).toBe(held.id);
+    expect(idsUnique(next)).toBe(true);
+    expect(() => setExpr(p, b.id, "args", num(1))).toThrow(/no expression slot/);
+    expect(() => setExpr(p, a.id, "value", [num(1)])).toThrow(/no exprs slot/);
   });
 
   it("setParams replaces a function's parameters", () => {

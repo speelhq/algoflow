@@ -81,7 +81,7 @@ function callText(fn: LineFunction): TextLine {
 /** A statement calling `fn`, its slot holding the text a choice of the call writes. */
 function callStatement(fn: LineFunction): Stmt {
   const statement = getBlockDef("expr").create() as Extract<Stmt, { type: "expr" }>;
-  return { ...statement, expr: textValue(callText(fn).text, false) };
+  return { ...statement, expr: textValue(callText(fn).text, "expr") };
 }
 
 /** The groups with only the entries whose label or help contains `query`. */

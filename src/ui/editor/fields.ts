@@ -1,28 +1,45 @@
-// The fields of a statement's notation in the block editor: each value or target slot, and each
-// item of a list of values, in the notation's reading order.
+// The fields of a statement's notation in the block editor: each value, target, or values slot,
+// edited as one text, in the notation's reading order.
 import { blockText, t } from "@/i18n/t";
 import { draftValue } from "@/lang/drafts";
-import type { Expr, NodeId, Stmt } from "@/lang/types";
-import { draftText, isExpr } from "@/lang/walk";
+import type { Expr, Stmt } from "@/lang/types";
+import { draftText, isExpr, type ExprRole } from "@/lang/walk";
 import { draftOf, emptyDraft, getBlockDef, keyOf, findSlot, type Slot } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
   generatedNotation,
-  placeholderValue,
   notationTokens,
+  SEPARATOR,
   slotHint,
   type NotationToken,
 } from "@/ui/chart/text";
 
-/** One editable slot of the notation: a value or a target, or an item of a list of values. */
-export type Field = { slot: string; index?: number };
+/**
+ * One field of the notation: a slot of a statement, edited as one text (`editor.md`, Block
+ * editor), whose role says how its text is read.
+ */
+export type Field = { slot: string; role: ExprRole };
 
-export const fieldKey = (field: Field) => `${field.slot}:${field.index ?? ""}`;
+/** What a field holds: a value or a target, or the items of an `exprs` slot. */
+export type FieldValue = Expr | Expr[];
 
 type Bag = Record<string, unknown>;
 
 export const sameField = (a: Field | null, b: Field | null) =>
-  a !== null && b !== null && fieldKey(a) === fieldKey(b);
+  a !== null && b !== null && a.slot === b.slot;
+
+/**
+ * The field `step` on from `field` in the notation's reading order, which Tab and Shift+Tab move
+ * to (`editor.md`, Block editor), or undefined past either end.
+ */
+export function fieldBeside(
+  fields: readonly Field[],
+  field: Field,
+  step: 1 | -1,
+): Field | undefined {
+  const at = fields.findIndex((each) => sameField(each, field));
+  return at < 0 ? undefined : fields[at + step];
+}
 
 /** The target slot a field edits, which its line keeps a target in (`editor.md`, Targets). */
 export function targetSlot(
@@ -55,15 +72,18 @@ export function editedLines(stmt: Stmt): { token: NotationToken; again: boolean 
   );
 }
 
-/** The fields of the notation, in its reading order. */
+/**
+ * The fields of the notation, in its reading order. An optional slot that holds no value is no
+ * field, because `+ value` gives it one.
+ */
 export function fieldsOf(stmt: Stmt): Field[] {
   const out: Field[] = [];
   for (const { token, again } of editedLines(stmt).flat()) {
     if ("text" in token || again) continue;
-    const held = placeholderValue(stmt, token.placeholder);
-    const slot = token.placeholder;
-    if (held?.role === "expr" && held.expr) out.push({ slot });
-    else if (held?.role === "exprs") held.items.forEach((_, index) => out.push({ slot, index }));
+    const slot = findSlot(stmt, token.placeholder);
+    if (slot?.role !== "expr" && slot?.role !== "target" && slot?.role !== "exprs") continue;
+    const field = { slot: slot.name, role: slot.role };
+    if (valueOf(stmt, field) !== undefined) out.push(field);
   }
   return out;
 }
@@ -84,20 +104,33 @@ export function oneLine(text: string): string {
 
 /**
  * The text a field shows for its value: a draft's text as typed, or the value as the emitter
- * writes it (`editor.md`, Value line).
+ * writes it, and an `exprs` slot's items separated by commas (`editor.md`, Value line).
  */
-export function fieldText(value: Expr): string {
+export function fieldText(value: FieldValue): string {
+  if (Array.isArray(value)) return value.map(fieldText).join(SEPARATOR);
   return draftText(value) ?? unparse(value);
 }
 
+/** The draft a field holds: its value, or the only item of an `exprs` slot, when it is one. */
+export function fieldDraft(value: FieldValue): Expr | undefined {
+  return (Array.isArray(value) ? value : [value]).find((each) => draftText(each) !== undefined);
+}
+
 /**
- * The value that a field's text writes (`editor.md`, Value line): the value it parses as, which a
- * target's line keeps only when it is a target, or else the text as a draft. No text is an empty
- * slot.
+ * The value that a field's text writes in a slot of `role` (`editor.md`, Value line): the value it
+ * parses as, which a target's line keeps only when it is a target, or else the text as a draft. An
+ * `exprs` slot's text parses as values separated by commas, and it holds the draft as its only
+ * item (`language.md`, Expressions, Drafts). No text is an empty slot, or no item.
  */
-export function textValue(text: string, target: boolean): Expr {
+export function textValue(text: string, role: "exprs"): Expr[];
+export function textValue(text: string, role: "expr" | "target"): Expr;
+export function textValue(text: string, role: ExprRole): FieldValue;
+export function textValue(text: string, role: ExprRole): FieldValue {
+  const read = draftValue(role, text);
+  if (role === "exprs") {
+    return "value" in read && Array.isArray(read.value) ? read.value : [draftOf(text)];
+  }
   if (text === "") return emptyDraft();
-  const read = draftValue(target ? "target" : "expr", text);
   return "value" in read && !Array.isArray(read.value) ? read.value : draftOf(text);
 }
 
@@ -113,35 +146,27 @@ export function fieldHint(stmt: Stmt, field: Field): string {
   return slot?.role === "expr" && slot.optional ? OPTIONAL : slotHint(stmt, field.slot);
 }
 
-/** The expression a value field holds. */
-export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
+/** What a field holds, or undefined while an optional slot holds no value. */
+export function valueOf(stmt: Stmt, field: Field): FieldValue | undefined {
   const value = (stmt as unknown as Bag)[field.slot];
-  const item =
-    field.index === undefined ? value : Array.isArray(value) ? value[field.index] : undefined;
-  return isExpr(item) ? item : undefined;
+  if (field.role === "exprs") return Array.isArray(value) ? value.filter(isExpr) : undefined;
+  return isExpr(value) ? value : undefined;
 }
 
 /**
  * The field that takes the keyboard when the editor opens (`editor.md`, Block editor): the slot
- * clicked on the chart node (the item that is the empty slot clicked, when one was), else the first
- * field that holds a draft, else none.
+ * clicked on the chart node, else the first field that holds a draft, else none.
  */
 export function startField(
   stmt: Stmt,
   fields: readonly Field[],
-  clicked: { slot: string | null; emptyId: NodeId | null },
+  clicked: string | null,
 ): Field | null {
-  const { slot, emptyId } = clicked;
-  if (slot === null) {
-    return (
-      fields.find((field) => {
-        const value = valueOf(stmt, field);
-        return value !== undefined && draftText(value) !== undefined;
-      }) ?? null
-    );
-  }
-  const inSlot = fields.filter((field) => field.slot === slot);
-  const holding =
-    emptyId === null ? undefined : inSlot.find((field) => valueOf(stmt, field)?.id === emptyId);
-  return holding ?? inSlot[0] ?? null;
+  if (clicked !== null) return fields.find((field) => field.slot === clicked) ?? null;
+  return (
+    fields.find((field) => {
+      const value = valueOf(stmt, field);
+      return value !== undefined && fieldDraft(value) !== undefined;
+    }) ?? null
+  );
 }

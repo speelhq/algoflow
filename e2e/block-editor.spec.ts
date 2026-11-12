@@ -170,23 +170,46 @@ test("the editor is placed by its chart node without a control on it", async ({ 
   ).toHaveCount(0);
 });
 
-test("`,` in a list of values opens the next value after this one", async ({ page }) => {
+test("a print's values are one field, typed, removed, and added by their text", async ({
+  page,
+}) => {
   await seedProgress(page, {});
   await page.goto("/#/p/tutorial");
+  // A new print holds no value, draws no hint, and its field has the keyboard.
   await insert(page, "main/main/0", "print");
+  await expect(chart(page)).toContainText("print()");
+  const field = editor(page).locator("[data-value-line]");
+  await expect(field).toHaveCount(1);
+  await expect(field).toBeFocused();
   await keys(page, "1,2");
   await expect(chart(page)).toContainText("print(1, 2)");
-  await editor(page).locator("[data-value-line]").first().click();
-  await keys(page, ",");
-  await expect(chart(page)).toContainText("print(1, values, 2)");
+  await expect(field).toHaveCount(1);
+  // No button removes or adds a value: the text does.
+  await expect(editor(page).getByRole("button", { name: "+ value" })).toHaveCount(0);
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Backspace");
+  await expect(chart(page)).toContainText("print(1)");
+  await keys(page, ", n");
+  await expect(chart(page)).toContainText("print(1, n)");
+  // Text that is no values separated by commas is one draft, written as typed.
+  await keys(page, " m");
+  await expect(chart(page)).toContainText("print(1, n m)");
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.press("Backspace");
+  await expect(chart(page)).toContainText("print()");
 });
 
-test("a print with no value draws no hint", async ({ page }) => {
+test("a stored print opens its values as one text, the slot clicked taking the keyboard", async ({
+  page,
+}) => {
   await seedProgress(page, {});
-  await page.goto("/#/p/tutorial");
-  await insert(page, "main/main/0", "print");
-  await editor(page).getByRole("button", { name: "Remove this value" }).click();
-  await expect(chart(page)).toContainText("print()");
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  await page.locator('[data-chart-node="fzb-prnt-001"] [data-block-slot="args"]').click();
+  const field = editor(page).locator("[data-value-line]");
+  await expect(field).toHaveCount(1);
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("i");
 });
 
 test("a list is typed, its item read, and one item set in the target's line", async ({ page }) => {
@@ -453,7 +476,7 @@ test("the changes typed in one field are one entry of the history", async ({ pag
   await keys(page, "123");
   await expect(chart(page)).toContainText("print(123)");
   await page.keyboard.press("ControlOrMeta+z");
-  await expect(chart(page)).toContainText("print(values)");
+  await expect(chart(page)).toContainText("print()");
   await expect(editor(page).locator("[data-value-line]").first()).toHaveValue("");
 });
 
@@ -469,18 +492,4 @@ test("an operator is switched by typing its keys: `=` after the `<` of `i < n` g
   await keys(page, "=");
   await expect(editor(page).locator("[data-value-line]").first()).toHaveValue("i <= n");
   await expect(chart(page)).toContainText("i <= n?");
-});
-
-test("removing another item keeps the keyboard in the field being typed", async ({ page }) => {
-  await seedProgress(page, {});
-  await page.goto("/#/p/tutorial");
-  await insert(page, "main/main/0", "print");
-  await keys(page, "1,2");
-  await expect(chart(page)).toContainText("print(1, 2)");
-  await editor(page).locator("[data-value-line]").first().click();
-  await page.keyboard.press("End");
-  await editor(page).getByRole("button", { name: "Remove this value" }).last().click();
-  await expect(chart(page)).toContainText("print(1)");
-  await keys(page, "0");
-  await expect(chart(page)).toContainText("print(10)");
 });
