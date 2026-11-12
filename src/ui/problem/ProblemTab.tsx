@@ -1,12 +1,12 @@
 // The statement, `Example`, `Cases used by Submit`, the hints revealed one per click
 // (recorded), and `Show solution` (recorded).
 import type { ReactNode } from "react";
-import type { Challenge } from "@/challenges";
+import { HINTS, type Challenge } from "@/challenges";
 import { localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor";
 import { inRun, useMode } from "@/store/mode";
-import { HINTS, useProgress } from "@/store/progress";
+import { useProgress } from "@/store/progress";
 import { assignmentText, dataText, inputSpans, joinSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { foldLines } from "@/ui/text/fold";

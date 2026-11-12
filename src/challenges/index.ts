@@ -25,4 +25,5 @@ export function findChallenge(id: string | undefined): Challenge | undefined {
 }
 
 export { PLANS, planOf } from "./plans";
+export { HINTS } from "./types";
 export type { Challenge, Difficulty, Localized, Plan, Test, Topic } from "./types";

@@ -5,14 +5,12 @@
 // arrives, so no tab removes what another recorded.
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { HINTS } from "@/challenges/types";
 import { isRecord } from "@/lang/record";
 import { clamp } from "@/lib/utils";
 import { persistStorage, readStored } from "./storage";
 
 export const PROGRESS_STORAGE_KEY = "algoflow:progress";
-
-/** A challenge has exactly three hints. */
-export const HINTS = 3;
 
 export type ProgressStatus = "attempted" | "solved";
 export type ProgressEntry = { status: ProgressStatus; hints: number; solution: boolean };
