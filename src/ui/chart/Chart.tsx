@@ -1,16 +1,8 @@
 // The flowchart as SVG from `layout()`. Shapes come from `ChartNode.shape`
 // and never from a block type; generated chart nodes are gray. An HTML layer over the SVG,
 // under the same scale, holds the parts a learner interacts with (the Input chart nodes' menus,
-// the connectors, the editor) and a diagnostic's card beside its chart node.
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+// the connectors, the editor) and a diagnostic's message beside its chart node.
+import { useMemo, useRef, type ReactNode } from "react";
 import { t } from "@/i18n/t";
 import type { NodeId } from "@/lang/types";
 import { cn } from "@/lib/utils";
@@ -23,12 +15,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
-import { ChartDrag, DropZone, useNodeDrag, type Moves } from "./drag";
+import { ChartDrag, DropZone, useNodeDrag, type DragState, type Moves } from "./drag";
 import type { ChartEdge, ChartLayout, ChartNode } from "./layout";
 import { nodeFor, type Paint } from "./paint";
 import { spanStyle } from "./style";
 import { chartSpanFont } from "./measure";
-import { fitScale, zoomStep } from "./zoom";
+import { useHoverMessage, useClickToSelect, type OnSelect } from "./pointer";
+import { useEditorRoom, useScrollToCurrent } from "./scroll";
+import { useZoom, type Zoom } from "./zoom";
 
 /** Margin around the chart, in chart units. */
 const PAD = 24;
@@ -38,8 +32,7 @@ type Props = {
   /** The statement outlined as selected, and the owner outlined from a Python line. */
   selectedId?: NodeId | null;
   hoveredId?: NodeId | null;
-  /** A click on a statement's chart node (or a generated chart node of it), with the slot clicked. */
-  onSelect?: (owner: NodeId, slot?: string) => void;
+  onSelect?: OnSelect;
   /** The cases an Input chart node's menu lists, and what choosing one does; absent while read-only. */
   cases?: {
     labels: string[];
@@ -56,7 +49,7 @@ type Props = {
   /** Dragging a chart node onto a connector; absent while read-only. */
   moves?: Moves;
   /** Statements with a diagnostic to mark with a red dot, and what hovering one shows. */
-  flags?: { owners: ReadonlySet<NodeId>; card: (owner: NodeId) => ReactNode };
+  flags?: { owners: ReadonlySet<NodeId>; message: (owner: NodeId) => ReactNode };
 };
 
 function NodeShape({ node }: { node: ChartNode }) {
@@ -267,6 +260,144 @@ function EdgeView({ edge, taken }: { edge: ChartEdge; taken: boolean }) {
   );
 }
 
+/** The arrowheads of the edges: one for an edge the run hasn't taken, one for a taken edge. */
+function Arrowheads() {
+  return (
+    <defs>
+      <marker
+        id="chart-arrow"
+        viewBox="0 0 10 10"
+        refX="10"
+        refY="5"
+        markerWidth="7"
+        markerHeight="7"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" className="fill-foreground/80" />
+      </marker>
+      <marker
+        id="chart-arrow-taken"
+        viewBox="0 0 10 10"
+        refX="10"
+        refY="5"
+        markerWidth="6"
+        markerHeight="6"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 0 L 10 5 L 0 10 z" className="fill-taken" />
+      </marker>
+    </defs>
+  );
+}
+
+/** A flagged chart node's diagnostic message beside it, held open while the pointer is over it. */
+function HoverMessage(props: {
+  node: ChartNode;
+  owner: NodeId;
+  hover: (owner: NodeId | null) => void;
+  children: ReactNode;
+}) {
+  const { node, owner, hover, children } = props;
+  return (
+    <div
+      className="pointer-events-auto absolute w-72 rounded-lg border bg-background p-2 shadow-md"
+      style={{ left: node.x + node.w + 12, top: node.y }}
+      data-testid="diagnostic-message"
+      onMouseEnter={() => hover(owner)}
+      onMouseLeave={() => hover(null)}
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
+ * The connector of every edge that carries a place, closed to a drop it doesn't accept, with a
+ * refused drop's reason beside its connector.
+ */
+function Connectors(props: {
+  edges: readonly ChartEdge[];
+  connector: NonNullable<Props["connector"]>;
+  moves: Moves | undefined;
+  drag: DragState;
+}) {
+  const { edges, connector, moves, drag } = props;
+  const { dragged, refusal } = drag;
+  return edges.map((edge) => {
+    const { place } = edge;
+    if (!place) return null;
+    const closed = dragged !== null && moves !== undefined && !moves.accepts(dragged, place);
+    return (
+      <div
+        key={edge.id}
+        className="pointer-events-auto absolute"
+        style={{ left: edge.anchor.x, top: edge.anchor.y }}
+      >
+        <DropZone edge={edge} disabled={closed}>
+          {connector({ ...edge, place })}
+        </DropZone>
+        {refusal?.edge === edge.id && (
+          <div
+            role="status"
+            data-testid="drop-refused"
+            className="absolute top-3 left-3 w-56 rounded-md border border-destructive/60 bg-background px-2 py-1 text-sm text-destructive shadow-sm"
+          >
+            {refusal.text}
+          </div>
+        )}
+      </div>
+    );
+  });
+}
+
+/** The menu of cases over each Input chart node. */
+function InputMenus(props: { nodes: readonly ChartNode[]; cases: NonNullable<Props["cases"]> }) {
+  const { nodes, cases } = props;
+  return nodes
+    .filter((node) => node.role === "input")
+    .map((node) => (
+      <div
+        key={node.id}
+        className="pointer-events-auto absolute"
+        style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
+      >
+        <InputMenu label={node.text} cases={cases} />
+      </div>
+    ));
+}
+
+/** `−`, the current scale, and `+` in the chart's corner. */
+function ZoomControls({ zoom }: { zoom: Zoom }) {
+  return (
+    <div className="absolute top-3 right-4 flex gap-1" data-testid="zoom">
+      <Button
+        variant="outline"
+        size="icon-sm"
+        aria-label={t("chart.zoomOut.label")}
+        onClick={zoom.zoomOut}
+      >
+        {t("chart.zoomOut.icon")}
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        aria-label={t("chart.zoomReset.label")}
+        onClick={zoom.reset}
+      >
+        {t("chart.zoomReset.text", { n: Math.round(zoom.scale * 100) })}
+      </Button>
+      <Button
+        variant="outline"
+        size="icon-sm"
+        aria-label={t("chart.zoomIn.label")}
+        onClick={zoom.zoomIn}
+      >
+        {t("chart.zoomIn.icon")}
+      </Button>
+    </div>
+  );
+}
+
 export function Chart(props: Props) {
   const {
     chart,
@@ -283,77 +414,28 @@ export function Chart(props: Props) {
   } = props;
   const edited = editor && selectedId ? nodeFor(chart.nodes, selectedId) : undefined;
   const scroller = useRef<HTMLDivElement>(null);
-  const available = useElementWidth(scroller);
-  const [zoom, setZoom] = useState<number | null>(null);
-  const scale = zoom ?? fitScale(available, chart.width + 2 * PAD);
-  const width = (chart.width + 2 * PAD) * scale;
-  const height = (chart.height + 2 * PAD) * scale;
-  // The chart is centered; while an editor is open, room for it is added on the chart node's right
-  // where the canvas has none, and the canvas scrolls to show it.
-  const offset = Math.max(0, (available - width) / 2);
-  const editorEnd = edited
-    ? offset + (PAD + edited.x + edited.w) * scale + EDITOR_WIDTH + 2 * EDITOR_GAP
-    : 0;
-  const extra = Math.max(0, editorEnd - (offset + width));
-  useLayoutEffect(() => {
-    const element = scroller.current;
-    if (!element || editorEnd === 0) return;
-    const short = editorEnd - (element.scrollLeft + available);
-    if (short > 0) element.scrollLeft += short;
-  }, [editorEnd, available]);
-
-  // One delegated listener: a click on any part of a chart node selects the statement it belongs to.
   const svg = useRef<SVGSVGElement>(null);
-  useEffect(() => {
-    const element = svg.current;
-    if (!element || !onSelect) return;
-    const click = (event: MouseEvent) => {
-      const target = event.target instanceof Element ? event.target : null;
-      const owner = target?.closest<SVGGElement>("[data-owner]")?.dataset.owner;
-      const span = target?.closest<SVGElement>("[data-block-slot]");
-      if (owner) onSelect(owner, span?.dataset.blockSlot);
-    };
-    element.addEventListener("click", click);
-    return () => element.removeEventListener("click", click);
-  }, [onSelect]);
-
-  // The current chart node is scrolled into view.
+  const canvasWidth = useElementWidth(scroller);
+  // The chart's size in chart units, with its margin.
+  const paddedSize = { width: chart.width + 2 * PAD, height: chart.height + 2 * PAD };
+  const zoom = useZoom(canvasWidth, paddedSize.width);
+  const { scale } = zoom;
+  const width = paddedSize.width * scale;
+  const height = paddedSize.height * scale;
+  // The chart is centered, and the canvas grows on its right while the editor needs the room.
+  const offset = Math.max(0, (canvasWidth - width) / 2);
+  const editorRoom = useEditorRoom(scroller, {
+    canvasWidth,
+    contentWidth: offset + width,
+    widthForEditor: edited
+      ? offset + (PAD + edited.x + edited.w) * scale + EDITOR_WIDTH + 2 * EDITOR_GAP
+      : null,
+  });
+  useClickToSelect(svg, onSelect);
   const current = paint?.current ?? null;
-  useEffect(() => {
-    if (current === null) return;
-    const node = svg.current?.querySelector(`[data-chart-node="${CSS.escape(current)}"]`);
-    node?.scrollIntoView({ block: "nearest", inline: "nearest" });
-  }, [current]);
-
-  // The chart node with a diagnostic under the pointer shows its card until the pointer leaves both.
-  const [flagHover, setFlagHover] = useState<NodeId | null>(null);
-  const leave = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hold = useCallback((owner: NodeId | null) => {
-    if (leave.current !== null) clearTimeout(leave.current);
-    leave.current = null;
-    if (owner !== null) setFlagHover(owner);
-    else leave.current = setTimeout(() => setFlagHover(null), 250);
-  }, []);
-  useEffect(() => {
-    const element = svg.current;
-    if (!element || !flags) return;
-    const over = (event: MouseEvent) => {
-      const target = event.target instanceof Element ? event.target : null;
-      const owner = target?.closest<SVGGElement>("[data-owner]")?.dataset.owner;
-      hold(owner && flags.owners.has(owner) ? owner : null);
-    };
-    const out = () => hold(null);
-    element.addEventListener("mouseover", over);
-    element.addEventListener("mouseleave", out);
-    return () => {
-      element.removeEventListener("mouseover", over);
-      element.removeEventListener("mouseleave", out);
-    };
-  }, [flags, hold]);
-  const flagNode =
-    flags && flagHover !== null && flags.owners.has(flagHover)
-      ? nodeFor(chart.nodes, flagHover)
-      : undefined;
+  useScrollToCurrent(svg, current);
+  const { messageOwner, hover } = useHoverMessage(svg, flags?.owners);
+  const messageNode = messageOwner === null ? undefined : nodeFor(chart.nodes, messageOwner);
 
   // The chart node that carries each flagged statement's dot.
   const flaggedNodes = useMemo(
@@ -380,48 +462,25 @@ export function Chart(props: Props) {
 
   return (
     <ChartDrag moves={moves} edges={chart.edges}>
-      {({ dragged, refusal }) => (
+      {(drag) => (
         <div className="relative min-h-0 flex-1">
           <div
             ref={scroller}
             className="absolute inset-0 overflow-auto [scrollbar-gutter:stable]"
             data-testid="chart-scroll"
           >
-            <div style={{ width: offset + width + extra, height }}>
+            <div style={{ width: offset + width + editorRoom, height }}>
               <div className="relative" style={{ marginLeft: offset, width, height }}>
                 <svg
                   ref={svg}
                   width={width}
                   height={height}
-                  viewBox={`${-PAD} ${-PAD} ${chart.width + 2 * PAD} ${chart.height + 2 * PAD}`}
+                  viewBox={`${-PAD} ${-PAD} ${paddedSize.width} ${paddedSize.height}`}
                   aria-label={t("chart.label")}
                   role="img"
                   data-testid="chart"
                 >
-                  <defs>
-                    <marker
-                      id="chart-arrow"
-                      viewBox="0 0 10 10"
-                      refX="10"
-                      refY="5"
-                      markerWidth="7"
-                      markerHeight="7"
-                      orient="auto-start-reverse"
-                    >
-                      <path d="M 0 0 L 10 5 L 0 10 z" className="fill-foreground/80" />
-                    </marker>
-                    <marker
-                      id="chart-arrow-taken"
-                      viewBox="0 0 10 10"
-                      refX="10"
-                      refY="5"
-                      markerWidth="6"
-                      markerHeight="6"
-                      orient="auto-start-reverse"
-                    >
-                      <path d="M 0 0 L 10 5 L 0 10 z" className="fill-taken" />
-                    </marker>
-                  </defs>
+                  <Arrowheads />
                   {chart.edges.map((edge) => (
                     <EdgeView
                       key={edge.id}
@@ -438,21 +497,15 @@ export function Chart(props: Props) {
                     />
                   ))}
                 </svg>
-                {(cases || connector || edited || flagNode) && (
+                {(cases || connector || edited || messageNode) && (
                   <div
                     className="pointer-events-none absolute top-0 left-0 origin-top-left"
                     style={{ transform: `scale(${scale}) translate(${PAD}px, ${PAD}px)` }}
                   >
-                    {flagNode && flags && flagHover !== null && (
-                      <div
-                        className="pointer-events-auto absolute w-72 rounded-lg border bg-background p-2 shadow-md"
-                        style={{ left: flagNode.x + flagNode.w + 12, top: flagNode.y }}
-                        data-testid="diagnostic-message"
-                        onMouseEnter={() => hold(flagHover)}
-                        onMouseLeave={() => hold(null)}
-                      >
-                        {flags.card(flagHover)}
-                      </div>
+                    {messageNode && flags && messageOwner !== null && (
+                      <HoverMessage node={messageNode} owner={messageOwner} hover={hover}>
+                        {flags.message(messageOwner)}
+                      </HoverMessage>
                     )}
                     {edited && (
                       <div
@@ -463,76 +516,21 @@ export function Chart(props: Props) {
                         {editor}
                       </div>
                     )}
-                    {connector &&
-                      chart.edges.map((edge) => {
-                        const { place } = edge;
-                        if (!place) return null;
-                        const closed =
-                          dragged !== null && moves !== undefined && !moves.accepts(dragged, place);
-                        return (
-                          <div
-                            key={edge.id}
-                            className="pointer-events-auto absolute"
-                            style={{ left: edge.anchor.x, top: edge.anchor.y }}
-                          >
-                            <DropZone edge={edge} disabled={closed}>
-                              {connector({ ...edge, place })}
-                            </DropZone>
-                            {refusal?.edge === edge.id && (
-                              <div
-                                role="status"
-                                data-testid="drop-refused"
-                                className="absolute top-3 left-3 w-56 rounded-md border border-destructive/60 bg-background px-2 py-1 text-sm text-destructive shadow-sm"
-                              >
-                                {refusal.text}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    {cases &&
-                      chart.nodes
-                        .filter((node) => node.role === "input")
-                        .map((node) => (
-                          <div
-                            key={node.id}
-                            className="pointer-events-auto absolute"
-                            style={{ left: node.x, top: node.y, width: node.w, height: node.h }}
-                          >
-                            <InputMenu label={node.text} cases={cases} />
-                          </div>
-                        ))}
+                    {connector && (
+                      <Connectors
+                        edges={chart.edges}
+                        connector={connector}
+                        moves={moves}
+                        drag={drag}
+                      />
+                    )}
+                    {cases && <InputMenus nodes={chart.nodes} cases={cases} />}
                   </div>
                 )}
               </div>
             </div>
           </div>
-          <div className="absolute top-3 right-4 flex gap-1" data-testid="zoom">
-            <Button
-              variant="outline"
-              size="icon-sm"
-              aria-label={t("chart.zoomOut.label")}
-              onClick={() => setZoom(zoomStep(scale, -1))}
-            >
-              {t("chart.zoomOut.icon")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label={t("chart.zoomReset.label")}
-              onClick={() => setZoom(1)}
-            >
-              {t("chart.zoomReset.text", { n: Math.round(scale * 100) })}
-            </Button>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              aria-label={t("chart.zoomIn.label")}
-              onClick={() => setZoom(zoomStep(scale, 1))}
-            >
-              {t("chart.zoomIn.icon")}
-            </Button>
-          </div>
+          <ZoomControls zoom={zoom} />
         </div>
       )}
     </ChartDrag>

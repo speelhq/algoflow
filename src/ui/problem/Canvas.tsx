@@ -178,7 +178,7 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
     return {
       owners: new Set(flagged.keys()),
       // oxlint-disable-next-line react/no-unstable-nested-components -- a render function, not a component
-      card: (owner: NodeId) => (
+      message: (owner: NodeId) => (
         <div className="flex flex-col gap-2">
           {(flagged.get(owner) ?? []).map((diagnostic, i) => (
             // oxlint-disable-next-line react/no-array-index-key -- diagnostics have no id of their own
