@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { ifStmt } from "./if";
-import { ast, eventTypes, notation, program, runAll, varData } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData, hints } from "./testing";
 
 const { if_, assign, num, bin, v, for_, brk } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -55,6 +55,10 @@ describe("if (blocks.md)", () => {
 });
 
 describe("notation (blocks.md, Notation)", () => {
+  it("declares the hint of each slot of its table", () => {
+    expect(hints("if")).toEqual(["condition"]);
+  });
+
   it("writes the notation of its table", () => {
     expect(notation(if_(v("ok"), []))).toBe("{cond}");
   });

@@ -33,7 +33,7 @@ export function targetSlot(
 }
 
 /**
- * The words the notation writes right after a field (`)` after the last value of `print(…)`),
+ * The words the notation writes right after a field (`)` after the last value of `print(values)`),
  * which a key that begins them, typed after the field's value, moves on from.
  */
 export function wordsAfter(stmt: Stmt, field: Field): string {

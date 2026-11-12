@@ -21,21 +21,21 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
     case "variable":
       return {
         key: `v:${row.name}:${index}`,
-        label: row.name,
-        variable: true,
+        label: [{ text: row.name, variable: true }],
+        code: true,
         note: kindName(kinds, row.name),
       };
     case "new":
       return {
         key: `new:${row.name}`,
-        label: row.name,
-        variable: true,
+        label: [{ text: row.name, variable: true }],
+        code: true,
         lead: t("editor.newVariable"),
       };
     case "entry":
       return {
         key: `e:${row.entry.id}`,
-        label: row.entry.label,
+        label: [{ text: row.entry.label }],
         ...(row.entry.declared.symbol ? { symbol: row.entry.declared.symbol } : {}),
       };
     case "function":
@@ -43,7 +43,7 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
     case "parentheses":
       return {
         key: "parentheses",
-        label: t("editor.parentheses.label"),
+        label: [{ text: t("editor.parentheses.label") }],
         symbol: t("editor.parentheses.symbol"),
       };
   }

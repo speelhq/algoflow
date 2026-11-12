@@ -106,8 +106,6 @@ const HEIGHT: Record<Shape, number> = {
 
 /** A width estimated from the length of the text, where no font can measure it. */
 export const estimatedWidth: Measure = (span) => span.text.length * 7.2;
-/** Room on each side of an empty slot's text for its dashed outline. */
-export const PILL = 8;
 /** A diamond's text wider than this is drawn on two lines, as the designs draw it. */
 const WRAP = 150;
 /** The distance between the two lines of a diamond's text. */
@@ -257,8 +255,7 @@ class Builder {
     unplaced: NotationSpan[],
     y: number,
   ): ChartNode {
-    const measured = (span: NotationSpan) =>
-      span === BREAK ? 0 : this.measure(span) + (span.empty ? 2 * PILL : 0);
+    const measured = (span: NotationSpan) => (span === BREAK ? 0 : this.measure(span));
     const whole = unplaced.reduce((sum, span) => sum + measured(span), 0);
     const lines = shape === "diamond" && whole > WRAP ? inTwo(unplaced, measured) : [unplaced];
     const lineWidths = lines.map((line) => line.reduce((sum, span) => sum + measured(span), 0));
@@ -365,7 +362,7 @@ class Builder {
 
   /** A box; `leaves` names where its edge goes when it is not to the next chart node. */
   private box(stmt: Stmt, leaves: Leave | null): Frag {
-    const spans = notationSpans(stmt);
+    const spans = notationSpans(stmt, this.program);
     const node = this.captioned(stmt, stmt.id, "stmt", "box", spans, 0);
     const half = node.w / 2;
     return {
@@ -384,7 +381,7 @@ class Builder {
   }
 
   private diamond(stmt: Stmt, y: number): ChartNode {
-    return this.captioned(stmt, stmt.id, "stmt", "diamond", questionSpans(stmt), y);
+    return this.captioned(stmt, stmt.id, "stmt", "diamond", questionSpans(stmt, this.program), y);
   }
 
   /** `branch`: Yes to the right, No below on the axis, both merging below. */
@@ -464,7 +461,7 @@ class Builder {
         stmt.id,
         "init",
         "box",
-        generatedSpans(stmt, "init"),
+        generatedSpans(stmt, "init", this.program),
         0,
       );
       frag.nodes.push(init);
@@ -487,7 +484,7 @@ class Builder {
           `${stmt.id}:check`,
           "check",
           "diamond",
-          generatedSpans(stmt, "check"),
+          generatedSpans(stmt, "check", this.program),
           y,
         )
       : this.diamond(stmt, y);
@@ -517,7 +514,7 @@ class Builder {
         stmt.id,
         "update",
         "box",
-        generatedSpans(stmt, "update"),
+        generatedSpans(stmt, "update", this.program),
         yUpdate,
       );
       frag.nodes.push(update);

@@ -28,7 +28,7 @@ test("code is drawn in JetBrains Mono with no ligature, and words in Geist", asy
 
   await page.locator('[data-testid="connector"][data-place="main/main/0"]').click();
   const menu = page.getByTestId("block-menu");
-  expect((await style(menu.getByText("print(…)"))).family).toContain("JetBrains Mono");
+  expect((await style(menu.getByText("print(values)"))).family).toContain("JetBrains Mono");
   expect((await style(menu.getByText("Print", { exact: true }))).family).toContain("Geist");
 
   await menu.locator('[data-entry="print"]').click();

@@ -1,23 +1,23 @@
 // The block menu's entries for one connector: the registered statement blocks
 // grouped by category in menu order, each in registration order, those whose `requires`
 // the place does not meet disabled with the reason, then the program's functions a call can
-// name, as calls. Reads `shape`, `hidden`, `category`, `requires`, and the notation of a
-// block's `create()`, never a type.
+// name, as calls. Reads `shape`, `hidden`, `category`, `requires`, and the notation and slot
+// hints of a block's `create()`, never a type.
 import { blockText, t } from "@/i18n/t";
 import { placeContext } from "@/lang/scope";
 import type { Place, Program, Stmt } from "@/lang/types";
 import { getBlockDef, menuBlockDefs } from "@/blocks/registry";
 import { CATEGORIES, type Category } from "@/blocks/categories";
-import { notationWithEmptySlots } from "@/ui/chart/text";
+import { joinSpans, notationWithHints, type NotationSpan } from "@/ui/chart/text";
 import { functionLabel } from "./explain";
 import { callableFunctions, callExpr, type LineFunction } from "./line";
 
 export type BlockMenuEntry = {
   /** The registry key, or `call:<name>` for a function of the program. */
   id: string;
-  /** The block's label, or a program function's call as the value list labels it (`double(…)`). */
-  label: string;
-  /** The block's notation with every slot written `…`; absent for a call, whose label it is. */
+  /** The block's label, or a program function's call as the value list labels it (`double(x)`). */
+  label: NotationSpan[];
+  /** The block's notation with every slot written as its hint; absent for a call, whose label it is. */
   notation?: string;
   help: string;
   /** Why the block cannot go here; absent when it can. */
@@ -38,8 +38,8 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
           (def.requires === "loop" && !here.loop) || (def.requires === "function" && !here.fn);
         const entry: BlockMenuEntry = {
           id: def.key,
-          label: blockText(def.key, "label"),
-          notation: notationWithEmptySlots(def.notation(def.create())),
+          label: [{ text: blockText(def.key, "label") }],
+          notation: notationWithHints(def.create() as Stmt),
           help: blockText(def.key, "help"),
           create: () => def.create() as Stmt,
         };
@@ -78,7 +78,7 @@ export function searchMenu(groups: BlockMenuGroup[], query: string): BlockMenuGr
     .map((group) => ({
       ...group,
       entries: group.entries.filter((entry) =>
-        [entry.label, entry.help].some((text) => text.toLowerCase().includes(q)),
+        [joinSpans(entry.label), entry.help].some((text) => text.toLowerCase().includes(q)),
       ),
     }))
     .filter((group) => group.entries.length > 0);

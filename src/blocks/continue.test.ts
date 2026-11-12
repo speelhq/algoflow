@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, notation, program, runAll, varData } from "./testing";
+import { ast, notation, program, runAll, varData, hints } from "./testing";
 
 const { cont, for_, assign, num, v, bin, while_ } = ast;
 
@@ -38,6 +38,10 @@ describe("continue (blocks.md)", () => {
 });
 
 describe("notation (blocks.md, Notation)", () => {
+  it("declares the hint of each slot of its table", () => {
+    expect(hints("continue")).toEqual([]);
+  });
+
   it("writes the notation of its table", () => {
     expect(notation(cont())).toBe("continue");
   });

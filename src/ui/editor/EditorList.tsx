@@ -3,14 +3,14 @@
 import { useEffect, useRef } from "react";
 import { t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
-import { spanStyle } from "@/ui/chart/style";
+import type { NotationSpan } from "@/ui/chart/text";
+import { Spans } from "./Spans";
 
 export type ListItem = {
   key: string;
-  label: string;
-  /** Drawn as a variable: a bold word in the variable color. */
-  variable?: boolean;
-  /** The name is a call's code, drawn in JetBrains Mono as a variable's is (`pages.md`, Typefaces). */
+  /** The name, as spans, each drawn in its style: a variable's, a call's with its hints. */
+  label: NotationSpan[];
+  /** The name is code, a variable's or a call's, drawn in JetBrains Mono (`pages.md`, Typefaces). */
   code?: boolean;
   /** Before the name, in its own column (`*`). */
   symbol?: string;
@@ -72,7 +72,6 @@ export function EditorList(props: Props) {
             // A section with a symbol keeps a column for symbols.
             const symbols = section.items.some((row) => row.symbol !== undefined);
             const on = highlight === at;
-            const style = spanStyle(item);
             return (
               <button
                 key={item.key}
@@ -93,11 +92,8 @@ export function EditorList(props: Props) {
                   <span className="w-7 shrink-0 text-center font-mono">{item.symbol}</span>
                 )}
                 {item.lead && <span>{item.lead}</span>}
-                <span
-                  className={cn((item.code || item.variable) && "font-mono", style.colorClass)}
-                  style={{ fontWeight: style.fontWeight }}
-                >
-                  {item.label}
+                <span className={cn(item.code && "font-mono")}>
+                  <Spans spans={item.label} />
                 </span>
                 <span className="ml-auto text-xs text-muted-foreground">{item.note}</span>
                 {on && enter && (

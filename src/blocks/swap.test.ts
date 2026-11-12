@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import type { Data, Stmt } from "@/lang/types";
-import { ast, eventTypes, notation, program, runAll, varData, withInputs } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData, withInputs, hints } from "./testing";
 
 const { assign, bin, for_, item, num, swap, v } = ast;
 const runWith = (values: Record<string, Data>, main: Stmt[]) => {
@@ -130,6 +130,10 @@ describe("swap, errors", () => {
 });
 
 describe("notation (blocks.md, Notation)", () => {
+  it("declares the hint of each slot of its table", () => {
+    expect(hints("swap")).toEqual(["first", "second"]);
+  });
+
   it("writes the notation of its table", () => {
     expect(notation(swap(v("x"), v("y")))).toBe("swap({a}, {b})");
   });

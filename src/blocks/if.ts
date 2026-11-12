@@ -9,7 +9,7 @@ export const ifStmt = defineStmt<"if">({
   category: "control",
   chart: { branch: { cond: "cond", yes: "then", no: "else" } },
   slots: [
-    { name: "cond", role: "expr" },
+    { name: "cond", role: "expr", hint: "condition" },
     { name: "then", role: "body" },
     { name: "else", role: "body" },
   ],

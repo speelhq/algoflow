@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { getBlockDef } from "./registry";
-import { ast, eventTypes, notation, program, runAll } from "./testing";
+import { ast, eventTypes, notation, program, runAll, hints } from "./testing";
 
 const { exprStmt, call, num, bin } = ast;
 
@@ -31,6 +31,10 @@ describe("expr (blocks.md)", () => {
 });
 
 describe("notation (blocks.md, Notation)", () => {
+  it("declares the hint of each slot of its table", () => {
+    expect(hints("expr")).toEqual(["expression"]);
+  });
+
   it("writes the notation of its table", () => {
     expect(notation(exprStmt(call("f")))).toBe("{expr}");
   });

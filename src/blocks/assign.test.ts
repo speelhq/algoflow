@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, eventTypes, notation, program, runAll, varData } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData, hints } from "./testing";
 
 const { assign, assignTo, num, bin, v } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -31,6 +31,10 @@ describe("assign (blocks.md)", () => {
 });
 
 describe("notation (blocks.md, Notation)", () => {
+  it("declares the hint of each slot of its table", () => {
+    expect(hints("assign")).toEqual(["variable", "value"]);
+  });
+
   it("writes the notation of its table", () => {
     expect(notation(assign("total", num(0)))).toBe("{target} ← {value}");
   });

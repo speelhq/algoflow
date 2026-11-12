@@ -133,6 +133,28 @@ test("a dragged chart node's ghost draws its spans as the chart node does", asyn
   );
 });
 
+test("a dragged chart node's ghost draws an empty slot's hint gray, as the chart node does", async ({
+  page,
+}) => {
+  const assign = {
+    id: "gst-asg0-001",
+    type: "assign",
+    target: { id: "gst-tgt0-001", type: "var", name: "x" },
+    value: { id: "gst-emp0-001", type: "empty" },
+  };
+  await seedProgram(page, "fizzbuzz", programWith([assign]));
+  await page.goto("/#/p/fizzbuzz");
+  const drawn = await drawnSpans(node(page, assign.id).locator("tspan"));
+  const hint = drawn.find((span) => span.text === "value");
+  expect(hint?.weight).toBe("400");
+  expect(hint?.color).not.toBe(drawn.find((span) => span.text === " ← ")?.color);
+  await lift(page, assign.id);
+  const ghost = page.getByTestId("drag-ghost");
+  await expect(ghost).toBeVisible();
+  expect(await drawnSpans(ghost.locator("span"))).toEqual(drawn);
+  await page.mouse.up();
+});
+
 test("a drop that takes break out of its loop is refused with a tooltip", async ({ page }) => {
   const loop = {
     id: "drg-loop-001",

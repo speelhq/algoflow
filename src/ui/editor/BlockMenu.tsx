@@ -8,6 +8,7 @@ import { useProgram } from "@/store/program";
 import { Input } from "@/ui/primitives/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/ui/primitives/popover";
 import { insertBlock } from "./edits";
+import { Spans } from "./Spans";
 import { menuGroups, searchMenu, type BlockMenuEntry } from "./menu";
 
 function Entries({ place, done }: { place: Place; done: () => void }) {
@@ -58,7 +59,7 @@ function Entries({ place, done }: { place: Place; done: () => void }) {
                 <span>
                   {/* A call's label is its code (`BlockMenuEntry`). */}
                   <span className={cn(entry.notation === undefined && "font-mono")}>
-                    {entry.label}
+                    <Spans spans={entry.label} />
                   </span>
                   {entry.notation !== undefined && (
                     <>
