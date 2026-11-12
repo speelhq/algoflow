@@ -116,9 +116,9 @@ export function ResultTab({ challenge }: { challenge?: Challenge }) {
   );
 }
 
-/** A Playground program has no case selector and no `Expected`. */
+/** The rows of the run shown, empty in build mode; a Playground program has no `Expected`. */
 function RunResult({ challenge }: { challenge: Challenge | undefined }) {
-  const idle = !inRun(useMode());
+  const building = !inRun(useMode());
   const caseIndex = useRun((s) => s.caseIndex);
   const stdout = useRun((s) => s.stdout);
   const state = useRun((s) => s.state);
@@ -127,16 +127,16 @@ function RunResult({ challenge }: { challenge: Challenge | undefined }) {
   const rows = useMemo(
     () =>
       resultRows(test?.expect, {
-        stdout: idle ? [] : stdout,
-        vars: idle || !state ? {} : mainVars(state),
+        stdout: building ? [] : stdout,
+        vars: building || !state ? {} : mainVars(state),
       }),
-    [test, idle, stdout, state],
+    [test, building, stdout, state],
   );
   const differingRow = verdict ? firstDifferingRow(rows) : null;
 
   return (
     <div className="space-y-4" data-testid="result-tab">
-      {idle ? <p className="text-muted-foreground">{t("result.empty")}</p> : <Variables />}
+      {building ? <p className="text-muted-foreground">{t("result.empty")}</p> : <Variables />}
       {verdict && (
         <p
           className={cn(
@@ -152,7 +152,7 @@ function RunResult({ challenge }: { challenge: Challenge | undefined }) {
         rows={rows}
         differingRow={differingRow}
         expected={test?.expect.stdout !== undefined}
-        printed={idle || verdict ? undefined : stdout.length}
+        printed={building || verdict ? undefined : stdout.length}
       />
     </div>
   );

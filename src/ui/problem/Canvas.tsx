@@ -57,7 +57,7 @@ function SolutionBand({ challenge }: { challenge: Challenge }) {
 }
 
 /** The driver fields the chart draws and narrates from. */
-type Shown = Pick<
+type ShownRun = Pick<
   RunState,
   | "status"
   | "step"
@@ -80,7 +80,7 @@ function useRunPaint(
   program: Program,
   mode: Mode,
 ): { paint?: Paint; narration: Narrated | null } {
-  const run: Shown = useRun(
+  const run: ShownRun = useRun(
     useShallow((s) => ({
       status: s.status,
       step: s.step,
