@@ -3,7 +3,7 @@
 // which no registered block definition constructs. What editing reaches is validate()'s job. A
 // draft whose text is now a value of its slot is read as that value.
 import { getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
-import { normalizeCaption } from "./edit";
+import { storeCaption } from "./edit";
 import { isNodeId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
 import { isRecord } from "./record";
@@ -151,10 +151,7 @@ function checkStmts(value: unknown, path: string): void {
       if (typeof stmt.caption !== "string" || /[\n\r]/.test(stmt.caption)) {
         throw new MigrateError(`${at}.caption`, "expected one line of text");
       }
-      // A caption is stored as an edit stores it (one line, its spaces collapsed), absent when empty.
-      const caption = normalizeCaption(stmt.caption);
-      if (caption === "") delete stmt.caption;
-      else stmt.caption = caption;
+      storeCaption(stmt, stmt.caption);
     }
     if (!hasBlockDef(type) || getBlockDef(type).shape !== "stmt") {
       throw new MigrateError(`${at}.type`, `unknown type "${type}"`);
