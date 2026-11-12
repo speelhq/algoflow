@@ -1,22 +1,43 @@
-// Every edit the page makes goes through `apply`: only in build mode on the learner's own
-// program, as one history entry (or one per typed field), selecting what it creates.
+// Every edit the page makes goes through `apply` or `applyTyped`. Both edit the learner's own
+// program, and only in build mode. `insertBlock` selects the block it inserts.
 import { EditError, insertStmt } from "@/lang/edit";
 import type { Place, Program, Stmt } from "@/lang/types";
 import { useEditor } from "@/store/editor";
 import { currentMode, editable } from "@/store/mode";
 import { useProgram } from "@/store/program";
 
-/** Applies `change` to the program; false when editing is disabled or the edit does not apply. */
-export function apply(change: (program: Program) => Program, field?: string): boolean {
+/**
+ * Applies `change` to the program and hands the result to `record`. Returns false when editing
+ * is disabled or the edit does not apply.
+ */
+function applyWith(
+  change: (program: Program) => Program,
+  record: (next: Program) => void,
+): boolean {
   if (!editable(currentMode())) return false;
-  const store = useProgram.getState();
   try {
-    store.edit(change(store.program), field);
+    record(change(useProgram.getState().program));
     return true;
   } catch (error) {
     if (error instanceof EditError) return false;
     throw error;
   }
+}
+
+/**
+ * Applies `change` to the program as a history entry of its own. Returns false when editing is
+ * disabled or the edit does not apply.
+ */
+export function apply(change: (program: Program) => Program): boolean {
+  return applyWith(change, (next) => useProgram.getState().edit(next));
+}
+
+/**
+ * Applies `change`, typed into `field`, to the program through `typeInto`. Returns false when
+ * editing is disabled or the edit does not apply.
+ */
+export function applyTyped(change: (program: Program) => Program, field: string): boolean {
+  return applyWith(change, (next) => useProgram.getState().typeInto(next, field));
 }
 
 /**
