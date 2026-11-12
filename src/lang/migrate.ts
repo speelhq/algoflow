@@ -89,7 +89,7 @@ function readDrafts(block: Record<string, unknown>): void {
   for (const slot of getBlockDef(keyOf(block as unknown as Expr)).slots) {
     if (slot.role !== "expr" && slot.role !== "target" && slot.role !== "exprs") continue;
     const held = block[slot.name];
-    // An `exprs` slot holds a draft with text as its only item (`checkDraftsHeld`).
+    // An `exprs` slot holds a draft with text as its only item (`checkItemDrafts`).
     const text = draftText(slot.role === "exprs" && Array.isArray(held) ? held[0] : held);
     if (!text) continue;
     const read = draftValue(slot.role, text);
@@ -98,23 +98,22 @@ function readDrafts(block: Record<string, unknown>): void {
 }
 
 /**
- * Rejects a draft with text that no edit makes (`language.md`, Data, Faults that `migrate()`
- * rejects): one that an expression holds, or one beside other items of an `exprs` slot. A draft
- * with no text passes there, because the value line still makes an empty slot inside a value and
- * beside a print's other values.
+ * The fault of a draft outside a statement's slot, which no edit makes (`language.md`,
+ * Expressions, Drafts).
  */
-function checkDraftsHeld(block: Record<string, unknown>, path: string): void {
-  const def = getBlockDef(keyOf(block as unknown as Expr));
-  for (const slot of def.slots) {
-    if (slot.role !== "expr" && slot.role !== "target" && slot.role !== "exprs") continue;
-    const held = block[slot.name];
-    const items = slot.role === "exprs" && Array.isArray(held) ? held : [held];
-    // A statement's slot holds a draft as its value, or as an `exprs` slot's only item.
-    if (def.shape === "stmt" && items.length <= 1) continue;
+const DRAFT_ELSEWHERE = "expected a draft only as a statement's slot";
+
+/**
+ * Rejects a draft with text beside other items of a statement's `exprs` slot, which no edit makes.
+ * A draft with no text passes there, because the editor still adds each of a print's values as a
+ * field of its own.
+ */
+function checkItemDrafts(stmt: Record<string, unknown>, path: string): void {
+  for (const slot of getBlockDef(keyOf(stmt as unknown as Expr)).slots) {
+    const items = stmt[slot.name];
+    if (slot.role !== "exprs" || !Array.isArray(items) || items.length <= 1) continue;
     items.forEach((item, i) => {
-      if (!draftText(item)) return;
-      const at = slot.role === "exprs" ? `${path}.${slot.name}[${i}]` : `${path}.${slot.name}`;
-      throw new MigrateError(at, "expected a draft only as a statement's slot");
+      if (draftText(item)) throw new MigrateError(`${path}.${slot.name}[${i}]`, DRAFT_ELSEWHERE);
     });
   }
 }
@@ -127,14 +126,18 @@ function checkExpr(value: unknown, path: string): void {
     throw new MigrateError(`${path}.type`, `unknown type "${type}"`);
   }
   checkFields(value, path);
-  // No edit leaves an expression's name holding nothing, and a value line has no empty slot to
-  // fill it at (`language.md`, Data, Faults that `migrate()` rejects).
+  // No edit leaves an expression's name holding nothing, and nothing would show the fault, because
+  // a field and a chart node write it as no text (`language.md`, Data, Faults that `migrate()`
+  // rejects).
   const nothing = getBlockDef(keyOf(value as unknown as Expr)).slots.find(
     (slot) => slot.role === "name" && value[slot.name] === "",
   );
   if (nothing) throw new MigrateError(`${path}.${nothing.name}`, "expected the slot filled");
-  for (const child of rawChildren(value, path)) checkExpr(child.value, child.path);
-  checkDraftsHeld(value, path);
+  for (const child of rawChildren(value, path)) {
+    checkExpr(child.value, child.path);
+    // No expression holds a draft, an empty slot included.
+    if (draftText(child.value) !== undefined) throw new MigrateError(child.path, DRAFT_ELSEWHERE);
+  }
 }
 
 function checkStmts(value: unknown, path: string): void {
@@ -158,7 +161,7 @@ function checkStmts(value: unknown, path: string): void {
     }
     checkFields(stmt, at);
     for (const child of rawChildren(stmt, at)) checkExpr(child.value, child.path);
-    checkDraftsHeld(stmt, at);
+    checkItemDrafts(stmt, at);
     readDrafts(stmt);
     // A target slot holds a target, or a draft: no edit makes any other value there.
     for (const slot of getBlockDef(type).slots) {

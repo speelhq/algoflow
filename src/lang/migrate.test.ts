@@ -82,21 +82,26 @@ describe("migrate", () => {
     ]);
   });
 
-  it("rejects a draft with text that an expression holds, or beside other items", () => {
+  it("rejects a draft that an expression holds, or one with text beside other items", () => {
     const inside = asStored(program([assign("x", bin("+", num(1), ast.draft("2 *")))]));
     expect(() => migrate(inside)).toThrow(
       /^main\[0\]\.value\.right: expected a draft only as a statement's slot/,
+    );
+    const empty = asStored(program([assign("x", bin("+", num(1), ast.empty()))]));
+    expect(() => migrate(empty)).toThrow(
+      /^main\[0\]\.value\.right: expected a draft only as a statement's slot/,
+    );
+    const argument = asStored(program([print(ast.call("abs", ast.empty()))]));
+    expect(() => migrate(argument)).toThrow(
+      /^main\[0\]\.args\[0\]\.args\[0\]: expected a draft only as a statement's slot/,
     );
     const beside = asStored(program([print(num(1), ast.draft("x y"))]));
     expect(() => migrate(beside)).toThrow(
       /^main\[0\]\.args\[1\]: expected a draft only as a statement's slot/,
     );
-    // The value line still makes an empty slot inside a value and beside a print's values.
-    const empties = program([
-      assign("x", bin("+", num(1), ast.empty())),
-      print(num(1), ast.empty()),
-    ]);
-    expect(migrate(json(empties))).toEqual(empties);
+    // The editor still adds each of a print's values as a field of its own.
+    const added = program([print(num(1), ast.empty())]);
+    expect(migrate(json(added))).toEqual(added);
   });
 
   it("rejects a draft whose text isn't one line, at its path", () => {
