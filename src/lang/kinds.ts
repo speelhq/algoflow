@@ -27,11 +27,15 @@ export function exprKind(expr: Expr, variables: Kinds): Kind | undefined {
   return getBlockDef(keyOf(expr)).yields?.(expr, (inner) => exprKind(inner, variables));
 }
 
-type Scope = { kinds: Map<Name, Kind>; setters: Map<Name, Stmt> };
+/**
+ * What a routine's variables are known to hold: each one's kind, and the statement that first sets
+ * it.
+ */
+type RoutineKinds = { kinds: Map<Name, Kind>; setters: Map<Name, Stmt> };
 
-const memo = new WeakMap<Program, Map<string, Scope>>();
+const memo = new WeakMap<Program, Map<string, RoutineKinds>>();
 
-function scope(program: Program, routine: Routine): Scope {
+function routineKinds(program: Program, routine: Routine): RoutineKinds {
   let routines = memo.get(program);
   if (!routines) {
     routines = new Map();
@@ -71,10 +75,10 @@ function scope(program: Program, routine: Routine): Scope {
 
 /** The kinds of the variables of `main` or of one function, by its id. */
 export function variableKinds(program: Program, routine: Routine): Kinds {
-  return scope(program, routine).kinds;
+  return routineKinds(program, routine).kinds;
 }
 
 /** The statement that first sets each variable of `main` or of one function. */
 export function firstSetters(program: Program, routine: Routine): ReadonlyMap<Name, Stmt> {
-  return scope(program, routine).setters;
+  return routineKinds(program, routine).setters;
 }
