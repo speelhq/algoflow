@@ -17,7 +17,7 @@ import { layout, type ChartLayout } from "@/ui/chart/layout";
 import { measureText, useFontLoads } from "@/ui/chart/measure";
 import { paint, type Paint } from "@/ui/chart/paint";
 import { PathBar } from "@/ui/chart/PathBar";
-import { Connector } from "@/ui/editor/BlockMenu";
+import { Connector } from "@/ui/editor/Connector";
 import { apply } from "@/ui/editor/edits";
 import { accepts, tryMove } from "@/ui/editor/moves";
 import { DiagnosticMessage, flaggedOwners } from "@/ui/editor/diagnostics";
