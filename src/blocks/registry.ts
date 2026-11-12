@@ -29,7 +29,7 @@ import { print } from "./print";
 import { returnStmt } from "./return";
 import { str } from "./str";
 import { swap } from "./swap";
-import { builtinKey, methodKey, type BlockDef } from "./types";
+import { builtinKey, methodKey, type BlockDef, type Slot } from "./types";
 import { unop } from "./unop";
 import { variable } from "./var";
 import { whileStmt } from "./while";
@@ -88,6 +88,11 @@ export function keyOf(block: Block): string {
     return BLOCK_DEFS.has(builtinKey(block.fn)) ? builtinKey(block.fn) : "call";
   if (block.type === "method") return methodKey(block.name);
   return block.type;
+}
+
+/** The slot `name` that `block`'s definition declares, if it declares one. */
+export function findSlot(block: Block, name: string): Slot | undefined {
+  return getBlockDef(keyOf(block)).slots.find((slot) => slot.name === name);
 }
 
 /** Block menu entries of one category, in registration order. */

@@ -14,7 +14,7 @@ import {
   paramArg,
   variableOf,
 } from "@/lang/walk";
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { getBlockDef, keyOf, findSlot } from "@/blocks/registry";
 import type { Generated, BlockDef, Side } from "@/blocks/types";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
 import { str, writeValue } from "@/runtime/values";
@@ -73,7 +73,7 @@ const VALUE_HINT = "value";
 
 /** The `hint` that slot `slot` of a statement declares; every expression slot of one declares one. */
 export function slotHint(stmt: Block, slot: string): string {
-  const found = getBlockDef(keyOf(stmt)).slots.find((s) => s.name === slot);
+  const found = findSlot(stmt, slot);
   const hint = found && "hint" in found ? found.hint : undefined;
   if (hint === undefined) throw new Error(`slot ${slot} of ${keyOf(stmt)} declares no hint`);
   return hint;
@@ -169,7 +169,7 @@ const precedenceOf = (expr: Expr) => getBlockDef(keyOf(expr)).precedence?.(expr)
 export function bindsAt(block: Block, slot: string): number | undefined {
   const def = getBlockDef(keyOf(block));
   const own = def.shape === "expr" ? def.precedence?.(block as Expr) : undefined;
-  const found = def.slots.find((s) => s.name === slot);
+  const found = findSlot(block, slot);
   return own ?? (found?.role === "expr" && found.atom ? PRECEDENCE.atom : undefined);
 }
 
@@ -214,7 +214,7 @@ export type Held =
 /** What the placeholder `name` of `block`'s notation or template holds. */
 export function placeholderValue(block: Block, name: string): Held | undefined {
   const def = getBlockDef(keyOf(block));
-  const slot = def.slots.find((s) => s.name === name);
+  const slot = findSlot(block, name);
   if (!slot) {
     // A builtin's notation names its parameters (`{a}`, `{b}`).
     const found = paramArg(block, name);
@@ -422,8 +422,7 @@ const ASSIGN = getBlockDef("assign").create();
  */
 export function assignmentSpans(name: string, value: string): NotationSpan[] {
   return filledSpans(notationOf(ASSIGN), (placeholderName) =>
-    getBlockDef(keyOf(ASSIGN)).slots.find((slot) => slot.name === placeholderName)?.role ===
-    "target"
+    findSlot(ASSIGN, placeholderName)?.role === "target"
       ? [{ text: name, variable: true }]
       : [{ text: value }],
   );

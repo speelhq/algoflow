@@ -2,7 +2,7 @@
 import type { Data, Expr, FunctionDef, Name, NodeId, Program, Stmt } from "@/lang/types";
 import { dataKey, floatOf, inputValue, isFloatData } from "@/lang/data";
 import { programExprs } from "@/lang/walk";
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { getBlockDef, keyOf, findSlot } from "@/blocks/registry";
 import type { EmitContext, PyLine, Side } from "@/blocks/types";
 import { floatRepr } from "@/runtime/values";
 import { PRECEDENCE, needsParens } from "./precedence";
@@ -46,7 +46,7 @@ const ctx: EmitContext = {
   slot(block, name) {
     const expr = (block as unknown as Record<string, Expr>)[name];
     if (!expr) throw new Error(`no expression in slot ${name}`);
-    const found = getBlockDef(keyOf(block)).slots.find((slot) => slot.name === name);
+    const found = findSlot(block, name);
     return found?.role === "expr" && found.atom
       ? ctx.operand(expr, PRECEDENCE.atom, "left")
       : ctx.expr(expr);

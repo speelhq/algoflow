@@ -14,7 +14,7 @@ import { visibleAt } from "@/lang/scope";
 import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
 import { isExpr, blocksById, routineOf } from "@/lang/walk";
 import { cn } from "@/lib/utils";
-import { emptyDraft, getBlockDef, keyOf } from "@/blocks/registry";
+import { emptyDraft, getBlockDef, keyOf, findSlot } from "@/blocks/registry";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { placeholderValue, slotSpans } from "@/ui/chart/text";
@@ -168,7 +168,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     const empty = emptyDraft();
     const itemsOf = (block: Stmt | undefined): unknown =>
       block ? (block as unknown as Record<string, unknown>)[slot] : undefined;
-    const list = def.slots.find((s) => s.name === slot)?.role === "exprs";
+    const list = findSlot(stmt, slot)?.role === "exprs";
     const added = (p: Program): Program => {
       if (!list) return setExpr(p, stmt.id, slot, empty);
       const items = itemsOf(blocksById(p).get(stmt.id) as Stmt | undefined);

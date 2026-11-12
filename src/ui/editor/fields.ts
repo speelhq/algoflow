@@ -4,7 +4,7 @@ import { blockText, t } from "@/i18n/t";
 import { draftValue } from "@/lang/drafts";
 import type { Expr, NodeId, Stmt } from "@/lang/types";
 import { draftText, isExpr } from "@/lang/walk";
-import { draftOf, emptyDraft, getBlockDef, keyOf, type Slot } from "@/blocks/registry";
+import { draftOf, emptyDraft, getBlockDef, keyOf, findSlot, type Slot } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
   generatedNotation,
@@ -29,7 +29,7 @@ export function targetSlot(
   stmt: Stmt,
   field: Field,
 ): Extract<Slot, { role: "target" }> | undefined {
-  const slot = getBlockDef(keyOf(stmt)).slots.find((each) => each.name === field.slot);
+  const slot = findSlot(stmt, field.slot);
   return slot?.role === "target" ? slot : undefined;
 }
 
@@ -109,7 +109,7 @@ const OPTIONAL = "optional";
  * (`editor.md`, Value line, Empty slots).
  */
 export function fieldHint(stmt: Stmt, field: Field): string {
-  const slot = getBlockDef(keyOf(stmt)).slots.find((each) => each.name === field.slot);
+  const slot = findSlot(stmt, field.slot);
   return slot?.role === "expr" && slot.optional ? OPTIONAL : slotHint(stmt, field.slot);
 }
 
