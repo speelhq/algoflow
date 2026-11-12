@@ -141,6 +141,7 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
   const selectedId = useEditor((s) => s.selectedId);
   const editing = useEditor((s) => s.editing);
   const hoveredId = useEditor((s) => s.hoveredId);
+  const typing = useEditor((s) => s.typing);
   const caseIndex = useRun((s) => s.caseIndex);
   const selectCase = useRun((s) => s.selectCase);
   const mode = useMode();
@@ -173,7 +174,7 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
   const { paint: painted, narration: narrated } = useRunPaint(chart, mine, mode);
   const empty = mine.main.length === 0;
   const flags = useMemo(() => {
-    const flagged = flaggedOwners(mine);
+    const flagged = flaggedOwners(mine, typing);
     return {
       owners: new Set(flagged.keys()),
       // oxlint-disable-next-line react/no-unstable-nested-components -- a render function, not a component
@@ -186,7 +187,7 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
         </div>
       ),
     };
-  }, [mine]);
+  }, [mine, typing]);
   const moves: Moves = useMemo(
     () => ({
       accepts: (owner, place) => accepts(useProgram.getState().program, owner, place),

@@ -68,6 +68,8 @@ type Initial = { slot: string | null; emptyId: NodeId | null };
 function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initial: Initial }) {
   const def = getBlockDef(keyOf(stmt));
   const led = useEditor((s) => s.diagnostic);
+  const typing = useEditor((s) => s.typing);
+  const setTyping = useEditor((s) => s.setTyping);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
   const fields = fieldsOf(stmt);
@@ -112,7 +114,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
             : { asked: [], names: variables, binds },
     };
   }, [program, stmt.id, kinds, binds, named]);
-  const diagnostics = editorDiagnostics(program, stmt.id, led);
+  const diagnostics = editorDiagnostics(program, stmt.id, led, typing);
+  // A field of this editor no longer has the keyboard once the editor closes.
+  useEffect(() => () => setTyping(null), [setTyping]);
 
   // ------------------------------------------------------------ transitions
 
@@ -357,6 +361,12 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
       <div
         className="flex flex-col gap-1.5 border-b p-2.5 font-mono text-[0.95rem]"
         data-testid="editor-notation"
+        // While a field has the keyboard, the learner hasn't finished the block (`chart.md`,
+        // Editing on the chart, Diagnostics).
+        onFocus={() => setTyping(stmt.id)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) setTyping(null);
+        }}
       >
         {notation}
       </div>

@@ -7,18 +7,22 @@ import { blocksById, draftText, ownerOf } from "@/lang/walk";
 import { Button } from "@/ui/primitives/button";
 import { apply } from "./edits";
 
+/** Whether a diagnostic is of a draft, which the learner hasn't finished. */
+function ofDraft(program: Program, d: Diagnostic): boolean {
+  return draftText(blocksById(program).get(d.nodeId)) !== undefined;
+}
+
 /**
  * The diagnostics chart nodes show, by owner, a statement or a function (`chart.md`, Shapes): none
- * of a draft, which is reported only once Run or Submit leads to it (`run.md`, Run bar, Starting a
- * run), because a block drawn red while it is built would report an error before the learner had
- * finished its value.
+ * of what the learner hasn't finished, a draft or the statement `typing` whose editor has a field
+ * with the keyboard, which only Run or Submit reports (`chart.md`, Editing on the chart,
+ * Diagnostics).
  */
-export function flaggedOwners(program: Program): Map<NodeId, Diagnostic[]> {
+export function flaggedOwners(program: Program, typing: NodeId | null): Map<NodeId, Diagnostic[]> {
   const flagged = new Map<NodeId, Diagnostic[]>();
-  const blocks = blocksById(program);
   for (const d of validate(program)) {
-    if (draftText(blocks.get(d.nodeId)) !== undefined) continue;
     const owner = ownerOf(program, d.nodeId);
+    if (owner === typing || ofDraft(program, d)) continue;
     flagged.set(owner, [...(flagged.get(owner) ?? []), d]);
   }
   return flagged;
@@ -34,18 +38,25 @@ function sameDiagnostic(a: Diagnostic, b: Diagnostic): boolean {
 }
 
 /**
- * The diagnostics statement `id`'s editor shows: those its chart node shows, and first the one Run led
- * to, while the program still has it.
+ * The diagnostics statement `id`'s editor shows at its top: those its chart node shows, and first
+ * the one Run led to while the program still has it (`editor.md`, Block editor), which Run
+ * reported even while a field has the keyboard.
  */
 export function editorDiagnostics(
   program: Program,
   id: NodeId,
   led: Diagnostic | null,
+  typing: NodeId | null,
 ): Diagnostic[] {
-  const shown = flaggedOwners(program).get(id) ?? [];
-  const still = led ? validate(program).find((d) => sameDiagnostic(d, led)) : undefined;
-  const owner = still ? ownerOf(program, still.nodeId) : undefined;
-  return still && owner === id && !shown.includes(still) ? [still, ...shown] : shown;
+  const shown = flaggedOwners(program, typing).get(id) ?? [];
+  const still = ledStill(program, led);
+  const first = still && ownerOf(program, still.nodeId) === id;
+  return first && !shown.includes(still) ? [still, ...shown] : shown;
+}
+
+/** The diagnostic Run or Submit led to, while the program still has it. */
+export function ledStill(program: Program, led: Diagnostic | null): Diagnostic | undefined {
+  return led ? validate(program).find((d) => sameDiagnostic(d, led)) : undefined;
 }
 
 /** Applies a diagnostic's fix; only the fixes validation names exist. */
