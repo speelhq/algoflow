@@ -90,20 +90,23 @@ export function callExpr(fn: LineFunction): Expr | undefined {
   return { ...call, [args.name]: fn.params.map(() => emptyDraft()) };
 }
 
+/** The variables visible at the statement, as rows. */
+const variableRows = (ctx: LineContext): Row[] =>
+  ctx.variables.map((name): Row => ({ type: "variable", name }));
+
+/** The program's functions a call can name, as rows. */
+const functionRows = (ctx: LineContext): Row[] =>
+  ctx.functions.map((fn): Row => ({ type: "function", fn }));
+
 /** The rows a word names where a value is expected: the variables, the entries, and every call. */
 export function expectedWordRows(ctx: LineContext): Row[] {
   return [
-    ...ctx.variables.map((name): Row => ({ type: "variable", name })),
+    ...variableRows(ctx),
     ...allEntries()
       .filter((entry) => !takesValue(entry) || entry.call)
       .map((entry): Row => ({ type: "entry", entry })),
-    ...ctx.functions.map((fn): Row => ({ type: "function", fn })),
+    ...functionRows(ctx),
   ];
-}
-
-/** Every entry that takes a value, as rows: those offered after a value of no known kind. */
-export function afterRows(): Row[] {
-  return after(undefined, false);
 }
 
 /**
@@ -161,7 +164,7 @@ export function sections(rows: readonly Row[], asked: readonly string[]): Sectio
 }
 
 /** The rows offered where a value is expected; with `all`, every entry too. */
-export function expected(ctx: LineContext, all: boolean): Row[] {
+export function expectedRows(ctx: LineContext, all: boolean): Row[] {
   const offered = allEntries().filter((entry) => all || !takesValue(entry));
   // The parentheses follow the calculations offered where a value is expected.
   const last = offered.findLastIndex(
@@ -169,15 +172,11 @@ export function expected(ctx: LineContext, all: boolean): Row[] {
   );
   const entries = offered.map((entry): Row => ({ type: "entry", entry }));
   entries.splice(last + 1, 0, { type: "parentheses" });
-  return [
-    ...ctx.variables.map((name): Row => ({ type: "variable", name })),
-    ...entries,
-    ...ctx.functions.map((fn): Row => ({ type: "function", fn })),
-  ];
+  return [...variableRows(ctx), ...entries, ...functionRows(ctx)];
 }
 
 /** The entries offered after a value of `kind`; every one that takes a value when it is unknown. */
-export function after(kind: Kind | undefined, all: boolean): Row[] {
+export function rowsAfter(kind: Kind | undefined, all: boolean): Row[] {
   return allEntries()
     .filter(
       (entry) =>

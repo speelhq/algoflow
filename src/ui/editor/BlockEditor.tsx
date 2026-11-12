@@ -23,7 +23,7 @@ import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics, ledDraft } from "./diagnostics";
 import { apply } from "./edits";
 import { EditorList } from "./EditorList";
-import { explainDraft, explainText, helpSpans, type Explanation } from "./explain";
+import { explainDraft, explainLine, helpSpans, type Explanation } from "./explain";
 import {
   editedLines,
   fieldHint,
@@ -36,7 +36,7 @@ import {
   targetSlot,
   type Field,
 } from "./fields";
-import { caretMatches, caretOffersAll, caretPlace, wordAt } from "./caret";
+import { caretMatches, caretOffersAll, readCaret, wordAt } from "./caret";
 import { callableFunctions, type LineContext } from "./choices";
 import { CaptionField } from "./CaptionField";
 import { routineNames } from "./names";
@@ -44,7 +44,7 @@ import { valueList } from "./rows";
 import {
   changeText,
   enterField,
-  follow,
+  followStatement,
   highlightRow,
   openSession,
   pickRow,
@@ -91,7 +91,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     return openSession(stmt, start, initial.insertedCaret);
   });
   // A value changed elsewhere (an undo) reopens the line on it.
-  const session = follow(kept, stmt);
+  const session = followStatement(kept, stmt);
   if (session !== kept) setSession(session);
   const { focus, line } = session;
   const [focused, setFocused] = useState<Field | null>(null);
@@ -306,7 +306,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         sections={sections}
         highlight={shown}
         enter={typed}
-        empty={caretPlace(line, ctx) === "text" ? t("editor.inText") : t("editor.noItems")}
+        empty={
+          readCaret(line, ctx.kinds).place === "text" ? t("editor.inText") : t("editor.noItems")
+        }
         onHighlight={(index) => setSession((s) => highlightRow(s, index))}
         onChoose={(index) => {
           const row = rows[index];
@@ -319,7 +321,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           : {})}
       />
     );
-    explanation ??= explainText(
+    explanation ??= explainLine(
       line,
       ctx,
       shown === null ? undefined : rows[shown],

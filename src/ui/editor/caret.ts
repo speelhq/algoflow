@@ -20,12 +20,11 @@ import {
 import { PRECEDENCE } from "@/python/precedence";
 import { bindsAt } from "@/ui/chart/text";
 import {
-  after,
-  afterRows,
-  expected,
+  expectedRows,
   expectedWordRows,
   matchSections,
   rankMatches,
+  rowsAfter,
   sections,
   targetNames,
   callExpr,
@@ -73,11 +72,6 @@ export function wordAt(line: TextLine): Word {
   return { text: found[0], start: found.index };
 }
 
-/** Which of the value list's places the caret is in (`editor.md`, Value list). */
-export function caretPlace(line: TextLine, ctx: LineContext): CaretPlace["place"] {
-  return readCaret(line, ctx.kinds).place;
-}
-
 /** What the value list reads at the caret, or before the selection. */
 export function readCaret(line: TextLine, kinds: Kinds): CaretPlace {
   const word = wordAt(line);
@@ -97,8 +91,14 @@ const CARET = String.fromCharCode(0xfdd2);
 const TRAILING = new RegExp(`(?:, ${EMPTY})+(?=[)\\]}]|$)`, "gu");
 const CARET_AT = new RegExp(`[${EMPTY}${CARET}]`, "u");
 
-/** What a choice writes: the line's new text and its caret. */
-export type Written = { text: string; caret: number };
+/** A line holding `text`, with the caret at `caret`. */
+const caretLine = (text: string, caret: number): TextLine => ({ text, start: caret, end: caret });
+
+/**
+ * What a choice writes: its line, and its text with each slot it doesn't fill written as a name,
+ * so a target's line can tell whether the choice writes a target.
+ */
+type Choice = { line: TextLine; filled: string };
 
 type Bag = Record<string, unknown>;
 
@@ -132,10 +132,9 @@ function marked(expr: Expr, takes: boolean): Expr {
  * An expression as a choice writes it, as the emitter writes it (`editor.md`, Value list,
  * Choosing): each slot that it doesn't fill holds nothing, and a separator that only such slots
  * follow is left out; the caret goes where the first such slot is, or after the text. `taken` is
- * the text of the value it takes into its first slot. `filled` writes each slot that it doesn't
- * fill as a name, so a target's line can tell whether the choice writes a target.
+ * the text of the value it takes into its first slot.
  */
-function writeChoice(made: Expr, taken?: string): Written & { filled: string } {
+function writeChoice(made: Expr, taken?: string): Choice {
   const full = unparse(marked(made, taken !== undefined));
   const firstEmpty = full.indexOf(EMPTY);
   const dropped = full.replace(TRAILING, (run: string, offset: number) =>
@@ -146,42 +145,34 @@ function writeChoice(made: Expr, taken?: string): Written & { filled: string } {
   const at = text.search(CARET_AT);
   const plain = text.replaceAll(EMPTY, "").replaceAll(CARET, "");
   return {
-    text: plain,
-    caret: at === -1 ? plain.length : at,
+    line: caretLine(plain, at === -1 ? plain.length : at),
     filled: full.replace(TAKEN, () => taken ?? "").replaceAll(EMPTY, "_"),
   };
 }
 
-/** The text a row writes, and the part of the line it replaces. */
-type Choice = Written & { filled: string; from: number };
-
+/** What a row writes, and where in the line the text it replaces starts. */
 function choiceAt(
   line: TextLine,
   place: Extract<CaretPlace, { place: "expected" | "after" }>,
   row: Row,
-): Choice {
-  const word = place.word;
-  const at = (written: Written & { filled?: string }): Choice => ({
-    filled: written.text,
-    ...written,
-    from: word.start,
-  });
+): Choice & { from: number } {
+  const from = place.word.start;
   switch (row.type) {
     case "variable":
     case "new":
-      return at({ text: row.name, caret: row.name.length });
+      return { line: caretLine(row.name, row.name.length), filled: row.name, from };
     case "parentheses":
-      return { text: "()", caret: 1, filled: "(_)", from: word.start };
+      return { line: caretLine("()", 1), filled: "(_)", from };
     case "function": {
       const call = callExpr(row.fn);
       if (!call) throw new Error(`"${row.fn.name}" names no call`);
-      return at(writeChoice(call));
+      return { ...writeChoice(call), from };
     }
     case "entry":
       break;
   }
   const made = makeEntry(row.entry);
-  if (place.place !== "after" || !takesValue(row.entry)) return at(writeChoice(made));
+  if (place.place !== "after" || !takesValue(row.entry)) return { ...writeChoice(made), from };
   const first = firstSlot(made);
   const binds = first ? bindsAt(made, first.name) : undefined;
   // An entry whose first slot binds as an atom takes the value just before the caret; an operator
@@ -199,24 +190,23 @@ function choiceAt(
  * The text and the caret a choice of `row` writes at the caret, in place of the value it takes or
  * of the word being typed, or in place of the selection (`editor.md`, Value list, Choosing).
  */
-export function choose(line: TextLine, row: Row, kinds: Kinds): Written | undefined {
+export function choose(line: TextLine, row: Row, kinds: Kinds): TextLine | undefined {
   const place = readCaret(line, kinds);
   if (place.place === "text" || place.place === "none") return undefined;
   const choice = choiceAt(line, place, row);
   const prefix = line.text.slice(0, choice.from);
-  return {
-    text: prefix + choice.text + line.text.slice(line.end),
-    caret: prefix.length + choice.caret,
-  };
+  return caretLine(
+    prefix + choice.line.text + line.text.slice(line.end),
+    prefix.length + choice.line.start,
+  );
 }
 
 /**
- * The text a block's slot holds when the block menu inserts the block: the text that a choice of
- * the operation it holds writes (`editor.md`, Block menu). For example: `greet()`.
+ * The line a block's slot holds when the block menu inserts the block: the text and the caret that
+ * a choice of the operation it holds writes (`editor.md`, Block menu). For example: `greet()`.
  */
-export function slotChoice(expr: Expr): Written {
-  const { text, caret } = writeChoice(expr);
-  return { text, caret };
+export function choiceLine(expr: Expr): TextLine {
+  return writeChoice(expr).line;
 }
 
 // ---------------------------------------------------------------- the lists
@@ -258,7 +248,12 @@ function wordRows(line: TextLine, place: CaretPlace, ctx: LineContext): Row[] {
   if (place.place === "text" || place.place === "none") return [];
   const whole = wholeTarget(line, place, ctx);
   if (whole) return whole;
-  return kept(line, place, place.place === "expected" ? expectedWordRows(ctx) : afterRows(), ctx);
+  return kept(
+    line,
+    place,
+    place.place === "expected" ? expectedWordRows(ctx) : rowsAfter(undefined, false),
+    ctx,
+  );
 }
 
 function matchesAt(line: TextLine, place: CaretPlace, ctx: LineContext): Row[] {
@@ -289,7 +284,7 @@ export function caretSections(line: TextLine, ctx: LineContext, all: boolean): S
     kept(
       line,
       place,
-      place.place === "expected" ? expected(ctx, all) : after(place.kind, all),
+      place.place === "expected" ? expectedRows(ctx, all) : rowsAfter(place.kind, all),
       ctx,
     );
   return sections(rows, asked);

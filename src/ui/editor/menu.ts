@@ -10,7 +10,7 @@ import { getBlockDef, menuBlockDefs } from "@/blocks/registry";
 import { CATEGORIES, type Category } from "@/blocks/categories";
 import { joinSpans, notationWithHints, type NotationSpan } from "@/ui/chart/text";
 import { functionLabel } from "./explain";
-import { slotChoice, type Written } from "./caret";
+import { choiceLine, type TextLine } from "./caret";
 import { callableFunctions, callExpr, type LineFunction } from "./choices";
 import { textValue } from "./fields";
 
@@ -64,7 +64,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
       label: functionLabel(fn),
       help: blockText("call", "help"),
       create: () => callStatement(fn),
-      caret: callText(fn).caret,
+      caret: callText(fn).start,
     };
   });
   if (calls.length > 0) groups.push({ id: "program", title: t("menu.program"), entries: calls });
@@ -72,10 +72,10 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
 }
 
 /** The text that a choice of a call of `fn` writes, and its caret: `greet()`. */
-function callText(fn: LineFunction): Written {
+function callText(fn: LineFunction): TextLine {
   const call = callExpr(fn);
   if (!call) throw new Error(`"${fn.name}" is no function of the program`);
-  return slotChoice(call);
+  return choiceLine(call);
 }
 
 /** A statement calling `fn` of `program`, its slot holding the text a choice of the call writes. */

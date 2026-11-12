@@ -91,7 +91,7 @@ export function enterField(
 }
 
 /** The session over `stmt` as it is now: a value changed elsewhere (an undo) reopens the line. */
-export function follow(session: Session, stmt: Stmt): Session {
+export function followStatement(session: Session, stmt: Stmt): Session {
   const { focus, fieldValue } = session;
   if (!focus) return session;
   const value = valueOf(stmt, focus) ?? null;
@@ -173,10 +173,9 @@ const taken = (transition: Transition, after?: After): KeyTransition =>
  */
 export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransition {
   const { line } = session;
-  const written = line ? choose(line, row, ctx.kinds) : undefined;
-  if (!line || !written) return taken(still(session));
-  const typed = { text: written.text, start: written.caret, end: written.caret };
-  const changed = changeText(session, ctx, typed, false);
+  const chosen = line ? choose(line, row, ctx.kinds) : undefined;
+  if (!chosen) return taken(still(session));
+  const changed = changeText(session, ctx, chosen, false);
   const target = ctx.target !== null && isValue(changed.session.fieldValue);
   return taken(changed, target ? { go: 1 } : undefined);
 }
