@@ -18,8 +18,11 @@ export function revealSolution(id: string): void {
   useProgress.getState().solutionShown(id);
 }
 
-/** True when the program has no diagnostic; otherwise leads to the first one. */
-function readyToRun(): boolean {
+/**
+ * Gives the canvas back to the learner's program, and is true when it has no diagnostic; otherwise
+ * leads to the first one.
+ */
+function prepareRun(): boolean {
   const program = useProgram.getState().program;
   const editor = useEditor.getState();
   editor.showSolution(false);
@@ -33,7 +36,7 @@ function readyToRun(): boolean {
 }
 
 export function startRun(opts?: { watch?: boolean }): void {
-  if (!readyToRun()) return;
+  if (!prepareRun()) return;
   useSubmission.getState().reset();
   useEditor.getState().setTab("result");
   void useRun.getState().run(opts);
@@ -72,7 +75,7 @@ export function togglePlay(): void {
 
 /** Submit judges every test on its own runner and selects `Result`. */
 export function startSubmit(): void {
-  if (!readyToRun()) return;
+  if (!prepareRun()) return;
   useEditor.getState().setTab("result");
   void useSubmission.getState().submit();
 }
