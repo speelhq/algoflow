@@ -55,11 +55,11 @@ describe("paint", () => {
         marks: { [loop.id]: true, [branch.id]: true },
       }),
     );
-    expect(p.nodes.has("start")).toBe(true);
-    expect(p.nodes.has(branch.id)).toBe(true);
-    expect(p.nodes.has("end")).toBe(false);
+    expect(p.takenNodes.has("start")).toBe(true);
+    expect(p.takenNodes.has(branch.id)).toBe(true);
+    expect(p.takenNodes.has("end")).toBe(false);
     const labeled = chart.edges.filter((edge) => edge.from === branch.id);
-    const taken = labeled.filter((edge) => p.edges.has(edge.id)).map((edge) => edge.label);
+    const taken = labeled.filter((edge) => p.takenEdges.has(edge.id)).map((edge) => edge.label);
     expect(taken).toEqual(["yes"]);
     expect(p.marks.get(branch.id)).toBe(true);
     expect(p.marks.get(nodeOf(loop.id, "check") ?? "")).toBe(true);
@@ -73,7 +73,7 @@ describe("paint", () => {
     const no = chart.edges.find(
       (edge) => edge.from === nodeOf(loop.id, "check") && edge.label === "no",
     );
-    expect(no && p.edges.has(no.id)).toBe(true);
+    expect(no && p.takenEdges.has(no.id)).toBe(true);
   });
 
   it("takes a loop's No edge into a following loop's first chart node once control is there", () => {
@@ -88,9 +88,9 @@ describe("paint", () => {
     const no = twice.edges.find((edge) => edge.from === check?.id && edge.label === "no");
     const at = (activeId: string) =>
       paint(twice, view({ activeId, taken: { [first.id]: true, [second.id]: true } }));
-    expect(no && at(second.id).edges.has(no.id)).toBe(true);
+    expect(no && at(second.id).takenEdges.has(no.id)).toBe(true);
     // Before its first check the loop is current and has no mark: its No edge is not taken.
-    expect(no && at(first.id).edges.has(no.id)).toBe(false);
+    expect(no && at(first.id).takenEdges.has(no.id)).toBe(false);
   });
 
   it("after a loop with a break, the No edge is taken unless the break reached the exit", () => {
@@ -107,15 +107,15 @@ describe("paint", () => {
     const jump = drawn.edges.find((edge) => edge.from === stop.id);
     const at = (taken: Record<string, true>) => paint(drawn, view({ activeId: next.id, taken }));
     const ended = at({ [jumpy.id]: true, [next.id]: true });
-    expect(no && ended.edges.has(no.id)).toBe(true);
+    expect(no && ended.takenEdges.has(no.id)).toBe(true);
     const broke = at({ [jumpy.id]: true, [stop.id]: true, [next.id]: true });
-    expect(no && broke.edges.has(no.id)).toBe(false);
-    expect(jump && broke.edges.has(jump.id)).toBe(true);
+    expect(no && broke.takenEdges.has(no.id)).toBe(false);
+    expect(jump && broke.takenEdges.has(jump.id)).toBe(true);
   });
 
   it("marks the breakpoint on a loop's check and End once the run has ended", () => {
     const p = paint(chart, view({ breakpoint: loop.id, finished: true }));
     expect(p.breakpoint).toBe(nodeOf(loop.id, "check"));
-    expect(p.nodes.has("end")).toBe(true);
+    expect(p.takenNodes.has("end")).toBe(true);
   });
 });

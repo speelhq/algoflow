@@ -17,11 +17,12 @@ export type RunView = {
 
 export type Paint = {
   /** Chart node ids drawn in the taken-path color. */
-  nodes: Set<string>;
-  edges: Set<string>;
+  takenNodes: Set<string>;
+  /** Edge ids drawn in the taken-path color. */
+  takenEdges: Set<string>;
   /** Diamond chart node id → ✓ (true) or ✗ (false). */
   marks: Map<string, boolean>;
-  /** The chart node with the selection outline or the error outline. */
+  /** The chart node the run is at, outlined as running or as where the run failed. */
   current: string | null;
   breakpoint: string | null;
 };
@@ -56,23 +57,27 @@ function isTaken(node: ChartNode, view: RunView): boolean {
 
 export function paint(chart: ChartLayout, view: RunView): Paint {
   const byId = new Map(chart.nodes.map((node) => [node.id, node]));
-  const nodes = new Set(chart.nodes.filter((node) => isTaken(node, view)).map((node) => node.id));
-  const edges = new Set<string>();
+  const takenNodes = new Set(
+    chart.nodes.filter((node) => isTaken(node, view)).map((node) => node.id),
+  );
+  const takenEdges = new Set<string>();
   for (const edge of chart.edges) {
     const from = byId.get(edge.from);
     const to = byId.get(edge.to);
-    if (!from || !to || !nodes.has(from.id) || !nodes.has(to.id)) continue;
+    if (!from || !to || !takenNodes.has(from.id) || !takenNodes.has(to.id)) continue;
     const mark = from.owner === null ? undefined : view.marks[from.owner];
     // A labeled edge follows its diamond's mark; once a loop's mark is cleared on leaving
     // it (control is elsewhere), its `No` edge is taken when what it leads to is: what follows
     // the loop, or its exit, unless a jump on the path is what reached the exit.
     const left = mark === undefined && from.owner !== null && from.owner !== view.activeId;
     const jumped = (exit: ChartNode) =>
-      chart.edges.some((other) => other.to === exit.id && !other.label && nodes.has(other.from));
+      chart.edges.some(
+        (other) => other.to === exit.id && !other.label && takenNodes.has(other.from),
+      );
     const past = to.owner !== from.owner || (to.role === "exit" && !jumped(to));
     const follows =
       !edge.label || mark === (edge.label === "yes") || (left && edge.label === "no" && past);
-    if (follows) edges.add(edge.id);
+    if (follows) takenEdges.add(edge.id);
   }
   const marks = new Map<string, boolean>();
   for (const [owner, mark] of Object.entries(view.marks)) {
@@ -80,5 +85,11 @@ export function paint(chart: ChartLayout, view: RunView): Paint {
     if (node?.shape === "diamond") marks.set(node.id, mark);
   }
   const point = view.breakpoint === null ? undefined : nodeFor(chart.nodes, view.breakpoint);
-  return { nodes, edges, marks, current: currentNode(chart, view), breakpoint: point?.id ?? null };
+  return {
+    takenNodes,
+    takenEdges,
+    marks,
+    current: currentNode(chart, view),
+    breakpoint: point?.id ?? null,
+  };
 }
