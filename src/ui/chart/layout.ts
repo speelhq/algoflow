@@ -160,7 +160,8 @@ type Frag = {
   /** Flows that leave the region (for `End`, or for a loop), each ending on its right boundary. */
   escapes: Stub[];
 };
-type Slot = Place["slot"];
+/** The slot of a region: `main`, or a compound statement's body slot. */
+type RegionSlot = Place["slot"];
 
 function emptyFrag(): Frag {
   return {
@@ -303,7 +304,7 @@ class Builder {
   }
 
   /** Places `region` with its entry at `at` and joins `stub` to it; returns what flows out. */
-  private enter(stub: Stub, region: Frag, at: Point, into: Frag, parent: NodeId, slot: Slot) {
+  private enter(stub: Stub, region: Frag, at: Point, into: Frag, parent: NodeId, slot: RegionSlot) {
     const first: Place = { parent, slot, index: 0 };
     if (region.entry === null) return { ...stub, place: first };
     shift(region, at.x, at.y);
@@ -312,7 +313,7 @@ class Builder {
     return region.out;
   }
 
-  region(stmts: Stmt[], parent: RegionParent, slot: Slot): Frag {
+  region(stmts: Stmt[], parent: RegionParent, slot: RegionSlot): Frag {
     const frag = emptyFrag();
     let y = 0;
     let out: Stub | null = null;
@@ -346,7 +347,7 @@ class Builder {
 
   private regionOf(stmt: Stmt, slot: string): Frag {
     const stmts = regionsOf(stmt).find((region) => region.slot === slot)?.stmts ?? [];
-    return this.region(stmts, stmt.id, slot as Slot);
+    return this.region(stmts, stmt.id, slot as RegionSlot);
   }
 
   statement(stmt: Stmt): Frag {
@@ -417,8 +418,15 @@ class Builder {
       ],
       place: null,
     };
-    const noOut = this.enter(noStub, no, { x: 0, y: top }, frag, stmt.id, slots.no as Slot);
-    const yesOut = this.enter(yesStub, yes, { x: xYes, y: top }, frag, stmt.id, slots.yes as Slot);
+    const noOut = this.enter(noStub, no, { x: 0, y: top }, frag, stmt.id, slots.no as RegionSlot);
+    const yesOut = this.enter(
+      yesStub,
+      yes,
+      { x: xYes, y: top },
+      frag,
+      stmt.id,
+      slots.yes as RegionSlot,
+    );
 
     if (noOut || yesOut) {
       const merge = this.node(`${stmt.id}:merge`, stmt.id, "merge", "junction", [], yMerge);
@@ -502,7 +510,7 @@ class Builder {
     const passing = body.escapes.filter((escape) => escape.to !== "exit" && escape.to !== "next");
     const yBody = y + d.h + GAP_Y;
     const yesStub: Stub = { from: d.id, label: "yes", points: [{ x: 0, y: y + d.h }], place: null };
-    let out = this.enter(yesStub, body, { x: 0, y: yBody }, frag, stmt.id, slot as Slot);
+    let out = this.enter(yesStub, body, { x: 0, y: yBody }, frag, stmt.id, slot as RegionSlot);
     let bottom = yBody + body.height;
     let half = d.w / 2;
     let update: ChartNode | null = null;
