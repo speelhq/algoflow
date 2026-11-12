@@ -239,6 +239,92 @@ function edge(
   return made;
 }
 
+/** The `chart` form of a loop's block definition (`chart.md`, Shapes). */
+type LoopForm = "checked" | "counted";
+/** A loop's body as placed below its check: its region, what falls out of it, and its `y`. */
+type LoopBody = { region: Frag; out: Stub | null; y: number };
+/**
+ * The flows leaving a loop's body, by where they go: its own `exit` and `next` jumps, and the
+ * flows of its `Return`s, which pass on to `End`.
+ */
+type BodyEscapes = { exitJumps: Stub[]; nextJumps: Stub[]; returns: Stub[] };
+/**
+ * Where a loop's lanes run: the back edge on the left, then on the right the `next` lane and
+ * the `No` lane outside it; the row where the back edge turns, and the row below the loop.
+ */
+type LoopLanes = { xBack: number; xNext: number; xNo: number; yTurn: number; yBelow: number };
+
+/** Groups the flows leaving a loop's body by where they go. */
+function groupEscapes(body: LoopBody): BodyEscapes {
+  const { escapes } = body.region;
+  return {
+    exitJumps: escapes.filter((escape) => escape.to === "exit"),
+    nextJumps: escapes.filter((escape) => escape.to === "next"),
+    returns: escapes.filter((escape) => escape.to !== "exit" && escape.to !== "next"),
+  };
+}
+
+/** The lanes around a loop's check, its placed body, its update, and the flows leaving its body. */
+function loopLanes(
+  check: ChartNode,
+  body: LoopBody,
+  update: ChartNode | null,
+  bodyEscapes: BodyEscapes,
+): LoopLanes {
+  const bottom = update ? update.y + update.h : body.y + body.region.height;
+  const half = Math.max(check.w / 2, update ? update.w / 2 : 0);
+  const yTurn = bottom + GAP_Y / 2;
+  const xNext = Math.max(half, body.region.right) + LANE;
+  return {
+    xBack: -(Math.max(half, body.region.left) + LANE),
+    xNext,
+    // A `next` lane runs down inside the `No` lane when the body has a jump to the next pass.
+    xNo: bodyEscapes.nextJumps.length > 0 ? xNext + LANE : xNext,
+    yTurn,
+    yBelow: yTurn + LANE,
+  };
+}
+
+/** The back edge from below the body up the left lane to the loop's top. */
+function backEdge(from: Stub, top: ChartNode, lanes: LoopLanes): ChartEdge {
+  const { xBack, yTurn } = lanes;
+  const up = [
+    { x: 0, y: yTurn },
+    { x: xBack, y: yTurn },
+    { x: xBack, y: top.y },
+    { x: 0, y: top.y },
+  ];
+  return edge(from, top.id, up, { anchor: "first" });
+}
+
+/**
+ * Routes every `next` jump of a counted loop down its lane to the update, where the next pass
+ * starts. Returns the update's own flow, which goes up the back edge.
+ */
+function routeNextToUpdate(
+  frag: Frag,
+  update: ChartNode,
+  bodyEscapes: BodyEscapes,
+  lanes: LoopLanes,
+): Stub {
+  const { xNext } = lanes;
+  const y = update.y + update.h / 2;
+  for (const escape of bodyEscapes.nextJumps) {
+    extendTo(escape, xNext);
+    const into = [
+      { x: xNext, y },
+      { x: update.w / 2, y },
+    ];
+    frag.edges.push(edge(escape, update.id, into, { anchor: "start" }));
+  }
+  return { from: update.id, points: [{ x: 0, y: update.y + update.h }], place: null };
+}
+
+/** Extends a leaving flow sideways to `x`. */
+function extendTo(escape: Stub, x: number): void {
+  escape.points.push({ x, y: last(escape.points).y });
+}
+
 class Builder {
   /** Loops around the statement being placed: a jump outside every loop is an ordinary box. */
   private depth = 0;
@@ -340,8 +426,7 @@ class Builder {
       y += child.height + GAP_Y;
     }
     frag.out = out && { ...out, place: { parent, slot, index: stmts.length } };
-    for (const escape of frag.escapes)
-      escape.points.push({ x: frag.right, y: last(escape.points).y });
+    for (const escape of frag.escapes) extendTo(escape, frag.right);
     return frag;
   }
 
@@ -357,8 +442,8 @@ class Builder {
     if ("jump" in chart) return this.box(stmt, this.depth > 0 ? chart.jump : null);
     if ("branch" in chart) return this.branch(stmt, chart.branch);
     return "checked" in chart
-      ? this.loop(stmt, chart.checked.body, false)
-      : this.loop(stmt, chart.counted.body, true);
+      ? this.loop(stmt, chart.checked.body, "checked")
+      : this.loop(stmt, chart.counted.body, "counted");
   }
 
   /** A box; `leaves` names where its edge goes when it is not to the next chart node. */
@@ -448,8 +533,7 @@ class Builder {
       escape.points.push({ x: lane, y: from.y }, { x: lane, y: row }, { x: frag.right, y: row });
       frag.height = yMerge + LANE;
     }
-    for (const escape of yes.escapes)
-      escape.points.push({ x: frag.right, y: last(escape.points).y });
+    for (const escape of yes.escapes) extendTo(escape, frag.right);
     frag.escapes.push(...no.escapes, ...yes.escapes);
     return frag;
   }
@@ -459,169 +543,167 @@ class Builder {
    * body, a back edge up the left lane, No down the right lane and on past the loop. A counted
    * loop adds its generated init before the top and its update after the body.
    */
-  private loop(stmt: Stmt, slot: string, counted: boolean): Frag {
+  private loop(stmt: Stmt, slot: string, form: LoopForm): Frag {
     const frag = emptyFrag();
-    let y = 0;
-    let widest = 0;
-    if (counted) {
-      const init = this.node(
-        `${stmt.id}:init`,
-        stmt.id,
-        "init",
-        "box",
-        generatedSpans(stmt, "init", this.program),
-        0,
-      );
-      frag.nodes.push(init);
-      frag.entry = init.id;
-      y = init.h + JOIN;
-      widest = init.w / 2;
-    }
-    const top = this.node(`${stmt.id}:top`, stmt.id, "top", "junction", [], y);
-    const yJoin = y;
-    frag.nodes.push(top);
-    if (counted) {
-      const init: Stub = { from: `${stmt.id}:init`, points: [{ x: 0, y: y - JOIN }], place: null };
-      frag.edges.push(edge(init, top.id, [{ x: 0, y }]));
-    } else frag.entry = top.id;
-
-    y += JOIN;
-    const d = counted
-      ? this.captioned(
-          stmt,
-          `${stmt.id}:check`,
-          "check",
-          "diamond",
-          generatedSpans(stmt, "check", this.program),
-          y,
-        )
-      : this.diamond(stmt, y);
-    frag.nodes.push(d);
-    frag.edges.push(
-      edge({ from: top.id, points: [{ x: 0, y: yJoin }], place: null }, d.id, [{ x: 0, y }]),
-    );
-
-    this.depth += 1;
-    const body = this.regionOf(stmt, slot);
-    this.depth -= 1;
+    const init = form === "counted" ? this.placeLoopInit(stmt, frag) : null;
+    const top = this.placeLoopTop(stmt, frag, init);
+    frag.entry = (init ?? top).id;
+    const check = this.placeLoopCheck(stmt, form, frag, top);
+    const body = this.placeLoopBody(stmt, slot as RegionSlot, frag, check);
+    const update = form === "counted" ? this.placeLoopUpdate(stmt, frag, body) : null;
     // Jumps reaching this loop are its own: an inner loop has routed those for itself.
-    const exits = body.escapes.filter((escape) => escape.to === "exit");
-    const nexts = body.escapes.filter((escape) => escape.to === "next");
-    const passing = body.escapes.filter((escape) => escape.to !== "exit" && escape.to !== "next");
-    const yBody = y + d.h + GAP_Y;
-    const yesStub: Stub = { from: d.id, label: "yes", points: [{ x: 0, y: y + d.h }], place: null };
-    let out = this.enter(yesStub, body, { x: 0, y: yBody }, frag, stmt.id, slot as RegionSlot);
-    let bottom = yBody + body.height;
-    let half = d.w / 2;
-    let update: ChartNode | null = null;
+    const bodyEscapes = groupEscapes(body);
+    const lanes = loopLanes(check, body, update, bodyEscapes);
 
-    if (counted) {
-      const yUpdate = body.entry === null ? yBody : bottom + GAP_Y;
-      update = this.node(
-        `${stmt.id}:update`,
-        stmt.id,
-        "update",
-        "box",
-        generatedSpans(stmt, "update", this.program),
-        yUpdate,
-      );
-      frag.nodes.push(update);
-      if (out) frag.edges.push(edge(out, update.id, [{ x: 0, y: yUpdate }]));
-      out = { from: update.id, points: [{ x: 0, y: yUpdate + update.h }], place: null };
-      bottom = yUpdate + update.h;
-      half = Math.max(half, update.w / 2);
+    const backStart = update
+      ? routeNextToUpdate(frag, update, bodyEscapes, lanes)
+      : this.routeNextToBackEdge(stmt, frag, body, bodyEscapes, lanes);
+    if (backStart) frag.edges.push(backEdge(backStart, top, lanes));
+    frag.out = this.routeLoopExit(stmt, frag, check, bodyEscapes, lanes);
+    frag.height = lanes.yBelow;
+    const widest = init ? init.w / 2 : 0;
+    frag.left = Math.max(-lanes.xBack + 4, widest);
+    frag.right = Math.max(lanes.xNo + 4, widest);
+    for (const escape of bodyEscapes.returns) extendTo(escape, frag.right);
+    frag.escapes.push(...bodyEscapes.returns);
+    return frag;
+  }
+
+  /** Places a counted loop's generated init, where the loop is entered. */
+  private placeLoopInit(stmt: Stmt, frag: Frag): ChartNode {
+    const spans = generatedSpans(stmt, "init", this.program);
+    const init = this.node(`${stmt.id}:init`, stmt.id, "init", "box", spans, 0);
+    frag.nodes.push(init);
+    return init;
+  }
+
+  /** Places the loop's top, below the init of a counted loop, and where a checked loop is entered. */
+  private placeLoopTop(stmt: Stmt, frag: Frag, init: ChartNode | null): ChartNode {
+    const y = init ? init.h + JOIN : 0;
+    const top = this.node(`${stmt.id}:top`, stmt.id, "top", "junction", [], y);
+    frag.nodes.push(top);
+    if (init) {
+      const from: Stub = { from: init.id, points: [{ x: 0, y: init.h }], place: null };
+      frag.edges.push(edge(from, top.id, [{ x: 0, y }]));
     }
+    return top;
+  }
 
-    const yTurn = bottom + GAP_Y / 2;
-    const xBack = -(Math.max(half, body.left) + LANE);
-    // A `next` lane runs down inside the `No` lane when the body has a jump to the next pass.
-    const xNext = Math.max(half, body.right) + LANE;
-    const xNo = nexts.length > 0 ? xNext + LANE : xNext;
-    const up = [
-      { x: 0, y: yTurn },
-      { x: xBack, y: yTurn },
-      { x: xBack, y: yJoin },
-      { x: 0, y: yJoin },
-    ];
-    const toLane = (escape: Stub, x: number) => escape.points.push({ x, y: last(escape.points).y });
+  /** Places the diamond below the top: a counted loop's generated check, or a checked loop's own. */
+  private placeLoopCheck(stmt: Stmt, form: LoopForm, frag: Frag, top: ChartNode): ChartNode {
+    const y = top.y + JOIN;
+    const check =
+      form === "counted"
+        ? this.captioned(
+            stmt,
+            `${stmt.id}:check`,
+            "check",
+            "diamond",
+            generatedSpans(stmt, "check", this.program),
+            y,
+          )
+        : this.diamond(stmt, y);
+    frag.nodes.push(check);
+    const from: Stub = { from: top.id, points: [{ x: 0, y: top.y }], place: null };
+    frag.edges.push(edge(from, check.id, [{ x: 0, y }]));
+    return check;
+  }
 
-    if (update) {
-      // The next pass of a counted loop starts at its update.
-      const yUpdate = update.y + update.h / 2;
-      for (const escape of nexts) {
-        toLane(escape, xNext);
-        frag.edges.push(
-          edge(
-            escape,
-            update.id,
-            [
-              { x: xNext, y: yUpdate },
-              { x: update.w / 2, y: yUpdate },
-            ],
-            {
-              anchor: "start",
-            },
-          ),
-        );
-      }
-      if (out) frag.edges.push(edge(out, top.id, up, { anchor: "first" }));
-    } else if (nexts.length > 0) {
-      // The next pass of a checked loop starts where the back edge does.
-      const next = this.node(`${stmt.id}:next`, stmt.id, "next", "junction", [], yTurn);
-      frag.nodes.push(next);
-      for (const escape of nexts) {
-        toLane(escape, xNext);
-        frag.edges.push(
-          edge(
-            escape,
-            next.id,
-            [
-              { x: xNext, y: yTurn },
-              { x: 0, y: yTurn },
-            ],
-            { anchor: "start" },
-          ),
-        );
-      }
-      if (out) frag.edges.push(edge(out, next.id, [{ x: 0, y: yTurn }]));
-      const from: Stub = { from: next.id, points: [{ x: 0, y: yTurn }], place: null };
-      frag.edges.push(edge(from, top.id, up.slice(1), { anchor: "first" }));
-    } else if (out) {
-      frag.edges.push(edge(out, top.id, up, { anchor: "first" }));
+  /**
+   * Places the body below the check, joined to it by `Yes`, one loop deeper, so its jumps go to
+   * this loop.
+   */
+  private placeLoopBody(stmt: Stmt, slot: RegionSlot, frag: Frag, check: ChartNode): LoopBody {
+    this.depth += 1;
+    const region = this.regionOf(stmt, slot);
+    this.depth -= 1;
+    const y = check.y + check.h + GAP_Y;
+    const yes: Stub = {
+      from: check.id,
+      label: "yes",
+      points: [{ x: 0, y: check.y + check.h }],
+      place: null,
+    };
+    const out = this.enter(yes, region, { x: 0, y }, frag, stmt.id, slot);
+    return { region, out, y };
+  }
+
+  /** Places a counted loop's generated update below the body, or in its place when it is empty. */
+  private placeLoopUpdate(stmt: Stmt, frag: Frag, body: LoopBody): ChartNode {
+    const y = body.region.entry === null ? body.y : body.y + body.region.height + GAP_Y;
+    const spans = generatedSpans(stmt, "update", this.program);
+    const update = this.node(`${stmt.id}:update`, stmt.id, "update", "box", spans, y);
+    frag.nodes.push(update);
+    if (body.out) frag.edges.push(edge(body.out, update.id, [{ x: 0, y }]));
+    return update;
+  }
+
+  /**
+   * Routes every `next` jump of a checked loop down its lane to a `next` junction where the back
+   * edge starts, when the body has one. Returns the flow that goes up the back edge.
+   */
+  private routeNextToBackEdge(
+    stmt: Stmt,
+    frag: Frag,
+    body: LoopBody,
+    bodyEscapes: BodyEscapes,
+    lanes: LoopLanes,
+  ): Stub | null {
+    const { nextJumps } = bodyEscapes;
+    const { xNext, yTurn } = lanes;
+    if (nextJumps.length === 0) return body.out;
+    const next = this.node(`${stmt.id}:next`, stmt.id, "next", "junction", [], yTurn);
+    frag.nodes.push(next);
+    for (const escape of nextJumps) {
+      extendTo(escape, xNext);
+      const into = [
+        { x: xNext, y: yTurn },
+        { x: 0, y: yTurn },
+      ];
+      frag.edges.push(edge(escape, next.id, into, { anchor: "start" }));
     }
+    if (body.out) frag.edges.push(edge(body.out, next.id, [{ x: 0, y: yTurn }]));
+    return { from: next.id, points: [{ x: 0, y: yTurn }], place: null };
+  }
 
-    frag.height = yTurn + LANE;
+  /**
+   * Routes `No` from the check down the right lane to below the loop, where every `exit` jump
+   * meets it at an `exit` junction. Returns the flow that goes on past the loop.
+   */
+  private routeLoopExit(
+    stmt: Stmt,
+    frag: Frag,
+    check: ChartNode,
+    bodyEscapes: BodyEscapes,
+    lanes: LoopLanes,
+  ): Stub {
+    const { exitJumps } = bodyEscapes;
+    const { xNo, yBelow } = lanes;
+    const y = check.y + check.h / 2;
     const no: Stub = {
-      from: d.id,
+      from: check.id,
       label: "no",
       points: [
-        { x: d.w / 2, y: y + d.h / 2 },
-        { x: xNo, y: y + d.h / 2 },
-        { x: xNo, y: frag.height },
-        { x: 0, y: frag.height },
+        { x: check.w / 2, y },
+        { x: xNo, y },
+        { x: xNo, y: yBelow },
+        { x: 0, y: yBelow },
       ],
       place: null,
     };
-    if (exits.length > 0) {
-      // `No` and every exit meet below the loop, and what follows starts there.
-      const exit = this.node(`${stmt.id}:exit`, stmt.id, "exit", "junction", [], frag.height);
-      frag.nodes.push(exit);
-      frag.edges.push(edge(no, exit.id, []));
-      for (const escape of exits) {
-        toLane(escape, xNo);
-        const down = [
-          { x: xNo, y: frag.height },
-          { x: 0, y: frag.height },
-        ];
-        frag.edges.push(edge(escape, exit.id, down, { anchor: "start" }));
-      }
-      frag.out = { from: exit.id, points: [{ x: 0, y: frag.height }], place: null };
-    } else frag.out = no;
-    frag.left = Math.max(-xBack + 4, widest);
-    frag.right = Math.max(xNo + 4, widest);
-    for (const escape of passing) toLane(escape, frag.right);
-    frag.escapes.push(...passing);
-    return frag;
+    if (exitJumps.length === 0) return no;
+    const exit = this.node(`${stmt.id}:exit`, stmt.id, "exit", "junction", [], yBelow);
+    frag.nodes.push(exit);
+    frag.edges.push(edge(no, exit.id, []));
+    for (const escape of exitJumps) {
+      extendTo(escape, xNo);
+      const down = [
+        { x: xNo, y: yBelow },
+        { x: 0, y: yBelow },
+      ];
+      frag.edges.push(edge(escape, exit.id, down, { anchor: "start" }));
+    }
+    return { from: exit.id, points: [{ x: 0, y: yBelow }], place: null };
   }
 }
 
