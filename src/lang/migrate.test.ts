@@ -82,7 +82,7 @@ describe("migrate", () => {
     ]);
   });
 
-  it("rejects a draft that an expression holds, or one with text beside other items", () => {
+  it("rejects a draft that an expression holds, or one beside other items", () => {
     const inside = asStored(program([assign("x", bin("+", num(1), ast.draft("2 *")))]));
     expect(() => migrate(inside)).toThrow(
       /^main\[0\]\.value\.right: expected a draft only as a statement's slot/,
@@ -99,9 +99,18 @@ describe("migrate", () => {
     expect(() => migrate(beside)).toThrow(
       /^main\[0\]\.args\[1\]: expected a draft only as a statement's slot/,
     );
-    // The editor still adds each of a print's values as a field of its own.
-    const added = program([print(num(1), ast.empty())]);
-    expect(migrate(json(added))).toEqual(added);
+    const emptyBeside = asStored(program([print(num(1), ast.empty())]));
+    expect(() => migrate(emptyBeside)).toThrow(
+      /^main\[0\]\.args\[1\]: expected a draft only as a statement's slot/,
+    );
+  });
+
+  it("reads a list of values whose only item is a draft with no text as no item", () => {
+    const stored = asStored(program([print(ast.empty())]));
+    expect((migrate(stored).main[0] as Record<string, unknown>).args).toEqual([]);
+    // A draft whose text is no values separated by commas stays the list's only item.
+    const typed = asStored(program([print(ast.draft("x y"))]));
+    expect(migrate(json(typed))).toEqual(typed);
   });
 
   it("rejects a draft whose text isn't one line, at its path", () => {
