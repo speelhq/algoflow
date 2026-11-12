@@ -66,11 +66,14 @@ function claim(expr: Expr, taken: Set<NodeId>): void {
   for (const id of ids()) taken.add(id);
 }
 
-/** An expression entering the program; ids of `replaced`, which it takes the place of, may stay. */
-function freshExpr(expr: Expr, program: Program, replaced?: Expr): Expr {
-  const copy = clone(expr);
-  claim(copy, takenIds(program, replaced ? [replaced] : []));
-  return copy;
+/** Expressions entering the program; ids of `replaced`, which they take the place of, may stay. */
+function freshExprs(exprs: readonly Expr[], program: Program, replaced: readonly Expr[]): Expr[] {
+  const taken = takenIds(program, replaced);
+  return exprs.map((expr) => {
+    const copy = clone(expr);
+    claim(copy, taken);
+    return copy;
+  });
 }
 
 // ---------------------------------------------------------------- finding
@@ -163,63 +166,25 @@ export function duplicateStmt(program: Program, id: NodeId): Program {
 // ---------------------------------------------------------------- slots
 
 /**
- * Sets an expression or target slot. For `exprs` slots `index` selects the item (appending
- * past the end).
+ * Sets an expression or target slot to `value`, or an `exprs` slot to its items as a whole, because
+ * a field edits the slot as one text (`language.md`, Edits, Statement positions). The ids of the
+ * value replaced may stay.
  */
-export function setExpr(
-  program: Program,
-  id: NodeId,
-  slot: string,
-  expr: Expr,
-  index?: number,
-): Program {
+export function setExpr(program: Program, id: NodeId, slot: string, value: Expr | Expr[]): Program {
   const next = clone(program);
   const block = getBlock(next, id);
-  const spec = findSlot(block, slot);
+  const role = findSlot(block, slot)?.role;
   const bag = block as unknown as Bag;
-  const old = (value: unknown) => (isExpr(value) ? value : undefined);
-  if (spec?.role === "expr" || spec?.role === "target") {
-    bag[slot] = freshExpr(expr, next, old(bag[slot]));
-  } else if (spec?.role === "exprs") {
-    const items = (bag[slot] as Expr[] | undefined) ?? [];
-    const at = index === undefined ? items.length : Math.max(0, Math.min(index, items.length));
-    items.splice(at, at < items.length ? 1 : 0, freshExpr(expr, next, old(items[at])));
-    bag[slot] = items;
+  const held = bag[slot];
+  if ((role === "expr" || role === "target") && !Array.isArray(value)) {
+    [bag[slot]] = freshExprs([value], next, isExpr(held) ? [held] : []);
+  } else if (role === "exprs" && Array.isArray(value)) {
+    bag[slot] = freshExprs(value, next, Array.isArray(held) ? held.filter(isExpr) : []);
   } else {
-    throw new EditError(`block ${id} has no expression slot ${slot}`);
+    throw new EditError(
+      `block ${id} has no ${Array.isArray(value) ? "exprs" : "expression"} slot ${slot}`,
+    );
   }
-  return next;
-}
-
-/** Inserts `expr` as item `index` of an `exprs` slot; the items from `index` on move one on. */
-export function insertItem(
-  program: Program,
-  id: NodeId,
-  slot: string,
-  index: number,
-  expr: Expr,
-): Program {
-  const next = clone(program);
-  const block = getBlock(next, id);
-  const spec = findSlot(block, slot);
-  const items = (block as unknown as Bag)[slot];
-  if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index > items.length) {
-    throw new EditError(`block ${id} has no place ${index} in ${slot}`);
-  }
-  items.splice(index, 0, freshExpr(expr, next));
-  return next;
-}
-
-/** Removes item `index` of an `exprs` slot. */
-export function removeItem(program: Program, id: NodeId, slot: string, index: number): Program {
-  const next = clone(program);
-  const block = getBlock(next, id);
-  const spec = findSlot(block, slot);
-  const items = (block as unknown as Bag)[slot];
-  if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index >= items.length) {
-    throw new EditError(`block ${id} has no item ${index} in ${slot}`);
-  }
-  items.splice(index, 1);
   return next;
 }
 

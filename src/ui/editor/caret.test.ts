@@ -99,6 +99,9 @@ describe("the value list (editor.md, Value list)", () => {
     expect(readCaret(at("x ab"), ctx.kinds)).toMatchObject({ place: "after", kind: "number" });
     expect(readCaret(at("nums|"), ctx.kinds).place).toBe("expected");
     expect(readCaret(at("nums |"), ctx.kinds)).toMatchObject({ place: "after", kind: "list" });
+    // A print's values are one text, so a value is expected after a `,` outside any bracket.
+    expect(readCaret(at("1, "), ctx.kinds).place).toBe("expected");
+    expect(readCaret(at("1, nums "), ctx.kinds)).toMatchObject({ place: "after", kind: "list" });
   });
 
   it("reads the text before a selection", () => {

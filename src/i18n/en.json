@@ -495,10 +495,6 @@
     "noItems": "Nothing matches",
     "inText": "Inside a text. End it with its quote to choose a value.",
     "addValue": "+ value",
-    "removeValue": {
-      "label": "Remove this value",
-      "icon": "×"
-    },
     "duplicate": "Duplicate",
     "delete": "Delete",
     "caption": {
