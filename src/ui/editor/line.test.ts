@@ -23,9 +23,8 @@ import {
   tab,
   type,
   type Line,
-  type LineContext,
-  type Row,
 } from "./line";
+import type { LineContext, Row } from "./choices";
 import { listSections } from "./list";
 
 const ctx: LineContext = {

@@ -10,7 +10,8 @@ import { getBlockDef, menuBlockDefs } from "@/blocks/registry";
 import { CATEGORIES, type Category } from "@/blocks/categories";
 import { joinSpans, notationWithHints, type NotationSpan } from "@/ui/chart/text";
 import { functionLabel } from "./explain";
-import { callableFunctions, callExpr, type LineFunction } from "./line";
+import { callableFunctions } from "./line";
+import { callExpr, type LineFunction } from "./choices";
 
 export type BlockMenuEntry = {
   /** The registry key, or `call:<name>` for a function of the program. */

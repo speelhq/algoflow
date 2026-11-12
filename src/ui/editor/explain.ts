@@ -16,16 +16,8 @@ import {
   SEPARATOR,
 } from "@/ui/chart/text";
 import { labelOf } from "./entries";
-import {
-  PARENTHESES_KEY,
-  find,
-  matches,
-  parentOf,
-  wordRows,
-  type Line,
-  type LineContext,
-  type Row,
-} from "./line";
+import { PARENTHESES_KEY, find, matches, parentOf, wordRows, type Line } from "./line";
+import type { LineContext, Row } from "./choices";
 
 /** A span of an explanation: a span of a block's text, or a key to type. */
 export type ExplanationSpan = NotationSpan | { text: string; key: true };

@@ -5,7 +5,7 @@ import { ast } from "@/blocks/testing";
 import { isEmptyExpr } from "@/lang/walk";
 import { allEntries } from "./entries";
 import { fieldsOf, startField, type Field } from "./fields";
-import type { LineContext } from "./line";
+import type { LineContext } from "./choices";
 import {
   commit,
   focusField,

@@ -6,8 +6,9 @@ import type { Name } from "@/lang/types";
 import type { ListItem, ListSection } from "./EditorList";
 import { allEntries, findEntry } from "./entries";
 import { functionLabel } from "./explain";
-import { find, type LineContext, type Row } from "./line";
-import { listRows, listSections, type ListGroup } from "./list";
+import { find } from "./line";
+import { listRows, type LineContext, type ListGroup, type Row } from "./choices";
+import { listSections } from "./list";
 import type { Session } from "./session";
 
 /** A variable's kind as the lists name it. */
