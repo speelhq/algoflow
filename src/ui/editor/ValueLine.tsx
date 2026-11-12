@@ -7,6 +7,7 @@ import { t } from "@/i18n/t";
 import type { Expr, NodeId } from "@/lang/types";
 import { isEmptyExpr, variableOf } from "@/lang/walk";
 import { cn } from "@/lib/utils";
+import { spanStyle } from "@/ui/chart/style";
 import type { Side } from "@/blocks/types";
 import {
   parenthesized,
@@ -110,7 +111,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
         />
       );
     }
-    const name = variableOf(expr);
+    const style = spanStyle({ variable: variableOf(expr) !== undefined });
     return (
       <button
         key={expr.id}
@@ -118,10 +119,8 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
         tabIndex={-1}
         onMouseDown={(event) => event.preventDefault()}
         data-value={expr.id}
-        className={cn(
-          "cursor-text rounded-sm px-px",
-          name !== undefined && "font-semibold text-variable",
-        )}
+        className={cn("cursor-text rounded-sm px-px", style.colorClass)}
+        style={{ fontWeight: style.fontWeight }}
         onClick={() => props.onClickAt(expr.id, false)}
       >
         {exprText(expr)}

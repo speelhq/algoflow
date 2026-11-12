@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
+import { spanStyle } from "@/ui/chart/style";
 import { placeholderValue, slotSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { Popover } from "@/ui/primitives/popover";
@@ -265,15 +266,19 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           return text === "" ? null : <span key={`t${i}`}>{text}</span>;
         }
         if (!again) return widget(token.placeholder);
-        return slotSpans(stmt, token.placeholder).map((slotSpan, j) => (
-          <span
-            // oxlint-disable-next-line react/no-array-index-key -- spans are positional
-            key={`v${i}:${j}`}
-            className={cn(slotSpan.variable && "font-semibold text-variable")}
-          >
-            {slotSpan.text}
-          </span>
-        ));
+        return slotSpans(stmt, token.placeholder).map((slotSpan, j) => {
+          const style = spanStyle(slotSpan);
+          return (
+            <span
+              // oxlint-disable-next-line react/no-array-index-key -- spans are positional
+              key={`v${i}:${j}`}
+              className={style.colorClass}
+              style={{ fontWeight: style.fontWeight }}
+            >
+              {slotSpan.text}
+            </span>
+          );
+        });
       })}
     </div>
   ));
@@ -374,7 +379,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         data-testid="explanation"
       >
         {explanation.name !== "" && (
-          <span className={cn("font-semibold", explanation.variable && "text-variable")}>
+          <span className={cn("font-semibold", spanStyle(explanation).colorClass)}>
             {explanation.name}
           </span>
         )}

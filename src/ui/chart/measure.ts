@@ -2,15 +2,15 @@
 // Widths depend on the loaded fonts, so the cache is cleared each time fonts finish loading.
 import { useSyncExternalStore } from "react";
 import { estimatedWidth, type Measure } from "./layout";
+import { spanStyle } from "./style";
 import type { NotationSpan } from "./text";
 
 /** The font stack every chart node's text is drawn in (`pages.md`, Typefaces), a variable of `src/ui/theme.css`. */
 const CODE_STACK_VARIABLE = "--typeface-code";
 
 /**
- * The font a chart span is drawn in: the code stack, bold for a variable's name. A style sets it
- * part by part, because the `font` shorthand would reset the feature settings that turn ligatures
- * off.
+ * The font a chart span is drawn in: the code stack, in its style's weight. A style sets it part by
+ * part, because the `font` shorthand would reset the feature settings that turn ligatures off.
  */
 export function chartSpanFont(span: NotationSpan): {
   fontFamily: string;
@@ -19,7 +19,7 @@ export function chartSpanFont(span: NotationSpan): {
 } {
   return {
     fontFamily: `var(${CODE_STACK_VARIABLE})`,
-    fontWeight: span.variable ? 600 : 400,
+    fontWeight: spanStyle(span).fontWeight,
     fontSize: 13,
   };
 }

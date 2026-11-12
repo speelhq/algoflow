@@ -26,6 +26,7 @@ import {
 import { ChartDrag, DropZone, useNodeDrag, type Moves } from "./drag";
 import { PILL, type ChartEdge, type ChartLayout, type ChartNode } from "./layout";
 import { nodeFor, type Paint } from "./paint";
+import { spanStyle } from "./style";
 import { chartSpanFont } from "./measure";
 import { fitScale, zoomStep } from "./zoom";
 
@@ -171,7 +172,10 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
         <text
           y={node.y + node.h / 2}
           dominantBaseline="central"
-          className={cn("fill-foreground font-mono", node.generated && "fill-muted-foreground")}
+          className={cn(
+            "fill-current font-mono",
+            node.generated ? "text-muted-foreground" : "text-foreground",
+          )}
           style={{ whiteSpace: "pre" }}
         >
           {node.spans.map((span, i) => (
@@ -183,8 +187,9 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
               data-block-slot={span.slot}
               data-empty-id={span.emptyId}
               className={cn(
-                span.empty && "fill-muted-foreground",
-                span.variable && "fill-variable",
+                "fill-current",
+                span.empty && "text-muted-foreground",
+                spanStyle(span).colorClass,
               )}
               style={chartSpanFont(span)}
             >

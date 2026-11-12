@@ -17,6 +17,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import type { NodeId, Place } from "@/lang/types";
 import { cn } from "@/lib/utils";
 import type { ChartEdge, ChartNode } from "./layout";
+import { spanStyle } from "./style";
 import { chartSpanFont } from "./measure";
 import type { NotationSpan } from "./text";
 
@@ -27,14 +28,15 @@ export type Moves = {
   accepts: (owner: NodeId, place: Place) => boolean;
 };
 
-type Dragged = { owner: NodeId; spans: NotationSpan[] };
+/** The dragged chart node: its owner, and its text and grayness, which its ghost draws. */
+type Dragged = { owner: NodeId; spans: NotationSpan[]; generated: boolean };
 type Refusal = { edge: string; text: string };
 
 /** The listeners that make a chart node draggable, and the ref they need; inert when disabled. */
 export function useNodeDrag(node: ChartNode, enabled: boolean) {
   const { setNodeRef, listeners } = useDraggable({
     id: node.id,
-    data: { owner: node.owner, spans: node.spans },
+    data: { owner: node.owner, spans: node.spans, generated: node.generated },
     // Only a statement's chart node moves: a function chart's `Start` has an owner, but stays.
     disabled: !enabled || node.owner === null || node.shape === "terminal",
   });
@@ -91,7 +93,13 @@ export function ChartDrag(props: {
 
   const start = (event: DragStartEvent) => {
     const data = event.active.data.current as Partial<Dragged> | undefined;
-    if (data?.owner) setDragged({ owner: data.owner, spans: data.spans ?? [] });
+    if (data?.owner) {
+      setDragged({
+        owner: data.owner,
+        spans: data.spans ?? [],
+        generated: data.generated ?? false,
+      });
+    }
   };
   const end = (event: DragEndEvent) => {
     const owner = dragged?.owner;
@@ -115,10 +123,23 @@ export function ChartDrag(props: {
       {children({ dragged: dragged?.owner ?? null, refusal })}
       <DragOverlay dropAnimation={null}>
         {dragged && (
-          <div className="rounded-lg border bg-background px-3 py-2 whitespace-pre font-mono shadow-md">
+          // A generated chart node's ghost is gray, as the chart node is (`chart.md`, Shapes).
+          <div
+            data-testid="drag-ghost"
+            className={cn(
+              "rounded-lg border px-3 py-2 whitespace-pre font-mono shadow-md",
+              dragged.generated
+                ? "border-muted-foreground/60 bg-muted text-muted-foreground"
+                : "bg-background text-foreground",
+            )}
+          >
             {dragged.spans.map((nodeSpan, i) => (
-              // oxlint-disable-next-line react/no-array-index-key -- spans are positional
-              <span key={i} style={chartSpanFont(nodeSpan)}>
+              <span
+                // oxlint-disable-next-line react/no-array-index-key -- spans are positional
+                key={i}
+                className={spanStyle(nodeSpan).colorClass}
+                style={chartSpanFont(nodeSpan)}
+              >
                 {nodeSpan.text}
               </span>
             ))}

@@ -1,25 +1,45 @@
 // Selecting, removing, duplicating, dragging, undo and redo.
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { programWith, seedProgram, seedProgress, solutionOf } from "./seed";
 
 const node = (page: Page, id: string) => page.locator(`[data-chart-node="${id}"]`);
 
-/** Drags a chart node onto the connector of `place`. */
-async function drag(page: Page, id: string, place: string): Promise<void> {
+/** Starts dragging a chart node, which then shows its ghost under the pointer. */
+async function lift(page: Page, id: string): Promise<void> {
   // The chart is laid out again once its font has loaded; drag from where it settles.
   await page.evaluate(() => document.fonts.ready.then(() => true));
   await expect
     .poll(async () => JSON.stringify(await node(page, id).boundingBox()), { intervals: [100] })
     .toBe(JSON.stringify(await node(page, id).boundingBox()));
   const from = await node(page, id).boundingBox();
-  const to = await page.locator(`[data-testid="connector"][data-place="${place}"]`).boundingBox();
-  if (!from || !to) throw new Error("not drawn");
+  if (!from) throw new Error("not drawn");
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);
   await page.mouse.down();
   await page.mouse.move(from.x + from.width / 2 + 10, from.y + from.height / 2 + 10, { steps: 4 });
+}
+
+/** Drags a chart node onto the connector of `place`. */
+async function drag(page: Page, id: string, place: string): Promise<void> {
+  await lift(page, id);
+  const to = await page.locator(`[data-testid="connector"][data-place="${place}"]`).boundingBox();
+  if (!to) throw new Error("not drawn");
   await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 12 });
   await page.mouse.up();
+}
+
+/** A chart node's text spans, or a ghost's, as each is drawn: its text, weight, and color. */
+async function drawnSpans(
+  spans: Locator,
+): Promise<{ text: string; weight: string; color: string }[]> {
+  return spans.evaluateAll((elements) =>
+    elements.map((element) => {
+      const style = getComputedStyle(element);
+      // An SVG span shows its color as its fill; an HTML span as its color.
+      const color = element instanceof SVGElement ? style.fill : style.color;
+      return { text: element.textContent ?? "", weight: style.fontWeight, color };
+    }),
+  );
 }
 
 test.beforeEach(async ({ page }) => {
@@ -86,6 +106,31 @@ test("a block dragged onto another connector moves there", async ({ page }) => {
   // A drop opens no editor.
   await expect(page.getByTestId("block-editor")).toHaveCount(0);
   await expect(page.getByTestId("python-line").nth(1)).toHaveText("2print(i)");
+});
+
+test("a dragged chart node's ghost draws its spans as the chart node does", async ({ page }) => {
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  const ghost = page.getByTestId("drag-ghost");
+  // A generated chart node, `i ← 1`, gray with its variable bold in the variable color.
+  for (const id of ["fzb-loop-001:init", "fzb-prnt-001"]) {
+    const drawn = await drawnSpans(node(page, id).locator("tspan"));
+    await lift(page, id);
+    await expect(ghost).toBeVisible();
+    expect(await drawnSpans(ghost.locator("span"))).toEqual(drawn);
+    await page.keyboard.press("Escape");
+    await page.mouse.up();
+    await expect(ghost).toHaveCount(0);
+  }
+  const init = await drawnSpans(node(page, "fzb-loop-001:init").locator("tspan"));
+  const print = await drawnSpans(node(page, "fzb-prnt-001").locator("tspan"));
+  expect(init.find((span) => span.text === "i")?.weight).toBe("600");
+  expect(init.find((span) => span.text === "i")?.color).toBe(
+    print.find((span) => span.text === "i")?.color,
+  );
+  expect(init.find((span) => span.text !== "i")?.color).not.toBe(
+    print.find((span) => span.text !== "i")?.color,
+  );
 });
 
 test("a drop that takes break out of its loop is refused with a tooltip", async ({ page }) => {
