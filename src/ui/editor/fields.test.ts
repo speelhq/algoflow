@@ -6,15 +6,19 @@ import { getBlockDef } from "@/blocks/registry";
 import type { Stmt } from "@/lang/types";
 import {
   editedLines,
+  fieldHint,
   fieldLabel,
+  fieldText,
   fieldsOf,
+  oneLine,
   startField,
   targetSlot,
+  textValue,
   valueOf,
   wordsAfter,
 } from "./fields";
 
-const { assign, assignTo, print, for_, forTo, num, v, exprStmt, ret } = ast;
+const { assign, assignTo, print, for_, forTo, num, v, exprStmt, ret, bin, draft } = ast;
 
 describe("fieldLabel", () => {
   it("names a field by the block's label and the slot's name", () => {
@@ -104,5 +108,26 @@ describe("a target", () => {
 
   it("is named by the block's label and the slot's name", () => {
     expect(fieldLabel(assign("total", num(1)), { slot: "target" })).toBe("Set variable, variable");
+  });
+});
+
+describe("a value line's text (editor.md, Value line)", () => {
+  it("writes a value as the emitter does and a draft as typed, and reads a text back", () => {
+    expect(fieldText(bin("+", v("x"), num(1)))).toBe("x + 1");
+    expect(fieldText(draft("x  +"))).toBe("x  +");
+    expect(textValue("x+1", false)).toMatchObject({ type: "binop", op: "+" });
+    expect(textValue("x +", false)).toMatchObject({ type: "draft", text: "x +" });
+    expect(textValue("", false)).toMatchObject({ type: "draft", text: "" });
+    expect(textValue("x + 1", true)).toMatchObject({ type: "draft", text: "x + 1" });
+  });
+
+  it("shows its slot's hint with no text, or `optional` for an optional slot", () => {
+    expect(fieldHint(assign("x", num(1)), { slot: "value" })).toBe("value");
+    expect(fieldHint(print(num(1)), { slot: "args", index: 0 })).toBe("values");
+    expect(fieldHint(ret(num(1)), { slot: "value" })).toBe("optional");
+  });
+
+  it("puts a line break on one line as a space, as in a caption", () => {
+    expect(oneLine("x\n+\r\n1")).toBe("x + 1");
   });
 });

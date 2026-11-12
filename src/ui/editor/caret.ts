@@ -7,7 +7,7 @@
 import { exprKind, type Kinds } from "@/lang/kinds";
 import type { Expr, Kind } from "@/lang/types";
 import { isEmptyExpr, isTarget } from "@/lang/walk";
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { draftOf, getBlockDef, keyOf } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
   endsInText,
@@ -73,6 +73,11 @@ export function wordAt(line: TextLine): Word {
   return { text: found[0], start: found.index };
 }
 
+/** Which of the value list's places the caret is in (`editor.md`, Value list). */
+export function caretPlace(line: TextLine, ctx: LineContext): CaretPlace["place"] {
+  return readCaret(line, ctx.kinds).place;
+}
+
 /** What the value list reads at the caret, or before the selection. */
 export function readCaret(line: TextLine, kinds: Kinds): CaretPlace {
   const word = wordAt(line);
@@ -97,8 +102,6 @@ export type Written = { text: string; caret: number };
 
 type Bag = Record<string, unknown>;
 
-const draft = (text: string): Expr => ({ id: "", type: "draft", text });
-
 /**
  * `expr` with a mark in each slot that holds nothing: each empty slot, and each literal that holds
  * no text; and with `TAKEN` in its first slot when it takes a value.
@@ -108,17 +111,17 @@ function marked(expr: Expr, takes: boolean): Expr {
   const copy: Bag = { ...expr };
   const first = takes ? firstSlot(expr) : undefined;
   const mark = (value: unknown): unknown => {
-    if (isEmptyExpr(value)) return draft(EMPTY);
+    if (isEmptyExpr(value)) return draftOf(EMPTY);
     return value && typeof value === "object" ? marked(value as Expr, false) : value;
   };
   for (const slot of def.slots) {
     const value = copy[slot.name];
     if (slot.role === "literal" && value === "") copy[slot.name] = EMPTY;
     else if (slot.role === "expr" || slot.role === "target") {
-      copy[slot.name] = slot === first ? draft(TAKEN) : mark(value);
+      copy[slot.name] = slot === first ? draftOf(TAKEN) : mark(value);
     } else if (slot.role === "exprs" && Array.isArray(value)) {
       copy[slot.name] = value.map((item, i) =>
-        slot === first && i === 0 ? draft(TAKEN) : mark(item),
+        slot === first && i === 0 ? draftOf(TAKEN) : mark(item),
       );
     }
   }
@@ -293,13 +296,19 @@ export function caretSections(line: TextLine, ctx: LineContext, all: boolean): S
 }
 
 /**
- * Whether the value list ends with `Show all`: where an entry can be chosen, and not over a
- * target's names, which it would list again.
+ * Whether the value list ends with `Show all` (`editor.md`, Value list): not while a word is typed,
+ * not where it holds no row, and not over a target's names, which it would list again. It is
+ * gone once chosen, which the editor knows.
  */
 export function caretOffersAll(line: TextLine, ctx: LineContext): boolean {
   const place = readCaret(line, ctx.kinds);
-  if (place.place === "text" || place.place === "none") return false;
-  return wholeTarget(line, place, ctx) === undefined;
+  if (place.place === "text" || place.place === "none" || place.word.text !== "") return false;
+  return wholeTarget(line, place, ctx) === undefined && caretSections(line, ctx, false).length > 0;
+}
+
+/** The rows a word can name at the caret, which the explanation line's `Did you mean` reads. */
+export function caretWordRows(line: TextLine, ctx: LineContext): Row[] {
+  return wordRows(line, readCaret(line, ctx.kinds), ctx);
 }
 
 // ---------------------------------------------------------------- the explanation line

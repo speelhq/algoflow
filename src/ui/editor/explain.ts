@@ -16,8 +16,8 @@ import {
   SEPARATOR,
 } from "@/ui/chart/text";
 import { labelOf } from "./entries";
-import { PARENTHESES_KEY, find, matches, parentOf, wordRows, type Line } from "./line";
-import type { LineContext, Row } from "./choices";
+import { caretMatches, caretOperation, caretWordRows, wordAt, type TextLine } from "./caret";
+import { PARENTHESES_KEY, type LineContext, type Row } from "./choices";
 
 /** A span of an explanation: a span of a block's text, or a key to type. */
 export type ExplanationSpan = NotationSpan | { text: string; key: true };
@@ -116,11 +116,14 @@ function distance(a: string, b: string): number {
   return row[y.length] ?? 0;
 }
 
-/** The closest name to a word that matches nothing: one letter in three may differ, one at least. */
-function closestName(line: Line, ctx: LineContext): string | undefined {
-  const allowed = Math.max(1, Math.floor(line.word.length / 3));
+/**
+ * The closest name to a word that matches nothing, among the rows it can name: one letter in three
+ * may differ, one at least (`editor.md`, Value line, Words).
+ */
+function closestName(word: string, rows: readonly Row[]): string | undefined {
+  const allowed = Math.max(1, Math.floor(word.length / 3));
   let best: { name: string; d: number } | undefined;
-  for (const row of wordRows(line, ctx)) {
+  for (const row of rows) {
     const names =
       row.type === "variable"
         ? [row.name]
@@ -130,20 +133,11 @@ function closestName(line: Line, ctx: LineContext): string | undefined {
             ? [row.fn.name]
             : [];
     for (const name of names) {
-      const d = distance(line.word, name);
+      const d = distance(word, name);
       if (d <= allowed && (!best || d < best.d)) best = { name, d };
     }
   }
   return best?.name;
-}
-
-/** The operation one of whose slots holds the caret, and that slot's value. */
-function operationAt(line: Line): { operation: Expr; value: Expr } | undefined {
-  if (line.selected) return undefined;
-  const id = "at" in line.caret ? line.caret.at : line.caret.after;
-  const up = parentOf(line.root, id);
-  const value = find(line.root, id);
-  return up && value ? { operation: up.parent, value } : undefined;
 }
 
 /**
@@ -181,19 +175,23 @@ function operationSpans(operation: Expr, current: Expr, program: Program): Notat
   });
 }
 
-/** The explanation of a value line, with `highlighted` the row the list highlights. */
-export function explainLine(
-  line: Line,
+/**
+ * The explanation of a value line, with `highlighted` the row the list highlights; undefined leaves
+ * the block's help. Where several apply, it is the first of a word that matches nothing, the row
+ * highlighted, and the operation whose slot holds the caret (`editor.md`, Explanation line).
+ */
+export function explainText(
+  line: TextLine,
   ctx: LineContext,
   highlighted: Row | undefined,
   program: Program,
   at: NodeId,
 ): Explanation | undefined {
-  if (line.refused) return { name: [], spans: [{ text: line.refused }] };
-  if (line.word !== "" && matches(line, ctx).length === 0) {
-    const closest = closestName(line, ctx);
+  const word = wordAt(line).text;
+  if (word !== "" && caretMatches(line, ctx).length === 0) {
+    const closest = closestName(word, caretWordRows(line, ctx));
     return {
-      name: [{ text: line.word }],
+      name: [{ text: word }],
       spans: [
         {
           text: closest ? t("editor.didYouMean", { name: closest }) : t("editor.nothingLike"),
@@ -202,7 +200,7 @@ export function explainLine(
     };
   }
   if (highlighted) return explainRow(highlighted, program, at);
-  const inside = operationAt(line);
+  const inside = caretOperation(line, ctx.kinds);
   return inside && explainOperation(inside, ctx.kinds, program);
 }
 

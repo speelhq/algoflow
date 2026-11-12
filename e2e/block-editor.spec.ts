@@ -21,15 +21,16 @@ async function keys(page: Page, text: string): Promise<void> {
   await page.keyboard.type(text);
 }
 
-/** A print of one text, chosen as Text and typed without quotes. */
+/** A print of one text, chosen as Text, which writes its quotes, and typed between them. */
 async function printText(page: Page, place: string, text: string): Promise<void> {
   await insert(page, place, "print");
   await keys(page, "text");
   await page.keyboard.press("Enter");
-  await expect(editor(page).locator("[data-text-field]")).toBeFocused();
+  await expect(editor(page).locator("[data-value-line]").first()).toHaveValue('""');
   await keys(page, text);
+  // Inside a text, Enter chooses nothing and closes the editor.
   await page.keyboard.press("Enter");
-  await page.keyboard.press("Enter");
+  await expect(editor(page)).toHaveCount(0);
 }
 
 test("FizzBuzz is built from an empty chart by typing and choosing, and accepted", async ({
@@ -103,16 +104,16 @@ test("the list follows what is before the caret, and a choice after a value take
   await expect(list).not.toContainText("Random whole number");
   await list.locator('[data-row="e:call:str"]').click();
   await expect(chart(page)).toContainText("total ← str(n)");
-  // Backspace after the call's parenthesis keeps its first argument.
+  // Backspace removes one character, as in any text field, and the text that is left stays.
   await page.keyboard.press("Backspace");
-  await expect(chart(page)).toContainText("total ← n");
+  await expect(editor(page).locator("[data-value-line]").last()).toHaveValue("str(n");
 });
 
 test("a typed word that names nothing is underlined with the closest name", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/sum-to-n");
   await insert(page, "main/main/0", "print");
-  await keys(page, "nn+");
+  await keys(page, "nn");
   await expect(editor(page).getByTestId("explanation")).toContainText("Did you mean n?");
 });
 
@@ -214,14 +215,16 @@ test("a list is typed, its item read, and one item set in the target's line", as
   await page.keyboard.press("Enter");
   await expect(chart(page)).toContainText("x ← nums[1]");
 
-  // After a variable, a target's list offers only an item of it, and `[` makes one.
+  // After a variable, a target's list offers only an item of it, which writes its brackets.
   await insert(page, "main/main/2", "assign");
   await keys(page, "nums ");
   await expect(list).toHaveText(/Item at a position/);
   await expect(list).not.toContainText("Count");
-  await keys(page, "[");
-  await expect(chart(page)).toContainText("nums[value] ← value");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("nums[] ← value");
   await keys(page, "0");
+  await expect(chart(page)).toContainText("nums[0] ← value");
   await page.keyboard.press("Tab");
   await keys(page, "x");
   await page.keyboard.press("Enter");
@@ -288,11 +291,11 @@ test("an item of a variable of no known kind is set by keys alone; no other valu
   await page.keyboard.press("Enter");
 
   await insert(page, "main/main/2", "assign");
-  // A key that would make no target is refused, and says why.
+  // Text that writes no target stays as typed, and the list offers no row that would write one.
   await keys(page, "5");
-  await expect(editor(page).getByTestId("explanation")).toContainText(
-    "Only a variable or an item of a list can be given a value",
-  );
+  await expect(chart(page)).toContainText("5 ← value");
+  await expect(editor(page).getByTestId("value-list")).toContainText("Nothing matches");
+  await page.keyboard.press("Backspace");
   await keys(page, "row[1]");
   await page.keyboard.press("Tab");
   await keys(page, "9");
@@ -401,40 +404,83 @@ test("the editor stays where it is while its list changes, within the canvas", a
   expect(await place()).toEqual(before);
 });
 
-test("a text is edited again by keys and by a click", async ({ page }) => {
+test("a text is typed between its quotes and edited as any text field does", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/tutorial");
+  await insert(page, "main/main/0", "print");
+  const field = editor(page).locator("[data-value-line]").first();
+  // `Text` writes its quotes with the caret between them.
+  await keys(page, "text");
+  await page.keyboard.press("Enter");
+  await keys(page, "hello");
+  await expect(chart(page)).toContainText('print("hello")');
+  // Inside a text, the list offers no row and says how to end the text.
+  await expect(editor(page).getByTestId("value-list")).toContainText("Inside a text");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Backspace");
+  await keys(page, "p");
+  await expect(chart(page)).toContainText('print("help")');
+  // Selected text is replaced by what is typed.
+  await page.keyboard.press("ControlOrMeta+a");
+  await keys(page, '1 + "ab"');
+  await expect(field).toHaveValue('1 + "ab"');
+  await expect(chart(page)).toContainText('print(1 + "ab")');
+});
+
+test("an input method's composition edits the program once it ends", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/tutorial");
   await insert(page, "main/main/0", "print");
   await keys(page, "text");
   await page.keyboard.press("Enter");
-  await keys(page, "hello");
-  await page.keyboard.press("Enter");
-  await expect(chart(page)).toContainText('print("hello")');
+  const client = await page.context().newCDPSession(page);
+  // While the input method composes, the program keeps the text it had.
+  await client.send("Input.imeSetComposition", {
+    text: "こんにち",
+    selectionStart: 4,
+    selectionEnd: 4,
+  });
+  await expect(editor(page).locator("[data-value-line]").first()).toHaveValue('"こんにち"');
+  await expect(chart(page)).toContainText('print("")');
+  await client.send("Input.insertText", { text: "こんにちは" });
+  await expect(chart(page)).toContainText('print("こんにちは")');
+});
 
-  // Backspace after the text takes its last character and opens its field on the rest.
-  await page.keyboard.press("Backspace");
-  const field = editor(page).locator("[data-text-field]");
-  await expect(field).toBeFocused();
-  await expect(field).toHaveValue("hell");
-  // In the field, Backspace and keys edit the text as any text field does.
-  await page.keyboard.press("Backspace");
-  await keys(page, "p");
-  await page.keyboard.press("Enter");
-  await expect(chart(page)).toContainText('print("help")');
-
-  // A click opens it again; Backspace in the emptied field removes the text.
-  await editor(page).locator("[data-value]").first().click();
-  await expect(field).toHaveValue("help");
-  for (let i = 0; i < 5; i += 1) await page.keyboard.press("Backspace");
-  await expect(field).toHaveCount(0);
+test("the changes typed in one field are one entry of the history", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/tutorial");
+  await insert(page, "main/main/0", "print");
+  await keys(page, "123");
+  await expect(chart(page)).toContainText("print(123)");
+  await page.keyboard.press("ControlOrMeta+z");
   await expect(chart(page)).toContainText("print(values)");
+  await expect(editor(page).locator("[data-value-line]").first()).toHaveValue("");
+});
 
-  // A click on another value while a field is open ends the field and keeps the keyboard.
-  await keys(page, "1+text");
-  await page.keyboard.press("Enter");
-  await keys(page, "ab");
-  await editor(page).locator("[data-value]").first().click();
-  await expect(field).toHaveCount(0);
-  await keys(page, "2");
-  await expect(chart(page)).toContainText('print(12 + "ab")');
+test("an operator is switched by typing its keys: `=` after the `<` of `i < n` gives `i <= n`", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/sum-to-n");
+  await insert(page, "main/main/0", "while");
+  await keys(page, "i < n");
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await keys(page, "=");
+  await expect(editor(page).locator("[data-value-line]").first()).toHaveValue("i <= n");
+  await expect(chart(page)).toContainText("i <= n?");
+});
+
+test("removing another item keeps the keyboard in the field being typed", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/tutorial");
+  await insert(page, "main/main/0", "print");
+  await keys(page, "1,2");
+  await expect(chart(page)).toContainText("print(1, 2)");
+  await editor(page).locator("[data-value-line]").first().click();
+  await page.keyboard.press("End");
+  await editor(page).getByRole("button", { name: "Remove this value" }).last().click();
+  await expect(chart(page)).toContainText("print(1)");
+  await keys(page, "0");
+  await expect(chart(page)).toContainText("print(10)");
 });

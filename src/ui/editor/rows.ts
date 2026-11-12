@@ -1,14 +1,11 @@
-// The list under the editor's focused field: the value list of its value line, or, while an
-// operator is switched, the other operators of its group.
+// The list under the editor's focused field: the value list of its value line, as drawn.
 import { t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
 import type { Name } from "@/lang/types";
 import type { ListItem, ListSection } from "./EditorList";
-import { allEntries, findEntry } from "./entries";
 import { functionLabel } from "./explain";
-import { find } from "./line";
 import { listRows, type LineContext, type ListGroup, type Row } from "./choices";
-import { listSections } from "./list";
+import { caretSections } from "./caret";
 import type { Session } from "./session";
 
 /** A variable's kind as the lists name it. */
@@ -50,25 +47,6 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
   }
 }
 
-/** The other operators of the switched operator's block and group. */
-function switchRows(session: Session, kinds: Kinds): { rows: Row[]; sections: ListSection[] } {
-  const { line, switching } = session;
-  const held = line && switching ? find(line.root, switching) : undefined;
-  const current = held ? findEntry(held, kinds) : undefined;
-  if (!current) return { rows: [], sections: [] };
-  const rows = allEntries()
-    .filter(
-      (entry) =>
-        entry !== current &&
-        entry.def === current.def &&
-        entry.declared.group === current.declared.group,
-    )
-    .map((entry): Row => ({ type: "entry", entry }));
-  const title = t(`editor.lists.${current.declared.group}`);
-  const items = rows.map((row, index) => rowItem(row, index, kinds));
-  return { rows, sections: rows.length > 0 ? [{ title, items }] : [] };
-}
-
 /** The rows of the focused value line's list, and its sections as drawn. */
 export function valueList(
   session: Session,
@@ -76,8 +54,7 @@ export function valueList(
 ): { rows: Row[]; sections: ListSection[] } {
   const { line } = session;
   if (!line) return { rows: [], sections: [] };
-  if (session.switching) return switchRows(session, ctx.kinds);
-  const listed = listSections(line, ctx, session.all);
+  const listed = caretSections(line, ctx, session.all);
   let index = 0;
   const sections = listed.map((section) => ({
     title: listTitle(section.group),

@@ -1,230 +1,193 @@
-// A value line drawn as the chart writes its expression: variables as bold words in
-// their color, an operator as its symbol, an empty slot as a dashed box, the
-// parentheses the chart draws and those opened and not closed, the caret, and the word being
-// typed. Keys go to `onKey`; clicks name the expression clicked.
-import { forwardRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { t } from "@/i18n/t";
-import type { Expr, NodeId, Program } from "@/lang/types";
-import { isEmptyExpr, variableOf } from "@/lang/walk";
+// A value line: a text field that holds its slot's text (`editor.md`, Value line). The field's own
+// text is transparent over a copy of it drawn in spans, so each variable takes its weight and
+// color from `spanStyle()`, as on the chart, and a word that matches nothing, or a draft's text
+// from its error, is underlined. With no text, the field shows its slot's hint.
+import {
+  forwardRef,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ClipboardEvent,
+  type KeyboardEvent,
+} from "react";
+import { variableSpans, type Span } from "@/python/parse";
 import { cn } from "@/lib/utils";
 import { spanStyle } from "@/ui/chart/style";
-import type { Side } from "@/blocks/types";
-import {
-  parenthesized,
-  notationOf,
-  exprText,
-  placeholderValue,
-  notationTokens,
-  SEPARATOR,
-} from "@/ui/chart/text";
-import { slotValues, textOf, type Line } from "./line";
-import type { TextEnd } from "./session";
+import type { TextLine } from "./caret";
+import { oneLine } from "./fields";
 
 type Props = {
-  /** The expression drawn, and the program that holds it. */
-  root: Expr;
-  program: Program;
-  /** The line's editing state while it has the keyboard. */
-  line: Line | null;
+  /** The text the field holds, and its selection while it has the keyboard. */
+  text: string;
+  selection: { start: number; end: number } | null;
+  hint: string;
   label: string;
-  /** The word typed matches nothing: it is underlined. */
-  unmatched: boolean;
-  onKey: (event: KeyboardEvent<HTMLDivElement>) => void;
-  onFocus: () => void;
-  /** A click on a value or an empty slot; `op` when it is an operator's symbol. */
-  onClickAt: (id: NodeId, op: boolean) => void;
-  /** The text being typed in a text field changes or ends. */
-  onText: (id: NodeId, text: string) => void;
-  onTextEnd: (key: TextEnd) => void;
+  /** The word typed that matches nothing, underlined. */
+  unmatched: Span | null;
+  /** A draft's text from its error, underlined once Run or Submit led to it. */
+  error: Span | null;
+  /** The text changes; `composing` while an input method composes it. */
+  onChange: (line: TextLine, composing: boolean) => void;
+  onSelect: (start: number, end: number) => void;
+  onKey: (event: KeyboardEvent<HTMLInputElement>) => void;
+  /** The field takes the keyboard: by a click, with the selection it made, else by a key. */
+  onFocus: (clicked: { start: number; end: number } | null) => void;
 };
 
-function Caret() {
-  return <span className="mx-px inline-block h-4 w-px animate-pulse bg-foreground align-middle" />;
+/**
+ * The field shows the session's selection, which a choice or Tab sets; one the learner made is the
+ * field's already. Setting it fires the field's `select`, which reads its scroll again.
+ */
+function showSelection(
+  field: HTMLInputElement,
+  selection: { start: number; end: number } | null,
+): void {
+  if (!selection) return;
+  if (field.selectionStart !== selection.start || field.selectionEnd !== selection.end) {
+    field.setSelectionRange(selection.start, selection.end);
+  }
 }
 
-export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(props, ref) {
-  const { root, label, unmatched } = props;
-  // The editing state shows only while the line has the keyboard.
-  const [keys, setKeys] = useState(false);
-  const line = keys ? props.line : null;
-  const focused = line !== null;
-  const caret = line?.caret;
-  const word = (
-    <>
-      {line && line.word !== "" && (
-        <span className={cn(unmatched && "underline decoration-destructive decoration-wavy")}>
-          {line.word}
-        </span>
-      )}
-      <Caret />
-    </>
-  );
+/** The text cut into pieces at each span's edges, each piece marked by the spans it lies in. */
+function pieces(text: string, marks: { span: Span; kind: "variable" | "unmatched" | "error" }[]) {
+  const cuts = new Set([0, text.length]);
+  for (const { span } of marks) cuts.add(span.start).add(span.end);
+  const edges = [...cuts].filter((at) => at <= text.length).toSorted((a, b) => a - b);
+  return edges.slice(0, -1).map((start, i) => {
+    const end = edges[i + 1] ?? text.length;
+    const kinds = new Set(
+      marks.filter(({ span }) => span.start <= start && end <= span.end).map(({ kind }) => kind),
+    );
+    return { start, text: text.slice(start, end), kinds };
+  });
+}
 
-  const emptyBox = (expr: Expr): ReactNode => {
-    const here = caret && "at" in caret && caret.at === expr.id && !line?.selected;
-    return (
-      <button
-        key={expr.id}
-        type="button"
-        tabIndex={-1}
-        onMouseDown={(event) => event.preventDefault()}
-        className={cn(
-          "inline-flex h-6 min-w-8 items-center rounded border border-dashed border-muted-foreground/60 px-1 align-middle",
-          here && "border-solid border-selection",
-        )}
-        onClick={() => props.onClickAt(expr.id, false)}
-      >
-        {here ? word : null}
-      </button>
+export const ValueLine = forwardRef<HTMLInputElement, Props>(function ValueLine(props, ref) {
+  const { text, selection, hint } = props;
+  const input = useRef<HTMLInputElement | null>(null);
+  const composing = useRef(false);
+  const clicked = useRef(false);
+  const [scroll, setScroll] = useState(0);
+
+  // A selection the session sets shows while the field has the keyboard, and once it takes it by
+  // a key (`onFocus`).
+  useLayoutEffect(() => {
+    if (input.current && document.activeElement === input.current)
+      showSelection(input.current, selection);
+  }, [selection]);
+
+  const report = (field: HTMLInputElement) => {
+    setScroll(field.scrollLeft);
+    props.onSelect(field.selectionStart ?? 0, field.selectionEnd ?? 0);
+  };
+
+  const change = (field: HTMLInputElement) => {
+    setScroll(field.scrollLeft);
+    props.onChange(
+      { text: field.value, start: field.selectionStart ?? 0, end: field.selectionEnd ?? 0 },
+      composing.current,
     );
   };
 
-  const leaf = (expr: Expr): ReactNode => {
-    const value = textOf(expr);
-    if (line?.text === expr.id && value !== undefined) {
-      return (
-        <input
-          key={expr.id}
-          // oxlint-disable-next-line jsx-a11y/no-autofocus -- the text field is where the learner types
-          autoFocus
-          aria-label={t("editor.textField")}
-          data-text-field
-          className="h-6 w-28 rounded border border-selection px-1 align-middle outline-none"
-          value={value}
-          onChange={(event) => props.onText(expr.id, event.target.value)}
-          onBlur={() => props.onTextEnd("blur")}
-          onKeyDown={(event) => {
-            // A key of an input method's composition is the composition's (Enter confirms it).
-            if (event.nativeEvent.isComposing) return;
-            // Backspace in the empty text field removes the text.
-            if (event.key === "Backspace" && event.currentTarget.value === "") {
-              event.preventDefault();
-              event.stopPropagation();
-              props.onTextEnd("Backspace");
-            } else if (event.key === "Enter" || event.key === "Tab") {
-              event.preventDefault();
-              event.stopPropagation();
-              props.onTextEnd(
-                event.key === "Tab" ? (event.shiftKey ? "ShiftTab" : "Tab") : "Enter",
-              );
-            }
-          }}
-        />
-      );
-    }
-    const style = spanStyle({ variable: variableOf(expr) !== undefined });
-    return (
-      <button
-        key={expr.id}
-        type="button"
-        tabIndex={-1}
-        onMouseDown={(event) => event.preventDefault()}
-        data-value={expr.id}
-        className={cn("cursor-text rounded-sm px-px", style.colorClass)}
-        style={{ fontWeight: style.fontWeight }}
-        onClick={() => props.onClickAt(expr.id, false)}
-      >
-        {exprText(expr, props.program)}
-      </button>
-    );
+  // A line break pasted becomes a space, as in a caption, where a field would drop it.
+  const paste = (event: ClipboardEvent<HTMLInputElement>) => {
+    const pasted = event.clipboardData.getData("text/plain");
+    const flat = oneLine(pasted);
+    if (flat === pasted) return;
+    event.preventDefault();
+    const field = event.currentTarget;
+    const start = field.selectionStart ?? 0;
+    const end = field.selectionEnd ?? 0;
+    const next = text.slice(0, start) + flat + text.slice(end);
+    const at = start + flat.length;
+    props.onChange({ text: next, start: at, end: at }, false);
   };
 
-  /** An expression; `placed` says how its parent places it, for its parentheses. */
-  const draw = (expr: Expr, placed?: { binds: number | undefined; side: Side }): ReactNode => {
-    const open = line?.open.includes(expr.id) ?? false;
-    const parentheses = (placed !== undefined && parenthesized(expr, placed)) || open;
-    let body: ReactNode;
-    if (isEmptyExpr(expr)) body = emptyBox(expr);
-    else if (slotValues(expr).length === 0) body = leaf(expr);
-    else body = operation(expr);
-    const after = caret && "after" in caret && caret.after === expr.id && !line?.selected;
-    return (
-      <span key={expr.id} className="inline">
-        {parentheses && <span className="text-muted-foreground">(</span>}
-        {body}
-        {after && open && word}
-        {parentheses && <span className="text-muted-foreground">)</span>}
-        {after && !open && word}
-      </span>
-    );
-  };
+  const marks = [
+    ...variableSpans(text).map((span) => ({ span, kind: "variable" as const })),
+    ...(props.unmatched ? [{ span: props.unmatched, kind: "unmatched" as const }] : []),
+    ...(props.error ? [{ span: props.error, kind: "error" as const }] : []),
+  ];
+  // The field is as wide as its text or its hint, in the line's monospaced characters.
+  const width = `calc(${Math.max(text.length, hint.length, 1) + 1}ch + 1rem + 2px)`;
 
-  const operation = (expr: Expr): ReactNode => {
-    const pieces: ReactNode[] = [];
-    notationTokens(notationOf(expr)).forEach((token, i) => {
-      if ("text" in token) {
-        // oxlint-disable-next-line react/no-array-index-key -- a notation's tokens keep their order
-        if (token.text.trim() !== "") pieces.push(<span key={`w${i}`}>{token.text}</span>);
-        else pieces.push(" ");
-        return;
-      }
-      const held = placeholderValue(expr, token.placeholder);
-      switch (held?.role) {
-        case "expr":
-          if (held.expr) pieces.push(draw(held.expr, held));
-          return;
-        case "exprs":
-          held.items.forEach((item, j) => {
-            if (j > 0) pieces.push(<span key={`c${item.id}`}>{SEPARATOR}</span>);
-            pieces.push(draw(item));
-          });
-          return;
-        case "operator":
-          pieces.push(
-            <button
-              key={`op${expr.id}`}
-              type="button"
-              tabIndex={-1}
-              onMouseDown={(event) => event.preventDefault()}
-              className="cursor-pointer rounded-sm px-0.5 hover:bg-muted"
-              onClick={() => props.onClickAt(expr.id, true)}
-            >
-              {held.text}
-            </button>,
-          );
-          return;
-        case "name":
-          pieces.push(<span key={`name:${token.placeholder}`}>{held.name}</span>);
-          return;
-        default:
-          return;
-      }
-    });
-    return <>{pieces}</>;
-  };
-
-  const empty = isEmptyExpr(root) && !focused;
   return (
-    <div
-      ref={ref}
-      role="textbox"
-      tabIndex={0}
-      aria-label={label}
-      data-value-line
-      className={cn(
-        "inline-flex min-h-8 max-w-full flex-wrap items-center gap-y-1 rounded-md border px-2 py-1 font-mono whitespace-pre-wrap outline-none",
-        focused
-          ? "border-selection ring-1 ring-selection"
-          : "border-dashed border-muted-foreground/60",
-        line?.selected && "[&>span]:rounded-sm [&>span]:bg-selection/20",
-      )}
-      onKeyDown={props.onKey}
-      onFocus={() => {
-        setKeys(true);
-        props.onFocus();
-      }}
-      onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setKeys(false);
-      }}
+    <span
+      className="relative inline-flex max-w-full rounded-md border border-input font-mono focus-within:border-selection focus-within:ring-1 focus-within:ring-selection"
+      style={{ width }}
     >
-      {empty ? (
-        <span className="font-sans text-muted-foreground">{t("editor.valueLine.hint")}</span>
-      ) : (
-        <>
-          {draw(root)}
-          {line?.selected && <Caret />}
-        </>
-      )}
-    </div>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 overflow-hidden px-2 py-1 whitespace-pre"
+      >
+        <span className="inline-block" style={{ transform: `translateX(${-scroll}px)` }}>
+          {pieces(text, marks).map((piece) => {
+            const style = spanStyle({ variable: piece.kinds.has("variable") });
+            return (
+              <span
+                key={piece.start}
+                className={cn(
+                  style.colorClass,
+                  (piece.kinds.has("unmatched") || piece.kinds.has("error")) &&
+                    "underline decoration-destructive decoration-wavy",
+                )}
+                style={{ fontWeight: style.fontWeight }}
+              >
+                {piece.text}
+              </span>
+            );
+          })}
+        </span>
+      </span>
+      <input
+        ref={(element) => {
+          input.current = element;
+          if (typeof ref === "function") ref(element);
+          else if (ref) ref.current = element;
+        }}
+        type="text"
+        value={text}
+        placeholder={hint}
+        aria-label={props.label}
+        spellCheck={false}
+        autoComplete="off"
+        data-value-line
+        className="relative min-w-0 flex-1 bg-transparent px-2 py-1 text-transparent caret-foreground outline-none selection:bg-selection/30 placeholder:font-normal placeholder:text-muted-foreground"
+        onChange={(event) => change(event.currentTarget)}
+        onSelect={(event) => report(event.currentTarget)}
+        onScroll={(event) => setScroll(event.currentTarget.scrollLeft)}
+        onKeyDown={(event) => {
+          // A key of an input method's composition is the composition's, Esc and Enter included,
+          // so neither the editor nor the page acts on it. Safari reports the Enter that ends a
+          // composition with key code 229 once the composition has ended.
+          if (event.nativeEvent.isComposing || event.keyCode === 229) {
+            event.stopPropagation();
+            return;
+          }
+          props.onKey(event);
+        }}
+        onPaste={paste}
+        onCompositionStart={() => {
+          composing.current = true;
+        }}
+        onCompositionEnd={(event) => {
+          composing.current = false;
+          change(event.currentTarget);
+        }}
+        onMouseDown={(event) => {
+          // Only a press that gives the field the keyboard is a click that enters it.
+          clicked.current = document.activeElement !== event.currentTarget;
+        }}
+        onFocus={(event) => {
+          const field = event.currentTarget;
+          const by = clicked.current
+            ? { start: field.selectionStart ?? 0, end: field.selectionEnd ?? 0 }
+            : null;
+          clicked.current = false;
+          if (!by) showSelection(field, selection);
+          props.onFocus(by);
+        }}
+      />
+    </span>
   );
 });

@@ -3,7 +3,7 @@
 // kept while one of its words begins with the word typed, and a typed name none of them is
 // offered as a new variable.
 import { declaredBy } from "@/lang/scope";
-import type { Name, Program, Routine } from "@/lang/types";
+import type { Name, NodeId, Program, Routine } from "@/lang/types";
 import { isValidName } from "@/lang/validate";
 import { allStmts, getRoutine, routineStmts } from "@/lang/walk";
 
@@ -23,18 +23,22 @@ export type RoutineNames = { asked: readonly Name[]; names: readonly Name[] };
 
 /**
  * In `main` the problem's expected names (`asked`), then the inputs and the names `main` assigns;
- * in a function its parameters and the names its body assigns; each in program order.
+ * in a function its parameters and the names its body assigns; each in program order. The names
+ * that statement `editing` assigns are left out, because its target's line holds the name being
+ * typed (`editor.md`, Name list).
  */
 export function routineNames(
   program: Program,
   routine: Routine,
   asked: readonly Name[],
+  editing: NodeId,
 ): RoutineNames {
   const def = getRoutine(program, routine);
   const main = def === "main";
   const problem = main ? [...new Set(asked)] : [];
   const names = new Set<Name>(main ? program.inputs.map((input) => input.name) : def.params);
   for (const stmt of allStmts(routineStmts(program, def))) {
+    if (stmt.id === editing) continue;
     for (const { name } of declaredBy(stmt)) names.add(name);
   }
   return { asked: problem, names: [...names].filter((name) => !problem.includes(name)) };

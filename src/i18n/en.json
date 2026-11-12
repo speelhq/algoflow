@@ -283,7 +283,7 @@
     },
     "str": {
       "label": "Text",
-      "help": "A piece of text, typed without quotes."
+      "help": "A piece of text, typed between quotes."
     },
     "bool": {
       "label": "True / false",
@@ -493,7 +493,7 @@
   "editor": {
     "label": "Edit block",
     "noItems": "Nothing matches",
-    "textField": "Text",
+    "inText": "Inside a text. End it with its quote to choose a value.",
     "addValue": "+ value",
     "removeValue": {
       "label": "Remove this value",
@@ -504,9 +504,6 @@
     "caption": {
       "label": "Caption",
       "hint": "optional"
-    },
-    "valueLine": {
-      "hint": "type or choose"
     },
     "typeKeys": "Type `{keys}`.",
     "fieldName": "{label}, {slot}",

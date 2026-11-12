@@ -1,14 +1,17 @@
 // The fields of a statement's notation in the block editor: each value or target slot, and each
 // item of a list of values, in the notation's reading order.
 import { blockText, t } from "@/i18n/t";
+import { draftValue } from "@/lang/drafts";
 import type { Expr, NodeId, Stmt } from "@/lang/types";
-import { holdsEmptySlot, isExpr } from "@/lang/walk";
-import { getBlockDef, keyOf, type Slot } from "@/blocks/registry";
+import { draftText, holdsEmptySlot, isExpr } from "@/lang/walk";
+import { draftOf, emptyExpr, getBlockDef, keyOf, type Slot } from "@/blocks/registry";
+import { unparse } from "@/python/emit";
 import {
   generatedNotation,
   placeholderValue,
   SEPARATOR,
   notationTokens,
+  slotHint,
   type NotationToken,
 } from "@/ui/chart/text";
 import { find } from "./line";
@@ -96,6 +99,42 @@ export function fieldLabel(stmt: Stmt, field: Field): string {
   });
 }
 
+/** A field's text on one line: a line break becomes a space (`language.md`, Captions). */
+export function oneLine(text: string): string {
+  return text.replace(/[\r\n]+/g, " ");
+}
+
+/**
+ * The text a field shows for its value: a draft's text as typed, or the value as the emitter
+ * writes it (`editor.md`, Value line).
+ */
+export function fieldText(value: Expr): string {
+  return draftText(value) ?? unparse(value);
+}
+
+/**
+ * The value that a field's text writes (`editor.md`, Value line): the value it parses as, which a
+ * target's line keeps only when it is a target, or else the text as a draft. No text is an empty
+ * slot.
+ */
+export function textValue(text: string, target: boolean): Expr {
+  if (text === "") return emptyExpr();
+  const read = draftValue(target ? "target" : "expr", text);
+  return "value" in read && !Array.isArray(read.value) ? read.value : draftOf(text);
+}
+
+/** The word an optional slot's field shows while it has no text, the same in every locale. */
+const OPTIONAL = "optional";
+
+/**
+ * What a field shows while it has no text: its slot's hint, or `optional` for an optional slot
+ * (`editor.md`, Value line, Empty slots).
+ */
+export function fieldHint(stmt: Stmt, field: Field): string {
+  const slot = getBlockDef(keyOf(stmt)).slots.find((each) => each.name === field.slot);
+  return slot?.role === "expr" && slot.optional ? OPTIONAL : slotHint(stmt, field.slot);
+}
+
 /** The expression a value field holds. */
 export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
   const value = (stmt as unknown as Bag)[field.slot];
@@ -105,9 +144,9 @@ export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
 }
 
 /**
- * The field that takes the keyboard when the editor opens: the slot clicked on the chart node (the
- * item holding the empty slot clicked, when one was), else the first field that holds an empty
- * slot, else none.
+ * The field that takes the keyboard when the editor opens (`editor.md`, Block editor): the slot
+ * clicked on the chart node (the item holding the empty slot clicked, when one was), else the
+ * first field that holds a draft, else none.
  */
 export function startField(
   stmt: Stmt,
@@ -119,7 +158,7 @@ export function startField(
     return (
       fields.find((field) => {
         const value = valueOf(stmt, field);
-        return value !== undefined && holdsEmptySlot(value);
+        return value !== undefined && (draftText(value) !== undefined || holdsEmptySlot(value));
       }) ?? null
     );
   }

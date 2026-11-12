@@ -19,7 +19,12 @@ export function apply(change: (program: Program) => Program, field?: string): bo
   }
 }
 
-/** Inserts a block at a connector's place and opens its editor. */
-export function insertBlock(stmt: Stmt, place: Place): void {
-  if (apply((program) => insertStmt(program, stmt, place))) useEditor.getState().select(stmt.id);
+/**
+ * Inserts a block at a connector's place and opens its editor, its first field's caret at `caret`
+ * (`editor.md`, Block editor).
+ */
+export function insertBlock(stmt: Stmt, place: Place, caret: number): void {
+  if (apply((program) => insertStmt(program, stmt, place))) {
+    useEditor.getState().selectInserted(stmt.id, caret);
+  }
 }

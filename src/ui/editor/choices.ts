@@ -12,6 +12,9 @@ import { isNewName, matchesName, type RoutineNames } from "./names";
 
 export type LineFunction = { name: Name; params: readonly Name[] };
 
+/** The key that opens a pair of parentheses, which the explanation line names for `( )`. */
+export const PARENTHESES_KEY = "(";
+
 /**
  * A target slot's line: the names offered where the whole target is an empty slot, the
  * problem's expected ones (`asked`) first, and whether a name typed that none is makes a new

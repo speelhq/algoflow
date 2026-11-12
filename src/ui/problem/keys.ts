@@ -10,24 +10,40 @@ import { currentMode, editable, inRun } from "@/store/mode";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { apply } from "@/ui/editor/edits";
-import { lineTakes } from "@/ui/editor/line";
 import { togglePlay } from "./actions";
 
 const REMOVE = new Set(["Delete", "Backspace"]);
 
+/** The keys with Ctrl or Cmd that the table names: undo and redo, duplicate, and the play button. */
+const TABLE_WITH_MOD = new Set(["z", "d", "enter"]);
+
+type KeyEventLike = Pick<
+  KeyboardEvent,
+  "target" | "key" | "ctrlKey" | "metaKey" | "getModifierState"
+>;
+
 /**
- * Whether the focused element owns a key: a field or a slider every key, a value line the keys
- * it takes, and an open editor or menu Delete and Backspace.
+ * Whether a value line owns a key: every key but Esc and those with Ctrl or Cmd that the table
+ * names, which act as the table states (`editor.md`, Value line, Keys). A character that AltGr
+ * makes, which Windows reports with Ctrl, is the line's.
  */
-export function ownsKeys(
-  event: Pick<KeyboardEvent, "target" | "key" | "ctrlKey" | "metaKey" | "getModifierState">,
-): boolean {
+function lineOwns(event: KeyEventLike): boolean {
+  if (event.key === "Escape") return false;
+  const mod = (event.ctrlKey || event.metaKey) && !event.getModifierState("AltGraph");
+  return !(mod && TABLE_WITH_MOD.has(event.key.toLowerCase()));
+}
+
+/**
+ * Whether the focused element owns a key: a value line the keys it owns, any other field or a
+ * slider every key, and an open editor or menu Delete and Backspace.
+ */
+export function ownsKeys(event: KeyEventLike): boolean {
   const { target } = event;
   if (!(target instanceof Element)) return false;
+  if (target.closest("[data-value-line]") !== null) return lineOwns(event);
   if (target.closest("input, textarea, select, [contenteditable], [role=slider]") !== null) {
     return true;
   }
-  if (target.closest("[data-value-line]") !== null && lineTakes(event)) return true;
   return REMOVE.has(event.key) && target.closest('[role="dialog"], [role="menu"]') !== null;
 }
 

@@ -10,6 +10,7 @@ import {
   parseArgs,
   parseClosed,
   readBefore,
+  variableSpans,
   type ParseError,
 } from "./parse";
 import { BINOPS } from "./precedence";
@@ -365,5 +366,19 @@ describe("the text before a caret, closed and checked for a text", () => {
   it("tells whether a text ends inside a text", () => {
     expect(endsInText('x + "ab')).toBe(true);
     expect(endsInText('x + "ab"')).toBe(false);
+  });
+});
+
+describe("variableSpans", () => {
+  const names = (text: string) =>
+    variableSpans(text).map(({ start, end }) => text.slice(start, end));
+
+  it("reads each name that is no keyword, member, or call as a variable, in a draft too", () => {
+    expect(names("total + abs(n) * nums[i]")).toEqual(["total", "n", "nums", "i"]);
+    expect(names("not done and x == None")).toEqual(["done", "x"]);
+    expect(names("random.randint(1, k)")).toEqual(["k"]);
+    expect(names("nums.pop() + ")).toEqual(["nums"]);
+    expect(names('"a b" + c')).toEqual(["c"]);
+    expect(names('total + "un')).toEqual(["total"]);
   });
 });

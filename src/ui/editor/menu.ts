@@ -11,7 +11,9 @@ import { CATEGORIES, type Category } from "@/blocks/categories";
 import { joinSpans, notationWithHints, type NotationSpan } from "@/ui/chart/text";
 import { functionLabel } from "./explain";
 import { callableFunctions } from "./line";
+import { slotChoice, type Written } from "./caret";
 import { callExpr, type LineFunction } from "./choices";
+import { textValue } from "./fields";
 
 export type BlockMenuEntry = {
   /** The registry key, or `call:<name>` for a function of the program. */
@@ -24,6 +26,11 @@ export type BlockMenuEntry = {
   /** Why the block cannot go here; absent when it can. */
   disabled?: string;
   create: () => Stmt;
+  /**
+   * Where the caret goes in the first field of the block inserted: where a choice of the operation
+   * it holds puts it (`editor.md`, Block menu), and at the start of a block's field with no text.
+   */
+  caret: number;
 };
 export type BlockMenuGroup = { id: Category | "program"; title: string; entries: BlockMenuEntry[] };
 
@@ -43,6 +50,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
           notation: notationWithHints(def.create() as Stmt),
           help: blockText(def.key, "help"),
           create: () => def.create() as Stmt,
+          caret: 0,
         };
         if (missing && def.requires) entry.disabled = t(`menu.requires.${def.requires}`);
         return entry;
@@ -57,18 +65,24 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
       label: functionLabel(fn),
       help: blockText("call", "help"),
       create: () => callStatement(fn),
+      caret: callText(fn).caret,
     };
   });
   if (calls.length > 0) groups.push({ id: "program", title: t("menu.program"), entries: calls });
   return groups;
 }
 
-/** A statement calling `fn` of `program`, its arguments empty, as a value line makes the call. */
-function callStatement(fn: LineFunction): Stmt {
+/** The text that a choice of a call of `fn` writes, and its caret: `greet()`. */
+function callText(fn: LineFunction): Written {
   const call = callExpr(fn);
   if (!call) throw new Error(`"${fn.name}" is no function of the program`);
+  return slotChoice(call);
+}
+
+/** A statement calling `fn` of `program`, its slot holding the text a choice of the call writes. */
+function callStatement(fn: LineFunction): Stmt {
   const statement = getBlockDef("expr").create() as Extract<Stmt, { type: "expr" }>;
-  return { ...statement, expr: call };
+  return { ...statement, expr: textValue(callText(fn).text, false) };
 }
 
 /** The groups with only the entries whose label or help contains `query`. */

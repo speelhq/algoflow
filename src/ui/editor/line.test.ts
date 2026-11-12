@@ -13,7 +13,6 @@ import {
   clickAt,
   endText,
   exactRow,
-  lineTakes,
   matches,
   move,
   openLine,
@@ -112,19 +111,6 @@ describe("typing", () => {
     expect(py(keys("9007199254740991"))).toBe("9007199254740991");
     expect(py(keys("90071992547409911"))).toBe("9007199254740991");
     expect(py(keys("9007199254740992"))).toBe("900719925474099");
-  });
-
-  it("the line takes keys without Ctrl or Cmd, and what AltGr makes", () => {
-    const key = (ctrlKey: boolean, metaKey: boolean, altGraph = false) => ({
-      ctrlKey,
-      metaKey,
-      getModifierState: (state: string) => altGraph && state === "AltGraph",
-    });
-    expect(lineTakes(key(false, false))).toBe(true);
-    expect(lineTakes(key(true, false))).toBe(false);
-    expect(lineTakes(key(false, true))).toBe(false);
-    // AltGr on Windows reports Ctrl too.
-    expect(lineTakes(key(true, false, true))).toBe(true);
   });
 
   it("an operator's key at an empty slot inserts nothing", () => {

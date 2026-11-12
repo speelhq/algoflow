@@ -233,8 +233,8 @@ test.describe("Block editor", () => {
     await insert(page, "assign");
     await page.keyboard.type("total");
     await page.keyboard.press("Enter");
-    await page.keyboard.type("total+i");
-    await expect(editor(page).getByTestId("editor-notation")).toContainText("total + i");
+    await page.keyboard.type("total + i");
+    await expect(editor(page).locator("[data-value-line]").last()).toHaveValue("total + i");
     await page.screenshot({ path: shot("editor-typing"), animations: "disabled" });
   });
 
