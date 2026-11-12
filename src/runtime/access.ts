@@ -17,12 +17,7 @@ export function asList(
   ctx: RunContext,
   other: Value,
 ): { ref: HeapId; items: Value[] } {
-  if (list.t !== "list") {
-    return ctx.fail(nodeId, "E_TYPE", {
-      left: typeName(list),
-      right: typeName(other),
-    });
-  }
+  if (list.t !== "list") return typeError(nodeId, list, other, ctx);
   const entry = getHeapEntry(ctx.heap, list.ref);
   if (entry.type !== "list") throw new Error("list ref is not a list");
   return { ref: list.ref, items: entry.items };

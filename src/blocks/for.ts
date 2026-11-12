@@ -2,7 +2,7 @@
 // its target's place, found again, and a `loop` event that carries the place.
 import { newId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
-import { typeName } from "@/runtime/values";
+import { typeError } from "@/runtime/access";
 import { defineStmt, type Counted } from "./types";
 import { emptyDraft } from "./draft";
 
@@ -39,12 +39,7 @@ export const forStmt = defineStmt<"for">({
   *run(block, ctx) {
     const start = yield* ctx.eval(block.start);
     const stop = yield* ctx.eval(block.stop);
-    if (start.t !== "int" || stop.t !== "int") {
-      return ctx.fail(block.id, "E_TYPE", {
-        left: typeName(start),
-        right: typeName(stop),
-      });
-    }
+    if (start.t !== "int" || stop.t !== "int") return typeError(block.id, start, stop, ctx);
     for (let i = start.v; i < stop.v; i += 1) {
       const value = { t: "int", v: i } as const;
       // Python assigns its target at each pass, so the place is found again.
