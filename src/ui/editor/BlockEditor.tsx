@@ -40,7 +40,7 @@ import { caretMatches, caretOffersAll, readCaret, wordAt } from "./caret";
 import { callableFunctions, type LineContext } from "./choices";
 import { CaptionField } from "./CaptionField";
 import { routineNames } from "./names";
-import { valueList } from "./rows";
+import { valueList } from "./valueList";
 import {
   changeText,
   enterField,
@@ -76,7 +76,7 @@ function itemAfterRemoval(focus: Field | null, slot: string, index: number): Fie
 
 function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initial: Initial }) {
   const def = getBlockDef(keyOf(stmt));
-  const led = useEditor((s) => s.ledDiagnostic);
+  const ledDiagnostic = useEditor((s) => s.ledDiagnostic);
   const typing = useEditor((s) => s.typing);
   const setTyping = useEditor((s) => s.setTyping);
   const select = useEditor((s) => s.select);
@@ -130,8 +130,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
             : { asked: [], names: variables, binds },
     };
   }, [program, stmt.id, kinds, binds, named]);
-  const diagnostics = editorDiagnostics(program, stmt.id, led, typing);
-  const draftError = ledDraft(program, stmt, led);
+  const diagnostics = editorDiagnostics(program, stmt.id, ledDiagnostic, typing);
+  const draftError = ledDraft(program, stmt, ledDiagnostic);
   // A field of this editor no longer has the keyboard once the editor closes.
   useEffect(() => () => setTyping(null), [setTyping]);
 
@@ -141,7 +141,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const current = () => blocksById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
 
   /** Writes a transition's values into the program and keeps the session it leaves. */
-  const run = (transition: Transition): Session => {
+  const applyTransition = (transition: Transition): Session => {
     for (const { field, root } of transition.edits) {
       const at = `${stmt.id}:${fieldKey(field)}`;
       apply((p) => setExpr(p, stmt.id, field.slot, root, field.index), at);
@@ -209,7 +209,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     const result = valueKey(session, event, values.rows, ctx, canMove);
     if (!result.taken) return;
     event.preventDefault();
-    runAfter(run(result), result.after);
+    runAfter(applyTransition(result), result.after);
   };
 
   const register = (field: Field) => (element: HTMLElement | null) => {
@@ -230,7 +230,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         unmatched={shown ? unmatched : null}
         error={draftError?.draft === root.id ? { start: draftError.from, end: text.length } : null}
         onKey={onValueKey}
-        onChange={(typed, composing) => run(changeText(session, ctx, typed, composing))}
+        onChange={(typed, composing) => applyTransition(changeText(session, ctx, typed, composing))}
         onSelect={(start, end) => setSession((s) => selectText(s, start, end))}
         onFocus={(clicked) => {
           setFocused(field);
@@ -314,7 +314,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           const row = rows[index];
           if (!row) return;
           const picked = pickRow(session, row, ctx);
-          runAfter(run(picked), picked.after);
+          runAfter(applyTransition(picked), picked.after);
         }}
         {...(!session.all && caretOffersAll(line, ctx)
           ? { onShowAll: () => setSession((s) => showAll(s)) }
