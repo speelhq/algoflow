@@ -78,7 +78,7 @@ function callText(fn: LineFunction): TextLine {
   return choiceLine(call);
 }
 
-/** A statement calling `fn` of `program`, its slot holding the text a choice of the call writes. */
+/** A statement calling `fn`, its slot holding the text a choice of the call writes. */
 function callStatement(fn: LineFunction): Stmt {
   const statement = getBlockDef("expr").create() as Extract<Stmt, { type: "expr" }>;
   return { ...statement, expr: textValue(callText(fn).text, false) };
