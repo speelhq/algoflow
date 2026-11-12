@@ -113,7 +113,6 @@ let generation = 0;
 let target: number | null = null;
 /** The run was started by `Watch this case`. */
 let watching = false;
-let tick: () => void = () => {};
 const NO_PRINTS: number[] = [];
 
 function freshProjection(): Projection {
@@ -130,11 +129,6 @@ function freshProjection(): Projection {
 function clearTimer(): void {
   if (timer !== null) clearInterval(timer);
   timer = null;
-}
-
-function armTimer(): void {
-  clearTimer();
-  timer = setInterval(() => tick(), 1000 / useLayout.getState().speed);
 }
 
 function cancel(): void {
@@ -325,7 +319,8 @@ export const useRun = create<RunState>()((set, get) => {
     );
   };
 
-  tick = () => {
+  /** Takes one step of Play, and pauses at the breakpoint. */
+  const tick = () => {
     if (!running()) {
       clearTimer();
       return;
@@ -336,6 +331,17 @@ export const useRun = create<RunState>()((set, get) => {
       publish("paused", false);
     } else publish("playing", false);
   };
+
+  /** Replaces any play timer with one that calls `tick` at the play speed. */
+  const armTimer = () => {
+    clearTimer();
+    timer = setInterval(tick, 1000 / useLayout.getState().speed);
+  };
+
+  // A new speed takes effect on the running play timer.
+  useLayout.subscribe((current, previous) => {
+    if (current.speed !== previous.speed && timer !== null) armTimer();
+  });
 
   return {
     status: "idle",
@@ -448,11 +454,6 @@ export const useRun = create<RunState>()((set, get) => {
       set({ caseIndex: index });
     },
   };
-});
-
-// A new speed takes effect on the running play timer.
-useLayout.subscribe((current, previous) => {
-  if (current.speed !== previous.speed && timer !== null) armTimer();
 });
 
 // A new program discards the runner, as an edit made during the pre-run does; opening a program
