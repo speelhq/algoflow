@@ -12,7 +12,7 @@ export function draftOf(text: string): Extract<Expr, { type: "draft" }> {
 }
 
 /** A new empty slot's value, a draft with no text, as every block's `create()` and the editor make one. */
-export function emptyExpr(): Extract<Expr, { type: "draft" }> {
+export function emptyDraft(): Extract<Expr, { type: "draft" }> {
   return draftOf("");
 }
 
@@ -26,7 +26,7 @@ export const draft = defineExpr<"draft">({
     typeof fields.text === "string" && !/[\n\r]/.test(fields.text)
       ? undefined
       : { field: "text", message: "expected one line of text" },
-  create: emptyExpr,
+  create: emptyDraft,
   run(block): Generator<Event, Value, void> {
     throw new Error(`draft ${block.id} cannot run`);
   },

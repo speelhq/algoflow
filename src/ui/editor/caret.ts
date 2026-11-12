@@ -6,7 +6,7 @@
 // and the blocks' slots, `entries`, and `create()`, never a type.
 import { exprKind, type Kinds } from "@/lang/kinds";
 import type { Expr, Kind } from "@/lang/types";
-import { isEmptyExpr, isTarget } from "@/lang/walk";
+import { isEmptyDraft, isTarget } from "@/lang/walk";
 import { draftOf, getBlockDef, keyOf } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
@@ -111,7 +111,7 @@ function marked(expr: Expr, takes: boolean): Expr {
   const copy: Bag = { ...expr };
   const first = takes ? firstSlot(expr) : undefined;
   const mark = (value: unknown): unknown => {
-    if (isEmptyExpr(value)) return draftOf(EMPTY);
+    if (isEmptyDraft(value)) return draftOf(EMPTY);
     return value && typeof value === "object" ? marked(value as Expr, false) : value;
   };
   for (const slot of def.slots) {

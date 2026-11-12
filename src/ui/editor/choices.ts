@@ -6,7 +6,7 @@ import type { Kinds } from "@/lang/kinds";
 import type { Expr, Kind, Name, Program } from "@/lang/types";
 import { refusedDefinitions } from "@/lang/validate";
 import type { ValueGroup } from "@/blocks/types";
-import { emptyExpr } from "@/blocks/registry";
+import { emptyDraft } from "@/blocks/registry";
 import { isParseError, parse } from "@/python/parse";
 import { allEntries, firstSlot, GROUPS, takesValue, type Entry } from "./entries";
 import { isNewName, matchesName, type RoutineNames } from "./names";
@@ -87,7 +87,7 @@ export function callExpr(fn: LineFunction): Expr | undefined {
   const call = parse(`${fn.name}()`);
   const args = isParseError(call) ? undefined : firstSlot(call);
   if (isParseError(call) || args?.role !== "exprs") return undefined;
-  return { ...call, [args.name]: fn.params.map(() => emptyExpr()) };
+  return { ...call, [args.name]: fn.params.map(() => emptyDraft()) };
 }
 
 /** The rows a word names where a value is expected: the variables, the entries, and every call. */

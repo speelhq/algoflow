@@ -9,7 +9,7 @@ import {
   conditionOf,
   draftSlots,
   draftText,
-  isEmptyExpr,
+  isEmptyDraft,
   isExpr,
   paramArg,
   variableOf,
@@ -191,7 +191,7 @@ function operandSpans(
   program: Program,
   writing: Writing,
 ): NotationSpan[] {
-  if (isEmptyExpr(child)) return [hintSpan(child, hint)];
+  if (isEmptyDraft(child)) return [hintSpan(child, hint)];
   const spans = exprSpans(child, program, writing);
   return parenthesized(child, held) ? inParentheses(spans) : spans;
 }
@@ -246,7 +246,7 @@ export function placeholderValue(block: Block, name: string): Held | undefined {
  * its hint.
  */
 export function exprSpans(expr: Expr, program: Program, writing: Writing = {}): NotationSpan[] {
-  if (isEmptyExpr(expr)) throw new Error(`empty slot ${expr.id} is written by what holds it`);
+  if (isEmptyDraft(expr)) throw new Error(`empty slot ${expr.id} is written by what holds it`);
   // A draft's text is no template: a `{` in it is the learner's.
   const typed = draftText(expr);
   if (typed !== undefined) return [{ text: typed }];
@@ -393,7 +393,7 @@ export function questionSpans(block: Block, program: Program): NotationSpan[] {
   const condition = conditionOf(block);
   if (!condition) return [];
   const spans = slotSpans(block, condition.slot, program);
-  if (isEmptyExpr(condition.expr)) return spans;
+  if (isEmptyDraft(condition.expr)) return spans;
   return filledSpans(CHART_TEXT.question, () => spans);
 }
 

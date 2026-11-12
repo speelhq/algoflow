@@ -3,7 +3,7 @@
 import { errorText, t } from "@/i18n/t";
 import { firstSetters, variableKinds, type Kinds } from "@/lang/kinds";
 import type { Diagnostic, Expr, Name, Kind, NodeId, Program } from "@/lang/types";
-import { getRoutine, isEmptyExpr, routineOf } from "@/lang/walk";
+import { getRoutine, isEmptyDraft, routineOf } from "@/lang/walk";
 import {
   parenthesized,
   notationOf,
@@ -151,7 +151,7 @@ function closestName(word: string, rows: readonly Row[]): string | undefined {
  */
 function operationSpans(operation: Expr, current: Expr, program: Program): NotationSpan[] {
   const written = (value: Expr, index: number | undefined): NotationSpan => {
-    const empty = isEmptyExpr(value);
+    const empty = isEmptyDraft(value);
     const text = empty ? exprHint(operation, index, program) : exprText(value, program);
     return {
       text,

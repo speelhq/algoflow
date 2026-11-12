@@ -17,7 +17,7 @@ import {
   truthy,
 } from "@/runtime/values";
 import { defineExpr, type RunContext } from "./types";
-import { emptyExpr } from "./draft";
+import { emptyDraft } from "./draft";
 
 type Binop = Extract<Expr, { type: "binop" }>;
 
@@ -120,7 +120,7 @@ export const binop = defineExpr<"binop">({
     { name: "right", role: "expr" },
   ],
   precedence: (block) => binopPrecedence((block as Binop).op),
-  create: () => ({ id: newId(), type: "binop", op: "+", left: emptyExpr(), right: emptyExpr() }),
+  create: () => ({ id: newId(), type: "binop", op: "+", left: emptyDraft(), right: emptyDraft() }),
   fieldsError: (fields) =>
     typeof fields.op === "string" && isBinOp(fields.op)
       ? undefined

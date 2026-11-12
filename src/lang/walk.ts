@@ -14,7 +14,7 @@ export function draftText(value: unknown): string | undefined {
 }
 
 /** Whether a value is an empty slot: a draft with no text. */
-export function isEmptyExpr(value: unknown): boolean {
+export function isEmptyDraft(value: unknown): boolean {
   return draftText(value) === "";
 }
 

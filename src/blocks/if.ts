@@ -2,7 +2,7 @@
 import { newId } from "@/lang/id";
 import { decide } from "@/runtime/condition";
 import { defineStmt } from "./types";
-import { emptyExpr } from "./draft";
+import { emptyDraft } from "./draft";
 
 export const ifStmt = defineStmt<"if">({
   key: "if",
@@ -16,7 +16,7 @@ export const ifStmt = defineStmt<"if">({
   create: () => ({
     id: newId(),
     type: "if",
-    cond: emptyExpr(),
+    cond: emptyDraft(),
     then: [],
     else: [],
   }),

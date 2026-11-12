@@ -3,7 +3,7 @@
 import { newId } from "@/lang/id";
 import { asList, listIndex } from "@/runtime/access";
 import { defineExpr } from "./types";
-import { emptyExpr } from "./draft";
+import { emptyDraft } from "./draft";
 
 export const index = defineExpr<"index">({
   key: "index",
@@ -12,7 +12,7 @@ export const index = defineExpr<"index">({
     { name: "list", role: "expr", atom: true },
     { name: "index", role: "expr" },
   ],
-  create: () => ({ id: newId(), type: "index", list: emptyExpr(), index: emptyExpr() }),
+  create: () => ({ id: newId(), type: "index", list: emptyDraft(), index: emptyDraft() }),
   *run(block, ctx) {
     return (yield* ctx.read(block, block.id)).value;
   },

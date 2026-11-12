@@ -2,7 +2,7 @@
 // its value was read from, by which the driver shows an exchange as one step.
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
-import { emptyExpr } from "./draft";
+import { emptyDraft } from "./draft";
 
 export const swap = defineStmt<"swap">({
   key: "swap",
@@ -11,7 +11,7 @@ export const swap = defineStmt<"swap">({
     { name: "a", role: "target", hint: "first" },
     { name: "b", role: "target", hint: "second" },
   ],
-  create: () => ({ id: newId(), type: "swap", a: emptyExpr(), b: emptyExpr() }),
+  create: () => ({ id: newId(), type: "swap", a: emptyDraft(), b: emptyDraft() }),
   *run(block, ctx) {
     // Python reads `b` then `a`, then finds `a` again and writes it, then `b`.
     const second = yield* ctx.read(block.b, block.id);

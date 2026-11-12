@@ -4,7 +4,7 @@ import { newId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { typeName } from "@/runtime/values";
 import { defineStmt, type Counted } from "./types";
-import { emptyExpr } from "./draft";
+import { emptyDraft } from "./draft";
 
 const isZero = (expr: Expr) => expr.type === "num" && !expr.float && expr.value === 0;
 
@@ -31,9 +31,9 @@ export const forStmt = defineStmt<"for">({
   create: () => ({
     id: newId(),
     type: "for",
-    var: emptyExpr(),
+    var: emptyDraft(),
     start: { id: newId(), type: "num", value: 0, float: false, raw: "0" },
-    stop: emptyExpr(),
+    stop: emptyDraft(),
     body: [],
   }),
   *run(block, ctx) {

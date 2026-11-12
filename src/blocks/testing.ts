@@ -15,7 +15,7 @@ import type {
 import { isDone } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Done, Event, State } from "@/runtime/types";
-import { getBlockDef, keyOf } from "./registry";
+import { emptyDraft, getBlockDef, keyOf } from "./registry";
 
 let counter = 0;
 
@@ -25,7 +25,7 @@ export function tid(): NodeId {
 }
 
 export const ast = {
-  empty: (): Expr => ({ id: tid(), type: "draft", text: "" }),
+  empty: (): Expr => ({ ...emptyDraft(), id: tid() }),
   draft: (text: string): Expr => ({ id: tid(), type: "draft", text }),
   num: (value: number, raw = String(value)): Expr => ({
     id: tid(),
