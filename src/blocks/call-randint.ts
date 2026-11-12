@@ -1,5 +1,5 @@
 // The builtin `randint` of `random`: an int drawn from mulberry32, both bounds included.
-import { typeName } from "@/runtime/values";
+import { typeError } from "@/runtime/access";
 import { defineBuiltin } from "./builtin";
 
 export const randomInt = defineBuiltin({
@@ -10,12 +10,7 @@ export const randomInt = defineBuiltin({
   entries: [{ name: "", group: "calculate" }],
   module: "random",
   evaluate([a = { t: "none" }, b = { t: "none" }], block, ctx) {
-    if (a.t !== "int" || b.t !== "int") {
-      return ctx.fail(block.id, "E_TYPE", {
-        left: typeName(a),
-        right: typeName(b),
-      });
-    }
+    if (a.t !== "int" || b.t !== "int") return typeError(block.id, a, b, ctx);
     // CPython raises ValueError("empty range") when a > b.
     if (a.v > b.v) return ctx.fail(block.id, "E_EMPTY_RANGE", { a: a.v, b: b.v });
     return { t: "int", v: ctx.random.int(a.v, b.v) };
