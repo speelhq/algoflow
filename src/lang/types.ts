@@ -114,6 +114,7 @@ export const KINDS: readonly Kind[] = ["number", "text", "truefalse", "none", "l
 // ---------------------------------------------------------------- Names
 
 export const NAME_PATTERN = /^[a-z_][a-z0-9_]*$/;
+export const CLASS_NAME_PATTERN = /^[A-Z][A-Za-z0-9]*$/;
 /** Python's keywords. */
 export const PYTHON_KEYWORDS: ReadonlySet<string> = new Set(
   `False None True and as assert async await break class continue def del elif

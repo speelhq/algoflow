@@ -15,7 +15,6 @@ import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
 import { isExpr, blocksById, routineOf } from "@/lang/walk";
 import { cn } from "@/lib/utils";
 import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
-import { parseScope } from "@/python/parse";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { placeholderValue, slotSpans } from "@/ui/chart/text";
@@ -102,7 +101,6 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     return {
       variables,
       kinds,
-      scope: parseScope(program),
       functions: callableFunctions(program),
       target:
         binds === undefined

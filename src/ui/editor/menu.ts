@@ -8,7 +8,6 @@ import { placeContext } from "@/lang/scope";
 import type { Place, Program, Stmt } from "@/lang/types";
 import { getBlockDef, menuBlockDefs } from "@/blocks/registry";
 import { CATEGORIES, type Category } from "@/blocks/categories";
-import { parseScope } from "@/python/parse";
 import { notationWithEmptySlots } from "@/ui/chart/text";
 import { functionLabel } from "./explain";
 import { callableFunctions, callExpr, type LineFunction } from "./line";
@@ -56,7 +55,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
       id: `call:${fn.name}`,
       label: functionLabel(fn),
       help: blockText("call", "help"),
-      create: () => callStatement(program, fn),
+      create: () => callStatement(fn),
     };
   });
   if (calls.length > 0) groups.push({ id: "program", title: t("menu.program"), entries: calls });
@@ -64,8 +63,8 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
 }
 
 /** A statement calling `fn` of `program`, its arguments empty, as a value line makes the call. */
-function callStatement(program: Program, fn: LineFunction): Stmt {
-  const call = callExpr(fn, parseScope(program));
+function callStatement(fn: LineFunction): Stmt {
+  const call = callExpr(fn);
   if (!call) throw new Error(`"${fn.name}" is no function of the program`);
   const statement = getBlockDef("expr").create() as Extract<Stmt, { type: "expr" }>;
   return { ...statement, expr: call };

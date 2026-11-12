@@ -1,6 +1,7 @@
 // Every validation code has a failing and a passing case; scope.
 import { describe, expect, it } from "vitest";
 import { ast, program, runAll } from "@/blocks/testing";
+import { isParseError, parse } from "@/python/parse";
 import type { Diagnostic, Program, Stmt } from "./types";
 import { validate } from "./validate";
 
@@ -168,6 +169,12 @@ describe("validate (language.md, Validation)", () => {
     expect(codes(program([exprStmt(call("abs", num(1)))]))).toEqual([]);
     const fn = { id: "f0000000000f", name: "f", params: [], body: [] };
     expect(codes(program([exprStmt(call("f"))], { functions: [fn] }))).toEqual([]);
+  });
+
+  it("E_UNKNOWN_CALL: a parsed call of a name the program doesn't define", () => {
+    const parsed = parse("nope(1)");
+    if (isParseError(parsed)) throw new Error("nope(1) parses");
+    expect(codes(program([exprStmt(parsed)]))).toEqual(["E_UNKNOWN_CALL"]);
   });
 
   it("E_EMPTY_SLOT: an empty slot, naming the slot", () => {

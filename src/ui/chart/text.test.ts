@@ -28,7 +28,7 @@ const { assign, assignTo, num, str, bool, bin, neg, not, v, print, for_, if_, ca
 const { item } = ast;
 
 function expr(python: string): Expr {
-  const parsed = parse(python, { functions: ["f"] });
+  const parsed = parse(python);
   if (isParseError(parsed)) throw new Error(python);
   return parsed;
 }
