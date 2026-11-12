@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PROGRESS_STORAGE_KEY, readProgress, solvedCount, statusOf, useProgress } from "./progress";
+import { PROGRESS_STORAGE_KEY, toProgress, solvedCount, statusOf, useProgress } from "./progress";
 
 const stored = (): unknown => JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) ?? "null");
 
@@ -98,7 +98,7 @@ describe("progress store", () => {
 
   it("validates a stored record instead of trusting it", async () => {
     expect(
-      readProgress({
+      toProgress({
         ok: { status: "solved", hints: 2, solution: true },
         loose: { status: "attempted", hints: 40, solution: "yes" },
         bad: { status: "won" },
@@ -108,7 +108,7 @@ describe("progress store", () => {
       ok: { status: "solved", hints: 2, solution: true },
       loose: { status: "attempted", hints: 3, solution: false },
     });
-    expect(readProgress("nonsense")).toEqual({});
+    expect(toProgress("nonsense")).toEqual({});
 
     localStorage.setItem(PROGRESS_STORAGE_KEY, JSON.stringify({ gcd: { status: "solved" } }));
     await useProgress.persist.rehydrate();
