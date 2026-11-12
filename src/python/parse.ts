@@ -472,7 +472,7 @@ export function parseData(data: Data): Expr | ParseError {
 const CLOSERS: Readonly<Record<string, string>> = { "(": ")", "[": "]", "{": "}" };
 
 /** An expression read before a caret, with its span. */
-export type Spanned = Span & { expr: Expr };
+export type SpannedExpr = Span & { expr: Expr };
 
 /**
  * The operation one of whose slots holds the caret, and that slot's value: the empty slot at the
@@ -488,7 +488,7 @@ export type CaretOperation = { operation: Expr; value: Expr };
 export type CaretReading =
   | { place: "text" }
   | { place: "expected"; operation?: CaretOperation }
-  | { place: "after"; before: Spanned; atom: Spanned; operation?: CaretOperation }
+  | { place: "after"; before: SpannedExpr; atom: SpannedExpr; operation?: CaretOperation }
   | { place: "none" };
 
 /** Whether a token leaves a value expected after it: an operator or `,`. */
@@ -590,7 +590,7 @@ export function readBefore(text: string): CaretReading {
     .toSorted((a, b) => a.start - b.start);
   const deepest = ending.at(-1);
   const within = ending.filter((spanned) => spanned.start >= open);
-  const spanned = (found: (typeof ending)[number] | undefined): Spanned | undefined =>
+  const spanned = (found: (typeof ending)[number] | undefined): SpannedExpr | undefined =>
     found && { start: found.start, end: found.end, expr: found.expr };
   const before = spanned(within[0]);
   const atom = spanned(within.find((found) => found.atom));
