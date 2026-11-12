@@ -237,7 +237,9 @@ describe("notation", () => {
 
   it("writes a variable as its value when the writing gives one", () => {
     const values: Record<string, string> = { i: "3" };
-    expect(exprText(expr("i % 15 == 0"), P, { value: (name) => values[name] })).toBe("3 % 15 == 0");
+    expect(exprText(expr("i % 15 == 0"), P, { variableText: (name) => values[name] })).toBe(
+      "3 % 15 == 0",
+    );
   });
 
   it("keeps the spaces a text holds, and leaves no space where a slot holds nothing", () => {
