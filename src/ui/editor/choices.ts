@@ -3,7 +3,8 @@
 // after one; what a typed word names and the order of its matches; and the groups the rows are
 // listed in, in one order everywhere (`editor.md`, Value line, Words; Value list; Targets).
 import type { Kinds } from "@/lang/kinds";
-import type { Expr, Kind, Name } from "@/lang/types";
+import type { Expr, Kind, Name, Program } from "@/lang/types";
+import { refusedDefinitions } from "@/lang/validate";
 import type { ValueGroup } from "@/blocks/types";
 import { emptyExpr } from "@/blocks/registry";
 import { isParseError, parse } from "@/python/parse";
@@ -57,7 +58,7 @@ export function rowName(row: Row): string {
 }
 
 /** Whether the row is named exactly by the word: its name, or the entry's keys. */
-export function namesExactly(row: Row, word: string): boolean {
+function namesExactly(row: Row, word: string): boolean {
   if (row.type === "entry" && row.entry.declared.typed === word) return true;
   return rowName(row).toLowerCase() === word.toLowerCase();
 }
@@ -71,6 +72,14 @@ export function targetNames(word: string, target: TargetLine): Row[] {
   const rows = names.map((name): Row => ({ type: "variable", name }));
   if (target.binds && isNewName(word, names)) rows.push({ type: "new", name: word });
   return rows;
+}
+
+/** The program's functions a call can name: those whose name no diagnostic refuses. */
+export function callableFunctions(program: Program): LineFunction[] {
+  const refused = refusedDefinitions(program);
+  return program.functions
+    .filter((fn) => !refused.has(fn.id))
+    .map((fn) => ({ name: fn.name, params: fn.params }));
 }
 
 /** A call of one of the program's functions, its arguments empty slots. */
@@ -129,7 +138,7 @@ const LIST_GROUPS: readonly ListGroup[] = ["problem", "variables", "new", ...GRO
 export type Section = { group: ListGroup; rows: Row[] };
 
 /** The group a row is listed under: among a target's names, one the problem expects under `This problem`. */
-export function groupOf(row: Row, asked: readonly string[]): ListGroup {
+function groupOf(row: Row, asked: readonly string[]): ListGroup {
   switch (row.type) {
     case "variable":
       return asked.includes(row.name) ? "problem" : "variables";

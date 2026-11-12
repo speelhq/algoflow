@@ -3,18 +3,16 @@
 import { blockText, t } from "@/i18n/t";
 import { draftValue } from "@/lang/drafts";
 import type { Expr, NodeId, Stmt } from "@/lang/types";
-import { draftText, holdsEmptySlot, isExpr } from "@/lang/walk";
+import { allExprs, draftText, holdsEmptySlot, isExpr } from "@/lang/walk";
 import { draftOf, emptyExpr, getBlockDef, keyOf, type Slot } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
   generatedNotation,
   placeholderValue,
-  SEPARATOR,
   notationTokens,
   slotHint,
   type NotationToken,
 } from "@/ui/chart/text";
-import { find } from "./line";
 
 /** One editable slot of the notation: a value or a target, or an item of a list of values. */
 export type Field = { slot: string; index?: number };
@@ -33,26 +31,6 @@ export function targetSlot(
 ): Extract<Slot, { role: "target" }> | undefined {
   const slot = getBlockDef(keyOf(stmt)).slots.find((each) => each.name === field.slot);
   return slot?.role === "target" ? slot : undefined;
-}
-
-/**
- * The words the notation writes right after a field (`)` after the last value of `print(values)`),
- * which a key that begins them, typed after the field's value, moves on from.
- */
-export function wordsAfter(stmt: Stmt, field: Field): string {
-  // After an item of a list of values other than its last, the notation writes their separator.
-  const items = (stmt as unknown as Bag)[field.slot];
-  if (field.index !== undefined && Array.isArray(items) && field.index < items.length - 1) {
-    return SEPARATOR.trim();
-  }
-  const tokens = editedLines(stmt)
-    .flat()
-    .map(({ token }) => token);
-  const at = tokens.findIndex(
-    (token) => "placeholder" in token && token.placeholder === field.slot,
-  );
-  const next = tokens[at + 1];
-  return at >= 0 && next && "text" in next ? next.text.trim() : "";
 }
 
 /**
@@ -141,6 +119,11 @@ export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
   const item =
     field.index === undefined ? value : Array.isArray(value) ? value[field.index] : undefined;
   return isExpr(item) ? item : undefined;
+}
+
+function find(root: Expr, id: NodeId): Expr | undefined {
+  for (const expr of allExprs(root)) if (expr.id === id) return expr;
+  return undefined;
 }
 
 /**

@@ -15,7 +15,6 @@ import {
   targetSlot,
   textValue,
   valueOf,
-  wordsAfter,
 } from "./fields";
 
 const { assign, assignTo, print, for_, forTo, num, v, exprStmt, ret, bin, draft } = ast;
@@ -94,16 +93,6 @@ describe("a target", () => {
     expect(fieldsOf(unnamed)).toEqual([{ slot: "var" }, { slot: "start" }, { slot: "stop" }]);
     const filled = print(num(1), ast.call("abs", v("n")));
     expect(startField(filled, fieldsOf(filled), opened)).toBeNull();
-  });
-
-  it("names the words after a field, which a key beginning them moves on from", () => {
-    const stmt = assign("total", num(5));
-    expect(wordsAfter(stmt, { slot: "target" })).toBe("←");
-    expect(wordsAfter(stmt, { slot: "value" })).toBe("");
-    // After an item of a list of values the notation writes `, `, and its bracket after the last.
-    const shown = ast.print(v("a"), v("b"));
-    expect(wordsAfter(shown, { slot: "args", index: 0 })).toBe(",");
-    expect(wordsAfter(shown, { slot: "args", index: 1 })).toBe(")");
   });
 
   it("is named by the block's label and the slot's name", () => {

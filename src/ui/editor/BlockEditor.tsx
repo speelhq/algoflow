@@ -36,9 +36,8 @@ import {
   targetSlot,
   type Field,
 } from "./fields";
-import { callableFunctions } from "./line";
 import { caretMatches, caretOffersAll, caretPlace, wordAt } from "./caret";
-import type { LineContext } from "./choices";
+import { callableFunctions, type LineContext } from "./choices";
 import { CaptionField } from "./CaptionField";
 import { routineNames } from "./names";
 import { valueList } from "./rows";
