@@ -17,7 +17,7 @@ export const SPEEDS = { slow: 1, normal: 4, fast: 15 } as const;
 export type SpeedName = keyof typeof SPEEDS;
 export const SPEED_NAMES = Object.keys(SPEEDS) as SpeedName[];
 
-/** A stored or requested speed as one of the three: the nearest, else `Normal`. */
+/** A stored or requested speed as one of the three: the nearest, else `fallback`. */
 function speedOf(value: unknown, fallback: number): number {
   if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
   const speeds = Object.values(SPEEDS) as number[];
@@ -46,7 +46,7 @@ export type LayoutState = {
   setSpeed: (speed: number) => void;
 };
 
-/** A finite number rounded and clamped, else `fallback`: what a setter and a stored value both pass. */
+/** A stored size as a finite number rounded and clamped, else `fallback`. */
 function size(value: unknown, fallback: number, min: number, max: number): number {
   return typeof value === "number" && Number.isFinite(value)
     ? clamp(Math.round(value), min, max)
