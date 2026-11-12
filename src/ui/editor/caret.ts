@@ -15,7 +15,7 @@ import {
   parseClosed,
   readBefore,
   type CaretOperation,
-  type Spanned,
+  type SpannedExpr,
 } from "@/python/parse";
 import { PRECEDENCE } from "@/python/precedence";
 import { bindsAt } from "@/ui/chart/text";
@@ -49,9 +49,9 @@ export type CaretPlace =
       place: "after";
       word: Word;
       /** The expression before the caret, which chooses the entries offered. */
-      before: Spanned;
+      before: SpannedExpr;
       /** The value just before the caret, which an entry whose first slot binds as an atom takes. */
-      atom: Spanned;
+      atom: SpannedExpr;
       kind?: Kind;
       operation?: CaretOperation;
     };

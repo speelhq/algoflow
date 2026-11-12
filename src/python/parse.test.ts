@@ -263,11 +263,12 @@ describe("parse(unparse(e)) is e apart from ids", () => {
 });
 
 describe("readBefore (parser.md, Reading before a caret)", () => {
-  type Written = { text: string; start: number };
+  /** An expression read, written back as text, with where it starts. */
+  type TextSpan = { text: string; start: number };
   type Read = {
     place: string;
-    before?: Written;
-    atom?: Written;
+    before?: TextSpan;
+    atom?: TextSpan;
     operation?: { operation: string; value: string };
   };
 
