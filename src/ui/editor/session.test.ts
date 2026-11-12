@@ -10,7 +10,7 @@ import type { LineContext, Row } from "./choices";
 import {
   changeText,
   enterField,
-  follow,
+  followStatement,
   openSession,
   pickRow,
   selectText,
@@ -135,8 +135,8 @@ describe("changing the text (editor.md, Value line)", () => {
   it("a value changed elsewhere reopens the line on it, and a selection is the field's", () => {
     const stmt = assign("total", num(1));
     const open = openSession(stmt, field, null);
-    expect(follow(open, stmt)).toBe(open);
-    const undone = follow(open, assign("total", num(25)));
+    expect(followStatement(open, stmt)).toBe(open);
+    const undone = followStatement(open, assign("total", num(25)));
     expect(undone.line).toEqual({ text: "25", start: 2, end: 2 });
     expect(selectText(open, 1, 1).line).toEqual({ text: "1", start: 1, end: 1 });
   });

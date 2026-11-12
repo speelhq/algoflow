@@ -185,7 +185,7 @@ function operationSpans(operation: Expr, current: Expr, program: Program): Notat
  * the block's help. Where several apply, it is the first of a word that matches nothing, the row
  * highlighted, and the operation whose slot holds the caret (`editor.md`, Explanation line).
  */
-export function explainText(
+export function explainLine(
   line: TextLine,
   ctx: LineContext,
   highlighted: Row | undefined,

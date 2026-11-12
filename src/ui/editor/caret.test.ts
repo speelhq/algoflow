@@ -11,7 +11,7 @@ import {
   caretSections,
   choose,
   readCaret,
-  slotChoice,
+  choiceLine,
   wordAt,
   type TextLine,
 } from "./caret";
@@ -50,8 +50,8 @@ const entry = (label: string): Row => {
 
 /** The line a choice leaves, with `|` at its caret. */
 function chosen(line: TextLine, row: Row, context: LineContext = ctx): string | undefined {
-  const written = choose(line, row, context.kinds);
-  return written && `${written.text.slice(0, written.caret)}|${written.text.slice(written.caret)}`;
+  const left = choose(line, row, context.kinds);
+  return left && `${left.text.slice(0, left.start)}|${left.text.slice(left.start)}`;
 }
 
 const groups = (line: TextLine, context: LineContext = ctx, all = false) =>
@@ -202,7 +202,7 @@ describe("the block menu's text of a call (editor.md, Block menu)", () => {
       .flatMap((group) => group.entries)
       .find((each) => each.id === "call:greet");
     const stmt = call?.create();
-    expect(stmt && stmt.type === "expr" ? slotChoice(stmt.expr).text : undefined).toBe("greet()");
+    expect(stmt && stmt.type === "expr" ? choiceLine(stmt.expr).text : undefined).toBe("greet()");
     expect(call?.caret).toBe(6);
   });
 });
