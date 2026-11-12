@@ -1,6 +1,6 @@
 // Structural checks of a challenge file (used by scripts/check.ts).
 // The schema types live in src/challenges/types.ts.
-import { DIFFICULTIES, TOPICS, type Challenge, type Localized } from "@/challenges/types";
+import { DIFFICULTIES, HINTS, TOPICS, type Challenge, type Localized } from "@/challenges/types";
 import { dataError } from "@/lang/data";
 import { dataKind } from "@/lang/kinds";
 import { CURRENT_VERSION, isInputDecl, migrate } from "@/lang/migrate";
@@ -132,7 +132,9 @@ export function checkChallengeSchema(
   if (tests.length > 0 && !edge) problems.push("no test has edge: true");
 
   const hints = Array.isArray(json.hints) ? json.hints : [];
-  if (!Array.isArray(json.hints) || hints.length !== 3) problems.push("hints must be exactly 3");
+  if (!Array.isArray(json.hints) || hints.length !== HINTS) {
+    problems.push(`hints must be exactly ${HINTS}`);
+  }
   hints.forEach((hint, i) => {
     if (!isLocalized(hint, requireJa)) problems.push(`hints[${i}] must be { en, ja? }`);
   });

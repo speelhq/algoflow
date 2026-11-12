@@ -34,6 +34,9 @@ export function seedOf(test: Test | undefined): number {
   return test?.seed ?? 1;
 }
 
+/** A challenge has exactly three hints (`challenges.md`, Hints). */
+export const HINTS = 3;
+
 export type Challenge = {
   id: string;
   title: Localized;
