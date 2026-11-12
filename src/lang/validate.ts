@@ -1,5 +1,5 @@
-// Every validation code, run after every edit and before every run: scope rules,
-// names, drafts, and field defaults.
+// Every validation code, run after every edit and before every run: node ids, names, scope rules,
+// jumps and returns, drafts, and calls.
 // Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
 import { builtinKey, getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
 import { expectedArgs, type BlockDef } from "@/blocks/types";
@@ -25,7 +25,8 @@ function isBuiltinName(name: string): boolean {
   return hasBlockDef(builtinKey(name));
 }
 
-type Scope = { loop: number; inFunction: boolean };
+/** Where a statement sits: inside how many loops, and whether inside a function. */
+type Enclosing = { loop: number; inFunction: boolean };
 
 class Collector {
   readonly diagnostics: Diagnostic[] = [];
@@ -84,7 +85,7 @@ class Collector {
 
   // ------------------------------------------------------------ regions
 
-  scopes(): void {
+  routines(): void {
     for (const fn of this.program.functions) {
       this.region(fn.body, new Set(fn.params), new Map(), { loop: 0, inFunction: true });
     }
@@ -102,7 +103,7 @@ class Collector {
     stmts: Stmt[],
     visible: Set<Name>,
     inner: Map<Name, NodeId>,
-    scope: Scope,
+    enclosing: Enclosing,
   ): Set<Name> {
     const declared = new Set<Name>();
     for (const stmt of stmts) {
@@ -110,7 +111,7 @@ class Collector {
       this.drafts(stmt);
       this.calls(stmt);
       this.reads(stmt, visible, inner);
-      this.control(stmt, def, scope);
+      this.control(stmt, def, enclosing);
 
       for (const { name } of declaredBy(stmt)) {
         if (!isValidName(name)) this.report(stmt.id, "E_BAD_NAME", { name });
@@ -121,14 +122,9 @@ class Collector {
         visible.add(name);
       }
 
-      const bodyScope = def.loop ? { ...scope, loop: scope.loop + 1 } : scope;
+      const inBody = def.loop ? { ...enclosing, loop: enclosing.loop + 1 } : enclosing;
       for (const region of regionsOf(stmt)) {
-        const nestedDeclared = this.region(
-          region.stmts,
-          new Set(visible),
-          new Map(inner),
-          bodyScope,
-        );
+        const nestedDeclared = this.region(region.stmts, new Set(visible), new Map(inner), inBody);
         for (const name of nestedDeclared) {
           if (visible.has(name)) continue;
           declared.add(name);
@@ -151,9 +147,10 @@ class Collector {
     }
   }
 
-  private control(stmt: Stmt, def: BlockDef, scope: Scope): void {
-    if (def.requires === "loop" && scope.loop === 0) this.report(stmt.id, "E_BREAK_OUTSIDE");
-    if (def.requires === "function" && !scope.inFunction) this.report(stmt.id, "E_RETURN_OUTSIDE");
+  private control(stmt: Stmt, def: BlockDef, enclosing: Enclosing): void {
+    if (def.requires === "loop" && enclosing.loop === 0) this.report(stmt.id, "E_BREAK_OUTSIDE");
+    if (def.requires === "function" && !enclosing.inFunction)
+      this.report(stmt.id, "E_RETURN_OUTSIDE");
   }
 
   // ------------------------------------------------------------ drafts
@@ -225,7 +222,7 @@ function analyze(program: Program): Analysis {
     const collector = new Collector(program);
     collector.ids();
     collector.declarations();
-    collector.scopes();
+    collector.routines();
     analysis = {
       diagnostics: collector.diagnostics,
       refusedDefinitions: collector.refusedDefinitions,
