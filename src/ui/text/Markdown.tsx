@@ -1,6 +1,6 @@
 // A challenge text as paragraphs with `code`, **bold**, and *italic*.
 import { cn } from "@/lib/utils";
-import { markdown, type MarkdownSpan } from "./markdown";
+import { parseMarkdown, type MarkdownSpan } from "./parseMarkdown";
 
 function MarkdownSpanText({ span }: { span: MarkdownSpan }) {
   switch (span.kind) {
@@ -18,7 +18,7 @@ function MarkdownSpanText({ span }: { span: MarkdownSpan }) {
 export function Markdown({ text, className }: { text: string; className?: string }) {
   return (
     <div className={cn("space-y-2", className)}>
-      {markdown(text).map((paragraph, i) => (
+      {parseMarkdown(text).map((paragraph, i) => (
         // oxlint-disable-next-line react/no-array-index-key -- paragraphs have no identity but their order
         <p key={i}>
           {paragraph.map((span, j) => (

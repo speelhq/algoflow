@@ -16,7 +16,7 @@ import { useTests } from "@/store/tests";
 import { navigate, routeHash } from "@/ui/app/route";
 import { openInPlayground } from "@/ui/editor/programs";
 import { Button, buttonVariants } from "@/ui/primitives/button";
-import { Markdown } from "@/ui/text/MarkdownText";
+import { Markdown } from "@/ui/text/Markdown";
 import { revealSolution, startRun } from "./actions";
 import { caseText } from "./caseText";
 import { ResultRows } from "./ResultRows";

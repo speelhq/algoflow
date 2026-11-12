@@ -20,8 +20,11 @@ function spans(paragraph: string): MarkdownSpan[] {
   return out;
 }
 
-/** Paragraphs are separated by a blank line; a single line break stays inside its paragraph. */
-export function markdown(source: string): MarkdownSpan[][] {
+/**
+ * A text's paragraphs, each as its spans. Paragraphs are separated by a blank line; a single line
+ * break stays inside its paragraph.
+ */
+export function parseMarkdown(source: string): MarkdownSpan[][] {
   return source
     .split(/\n[ \t]*\n/)
     .map((paragraph) => paragraph.trim())
