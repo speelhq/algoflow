@@ -79,7 +79,7 @@ const groups = (line: Line, all = false, context: LineContext = ctx) =>
 describe("typing", () => {
   it("keys insert what the chart writes", () => {
     expect(py(keys("i%15==0"))).toBe("i % 15 == 0");
-    expect(exprText(keys("i%15==0").root)).toBe("i % 15 == 0");
+    expect(exprText(keys("i%15==0").root, program([]))).toBe("i % 15 == 0");
     expect(py(keys("a<=b".replace("a", "i").replace("b", "n")))).toBe("i <= n");
     expect(py(keys("i!=n"))).toBe("i != n");
     expect(py(keys("i>=n"))).toBe("i >= n");

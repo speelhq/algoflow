@@ -177,15 +177,15 @@ test("`,` in a list of values opens the next value after this one", async ({ pag
   await expect(chart(page)).toContainText("print(1, 2)");
   await editor(page).locator("[data-value-line]").first().click();
   await keys(page, ",");
-  await expect(chart(page)).toContainText("print(1, …, 2)");
+  await expect(chart(page)).toContainText("print(1, values, 2)");
 });
 
-test("a print with no value draws no `…`", async ({ page }) => {
+test("a print with no value draws no hint", async ({ page }) => {
   await seedProgress(page, {});
   await page.goto("/#/p/tutorial");
   await insert(page, "main/main/0", "print");
   await editor(page).getByRole("button", { name: "Remove this value" }).click();
-  await expect(chart(page)).not.toContainText("…");
+  await expect(chart(page)).toContainText("print()");
 });
 
 test("a list is typed, its item read, and one item set in the target's line", async ({ page }) => {
@@ -220,7 +220,7 @@ test("a list is typed, its item read, and one item set in the target's line", as
   await expect(list).toHaveText(/Item at a position/);
   await expect(list).not.toContainText("Count");
   await keys(page, "[");
-  await expect(chart(page)).toContainText("nums[…] ← …");
+  await expect(chart(page)).toContainText("nums[value] ← value");
   await keys(page, "0");
   await page.keyboard.press("Tab");
   await keys(page, "x");
@@ -427,7 +427,7 @@ test("a text is edited again by keys and by a click", async ({ page }) => {
   await expect(field).toHaveValue("help");
   for (let i = 0; i < 5; i += 1) await page.keyboard.press("Backspace");
   await expect(field).toHaveCount(0);
-  await expect(chart(page)).toContainText("print(…)");
+  await expect(chart(page)).toContainText("print(values)");
 
   // A click on another value while a field is open ends the field and keeps the keyboard.
   await keys(page, "1+text");

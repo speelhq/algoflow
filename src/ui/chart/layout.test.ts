@@ -557,7 +557,7 @@ describe("layout texts", () => {
     });
     const node = (id: string) => chart.nodes.find((n) => n.id === id);
     expect(node(captioned.id)).toMatchObject({ text: "Show x", title: "print(x)" });
-    expect(node(unfinished.id)).toMatchObject({ text: "print(…)" });
+    expect(node(unfinished.id)).toMatchObject({ text: "print(values)" });
     expect(node(unfinished.id)?.title).toBeUndefined();
     expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times", title: "i < 3?" });
     expect(node(`${loop.id}:init`)?.text).toBe("i ← 0");
@@ -591,8 +591,8 @@ describe("layout texts", () => {
           .trimEnd(),
       );
     };
-    expect(chart.nodes.find((n) => n.id === check.id)?.text).toBe("i % 15 == 0 and i < …?");
-    expect(lines(check.id)).toEqual(["i % 15 == 0", "and i < …?"]);
+    expect(chart.nodes.find((n) => n.id === check.id)?.text).toBe("i % 15 == 0 and i < value?");
+    expect(lines(check.id)).toEqual(["i % 15 == 0", "and i < value?"]);
     const one = chart.nodes.find((n) => n.id === short.id)?.spans ?? [];
     expect(new Set(one.map((span) => span.dy))).toEqual(new Set([0]));
   });

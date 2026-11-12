@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
 import { ast, program } from "@/blocks/testing";
+import { joinSpans } from "@/ui/chart/text";
 import { allEntries, labelOf, makeEntry } from "./entries";
 import { explainLine, explainVariable } from "./explain";
 import { openLine, settle, type, type Line, type LineContext } from "./line";
@@ -26,7 +27,7 @@ function keys(text: string, settled = true): Line {
 }
 
 const shown = (explained: ReturnType<typeof explainLine>) =>
-  explained && [explained.name, explained.spans.map((span) => span.text).join("")];
+  explained && [joinSpans(explained.name), explained.spans.map((span) => span.text).join("")];
 
 const target = print(empty());
 const p = program(
@@ -45,7 +46,7 @@ describe("explanation line", () => {
       p,
       target.id,
     );
-    expect(explained?.name).toBe("Remainder");
+    expect(explained && joinSpans(explained.name)).toBe("Remainder");
     expect(explained?.spans.at(-2)).toEqual({ text: "%", key: true });
     expect(shown(explained)?.[1]).toMatch(/is 1\. Type %\.$/);
     const text = allEntries().find((entry) => entry.id === "str");
@@ -69,12 +70,13 @@ describe("explanation line", () => {
 
   it("inside an operation's slot: its name and its template with that slot underlined", () => {
     const explained = explainLine(keys("total+"), ctx, undefined, p, target.id);
-    expect(shown(explained)).toEqual(["Add", "total + …"]);
-    expect(explained?.spans.find((span) => "underline" in span && span.underline)?.text).toBe("…");
+    expect(shown(explained)).toEqual(["Add", "total + value"]);
+    // The empty slot is its hint, gray, and the caret's slot is underlined.
+    expect(explained?.spans.at(-1)).toEqual({ text: "value", hint: true, underline: true });
     // A slot's value is parenthesized as the chart parenthesizes it.
     expect(shown(explainLine(keys("(i+n)//"), ctx, undefined, p, target.id))).toEqual([
       "Whole-number quotient",
-      "(i + n) // …",
+      "(i + n) // value",
     ]);
   });
 
@@ -85,9 +87,9 @@ describe("explanation line", () => {
       for (const key of text) line = type(line, key, lists).line;
       return explainLine(line, lists, undefined, p, target.id);
     };
-    expect(shown(typed("nums+"))).toEqual(["Join with another list", "nums + …"]);
+    expect(shown(typed("nums+"))).toEqual(["Join with another list", "nums + value"]);
     // A list with items is named by its block; `Empty list` names one with none.
-    expect(typed("[1,")?.name).toBe("List");
+    expect(shown(typed("[1,"))?.[0]).toBe("List");
     const blank = allEntries().find((entry) => entry.id === "list.empty");
     if (!blank) throw new Error("no Empty list");
     const [one, two] = [makeEntry(blank), makeEntry(blank)];
@@ -97,6 +99,18 @@ describe("explanation line", () => {
     expect(explained?.spans.filter((span) => "key" in span)).toEqual([{ text: "[]", key: true }]);
     // Each made list has its own items, none shared with the block definition.
     expect(Reflect.get(one, "items")).not.toBe(Reflect.get(two, "items"));
+  });
+
+  it("a function of the program: its call, each argument its parameter's hint", () => {
+    const fn = { name: "double", params: ["x", "times"] };
+    const explained = explainLine(keys(""), ctx, { type: "function", fn }, p, target.id);
+    expect(explained?.name).toEqual([
+      { text: "double(" },
+      { text: "x", hint: true },
+      { text: ", " },
+      { text: "times", hint: true },
+      { text: ")" },
+    ]);
   });
 
   it("a word that matches nothing: the closest name, or that nothing is like it", () => {

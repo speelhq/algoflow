@@ -7,8 +7,8 @@ export const assign = defineStmt<"assign">({
   key: "assign",
   category: "basic",
   slots: [
-    { name: "target", role: "target", binds: true, stores: "value" },
-    { name: "value", role: "expr" },
+    { name: "target", role: "target", hint: "variable", binds: true, stores: "value" },
+    { name: "value", role: "expr", hint: "value" },
   ],
   create: () => ({ id: newId(), type: "assign", target: emptyExpr(), value: emptyExpr() }),
   *run(block, ctx) {

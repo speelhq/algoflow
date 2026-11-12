@@ -4,7 +4,7 @@
 // typed. Keys go to `onKey`; clicks name the expression clicked.
 import { forwardRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { t } from "@/i18n/t";
-import type { Expr, NodeId } from "@/lang/types";
+import type { Expr, NodeId, Program } from "@/lang/types";
 import { isEmptyExpr, variableOf } from "@/lang/walk";
 import { cn } from "@/lib/utils";
 import { spanStyle } from "@/ui/chart/style";
@@ -21,8 +21,9 @@ import { slotValues, textOf, type Line } from "./line";
 import type { TextEnd } from "./session";
 
 type Props = {
-  /** The expression drawn. */
+  /** The expression drawn, and the program that holds it. */
   root: Expr;
+  program: Program;
   /** The line's editing state while it has the keyboard. */
   line: Line | null;
   label: string;
@@ -123,7 +124,7 @@ export const ValueLine = forwardRef<HTMLDivElement, Props>(function ValueLine(pr
         style={{ fontWeight: style.fontWeight }}
         onClick={() => props.onClickAt(expr.id, false)}
       >
-        {exprText(expr)}
+        {exprText(expr, props.program)}
       </button>
     );
   };

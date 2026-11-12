@@ -7,8 +7,8 @@ import { getRoutine, isEmptyExpr, routineOf } from "@/lang/walk";
 import {
   parenthesized,
   notationOf,
+  exprHint,
   exprText,
-  emptyNotation,
   placeholderValue,
   notationText,
   filledSpans,
@@ -31,9 +31,8 @@ import {
 export type ExplanationSpan = NotationSpan | { text: string; key: true };
 
 export type Explanation = {
-  /** What is explained: a name, drawn as a variable when it is one. */
-  name: string;
-  variable?: boolean;
+  /** What is explained: a name, as spans, a variable's drawn as a variable; none for a refusal. */
+  name: NotationSpan[];
   spans: ExplanationSpan[];
 };
 
@@ -61,7 +60,7 @@ export function explainVariable(program: Program, at: NodeId, name: Name): strin
   const setter = firstSetters(program, routine).get(name);
   if (!setter) return t("editor.explain.newVariable", { name });
   // A counted loop's notation is its init, where its variable first gets a value.
-  const statement = notationText(setter);
+  const statement = notationText(setter, program);
   return kind
     ? t("editor.explain.variable", { kind: kindName(kind), statement })
     : t("editor.explain.variablePlain", { statement });
@@ -72,7 +71,7 @@ export function explainName(program: Program, at: NodeId, name: Name, isNew: boo
   const text = isNew
     ? t("editor.explain.newVariable", { name })
     : explainVariable(program, at, name);
-  return { name, variable: true, spans: [{ text }] };
+  return { name: [{ text: name, variable: true }], spans: [{ text }] };
 }
 
 /** A help followed, when keys insert what it explains, by how to type them. */
@@ -87,10 +86,13 @@ function explainRow(row: Row, program: Program, at: NodeId): Explanation {
     case "new":
       return explainName(program, at, row.name, row.type === "new");
     case "entry":
-      return { name: row.entry.label, spans: typedHelp(row.entry.help, row.entry.declared.typed) };
+      return {
+        name: [{ text: row.entry.label }],
+        spans: typedHelp(row.entry.help, row.entry.declared.typed),
+      };
     case "parentheses":
       return {
-        name: t("editor.parentheses.label"),
+        name: [{ text: t("editor.parentheses.label") }],
         spans: typedHelp(t("editor.parentheses.help"), PARENTHESES_KEY),
       };
     case "function":
@@ -98,9 +100,12 @@ function explainRow(row: Row, program: Program, at: NodeId): Explanation {
   }
 }
 
-/** A function as the list names it: `name(…)`, or `name()` with no parameter. */
-export function functionLabel(fn: { name: string; params: readonly string[] }): string {
-  return `${fn.name}(${fn.params.length > 0 ? emptyNotation() : ""})`;
+/** A function as the lists name it, a call with each argument its parameter's hint: `double(x)`. */
+export function functionLabel(fn: { name: string; params: readonly string[] }): NotationSpan[] {
+  const params = fn.params.flatMap((param, i): NotationSpan[] =>
+    i === 0 ? [{ text: param, hint: true }] : [{ text: SEPARATOR }, { text: param, hint: true }],
+  );
+  return [{ text: `${fn.name}(` }, ...params, { text: ")" }];
 }
 
 /** The edit distance of two words, ignoring case. */
@@ -149,11 +154,19 @@ function operationAt(line: Line): { operation: Expr; value: Expr } | undefined {
   return up && value ? { operation: up.parent, value } : undefined;
 }
 
-/** An operation's notation with the caret's slot underlined and every other empty slot `…`. */
-function operationSpans(operation: Expr, current: Expr): NotationSpan[] {
-  const written = (value: Expr): NotationSpan => {
-    const text = isEmptyExpr(value) ? emptyNotation() : exprText(value);
-    return value === current ? { text, underline: true } : { text };
+/**
+ * An operation's notation with the caret's slot underlined and each empty slot as its hint
+ * (`blocks.md`, Notation, Drawing).
+ */
+function operationSpans(operation: Expr, current: Expr, program: Program): NotationSpan[] {
+  const written = (value: Expr, index: number | undefined): NotationSpan => {
+    const empty = isEmptyExpr(value);
+    const text = empty ? exprHint(operation, index, program) : exprText(value, program);
+    return {
+      text,
+      ...(empty ? { hint: true } : {}),
+      ...(value === current ? { underline: true } : {}),
+    };
   };
   return filledSpans(notationOf(operation), (name) => {
     const held = placeholderValue(operation, name);
@@ -161,11 +174,11 @@ function operationSpans(operation: Expr, current: Expr): NotationSpan[] {
       case "expr":
         if (!held.expr) return [];
         return parenthesized(held.expr, held)
-          ? [{ text: "(" }, written(held.expr), { text: ")" }]
-          : [written(held.expr)];
+          ? [{ text: "(" }, written(held.expr, undefined), { text: ")" }]
+          : [written(held.expr, undefined)];
       case "exprs":
         return held.items.flatMap((item, i) =>
-          i === 0 ? [written(item)] : [{ text: SEPARATOR }, written(item)],
+          i === 0 ? [written(item, i)] : [{ text: SEPARATOR }, written(item, i)],
         );
       case "literal":
       case "operator":
@@ -184,11 +197,11 @@ export function explainLine(
   program: Program,
   at: NodeId,
 ): Explanation | undefined {
-  if (line.refused) return { name: "", spans: [{ text: line.refused }] };
+  if (line.refused) return { name: [], spans: [{ text: line.refused }] };
   if (line.word !== "" && matches(line, ctx).length === 0) {
     const closest = closestName(line, ctx);
     return {
-      name: line.word,
+      name: [{ text: line.word }],
       spans: [
         {
           text: closest ? t("editor.didYouMean", { name: closest }) : t("editor.nothingLike"),
@@ -200,7 +213,7 @@ export function explainLine(
   const inside = operationAt(line);
   if (!inside) return undefined;
   return {
-    name: labelOf(inside.operation, ctx.kinds),
-    spans: operationSpans(inside.operation, inside.value),
+    name: [{ text: labelOf(inside.operation, ctx.kinds) }],
+    spans: operationSpans(inside.operation, inside.value, program),
   };
 }

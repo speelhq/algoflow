@@ -107,6 +107,13 @@ export function notation(block: Expr | Stmt): string {
   return getBlockDef(keyOf(block)).notation(block);
 }
 
+/** The `hint` of each `expr`, `target`, and `exprs` slot of block definition `key`, in slot order. */
+export function hints(key: string): Array<string | undefined> {
+  return getBlockDef(key)
+    .slots.filter((slot) => slot.role === "expr" || slot.role === "target" || slot.role === "exprs")
+    .map((slot) => ("hint" in slot ? slot.hint : undefined));
+}
+
 export function program(
   main: Stmt[],
   opts: { inputs?: InputDecl[]; functions?: FunctionDef[]; title?: string } = {},

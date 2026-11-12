@@ -42,22 +42,22 @@ function literal(data: Data): Expr {
  * A location as the blocks write it (`nums[2]`, `counts["a"]`), its list or dict named by the
  * variable of the frame that holds it.
  */
-function refText(ref: Ref, frame: Frame | undefined, heap: Heap): string {
+function refText(ref: Ref, frame: Frame | undefined, heap: Heap, program: Program): string {
   if ("var" in ref) return ref.var;
   const holder: Expr = { id: "", type: "var", name: nameOf(ref.heap, frame, heap) };
   const target: Expr =
     "index" in ref
       ? { id: "", type: "index", list: holder, index: literal(ref.index) }
       : { id: "", type: "key", dict: holder, key: literal(toData(keyValue(ref.key), heap)) };
-  return exprText(target);
+  return exprText(target, program);
 }
 
 /**
  * A comparison as the chart writes it, each variable that holds a number, a text, a boolean,
  * or none written as its value in the shown frame; a list keeps its name.
  */
-function comparedText(expr: Expr, frame: Frame | undefined, heap: Heap): string {
-  return exprText(expr, {
+function comparedText(expr: Expr, frame: Frame | undefined, heap: Heap, program: Program): string {
+  return exprText(expr, program, {
     value: (name) => {
       const value = frame?.vars.get(name);
       return value && !("ref" in value) ? valueText(value, heap) : undefined;
@@ -66,8 +66,10 @@ function comparedText(expr: Expr, frame: Frame | undefined, heap: Heap): string 
 }
 
 /** A diamond's question: its condition as compared, except that one variable keeps its name. */
-function questionText(expr: Expr, frame: Frame | undefined, heap: Heap): string {
-  return variableOf(expr) === undefined ? comparedText(expr, frame, heap) : exprText(expr);
+function questionText(expr: Expr, frame: Frame | undefined, heap: Heap, program: Program): string {
+  return variableOf(expr) === undefined
+    ? comparedText(expr, frame, heap, program)
+    : exprText(expr, program);
 }
 
 export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
@@ -79,10 +81,10 @@ export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
       if (!block) return { key: "run.narrate.enter", params: { notation: "" } };
       const condition = conditionOf(block);
       return condition
-        ? { key: "run.narrate.check", params: { condition: exprText(condition.expr) } }
+        ? { key: "run.narrate.check", params: { condition: exprText(condition.expr, ctx.program) } }
         : {
             key: "run.narrate.enter",
-            params: { notation: notationText(block) },
+            params: { notation: notationText(block, ctx.program) },
           };
     }
     case "read": {
@@ -98,7 +100,7 @@ export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
       return {
         key: "run.narrate.read",
         params: {
-          what: refText(first, frame, heap),
+          what: refText(first, frame, heap, ctx.program),
           value: value ? valueText(value, heap) : "",
         },
       };
@@ -107,23 +109,29 @@ export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
       const expr = block && isExpr(block) ? block : undefined;
       // A diamond's whole condition is its question and the edge taken; any other, its value.
       if (diamondConditions(ctx.program).has(event.nodeId)) {
-        const condition = expr ? questionText(expr, frame, heap) : "";
+        const condition = expr ? questionText(expr, frame, heap, ctx.program) : "";
         const answer = t(event.result ? "chart.yes" : "chart.no");
         return { key: "run.narrate.compareAnswer", params: { condition, answer } };
       }
-      const condition = expr ? comparedText(expr, frame, heap) : "";
+      const condition = expr ? comparedText(expr, frame, heap, ctx.program) : "";
       const value = valueText({ t: "bool", v: event.result }, heap);
       return { key: "run.narrate.compare", params: { condition, value } };
     }
     case "write":
       return {
         key: "run.narrate.write",
-        params: { what: refText(event.ref, frame, heap), value: valueText(event.value, heap) },
+        params: {
+          what: refText(event.ref, frame, heap, ctx.program),
+          value: valueText(event.value, heap),
+        },
       };
     case "swap":
       return {
         key: "run.narrate.swap",
-        params: { a: refText(event.a, frame, heap), b: refText(event.b, frame, heap) },
+        params: {
+          a: refText(event.a, frame, heap, ctx.program),
+          b: refText(event.b, frame, heap, ctx.program),
+        },
       };
     case "loop":
       return event.ref !== undefined && event.value
@@ -131,7 +139,7 @@ export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
             key: "run.narrate.loop",
             params: {
               pass: ctx.pass ?? 1,
-              what: refText(event.ref, frame, heap),
+              what: refText(event.ref, frame, heap, ctx.program),
               value: valueText(event.value, heap),
             },
           }

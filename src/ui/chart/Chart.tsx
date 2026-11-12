@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/ui/primitives/dropdown-menu";
 import { ChartDrag, DropZone, useNodeDrag, type Moves } from "./drag";
-import { PILL, type ChartEdge, type ChartLayout, type ChartNode } from "./layout";
+import type { ChartEdge, ChartLayout, ChartNode } from "./layout";
 import { nodeFor, type Paint } from "./paint";
 import { spanStyle } from "./style";
 import { chartSpanFont } from "./measure";
@@ -153,20 +153,6 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
     >
       {node.title !== undefined && <title>{node.title}</title>}
       <NodeShape node={node} />
-      {node.spans.map((span, i) =>
-        span.empty ? (
-          <rect
-            // oxlint-disable-next-line react/no-array-index-key -- spans are positional
-            key={`pill${i}`}
-            x={node.x + span.dx + 2}
-            y={node.y + node.h / 2 + span.dy - 11}
-            width={span.w - 4}
-            height={22}
-            rx={11}
-            className="fill-background stroke-muted-foreground [stroke-dasharray:4_3]"
-          />
-        ) : null,
-      )}
       {node.spans.length > 0 && (
         // `font-mono` holds the feature settings that each span inherits; each span sets its own font.
         <text
@@ -182,15 +168,11 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
             <tspan
               // oxlint-disable-next-line react/no-array-index-key -- spans are positional
               key={i}
-              x={node.x + span.dx + (span.empty ? PILL : 0)}
+              x={node.x + span.dx}
               y={node.y + node.h / 2 + span.dy}
               data-block-slot={span.slot}
               data-empty-id={span.emptyId}
-              className={cn(
-                "fill-current",
-                span.empty && "text-muted-foreground",
-                spanStyle(span).colorClass,
-              )}
+              className={cn("fill-current", spanStyle(span).colorClass)}
               style={chartSpanFont(span)}
             >
               {span.text}

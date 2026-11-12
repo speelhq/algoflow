@@ -23,9 +23,9 @@ export const forStmt = defineStmt<"for">({
   chart: { counted: COUNTED },
   declares: "number",
   slots: [
-    { name: "var", role: "target", binds: true },
-    { name: "start", role: "expr" },
-    { name: "stop", role: "expr" },
+    { name: "var", role: "target", hint: "variable", binds: true },
+    { name: "start", role: "expr", hint: "start" },
+    { name: "stop", role: "expr", hint: "stop" },
     { name: "body", role: "body" },
   ],
   create: () => ({

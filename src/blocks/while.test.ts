@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { whileStmt } from "./while";
-import { ast, eventTypes, notation, program, runAll, varData, withInputs } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData, withInputs, hints } from "./testing";
 
 const { while_, assign, num, bin, v, brk, bool } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -72,6 +72,10 @@ describe("while (blocks.md)", () => {
 });
 
 describe("notation (blocks.md, Notation)", () => {
+  it("declares the hint of each slot of its table", () => {
+    expect(hints("while")).toEqual(["condition"]);
+  });
+
   it("writes the notation of its table", () => {
     expect(notation(while_(v("ok"), []))).toBe("{cond}");
   });

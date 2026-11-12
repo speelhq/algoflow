@@ -12,13 +12,13 @@ import type { Expr, Name, NodeId, Program } from "@/lang/types";
 import { refusedDefinitions } from "@/lang/validate";
 import { allExprs, isEmptyExpr, isTarget, variableOf } from "@/lang/walk";
 import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
+import { unparse } from "@/python/emit";
 import { isParseError, parse } from "@/python/parse";
 import { levelAssociativity } from "@/python/precedence";
 import {
   bindsAt,
   closedBy,
   notationOf,
-  exprText,
   isCall,
   placeholderValue,
   notationTokens,
@@ -279,7 +279,7 @@ function parsed(text: string): Expr | undefined {
 function numberOf(raw: string): Expr | undefined {
   if (!/^[0-9.]+$/.test(raw)) return undefined;
   const made = parsed(raw);
-  return made && slotValues(made).length === 0 && exprText(made) === raw ? made : undefined;
+  return made && slotValues(made).length === 0 && unparse(made) === raw ? made : undefined;
 }
 
 let numberKey: string | undefined;
@@ -295,13 +295,13 @@ export function variableExpr(name: Name): Expr | undefined {
   return made && variableOf(made) === name ? made : undefined;
 }
 
-/** A sign before the empty slot it leaves (`-…`). */
+/** A sign before the empty slot it leaves (`-value`). */
 function signExpr(): Expr | undefined {
   const made = parsed("-a");
   return made && mapSlotValues(made, () => emptyExpr());
 }
 
-/** A list with one empty item (`[…]`), as `[` opens it. */
+/** A list with one empty item (`[value]`), as `[` opens it. */
 function listExpr(): Expr | undefined {
   const made = parsed("[a]");
   return made && mapSlotValues(made, () => emptyExpr());
@@ -599,7 +599,7 @@ function typeDigit(line: Line, ch: string): Outcome {
   }
   const last = find(base.root, base.caret.after);
   if (!last || !isNumber(last)) return refused(line);
-  const made = numberOf(exprText(last) + ch);
+  const made = numberOf(unparse(last) + ch);
   if (!made) return refused(line);
   return done(replace(base, last.id, { ...made, id: last.id }));
 }
@@ -766,8 +766,8 @@ function removeBefore(line: Line): Outcome {
   if ("after" in caret) {
     const last = find(root, caret.after);
     if (!last) return refused(line);
-    if (isNumber(last) && exprText(last).length > 1) {
-      const made = numberOf(exprText(last).slice(0, -1));
+    if (isNumber(last) && unparse(last).length > 1) {
+      const made = numberOf(unparse(last).slice(0, -1));
       if (made) return done(replace(current, last.id, { ...made, id: last.id }));
     }
     // A text loses its last character as its field counts one, and the field opens on the rest.

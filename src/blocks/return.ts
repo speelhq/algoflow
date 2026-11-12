@@ -6,7 +6,7 @@ export const returnStmt = defineStmt<"return">({
   key: "return",
   category: "function",
   requires: "function",
-  slots: [{ name: "value", role: "expr", optional: true }],
+  slots: [{ name: "value", role: "expr", hint: "value", optional: true }],
   create: () => ({ id: newId(), type: "return" }),
   *run(block, ctx) {
     const value = block.value ? yield* ctx.eval(block.value) : { t: "none" as const };

@@ -37,6 +37,17 @@ describe("registry", () => {
     expect(new Set(roles)).toEqual(new Set(["literal", "operator", "name"]));
   });
 
+  it("every expression slot of a statement declares a hint, and no slot of an expression does", () => {
+    for (const def of BLOCK_DEFS.values()) {
+      for (const slot of def.slots) {
+        if (slot.role !== "expr" && slot.role !== "target" && slot.role !== "exprs") continue;
+        const hint = slot.hint ?? "";
+        if (def.shape === "stmt") expect(hint, `${def.key}.${slot.name}`).not.toBe("");
+        else expect(slot.hint, `${def.key}.${slot.name}`).toBeUndefined();
+      }
+    }
+  });
+
   it("a binding slot stores an expression slot of its block, and a loop's stores none", () => {
     const stored = [...BLOCK_DEFS.values()].flatMap((def) =>
       def.slots.flatMap((slot) =>

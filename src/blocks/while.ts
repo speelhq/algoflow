@@ -10,7 +10,7 @@ export const whileStmt = defineStmt<"while">({
   loop: true,
   chart: { checked: { cond: "cond", body: "body" } },
   slots: [
-    { name: "cond", role: "expr" },
+    { name: "cond", role: "expr", hint: "condition" },
     { name: "body", role: "body" },
   ],
   create: () => ({ id: newId(), type: "while", cond: emptyExpr(), body: [] }),

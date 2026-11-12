@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { forStmt } from "./for";
-import { ast, eventTypes, notation, program, runAll, varData, withInputs } from "./testing";
+import { ast, eventTypes, notation, program, runAll, varData, withInputs, hints } from "./testing";
 
 const { for_, forTo, assign, num, float, str, bin, v, item, list, brk, cont, if_ } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -32,7 +32,12 @@ describe("for (blocks.md)", () => {
       stop: { type: "empty" },
       body: [],
     });
-    expect(forStmt.slots[0]).toEqual({ name: "var", role: "target", binds: true });
+    expect(forStmt.slots[0]).toEqual({
+      name: "var",
+      role: "target",
+      hint: "variable",
+      binds: true,
+    });
   });
 
   it("one loop event per iteration carrying the variable's place and the value", () => {
@@ -147,6 +152,10 @@ describe("for (blocks.md)", () => {
 });
 
 describe("notation (blocks.md, Notation)", () => {
+  it("declares the hint of each slot of its table", () => {
+    expect(hints("for")).toEqual(["variable", "start", "stop"]);
+  });
+
   it("writes the notation of its table", () => {
     expect(notation(for_("i", num(1), v("n"), []))).toBe("{var} ← {start}");
   });

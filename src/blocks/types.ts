@@ -56,17 +56,24 @@ export function expectedArgs(params: readonly Param[], got: number): number | un
   return undefined;
 }
 
+/**
+ * The word written in place of a statement's slot that holds an expression, while it holds no
+ * text, the same in every locale; no slot of an expression declares one (`blocks.md`, Notation,
+ * Drawing).
+ */
+type Hinted = { hint?: string };
+
 /** One part of a block that the learner fills or edits, with the marks its role takes. */
 export type Slot =
-  | {
+  | (Hinted & {
       name: string;
       role: "expr";
       /** It may hold no expression (`return`'s value). */
       optional?: true;
       /** Its value binds as an atom: an operation there is parenthesized (the list of an item). */
       atom?: true;
-    }
-  | {
+    })
+  | (Hinted & {
       name: string;
       role: "target";
       /** It declares the variable its target is (`assign`'s, a loop's). */
@@ -76,8 +83,9 @@ export type Slot =
        * passes give the value (`blocks.md`, Slots).
        */
       stores?: string;
-    }
-  | { name: string; role: "exprs" | "name" | "body" | "literal" | "operator" };
+    })
+  | (Hinted & { name: string; role: "exprs" })
+  | { name: string; role: "name" | "body" | "literal" | "operator" };
 
 export type SlotRole = Slot["role"];
 

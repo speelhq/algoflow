@@ -8,6 +8,9 @@ import type { NotationSpan } from "./text";
 /** The font stack every chart node's text is drawn in (`pages.md`, Typefaces), a variable of `src/ui/theme.css`. */
 const CODE_STACK_VARIABLE = "--typeface-code";
 
+/** The weight of a chart node's text, which a span without a weight of its own takes. */
+const CHART_TEXT_WEIGHT = 400;
+
 /**
  * The font a chart span is drawn in: the code stack, in its style's weight. A style sets it part by
  * part, because the `font` shorthand would reset the feature settings that turn ligatures off.
@@ -19,7 +22,7 @@ export function chartSpanFont(span: NotationSpan): {
 } {
   return {
     fontFamily: `var(${CODE_STACK_VARIABLE})`,
-    fontWeight: spanStyle(span).fontWeight,
+    fontWeight: spanStyle(span).fontWeight ?? CHART_TEXT_WEIGHT,
     fontSize: 13,
   };
 }

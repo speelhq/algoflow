@@ -18,7 +18,7 @@ test("hovering a flagged chart node shows its message, and the fix applies", asy
   await expect(page.getByTestId("chart")).toContainText("total ← None");
 });
 
-test("an empty slot shows no dot, only its `…`", async ({ page }) => {
+test("an empty slot shows no dot, only its hint", async ({ page }) => {
   const assign = {
     id: "dgn-asg0-001",
     type: "assign",
@@ -27,6 +27,6 @@ test("an empty slot shows no dot, only its `…`", async ({ page }) => {
   };
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");
-  await expect(page.getByTestId("chart")).toContainText("x ← …");
+  await expect(page.getByTestId("chart")).toContainText("x ← value");
   await expect(page.getByTestId("red-dot")).toHaveCount(0);
 });

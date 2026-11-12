@@ -9,7 +9,7 @@ import { emptyExpr } from "./empty";
 export const print = defineStmt<"print">({
   key: "print",
   category: "basic",
-  slots: [{ name: "args", role: "exprs" }],
+  slots: [{ name: "args", role: "exprs", hint: "values" }],
   create: () => ({ id: newId(), type: "print", args: [emptyExpr()] }),
   *run(block, ctx) {
     const values: Value[] = [];

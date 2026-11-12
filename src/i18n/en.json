@@ -212,7 +212,7 @@
     "assign": {
       "label": "Set variable",
       "slot": {
-        "target": "target",
+        "target": "variable",
         "value": "value"
       },
       "help": "Gives a variable a value, the first time or again."
@@ -251,7 +251,7 @@
     "print": {
       "label": "Print",
       "slot": {
-        "args": "value"
+        "args": "values"
       },
       "help": "Writes the values to Output, separated by spaces."
     },

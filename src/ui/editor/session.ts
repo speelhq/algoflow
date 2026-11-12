@@ -177,7 +177,7 @@ export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransi
 
 /**
  * A key the focused value line takes; `rows` is the value list shown under it, and `next` the
- * words the notation writes after the field (`)` after the last value of `print(…)`).
+ * words the notation writes after the field (`)` after the last value of `print(values)`).
  */
 export function valueKey(
   session: Session,

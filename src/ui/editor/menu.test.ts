@@ -2,10 +2,10 @@
 // functions a call can name.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/blocks/testing";
-import { notationWithEmptySlots } from "@/ui/chart/text";
+import { joinSpans, notationWithHints } from "@/ui/chart/text";
 import { menuGroups, searchMenu } from "./menu";
 
-const { v, while_ } = ast;
+const { v, while_, for_, num } = ast;
 const MAIN = { parent: "main", slot: "main", index: 0 } as const;
 
 describe("block menu", () => {
@@ -44,9 +44,11 @@ describe("block menu", () => {
     const groups = menuGroups(p, MAIN);
     const last = groups[groups.length - 1];
     expect(last?.title).toBe("This program");
-    expect(last?.entries.map((entry) => [entry.label, entry.notation])).toEqual([
-      ["double(…)", undefined],
+    expect(last?.entries.map((entry) => [joinSpans(entry.label), entry.notation])).toEqual([
+      ["double(x)", undefined],
     ]);
+    // The parameter is the hint of its argument, gray (`blocks.md`, Notation, Drawing).
+    expect(last?.entries[0]?.label).toContainEqual({ text: "x", hint: true });
     const stmt = last?.entries[0]?.create();
     expect(stmt).toMatchObject({ type: "expr", expr: { type: "call", fn: "double" } });
     expect(stmt?.type === "expr" && stmt.expr.type === "call" && stmt.expr.args).toHaveLength(1);
@@ -66,20 +68,20 @@ describe("block menu", () => {
     expect(offered).toEqual(["call:double"]);
   });
 
-  it("an entry reads as the block's label followed by its notation with … for each slot", () => {
-    expect(notationWithEmptySlots("{var} ← {start}")).toBe("… ← …");
+  it("an entry reads as the block's label followed by its notation with each slot as its hint", () => {
+    expect(notationWithHints(for_("i", num(0), num(3), []))).toBe("variable ← start");
     const entries = menuGroups(program([]), MAIN).flatMap((group) => group.entries);
     const read = (id: string) => {
       const entry = entries.find((e) => e.id === id);
-      return `${entry?.label}  ${entry?.notation}`;
+      return `${joinSpans(entry?.label ?? [])}  ${entry?.notation}`;
     };
     expect(["assign", "print", "for", "while", "break", "return"].map(read)).toEqual([
-      "Set variable  … ← …",
-      "Print  print(…)",
-      "For loop  … ← …",
-      "While loop  …",
+      "Set variable  variable ← value",
+      "Print  print(values)",
+      "For loop  variable ← start",
+      "While loop  condition",
       "Break  break",
-      "Return  return …",
+      "Return  return value",
     ]);
   });
 
