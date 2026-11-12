@@ -15,7 +15,7 @@ import {
   placeholderValue,
   slotSpans,
   questionSpans,
-  hasEmptySlot,
+  holdsDraft,
   notationSpans,
   notationText,
   notationTokens,
@@ -190,10 +190,18 @@ describe("notation", () => {
       [" + ", "value"],
       ["value", "value"],
     ]);
-    expect(hasEmptySlot(set)).toBe(true);
+    expect(holdsDraft(set)).toBe(true);
     // A counted loop's stop, which its notation (its init) does not write, counts too.
-    expect(hasEmptySlot(for_("i", num(0), empty(), []))).toBe(true);
-    expect(hasEmptySlot(for_("i", num(0), num(3), []))).toBe(false);
+    expect(holdsDraft(for_("i", num(0), empty(), []))).toBe(true);
+    expect(holdsDraft(for_("i", num(0), num(3), []))).toBe(false);
+  });
+
+  it("writes a draft as its text, a brace included, and a statement that holds one shows it", () => {
+    const set = assign("total", ast.draft("total + {"));
+    expect(notationText(set, P)).toBe("total ← total + {");
+    expect(holdsDraft(set)).toBe(true);
+    expect(notationText(print(num(1), ast.draft("x y")), P)).toBe("print(1, x y)");
+    expect(joinSpans(questionSpans(if_(ast.draft("i <"), []), P))).toBe("i <?");
   });
 
   it("writes a statement's empty slot as the slot's hint, a loop's empty variable as any other", () => {
@@ -204,7 +212,7 @@ describe("notation", () => {
       { text: " ← " },
       { text: "0", slot: "start" },
     ]);
-    expect(hasEmptySlot(loop)).toBe(true);
+    expect(holdsDraft(loop)).toBe(true);
     // An empty value carries its id, so a click on it opens the editor at it.
     const hole = empty();
     expect(slotSpans(print(num(1), hole), "args", P).at(-1)).toEqual({

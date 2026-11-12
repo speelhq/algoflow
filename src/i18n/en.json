@@ -205,9 +205,9 @@
     "rows": "Playground programs"
   },
   "block": {
-    "empty": {
-      "label": "Empty slot",
-      "help": "A slot that still needs a value."
+    "draft": {
+      "label": "Draft",
+      "help": "Text typed into a slot that is not a value yet, or nothing while the slot still needs a value."
     },
     "assign": {
       "label": "Set variable",
@@ -607,6 +607,7 @@
     "E_DUPLICATE_ID": "Two blocks or functions share the same id",
     "E_PARSE_SYNTAX": "Syntax error at character {position}",
     "E_PARSE_CHAIN": "Write a < b < c as a < b and b < c",
+    "E_NOT_TARGET": "Only a variable or an item of a list can be given a value",
     "E_INDEX": "Item {index} does not exist (length {length})",
     "E_KEY": "Key {key} does not exist",
     "E_TYPE": "{left} and {right} cannot be used in this operation",

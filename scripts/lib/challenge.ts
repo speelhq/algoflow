@@ -141,7 +141,9 @@ export function checkChallengeSchema(
   if (isRecord(json.solution) && json.solution.version !== CURRENT_VERSION)
     problems.push(`solution.version must be ${CURRENT_VERSION}`);
   try {
-    const program = migrate(json.solution);
+    // A copy, because migrate() reads a draft as the value its text writes, while the build bundles
+    // the solution as it is: the tests run the solution as the page gets it.
+    const program = migrate(structuredClone(json.solution));
     if (!sameData(program.inputs, inputs)) problems.push("solution.inputs must equal inputs");
     if (program.challengeId !== undefined && program.challengeId !== fileId)
       problems.push(`solution.challengeId must be "${fileId}"`);

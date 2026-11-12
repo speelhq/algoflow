@@ -52,6 +52,65 @@ describe("migrate", () => {
     expect(migrate(asStored(program([ast.assignTo(ast.empty(), num(2))])))).toBeTruthy();
   });
 
+  it("reads a stored draft, and keeps one whose text is no value of its slot", () => {
+    const typed = asStored(
+      program([assign("x", ast.draft("1 +")), ast.assignTo(ast.draft("1"), num(2))]),
+    );
+    expect(migrate(json(typed))).toEqual(typed);
+    expect(migrate(asStored(program([assign("x", ast.empty())])))).toBeTruthy();
+  });
+
+  it("reads a draft whose text is a value of its slot as that value", () => {
+    const stored = asStored(
+      program([
+        assign("x", ast.draft("abs(n) + 1")),
+        ast.assignTo(ast.draft("nums[0]"), num(2)),
+        print(ast.draft("1, x")),
+      ]),
+    );
+    const read = migrate(stored);
+    const [value, target, shown] = read.main as Array<Record<string, unknown>>;
+    expect(value?.value).toMatchObject({
+      type: "binop",
+      op: "+",
+      left: { type: "call", fn: "abs" },
+    });
+    expect(target?.target).toMatchObject({ type: "index", list: { name: "nums" } });
+    expect(shown?.args).toMatchObject([
+      { type: "num", value: 1 },
+      { type: "var", name: "x" },
+    ]);
+  });
+
+  it("rejects a draft with text that an expression holds, or beside other items", () => {
+    const inside = asStored(program([assign("x", bin("+", num(1), ast.draft("2 *")))]));
+    expect(() => migrate(inside)).toThrow(
+      /^main\[0\]\.value\.right: expected a draft only as a statement's slot/,
+    );
+    const beside = asStored(program([print(num(1), ast.draft("x y"))]));
+    expect(() => migrate(beside)).toThrow(
+      /^main\[0\]\.args\[1\]: expected a draft only as a statement's slot/,
+    );
+    // The value line still makes an empty slot inside a value and beside a print's values.
+    const empties = program([
+      assign("x", bin("+", num(1), ast.empty())),
+      print(num(1), ast.empty()),
+    ]);
+    expect(migrate(json(empties))).toEqual(empties);
+  });
+
+  it("rejects a draft whose text isn't one line, at its path", () => {
+    const broken = asStored(program([assign("x", ast.draft("1 +\n2"))]));
+    expect(() => migrate(broken)).toThrow(/^main\[0\]\.value\.text: expected one line of text/);
+  });
+
+  it("rejects a stored empty expression as a block of an unknown type", () => {
+    const stored = asStored(program([assign("x", num(1))]));
+    const stmt = (stored.main as Array<Record<string, unknown>>)[0]!;
+    stmt.value = { id: "e0000000000e", type: "empty" };
+    expect(() => migrate(stored)).toThrow(/^main\[0\]\.value\.type: unknown type "empty"/);
+  });
+
   it("rejects an unsupported version with the path", () => {
     expect(() => migrate({ ...program([]), version: 2 })).toThrow(MigrateError);
     expect(() => migrate({ ...program([]), version: 2 })).toThrow(

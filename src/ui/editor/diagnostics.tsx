@@ -3,18 +3,21 @@ import { errorText, t } from "@/i18n/t";
 import { hoistAssign } from "@/lang/edit";
 import type { Diagnostic, NodeId, Program } from "@/lang/types";
 import { validate } from "@/lang/validate";
-import { ownerOf } from "@/lang/walk";
+import { blocksById, draftText, ownerOf } from "@/lang/walk";
 import { Button } from "@/ui/primitives/button";
 import { apply } from "./edits";
 
 /**
- * The diagnostics chart nodes show, by owner, a statement or a function (`chart.md`, Shapes): no
- * empty slot, whose `…` already shows it.
+ * The diagnostics chart nodes show, by owner, a statement or a function (`chart.md`, Shapes): none
+ * of a draft, which is reported only once Run or Submit leads to it (`run.md`, Run bar, Starting a
+ * run), because a block drawn red while it is built would report an error before the learner had
+ * finished its value.
  */
 export function flaggedOwners(program: Program): Map<NodeId, Diagnostic[]> {
   const flagged = new Map<NodeId, Diagnostic[]>();
+  const blocks = blocksById(program);
   for (const d of validate(program)) {
-    if (d.code === "E_EMPTY_SLOT") continue;
+    if (draftText(blocks.get(d.nodeId)) !== undefined) continue;
     const owner = ownerOf(program, d.nodeId);
     flagged.set(owner, [...(flagged.get(owner) ?? []), d]);
   }

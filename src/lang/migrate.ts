@@ -1,12 +1,14 @@
 // Import validates a program of the current `version`. It refuses what no edit could make: a
 // wrong shape, an unknown type, a bad id, a field its block would not write, a class,
-// which no registered block definition constructs. What editing reaches is validate()'s job.
+// which no registered block definition constructs. What editing reaches is validate()'s job. A
+// draft whose text is now a value of its slot is read as that value.
 import { getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
 import { normalizeCaption } from "./edit";
 import { isNodeId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
 import { isRecord } from "./record";
-import { isEmptyExpr, isTarget } from "./walk";
+import { draftValue } from "./drafts";
+import { draftText, isTarget } from "./walk";
 
 export class MigrateError extends Error {
   constructor(
@@ -77,6 +79,46 @@ function rawChildren(
   return out;
 }
 
+/**
+ * Each draft of a statement whose text is a value of its slot, read as that value, because a later
+ * release can register what the text names (`language.md`, Expressions, Drafts): an `expr` slot's
+ * text that parses, a `target` slot's that parses as a target, and an `exprs` slot's only item
+ * whose text parses as values separated by commas.
+ */
+function readDrafts(block: Record<string, unknown>): void {
+  for (const slot of getBlockDef(keyOf(block as unknown as Expr)).slots) {
+    if (slot.role !== "expr" && slot.role !== "target" && slot.role !== "exprs") continue;
+    const held = block[slot.name];
+    // An `exprs` slot holds a draft with text as its only item (`checkDraftsHeld`).
+    const text = draftText(slot.role === "exprs" && Array.isArray(held) ? held[0] : held);
+    if (!text) continue;
+    const read = draftValue(slot.role, text);
+    if ("value" in read) block[slot.name] = read.value;
+  }
+}
+
+/**
+ * Rejects a draft with text that no edit makes (`language.md`, Data, Faults that `migrate()`
+ * rejects): one that an expression holds, or one beside other items of an `exprs` slot. A draft
+ * with no text passes there, because the value line still makes an empty slot inside a value and
+ * beside a print's other values.
+ */
+function checkDraftsHeld(block: Record<string, unknown>, path: string): void {
+  const def = getBlockDef(keyOf(block as unknown as Expr));
+  for (const slot of def.slots) {
+    if (slot.role !== "expr" && slot.role !== "target" && slot.role !== "exprs") continue;
+    const held = block[slot.name];
+    const items = slot.role === "exprs" && Array.isArray(held) ? held : [held];
+    // A statement's slot holds a draft as its value, or as an `exprs` slot's only item.
+    if (def.shape === "stmt" && items.length <= 1) continue;
+    items.forEach((item, i) => {
+      if (!draftText(item)) return;
+      const at = slot.role === "exprs" ? `${path}.${slot.name}[${i}]` : `${path}.${slot.name}`;
+      throw new MigrateError(at, "expected a draft only as a statement's slot");
+    });
+  }
+}
+
 function checkExpr(value: unknown, path: string): void {
   if (!isRecord(value)) throw new MigrateError(path, "expected an expression");
   expectNodeId(value.id, `${path}.id`);
@@ -92,6 +134,7 @@ function checkExpr(value: unknown, path: string): void {
   );
   if (nothing) throw new MigrateError(`${path}.${nothing.name}`, "expected the slot filled");
   for (const child of rawChildren(value, path)) checkExpr(child.value, child.path);
+  checkDraftsHeld(value, path);
 }
 
 function checkStmts(value: unknown, path: string): void {
@@ -115,11 +158,12 @@ function checkStmts(value: unknown, path: string): void {
     }
     checkFields(stmt, at);
     for (const child of rawChildren(stmt, at)) checkExpr(child.value, child.path);
-    // A target slot holds a target, or `empty` while it is an empty slot: no edit makes any
-    // other value there.
+    checkDraftsHeld(stmt, at);
+    readDrafts(stmt);
+    // A target slot holds a target, or a draft: no edit makes any other value there.
     for (const slot of getBlockDef(type).slots) {
       const held = stmt[slot.name] as Expr;
-      if (slot.role === "target" && !isEmptyExpr(held) && !isTarget(held)) {
+      if (slot.role === "target" && draftText(held) === undefined && !isTarget(held)) {
         throw new MigrateError(`${at}.${slot.name}`, "expected a target");
       }
     }

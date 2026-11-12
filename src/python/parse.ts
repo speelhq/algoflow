@@ -20,7 +20,7 @@ export type ParseError = {
   params?: Record<string, string>;
 };
 
-export function isParseError(result: Expr | ParseError): result is ParseError {
+export function isParseError(result: Expr | Expr[] | ParseError): result is ParseError {
   return "code" in result;
 }
 
@@ -182,6 +182,17 @@ class Parser {
     const expr = this.or();
     if (this.peek().type !== "end") fail("E_PARSE_SYNTAX", this.peek().pos);
     return expr;
+  }
+
+  /** The text of an `exprs` slot: its values separated by commas, none for no text. */
+  parseArgsAll(): Expr[] {
+    const items: Expr[] = [];
+    if (this.peek().type === "end") return items;
+    for (;;) {
+      items.push(this.or());
+      if (this.peek().type === "end") return items;
+      this.expectOp(",");
+    }
   }
 
   private binary(next: () => Expr, level: number): Expr {
@@ -371,13 +382,22 @@ class Parser {
   }
 }
 
-export function parse(text: string): Expr | ParseError {
+function attempt<T>(read: () => T): T | ParseError {
   try {
-    return new Parser(tokenize(text)).parseAll();
+    return read();
   } catch (error) {
     if (error instanceof Fail) return error.error;
     throw error;
   }
+}
+
+export function parse(text: string): Expr | ParseError {
+  return attempt(() => new Parser(tokenize(text)).parseAll());
+}
+
+/** The text of an `exprs` slot as its values separated by commas (`parser.md`, Grammar). */
+export function parseArgs(text: string): Expr[] | ParseError {
+  return attempt(() => new Parser(tokenize(text)).parseArgsAll());
 }
 
 /** A value as the blocks write it: its Python text parsed, or the error where no block writes it. */

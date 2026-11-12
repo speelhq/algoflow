@@ -72,7 +72,7 @@ export type StmtType = Stmt["type"];
 
 type E = { id: NodeId };
 export type Expr =
-  | (E & { type: "empty" }) // What an empty slot holds
+  | (E & { type: "draft"; text: string }) // text typed into a slot that is no value yet (`language.md`, Expressions, Drafts)
   | (E & { type: "num"; value: number; float: boolean; raw: string })
   | (E & { type: "str"; value: string })
   | (E & { type: "bool"; value: boolean })
@@ -140,6 +140,9 @@ export const DIAGNOSTIC_CODES = [
   "E_ARITY",
   "E_UNKNOWN_CALL",
   "E_EMPTY_SLOT",
+  "E_PARSE_SYNTAX",
+  "E_PARSE_CHAIN",
+  "E_NOT_TARGET",
   "E_DUPLICATE_ID",
 ] as const;
 export type DiagnosticCode = (typeof DIAGNOSTIC_CODES)[number];

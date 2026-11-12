@@ -8,9 +8,14 @@ export function isExpr(value: unknown): value is Expr {
   return typeof value === "object" && value !== null && "type" in value && "id" in value;
 }
 
-/** What an empty slot holds: the one expression that is no block a learner chooses. */
+/** A draft's text (`language.md`, Expressions, Drafts); undefined for any other value. */
+export function draftText(value: unknown): string | undefined {
+  return isExpr(value) && value.type === "draft" ? value.text : undefined;
+}
+
+/** Whether a value is an empty slot: a draft with no text. */
 export function isEmptyExpr(value: unknown): boolean {
-  return isExpr(value) && value.type === "empty";
+  return draftText(value) === "";
 }
 
 /** Whether an expression names where a value is stored: its block declares `locate`. */
@@ -43,43 +48,59 @@ export function paramArg(block: Block, name: string): { arg: Expr; index: number
 
 export type SlotExpr = { slot: string; expr: Expr; index?: number };
 
-/** Direct expression children with the slot each sits in; a target is one, as an `expr` is. */
-export function childSlots(block: Block): SlotExpr[] {
+/** The roles of the slots that hold an expression. */
+export type ExprRole = "expr" | "target" | "exprs";
+
+/** Direct expression children with the slot each sits in, and its role; a target is one too. */
+export function childSlots(block: Block): Array<SlotExpr & { role: ExprRole }> {
   const def = getBlockDef(keyOf(block));
   const bag = block as unknown as Bag;
-  const out: SlotExpr[] = [];
+  const out: Array<SlotExpr & { role: ExprRole }> = [];
   for (const slot of def.slots) {
     const value = bag[slot.name];
     if ((slot.role === "expr" || slot.role === "target") && isExpr(value)) {
-      out.push({ slot: slot.name, expr: value });
+      out.push({ slot: slot.name, role: slot.role, expr: value });
     } else if (slot.role === "exprs" && Array.isArray(value)) {
       value.forEach((item, index) => {
-        if (isExpr(item)) out.push({ slot: slot.name, expr: item, index });
+        if (isExpr(item)) out.push({ slot: slot.name, role: slot.role, expr: item, index });
       });
     }
   }
   return out;
 }
 
-/** An empty slot (`language.md`, Expressions, Drafts): slot `slot` of `block`, or its item `index`. */
-export type EmptySlot = { block: Block; slot: string; index?: number };
+/**
+ * A draft (`language.md`, Expressions, Drafts) in slot `slot` of `block`, of role `role`, or in its
+ * item `index`, with its text.
+ */
+export type DraftSlot = {
+  block: Block;
+  slot: string;
+  role: ExprRole;
+  index?: number;
+  draft: Expr;
+  text: string;
+};
 
 /**
- * The empty slots of a block and of every expression in its slots, in slot order: each slot or
- * item that holds `empty`, and the empty slots of the expressions that the others hold.
+ * The drafts of a block and of every expression in its slots, in slot order: each slot or item
+ * that holds a draft, and the drafts of the expressions that the others hold.
  */
-export function emptySlots(block: Block): EmptySlot[] {
-  const out: EmptySlot[] = [];
-  for (const { slot, expr, index } of childSlots(block)) {
-    if (!isEmptyExpr(expr)) out.push(...emptySlots(expr));
-    else out.push(index === undefined ? { block, slot } : { block, slot, index });
+export function draftSlots(block: Block): DraftSlot[] {
+  const out: DraftSlot[] = [];
+  for (const { slot, role, expr, index } of childSlots(block)) {
+    const text = draftText(expr);
+    if (text === undefined) out.push(...draftSlots(expr));
+    else {
+      out.push({ block, slot, role, ...(index === undefined ? {} : { index }), draft: expr, text });
+    }
   }
   return out;
 }
 
 /** Whether a value is an empty slot or holds one, at any depth. */
 export function holdsEmptySlot(expr: Expr): boolean {
-  return isEmptyExpr(expr) || emptySlots(expr).length > 0;
+  return isEmptyExpr(expr) || draftSlots(expr).some((found) => found.text === "");
 }
 
 /** Direct expression children of a statement or expression, in slot order. */

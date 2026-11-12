@@ -17,7 +17,7 @@ import {
   truthy,
 } from "@/runtime/values";
 import { defineExpr, type RunContext } from "./types";
-import { emptyExpr } from "./empty";
+import { emptyExpr } from "./draft";
 
 type Binop = Extract<Expr, { type: "binop" }>;
 

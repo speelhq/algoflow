@@ -21,7 +21,7 @@ describe("block menu", () => {
     const ids = menuGroups(program([]), MAIN).flatMap((group) => group.entries.map((e) => e.id));
     expect(ids).not.toContain("expr");
     expect(ids).not.toContain("num");
-    expect(ids).not.toContain("empty");
+    expect(ids).not.toContain("draft");
   });
 
   it("a block whose requires the place does not meet is disabled with the reason", () => {

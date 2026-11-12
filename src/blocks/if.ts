@@ -2,7 +2,7 @@
 import { newId } from "@/lang/id";
 import { decide } from "@/runtime/condition";
 import { defineStmt } from "./types";
-import { emptyExpr } from "./empty";
+import { emptyExpr } from "./draft";
 
 export const ifStmt = defineStmt<"if">({
   key: "if",

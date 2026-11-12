@@ -25,7 +25,8 @@ export function tid(): NodeId {
 }
 
 export const ast = {
-  empty: (): Expr => ({ id: tid(), type: "empty" }),
+  empty: (): Expr => ({ id: tid(), type: "draft", text: "" }),
+  draft: (text: string): Expr => ({ id: tid(), type: "draft", text }),
   num: (value: number, raw = String(value)): Expr => ({
     id: tid(),
     type: "num",

@@ -55,6 +55,10 @@ describe("builtin argument counts", () => {
   });
 
   it("a new builtin holds one empty argument per parameter not marked optional", () => {
-    expect(probe.create()).toMatchObject({ type: "call", fn: "probe", args: [{ type: "empty" }] });
+    expect(probe.create()).toMatchObject({
+      type: "call",
+      fn: "probe",
+      args: [{ type: "draft", text: "" }],
+    });
   });
 });

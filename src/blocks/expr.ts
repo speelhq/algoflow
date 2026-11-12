@@ -1,7 +1,7 @@
 // The `expr` block definition: an expression evaluated for its effect (method statements wrap one).
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
-import { emptyExpr } from "./empty";
+import { emptyExpr } from "./draft";
 
 export const exprStmt = defineStmt<"expr">({
   key: "expr",

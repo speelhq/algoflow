@@ -4,7 +4,7 @@ import { newId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { str } from "@/runtime/values";
 import { defineStmt } from "./types";
-import { emptyExpr } from "./empty";
+import { emptyExpr } from "./draft";
 
 export const print = defineStmt<"print">({
   key: "print",

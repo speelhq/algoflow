@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
 import { ast } from "@/blocks/testing";
+import { isEmptyExpr } from "@/lang/walk";
 import { allEntries } from "./entries";
 import { fieldsOf, startField, type Field } from "./fields";
 import type { LineContext } from "./line";
@@ -91,8 +92,8 @@ describe("editor session", () => {
     const typed = press(openSession(print(empty()), field, null), "abs(").session.line?.root;
     if (!typed) throw new Error("no value typed");
     const slot = typed.type === "call" ? typed.args[0] : undefined;
-    expect(slot?.type).toBe("empty");
-    // The editor opened again on `print(abs(…))` selects `abs(…)`.
+    expect(isEmptyExpr(slot)).toBe(true);
+    // The editor opened again on `print(abs(value))` selects `abs(value)`.
     const reopened = openSession(print(typed), field, null);
     expect(reopened.line?.selected).toBe(true);
     for (const shiftKey of [false, true]) {
@@ -161,9 +162,9 @@ describe("editor session", () => {
     const editing = chooseRow(openSession(stmt, field, null), { type: "entry", entry: text }, ctx);
     expect(editing.session.line?.text).toBeDefined();
     const transition = textEnded(editing.session, "Backspace", ctx);
-    expect(transition.session.line?.root.type).toBe("empty");
+    expect(isEmptyExpr(transition.session.line?.root)).toBe(true);
     expect(transition.session.line?.text).toBeUndefined();
-    expect(transition.edits.at(-1)?.root.type).toBe("empty");
+    expect(isEmptyExpr(transition.edits.at(-1)?.root)).toBe(true);
     // Once the field has ended, Backspace from it removes nothing more.
     const ended = textEnded(editing.session, "Enter", ctx).session;
     expect(textEnded(ended, "Backspace", ctx).session.line?.root.type).toBe("str");

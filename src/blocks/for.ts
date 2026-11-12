@@ -4,7 +4,7 @@ import { newId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { typeName } from "@/runtime/values";
 import { defineStmt, type Counted } from "./types";
-import { emptyExpr } from "./empty";
+import { emptyExpr } from "./draft";
 
 const isZero = (expr: Expr) => expr.type === "num" && !expr.float && expr.value === 0;
 

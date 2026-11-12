@@ -1,5 +1,5 @@
 // Every validation code, run after every edit and before every run: scope rules,
-// names, empty slots, and field defaults.
+// names, drafts, and field defaults.
 // Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
 import { builtinKey, getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
 import { expectedArgs, type BlockDef } from "@/blocks/types";
@@ -12,8 +12,9 @@ import {
   type Program,
   type Stmt,
 } from "./types";
+import { draftValue } from "./drafts";
 import { declaredBy } from "./scope";
-import { emptySlots, programIds, regionsOf, stmtExprs, variableOf } from "./walk";
+import { draftSlots, programIds, regionsOf, stmtExprs, variableOf } from "./walk";
 
 export function isValidName(name: string): boolean {
   return NAME_PATTERN.test(name) && !RESERVED.has(name);
@@ -106,7 +107,7 @@ class Collector {
     const declared = new Set<Name>();
     for (const stmt of stmts) {
       const def = getBlockDef(keyOf(stmt));
-      this.slots(stmt);
+      this.drafts(stmt);
       this.calls(stmt);
       this.reads(stmt, visible, inner);
       this.control(stmt, def, scope);
@@ -155,10 +156,25 @@ class Collector {
     if (def.requires === "function" && !scope.inFunction) this.report(stmt.id, "E_RETURN_OUTSIDE");
   }
 
-  // ------------------------------------------------------------ slots
+  // ------------------------------------------------------------ drafts
 
-  private slots(stmt: Stmt): void {
-    for (const { slot } of emptySlots(stmt)) this.report(stmt.id, "E_EMPTY_SLOT", { slot });
+  /**
+   * Every draft of a statement, at the draft's own node (`language.md`, Expressions, Drafts): one
+   * with no text as an empty slot, one whose text doesn't parse as its slot's values by the
+   * parser's error, and one in a target slot whose text parses as no target.
+   */
+  private drafts(stmt: Stmt): void {
+    for (const { slot, role, draft, text } of draftSlots(stmt)) {
+      if (text === "") {
+        this.report(draft.id, "E_EMPTY_SLOT", { slot });
+        continue;
+      }
+      const read = draftValue(role, text);
+      if (!("error" in read)) continue;
+      const { error } = read;
+      if (error === "E_NOT_TARGET") this.report(draft.id, error);
+      else this.report(draft.id, error.code, { ...error.params, position: error.position });
+    }
   }
 
   // ------------------------------------------------------------ calls (E_ARITY, E_UNKNOWN_CALL)

@@ -1,11 +1,19 @@
 // A block's text as spans: its block's `notation()` with the block's slots filled in, the same in
-// every locale; a variable is drawn bold in its own color, and an empty slot as its hint, gray.
-// Operators are parenthesized as the emitter does. Reads slot roles, `hint`, `params`, `callee`,
-// `notation`, `text`, `chart`, and `precedence` only, never a type; a variable shown with its
-// value is written by the `assign` block's notation.
+// every locale; a variable is drawn bold in its own color, a draft as its text, and an empty slot
+// as its hint, gray. Operators are parenthesized as the emitter does. Reads slot roles, `hint`,
+// `params`, `callee`, `notation`, `text`, `chart`, and `precedence` only, never a type; a variable
+// shown with its value is written by the `assign` block's notation.
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Block, NodeId, Program, Stmt, Value } from "@/lang/types";
-import { conditionOf, emptySlots, isEmptyExpr, isExpr, paramArg, variableOf } from "@/lang/walk";
+import {
+  conditionOf,
+  draftSlots,
+  draftText,
+  isEmptyExpr,
+  isExpr,
+  paramArg,
+  variableOf,
+} from "@/lang/walk";
 import { getBlockDef, keyOf } from "@/blocks/registry";
 import type { Generated, BlockDef, Side } from "@/blocks/types";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
@@ -238,11 +246,15 @@ export function placeholderValue(block: Block, name: string): Held | undefined {
 }
 
 /**
- * An expression as the chart writes it, each empty slot in it as its hint (`blocks.md`, Notation,
- * Drawing). An empty slot itself is written by what holds it, which gives its hint.
+ * An expression as the chart writes it, a draft as its text and each empty slot in it as its hint
+ * (`blocks.md`, Notation, Drawing). An empty slot itself is written by what holds it, which gives
+ * its hint.
  */
 export function exprSpans(expr: Expr, program: Program, writing: Writing = {}): NotationSpan[] {
   if (isEmptyExpr(expr)) throw new Error(`empty slot ${expr.id} is written by what holds it`);
+  // A draft's text is no template: a `{` in it is the learner's.
+  const typed = draftText(expr);
+  if (typed !== undefined) return [{ text: typed }];
   const name = variableOf(expr);
   if (name !== undefined) {
     const value = writing.value?.(name);
@@ -341,9 +353,9 @@ export function notationText(block: Block, program: Program): string {
   return joinSpans(notationSpans(block, program));
 }
 
-/** Whether a statement has an empty slot, at any depth of its slots. */
-export function hasEmptySlot(block: Block): boolean {
-  return emptySlots(block).length > 0;
+/** Whether a statement holds a draft, at any depth of its slots. */
+export function holdsDraft(block: Block): boolean {
+  return draftSlots(block).length > 0;
 }
 
 /**

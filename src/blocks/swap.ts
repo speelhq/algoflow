@@ -2,7 +2,7 @@
 // its value was read from, by which the driver shows an exchange as one step.
 import { newId } from "@/lang/id";
 import { defineStmt } from "./types";
-import { emptyExpr } from "./empty";
+import { emptyExpr } from "./draft";
 
 export const swap = defineStmt<"swap">({
   key: "swap",
