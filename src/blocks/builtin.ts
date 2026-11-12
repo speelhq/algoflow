@@ -14,7 +14,7 @@ import {
   type RunContext,
 } from "./types";
 import type { Category } from "./categories";
-import { emptyExpr } from "./draft";
+import { emptyDraft } from "./draft";
 
 export type BuiltinDef = {
   name: string;
@@ -49,7 +49,7 @@ export function defineBuiltin(def: BuiltinDef): BlockDef {
       id: newId(),
       type: "call",
       fn: def.name,
-      args: def.params.filter((param) => !param.optional).map(() => emptyExpr()),
+      args: def.params.filter((param) => !param.optional).map(() => emptyDraft()),
     }),
     *run(block, ctx) {
       // Validation reports a wrong count before any run, as it does for a program function.

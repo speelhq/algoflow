@@ -1,7 +1,7 @@
 // Typed expression text → Expr. No third-party imports.
 import { newId } from "@/lang/id";
 import { CLASS_NAME_PATTERN, type BinOp, type Data, type Expr, type NodeId } from "@/lang/types";
-import { allExprs, childSlots, isEmptyExpr } from "@/lang/walk";
+import { allExprs, childSlots, isEmptyDraft } from "@/lang/walk";
 import {
   builtinKey,
   builtinOf,
@@ -571,7 +571,7 @@ export function readBefore(text: string): CaretReading {
     return operation && { operation, value };
   };
   if (expected) {
-    const hole = all.find(isEmptyExpr);
+    const hole = all.find(isEmptyDraft);
     const operation = hole && parentOf(hole);
     return operation ? { place: "expected", operation } : { place: "expected" };
   }

@@ -4,7 +4,7 @@ import type { Expr } from "@/lang/types";
 import { PRECEDENCE } from "@/python/precedence";
 import { isNumber, makeNumber, truthy } from "@/runtime/values";
 import { defineExpr } from "./types";
-import { emptyExpr } from "./draft";
+import { emptyDraft } from "./draft";
 
 type Unop = Extract<Expr, { type: "unop" }>;
 
@@ -21,7 +21,7 @@ export const unop = defineExpr<"unop">({
     { name: "operand", role: "expr" },
   ],
   precedence: (block) => precedenceOf(block as Unop),
-  create: () => ({ id: newId(), type: "unop", op: "neg", operand: emptyExpr() }),
+  create: () => ({ id: newId(), type: "unop", op: "neg", operand: emptyDraft() }),
   fieldsError: (fields) =>
     typeof fields.op === "string" && Object.hasOwn(OPS, fields.op)
       ? undefined

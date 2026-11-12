@@ -4,7 +4,7 @@ import { blockText, t } from "@/i18n/t";
 import { draftValue } from "@/lang/drafts";
 import type { Expr, NodeId, Stmt } from "@/lang/types";
 import { draftText, isExpr } from "@/lang/walk";
-import { draftOf, emptyExpr, getBlockDef, keyOf, type Slot } from "@/blocks/registry";
+import { draftOf, emptyDraft, getBlockDef, keyOf, type Slot } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
   generatedNotation,
@@ -96,7 +96,7 @@ export function fieldText(value: Expr): string {
  * slot.
  */
 export function textValue(text: string, target: boolean): Expr {
-  if (text === "") return emptyExpr();
+  if (text === "") return emptyDraft();
   const read = draftValue(target ? "target" : "expr", text);
   return "value" in read && !Array.isArray(read.value) ? read.value : draftOf(text);
 }

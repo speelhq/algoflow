@@ -14,7 +14,7 @@ import { visibleAt } from "@/lang/scope";
 import type { Expr, NodeId, Program, Stmt } from "@/lang/types";
 import { isExpr, blocksById, routineOf } from "@/lang/walk";
 import { cn } from "@/lib/utils";
-import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
+import { emptyDraft, getBlockDef, keyOf } from "@/blocks/registry";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { placeholderValue, slotSpans } from "@/ui/chart/text";
@@ -165,7 +165,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   /** Adds a value to a slot: an optional value, or an item at `at` of a list (the end when null). */
   const addItem = (slot: string, at: number | null) => {
-    const empty = emptyExpr();
+    const empty = emptyDraft();
     const itemsOf = (block: Stmt | undefined): unknown =>
       block ? (block as unknown as Record<string, unknown>)[slot] : undefined;
     const list = def.slots.find((s) => s.name === slot)?.role === "exprs";
