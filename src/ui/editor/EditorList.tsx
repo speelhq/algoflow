@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
+import { spanStyle } from "@/ui/chart/style";
 
 export type ListItem = {
   key: string;
@@ -71,6 +72,7 @@ export function EditorList(props: Props) {
             // A section with a symbol keeps a column for symbols.
             const symbols = section.items.some((row) => row.symbol !== undefined);
             const on = highlight === at;
+            const style = spanStyle(item);
             return (
               <button
                 key={item.key}
@@ -92,10 +94,8 @@ export function EditorList(props: Props) {
                 )}
                 {item.lead && <span>{item.lead}</span>}
                 <span
-                  className={cn(
-                    (item.code || item.variable) && "font-mono",
-                    item.variable && "font-semibold text-variable",
-                  )}
+                  className={cn((item.code || item.variable) && "font-mono", style.colorClass)}
+                  style={{ fontWeight: style.fontWeight }}
                 >
                   {item.label}
                 </span>
