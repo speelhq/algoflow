@@ -1,6 +1,6 @@
 // Pure edit functions. Each returns a new Program and keeps
 // every NodeId unique. Statements are addressed by id or by Place.
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { getBlockDef, keyOf, findSlot } from "@/blocks/registry";
 import { newId } from "./id";
 import { declaredBy } from "./scope";
 import type { Expr, FunctionDef, Name, NodeId, Place, Program, Stmt } from "./types";
@@ -175,7 +175,7 @@ export function setExpr(
 ): Program {
   const next = clone(program);
   const block = getBlock(next, id);
-  const spec = getBlockDef(keyOf(block)).slots.find((s) => s.name === slot);
+  const spec = findSlot(block, slot);
   const bag = block as unknown as Bag;
   const old = (value: unknown) => (isExpr(value) ? value : undefined);
   if (spec?.role === "expr" || spec?.role === "target") {
@@ -201,7 +201,7 @@ export function insertItem(
 ): Program {
   const next = clone(program);
   const block = getBlock(next, id);
-  const spec = getBlockDef(keyOf(block)).slots.find((s) => s.name === slot);
+  const spec = findSlot(block, slot);
   const items = (block as unknown as Bag)[slot];
   if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index > items.length) {
     throw new EditError(`block ${id} has no place ${index} in ${slot}`);
@@ -214,7 +214,7 @@ export function insertItem(
 export function removeItem(program: Program, id: NodeId, slot: string, index: number): Program {
   const next = clone(program);
   const block = getBlock(next, id);
-  const spec = getBlockDef(keyOf(block)).slots.find((s) => s.name === slot);
+  const spec = findSlot(block, slot);
   const items = (block as unknown as Bag)[slot];
   if (spec?.role !== "exprs" || !Array.isArray(items) || index < 0 || index >= items.length) {
     throw new EditError(`block ${id} has no item ${index} in ${slot}`);
