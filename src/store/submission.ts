@@ -1,5 +1,5 @@
-// Submit judges every test on its own runner in batches,
-// without touching the driver; the driver judges the chosen case of a Run itself.
+// The submission: Submit judges every test on its own runner in batches, without touching the
+// driver; the driver judges the chosen case of a Run itself.
 import { create } from "zustand";
 import { findChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";
@@ -13,18 +13,18 @@ import { inBatches } from "./batches";
 import { useProgress } from "./progress";
 import { useProgram } from "./program";
 
-export type TestsState = {
+export type SubmissionState = {
   /** One verdict per challenge test, set once every test is judged. */
   results: TestResult[];
   /** What each test printed and left in its variables, for the rows of its case. */
   outcomes: Outcome[];
-  running: boolean;
-  /** Every test passed. */
-  cleared: boolean;
+  submitting: boolean;
+  /** Every test passed (`run.md`, Submission, Accepted). */
+  accepted: boolean;
   /** The chip whose rows are shown: the first failing test once judged, else 0. */
   selected: number;
   submit: () => Promise<void>;
-  select: (index: number) => void;
+  selectTest: (index: number) => void;
   reset: () => void;
 };
 
@@ -56,18 +56,18 @@ function current(): { id: string; program: Program; tests: Test[] } | null {
     : null;
 }
 
-export const useTests = create<TestsState>()((set, get) => ({
+export const useSubmission = create<SubmissionState>()((set, get) => ({
   results: [],
   outcomes: [],
-  running: false,
-  cleared: false,
+  submitting: false,
+  accepted: false,
   selected: 0,
 
   async submit() {
     const target = current();
     if (!target) return;
     const mine = ++generation;
-    set({ results: [], outcomes: [], running: true, cleared: false, selected: 0 });
+    set({ results: [], outcomes: [], submitting: true, accepted: false, selected: 0 });
     try {
       const results: TestResult[] = [];
       const outcomes: Outcome[] = [];
@@ -78,26 +78,26 @@ export const useTests = create<TestsState>()((set, get) => ({
         outcomes.push(outcome);
       }
       // `pnpm check` holds every challenge to three tests or more, so no submission is empty.
-      const cleared = results.every((result) => result.status === "pass");
+      const accepted = results.every((result) => result.status === "pass");
       const failing = results.findIndex((result) => result.status !== "pass");
-      set({ results, outcomes, cleared, selected: Math.max(failing, 0) });
-      useProgress.getState().submitted(target.id, cleared);
+      set({ results, outcomes, accepted, selected: Math.max(failing, 0) });
+      useProgress.getState().submitted(target.id, accepted);
     } finally {
       // Also after an internal error, which leaves no verdict; a later action has set its own state.
-      if (mine === generation) set({ running: false });
+      if (mine === generation) set({ submitting: false });
     }
   },
 
-  select(index) {
+  selectTest(index) {
     if (index >= 0 && index < get().results.length) set({ selected: index });
   },
 
   reset() {
     generation += 1;
-    set({ results: [], outcomes: [], running: false, cleared: false, selected: 0 });
+    set({ results: [], outcomes: [], submitting: false, accepted: false, selected: 0 });
   },
 }));
 
 useProgram.subscribe((state, previous) => {
-  if (state.program !== previous.program) useTests.getState().reset();
+  if (state.program !== previous.program) useSubmission.getState().reset();
 });

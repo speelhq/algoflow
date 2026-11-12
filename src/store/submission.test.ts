@@ -5,7 +5,7 @@ import { ast, program } from "@/blocks/testing";
 import { useProgress } from "./progress";
 import { useProgram } from "./program";
 import { useRun } from "./run";
-import { useTests } from "./tests";
+import { useSubmission } from "./submission";
 
 const { assign, num, bin, print, str } = ast;
 
@@ -15,19 +15,19 @@ const fizzbuzz = () => {
   return challenge;
 };
 
-describe("tests store", () => {
+describe("submission store", () => {
   beforeEach(() => {
     useRun.getState().stop();
-    useTests.getState().reset();
+    useSubmission.getState().reset();
   });
 
-  it("Submit judges every test of the challenge and sets cleared when all pass", async () => {
+  it("Submit judges every test of the challenge and sets accepted when all pass", async () => {
     useProgram.setState({ program: fizzbuzz().solution });
-    await useTests.getState().submit();
-    const s = useTests.getState();
+    await useSubmission.getState().submit();
+    const s = useSubmission.getState();
     expect(s.results).toEqual([{ status: "pass" }, { status: "pass" }, { status: "pass" }]);
-    expect(s.cleared).toBe(true);
-    expect(s.running).toBe(false);
+    expect(s.accepted).toBe(true);
+    expect(s.submitting).toBe(false);
   });
 
   it("a wrong program fails with expected and actual", async () => {
@@ -37,9 +37,9 @@ describe("tests store", () => {
         main: [print(str("nope"))],
       },
     });
-    await useTests.getState().submit();
-    const s = useTests.getState();
-    expect(s.cleared).toBe(false);
+    await useSubmission.getState().submit();
+    const s = useSubmission.getState();
+    expect(s.accepted).toBe(false);
     expect(s.outcomes[1]).toMatchObject({ stdout: ["nope"], vars: { n: 1 } });
     expect(s.results[1]).toEqual({
       status: "fail",
@@ -52,59 +52,59 @@ describe("tests store", () => {
 
   it("selects the first failing test, and a chip selects another judged one", async () => {
     useProgram.setState({ program: { ...fizzbuzz().solution, main: [print(str("1"))] } });
-    await useTests.getState().submit();
+    await useSubmission.getState().submit();
     // n = 15 fails, n = 1 passes ("1"), n = 3 fails.
-    expect(useTests.getState().results.map((r) => r.status)).toEqual(["fail", "pass", "fail"]);
-    expect(useTests.getState().selected).toBe(0);
-    useTests.getState().select(2);
-    expect(useTests.getState().selected).toBe(2);
-    useTests.getState().select(7);
-    expect(useTests.getState().selected).toBe(2);
-    useTests.getState().reset();
-    expect(useTests.getState().selected).toBe(0);
+    expect(useSubmission.getState().results.map((r) => r.status)).toEqual(["fail", "pass", "fail"]);
+    expect(useSubmission.getState().selected).toBe(0);
+    useSubmission.getState().selectTest(2);
+    expect(useSubmission.getState().selected).toBe(2);
+    useSubmission.getState().selectTest(7);
+    expect(useSubmission.getState().selected).toBe(2);
+    useSubmission.getState().reset();
+    expect(useSubmission.getState().selected).toBe(0);
   });
 
   it("verdicts appear once every test is judged; Submit again clears the previous ones", async () => {
     useProgram.setState({ program: { ...fizzbuzz().solution, main: [print(str("1"))] } });
-    await useTests.getState().submit();
-    useTests.getState().select(2);
-    const judging = useTests.getState().submit();
-    expect(useTests.getState()).toMatchObject({
+    await useSubmission.getState().submit();
+    useSubmission.getState().selectTest(2);
+    const judging = useSubmission.getState().submit();
+    expect(useSubmission.getState()).toMatchObject({
       results: [],
       outcomes: [],
-      running: true,
-      cleared: false,
+      submitting: true,
+      accepted: false,
       selected: 0,
     });
     await judging;
-    expect(useTests.getState()).toMatchObject({ running: false, selected: 0 });
-    expect(useTests.getState().results).toHaveLength(3);
+    expect(useSubmission.getState()).toMatchObject({ submitting: false, selected: 0 });
+    expect(useSubmission.getState().results).toHaveLength(3);
   });
 
   it("an accepted submission leaves the first chip selected", async () => {
     useProgram.setState({ program: fizzbuzz().solution });
-    await useTests.getState().submit();
-    expect(useTests.getState().selected).toBe(0);
+    await useSubmission.getState().submit();
+    expect(useSubmission.getState().selected).toBe(0);
   });
 
   it("a submission is recorded; an accepted one solves the problem for good", async () => {
     useProgress.setState({ entries: {} });
     useProgram.setState({ program: { ...fizzbuzz().solution, main: [print(str("nope"))] } });
-    await useTests.getState().submit();
+    await useSubmission.getState().submit();
     expect(useProgress.getState().entries.fizzbuzz?.status).toBe("attempted");
     useProgram.setState({ program: fizzbuzz().solution });
-    await useTests.getState().submit();
+    await useSubmission.getState().submit();
     expect(useProgress.getState().entries.fizzbuzz?.status).toBe("solved");
     useProgram.setState({ program: { ...fizzbuzz().solution, main: [print(str("nope"))] } });
-    await useTests.getState().submit();
+    await useSubmission.getState().submit();
     expect(useProgress.getState().entries.fizzbuzz?.status).toBe("solved");
   });
 
   it("a runtime error is reported in the row", async () => {
     const div = bin("/", num(1), num(0));
     useProgram.setState({ program: { ...fizzbuzz().solution, main: [assign("x", div)] } });
-    await useTests.getState().submit();
-    expect(useTests.getState().results[0]).toEqual({
+    await useSubmission.getState().submit();
+    expect(useSubmission.getState().results[0]).toEqual({
       status: "error",
       error: { nodeId: div.id, code: "E_DIV_ZERO", params: {} },
     });
@@ -113,27 +113,27 @@ describe("tests store", () => {
   it("a change of the program during a submission abandons it; nothing is recorded", async () => {
     useProgress.setState({ entries: {} });
     useProgram.setState({ program: fizzbuzz().solution });
-    const judging = useTests.getState().submit();
+    const judging = useSubmission.getState().submit();
     useProgram.setState({ program: { ...fizzbuzz().solution } });
     await judging;
-    expect(useTests.getState()).toMatchObject({ results: [], running: false });
+    expect(useSubmission.getState()).toMatchObject({ results: [], submitting: false });
     expect(useProgress.getState().entries).toEqual({});
   });
 
   it("a program with a diagnostic is not judged, as Run does not start", async () => {
     useProgram.setState({ program: { ...fizzbuzz().solution, main: [print(ast.empty())] } });
-    await useTests.getState().submit();
-    expect(useTests.getState()).toMatchObject({ results: [], running: false });
+    await useSubmission.getState().submit();
+    expect(useSubmission.getState()).toMatchObject({ results: [], submitting: false });
   });
 
   it("a program of no challenge is not judged; a change of the program clears the results", async () => {
     useProgram.setState({ program: program([print(str("x"))]) });
-    await useTests.getState().submit();
-    expect(useTests.getState().results).toEqual([]);
+    await useSubmission.getState().submit();
+    expect(useSubmission.getState().results).toEqual([]);
     useProgram.setState({ program: fizzbuzz().solution });
-    await useTests.getState().submit();
-    expect(useTests.getState().cleared).toBe(true);
+    await useSubmission.getState().submit();
+    expect(useSubmission.getState().accepted).toBe(true);
     useProgram.setState({ program: program([]) });
-    expect(useTests.getState()).toMatchObject({ results: [], outcomes: [], cleared: false });
+    expect(useSubmission.getState()).toMatchObject({ results: [], outcomes: [], accepted: false });
   });
 });

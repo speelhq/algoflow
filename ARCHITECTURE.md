@@ -83,7 +83,7 @@ tests.
   - `playground`: the index of Playground programs.
   - `editor`: the hovered and the selected node.
   - `run`: the driver, which runs ahead and then plays back on a timer.
-  - `tests`: the submission verdicts.
+  - `submission`: the submission verdicts.
   - `progress`: each problem's status.
   - `layout`: the panel width, collapse, and playback speed.
 

@@ -11,8 +11,8 @@ Before you change a store, read the spec it implements:
   Driver, and, for what the run shows, `docs/spec/ui/run.md`.
 - `program.ts` and `playground.ts`: `docs/spec/language/language.md`, Edits;
   Storage.
-- `progress.ts` and `tests.ts`: `docs/spec/challenges/challenges.md`,
-  Progress; Judging. `tests.ts` also follows `docs/spec/ui/run.md`,
+- `progress.ts` and `submission.ts`: `docs/spec/challenges/challenges.md`,
+  Progress; Judging. `submission.ts` also follows `docs/spec/ui/run.md`,
   Submission.
 - `layout.ts`: `docs/spec/ui/pages.md`.
 - `storage.ts`: the spec that names each `algoflow:` key it reads or

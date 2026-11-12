@@ -12,7 +12,7 @@ import { useEditor } from "@/store/editor";
 import { inRun, useMode } from "@/store/mode";
 import { statusOf, useProgress } from "@/store/progress";
 import { useRun } from "@/store/run";
-import { useTests } from "@/store/tests";
+import { useSubmission } from "@/store/submission";
 import { navigate, routeHash } from "@/ui/app/route";
 import { openInPlayground } from "@/ui/editor/programs";
 import { Button, buttonVariants } from "@/ui/primitives/button";
@@ -22,10 +22,10 @@ import { caseText } from "./caseText";
 import { ResultRows } from "./ResultRows";
 
 function Chips({ challenge }: { challenge: Challenge }) {
-  const results = useTests((s) => s.results);
-  const selected = useTests((s) => s.selected);
-  const select = useTests((s) => s.select);
-  const cleared = useTests((s) => s.cleared);
+  const results = useSubmission((s) => s.results);
+  const selected = useSubmission((s) => s.selected);
+  const selectTest = useSubmission((s) => s.selectTest);
+  const accepted = useSubmission((s) => s.accepted);
   return (
     <div className="flex flex-wrap gap-1.5" role="group" data-testid="case-chips">
       {challenge.tests.map((test, index) => {
@@ -34,7 +34,7 @@ function Chips({ challenge }: { challenge: Challenge }) {
           case: caseText(test.inputs),
         });
         // The chips of an accepted submission select nothing.
-        if (cleared) {
+        if (accepted) {
           return (
             <span
               // oxlint-disable-next-line react/no-array-index-key -- a case is its index in the tests
@@ -58,7 +58,7 @@ function Chips({ challenge }: { challenge: Challenge }) {
               pass ? "border-pass/60 text-pass" : "border-destructive/60 text-destructive",
               index === selected && (pass ? "bg-pass/10" : "bg-destructive/10"),
             )}
-            onClick={() => select(index)}
+            onClick={() => selectTest(index)}
             data-chip
           >
             {label}
@@ -71,9 +71,9 @@ function Chips({ challenge }: { challenge: Challenge }) {
 
 /** The selected case's rows, the first differing one highlighted, or its error message. */
 function SelectedRows({ challenge }: { challenge: Challenge }) {
-  const selected = useTests((s) => s.selected);
-  const result = useTests((s) => s.results[s.selected]);
-  const outcome = useTests((s) => s.outcomes[s.selected]);
+  const selected = useSubmission((s) => s.selected);
+  const result = useSubmission((s) => s.results[s.selected]);
+  const outcome = useSubmission((s) => s.outcomes[s.selected]);
   const test = challenge.tests[selected];
   const rows = useMemo(
     () => resultRows(test?.expect, outcome ?? { stdout: [], vars: {} }),
@@ -112,7 +112,7 @@ function Next({ id }: { id: string }) {
 }
 
 function Accepted({ challenge }: { challenge: Challenge }) {
-  const first = useTests((s) => s.outcomes[0]);
+  const first = useSubmission((s) => s.outcomes[0]);
   const setTab = useEditor((s) => s.setTab);
   // The chart stays the run's in run mode.
   const runMode = inRun(useMode());
@@ -148,10 +148,10 @@ function Accepted({ challenge }: { challenge: Challenge }) {
 }
 
 export function SubmissionView({ challenge }: { challenge: Challenge }) {
-  const submitting = useTests((s) => s.running);
-  const results = useTests((s) => s.results);
-  const cleared = useTests((s) => s.cleared);
-  const selected = useTests((s) => s.selected);
+  const submitting = useSubmission((s) => s.submitting);
+  const results = useSubmission((s) => s.results);
+  const accepted = useSubmission((s) => s.accepted);
+  const selected = useSubmission((s) => s.selected);
   const selectCase = useRun((s) => s.selectCase);
   if (submitting) {
     return <p className="text-muted-foreground">{t("result.submitting")}</p>;
@@ -160,14 +160,14 @@ export function SubmissionView({ challenge }: { challenge: Challenge }) {
   return (
     <div className="space-y-4" data-testid="submission">
       <h2
-        className={cn("text-lg font-semibold", cleared ? "text-pass" : "text-destructive")}
+        className={cn("text-lg font-semibold", accepted ? "text-pass" : "text-destructive")}
         data-testid="verdict"
       >
-        {t(cleared ? "result.accepted" : "result.wrong")}
+        {t(accepted ? "result.accepted" : "result.wrong")}
       </h2>
-      {!cleared && <p>{t("result.passedCount", { k: passed, n: challenge.tests.length })}</p>}
+      {!accepted && <p>{t("result.passedCount", { k: passed, n: challenge.tests.length })}</p>}
       <Chips challenge={challenge} />
-      {cleared ? (
+      {accepted ? (
         <Accepted challenge={challenge} />
       ) : (
         <>
