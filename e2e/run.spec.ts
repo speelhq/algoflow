@@ -190,7 +190,7 @@ test("Run with a diagnostic leads to its node instead of running", async ({ page
     id: "asg-empty-01",
     type: "assign",
     target: { id: "run-tgt-0001", type: "var", name: "x" },
-    value: { id: "val-empty-01", type: "empty" },
+    value: { id: "val-empty-01", type: "draft", text: "" },
   };
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");

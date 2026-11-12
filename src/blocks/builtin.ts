@@ -14,7 +14,7 @@ import {
   type RunContext,
 } from "./types";
 import type { Category } from "./categories";
-import { emptyExpr } from "./empty";
+import { emptyExpr } from "./draft";
 
 export type BuiltinDef = {
   name: string;

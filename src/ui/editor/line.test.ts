@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { Expr, Kind } from "@/lang/types";
 import { ast, program } from "@/blocks/testing";
+import { isEmptyExpr } from "@/lang/walk";
 import { unparse } from "@/python/emit";
 import { exprText } from "@/ui/chart/text";
 import { allEntries, labelOf, takesValue } from "./entries";
@@ -609,7 +610,7 @@ describe("a target's line (editor.md, Targets)", () => {
   it("refuses a key that would leave no target, with the reason; inside an item any value", () => {
     for (const key of ["-", "5", "[", "("]) {
       const step = type(empty(), key, binding);
-      expect(step.taken && step.line.root.type !== "empty", key).toBe(false);
+      expect(step.taken && !isEmptyExpr(step.line.root), key).toBe(false);
     }
     const refused = type(typed("nums", binding), "+", binding);
     expect(refused.taken).toBe(false);

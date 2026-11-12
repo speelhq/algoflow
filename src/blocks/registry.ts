@@ -17,7 +17,7 @@ import { strCall } from "./call-str";
 import { sum } from "./call-sum";
 import type { Category } from "./categories";
 import { continueStmt } from "./continue";
-import { empty } from "./empty";
+import { draft } from "./draft";
 import { exprStmt } from "./expr";
 import { forStmt } from "./for";
 import { ifStmt } from "./if";
@@ -47,7 +47,7 @@ const ALL: BlockDef[] = [
   returnStmt,
   swap,
   // expressions, in the order of the value list's entries
-  empty,
+  draft,
   num,
   variable,
   str,
@@ -95,6 +95,6 @@ export function menuBlockDefs(category: Category): BlockDef[] {
   return ALL.filter((def) => def.category === category && !def.hidden);
 }
 
-export { emptyExpr } from "./empty";
+export { emptyExpr } from "./draft";
 export { builtinKey, builtinOf, methodKey } from "./types";
 export type { EmitContext, BlockDef, Param, PyLine, RunContext, Signal, Slot } from "./types";

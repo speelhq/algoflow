@@ -189,7 +189,7 @@ export type BlockDef = {
   imports?: "random";
   /** Precedence of this expression; undefined = atom. */
   precedence?: (block: Expr) => number;
-  /** Not in the block menu (`empty`, `expr`). */
+  /** Not in the block menu (`draft`, `expr`). */
   hidden?: boolean;
   /** For literal blocks: the zero-like literal of the same type. */
   zeroLike?(block: Expr): Expr;

@@ -6,6 +6,7 @@ import type { Diagnostic, Program, Stmt } from "./types";
 import { validate } from "./validate";
 
 const {
+  draft,
   assign,
   print,
   num,
@@ -177,10 +178,10 @@ describe("validate (language.md, Validation)", () => {
     expect(codes(program([exprStmt(parsed)]))).toEqual(["E_UNKNOWN_CALL"]);
   });
 
-  it("E_EMPTY_SLOT: an empty slot, naming the slot", () => {
-    const value = assign("x", empty());
-    expect(validate(program([value]))).toEqual([
-      { nodeId: value.id, code: "E_EMPTY_SLOT", params: { slot: "value" } },
+  it("E_EMPTY_SLOT: a draft with no text, at the draft, naming the slot", () => {
+    const hole = empty();
+    expect(validate(program([assign("x", hole)]))).toEqual([
+      { nodeId: hole.id, code: "E_EMPTY_SLOT", params: { slot: "value" } },
     ]);
     expect(validate(program([if_(empty(), [])]))[0]).toMatchObject({
       code: "E_EMPTY_SLOT",
@@ -190,8 +191,8 @@ describe("validate (language.md, Validation)", () => {
       code: "E_EMPTY_SLOT",
       params: { slot: "var" },
     });
-    const unset = ast.assignTo(empty(), num(1));
-    expect(validate(program([unset]))).toEqual([
+    const unset = empty();
+    expect(validate(program([ast.assignTo(unset, num(1))]))).toEqual([
       { nodeId: unset.id, code: "E_EMPTY_SLOT", params: { slot: "target" } },
     ]);
     expect(validate(program([assign("x", bin("+", num(1), empty()))]))).toEqual([
@@ -204,6 +205,37 @@ describe("validate (language.md, Validation)", () => {
       expect.objectContaining({ code: "E_EMPTY_SLOT", params: { slot: "args" } }),
     ]);
     expect(codes(program([assign("x", bin("+", num(1), num(2))), print()]))).toEqual([]);
+  });
+
+  it("a draft whose text doesn't parse: the parser's error at the draft, with its position", () => {
+    const typed = draft("1 +");
+    expect(validate(program([assign("x", typed)]))).toEqual([
+      { nodeId: typed.id, code: "E_PARSE_SYNTAX", params: { position: 3 } },
+    ]);
+    const chained = draft("a < b < c");
+    expect(validate(program([if_(chained, [])]))).toEqual([
+      { nodeId: chained.id, code: "E_PARSE_CHAIN", params: { position: 6 } },
+    ]);
+    const method = draft("xs.frobnicate()");
+    expect(validate(program([exprStmt(method)]))).toEqual([
+      {
+        nodeId: method.id,
+        code: "E_UNKNOWN_CALL",
+        params: { name: "frobnicate", position: 3 },
+      },
+    ]);
+    // An `exprs` slot's text is its values separated by commas.
+    const values = draft("1, (");
+    expect(validate(program([print(values)]))).toEqual([
+      { nodeId: values.id, code: "E_PARSE_SYNTAX", params: { position: 4 } },
+    ]);
+  });
+
+  it("E_NOT_TARGET: a draft in a target slot whose text parses", () => {
+    const sum = draft("a + 1");
+    expect(validate(program([ast.assignTo(sum, num(2))]))).toEqual([
+      { nodeId: sum.id, code: "E_NOT_TARGET", params: {} },
+    ]);
   });
 
   it("a bound variable is declared, not read; an item's list and position are read", () => {

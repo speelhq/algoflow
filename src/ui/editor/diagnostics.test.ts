@@ -4,9 +4,10 @@ import { ast, program, tid } from "@/blocks/testing";
 import { estimatedWidth } from "@/ui/chart/layout";
 import { nodeFor } from "@/ui/chart/paint";
 import { laidOut } from "@/ui/chart/testing";
+import { validate } from "@/lang/validate";
 import { flaggedOwners } from "./diagnostics";
 
-const { assign, call, num, print, ret, v } = ast;
+const { assign, call, draft, empty, num, print, ret, v } = ast;
 
 describe("flaggedOwners", () => {
   it("puts a function's diagnostic on its chart's Start, and an expression's on its statement", () => {
@@ -21,5 +22,19 @@ describe("flaggedOwners", () => {
     expect(flagged.get(shown.id)?.map((d) => d.code)).toEqual(["E_UNKNOWN_CALL"]);
     const chart = laidOut(p, { routine: twice.id, inputs: {}, measure: estimatedWidth });
     expect(nodeFor(chart.nodes, twice.id)?.role).toBe("start");
+  });
+
+  it("shows no diagnostic of a draft, an empty slot included", () => {
+    const typed = assign("x", draft("1 +"));
+    const unfinished = print(empty());
+    const unknown = print(draft("xs.nope()"));
+    const p = program([typed, unfinished, unknown, print(v("y"))]);
+    expect(validate(p).map((d) => d.code)).toEqual([
+      "E_PARSE_SYNTAX",
+      "E_EMPTY_SLOT",
+      "E_UNKNOWN_CALL",
+      "E_UNDEFINED",
+    ]);
+    expect([...flaggedOwners(p).values()].flat().map((d) => d.code)).toEqual(["E_UNDEFINED"]);
   });
 });

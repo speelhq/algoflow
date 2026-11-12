@@ -140,7 +140,7 @@ test("a dragged chart node's ghost draws an empty slot's hint gray, as the chart
     id: "gst-asg0-001",
     type: "assign",
     target: { id: "gst-tgt0-001", type: "var", name: "x" },
-    value: { id: "gst-emp0-001", type: "empty" },
+    value: { id: "gst-emp0-001", type: "draft", text: "" },
   };
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");

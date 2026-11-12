@@ -3,7 +3,7 @@ import type { Expr } from "@/lang/types";
 import { BLOCK_DEFS, keyOf } from "@/blocks/registry";
 import { mulberry32 } from "@/runtime/random";
 import { unparse } from "./emit";
-import { isParseError, parse, type ParseError } from "./parse";
+import { isParseError, parse, parseArgs, type ParseError } from "./parse";
 import { BINOPS } from "./precedence";
 
 function ok(text: string): Expr {
@@ -118,6 +118,23 @@ describe("call resolution", () => {
 
   it("calling a non-name is a syntax error", () => {
     expect(err("(a + b)(1)")).toMatchObject({ code: "E_PARSE_SYNTAX", position: 7 });
+  });
+});
+
+describe("parseArgs (parser.md, Grammar)", () => {
+  it("reads an exprs slot's text as its values separated by commas, none for no text", () => {
+    expect(parseArgs("")).toEqual([]);
+    expect(parseArgs("1, x + 2")).toMatchObject([
+      { type: "num", value: 1 },
+      { type: "binop", op: "+" },
+    ]);
+    expect(parseArgs("f(a, b)")).toMatchObject([{ type: "call", args: [{}, {}] }]);
+  });
+
+  it("gives the parser's error where it stops", () => {
+    expect(parseArgs("1,")).toEqual({ code: "E_PARSE_SYNTAX", position: 2 });
+    expect(parseArgs("1 2")).toEqual({ code: "E_PARSE_SYNTAX", position: 2 });
+    expect(parseArgs("a < b < c")).toEqual({ code: "E_PARSE_CHAIN", position: 6 });
   });
 });
 

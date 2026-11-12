@@ -6,7 +6,8 @@ import {
   bodyStmts,
   conditionOf,
   diamondConditions,
-  emptySlots,
+  draftSlots,
+  draftText,
   findRoutine,
   getRoutine,
   isStatement,
@@ -17,23 +18,35 @@ import {
   holdsEmptySlot,
 } from "./walk";
 
-const { assign, num, bin, v, if_, for_, while_, print, ret, call, empty } = ast;
+const { assign, num, bin, v, if_, for_, while_, print, ret, call, empty, draft } = ast;
 
-describe("emptySlots", () => {
-  it("lists every empty slot at any depth, with the block that holds it", () => {
-    const sum = bin("+", num(1), empty());
-    const loop = ast.forTo(empty(), num(0), sum, []);
-    const abs = call("abs", empty());
-    const shown = print(num(1), empty(), abs);
-    expect(emptySlots(loop)).toEqual([
-      { block: loop, slot: "var" },
-      { block: sum, slot: "right" },
+describe("draftSlots", () => {
+  it("lists every draft at any depth, with the block that holds it and its text", () => {
+    const right = empty();
+    const sum = bin("+", num(1), right);
+    const variable = empty();
+    const loop = ast.forTo(variable, num(0), sum, []);
+    const typed = draft("abs(");
+    const abs = call("abs", typed);
+    const item = empty();
+    const shown = print(num(1), item, abs);
+    expect(draftSlots(loop)).toEqual([
+      { block: loop, slot: "var", role: "target", draft: variable, text: "" },
+      { block: sum, slot: "right", role: "expr", draft: right, text: "" },
     ]);
-    expect(emptySlots(shown)).toEqual([
-      { block: shown, slot: "args", index: 1 },
-      { block: abs, slot: "args", index: 0 },
+    expect(draftSlots(shown)).toEqual([
+      { block: shown, slot: "args", role: "exprs", index: 1, draft: item, text: "" },
+      { block: abs, slot: "args", role: "exprs", index: 0, draft: typed, text: "abs(" },
     ]);
-    expect(emptySlots(assign("x", bin("+", v("n"), num(1))))).toEqual([]);
+    expect(draftSlots(assign("x", bin("+", v("n"), num(1))))).toEqual([]);
+  });
+});
+
+describe("draftText", () => {
+  it("is a draft's text, and undefined for any other value", () => {
+    expect(draftText(draft("1 +"))).toBe("1 +");
+    expect(draftText(empty())).toBe("");
+    expect(draftText(num(1))).toBeUndefined();
   });
 });
 
@@ -44,6 +57,7 @@ describe("holdsEmptySlot", () => {
     expect(holdsEmptySlot(bin("+", v("n"), num(1)))).toBe(false);
     expect(holdsEmptySlot(call("abs"))).toBe(false);
     expect(holdsEmptySlot(ast.list())).toBe(false);
+    expect(holdsEmptySlot(draft("n +"))).toBe(false);
   });
 });
 

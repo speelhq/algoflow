@@ -3,7 +3,7 @@
 import { newId } from "@/lang/id";
 import { asList, listIndex } from "@/runtime/access";
 import { defineExpr } from "./types";
-import { emptyExpr } from "./empty";
+import { emptyExpr } from "./draft";
 
 export const index = defineExpr<"index">({
   key: "index",

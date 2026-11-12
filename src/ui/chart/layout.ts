@@ -13,7 +13,7 @@ import { getBlockDef, keyOf } from "@/blocks/registry";
 import {
   CHART_TEXT,
   generatedSpans,
-  hasEmptySlot,
+  holdsDraft,
   inputSpans,
   joinSpans,
   questionSpans,
@@ -284,7 +284,7 @@ class Builder {
   }
 
   /**
-   * A statement's chart node: its caption alone when it has one and no empty slot,
+   * A statement's chart node: its caption alone when it has one and holds no draft,
    * with `spans`, what it draws without its caption, as the title; otherwise `spans`.
    */
   private captioned(
@@ -295,7 +295,7 @@ class Builder {
     spans: NotationSpan[],
     y: number,
   ): ChartNode {
-    if (stmt.caption === undefined || hasEmptySlot(stmt)) {
+    if (stmt.caption === undefined || holdsDraft(stmt)) {
       return this.node(id, stmt.id, role, shape, spans, y);
     }
     const node = this.node(id, stmt.id, role, shape, [{ text: stmt.caption }], y);

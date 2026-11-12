@@ -171,6 +171,24 @@ describe("checkChallengeSchema", () => {
     ]);
   });
 
+  it("runs the solution as the build bundles it, not as migrate() reads it", () => {
+    const c = valid();
+    c.solution = {
+      ...program([assign("total", ast.draft("n + 1"))], {
+        inputs: [{ name: "n", kind: "number" }],
+      }),
+      challengeId: "demo",
+    };
+    const { challenge, problems } = checkChallengeSchema(c, "demo");
+    expect(problems).toEqual([]);
+    const draft = challenge?.solution.main[0];
+    expect(draft?.type === "assign" && draft.value.type).toBe("draft");
+    // Its run fails, so `pnpm check` reports the file.
+    const test = challenge?.tests[0];
+    if (!challenge || !test) throw new Error("no challenge");
+    expect(() => checkTest(challenge, test, 0, () => ({ error: "not run" }))).toThrow(/cannot run/);
+  });
+
   it("requires ja texts only when asked", () => {
     expect(checkChallengeSchema(valid(), "demo", { requireJa: true }).problems).toEqual(
       expect.arrayContaining([expect.stringContaining("title must be { en, ja? }")]),

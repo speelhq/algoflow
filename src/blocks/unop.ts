@@ -4,7 +4,7 @@ import type { Expr } from "@/lang/types";
 import { PRECEDENCE } from "@/python/precedence";
 import { isNumber, makeNumber, truthy } from "@/runtime/values";
 import { defineExpr } from "./types";
-import { emptyExpr } from "./empty";
+import { emptyExpr } from "./draft";
 
 type Unop = Extract<Expr, { type: "unop" }>;
 
