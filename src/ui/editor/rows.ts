@@ -3,15 +3,15 @@ import { t } from "@/i18n/t";
 import type { Kinds } from "@/lang/kinds";
 import type { Name } from "@/lang/types";
 import type { ListItem, ListSection } from "./EditorList";
-import { functionLabel } from "./explain";
+import { functionLabel, kindName } from "./explain";
 import { listRows, type LineContext, type ListGroup, type Row } from "./choices";
 import { caretSections } from "./caret";
 import type { Session } from "./session";
 
 /** A variable's kind as the lists name it. */
-function kindName(kinds: Kinds, name: Name): string | undefined {
+function variableKind(kinds: Kinds, name: Name): string | undefined {
   const kind = kinds.get(name);
-  return kind ? t(`editor.kind.${kind}`) : undefined;
+  return kind && kindName(kind);
 }
 
 function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
@@ -21,7 +21,7 @@ function rowItem(row: Row, index: number, kinds: Kinds): ListItem {
         key: `v:${row.name}:${index}`,
         label: [{ text: row.name, variable: true }],
         code: true,
-        note: kindName(kinds, row.name),
+        note: variableKind(kinds, row.name),
       };
     case "new":
       return {
