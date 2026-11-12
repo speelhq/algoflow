@@ -83,15 +83,16 @@ function rawChildren(
  * Each draft of a statement whose text is a value of its slot, read as that value, because a later
  * release can register what the text names (`language.md`, Expressions, Drafts): an `expr` slot's
  * text that parses, a `target` slot's that parses as a target, and an `exprs` slot's only item
- * whose text parses as values separated by commas.
+ * whose text parses as values separated by commas. An `exprs` slot's only item with no text is no
+ * item, as a field with no text holds it.
  */
 function readDrafts(block: Record<string, unknown>): void {
   for (const slot of getBlockDef(keyOf(block as unknown as Expr)).slots) {
     if (slot.role !== "expr" && slot.role !== "target" && slot.role !== "exprs") continue;
     const held = block[slot.name];
-    // An `exprs` slot holds a draft with text as its only item (`checkItemDrafts`).
+    // An `exprs` slot holds a draft only as its only item (`checkItemDrafts`).
     const text = draftText(slot.role === "exprs" && Array.isArray(held) ? held[0] : held);
-    if (!text) continue;
+    if (text === undefined) continue;
     const read = draftValue(slot.role, text);
     if ("value" in read) block[slot.name] = read.value;
   }
@@ -103,17 +104,15 @@ function readDrafts(block: Record<string, unknown>): void {
  */
 const DRAFT_ELSEWHERE = "expected a draft only as a statement's slot";
 
-/**
- * Rejects a draft with text beside other items of a statement's `exprs` slot, which no edit makes.
- * A draft with no text passes there, because the editor still adds each of a print's values as a
- * field of its own.
- */
+/** Rejects a draft beside other items of a statement's `exprs` slot, which no edit makes. */
 function checkItemDrafts(stmt: Record<string, unknown>, path: string): void {
   for (const slot of getBlockDef(keyOf(stmt as unknown as Expr)).slots) {
     const items = stmt[slot.name];
     if (slot.role !== "exprs" || !Array.isArray(items) || items.length <= 1) continue;
     items.forEach((item, i) => {
-      if (draftText(item)) throw new MigrateError(`${path}.${slot.name}[${i}]`, DRAFT_ELSEWHERE);
+      if (draftText(item) !== undefined) {
+        throw new MigrateError(`${path}.${slot.name}[${i}]`, DRAFT_ELSEWHERE);
+      }
     });
   }
 }
