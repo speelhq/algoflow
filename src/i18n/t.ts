@@ -56,7 +56,7 @@ export function blockPrefix(key: string): string {
 }
 
 /** The one place a registry key becomes a catalog key. */
-export function blockKey(key: string, part: string): MessageKey {
+function blockKey(key: string, part: string): MessageKey {
   return `${blockPrefix(key)}${part}` as MessageKey;
 }
 

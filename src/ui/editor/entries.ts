@@ -71,7 +71,7 @@ export function makeEntry(entry: Entry): Expr {
  * expression it holds (`Join with another list` for `+` after a list); `kinds` are the
  * variables' kinds.
  */
-export function findEntry(expr: Expr, kinds: Kinds): Entry | undefined {
+function findEntry(expr: Expr, kinds: Kinds): Entry | undefined {
   const bag = expr as unknown as Record<string, unknown>;
   const key = keyOf(expr);
   const held = allEntries().filter(
