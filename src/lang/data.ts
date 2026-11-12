@@ -93,11 +93,24 @@ export function alloc(heap: Heap, entry: HeapEntry): HeapId {
   return id;
 }
 
-/** Dict keys are `int` or `str`; the heap encodes them as "i:3" / "s:ab". */
+/** The heap's key for a dict key that stands for an int or a text: "i:3" / "s:ab". */
+function toHeapKey(stands: number | string): string {
+  return typeof stands === "number" ? `i:${stands}` : `s:${stands}`;
+}
+
+/** The int or the text a heap's dict key stands for. */
+function parseHeapKey(key: string): number | string {
+  return key.startsWith("i:") ? Number(key.slice(2)) : key.slice(2);
+}
+
+/** Dict keys are `int` or `str`; the heap's key for one, or undefined for any other value. */
 export function dictKey(value: Value): string | undefined {
-  if (value.t === "int") return `i:${value.v}`;
-  if (value.t === "str") return `s:${value.v}`;
-  return undefined;
+  return value.t === "int" || value.t === "str" ? toHeapKey(value.v) : undefined;
+}
+
+/** The `Data` dict key that stands for an int or a text: 3 is `$int:3`, a text itself. */
+function toDataKey(stands: number | string): string {
+  return typeof stands === "number" ? `${INT_KEY}${stands}` : stands;
 }
 
 /** The int or the text a `Data` dict key stands for: `$int:3` is 3, any other key its text. */
@@ -105,10 +118,10 @@ export function dataKey(key: string): number | string {
   return key.startsWith(INT_KEY) ? Number(key.slice(INT_KEY.length)) : key;
 }
 
+/** The value a heap's dict key stands for. */
 export function keyValue(key: string): Value {
-  return key.startsWith("i:")
-    ? { t: "int", v: Number(key.slice(2)) }
-    : { t: "str", v: key.slice(2) };
+  const stands = parseHeapKey(key);
+  return typeof stands === "number" ? { t: "int", v: stands } : { t: "str", v: stands };
 }
 
 /** The value `inputs` gives input `name`; a declared input without one is a caller's error. */
@@ -139,8 +152,7 @@ export function toValue(data: Data, heap: Heap): Value {
   for (const [key, item] of Object.entries(data)) {
     const message = keyError(key);
     if (message !== undefined) throw new Error(`toValue: ${key}: ${message}`);
-    const stands = dataKey(key);
-    entries.set(typeof stands === "number" ? `i:${stands}` : `s:${stands}`, toValue(item, heap));
+    entries.set(toHeapKey(dataKey(key)), toValue(item, heap));
   }
   return { t: "dict", ref: alloc(heap, { type: "dict", entries }) };
 }
@@ -170,7 +182,7 @@ function entryToData(entry: HeapEntry, heap: Heap): Data {
   if (entry.type === "list") return entry.items.map((item) => toData(item, heap));
   const out: Record<string, Data> = {};
   for (const [key, item] of entry.entries) {
-    out[key.startsWith("i:") ? `${INT_KEY}${key.slice(2)}` : key.slice(2)] = toData(item, heap);
+    out[toDataKey(parseHeapKey(key))] = toData(item, heap);
   }
   return out;
 }
