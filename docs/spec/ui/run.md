@@ -23,9 +23,8 @@ each:
   the selection and opens the function's editor
 - shows its message (`chart.md`, Editing on the chart)
 
-A draft, an empty slot included (`language.md`, Expressions, Drafts), is
-reported only this way, because a block drawn red while it is built
-would report an error before the learner had finished its value.
+What the learner hasn't finished (`chart.md`, Editing on the chart,
+Diagnostics) is reported only this way.
 
 `Run` is never disabled for a diagnostic, because a disabled button gives
 no reason.

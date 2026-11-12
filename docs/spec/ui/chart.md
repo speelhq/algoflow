@@ -269,11 +269,20 @@ change makes that drop valid.
 
 A chart node with a diagnostic shows a red dot. Hovering the chart node
 shows the message and, when `fix` is set, a button that applies the fix.
-Its owner's editor shows the same message and button at its top. A chart
-node shows no dot for a draft, an empty slot included (`language.md`,
-Expressions, Drafts), and its owner's editor shows no message at its top
-for one (`run.md`, Run bar, Starting a run; `editor.md`, Value line,
-Drafts).
+Its owner's editor shows the same message and button at its top.
+
+A chart node shows no dot, and its owner's editor no message at its top,
+for a diagnostic of what the learner hasn't finished, because a block
+drawn red while it is built would report an error before the learner had
+finished its value. What the learner hasn't finished is:
+
+- a draft, an empty slot included (`language.md`, Expressions, Drafts)
+- every diagnostic of a block while a field of its notation has the
+  keyboard (`editor.md`, Block editor)
+
+`Run` and `Submit` report both (`run.md`, Run bar, Starting a run). A
+draft's message then shows on its editor's explanation line (`editor.md`,
+Value line, Drafts).
 
 A function's diagnostic shows on that function's `Start` chart node, and
 the function's editor shows its message. For example: `E_DUPLICATE_NAME`
