@@ -1,7 +1,7 @@
 // One section per study plan, in plan order; the status icons and plan counts come from
 // progress.
 import { challengesOf, findChallenge, PLANS, type Challenge, type Plan } from "@/challenges";
-import { planAction, type Status } from "@/challenges/next";
+import { planAction, type FindStatus } from "@/challenges/next";
 import { localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { solvedCount, statusOf, useProgress, type Progress } from "@/store/progress";
@@ -27,8 +27,8 @@ export function ProblemsPage() {
 
 function PlanSection({ plan, entries }: { plan: Plan; entries: Progress }) {
   const { problems } = plan;
-  const status: Status = (id) => statusOf(entries, id);
-  const action = planAction(problems, status);
+  const findStatus: FindStatus = (id) => statusOf(entries, id);
+  const action = planAction(problems, findStatus);
   const solved = solvedCount(entries, problems);
   const next = action && findChallenge(action.id);
   return (
@@ -56,7 +56,7 @@ function PlanSection({ plan, entries }: { plan: Plan; entries: Progress }) {
       </div>
       <ul className="mt-1">
         {challengesOf(plan).map((challenge) => (
-          <ProblemRow key={challenge.id} challenge={challenge} status={status(challenge.id)} />
+          <ProblemRow key={challenge.id} challenge={challenge} status={findStatus(challenge.id)} />
         ))}
       </ul>
     </section>
@@ -64,7 +64,13 @@ function PlanSection({ plan, entries }: { plan: Plan; entries: Progress }) {
 }
 
 /** Status icon, title, difficulty, topic tags; the row opens the Problem page. */
-function ProblemRow({ challenge, status }: { challenge: Challenge; status: ReturnType<Status> }) {
+function ProblemRow({
+  challenge,
+  status,
+}: {
+  challenge: Challenge;
+  status: ReturnType<FindStatus>;
+}) {
   return (
     <li className="border-b">
       <a
