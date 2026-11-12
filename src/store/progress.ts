@@ -49,8 +49,8 @@ function parseEntry(value: unknown): ProgressEntry | undefined {
   };
 }
 
-/** Validates a stored record; malformed entries are dropped. */
-export function readProgress(stored: unknown): Progress {
+/** A stored record as progress: each entry checked, and a malformed one dropped. */
+export function toProgress(stored: unknown): Progress {
   const entries: Progress = {};
   if (!isRecord(stored)) return entries;
   for (const [id, value] of Object.entries(stored)) {
@@ -85,7 +85,7 @@ type Persisted = { entries: Progress };
 
 /** The key holds `Record<id, entry>` itself, with no wrapper around it. */
 const storage = persistStorage<Persisted>(
-  (stored) => ({ entries: readProgress(stored) }),
+  (stored) => ({ entries: toProgress(stored) }),
   (state) => state.entries,
 );
 
@@ -96,7 +96,7 @@ export const useProgress = create<ProgressState>()(
       const record = (id: string, entry: ProgressEntry) =>
         set((state) => ({
           entries: joinProgress(
-            joinProgress(readStored(PROGRESS_STORAGE_KEY, readProgress) ?? {}, state.entries),
+            joinProgress(readStored(PROGRESS_STORAGE_KEY, toProgress) ?? {}, state.entries),
             { [id]: entry },
           ),
         }));
@@ -116,7 +116,7 @@ export const useProgress = create<ProgressState>()(
       merge: (persisted, current) => ({
         ...current,
         entries: joinProgress(
-          readProgress(isRecord(persisted) ? persisted.entries : undefined),
+          toProgress(isRecord(persisted) ? persisted.entries : undefined),
           current.entries,
         ),
       }),

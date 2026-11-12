@@ -55,8 +55,8 @@ function size(value: unknown, fallback: number, min: number, max: number): numbe
 
 type Persisted = Pick<LayoutState, "panel" | "collapsed" | "speed">;
 
-/** A snapshot's fields, each validated; unknown or malformed fields fall back to defaults. */
-function readLayout(persisted: unknown): Persisted {
+/** A stored snapshot as the layout: each field checked, and a malformed one its default. */
+function toLayout(persisted: unknown): Persisted {
   const stored = isRecord(persisted) ? persisted : {};
   return {
     panel: size(stored.panel, PANEL.default, PANEL.min, Number.MAX_SAFE_INTEGER),
@@ -67,11 +67,11 @@ function readLayout(persisted: unknown): Persisted {
 
 /** Validates a persisted snapshot; unknown or malformed fields fall back to defaults. */
 export function mergePersisted(persisted: unknown, current: LayoutState): LayoutState {
-  return { ...current, ...readLayout(persisted) };
+  return { ...current, ...toLayout(persisted) };
 }
 
 /** The key holds the record itself, with no wrapper and no version. */
-const storage = persistStorage<Persisted>(readLayout, (state) => state);
+const storage = persistStorage<Persisted>(toLayout, (state) => state);
 
 export const useLayout = create<LayoutState>()(
   persist(
