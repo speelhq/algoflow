@@ -49,7 +49,30 @@ test("a draft shows its text and no dot, until Run leads to it", async ({ page }
     "data-selected",
     "true",
   );
-  await expect(page.getByTestId("block-editor").getByRole("alert")).toContainText(
-    "Syntax error at character 3",
+  // The message is on the explanation line, not at the editor's top, and the line underlines the
+  // draft's text from where the parser stopped.
+  const editor = page.getByTestId("block-editor");
+  await expect(editor.getByTestId("explanation")).toContainText("Syntax error at character 3");
+  await expect(editor.getByRole("alert")).toHaveCount(0);
+  await expect(editor.locator("[data-value-line]").last()).toHaveValue("1 +");
+});
+
+test("once Run leads to a target's text that writes no target, its line underlines all of it", async ({
+  page,
+}) => {
+  const assign = {
+    id: "dgn-asg2-001",
+    type: "assign",
+    target: { id: "dgn-drf0-002", type: "draft", text: "a + 1" },
+    value: { id: "dgn-num0-001", type: "num", value: 1, float: false, raw: "1" },
+  };
+  await seedProgram(page, "fizzbuzz", programWith([assign]));
+  await page.goto("/#/p/fizzbuzz");
+  await page.getByRole("button", { name: "▶ Run" }).click();
+  const editor = page.getByTestId("block-editor");
+  await expect(editor.getByTestId("explanation")).toContainText(
+    "Only a variable or an item of a list",
   );
+  // The variable keeps its own span, so the underline runs over two.
+  await expect(editor.locator(".decoration-wavy")).toHaveText(["a", " + 1"]);
 });

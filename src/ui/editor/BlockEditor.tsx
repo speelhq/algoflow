@@ -20,10 +20,10 @@ import { useProgram } from "@/store/program";
 import { placeholderValue, slotSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { Popover } from "@/ui/primitives/popover";
-import { DiagnosticMessage, editorDiagnostics } from "./diagnostics";
+import { DiagnosticMessage, editorDiagnostics, ledDraft } from "./diagnostics";
 import { apply } from "./edits";
 import { EditorList } from "./EditorList";
-import { explainText, helpSpans, type Explanation } from "./explain";
+import { explainDraft, explainText, helpSpans, type Explanation } from "./explain";
 import {
   editedLines,
   fieldHint,
@@ -132,6 +132,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     };
   }, [program, stmt.id, kinds, binds, named]);
   const diagnostics = editorDiagnostics(program, stmt.id, led, typing);
+  const draftError = ledDraft(program, stmt, led);
   // A field of this editor no longer has the keyboard once the editor closes.
   useEffect(() => () => setTyping(null), [setTyping]);
 
@@ -218,16 +219,17 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
 
   const lineWidget = (field: Field, root: Expr): ReactNode => {
     const shown = sameField(focus, field) ? line : null;
+    const text = shown ? shown.text : fieldText(root);
     return (
       <ValueLine
         key={fieldKey(field)}
         ref={register(field)}
-        text={shown ? shown.text : fieldText(root)}
+        text={text}
         selection={shown}
         hint={fieldHint(stmt, field)}
         label={fieldLabel(stmt, field)}
         unmatched={shown ? unmatched : null}
-        error={null}
+        error={draftError?.draft === root.id ? { start: draftError.from, end: text.length } : null}
         onKey={onValueKey}
         onChange={(typed, composing) => run(changeText(session, ctx, typed, composing))}
         onSelect={(start, end) => setSession((s) => selectText(s, start, end))}
@@ -294,7 +296,8 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   // ------------------------------------------------------------ the list and its explanation
 
   let list: ReactNode = null;
-  let explanation: Explanation | undefined;
+  // A draft's message comes first, because the learner was sent to the draft to fix it.
+  let explanation: Explanation | undefined = draftError && explainDraft(draftError.diagnostic);
   if (focus && line) {
     const { rows, sections } = values;
     const shown = shownHighlight(session, rows.length);
@@ -317,7 +320,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
           : {})}
       />
     );
-    explanation = explainText(
+    explanation ??= explainText(
       line,
       ctx,
       shown === null ? undefined : rows[shown],

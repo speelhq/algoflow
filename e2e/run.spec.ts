@@ -195,12 +195,14 @@ test("Run with a diagnostic leads to its node instead of running", async ({ page
   await seedProgram(page, "fizzbuzz", programWith([assign]));
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "▶ Run" }).click();
-  await expect(page.getByTestId("block-editor").getByRole("alert")).toContainText("is empty");
+  // A draft's message is on the explanation line (`editor.md`, Value line, Drafts).
+  const explanation = page.getByTestId("block-editor").getByTestId("explanation");
+  await expect(explanation).toContainText("is empty");
   // Once the slot is filled the message is gone.
   // The value's line, after the target's.
   await page.getByTestId("block-editor").locator("[data-value-line]").last().click();
   await page.keyboard.type("1");
-  await expect(page.getByTestId("block-editor").getByRole("alert")).toHaveCount(0);
+  await expect(explanation).not.toContainText("is empty");
   await expect(page.locator('[data-chart-node="asg-empty-01"]')).toHaveAttribute(
     "data-selected",
     "true",

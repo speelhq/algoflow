@@ -1,7 +1,7 @@
 // The diagnostics a chart node shows, and a diagnostic's message with the button applying its fix.
 import { errorText, t } from "@/i18n/t";
 import { hoistAssign } from "@/lang/edit";
-import type { Diagnostic, NodeId, Program } from "@/lang/types";
+import type { Diagnostic, NodeId, Program, Stmt } from "@/lang/types";
 import { validate } from "@/lang/validate";
 import { blocksById, draftText, ownerOf } from "@/lang/walk";
 import { Button } from "@/ui/primitives/button";
@@ -40,7 +40,8 @@ function sameDiagnostic(a: Diagnostic, b: Diagnostic): boolean {
 /**
  * The diagnostics statement `id`'s editor shows at its top: those its chart node shows, and first
  * the one Run led to while the program still has it (`editor.md`, Block editor), which Run
- * reported even while a field has the keyboard.
+ * reported even while a field has the keyboard. A draft's shows on the explanation line instead
+ * (`editor.md`, Value line, Drafts).
  */
 export function editorDiagnostics(
   program: Program,
@@ -50,13 +51,35 @@ export function editorDiagnostics(
 ): Diagnostic[] {
   const shown = flaggedOwners(program, typing).get(id) ?? [];
   const still = ledStill(program, led);
-  const first = still && ownerOf(program, still.nodeId) === id;
-  return first && !shown.includes(still) ? [still, ...shown] : shown;
+  const first = still && !ofDraft(program, still) && ownerOf(program, still.nodeId) === id;
+  return first ? [still, ...shown.filter((d) => d !== still)] : shown;
 }
 
 /** The diagnostic Run or Submit led to, while the program still has it. */
-export function ledStill(program: Program, led: Diagnostic | null): Diagnostic | undefined {
+function ledStill(program: Program, led: Diagnostic | null): Diagnostic | undefined {
   return led ? validate(program).find((d) => sameDiagnostic(d, led)) : undefined;
+}
+
+/**
+ * The draft of `stmt` that Run or Submit led to, while the program still has it, with the part of
+ * its text that its value line underlines: from the error's position, or all of it for
+ * `E_NOT_TARGET` (`editor.md`, Value line, Drafts).
+ */
+export function ledDraft(
+  program: Program,
+  stmt: Stmt,
+  led: Diagnostic | null,
+): { diagnostic: Diagnostic; draft: NodeId; from: number } | undefined {
+  const still = ledStill(program, led);
+  if (!still || !ofDraft(program, still) || ownerOf(program, still.nodeId) !== stmt.id) {
+    return undefined;
+  }
+  const { position } = still.params;
+  return {
+    diagnostic: still,
+    draft: still.nodeId,
+    from: typeof position === "number" ? position : 0,
+  };
 }
 
 /** Applies a diagnostic's fix; only the fixes validation names exist. */

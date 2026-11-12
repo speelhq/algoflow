@@ -1,8 +1,8 @@
 // The explanation line at the foot of the editor: what the list highlights or the caret
 // is in, as a name and spans of text; undefined leaves the block's help.
-import { t } from "@/i18n/t";
+import { errorText, t } from "@/i18n/t";
 import { firstSetters, variableKinds, type Kinds } from "@/lang/kinds";
-import type { Expr, Name, Kind, NodeId, Program } from "@/lang/types";
+import type { Diagnostic, Expr, Name, Kind, NodeId, Program } from "@/lang/types";
 import { getRoutine, isEmptyExpr, routineOf } from "@/lang/walk";
 import {
   parenthesized,
@@ -27,6 +27,11 @@ export type Explanation = {
   name: NotationSpan[];
   spans: ExplanationSpan[];
 };
+
+/** A draft that Run or Submit led to: its error's message (`editor.md`, Value line, Drafts). */
+export function explainDraft(diagnostic: Diagnostic): Explanation {
+  return { name: [], spans: [{ text: errorText(diagnostic) }] };
+}
 
 /** A help text, each piece in backticks a key to type. */
 export function helpSpans(text: string): ExplanationSpan[] {
