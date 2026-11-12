@@ -21,6 +21,11 @@ export type EditorState = {
   slot: string | null;
   /** The empty slot clicked on the chart node, inside that slot. */
   emptyId: NodeId | null;
+  /**
+   * In a block that the block menu has just inserted, where its first field's caret goes: where a
+   * choice of the operation it holds puts it (`editor.md`, Block editor).
+   */
+  insertedCaret: number | null;
   /** The selected node's editor is open; a press outside it closes it and keeps the selection. */
   editing: boolean;
   hoveredId: NodeId | null;
@@ -36,6 +41,8 @@ export type EditorState = {
   /** Selects a node and opens its editor, on `slot` (and `emptyId`) when clicked; `edit: false` only selects. */
   select: (id: NodeId | null, slot?: string, edit?: boolean, emptyId?: NodeId) => void;
   closeEditor: () => void;
+  /** Selects the block the block menu has just inserted and opens its editor, its caret at `caret`. */
+  selectInserted: (id: NodeId, caret: number) => void;
   setTyping: (id: NodeId | null) => void;
   setHovered: (id: NodeId | null) => void;
   showSolution: (shown: boolean) => void;
@@ -59,6 +66,7 @@ export const useEditor = create<EditorState>()((set) => ({
   selectedId: null,
   slot: null,
   emptyId: null,
+  insertedCaret: null,
   editing: false,
   hoveredId: null,
   solution: false,
@@ -70,7 +78,17 @@ export const useEditor = create<EditorState>()((set) => ({
       selectedId: id === null ? null : selectable(id),
       slot: slot ?? null,
       emptyId: emptyId ?? null,
+      insertedCaret: null,
       editing: id !== null && edit,
+      diagnostic: null,
+    }),
+  selectInserted: (id, caret) =>
+    set({
+      selectedId: selectable(id),
+      slot: null,
+      emptyId: null,
+      insertedCaret: caret,
+      editing: true,
       diagnostic: null,
     }),
   closeEditor: () => set({ editing: false }),
@@ -82,6 +100,7 @@ export const useEditor = create<EditorState>()((set) => ({
       selectedId: selectable(owner),
       slot: null,
       emptyId: null,
+      insertedCaret: null,
       editing: true,
       diagnostic,
       solution: false,
@@ -92,6 +111,7 @@ export const useEditor = create<EditorState>()((set) => ({
       selectedId: null,
       slot: null,
       emptyId: null,
+      insertedCaret: null,
       editing: false,
       hoveredId: null,
       solution: false,

@@ -23,38 +23,38 @@ import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics } from "./diagnostics";
 import { apply } from "./edits";
 import { EditorList } from "./EditorList";
-import { explainLine, helpSpans, type Explanation } from "./explain";
+import { explainText, helpSpans, type Explanation } from "./explain";
 import {
   editedLines,
+  fieldHint,
   fieldKey,
   fieldLabel,
+  fieldText,
   fieldsOf,
   sameField,
   startField,
   targetSlot,
-  wordsAfter,
   type Field,
 } from "./fields";
-import { callableFunctions, lineTakes, matches, openLine, setText } from "./line";
+import { callableFunctions } from "./line";
+import { caretMatches, caretOffersAll, caretPlace, wordAt } from "./caret";
 import type { LineContext } from "./choices";
 import { CaptionField } from "./CaptionField";
 import { routineNames } from "./names";
-import { offersAll } from "./list";
 import { valueList } from "./rows";
 import {
-  clickInLine,
-  commit,
-  focusField,
+  changeText,
+  enterField,
   follow,
   highlightRow,
   openSession,
   pickRow,
-  settleWord,
+  selectText,
+  sessionWord,
   shownHighlight,
   showAll,
-  textEnded,
   valueKey,
-  type Click,
+  type After,
   type Session,
   type Transition,
 } from "./session";
@@ -63,7 +63,17 @@ import { Spans } from "./Spans";
 import { ValueLine } from "./ValueLine";
 import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 
-type Initial = { slot: string | null; emptyId: NodeId | null };
+type Initial = { slot: string | null; emptyId: NodeId | null; insertedCaret: number | null };
+
+/**
+ * The field with the keyboard once item `index` of slot `slot` is removed: the same, or one place
+ * earlier when it came after the item removed; none when it was that item.
+ */
+function itemAfterRemoval(focus: Field | null, slot: string, index: number): Field | null {
+  if (!focus || focus.slot !== slot || focus.index === undefined) return focus;
+  if (focus.index === index) return null;
+  return focus.index > index ? { ...focus, index: focus.index - 1 } : focus;
+}
 
 function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initial: Initial }) {
   const def = getBlockDef(keyOf(stmt));
@@ -74,9 +84,13 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   const closeEditor = useEditor((s) => s.closeEditor);
   const fields = fieldsOf(stmt);
   const elements = useRef(new Map<string, HTMLElement | null>());
-  const [kept, setSession] = useState(() =>
-    openSession(stmt, startField(stmt, fields, initial), initial.emptyId),
-  );
+  const [kept, setSession] = useState(() => {
+    // A block the block menu has just inserted opens on its first field (`editor.md`, Block
+    // editor).
+    const start =
+      initial.insertedCaret === null ? startField(stmt, fields, initial) : (fields[0] ?? null);
+    return openSession(stmt, start, initial.insertedCaret);
+  });
   // A value changed elsewhere (an undo) reopens the line on it.
   const session = follow(kept, stmt);
   if (session !== kept) setSession(session);
@@ -96,7 +110,10 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     () => Object.keys(findChallenge(program.challengeId)?.tests[0]?.expect.variables ?? {}),
     [program.challengeId],
   );
-  const named = useMemo(() => routineNames(program, routine, asked), [program, routine, asked]);
+  const named = useMemo(
+    () => routineNames(program, routine, asked, stmt.id),
+    [program, routine, asked, stmt.id],
+  );
   // The focused target slot's line keeps a target and offers names (`editor.md`, Targets).
   const target = focus ? targetSlot(stmt, focus) : undefined;
   const binds = target ? target.binds === true : undefined;
@@ -133,25 +150,21 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     return transition.session;
   };
 
-  /** Moves the keyboard to `field` from `from`; a word naming a row exactly is chosen first. */
-  const enter = (from: Session, field: Field | null, clicked: Click | null): Session => {
-    const settled = run(settleWord(from, ctx));
-    const now = current();
-    const next = now ? focusField(settled, now, field, clicked) : settled;
-    setSession(next);
-    return next;
+  /** Moves the keyboard to `field`: by Tab, or by a click with the selection it made. */
+  const enter = (field: Field | null, how: "tab" | { start: number; end: number }): void => {
+    setSession(enterField(current() ?? stmt, field, how));
   };
 
   /** Leaves `field` for the next or previous field of the notation, as the statement is now. */
-  const go = (from: Session, step: 1 | -1, field: Field | null): void => {
+  const go = (step: 1 | -1, field: Field | null): void => {
     const now = fieldsOf(current() ?? stmt);
     const at = field ? now.findIndex((each) => sameField(each, field)) : -1;
     const next = now[at + step];
-    if (next) enter(from, next, null);
+    if (next) enter(next, "tab");
   };
 
   /** Adds a value to a slot: an optional value, or an item at `at` of a list (the end when null). */
-  const addItem = (from: Session, slot: string, at: number | null) => {
+  const addItem = (slot: string, at: number | null) => {
     const empty = emptyExpr();
     const itemsOf = (block: Stmt | undefined): unknown =>
       block ? (block as unknown as Record<string, unknown>)[slot] : undefined;
@@ -167,25 +180,36 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
     const index = Array.isArray(items)
       ? items.findIndex((item) => isExpr(item) && item.id === empty.id)
       : -1;
-    enter(from, { slot, ...(list ? { index } : {}) }, null);
+    enter({ slot, ...(list ? { index } : {}) }, "tab");
   };
 
   // ------------------------------------------------------------ the value line
 
   const values = focus ? valueList(session, ctx) : { rows: [], sections: [] };
+  const word = line ? wordAt(line) : undefined;
+  const unmatched =
+    line && word && word.text !== "" && caretMatches(line, ctx).length === 0
+      ? { start: word.start, end: line.start }
+      : null;
 
-  const onValueKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    // Keys typed in a text field inside the line are the field's.
-    if (event.target instanceof HTMLInputElement || !lineTakes(event)) return;
-    const next = focus ? wordsAfter(stmt, focus) : "";
-    const result = valueKey(session, event, values.rows, ctx, next);
+  /** Runs what a key or a choice leaves to the editor, once the session it left is kept. */
+  const runAfter = (left: Session, then: After | undefined) => {
+    if (then === "close") closeEditor();
+    else if (then && "go" in then) go(then.go, left.focus);
+    else if (then && left.focus) addItem(left.focus.slot, then.addItem);
+  };
+
+  /** Whether the notation has a field `step` on from the focused one, which Tab moves to. */
+  const canMove = (step: 1 | -1) => {
+    const at = fields.findIndex((each) => sameField(each, focus));
+    return at >= 0 && fields[at + step] !== undefined;
+  };
+
+  const onValueKey = (event: KeyboardEvent<HTMLInputElement>) => {
+    const result = valueKey(session, event, values.rows, ctx, canMove);
     if (!result.taken) return;
     event.preventDefault();
-    const left = run(result);
-    const { after } = result;
-    if (after === "close") closeEditor();
-    else if (after && "go" in after) go(left, after.go, left.focus);
-    else if (after && left.focus) addItem(left, left.focus.slot, after.addItem);
+    runAfter(run(result), result.after);
   };
 
   const register = (field: Field) => (element: HTMLElement | null) => {
@@ -193,37 +217,23 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   };
 
   const lineWidget = (field: Field, root: Expr): ReactNode => {
-    const on = sameField(focus, field) && line !== null;
-    const shown = on ? line : null;
+    const shown = sameField(focus, field) ? line : null;
     return (
       <ValueLine
         key={fieldKey(field)}
         ref={register(field)}
-        root={root}
-        program={program}
-        line={shown}
+        text={shown ? shown.text : fieldText(root)}
+        selection={shown}
+        hint={fieldHint(stmt, field)}
         label={fieldLabel(stmt, field)}
-        unmatched={shown !== null && shown.word !== "" && matches(shown, ctx).length === 0}
+        unmatched={shown ? unmatched : null}
+        error={null}
         onKey={onValueKey}
-        onFocus={() => {
+        onChange={(typed, composing) => run(changeText(session, ctx, typed, composing))}
+        onSelect={(start, end) => setSession((s) => selectText(s, start, end))}
+        onFocus={(clicked) => {
           setFocused(field);
-          if (!sameField(focus, field)) enter(session, field, null);
-        }}
-        onClickAt={(id, op) => {
-          // The line takes the keyboard back from a text field the click closes; a text clicked
-          // opens its own field, which takes it in turn.
-          elements.current.get(fieldKey(field))?.focus();
-          if (sameField(focus, field)) setSession(clickInLine(session, { id, op }));
-          else enter(session, field, { id, op });
-        }}
-        onText={(id, text) => run(commit(session, setText(line ?? openLine(root), id, text)))}
-        onTextEnd={(key) => {
-          // The line takes the keyboard back first: the text field's blur ends it once more.
-          if (key !== "blur") elements.current.get(fieldKey(field))?.focus();
-          const result = textEnded(session, key, ctx);
-          const next = run(result);
-          const { after } = result;
-          if (typeof after === "object" && "go" in after) go(next, after.go, next.focus);
+          if (!sameField(focus, field)) enter(field, clicked ?? "tab");
         }}
       />
     );
@@ -238,7 +248,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         return held.expr ? (
           lineWidget({ slot: name }, held.expr)
         ) : (
-          <AddValue key={name} onAdd={() => addItem(session, name, null)} small={false} />
+          <AddValue key={name} onAdd={() => addItem(name, null)} small={false} />
         );
       case "exprs":
         return (
@@ -247,12 +257,15 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
             items={held.items}
             line={(item, index) => lineWidget({ slot: name, index }, item)}
             onRemove={(index) => {
-              // A word still typed is chosen in its own item, and the lines are left, before the
-              // items after it move.
-              enter(session, null, null);
-              apply((p) => removeItem(p, stmt.id, name, index));
+              // The field with the keyboard follows its item, and leaves the keyboard with it.
+              const staying = itemAfterRemoval(focus, name, index);
+              if (!apply((p) => removeItem(p, stmt.id, name, index))) return;
+              if (staying === null) {
+                if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+                enter(null, "tab");
+              } else setSession((s) => ({ ...s, focus: staying }));
             }}
-            onAdd={() => addItem(session, name, null)}
+            onAdd={() => addItem(name, null)}
           />
         );
       default:
@@ -285,26 +298,26 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   if (focus && line) {
     const { rows, sections } = values;
     const shown = shownHighlight(session, rows.length);
+    const typed = sessionWord(session) !== "";
     list = (
       <EditorList
         sections={sections}
         highlight={shown}
-        enter={line.word !== ""}
+        enter={typed}
+        empty={caretPlace(line, ctx) === "text" ? t("editor.inText") : t("editor.noItems")}
         onHighlight={(index) => setSession((s) => highlightRow(s, index))}
         onChoose={(index) => {
           const row = rows[index];
           if (!row) return;
           const picked = pickRow(session, row, ctx);
-          const left = run(picked);
-          const { after } = picked;
-          if (typeof after === "object" && "go" in after) go(left, after.go, left.focus);
+          runAfter(run(picked), picked.after);
         }}
-        {...(line.word === "" && !session.switching && !session.all && offersAll(line, ctx)
+        {...(!session.all && caretOffersAll(line, ctx)
           ? { onShowAll: () => setSession((s) => showAll(s)) }
           : {})}
       />
     );
-    explanation = explainLine(
+    explanation = explainText(
       line,
       ctx,
       shown === null ? undefined : rows[shown],
@@ -365,7 +378,9 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         // Editing on the chart, Diagnostics).
         onFocus={() => setTyping(stmt.id)}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) setTyping(null);
+          // A window left behind keeps its field's keyboard.
+          const leaving = !event.currentTarget.contains(event.relatedTarget) && document.hasFocus();
+          if (leaving) setTyping(null);
         }}
       >
         {notation}
@@ -407,6 +422,7 @@ export function BlockEditor({ id }: { id: NodeId }) {
   const program = useProgram((s) => s.program);
   const slot = useEditor((s) => s.slot);
   const emptyId = useEditor((s) => s.emptyId);
+  const insertedCaret = useEditor((s) => s.insertedCaret);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
   // The chart node's box, which the editor is placed beside; it is no control of its own.
@@ -445,10 +461,10 @@ export function BlockEditor({ id }: { id: NodeId }) {
             finalFocus={false}
           >
             <Body
-              key={`${id}:${slot ?? ""}:${emptyId ?? ""}`}
+              key={`${id}:${slot ?? ""}:${emptyId ?? ""}:${insertedCaret ?? ""}`}
               stmt={stmt}
               program={program}
-              initial={{ slot, emptyId }}
+              initial={{ slot, emptyId, insertedCaret }}
             />
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>

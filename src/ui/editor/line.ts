@@ -24,6 +24,7 @@ import {
 } from "@/ui/chart/text";
 import { allEntries, firstSlot, makeEntry, takesValue, type Entry } from "./entries";
 import {
+  PARENTHESES_KEY,
   afterRows,
   callExpr,
   expectedWordRows,
@@ -484,9 +485,6 @@ export function settle(line: Line, ctx: LineContext): Line {
 
 // ---------------------------------------------------------------- typing
 
-/** The key that opens a pair of parentheses, or a call's own after its name. */
-export const PARENTHESES_KEY = "(";
-
 /** The keys that end a word. */
 const ENDS_WORD = /^[-+*/%<>=!(),[\]]$/;
 
@@ -515,16 +513,6 @@ function typeDigit(line: Line, ch: string): Outcome {
   const made = numberOf(unparse(last) + ch);
   if (!made) return refused(line);
   return done(replace(base, last.id, { ...made, id: last.id }));
-}
-
-/**
- * Whether the line takes a key: one typed without Ctrl or Cmd, or a character AltGr makes (which
- * Windows reports with Ctrl). Every other key is the page's.
- */
-export function lineTakes(
-  event: Pick<KeyboardEvent, "ctrlKey" | "metaKey" | "getModifierState">,
-): boolean {
-  return (!event.ctrlKey && !event.metaKey) || event.getModifierState("AltGraph");
 }
 
 /** One key typed in the line, as the line's slot keeps it. */

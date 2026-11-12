@@ -13,12 +13,12 @@ describe("name list", () => {
       [assign("count", num(0)), for_("k", num(0), num(3), []), assign("total", num(1))],
       { inputs: [{ name: "n", kind: "number" }] },
     );
-    expect(routineNames(p, "main", ["total", "best"])).toEqual({
+    expect(routineNames(p, "main", ["total", "best"], "nothing")).toEqual({
       asked: ["total", "best"],
       names: ["n", "count", "k"],
     });
     const many = program(["a", "b", "c", "d", "e", "f", "g"].map((name) => assign(name, num(0))));
-    expect(routineNames(many, "main", []).names).toHaveLength(7);
+    expect(routineNames(many, "main", [], "nothing").names).toHaveLength(7);
   });
 
   it("Sum to n: total is the problem's name", () => {
@@ -26,7 +26,7 @@ describe("name list", () => {
     if (!sum) throw new Error("sum-to-n missing");
     const asked = Object.keys(sum.tests[0]?.expect.variables ?? {});
     const p = program([], { inputs: [{ name: "n", kind: "number" }] });
-    expect(routineNames(p, "main", asked)).toEqual({ asked: ["total"], names: ["n"] });
+    expect(routineNames(p, "main", asked, "nothing")).toEqual({ asked: ["total"], names: ["n"] });
   });
 
   it("in a function, its parameters and the names its body assigns, and no problem's names", () => {
@@ -37,8 +37,18 @@ describe("name list", () => {
       body: [assign("i", num(0))],
     };
     const p = program([assign("total", num(0))], { functions: [fn] });
-    expect(routineNames(p, fn.id, ["total"])).toEqual({ asked: [], names: ["heap", "x", "i"] });
-    expect(routineNames(p, "main", ["total"])).toEqual({ asked: ["total"], names: [] });
+    expect(routineNames(p, fn.id, ["total"], "nothing")).toEqual({
+      asked: [],
+      names: ["heap", "x", "i"],
+    });
+    expect(routineNames(p, "main", ["total"], "nothing")).toEqual({ asked: ["total"], names: [] });
+  });
+
+  it("leaves out the names that the statement being edited assigns, its line holding the name typed", () => {
+    const typed = for_("i", num(0), num(3), []);
+    const p = program([assign("count", num(0)), typed, assign("i", num(1))]);
+    expect(routineNames(p, "main", [], typed.id).names).toEqual(["count", "i"]);
+    expect(routineNames(program([typed]), "main", [], typed.id).names).toEqual([]);
   });
 
   it("offers a typed name as a new variable when no name is it and Identifiers allows it", () => {

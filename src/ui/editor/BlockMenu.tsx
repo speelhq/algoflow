@@ -19,7 +19,7 @@ function Entries({ place, done }: { place: Place; done: () => void }) {
   const choose = (entry: BlockMenuEntry) => {
     if (entry.disabled) return;
     done();
-    insertBlock(entry.create(), place);
+    insertBlock(entry.create(), place, entry.caret);
   };
   const first = shown.flatMap((group) => group.entries).find((entry) => !entry.disabled);
   return (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { emptyExpr, getBlockDef, menuBlockDefs } from "./registry";
+import { draftOf, emptyExpr, getBlockDef, menuBlockDefs } from "./registry";
 import { ast, evalExpr, notation } from "./testing";
 
 describe("draft (language.md, Expressions, Drafts)", () => {
@@ -15,6 +15,8 @@ describe("draft (language.md, Expressions, Drafts)", () => {
 
   it("makes an empty slot a draft with no text", () => {
     expect(emptyExpr()).toMatchObject({ type: "draft", text: "" });
+    expect(draftOf("x +")).toMatchObject({ type: "draft", text: "x +" });
+    expect(draftOf("x").id).not.toBe(draftOf("x").id);
     expect(getBlockDef("draft").create()).toMatchObject({ type: "draft", text: "" });
   });
 

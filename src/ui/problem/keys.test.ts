@@ -30,11 +30,19 @@ describe("ownsKeys", () => {
     );
   });
 
-  it("a value line owns the keys it takes, not Ctrl/Cmd+Z", () => {
-    const line = element('<div data-value-line><span data-focus tabindex="0"></span></div>');
+  it("a value line owns every key but Esc and the table's keys with Ctrl or Cmd", () => {
+    const line = element("<input data-value-line data-focus>");
     expect(ownsKeys(press(line, "a"))).toBe(true);
     expect(ownsKeys(press(line, "Backspace"))).toBe(true);
+    expect(ownsKeys(press(line, "ArrowLeft"))).toBe(true);
+    expect(ownsKeys(press(line, "v", true))).toBe(true);
     expect(ownsKeys(press(line, "z", true))).toBe(false);
+    expect(ownsKeys(press(line, "d", true))).toBe(false);
+    expect(ownsKeys(press(line, "Enter", true))).toBe(false);
+    expect(ownsKeys(press(line, "Escape"))).toBe(false);
+    // A character that AltGr makes, which Windows reports with Ctrl, is the line's.
+    const altGr = { ...press(line, "z", true), getModifierState: (s: string) => s === "AltGraph" };
+    expect(ownsKeys(altGr)).toBe(true);
   });
 
   it("an open editor or menu owns Delete and Backspace only", () => {

@@ -49,9 +49,10 @@ describe("block menu", () => {
     ]);
     // The parameter is the hint of its argument, gray (`blocks.md`, Notation, Drawing).
     expect(last?.entries[0]?.label).toContainEqual({ text: "x", hint: true });
+    // The statement's slot holds the text that a choice of the call writes (`editor.md`, Block menu).
     const stmt = last?.entries[0]?.create();
-    expect(stmt).toMatchObject({ type: "expr", expr: { type: "call", fn: "double" } });
-    expect(stmt?.type === "expr" && stmt.expr.type === "call" && stmt.expr.args).toHaveLength(1);
+    expect(stmt).toMatchObject({ type: "expr", expr: { type: "call", fn: "double", args: [] } });
+    expect(last?.entries[0]?.caret).toBe("double(".length);
   });
 
   it("a function no call can name is not offered: a word of the language, a builtin's name", () => {

@@ -196,16 +196,14 @@ describe("choosing (editor.md, Value list, Choosing)", () => {
 });
 
 describe("the block menu's text of a call (editor.md, Block menu)", () => {
-  it("writes `greet()` for a call of the program's function", () => {
+  it("writes `greet()` for a call of the program's function, the caret inside", () => {
     const made = addFunction(program([]), "greet", ["name"]);
     const call = menuGroups(made, { parent: "main", slot: "main", index: 0 })
       .flatMap((group) => group.entries)
       .find((each) => each.id === "call:greet");
     const stmt = call?.create();
-    expect(stmt && stmt.type === "expr" ? slotChoice(stmt.expr) : undefined).toEqual({
-      text: "greet()",
-      caret: 6,
-    });
+    expect(stmt && stmt.type === "expr" ? slotChoice(stmt.expr).text : undefined).toBe("greet()");
+    expect(call?.caret).toBe(6);
   });
 });
 
@@ -239,6 +237,9 @@ describe("a target's line (editor.md, Targets)", () => {
     expect(groups(at("cou"), target)).toEqual([["new", ["cou"]]]);
     expect(caretOffersAll(at(""), target)).toBe(false);
     expect(caretOffersAll(at("nums "), target)).toBe(true);
+    // No `Show all` where the list holds no row, nor while a word is typed.
+    expect(caretOffersAll(at("nums + "), target)).toBe(false);
+    expect(caretOffersAll(at("x ab"), ctx)).toBe(false);
   });
 });
 

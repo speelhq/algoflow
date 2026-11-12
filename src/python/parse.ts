@@ -598,3 +598,21 @@ export function readBefore(text: string): CaretReading {
   const operation = deepest && parentOf(deepest.expr);
   return { place: "after", before, atom, ...(operation ? { operation } : {}) };
 }
+
+/**
+ * The spans of the names a text reads as variables, whether or not it parses: each name that is
+ * no keyword, follows no `.`, and starts no call, a builtin's alias (`random.randint(`) included.
+ */
+export function variableSpans(text: string): Span[] {
+  const { tokens } = scan(text);
+  const aliases = aliasTable();
+  const isOp = (token: Token | undefined, op: string) => token?.type === "op" && token.text === op;
+  return tokens.flatMap((token, i): Span[] => {
+    if (token.type !== "name" || KEYWORDS.has(token.text) || isOp(tokens[i - 1], ".")) return [];
+    const next = tokens[i + 1];
+    const member = tokens[i + 2];
+    if (isOp(next, "(")) return [];
+    if (isOp(next, ".") && member && aliases.has(`${token.text}.${member.text}`)) return [];
+    return [{ start: token.pos, end: token.pos + token.text.length }];
+  });
+}

@@ -27,6 +27,8 @@ type Props = {
   highlight: number | null;
   /** The highlighted row shows the Enter key that chooses it. */
   enter: boolean;
+  /** What a list with no row reads: `editor.noItems`, or `editor.inText` inside a text. */
+  empty: string;
   onHighlight: (index: number) => void;
   onChoose: (index: number) => void;
   /** `Show all`, when the list offers it. */
@@ -58,7 +60,7 @@ export function EditorList(props: Props) {
       className="flex min-h-0 flex-1 flex-col overflow-y-auto px-1.5 py-1.5"
       data-testid="value-list"
     >
-      {rows === 0 && <p className="px-2 py-1 text-muted-foreground">{t("editor.noItems")}</p>}
+      {rows === 0 && <p className="px-2 py-1 text-muted-foreground">{props.empty}</p>}
       {sections.map((section, s) => (
         // oxlint-disable-next-line react/no-array-index-key -- two sections may both have no title
         <section key={`${s}:${section.title}`} aria-label={section.title} className="flex flex-col">
