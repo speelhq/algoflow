@@ -3,7 +3,15 @@ import type { Expr } from "@/lang/types";
 import { BLOCK_DEFS, keyOf } from "@/blocks/registry";
 import { mulberry32 } from "@/runtime/random";
 import { unparse } from "./emit";
-import { isParseError, parse, parseArgs, type ParseError } from "./parse";
+import {
+  endsInText,
+  isParseError,
+  parse,
+  parseArgs,
+  parseClosed,
+  readBefore,
+  type ParseError,
+} from "./parse";
 import { BINOPS } from "./precedence";
 
 function ok(text: string): Expr {
@@ -250,5 +258,112 @@ describe("parse(unparse(e)) is e apart from ids", () => {
       expect(withoutIds(parsed), `case ${i}: ${text}`).toEqual(withoutIds(expr));
       expect(unparse(parsed), `case ${i}`).toBe(text);
     }
+  });
+});
+
+describe("readBefore (parser.md, Reading before a caret)", () => {
+  type Written = { text: string; start: number };
+  type Read = {
+    place: string;
+    before?: Written;
+    atom?: Written;
+    operation?: { operation: string; value: string };
+  };
+
+  /** The reading with each expression written back as text, so a case reads as typed. */
+  function read(text: string): Read {
+    const reading = readBefore(text);
+    if (reading.place === "text" || reading.place === "none") return reading;
+    const written = (spanned: { expr: Expr; start: number }) => ({
+      text: unparse(spanned.expr),
+      start: spanned.start,
+    });
+    const operation = reading.operation && {
+      operation: unparse(reading.operation.operation),
+      value: unparse(reading.operation.value),
+    };
+    return reading.place === "expected"
+      ? { place: reading.place, operation }
+      : {
+          place: reading.place,
+          before: written(reading.before),
+          atom: written(reading.atom),
+          operation,
+        };
+  }
+
+  it("reads whether the caret is inside a text", () => {
+    expect(read('print("ab')).toEqual({ place: "text" });
+    expect(read("x + 'a")).toEqual({ place: "text" });
+    expect(read('"a" + "b"').place).toBe("after");
+  });
+
+  it("expects a value where the text is empty or ends with an operator or `,`", () => {
+    expect(read("").place).toBe("expected");
+    expect(read("total + ").place).toBe("expected");
+    expect(read("a and ").place).toBe("expected");
+    expect(read("not ").place).toBe("expected");
+    expect(read("max(a, ").place).toBe("expected");
+    expect(read("len(").place).toBe("expected");
+    expect(read("nums").place).toBe("after");
+    expect(read("x.").place).toBe("none");
+  });
+
+  it("reads the operation with an empty slot at the caret where a value is expected", () => {
+    // The empty slot is the operation's value, written as Python's `...`.
+    expect(read("dp[").operation).toEqual({ operation: "dp[...]", value: "..." });
+    expect(read("total + ").operation).toEqual({ operation: "total + ...", value: "..." });
+    expect(read("max(a, ").operation).toEqual({ operation: "max(a, ...)", value: "..." });
+    expect(read("").operation).toBeUndefined();
+  });
+
+  it("reads the largest expression that ends at the caret within the innermost parenthesis or bracket", () => {
+    expect(read("i < n")).toMatchObject({ before: { text: "i < n", start: 0 } });
+    expect(read("nums  ")).toMatchObject({ before: { text: "nums", start: 0 } });
+    expect(read("len(a + b")).toMatchObject({ before: { text: "a + b", start: 4 } });
+    expect(read("f(a, b")).toMatchObject({ before: { text: "b", start: 5 } });
+    // Inside a parenthesis still open, its value ends at the caret without it.
+    expect(read("(a + b")).toMatchObject({ before: { text: "a + b", start: 1 } });
+    expect(read("x * (a + b")).toMatchObject({
+      before: { text: "a + b", start: 5 },
+      atom: { text: "b", start: 9 },
+    });
+  });
+
+  it("reads the largest expression the text ends with, not the whole text", () => {
+    expect(read("a b + c")).toMatchObject({ before: { text: "b + c", start: 2 } });
+    expect(read("a = 1")).toMatchObject({ before: { text: "1", start: 4 } });
+  });
+
+  it("reads the value just before the caret as the largest that binds as an atom", () => {
+    expect(read("i + nums")).toMatchObject({ atom: { text: "nums", start: 4 } });
+    expect(read("-x")).toMatchObject({ before: { text: "-x" }, atom: { text: "x", start: 1 } });
+    expect(read("a + (b - c)")).toMatchObject({ atom: { text: "b - c", start: 4 } });
+    expect(read("2 * nums[0]")).toMatchObject({ atom: { text: "nums[0]", start: 4 } });
+    expect(read("1 + len(a)")).toMatchObject({ atom: { text: "len(a)", start: 4 } });
+  });
+
+  it("reads the operation whose slot holds the value that ends at the caret", () => {
+    expect(read("a + b").operation).toEqual({ operation: "a + b", value: "b" });
+    expect(read("len(nums").operation).toEqual({ operation: "len(nums)", value: "nums" });
+    expect(read("nums").operation).toBeUndefined();
+  });
+
+  it("reads no expression where the text ends with none and expects no value", () => {
+    expect(read("a.")).toEqual({ place: "none" });
+    expect(read("a =")).toEqual({ place: "none" });
+  });
+});
+
+describe("the text before a caret, closed and checked for a text", () => {
+  it("parses a text with each parenthesis and bracket still open closed", () => {
+    const closed = parseClosed("max(nums[i");
+    expect(isParseError(closed) ? closed : unparse(closed)).toBe("max(nums[i])");
+    expect(parseClosed("a +")).toMatchObject({ code: "E_PARSE_SYNTAX" });
+  });
+
+  it("tells whether a text ends inside a text", () => {
+    expect(endsInText('x + "ab')).toBe(true);
+    expect(endsInText('x + "ab"')).toBe(false);
   });
 });
