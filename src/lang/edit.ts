@@ -230,13 +230,20 @@ export function normalizeCaption(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
-/** Captions statement `id`, or removes its caption when `caption` holds no text. */
-export function setCaption(program: Program, id: NodeId, caption: string): Program {
-  const next = clone(program);
-  const { stmt } = getStmt(next, id);
+/**
+ * Stores `caption` on `stmt` as `language.md`, Captions, states: trimmed, each run of spaces one
+ * space, and absent when no text is left.
+ */
+export function storeCaption(stmt: { caption?: string }, caption: string): void {
   const stored = normalizeCaption(caption);
   if (stored === "") delete stmt.caption;
   else stmt.caption = stored;
+}
+
+/** Captions statement `id`, or removes its caption when `caption` holds no text. */
+export function setCaption(program: Program, id: NodeId, caption: string): Program {
+  const next = clone(program);
+  storeCaption(getStmt(next, id).stmt, caption);
   return next;
 }
 
