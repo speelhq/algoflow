@@ -420,7 +420,7 @@ const ASSIGN = getBlockDef("assign").create();
  * A variable shown with its value, written as an assignment writes it (`n ← 15`): its name in
  * the target's place, a variable, and the value's text in the value's.
  */
-export function assignmentSpans(name: string, value: string): NotationSpan[] {
+function assignmentSpans(name: string, value: string): NotationSpan[] {
   return filledSpans(notationOf(ASSIGN), (placeholderName) =>
     findSlot(ASSIGN, placeholderName)?.role === "target"
       ? [{ text: name, variable: true }]

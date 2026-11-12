@@ -64,7 +64,7 @@ export function explainVariable(program: Program, at: NodeId, name: Name): strin
 }
 
 /** A name a list offers: a variable of the routine, or a new one it makes. */
-export function explainName(program: Program, at: NodeId, name: Name, isNew: boolean): Explanation {
+function explainName(program: Program, at: NodeId, name: Name, isNew: boolean): Explanation {
   const text = isNew
     ? t("editor.explain.newVariable", { name })
     : explainVariable(program, at, name);

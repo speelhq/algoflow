@@ -1,6 +1,7 @@
 // One sentence per event, as a message key with its params (`run.narrate.*`). Values
 // are written the way blocks write them (`True`, `None`, `"text"`), a statement, a comparison,
 // and a location as the chart writes them, a comparison with the values of the shown frame.
+import type { WatchStep } from "@/challenges/rows";
 import { keyValue, toData } from "@/lang/data";
 import { errorKey, errorParams, t, type MessageKey, type Params } from "@/i18n/t";
 import type { Data, Expr, Heap, Program } from "@/lang/types";
@@ -170,7 +171,7 @@ export function narrateEnd(outcome: Done, total: number): Narration {
 }
 
 /** What happened at the step `Watch this case` opened at. */
-export function narrateDifference(difference: { line?: number }): Narration {
+export function narrateDifference(difference: WatchStep): Narration {
   return difference.line === undefined
     ? { key: "run.narrate.difference.end", params: {} }
     : { key: "run.narrate.difference.line", params: { line: difference.line } };
@@ -186,7 +187,7 @@ export type Position = {
   frame: number;
   pass: number | null;
   /** Where `Watch this case` opened. */
-  difference: { step: number; line?: number } | null;
+  difference: WatchStep | null;
 };
 
 /** The one sentence of the narration line, and whether it is an error's message. */

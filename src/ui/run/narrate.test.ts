@@ -184,8 +184,8 @@ describe("narrate", () => {
     expect(say(narrateEnd({ type: "error", error: value, events: 2 }, 3))).toBe(
       "Negate cannot be used on str",
     );
-    expect(say(narrateDifference({ line: 1 }))).toBe("This printed line 1");
-    expect(say(narrateDifference({}))).toBe("The run ended here");
+    expect(say(narrateDifference({ step: 4, line: 1 }))).toBe("This printed line 1");
+    expect(say(narrateDifference({ step: 9 }))).toBe("The run ended here");
   });
 
   it("the line says the error where the run stops on it, a difference at its step, then the end, else the event", () => {

@@ -12,7 +12,7 @@ import { execute } from "./interp";
 export type PythonRunner = (code: string, draws: number[], names: Name[]) => PythonResult;
 
 /** What each differing row says: its line or variable, what was expected, and what came. */
-export function differences(rows: Rows): string[] {
+function differences(rows: Rows): string[] {
   const shown = (value: unknown) => (value === undefined ? "nothing" : JSON.stringify(value));
   return [
     ...rows.output

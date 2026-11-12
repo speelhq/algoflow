@@ -53,7 +53,7 @@ export type RunState = {
   /** The chosen case's verdict, once the shown run is at its end. */
   verdict: TestResult | null;
   /** Where a run started by `Watch this case` opened, for the narration at that step. */
-  difference: Difference | null;
+  difference: WatchStep | null;
   /** Pre-runs, then plays; with `watch`, opens paused at the first difference. */
   run: (opts?: { watch?: boolean }) => Promise<void>;
   stepOnce: () => void;
@@ -66,8 +66,6 @@ export type RunState = {
   setBreakpoint: (id: NodeId | null) => void;
   selectCase: (index: number) => void;
 };
-
-export type Difference = WatchStep;
 
 // ---------------------------------------------------------------- module state
 
@@ -83,7 +81,7 @@ type Findings = {
   outcome: Done;
   prints: number[];
   verdict: TestResult | null;
-  difference: Difference;
+  difference: WatchStep;
 };
 type Projection = {
   step: number;
@@ -222,7 +220,7 @@ function atBreakpoint(): boolean {
 }
 
 /** The print of the verdict's first differing line, or the last step of the run. */
-function differenceOf(verdict: TestResult | null, prints: number[], total: number): Difference {
+function differenceOf(verdict: TestResult | null, prints: number[], total: number): WatchStep {
   const first = verdict?.status === "fail" ? firstDifferingRow(verdict.rows) : null;
   return watchStep(first, prints, total);
 }
