@@ -2,8 +2,9 @@
 
 The parser reads one Python expression as an `Expr`. The emitter's
 `unparse` writes an `Expr` back as text (`emitter.md`). This file states the
-grammar the parser reads, how it reads a call, the errors it reports,
-and the round trip between the parser and the emitter.
+grammar the parser reads, how it reads a call, what it reads before a
+caret, the errors it reports, and the round trip between the parser and
+the emitter.
 
 ## Grammar
 
@@ -90,6 +91,40 @@ The parser resolves `a.b(...)` to one of two things:
   definition). For example: `random.randint`.
 
 An `a.b(...)` that is neither gives `E_UNKNOWN_CALL`.
+
+## Reading before a caret
+
+This section states what the parser reads in the text before a caret,
+which a value line's lists and its explanation line read (`editor.md`,
+Value list; Explanation line).
+
+`readBefore(text): CaretReading` reads a text that ends at the caret:
+
+- whether the caret is inside a text: the text holds a `"` or `'` that no
+  matching quote closes
+- the innermost parenthesis or bracket still open, where the caret's text
+  starts
+- whether a value is expected: the text since that parenthesis or bracket
+  is empty or ends with an operator or a `,`
+- the expression that ends at the caret: the largest expression that the
+  text since that parenthesis or bracket ends with
+- the value just before the caret: the largest expression that ends at the
+  caret and binds as an atom (`blocks.md`, Notation, The form of an
+  expression)
+- the operation one of whose slots holds the caret, and that slot
+
+The parser reads the operation from the text with an empty slot at the
+caret where a value is expected, and with each parenthesis and bracket
+still open closed. For example: in `dp[`, the caret is in the `index` slot
+of `dp[]`.
+
+The parser reads the largest expression that the text ends with, not the
+whole text, because a text that fails to parse earlier on would then give
+no value before the caret. For example: in `a b + c`, the expression that
+ends at the caret is `b + c`.
+
+Where the text ends with no expression and expects no value, no
+expression ends at the caret. For example: `a.`.
 
 ## Errors
 

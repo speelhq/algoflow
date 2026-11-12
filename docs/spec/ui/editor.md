@@ -339,13 +339,16 @@ the caret.
 The value list reads the text before the caret, less the word being typed
 (Value line, Words), from the innermost parenthesis or bracket still open
 there. While text is selected, it reads the text before the selection
-(Value line, Selected text). That text gives one of three places:
+(Value line, Selected text). That text gives one of four places:
 
 - where it is empty or ends with an operator or a `,`: a value is
   expected
 - inside a text: the value list holds no row and reads `editor.inText`,
   which says to end the text with its quote, because no entry can be
   chosen inside a text
+- where no expression ends at the caret (`parser.md`, Reading before a
+  caret): the value list holds no row, because no entry has a value to
+  take there. For example: `nums.`.
 - anywhere else: after a value
 
 Where a value is expected, the value list holds:
@@ -376,9 +379,8 @@ these groups:
 - `Items` for a list, a dict, or an object
 - `Compare` and `Convert` for every kind
 
-The expression before the caret is the largest operation with a
-precedence that ends at the caret, within the innermost parenthesis or
-bracket still open before the caret.
+The expression before the caret is the expression that ends at the caret
+(`parser.md`, Reading before a caret).
 
 After a value of no known kind, the value list holds every entry that
 takes a value.
