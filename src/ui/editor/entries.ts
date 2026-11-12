@@ -45,6 +45,16 @@ export function allEntries(): Entry[] {
   return cached;
 }
 
+/**
+ * The slot an expression takes a value into when it is chosen after one: its first `expr` slot or
+ * `exprs` slot, in the order its block definition lists them.
+ */
+export function firstSlot(expr: Expr) {
+  return getBlockDef(keyOf(expr)).slots.find(
+    (slot) => slot.role === "expr" || slot.role === "exprs",
+  );
+}
+
 /** Whether the entry is offered after a value, which it takes as the first expression it holds. */
 export function takesValue(entry: Entry): boolean {
   return entry.declared.on !== undefined;

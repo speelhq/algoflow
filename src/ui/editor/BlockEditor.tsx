@@ -35,7 +35,8 @@ import {
   wordsAfter,
   type Field,
 } from "./fields";
-import { callableFunctions, lineTakes, matches, openLine, setText, type LineContext } from "./line";
+import { callableFunctions, lineTakes, matches, openLine, setText } from "./line";
+import type { LineContext } from "./choices";
 import { CaptionField } from "./CaptionField";
 import { routineNames } from "./names";
 import { offersAll } from "./list";

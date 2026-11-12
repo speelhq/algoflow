@@ -5,7 +5,8 @@ import { ast, program } from "@/blocks/testing";
 import { joinSpans } from "@/ui/chart/text";
 import { allEntries, labelOf, makeEntry } from "./entries";
 import { explainLine, explainVariable } from "./explain";
-import { openLine, settle, type, type Line, type LineContext } from "./line";
+import { openLine, settle, type, type Line } from "./line";
+import type { LineContext } from "./choices";
 
 const { assign, num, bin, v, for_, print, empty } = ast;
 

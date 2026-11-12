@@ -20,9 +20,8 @@ import {
   textOf,
   type,
   type Line,
-  type LineContext,
-  type Row,
 } from "./line";
+import type { LineContext, Row } from "./choices";
 
 export type Session = {
   focus: Field | null;

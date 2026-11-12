@@ -6,7 +6,6 @@
 // moves in reading order, and a call ends with its parenthesis), and `precedence`, so this file
 // names no block type. A target slot's line keeps a target (`editor.md`, Targets).
 import { errorText, t } from "@/i18n/t";
-import type { Kinds } from "@/lang/kinds";
 import { exprKind } from "@/lang/kinds";
 import type { Expr, Name, NodeId, Program } from "@/lang/types";
 import { refusedDefinitions } from "@/lang/validate";
@@ -23,8 +22,18 @@ import {
   placeholderValue,
   notationTokens,
 } from "@/ui/chart/text";
-import { allEntries, makeEntry, takesValue, type Entry } from "./entries";
-import { isNewName, matchesName, type RoutineNames } from "./names";
+import { allEntries, firstSlot, makeEntry, takesValue, type Entry } from "./entries";
+import {
+  afterRows,
+  callExpr,
+  expectedWordRows,
+  namesExactly,
+  rankMatches,
+  targetNames,
+  type LineContext,
+  type LineFunction,
+  type Row,
+} from "./choices";
 
 type Bag = Record<string, unknown>;
 
@@ -47,35 +56,6 @@ export type Line = {
   /** The text whose field is being typed in. */
   text?: NodeId;
 };
-
-export type LineFunction = { name: Name; params: readonly Name[] };
-
-/**
- * A target slot's line: the names offered where the whole target is an empty slot, the
- * problem's expected ones (`asked`) first, and whether a name typed that none is makes a new
- * variable.
- */
-export type TargetLine = RoutineNames & { binds: boolean };
-
-export type LineContext = {
-  /** The variables visible at the statement, the latest first. */
-  variables: readonly Name[];
-  kinds: Kinds;
-  functions: readonly LineFunction[];
-  /** The target slot the line edits, or null for a slot that takes any value. */
-  target: TargetLine | null;
-};
-
-/**
- * A choice of the list: a variable, a new variable named by the word typed, an entry, the
- * parentheses, or a function of the program.
- */
-export type Row =
-  | { type: "variable"; name: Name }
-  | { type: "new"; name: Name }
-  | { type: "entry"; entry: Entry }
-  | { type: "parentheses" }
-  | { type: "function"; fn: LineFunction };
 
 /** What a key or a choice did: `move` leaves the line for the next or previous field or item. */
 export type Outcome = { line: Line; taken: boolean; move?: "next" | "previous" | "item" };
@@ -307,12 +287,6 @@ function listExpr(): Expr | undefined {
   return made && mapSlotValues(made, () => emptyExpr());
 }
 
-/** A call of one of the program's functions, its arguments empty slots. */
-export function callExpr(fn: LineFunction): Expr | undefined {
-  const made = parsed(`${fn.name}(${fn.params.map(() => "a").join(", ")})`);
-  return made && mapSlotValues(made, () => emptyExpr());
-}
-
 /** The program's functions a call can name: those whose name no diagnostic refuses. */
 export function callableFunctions(program: Program): LineFunction[] {
   const refused = refusedDefinitions(program);
@@ -383,7 +357,7 @@ function takeValue(line: Line, entry: Entry): Outcome {
   const last = lastValue(line);
   if (!last) return refused(line);
   const made = makeEntry(entry);
-  const first = getBlockDef(keyOf(made)).slots.find((s) => s.role === "expr" || s.role === "exprs");
+  const first = firstSlot(made);
   const level = first ? bindsAt(made, first.name) : undefined;
   // An operator binds by its precedence; any other entry takes what the list was about.
   const target = line.selected
@@ -460,37 +434,6 @@ function chooseRow(line: Line, row: Row): Outcome {
 
 // ---------------------------------------------------------------- words
 
-function rowName(row: Row): string {
-  switch (row.type) {
-    case "variable":
-    case "new":
-      return row.name;
-    case "entry":
-      return row.entry.label;
-    case "function":
-      return row.fn.name;
-    case "parentheses":
-      return "";
-  }
-}
-
-/** Whether the row is named exactly by the word: its name, or the entry's keys. */
-function namesExactly(row: Row, word: string): boolean {
-  if (row.type === "entry" && row.entry.declared.typed === word) return true;
-  return rowName(row).toLowerCase() === word.toLowerCase();
-}
-
-/**
- * The names offered where a target slot's whole value is an empty slot (`editor.md`, Targets),
- * and in a slot that binds the word typed as a new variable when it names none and is a name.
- */
-function targetNames(word: string, target: TargetLine): Row[] {
-  const names = [...target.asked, ...target.names];
-  const rows = names.map((name): Row => ({ type: "variable", name }));
-  if (target.binds && isNewName(word, names)) rows.push({ type: "new", name: word });
-  return rows;
-}
-
 /** The names a target's line offers where its whole value is an empty slot; undefined elsewhere. */
 export function wholeTargetRows(line: Line, ctx: LineContext): Row[] | undefined {
   return ctx.target && fillsWhole(line) ? targetNames(line.word, ctx.target) : undefined;
@@ -518,44 +461,14 @@ export function namesTarget(line: Line, ctx: LineContext): boolean {
 /** The rows a word can name at the caret: where a value is expected, or after one. */
 export function wordRows(line: Line, ctx: LineContext): Row[] {
   if (ctx.target && namesTarget(line, ctx)) return targetNames(line.word, ctx.target);
-  if (atEmptySlot(line) || (line.selected && line.word !== "")) {
-    return [
-      ...ctx.variables.map((name): Row => ({ type: "variable", name })),
-      ...allEntries()
-        .filter((entry) => !takesValue(entry) || entry.call)
-        .map((entry): Row => ({ type: "entry", entry })),
-      ...ctx.functions.map((fn): Row => ({ type: "function", fn })),
-    ];
-  }
-  const after = allEntries()
-    .filter(takesValue)
-    .map((entry): Row => ({ type: "entry", entry }));
-  return keptRows(line, after, ctx);
+  if (atEmptySlot(line) || (line.selected && line.word !== "")) return expectedWordRows(ctx);
+  return keptRows(line, afterRows(), ctx);
 }
 
 /** The rows matching the word typed: a whole name first, then, after a value, its kind's. */
 export function matches(line: Line, ctx: LineContext): Row[] {
-  const word = line.word;
-  if (word === "") return [];
   const kind = atEmptySlot(line) ? undefined : kindBefore(line, ctx);
-  const found = wordRows(line, ctx).filter(
-    (row) =>
-      matchesName(rowName(row), word) ||
-      (row.type === "entry" && (row.entry.declared.typed ?? "").startsWith(word)),
-  );
-  // A new variable comes last: a name the program has is the likelier one meant.
-  const rank = (row: Row) =>
-    row.type === "new"
-      ? 3
-      : namesExactly(row, word)
-        ? 0
-        : kind !== undefined && row.type === "entry" && row.entry.declared.on?.includes(kind)
-          ? 1
-          : 2;
-  return found
-    .map((row, index) => ({ row, index }))
-    .toSorted((a, b) => rank(a.row) - rank(b.row) || a.index - b.index)
-    .map(({ row }) => row);
+  return rankMatches(wordRows(line, ctx), line.word, kind);
 }
 
 /** The row the word names exactly, if any. */
