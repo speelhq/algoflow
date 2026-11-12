@@ -1,7 +1,7 @@
 // The explanation line at the foot of the editor: what the list highlights or the caret
 // is in, as a name and spans of text; undefined leaves the block's help.
 import { t } from "@/i18n/t";
-import { firstSetters, variableKinds } from "@/lang/kinds";
+import { firstSetters, variableKinds, type Kinds } from "@/lang/kinds";
 import type { Expr, Name, Kind, NodeId, Program } from "@/lang/types";
 import { getRoutine, isEmptyExpr, routineOf } from "@/lang/walk";
 import {
@@ -203,9 +203,20 @@ export function explainLine(
   }
   if (highlighted) return explainRow(highlighted, program, at);
   const inside = operationAt(line);
-  if (!inside) return undefined;
+  return inside && explainOperation(inside, ctx.kinds, program);
+}
+
+/**
+ * An operation one of whose slots holds the caret: its entry's name, and its notation with that
+ * slot underlined (`editor.md`, Explanation line).
+ */
+export function explainOperation(
+  inside: { operation: Expr; value: Expr },
+  kinds: Kinds,
+  program: Program,
+): Explanation {
   return {
-    name: [{ text: labelOf(inside.operation, ctx.kinds) }],
+    name: [{ text: labelOf(inside.operation, kinds) }],
     spans: operationSpans(inside.operation, inside.value, program),
   };
 }
