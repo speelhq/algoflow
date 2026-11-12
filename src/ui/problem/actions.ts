@@ -81,11 +81,11 @@ export function startSubmit(): void {
 }
 
 /**
- * A click on a statement's chart node, with the slot and the empty slot clicked: while running it
+ * A click on a statement's chart node, with the slot clicked: while running it
  * sets or clears the breakpoint, pausing first; once the run has ended it returns to build mode
  * and selects; in build mode it selects; on the shown solution it does nothing.
  */
-export function clickChartNode(owner: NodeId, slot?: string, emptyId?: NodeId): void {
+export function clickChartNode(owner: NodeId, slot?: string): void {
   // A function's `Start` opens the function's editor, which is not built yet.
   if (!isStatement(useProgram.getState().program, owner)) return;
   const run = useRun.getState();
@@ -102,5 +102,5 @@ export function clickChartNode(owner: NodeId, slot?: string, emptyId?: NodeId): 
     case "build":
       break;
   }
-  useEditor.getState().select(owner, slot, true, emptyId);
+  useEditor.getState().select(owner, slot);
 }
