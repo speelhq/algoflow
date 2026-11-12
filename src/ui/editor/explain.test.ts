@@ -15,7 +15,6 @@ const ctx: LineContext = {
     ["total", "number"],
     ["n", "number"],
   ]),
-  scope: { functions: [] },
   functions: [],
   target: null,
 };

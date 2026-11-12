@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
-import { BLOCK_DEFS } from "@/blocks/registry";
+import { BLOCK_DEFS, keyOf } from "@/blocks/registry";
 import { mulberry32 } from "@/runtime/random";
 import { unparse } from "./emit";
-import { isParseError, NO_DEFINITIONS, parse, type ParseError, type ParseScope } from "./parse";
+import { isParseError, parse, type ParseError } from "./parse";
 import { BINOPS } from "./precedence";
 
-function ok(text: string, scope: ParseScope = NO_DEFINITIONS): Expr {
-  const result = parse(text, scope);
+function ok(text: string): Expr {
+  const result = parse(text);
   if (isParseError(result))
     throw new Error(`unexpected error ${JSON.stringify(result)} for ${text}`);
   return result;
 }
 
-function err(text: string, scope: ParseScope = NO_DEFINITIONS): ParseError {
-  const result = parse(text, scope);
+function err(text: string): ParseError {
+  const result = parse(text);
   if (!isParseError(result))
     throw new Error(`expected an error for ${text}, got ${unparse(result)}`);
   return result;
@@ -85,18 +85,22 @@ describe("parse", () => {
 });
 
 describe("call resolution", () => {
-  it("resolves a builtin or a user function by name, else E_UNKNOWN_CALL", () => {
-    const scope = { functions: ["fib"] };
-    expect(ok("abs(x)", scope)).toMatchObject({ type: "call", fn: "abs" });
-    expect(ok("fib(n)", scope)).toMatchObject({ type: "call", fn: "fib" });
-    expect(err("nope(1)", scope)).toEqual({
-      code: "E_UNKNOWN_CALL",
-      position: 0,
-      params: { name: "nope" },
-    });
-    expect(err("1 + nope(1)", scope)).toMatchObject({ code: "E_UNKNOWN_CALL", position: 4 });
+  it("reads a name that names a builtin as the builtin's call", () => {
+    expect(ok("abs(x)")).toMatchObject({ type: "call", fn: "abs" });
+    expect(keyOf(ok("abs(x)"))).toBe("call:abs");
+  });
+
+  it("reads any other name as a call of the program's function, whatever the program defines", () => {
+    expect(ok("fib(n)")).toMatchObject({ type: "call", fn: "fib", args: [{ name: "n" }] });
+    expect(keyOf(ok("nope(1)"))).toBe("call");
+    expect(ok("1 + nope (1)")).toMatchObject({ right: { type: "call", fn: "nope" } });
+  });
+
+  it("reads a class name as a new, which gives E_PARSE_SYNTAX at the name while none is registered", () => {
+    expect(err("Node(1)")).toEqual({ code: "E_PARSE_SYNTAX", position: 0 });
     // The name's token, whatever stands between it and the parenthesis.
-    expect(err("1 + nope (1)", scope)).toMatchObject({ code: "E_UNKNOWN_CALL", position: 4 });
+    expect(err("1 + Node (1)")).toEqual({ code: "E_PARSE_SYNTAX", position: 4 });
+    expect(err("A()")).toEqual({ code: "E_PARSE_SYNTAX", position: 0 });
   });
 
   it("accepts the Python aliases of builtins", () => {
@@ -224,7 +228,7 @@ describe("parse(unparse(e)) is e apart from ids", () => {
     for (let i = 0; i < 1000; i += 1) {
       const expr = next();
       const text = unparse(expr);
-      const parsed = parse(text, NO_DEFINITIONS);
+      const parsed = parse(text);
       if (isParseError(parsed)) throw new Error(`case ${i}: ${text} → ${JSON.stringify(parsed)}`);
       expect(withoutIds(parsed), `case ${i}: ${text}`).toEqual(withoutIds(expr));
       expect(unparse(parsed), `case ${i}`).toBe(text);

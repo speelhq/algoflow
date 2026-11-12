@@ -1,6 +1,6 @@
 // Typed expression text → Expr. No third-party imports.
 import { newId } from "@/lang/id";
-import type { BinOp, Data, Expr, Name, Program } from "@/lang/types";
+import { CLASS_NAME_PATTERN, type BinOp, type Data, type Expr } from "@/lang/types";
 import {
   builtinKey,
   builtinOf,
@@ -13,15 +13,6 @@ import { dataToPython } from "./emit";
 import { NUMBER, numberLiteral } from "./number";
 import { BINOPS, PRECEDENCE, binopsAt, isBinOp } from "./precedence";
 
-export type ParseScope = { functions: Name[] };
-
-/** The scope of a text that names no function of a program: a number, a value, a sign. */
-export const NO_DEFINITIONS: ParseScope = { functions: [] };
-
-/** The names a call in `program` may take: its functions. */
-export function parseScope(program: Program): ParseScope {
-  return { functions: program.functions.map((fn) => fn.name) };
-}
 export const PARSE_CODES = ["E_PARSE_SYNTAX", "E_PARSE_CHAIN", "E_UNKNOWN_CALL"] as const;
 export type ParseError = {
   code: (typeof PARSE_CODES)[number];
@@ -146,10 +137,7 @@ class Parser {
   private i = 0;
   private readonly aliases = aliasTable();
 
-  constructor(
-    private readonly tokens: Token[],
-    private readonly scope: ParseScope,
-  ) {}
+  constructor(private readonly tokens: Token[]) {}
 
   private peek(): Token {
     return this.tokens[this.i] ?? { type: "end", text: "", value: "", pos: 0 };
@@ -305,12 +293,16 @@ class Parser {
     }
   }
 
+  /**
+   * `NAME(...)` by the form of `NAME` alone, whatever the program defines (`parser.md`, Calls), so
+   * an edit elsewhere never turns a draft into a value; `validate()` resolves the call.
+   */
   private resolveCall(name: string, position: number, args: Expr[]): Expr {
+    // A class name is a `new`, which no registered block definition constructs yet, so `Expr`
+    // has no `new` to make.
+    if (CLASS_NAME_PATTERN.test(name)) return fail("E_PARSE_SYNTAX", position);
     if (hasBlockDef(builtinKey(name))) return { id: newId(), type: "call", fn: name, args };
-    if (this.scope.functions.includes(name)) {
-      return this.block(position, { id: newId(), type: "call", fn: name, args });
-    }
-    return fail("E_UNKNOWN_CALL", position, { name });
+    return this.block(position, { id: newId(), type: "call", fn: name, args });
   }
 
   /** Builtin aliases and method calls. */
@@ -379,9 +371,9 @@ class Parser {
   }
 }
 
-export function parse(text: string, scope: ParseScope): Expr | ParseError {
+export function parse(text: string): Expr | ParseError {
   try {
-    return new Parser(tokenize(text), scope).parseAll();
+    return new Parser(tokenize(text)).parseAll();
   } catch (error) {
     if (error instanceof Fail) return error.error;
     throw error;
@@ -390,5 +382,5 @@ export function parse(text: string, scope: ParseScope): Expr | ParseError {
 
 /** A value as the blocks write it: its Python text parsed, or the error where no block writes it. */
 export function parseData(data: Data): Expr | ParseError {
-  return parse(dataToPython(data), NO_DEFINITIONS);
+  return parse(dataToPython(data));
 }

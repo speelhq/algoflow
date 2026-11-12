@@ -26,7 +26,6 @@ const { assign, assignTo, print, num, bin, v, empty } = ast;
 const ctx: LineContext = {
   variables: ["x", "total"],
   kinds: new Map<string, Kind>([["x", "number"]]),
-  scope: { functions: [] },
   functions: [],
   target: null,
 };

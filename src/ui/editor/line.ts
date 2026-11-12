@@ -12,7 +12,7 @@ import type { Expr, Name, NodeId, Program } from "@/lang/types";
 import { refusedDefinitions } from "@/lang/validate";
 import { allExprs, isEmptyExpr, isTarget, variableOf } from "@/lang/walk";
 import { emptyExpr, getBlockDef, keyOf } from "@/blocks/registry";
-import { isParseError, NO_DEFINITIONS, parse, type ParseScope } from "@/python/parse";
+import { isParseError, parse } from "@/python/parse";
 import { levelAssociativity } from "@/python/precedence";
 import {
   bindsAt,
@@ -61,7 +61,6 @@ export type LineContext = {
   /** The variables visible at the statement, the latest first. */
   variables: readonly Name[];
   kinds: Kinds;
-  scope: ParseScope;
   functions: readonly LineFunction[];
   /** The target slot the line edits, or null for a slot that takes any value. */
   target: TargetLine | null;
@@ -271,15 +270,15 @@ export function kindBefore(line: Line, ctx: LineContext) {
 
 // ---------------------------------------------------------------- made by the parser
 
-function parsed(text: string, scope: ParseScope): Expr | undefined {
-  const result = parse(text, scope);
+function parsed(text: string): Expr | undefined {
+  const result = parse(text);
   return isParseError(result) ? undefined : result;
 }
 
 /** A number literal for `raw`, or undefined when Python would reject it or it is no number. */
 function numberOf(raw: string): Expr | undefined {
   if (!/^[0-9.]+$/.test(raw)) return undefined;
-  const made = parsed(raw, NO_DEFINITIONS);
+  const made = parsed(raw);
   return made && slotValues(made).length === 0 && exprText(made) === raw ? made : undefined;
 }
 
@@ -292,25 +291,25 @@ function isNumber(expr: Expr): boolean {
 
 /** `name` as a variable. */
 export function variableExpr(name: Name): Expr | undefined {
-  const made = parsed(name, NO_DEFINITIONS);
+  const made = parsed(name);
   return made && variableOf(made) === name ? made : undefined;
 }
 
 /** A sign before the empty slot it leaves (`-…`). */
 function signExpr(): Expr | undefined {
-  const made = parsed("-a", NO_DEFINITIONS);
+  const made = parsed("-a");
   return made && mapSlotValues(made, () => emptyExpr());
 }
 
 /** A list with one empty item (`[…]`), as `[` opens it. */
 function listExpr(): Expr | undefined {
-  const made = parsed("[a]", NO_DEFINITIONS);
+  const made = parsed("[a]");
   return made && mapSlotValues(made, () => emptyExpr());
 }
 
 /** A call of one of the program's functions, its arguments empty slots. */
-export function callExpr(fn: LineFunction, scope: ParseScope): Expr | undefined {
-  const made = parsed(`${fn.name}(${fn.params.map(() => "a").join(", ")})`, scope);
+export function callExpr(fn: LineFunction): Expr | undefined {
+  const made = parsed(`${fn.name}(${fn.params.map(() => "a").join(", ")})`);
   return made && mapSlotValues(made, () => emptyExpr());
 }
 
@@ -428,10 +427,10 @@ export function textOf(expr: Expr): string | undefined {
 
 /** Chooses a row of the list at the caret, as the line's slot keeps it. */
 export function choose(line: Line, row: Row, ctx: LineContext): Outcome {
-  return inSlot(line, chooseRow(line, row, ctx), ctx);
+  return inSlot(line, chooseRow(line, row), ctx);
 }
 
-function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
+function chooseRow(line: Line, row: Row): Outcome {
   let base: Line = { ...line, word: "", refused: undefined, pending: undefined };
   if (row.type === "entry" && takesValue(row.entry) && !atEmptySlot(base)) {
     // A refused choice leaves the line as it was, its word still to correct, with the reason.
@@ -447,7 +446,7 @@ function chooseRow(line: Line, row: Row, ctx: LineContext): Outcome {
       return made ? fill(base, made) : refused(line);
     }
     case "function": {
-      const made = callExpr(row.fn, ctx.scope);
+      const made = callExpr(row.fn);
       return made ? fill(base, made) : refused(line);
     }
     case "parentheses":
@@ -503,7 +502,7 @@ export function wholeTargetRows(line: Line, ctx: LineContext): Row[] | undefined
  */
 export function keptRows(line: Line, rows: readonly Row[], ctx: LineContext): Row[] {
   return rows.filter((row) => {
-    const chosen = chooseRow(line, row, ctx);
+    const chosen = chooseRow(line, row);
     return !chosen.taken || keeps(chosen.line.root, ctx);
   });
 }
