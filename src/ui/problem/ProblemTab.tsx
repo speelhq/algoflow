@@ -4,13 +4,13 @@ import type { ReactNode } from "react";
 import { HINTS, type Challenge } from "@/challenges";
 import { localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
-import { useEditor } from "@/store/editor";
 import { inRun, useMode } from "@/store/mode";
 import { useProgress } from "@/store/progress";
 import { assignmentText, dataText, inputSpans, joinSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { foldLines } from "@/ui/text/fold";
 import { Markdown } from "@/ui/text/MarkdownText";
+import { revealSolution } from "./actions";
 import { caseText } from "./caseText";
 
 function Heading({ children }: { children: ReactNode }) {
@@ -67,8 +67,6 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
   const id = challenge.id;
   const entry = useProgress((s) => (Object.hasOwn(s.entries, id) ? s.entries[id] : undefined));
   const hintShown = useProgress((s) => s.hintShown);
-  const solutionShown = useProgress((s) => s.solutionShown);
-  const showSolution = useEditor((s) => s.showSolution);
   const mode = useMode();
   const solution = mode === "solution";
   const revealed = Math.min(entry?.hints ?? 0, challenge.hints.length);
@@ -123,10 +121,7 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
           aria-pressed={solution}
           // The chart stays the run's in run mode.
           disabled={inRun(mode)}
-          onClick={() => {
-            showSolution(true);
-            solutionShown(id);
-          }}
+          onClick={() => revealSolution(id)}
         >
           {t("problem.solution.show")}
         </Button>

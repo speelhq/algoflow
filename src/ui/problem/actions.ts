@@ -1,15 +1,22 @@
 // The page's Run. With diagnostics present it does not start: it selects the statement that
-// owns the first diagnostic and shows its message, or clears the selection for a function's. Run acts on the learner's
-// program, so a shown solution gives way to the learner's program first. The play button's action,
-// and what a click on a chart node does in each mode.
+// owns the first diagnostic and shows its message, or clears the selection for a function's. Run
+// acts on the learner's program, so a shown solution gives way to the learner's program first. The
+// play button's action, what a click on a chart node does in each mode, and showing the solution.
 import { validate } from "@/lang/validate";
 import type { NodeId } from "@/lang/types";
 import { isStatement, ownerOf } from "@/lang/walk";
 import { useEditor } from "@/store/editor";
 import { currentMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
+import { useProgress } from "@/store/progress";
 import { useRun } from "@/store/run";
 import { useTests } from "@/store/tests";
+
+/** Shows the solution on the canvas, and records that the learner saw it (`challenges.md`, Progress). */
+export function revealSolution(id: string): void {
+  useEditor.getState().showSolution(true);
+  useProgress.getState().solutionShown(id);
+}
 
 /** True when the program has no diagnostic; otherwise leads to the first one. */
 function readyToRun(): boolean {
