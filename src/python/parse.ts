@@ -3,7 +3,6 @@ import { newId } from "@/lang/id";
 import { CLASS_NAME_PATTERN, type BinOp, type Data, type Expr, type NodeId } from "@/lang/types";
 import { allExprs, childSlots, isEmptyDraft } from "@/lang/walk";
 import {
-  builtinKey,
   builtinOf,
   methodKey,
   BLOCK_DEFS,
@@ -362,7 +361,6 @@ class Parser {
     // A class name is a `new`, which no registered block definition constructs yet, so `Expr`
     // has no `new` to make.
     if (CLASS_NAME_PATTERN.test(name)) return fail("E_PARSE_SYNTAX", position);
-    if (hasBlockDef(builtinKey(name))) return { id: newId(), type: "call", fn: name, args };
     return this.block(position, { id: newId(), type: "call", fn: name, args });
   }
 
