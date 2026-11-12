@@ -190,7 +190,7 @@ describe("notation", () => {
       [" + ", "value"],
       ["value", "value"],
     ]);
-    expect(holdsDraft(set)).toBe(true);
+    expect(holdsDraft(assign("total", empty()))).toBe(true);
     // A counted loop's stop, which its notation (its init) does not write, counts too.
     expect(holdsDraft(for_("i", num(0), empty(), []))).toBe(true);
     expect(holdsDraft(for_("i", num(0), num(3), []))).toBe(false);

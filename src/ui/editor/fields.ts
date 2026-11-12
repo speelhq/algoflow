@@ -3,7 +3,7 @@
 import { blockText, t } from "@/i18n/t";
 import { draftValue } from "@/lang/drafts";
 import type { Expr, NodeId, Stmt } from "@/lang/types";
-import { allExprs, draftText, holdsEmptySlot, isExpr } from "@/lang/walk";
+import { draftText, isExpr } from "@/lang/walk";
 import { draftOf, emptyExpr, getBlockDef, keyOf, type Slot } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
@@ -121,15 +121,10 @@ export function valueOf(stmt: Stmt, field: Field): Expr | undefined {
   return isExpr(item) ? item : undefined;
 }
 
-function find(root: Expr, id: NodeId): Expr | undefined {
-  for (const expr of allExprs(root)) if (expr.id === id) return expr;
-  return undefined;
-}
-
 /**
  * The field that takes the keyboard when the editor opens (`editor.md`, Block editor): the slot
- * clicked on the chart node (the item holding the empty slot clicked, when one was), else the
- * first field that holds a draft, else none.
+ * clicked on the chart node (the item that is the empty slot clicked, when one was), else the first
+ * field that holds a draft, else none.
  */
 export function startField(
   stmt: Stmt,
@@ -141,17 +136,12 @@ export function startField(
     return (
       fields.find((field) => {
         const value = valueOf(stmt, field);
-        return value !== undefined && (draftText(value) !== undefined || holdsEmptySlot(value));
+        return value !== undefined && draftText(value) !== undefined;
       }) ?? null
     );
   }
   const inSlot = fields.filter((field) => field.slot === slot);
   const holding =
-    emptyId === null
-      ? undefined
-      : inSlot.find((field) => {
-          const value = valueOf(stmt, field);
-          return value !== undefined && find(value, emptyId) !== undefined;
-        });
+    emptyId === null ? undefined : inSlot.find((field) => valueOf(stmt, field)?.id === emptyId);
   return holding ?? inSlot[0] ?? null;
 }

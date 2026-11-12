@@ -70,37 +70,20 @@ export function childSlots(block: Block): Array<SlotExpr & { role: ExprRole }> {
 }
 
 /**
- * A draft (`language.md`, Expressions, Drafts) in slot `slot` of `block`, of role `role`, or in its
- * item `index`, with its text.
+ * A statement's slot or item that holds a draft (`language.md`, Expressions, Drafts), with the
+ * draft's text.
  */
-export type DraftSlot = {
-  block: Block;
-  slot: string;
-  role: ExprRole;
-  index?: number;
-  draft: Expr;
-  text: string;
-};
+export type DraftSlot = SlotExpr & { role: ExprRole; text: string };
 
 /**
- * The drafts of a block and of every expression in its slots, in slot order: each slot or item
- * that holds a draft, and the drafts of the expressions that the others hold.
+ * The drafts of a statement, in slot order: each slot or item that holds one. Only a statement's
+ * slot holds a draft.
  */
-export function draftSlots(block: Block): DraftSlot[] {
-  const out: DraftSlot[] = [];
-  for (const { slot, role, expr, index } of childSlots(block)) {
-    const text = draftText(expr);
-    if (text === undefined) out.push(...draftSlots(expr));
-    else {
-      out.push({ block, slot, role, ...(index === undefined ? {} : { index }), draft: expr, text });
-    }
-  }
-  return out;
-}
-
-/** Whether a value is an empty slot or holds one, at any depth. */
-export function holdsEmptySlot(expr: Expr): boolean {
-  return isEmptyExpr(expr) || draftSlots(expr).some((found) => found.text === "");
+export function draftSlots(stmt: Stmt): DraftSlot[] {
+  return childSlots(stmt).flatMap((held) => {
+    const text = draftText(held.expr);
+    return text === undefined ? [] : [{ ...held, text }];
+  });
 }
 
 /** Direct expression children of a statement or expression, in slot order. */

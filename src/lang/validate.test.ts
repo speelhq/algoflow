@@ -195,13 +195,7 @@ describe("validate (language.md, Validation)", () => {
     expect(validate(program([ast.assignTo(unset, num(1))]))).toEqual([
       { nodeId: unset.id, code: "E_EMPTY_SLOT", params: { slot: "target" } },
     ]);
-    expect(validate(program([assign("x", bin("+", num(1), empty()))]))).toEqual([
-      expect.objectContaining({ code: "E_EMPTY_SLOT", params: { slot: "right" } }),
-    ]);
     expect(validate(program([print(num(1), empty())]))).toEqual([
-      expect.objectContaining({ code: "E_EMPTY_SLOT", params: { slot: "args" } }),
-    ]);
-    expect(validate(program([exprStmt(call("abs", empty()))]))).toEqual([
       expect.objectContaining({ code: "E_EMPTY_SLOT", params: { slot: "args" } }),
     ]);
     expect(codes(program([assign("x", bin("+", num(1), num(2))), print()]))).toEqual([]);
