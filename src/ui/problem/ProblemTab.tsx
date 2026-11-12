@@ -9,7 +9,7 @@ import { useProgress } from "@/store/progress";
 import { assignmentText, dataText, inputSpans, joinSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { foldLines } from "@/ui/text/fold";
-import { Markdown } from "@/ui/text/MarkdownText";
+import { Markdown } from "@/ui/text/Markdown";
 import { revealSolution } from "./actions";
 import { caseText } from "./caseText";
 
