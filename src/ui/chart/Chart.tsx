@@ -38,8 +38,8 @@ type Props = {
   /** The statement outlined as selected, and the owner outlined from a Python line. */
   selectedId?: NodeId | null;
   hoveredId?: NodeId | null;
-  /** A click on a statement's chart node (or a generated chart node of it), with the slot and empty slot clicked. */
-  onSelect?: (owner: NodeId, slot?: string, emptyId?: NodeId) => void;
+  /** A click on a statement's chart node (or a generated chart node of it), with the slot clicked. */
+  onSelect?: (owner: NodeId, slot?: string) => void;
   /** The cases an Input chart node's menu lists, and what choosing one does; absent while read-only. */
   cases?: {
     labels: string[];
@@ -171,7 +171,6 @@ function NodeView({ node, look, draggable }: { node: ChartNode; look: Look; drag
               x={node.x + span.dx}
               y={node.y + node.h / 2 + span.dy}
               data-block-slot={span.slot}
-              data-empty-id={span.emptyId}
               className={cn("fill-current", spanStyle(span).colorClass)}
               style={chartSpanFont(span)}
             >
@@ -312,7 +311,7 @@ export function Chart(props: Props) {
       const target = event.target instanceof Element ? event.target : null;
       const owner = target?.closest<SVGGElement>("[data-owner]")?.dataset.owner;
       const span = target?.closest<SVGElement>("[data-block-slot]");
-      if (owner) onSelect(owner, span?.dataset.blockSlot, span?.dataset.emptyId);
+      if (owner) onSelect(owner, span?.dataset.blockSlot);
     };
     element.addEventListener("click", click);
     return () => element.removeEventListener("click", click);

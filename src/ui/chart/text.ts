@@ -4,7 +4,7 @@
 // `params`, `callee`, `notation`, `text`, `chart`, and `precedence` only, never a type; a variable
 // shown with its value is written by the `assign` block's notation.
 import { toValue } from "@/lang/data";
-import type { Data, Expr, Heap, Block, NodeId, Program, Stmt, Value } from "@/lang/types";
+import type { Data, Expr, Heap, Block, Program, Stmt, Value } from "@/lang/types";
 import {
   conditionOf,
   draftSlots,
@@ -49,15 +49,14 @@ export function notationWithHints(stmt: Stmt): string {
 
 /**
  * A span of a block's text: the template's own words, or what a slot holds (`slot` names the
- * statement's slot it belongs to). `variable` marks a variable's name, `hint` the hint of an
- * empty slot, and `emptyId` the empty slot a click on the span opens. A caption takes its chart
- * node's place as a span with text alone (`chart.md`, Shapes).
+ * statement's slot it belongs to, which a click on the span opens). `variable` marks a variable's
+ * name, and `hint` the hint of an empty slot. A caption takes its chart node's place as a span
+ * with text alone (`chart.md`, Shapes).
  */
 export type NotationSpan = {
   text: string;
   slot?: string;
   hint?: boolean;
-  emptyId?: NodeId;
   variable?: boolean;
   /** The slot the editor's caret is in. */
   underline?: boolean;
@@ -90,11 +89,6 @@ export function exprHint(holder: Expr, index: number | undefined, program: Progr
       ? program.functions.find((each) => each.name === callee.name)
       : undefined;
   return (index === undefined ? undefined : fn?.params[index]) ?? VALUE_HINT;
-}
-
-/** An empty slot written as its hint, which a click opens. */
-function hintSpan(empty: Expr, hint: string): NotationSpan {
-  return { text: hint, hint: true, emptyId: empty.id };
 }
 
 /**
@@ -134,13 +128,7 @@ export function filledSpans(
   const merged: NotationSpan[] = [];
   for (const { span } of out) {
     const before = merged[merged.length - 1];
-    if (
-      before &&
-      plain(before) &&
-      plain(span) &&
-      before.slot === span.slot &&
-      before.emptyId === span.emptyId
-    ) {
+    if (before && plain(before) && plain(span) && before.slot === span.slot) {
       before.text += span.text;
     } else if (span.text !== "") merged.push({ ...span });
   }
@@ -194,7 +182,7 @@ function operandSpans(
   program: Program,
   writing: Writing,
 ): NotationSpan[] {
-  if (isEmptyDraft(child)) return [hintSpan(child, hint)];
+  if (isEmptyDraft(child)) return [{ text: hint, hint: true }];
   const spans = exprSpans(child, program, writing);
   return parenthesized(child, held) ? inParentheses(spans) : spans;
 }

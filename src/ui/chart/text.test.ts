@@ -171,7 +171,7 @@ describe("notation", () => {
     const spans = notationSpans(assignTo(item(v("nums"), empty()), num(0)), P);
     expect(joinSpans(spans)).toBe("nums[value] ← 0");
     expect(spans.find((span) => span.text === "nums")).toMatchObject({ variable: true });
-    expect(spans.filter((span) => span.emptyId !== undefined)).toHaveLength(1);
+    expect(spans.filter((span) => span.hint)).toHaveLength(1);
   });
 
   it("marks variables, and an empty slot at any depth as its hint", () => {
@@ -180,7 +180,7 @@ describe("notation", () => {
     expect(spans).toEqual([
       { text: "total", variable: true },
       { text: " + " },
-      { text: "value", hint: true, emptyId: slot.id },
+      { text: "value", hint: true },
     ]);
     const set = assign("total", bin("+", v("total"), slot));
     expect(notationSpans(set, P).map((span) => [span.text, span.slot])).toEqual([
@@ -205,22 +205,16 @@ describe("notation", () => {
   });
 
   it("writes a statement's empty slot as the slot's hint, a loop's empty variable as any other", () => {
-    const variable = empty();
-    const loop = ast.forTo(variable, num(0), num(3), []);
+    const loop = ast.forTo(empty(), num(0), num(3), []);
     expect(notationSpans(loop, P)).toEqual([
-      { text: "variable", hint: true, emptyId: variable.id, slot: "var" },
+      { text: "variable", hint: true, slot: "var" },
       { text: " ← " },
       { text: "0", slot: "start" },
     ]);
     expect(holdsDraft(loop)).toBe(true);
-    // An empty value carries its id, so a click on it opens the editor at it.
-    const hole = empty();
-    expect(slotSpans(print(num(1), hole), "args", P).at(-1)).toEqual({
-      text: "values",
-      hint: true,
-      emptyId: hole.id,
-      slot: "args",
-    });
+    // A print with no value draws nothing for its values (`editor.md`, Value line, Empty slots).
+    expect(slotSpans(print(), "args", P)).toEqual([]);
+    expect(notationText(print(), P)).toBe("print()");
   });
 
   it("writes an argument of a call of the program's function as its parameter's name, any other slot of an expression as value", () => {
