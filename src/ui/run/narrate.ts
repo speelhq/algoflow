@@ -58,7 +58,7 @@ function refText(ref: Ref, frame: Frame | undefined, heap: Heap, program: Progra
  */
 function comparedText(expr: Expr, frame: Frame | undefined, heap: Heap, program: Program): string {
   return exprText(expr, program, {
-    value: (name) => {
+    variableText: (name) => {
       const value = frame?.vars.get(name);
       return value && !("ref" in value) ? valueText(value, heap) : undefined;
     },

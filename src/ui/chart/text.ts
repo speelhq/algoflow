@@ -97,8 +97,11 @@ function hintSpan(empty: Expr, hint: string): NotationSpan {
   return { text: hint, hint: true, emptyId: empty.id };
 }
 
-/** How an expression is written: `value` gives the text a variable is written as instead of its name. */
-export type Writing = { value?: (name: string) => string | undefined };
+/**
+ * How an expression is written: `variableText` gives the text a variable is written as instead of
+ * its name.
+ */
+export type Writing = { variableText?: (name: string) => string | undefined };
 
 /**
  * A template as spans, each placeholder replaced by the spans `fill` gives. The template's own
@@ -252,8 +255,8 @@ export function exprSpans(expr: Expr, program: Program, writing: Writing = {}): 
   if (typed !== undefined) return [{ text: typed }];
   const name = variableOf(expr);
   if (name !== undefined) {
-    const value = writing.value?.(name);
-    return value === undefined ? [{ text: name, variable: true }] : [{ text: value }];
+    const text = writing.variableText?.(name);
+    return text === undefined ? [{ text: name, variable: true }] : [{ text }];
   }
   return filledSpans(notationOf(expr), (placeholderName) => {
     const held = placeholderValue(expr, placeholderName);
