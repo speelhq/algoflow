@@ -45,13 +45,34 @@ export function checkChallengeSchema(
   fileId: string,
   opts: { requireJa?: boolean } = {},
 ): SchemaResult {
-  const problems: string[] = [];
   const requireJa = opts.requireJa ?? false;
   if (!isRecord(json)) return { challenge: null, problems: ["not an object"] };
+  const { defines, problems: definitionProblems } = checkDefinitions(json);
+  const { inputs, declared, problems: inputProblems } = checkInputs(json);
+  const problems = [
+    ...checkKeys(json, fileId),
+    ...checkPresentation(json, requireJa),
+    ...definitionProblems,
+    ...inputProblems,
+    ...checkTestSchemas(json, declared),
+    ...checkHints(json, requireJa),
+    ...checkSolution(json, fileId, inputs, defines),
+  ];
+  return { challenge: problems.length === 0 ? (json as unknown as Challenge) : null, problems };
+}
 
+/** The file's id against its name, and every key against the keys a challenge holds. */
+function checkKeys(json: Record<string, unknown>, fileId: string): string[] {
+  const problems: string[] = [];
   if (json.id !== fileId)
     problems.push(`id "${String(json.id)}" does not match the file name "${fileId}"`);
   for (const key of Object.keys(json)) if (!KEYS.has(key)) problems.push(`unknown key "${key}"`);
+  return problems;
+}
+
+/** What the challenge shows a learner: its title, difficulty, topics, description, and takeaway. */
+function checkPresentation(json: Record<string, unknown>, requireJa: boolean): string[] {
+  const problems: string[] = [];
   if (!isLocalized(json.title, requireJa)) problems.push("title must be { en, ja? }");
   if (!DIFFICULTIES.some((d) => d === json.difficulty))
     problems.push(
@@ -66,16 +87,33 @@ export function checkChallengeSchema(
   if (!isLocalized(json.description, requireJa)) problems.push("description must be { en, ja? }");
   if (json.takeaway !== undefined && !isLocalized(json.takeaway, requireJa))
     problems.push("takeaway must be { en, ja? }");
+  return problems;
+}
+
+/** `module` and `defines` (`challenges.md`, Modules and definitions), with the names defined. */
+function checkDefinitions(json: Record<string, unknown>): {
+  defines: string[];
+  problems: string[];
+} {
+  const problems: string[] = [];
   if (json.module !== undefined && !isName(json.module))
     problems.push("module must be a valid name");
   const defines: string[] = [];
   // A class name is refused: no registered block definition constructs an object.
   if (Array.isArray(json.defines) && json.defines.every(isName)) defines.push(...json.defines);
   else if (json.defines !== undefined) problems.push("defines must be an array of function names");
+  return { defines, problems };
+}
 
-  const inputs = Array.isArray(json.inputs) ? json.inputs : [];
+/** The declared inputs, each with a valid name of its own, and the kind of each by its name. */
+function checkInputs(json: Record<string, unknown>): {
+  inputs: unknown[];
+  declared: ReadonlyMap<string, Kind>;
+  problems: string[];
+} {
+  const problems: string[] = [];
+  const inputs: unknown[] = Array.isArray(json.inputs) ? json.inputs : [];
   if (!Array.isArray(json.inputs)) problems.push("inputs must be an array");
-  /** Each declared input with its kind. */
   const declared = new Map<string, Kind>();
   inputs.forEach((input, i) => {
     if (!isInputDecl(input)) {
@@ -87,58 +125,111 @@ export function checkChallengeSchema(
     if (declared.has(input.name)) problems.push(`inputs[${i}] name "${input.name}" is duplicated`);
     declared.set(input.name, input.kind);
   });
+  return { inputs, declared, problems };
+}
 
-  const tests = Array.isArray(json.tests) ? json.tests : [];
+/** The tests: at least 3, at least one an edge test, each well formed (`checkTestSchema`). */
+function checkTestSchemas(
+  json: Record<string, unknown>,
+  declared: ReadonlyMap<string, Kind>,
+): string[] {
+  const problems: string[] = [];
+  const tests: unknown[] = Array.isArray(json.tests) ? json.tests : [];
   if (!Array.isArray(json.tests) || tests.length < 3)
     problems.push("tests must be an array of at least 3");
-  /** Whether a value is canonical Data; a fault is reported at its path. */
-  const canonical = (value: unknown, at: string): boolean => {
-    const fault = dataError(value);
-    if (fault) problems.push(`${at}${fault.at}: ${fault.message}`);
-    return fault === undefined;
-  };
-  let edge = false;
-  tests.forEach((test, i) => {
-    if (!isRecord(test)) return problems.push(`tests[${i}] must be an object`);
-    if (test.edge !== undefined && typeof test.edge !== "boolean")
-      problems.push(`tests[${i}].edge must be a boolean`);
-    else if (test.edge === true) edge = true;
-    if (!isRecord(test.inputs)) problems.push(`tests[${i}].inputs must be an object`);
-    else {
-      for (const [name, kind] of declared) {
-        if (!Object.hasOwn(test.inputs, name))
-          problems.push(`tests[${i}].inputs is missing "${name}"`);
-        else if (!canonical(test.inputs[name], `tests[${i}].inputs.${name}`)) continue;
-        else if (dataKind(test.inputs[name] as Data) !== kind)
-          problems.push(`tests[${i}].inputs.${name} is not of the kind ${kind}`);
-        else if (isParseError(parseData(test.inputs[name] as Data)))
-          problems.push(`tests[${i}].inputs.${name} is a value no block writes`);
-      }
-      for (const name of Object.keys(test.inputs))
-        if (!declared.has(name)) problems.push(`tests[${i}].inputs has unknown input "${name}"`);
-    }
-    if (test.seed !== undefined && typeof test.seed !== "number")
-      problems.push(`tests[${i}].seed must be a number`);
-    if (
-      !isRecord(test.expect) ||
-      (!isRecord(test.expect.variables) && !Array.isArray(test.expect.stdout))
-    ) {
-      problems.push(`tests[${i}].expect needs variables and/or stdout`);
-    } else if (isRecord(test.expect.variables)) {
-      for (const [name, value] of Object.entries(test.expect.variables))
-        canonical(value, `tests[${i}].expect.variables.${name}`);
-    }
-  });
-  if (tests.length > 0 && !edge) problems.push("no test has edge: true");
+  tests.forEach((test, i) => problems.push(...checkTestSchema(test, `tests[${i}]`, declared)));
+  if (tests.length > 0 && !tests.some((test) => isRecord(test) && test.edge === true))
+    problems.push("no test has edge: true");
+  return problems;
+}
 
-  const hints = Array.isArray(json.hints) ? json.hints : [];
+/**
+ * One test, reported at `path`: its `edge` and `seed`, every declared input with a value of its
+ * kind, and `expect`.
+ */
+function checkTestSchema(
+  test: unknown,
+  path: string,
+  declared: ReadonlyMap<string, Kind>,
+): string[] {
+  if (!isRecord(test)) return [`${path} must be an object`];
+  const problems: string[] = [];
+  if (test.edge !== undefined && typeof test.edge !== "boolean")
+    problems.push(`${path}.edge must be a boolean`);
+  if (!isRecord(test.inputs)) problems.push(`${path}.inputs must be an object`);
+  else problems.push(...checkTestInputs(test.inputs, `${path}.inputs`, declared));
+  if (test.seed !== undefined && typeof test.seed !== "number")
+    problems.push(`${path}.seed must be a number`);
+  if (
+    !isRecord(test.expect) ||
+    (!isRecord(test.expect.variables) && !Array.isArray(test.expect.stdout))
+  ) {
+    problems.push(`${path}.expect needs variables and/or stdout`);
+  } else if (isRecord(test.expect.variables)) {
+    for (const [name, value] of Object.entries(test.expect.variables))
+      problems.push(...checkData(value, `${path}.expect.variables.${name}`));
+  }
+  return problems;
+}
+
+/**
+ * A test's inputs, reported at `path`: each declared input, as canonical Data of its kind that a
+ * block writes, and no other.
+ */
+function checkTestInputs(
+  inputs: Record<string, unknown>,
+  path: string,
+  declared: ReadonlyMap<string, Kind>,
+): string[] {
+  const problems: string[] = [];
+  for (const [name, kind] of declared) {
+    const inputPath = `${path}.${name}`;
+    if (!Object.hasOwn(inputs, name)) {
+      problems.push(`${path} is missing "${name}"`);
+      continue;
+    }
+    const dataProblems = checkData(inputs[name], inputPath);
+    if (dataProblems.length > 0) problems.push(...dataProblems);
+    else if (dataKind(inputs[name] as Data) !== kind)
+      problems.push(`${inputPath} is not of the kind ${kind}`);
+    else if (isParseError(parseData(inputs[name] as Data)))
+      problems.push(`${inputPath} is a value no block writes`);
+  }
+  for (const name of Object.keys(inputs))
+    if (!declared.has(name)) problems.push(`${path} has unknown input "${name}"`);
+  return problems;
+}
+
+/** Checks that a value is canonical Data, and reports its fault at `path`. */
+function checkData(value: unknown, path: string): string[] {
+  const fault = dataError(value);
+  return fault ? [`${path}${fault.at}: ${fault.message}`] : [];
+}
+
+/** Exactly `HINTS` hints, each a `Localized` text. */
+function checkHints(json: Record<string, unknown>, requireJa: boolean): string[] {
+  const problems: string[] = [];
+  const hints: unknown[] = Array.isArray(json.hints) ? json.hints : [];
   if (!Array.isArray(json.hints) || hints.length !== HINTS) {
     problems.push(`hints must be exactly ${HINTS}`);
   }
   hints.forEach((hint, i) => {
     if (!isLocalized(hint, requireJa)) problems.push(`hints[${i}] must be { en, ja? }`);
   });
+  return problems;
+}
 
+/**
+ * The solution: its version, its inputs, its challenge id, its diagnostics, and a function for
+ * each name of `defines`.
+ */
+function checkSolution(
+  json: Record<string, unknown>,
+  fileId: string,
+  inputs: unknown[],
+  defines: readonly string[],
+): string[] {
+  const problems: string[] = [];
   // The app bundles a solution as it is, with no migrate(), so an older version would reach it.
   if (isRecord(json.solution) && json.solution.version !== CURRENT_VERSION)
     problems.push(`solution.version must be ${CURRENT_VERSION}`);
@@ -157,6 +248,5 @@ export function checkChallengeSchema(
   } catch (error) {
     problems.push(`solution: ${error instanceof Error ? error.message : String(error)}`);
   }
-
-  return { challenge: problems.length === 0 ? (json as unknown as Challenge) : null, problems };
+  return problems;
 }
