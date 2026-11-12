@@ -17,7 +17,7 @@ import { navigate, routeHash } from "@/ui/app/route";
 import { openInPlayground } from "@/ui/editor/programs";
 import { Button, buttonVariants } from "@/ui/primitives/button";
 import { Markdown } from "@/ui/text/MarkdownText";
-import { startRun } from "./actions";
+import { revealSolution, startRun } from "./actions";
 import { caseText } from "./caseText";
 import { ResultRows } from "./ResultRows";
 
@@ -114,8 +114,6 @@ function Next({ id }: { id: string }) {
 function Accepted({ challenge }: { challenge: Challenge }) {
   const first = useTests((s) => s.outcomes[0]);
   const setTab = useEditor((s) => s.setTab);
-  const showSolution = useEditor((s) => s.showSolution);
-  const solutionShown = useProgress((s) => s.solutionShown);
   // The chart stays the run's in run mode.
   const runMode = inRun(useMode());
   return (
@@ -137,14 +135,7 @@ function Accepted({ challenge }: { challenge: Challenge }) {
         <Button variant="outline" onClick={() => setTab("python")}>
           {t("result.seePython")}
         </Button>
-        <Button
-          variant="outline"
-          disabled={runMode}
-          onClick={() => {
-            showSolution(true);
-            solutionShown(challenge.id);
-          }}
-        >
+        <Button variant="outline" disabled={runMode} onClick={() => revealSolution(challenge.id)}>
           {t("result.compare")}
         </Button>
         <Button variant="outline" onClick={() => openInPlayground(localized(challenge.title))}>
