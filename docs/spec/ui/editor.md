@@ -13,6 +13,10 @@ The block menu lists the statement block definitions, except those marked
 menu per challenge was rejected, because it hides the language and adds
 authoring work.
 
+Enter in the search inserts the first entry that isn't disabled.
+
+A search that finds no entry reads `menu.empty`.
+
 A statement block definition has `shape: "stmt"` or is a method
 statement (`blocks.md`).
 
@@ -127,6 +131,11 @@ From top to bottom, the editor holds:
 - the value list of the focused slot (Value list)
 - the explanation line (Explanation line)
 
+The diagnostic that `Run` or `Submit` led to comes first among the
+block's diagnostics (`run.md`, Run bar, Starting a run), rather than in
+the order validation reports them, because it is the one the learner was
+sent to fix.
+
 A separator divides each of the caption field, the notation, and that
 list from the next.
 
@@ -170,6 +179,11 @@ removes the block (`chart.md`, Editing on the chart).
 
 Tab and Shift+Tab move the keyboard to the next and previous field of the
 notation.
+
+Tab past the notation's last field, and Shift+Tab before its first, move
+the keyboard on as in any form, rather than keeping it in the notation,
+because a learner who works by the keyboard alone would otherwise find no
+way out of it.
 
 An edit applies at once.
 
@@ -293,8 +307,12 @@ A name that equals the word comes first among the matches. After a value,
 the entries for the value's kind come next, because Enter chooses the
 first match. For example: `an` after a comparison is `And`.
 
-Enter or a click chooses the highlighted match, which replaces the word.
-↑ and ↓ move the highlight.
+`New variable <name>` comes last among the matches (Name list), rather
+than first as the name just typed, because a name that the program
+already has is the likelier one meant.
+
+While a word is typed, its first match is highlighted. Enter or a click
+chooses the highlighted match, which replaces the word.
 
 The line underlines a word that matches nothing, and the explanation line
 names the closest variable or entry (`editor.didYouMean`). For example:
@@ -399,7 +417,16 @@ groups:
 - where a value is expected: every entry
 - after a value: every entry that takes a value
 
+The value list ends with no `Show all` in three cases:
+
+- while a word is typed
+- once `Show all` is chosen
+- where the value list holds no row
+
 Hovering a row highlights it.
+
+↑ and ↓ move the highlight one row, and from the last row ↓ goes to the
+first, and from the first ↑ goes to the last.
 
 A value list with no row reads `editor.noItems`, except inside a text.
 
@@ -504,6 +531,10 @@ text is only the word being typed, or nothing (Targets). It holds:
 - in a function: the function's parameters and the names assigned in its
   body, under `Variables`
 
+The name list leaves out the names that only the block being edited
+assigns, because its target's line holds the name being typed, which
+would otherwise list itself as a variable the program already has.
+
 The name list offers the expected names first, because a verdict compares
 `expect.variables` by name, and a learner who names `total` differently
 would otherwise fail without a visible reason.
@@ -563,6 +594,18 @@ list highlights or the caret is in:
 | a draft that `Run` or `Submit` led to | its error's message (Value line, Drafts) |
 | a word that matches nothing | the closest name (Value line), or `editor.nothingLike` when none is close |
 | anything else | the block definition's help (`block.<key>.help`) |
+
+Where several rows apply, the line shows the first of these, in this
+order:
+
+- a draft that `Run` or `Submit` led to
+- a word that matches nothing
+- what the value list highlights
+- the operation one of whose slots holds the caret
+- the block definition's help
+
+A draft's message comes before what the value list highlights, rather
+than after it, because the learner was sent to the draft to fix it.
 
 ## Verification
 
