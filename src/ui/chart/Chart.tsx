@@ -373,7 +373,7 @@ export function Chart(props: Props) {
           : node.owner === hoveredId
             ? "hovered"
             : null,
-    taken: paint?.nodes.has(node.id) ?? false,
+    taken: paint?.takenNodes.has(node.id) ?? false,
     current: node.id === current ? (failed ? "error" : "running") : null,
     mark: paint?.marks.get(node.id),
     breakpoint: paint?.breakpoint === node.id,
@@ -427,7 +427,7 @@ export function Chart(props: Props) {
                     <EdgeView
                       key={edge.id}
                       edge={edge}
-                      taken={paint?.edges.has(edge.id) ?? false}
+                      taken={paint?.takenEdges.has(edge.id) ?? false}
                     />
                   ))}
                   {chart.nodes.map((node) => (
