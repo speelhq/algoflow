@@ -8,7 +8,7 @@ import type { LineContext, Row } from "./choices";
 import {
   fieldDraft,
   fieldText,
-  textValue,
+  parseFieldText,
   findFieldValue,
   type Field,
   type FieldValue,
@@ -129,7 +129,7 @@ export function changeText(session: Session, typed: TextLine, composing: boolean
   if (!focus) return still(session);
   const next: Session = { ...session, line: typed, highlight: null };
   if (composing) return still(next);
-  const value = textValue(typed.text, focus.role);
+  const value = parseFieldText(typed.text, focus.role);
   if (sameValue(value, fieldValue)) return still(next);
   return { session: { ...next, fieldValue: value }, edits: [{ field: focus, value }] };
 }

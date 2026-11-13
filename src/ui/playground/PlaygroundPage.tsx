@@ -12,7 +12,7 @@ import {
 import { playgroundRows, type PlaygroundRow } from "@/store/playground";
 import { Header } from "@/ui/app/Header";
 import { navigate, routeHash } from "@/ui/app/route";
-import { importedProgram } from "@/ui/editor/programs";
+import { parseProgramFile } from "@/ui/editor/programs";
 import { useTitle } from "@/ui/hooks/useTitle";
 import { Button } from "@/ui/primitives/button";
 import {
@@ -43,13 +43,13 @@ export function PlaygroundPage() {
   const [failed, setFailed] = useState(false);
   const file = useRef<HTMLInputElement>(null);
 
-  const create = () => {
+  const openNewProgram = () => {
     const id = createPlaygroundProgram(createProgram(t("playground.untitled")));
     navigate({ page: "program", id });
   };
   const load = async (picked: File | undefined) => {
     if (!picked) return;
-    const program = importedProgram(await picked.text());
+    const program = parseProgramFile(await picked.text());
     setFailed(program === undefined);
     if (program) {
       createPlaygroundProgram(program);
@@ -80,7 +80,7 @@ export function PlaygroundPage() {
               event.target.value = "";
             }}
           />
-          <Button onClick={create}>{t("playground.new")}</Button>
+          <Button onClick={openNewProgram}>{t("playground.new")}</Button>
         </div>
         {failed && (
           <p role="alert" className="mt-3 text-destructive">

@@ -15,7 +15,7 @@ import {
 } from "./parse";
 import { BINOPS } from "./precedence";
 
-function ok(text: string): Expr {
+function parseExpr(text: string): Expr {
   const result = parse(text);
   if (isParseError(result))
     throw new Error(`unexpected error ${JSON.stringify(result)} for ${text}`);
@@ -31,18 +31,18 @@ function err(text: string): ParseError {
 
 describe("parse", () => {
   it("parses literals with raw number text and decoded strings", () => {
-    expect(ok("1e3")).toMatchObject({ type: "num", value: 1000, float: true, raw: "1e3" });
-    expect(ok("42")).toMatchObject({ type: "num", value: 42, float: false, raw: "42" });
-    expect(ok(".5")).toMatchObject({ type: "num", value: 0.5, float: true });
-    expect(ok("'a\\nb'")).toMatchObject({ type: "str", value: "a\nb" });
-    expect(ok('"say \\"hi\\""')).toMatchObject({ type: "str", value: 'say "hi"' });
-    expect(ok("True")).toMatchObject({ type: "bool", value: true });
-    expect(ok("None")).toMatchObject({ type: "none" });
-    expect(ok("total")).toMatchObject({ type: "var", name: "total" });
+    expect(parseExpr("1e3")).toMatchObject({ type: "num", value: 1000, float: true, raw: "1e3" });
+    expect(parseExpr("42")).toMatchObject({ type: "num", value: 42, float: false, raw: "42" });
+    expect(parseExpr(".5")).toMatchObject({ type: "num", value: 0.5, float: true });
+    expect(parseExpr("'a\\nb'")).toMatchObject({ type: "str", value: "a\nb" });
+    expect(parseExpr('"say \\"hi\\""')).toMatchObject({ type: "str", value: 'say "hi"' });
+    expect(parseExpr("True")).toMatchObject({ type: "bool", value: true });
+    expect(parseExpr("None")).toMatchObject({ type: "none" });
+    expect(parseExpr("total")).toMatchObject({ type: "var", name: "total" });
   });
 
   it("builds the grammar's precedence levels", () => {
-    expect(ok("a or b and not c == d + e * -f ** 2")).toMatchObject({
+    expect(parseExpr("a or b and not c == d + e * -f ** 2")).toMatchObject({
       type: "binop",
       op: "or",
       right: {
@@ -60,9 +60,9 @@ describe("parse", () => {
         },
       },
     });
-    expect(ok("a ** b ** c")).toMatchObject({ op: "**", right: { op: "**" } });
-    expect(ok("a - b - c")).toMatchObject({ op: "-", left: { op: "-" } });
-    expect(ok("(a + b) * c")).toMatchObject({ op: "*", left: { op: "+" } });
+    expect(parseExpr("a ** b ** c")).toMatchObject({ op: "**", right: { op: "**" } });
+    expect(parseExpr("a - b - c")).toMatchObject({ op: "-", left: { op: "-" } });
+    expect(parseExpr("(a + b) * c")).toMatchObject({ op: "*", left: { op: "+" } });
   });
 
   it("reports grammar forms whose block is not registered yet as E_PARSE_SYNTAX at their token", () => {
@@ -74,20 +74,24 @@ describe("parse", () => {
   it("rejects number text CPython rejects and decodes \\x escapes", () => {
     expect(err("0777")).toEqual({ code: "E_PARSE_SYNTAX", position: 0 });
     expect(err("1 + 007")).toEqual({ code: "E_PARSE_SYNTAX", position: 4 });
-    expect(ok("00")).toMatchObject({ type: "num", value: 0, raw: "00" });
-    expect(ok("0.5")).toMatchObject({ type: "num", value: 0.5 });
-    expect(ok('"a\\x41\\x01"')).toMatchObject({ type: "str", value: "aA" });
+    expect(parseExpr("00")).toMatchObject({ type: "num", value: 0, raw: "00" });
+    expect(parseExpr("0.5")).toMatchObject({ type: "num", value: 0.5 });
+    expect(parseExpr('"a\\x41\\x01"')).toMatchObject({ type: "str", value: "aA" });
   });
 
   it("an int literal outside the int range is a syntax error at its token", () => {
-    expect(ok("9007199254740991")).toMatchObject({ type: "num", value: 2 ** 53 - 1, float: false });
+    expect(parseExpr("9007199254740991")).toMatchObject({
+      type: "num",
+      value: 2 ** 53 - 1,
+      float: false,
+    });
     expect(err("1 + 9007199254740992")).toEqual({ code: "E_PARSE_SYNTAX", position: 4 });
     expect(err("-9007199254740992")).toEqual({ code: "E_PARSE_SYNTAX", position: 1 });
-    expect(ok("9007199254740993.0")).toMatchObject({ type: "num", float: true });
+    expect(parseExpr("9007199254740993.0")).toMatchObject({ type: "num", float: true });
   });
 
   it("gives every block an id and no mark of how it was made", () => {
-    const expr = ok("a + b");
+    const expr = parseExpr("a + b");
     expect(expr.id).toHaveLength(12);
     expect(Object.keys(expr).toSorted()).toEqual(["id", "left", "op", "right", "type"]);
   });
@@ -95,14 +99,14 @@ describe("parse", () => {
 
 describe("call resolution", () => {
   it("reads a name that names a builtin as the builtin's call", () => {
-    expect(ok("abs(x)")).toMatchObject({ type: "call", fn: "abs" });
-    expect(registryKey(ok("abs(x)"))).toBe("call:abs");
+    expect(parseExpr("abs(x)")).toMatchObject({ type: "call", fn: "abs" });
+    expect(registryKey(parseExpr("abs(x)"))).toBe("call:abs");
   });
 
   it("reads any other name as a call of the program's function, whatever the program defines", () => {
-    expect(ok("fib(n)")).toMatchObject({ type: "call", fn: "fib", args: [{ name: "n" }] });
-    expect(registryKey(ok("nope(1)"))).toBe("call");
-    expect(ok("1 + nope (1)")).toMatchObject({ right: { type: "call", fn: "nope" } });
+    expect(parseExpr("fib(n)")).toMatchObject({ type: "call", fn: "fib", args: [{ name: "n" }] });
+    expect(registryKey(parseExpr("nope(1)"))).toBe("call");
+    expect(parseExpr("1 + nope (1)")).toMatchObject({ right: { type: "call", fn: "nope" } });
   });
 
   it("reads a class name as a new, which gives E_PARSE_SYNTAX at the name while none is registered", () => {
@@ -113,8 +117,8 @@ describe("call resolution", () => {
   });
 
   it("accepts the Python aliases of builtins", () => {
-    expect(ok("random.randint(1, 6)")).toMatchObject({ type: "call", fn: "randint" });
-    expect(unparse(ok("random.randint(1, 6)"))).toBe("random.randint(1, 6)");
+    expect(parseExpr("random.randint(1, 6)")).toMatchObject({ type: "call", fn: "randint" });
+    expect(unparse(parseExpr("random.randint(1, 6)"))).toBe("random.randint(1, 6)");
   });
 
   it("an unknown method → E_UNKNOWN_CALL at the method name", () => {
