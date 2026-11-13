@@ -1,6 +1,6 @@
 // The `print` block definition: joins the `str()` forms with one space; its `print` event follows
 // the events of its expressions.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { str } from "@/runtime/values";
 import { defineStmt } from "./types";
@@ -9,7 +9,7 @@ export const print = defineStmt<"print">({
   key: "print",
   category: "basic",
   slots: [{ name: "args", role: "exprs", hint: "values" }],
-  create: () => ({ id: newId(), type: "print", args: [] }),
+  create: () => ({ id: createNodeId(), type: "print", args: [] }),
   *run(block, ctx) {
     const values: Value[] = [];
     for (const arg of block.args) values.push(yield* ctx.eval(arg));

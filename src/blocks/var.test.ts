@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, notation, runAll, withInputs } from "./testing";
+import { ast, evalExpr, notation, runAll, createProgramWithInputs } from "./testing";
 
 const { v, num, for_, print } = ast;
 
@@ -23,7 +23,7 @@ describe("var (blocks.md)", () => {
 
   it("a loop variable read after a loop that ran no pass → E_UNDEFINED at run time", () => {
     const read = v("i");
-    const made = withInputs({ n: 0 }, [for_("i", num(0), v("n"), []), print(read)]);
+    const made = createProgramWithInputs({ n: 0 }, [for_("i", num(0), v("n"), []), print(read)]);
     expect(runAll(made.program, made.inputs).done).toMatchObject({
       type: "error",
       error: { nodeId: read.id, code: "E_UNDEFINED", params: { name: "i" } },

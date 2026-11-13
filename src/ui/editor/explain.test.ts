@@ -1,14 +1,14 @@
 // The explanation line explains what the list highlights or the caret is in.
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { joinSpans } from "@/ui/chart/text";
-import { allEntries, exprLabel, makeEntry } from "./entries";
+import { allEntries, exprLabel, createEntryExpr } from "./entries";
 import type { TextLine } from "./caret";
 import { explainEditor, explainLine, explainVariable } from "./explain";
 import type { LineContext } from "./choices";
 
-const { assign, num, bin, v, for_, print, empty } = ast;
+const { assign, num, bin, v, for_, print, empty, program } = ast;
 
 const ctx: LineContext = {
   variables: ["i", "total", "n"],
@@ -80,7 +80,7 @@ describe("explanation line", () => {
     expect(shown(typed("[1,"))?.[0]).toBe("List");
     const blank = allEntries().find((entry) => entry.id === "list.empty");
     if (!blank) throw new Error("no Empty list");
-    const [one, two] = [makeEntry(blank), makeEntry(blank)];
+    const [one, two] = [createEntryExpr(blank), createEntryExpr(blank)];
     expect(exprLabel(one, lists.kinds)).toBe("Empty list");
     const explained = explainLine(at(""), ctx, { type: "entry", entry: blank }, p, target.id);
     expect(explained?.spans.filter((span) => "key" in span)).toEqual([{ text: "[]", key: true }]);

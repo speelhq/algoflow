@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, eventTypes, notation, runAll, varData, withInputs } from "./testing";
+import {
+  ast,
+  evalExpr,
+  eventTypes,
+  notation,
+  runAll,
+  varData,
+  createProgramWithInputs,
+} from "./testing";
 
 const { assignTo, item, list, num, str, bin, neg, v } = ast;
 
@@ -47,7 +55,7 @@ describe("index (blocks.md)", () => {
 
   it("as a target, stores its item, negative from the end, its write at the statement", () => {
     const stmt = assignTo(item(v("xs"), num(-1)), num(9));
-    const made = withInputs({ xs: [1, 2] }, [stmt]);
+    const made = createProgramWithInputs({ xs: [1, 2] }, [stmt]);
     const result = runAll(made.program, made.inputs);
     expect(varData(result, "xs")).toEqual([1, 9]);
     expect(result.events[1]).toMatchObject({
@@ -59,7 +67,7 @@ describe("index (blocks.md)", () => {
 
   it("as a target, a position beyond the list → E_INDEX at the statement", () => {
     const stmt = assignTo(item(v("xs"), num(5)), num(0));
-    const made = withInputs({ xs: [1, 2] }, [stmt]);
+    const made = createProgramWithInputs({ xs: [1, 2] }, [stmt]);
     expect(runAll(made.program, made.inputs).done).toMatchObject({
       type: "error",
       error: { nodeId: stmt.id, code: "E_INDEX", params: { index: 5, length: 2 } },

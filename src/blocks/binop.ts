@@ -1,7 +1,7 @@
 // The `binop` block definition: arithmetic, comparison, logic, and `in`, with the reads of `in`, the
 // `compare` events, and the operator precedence of the emitted text.
 import { dictKey } from "@/lang/data";
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { KINDS, type Expr, type Value } from "@/lang/types";
 import { binopPrecedence, isBinOp, isComparison } from "@/python/precedence";
 import { typeError } from "@/runtime/access";
@@ -17,7 +17,7 @@ import {
   truthy,
 } from "@/runtime/values";
 import { defineExpr, type RunContext } from "./types";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 type Binop = Extract<Expr, { type: "binop" }>;
 
@@ -120,7 +120,13 @@ export const binop = defineExpr<"binop">({
     { name: "right", role: "expr" },
   ],
   precedence: (block) => binopPrecedence((block as Binop).op),
-  create: () => ({ id: newId(), type: "binop", op: "+", left: emptyDraft(), right: emptyDraft() }),
+  create: () => ({
+    id: createNodeId(),
+    type: "binop",
+    op: "+",
+    left: createEmptyDraft(),
+    right: createEmptyDraft(),
+  }),
   fieldsError: (fields) =>
     typeof fields.op === "string" && isBinOp(fields.op)
       ? undefined

@@ -1,9 +1,9 @@
 // The `index` block definition: `nums[i]`, one item of a list found by its position, read with its `read`
 // event, and as a target its place.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { asList, listIndex } from "@/runtime/access";
 import { defineExpr } from "./types";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 export const index = defineExpr<"index">({
   key: "index",
@@ -12,7 +12,12 @@ export const index = defineExpr<"index">({
     { name: "list", role: "expr", atom: true },
     { name: "index", role: "expr" },
   ],
-  create: () => ({ id: newId(), type: "index", list: emptyDraft(), index: emptyDraft() }),
+  create: () => ({
+    id: createNodeId(),
+    type: "index",
+    list: createEmptyDraft(),
+    index: createEmptyDraft(),
+  }),
   *run(block, ctx) {
     return (yield* ctx.read(block, block.id)).value;
   },

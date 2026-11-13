@@ -5,11 +5,10 @@ import {
   ast,
   evalExpr,
   eventTypes,
-  program,
   runAll,
-  tid,
+  createTestId,
   varData,
-  withInputs,
+  createProgramWithInputs,
 } from "@/blocks/testing";
 import { run, EVENT_LIMIT } from "./run";
 import { floatRepr, strRepr } from "./values";
@@ -35,6 +34,7 @@ const {
   list,
   item,
   ret,
+  program,
 } = ast;
 
 describe("values and the run", () => {
@@ -84,7 +84,7 @@ describe("values and the run", () => {
   it("a list index is int, else E_TYPE; negative from the end; out of range E_INDEX", () => {
     const write = (index: ReturnType<typeof num>) => {
       const stmt = assignTo(ast.item(v("xs"), index), num(0));
-      const made = withInputs({ xs: [1, 2] }, [stmt]);
+      const made = createProgramWithInputs({ xs: [1, 2] }, [stmt]);
       return runAll(made.program, made.inputs);
     };
     expect(varData(write(num(-1)), "xs")).toEqual([1, 0]);
@@ -111,7 +111,7 @@ describe("values and the run", () => {
   });
 
   it("assignment copies the reference", () => {
-    const made = withInputs({ xs: [1] }, [
+    const made = createProgramWithInputs({ xs: [1] }, [
       assign("ys", v("xs")),
       assignTo(ast.item(v("ys"), num(0)), num(9)),
     ]);
@@ -220,7 +220,7 @@ describe("event rules", () => {
   });
 
   it("a frame of a function named main names that function, not main", () => {
-    const fn = { id: tid(), name: "main", params: [], body: [ret(num(1))] };
+    const fn = { id: createTestId(), name: "main", params: [], body: [ret(num(1))] };
     const runner = run(program([exprStmt(call("main"))], { functions: [fn] }), {}, 1);
     let event = runner.next();
     while (event.type !== "call") event = runner.next();

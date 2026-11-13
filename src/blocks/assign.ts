@@ -1,7 +1,7 @@
 // The `assign` block definition: `<target> = <value>`; the value is stored at its target's place.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { defineStmt } from "./types";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 export const assign = defineStmt<"assign">({
   key: "assign",
@@ -10,7 +10,12 @@ export const assign = defineStmt<"assign">({
     { name: "target", role: "target", hint: "variable", binds: true, stores: "value" },
     { name: "value", role: "expr", hint: "value" },
   ],
-  create: () => ({ id: newId(), type: "assign", target: emptyDraft(), value: emptyDraft() }),
+  create: () => ({
+    id: createNodeId(),
+    type: "assign",
+    target: createEmptyDraft(),
+    value: createEmptyDraft(),
+  }),
   *run(block, ctx) {
     const value = yield* ctx.eval(block.value);
     yield* ctx.store(block.target, value, block.id);

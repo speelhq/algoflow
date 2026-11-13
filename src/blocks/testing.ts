@@ -15,92 +15,104 @@ import type {
 import { isDone } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Done, Event, State } from "@/runtime/types";
-import { emptyDraft, getBlockDef, registryKey } from "./registry";
+import { createEmptyDraft, getBlockDef, registryKey } from "./registry";
 
 let counter = 0;
 
-export function tid(): NodeId {
+export function createTestId(): NodeId {
   counter += 1;
   return `t${String(counter).padStart(11, "0")}`;
 }
 
 export const ast = {
-  empty: (): Expr => ({ ...emptyDraft(), id: tid() }),
-  draft: (text: string): Expr => ({ id: tid(), type: "draft", text }),
+  empty: (): Expr => ({ ...createEmptyDraft(), id: createTestId() }),
+  draft: (text: string): Expr => ({ id: createTestId(), type: "draft", text }),
   num: (value: number, raw = String(value)): Expr => ({
-    id: tid(),
+    id: createTestId(),
     type: "num",
     value,
     float: /[.eE]/.test(raw),
     raw,
   }),
   float: (value: number, raw?: string): Expr => ({
-    id: tid(),
+    id: createTestId(),
     type: "num",
     value,
     float: true,
     raw: raw ?? (Number.isInteger(value) ? `${value}.0` : String(value)),
   }),
-  str: (value: string): Expr => ({ id: tid(), type: "str", value }),
-  bool: (value: boolean): Expr => ({ id: tid(), type: "bool", value }),
-  none: (): Expr => ({ id: tid(), type: "none" }),
-  v: (name: string): Expr => ({ id: tid(), type: "var", name }),
+  str: (value: string): Expr => ({ id: createTestId(), type: "str", value }),
+  bool: (value: boolean): Expr => ({ id: createTestId(), type: "bool", value }),
+  none: (): Expr => ({ id: createTestId(), type: "none" }),
+  v: (name: string): Expr => ({ id: createTestId(), type: "var", name }),
   bin: (op: BinOp, left: Expr, right: Expr): Expr => ({
-    id: tid(),
+    id: createTestId(),
     type: "binop",
     op,
     left,
     right,
   }),
-  neg: (operand: Expr): Expr => ({ id: tid(), type: "unop", op: "neg", operand }),
-  not: (operand: Expr): Expr => ({ id: tid(), type: "unop", op: "not", operand }),
-  list: (...items: Expr[]): Expr => ({ id: tid(), type: "list", items }),
-  item: (list: Expr, index: Expr): Expr => ({ id: tid(), type: "index", list, index }),
-  call: (fn: string, ...args: Expr[]): Expr => ({ id: tid(), type: "call", fn, args }),
+  neg: (operand: Expr): Expr => ({ id: createTestId(), type: "unop", op: "neg", operand }),
+  not: (operand: Expr): Expr => ({ id: createTestId(), type: "unop", op: "not", operand }),
+  list: (...items: Expr[]): Expr => ({ id: createTestId(), type: "list", items }),
+  item: (list: Expr, index: Expr): Expr => ({ id: createTestId(), type: "index", list, index }),
+  call: (fn: string, ...args: Expr[]): Expr => ({ id: createTestId(), type: "call", fn, args }),
 
   assign: (name: string, value: Expr): Stmt => ({
-    id: tid(),
+    id: createTestId(),
     type: "assign",
-    target: { id: tid(), type: "var", name },
+    target: { id: createTestId(), type: "var", name },
     value,
   }),
   assignTo: (target: Expr, value: Expr): Extract<Stmt, { type: "assign" }> => ({
-    id: tid(),
+    id: createTestId(),
     type: "assign",
     target,
     value,
   }),
-  print: (...args: Expr[]): Stmt => ({ id: tid(), type: "print", args }),
-  swap: (a: Expr, b: Expr): Stmt => ({ id: tid(), type: "swap", a, b }),
-  exprStmt: (expr: Expr): Stmt => ({ id: tid(), type: "expr", expr }),
+  print: (...args: Expr[]): Stmt => ({ id: createTestId(), type: "print", args }),
+  swap: (a: Expr, b: Expr): Stmt => ({ id: createTestId(), type: "swap", a, b }),
+  exprStmt: (expr: Expr): Stmt => ({ id: createTestId(), type: "expr", expr }),
   if_: (cond: Expr, then: Stmt[], else_: Stmt[] = []): Stmt => ({
-    id: tid(),
+    id: createTestId(),
     type: "if",
     cond,
     then,
     else: else_,
   }),
   for_: (variable: string, start: Expr, stop: Expr, body: Stmt[]): Stmt => ({
-    id: tid(),
+    id: createTestId(),
     type: "for",
-    var: { id: tid(), type: "var", name: variable },
+    var: { id: createTestId(), type: "var", name: variable },
     start,
     stop,
     body,
   }),
   forTo: (target: Expr, start: Expr, stop: Expr, body: Stmt[]): Extract<Stmt, { type: "for" }> => ({
-    id: tid(),
+    id: createTestId(),
     type: "for",
     var: target,
     start,
     stop,
     body,
   }),
-  while_: (cond: Expr, body: Stmt[]): Stmt => ({ id: tid(), type: "while", cond, body }),
-  brk: (): Stmt => ({ id: tid(), type: "break" }),
-  cont: (): Stmt => ({ id: tid(), type: "continue" }),
+  while_: (cond: Expr, body: Stmt[]): Stmt => ({ id: createTestId(), type: "while", cond, body }),
+  brk: (): Stmt => ({ id: createTestId(), type: "break" }),
+  cont: (): Stmt => ({ id: createTestId(), type: "continue" }),
   ret: (value?: Expr): Stmt =>
-    value ? { id: tid(), type: "return", value } : { id: tid(), type: "return" },
+    value ? { id: createTestId(), type: "return", value } : { id: createTestId(), type: "return" },
+
+  program: (
+    main: Stmt[],
+    opts: { inputs?: InputDecl[]; functions?: FunctionDef[]; title?: string } = {},
+  ): Program => ({
+    version: 1,
+    title: opts.title ?? "test",
+    inputs: opts.inputs ?? [],
+    classes: [],
+    functions: opts.functions ?? [],
+    main,
+  }),
 };
 
 /** The notation its block definition writes `block` in (`blocks.md`, Notation). */
@@ -115,28 +127,14 @@ export function hints(key: string): Array<string | undefined> {
     .map((slot) => ("hint" in slot ? slot.hint : undefined));
 }
 
-export function program(
-  main: Stmt[],
-  opts: { inputs?: InputDecl[]; functions?: FunctionDef[]; title?: string } = {},
-): Program {
-  return {
-    version: 1,
-    title: opts.title ?? "test",
-    inputs: opts.inputs ?? [],
-    classes: [],
-    functions: opts.functions ?? [],
-    main,
-  };
-}
-
 /** A program of `main` declaring one input per value, of that value's kind, and the values. */
-export function withInputs(
+export function createProgramWithInputs(
   values: Record<string, Data>,
   main: Stmt[],
   opts: { functions?: FunctionDef[] } = {},
 ): { program: Program; inputs: Record<string, Data> } {
   const inputs = Object.entries(values).map(([name, value]) => ({ name, kind: dataKind(value) }));
-  return { program: program(main, { ...opts, inputs }), inputs: values };
+  return { program: ast.program(main, { ...opts, inputs }), inputs: values };
 }
 
 export type RunResult = {
@@ -186,7 +184,7 @@ export function evalExpr(
   expr: Expr,
   values: Record<string, Data> = {},
 ): { data: Data; value: Value; events: Event[]; done: Done } {
-  const made = withInputs(values, [ast.assign("result", expr)]);
+  const made = createProgramWithInputs(values, [ast.assign("result", expr)]);
   const result = runAll(made.program, made.inputs);
   const events = result.events.filter((e) => e.type !== "enter" && e.type !== "write");
   if (result.done.type === "error")

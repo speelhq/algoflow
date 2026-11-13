@@ -1,7 +1,7 @@
 // Notation as the chart writes it; a value as the blocks write it.
 import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
-import { ast, program, withInputs } from "@/blocks/testing";
+import { ast, createProgramWithInputs } from "@/blocks/testing";
 import { isParseError, parse } from "@/python/parse";
 import { PRECEDENCE } from "@/python/precedence";
 import { run } from "@/runtime/run";
@@ -39,6 +39,7 @@ const {
   call,
   ret,
   empty,
+  program,
 } = ast;
 
 const { item } = ast;
@@ -288,7 +289,10 @@ describe("diamonds and generated chart nodes", () => {
 
 describe("valueText", () => {
   it("writes True, False, None, and a text in quotes, inside containers too", () => {
-    const made = withInputs({ d: { a: [true, null, "x", { $float: 2 }], "$int:3": 1 } }, []);
+    const made = createProgramWithInputs(
+      { d: { a: [true, null, "x", { $float: 2 }], "$int:3": 1 } },
+      [],
+    );
     const runner = run(made.program, made.inputs, 1);
     const { frames, heap } = runner.state();
     const value = frames[0]?.vars.get("d");

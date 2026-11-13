@@ -3,14 +3,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { findChallenge, type Challenge } from "@/challenges";
 import { canRun } from "@/lang/validate";
-import { ast, program, runAll, tid } from "@/blocks/testing";
+import { ast, runAll, createTestId } from "@/blocks/testing";
 import { SPEEDS, useLayout } from "./layout";
 import { BATCH } from "./batches";
 import { useProgram } from "./program";
 import { useRun, type RunState } from "./run";
 import { settle } from "./testing";
 
-const { assign, num, bin, v, print, for_, if_, while_, str, exprStmt, call, ret } = ast;
+const { assign, num, bin, v, print, for_, if_, while_, str, exprStmt, call, ret, program } = ast;
 
 /** A problem whose one case gives a list: only a case puts a list into a run's state. */
 const lists = vi.hoisted((): Challenge => ({
@@ -33,9 +33,9 @@ vi.mock("@/challenges", async (importOriginal) => {
   };
 });
 
-const counting = () => program([for_("i", num(0), num(3), [print(v("i"))])]);
+const createCountingProgram = () => program([for_("i", num(0), num(3), [print(v("i"))])]);
 /** A loop of `BATCH` passes: `3 × BATCH + 1` visible steps, more than one batch. */
-const long = () => program([for_("i", num(0), num(BATCH), [print(v("i"))])]);
+const createLongProgram = () => program([for_("i", num(0), num(BATCH), [print(v("i"))])]);
 const LONG_TOTAL = 3 * BATCH + 1;
 
 const run = () => useRun.getState();
@@ -70,7 +70,7 @@ function fizzbuzz() {
 describe("run store", () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    useProgram.setState({ program: counting() });
+    useProgram.setState({ program: createCountingProgram() });
     run().stop();
     useRun.setState({ caseIndex: 0 });
     useLayout.setState({ speed: SPEEDS.normal });
@@ -132,7 +132,7 @@ describe("run store", () => {
   });
 
   it("pre-run: batches of BATCH with setTimeout(0) between them; idle and busy meanwhile", async () => {
-    useProgram.setState({ program: long() });
+    useProgram.setState({ program: createLongProgram() });
     const action = run().run();
     expect(run()).toMatchObject({ status: "idle", busy: true, total: 0 });
     await vi.advanceTimersByTimeAsync(0);
@@ -237,7 +237,7 @@ describe("run store", () => {
   });
 
   it("the frames have unwound when a call ends the run", async () => {
-    const fn = { id: tid(), name: "one", params: [], body: [ret(num(1))] };
+    const fn = { id: createTestId(), name: "one", params: [], body: [ret(num(1))] };
     useProgram.setState({ program: program([exprStmt(call("one"))], { functions: [fn] }) });
     await paused();
     await run().seek(3);
@@ -271,7 +271,7 @@ describe("run store", () => {
   });
 
   it("a write before a call is shown before the call's frame, by Seek and Step alike", async () => {
-    const fn = { id: tid(), name: "f", params: [], body: [ret(num(1))] };
+    const fn = { id: createTestId(), name: "f", params: [], body: [ret(num(1))] };
     const exchange = ast.swap(ast.item(v("nums"), num(0)), ast.item(v("nums"), call("f")));
     const nums = assign("nums", ast.list(num(1), num(2)));
     useProgram.setState({ program: program([nums, exchange], { functions: [fn] }) });
@@ -325,7 +325,7 @@ describe("run store", () => {
   });
 
   it("Seek works in batches and is busy meanwhile; Back held during it stacks on its target", async () => {
-    useProgram.setState({ program: long() });
+    useProgram.setState({ program: createLongProgram() });
     await paused();
     const seeking = run().seek(LONG_TOTAL - 100);
     expect(run()).toMatchObject({ status: "paused", busy: true, step: BATCH });
@@ -356,7 +356,7 @@ describe("run store", () => {
   });
 
   it("Stop during a pre-run publishes nothing later; a second Run in flight wins", async () => {
-    useProgram.setState({ program: long() });
+    useProgram.setState({ program: createLongProgram() });
     const stopped = run().run();
     run().stop();
     await settle(stopped);
@@ -370,7 +370,7 @@ describe("run store", () => {
   });
 
   it("Step does nothing during the pre-run; Step and Play wait for a Seek in flight", async () => {
-    useProgram.setState({ program: long() });
+    useProgram.setState({ program: createLongProgram() });
     const starting = run().run();
     run().stepOnce();
     await settle(starting);
@@ -487,7 +487,7 @@ describe("run store", () => {
   });
 
   it("Skip: in batches, status playing and busy; Pause and Seek cancel it", async () => {
-    useProgram.setState({ program: long() });
+    useProgram.setState({ program: createLongProgram() });
     await paused();
     const skipping = run().skip();
     expect(run()).toMatchObject({ status: "playing", busy: true, step: BATCH });
@@ -624,7 +624,7 @@ describe("run store", () => {
       verdict: { status: "error", error: { nodeId: div.id, code: "E_DIV_ZERO" } },
     });
 
-    useProgram.setState({ program: counting() });
+    useProgram.setState({ program: createCountingProgram() });
     await paused();
     await run().skip();
     expect(run()).toMatchObject({ status: "done", verdict: null });

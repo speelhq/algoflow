@@ -18,7 +18,7 @@ const ctx = {
   },
 } as unknown as RunContext;
 
-function call(argc: number): Extract<Expr, { type: "call" }> {
+function createProbeCall(argc: number): Extract<Expr, { type: "call" }> {
   const args = Array.from({ length: argc }, (_, i): Expr => ({
     id: `arg00000000${i}`,
     type: "num",
@@ -30,7 +30,7 @@ function call(argc: number): Extract<Expr, { type: "call" }> {
 }
 
 function run(argc: number): Value {
-  const steps = (probe.run as ExprRunner)(call(argc), ctx);
+  const steps = (probe.run as ExprRunner)(createProbeCall(argc), ctx);
   for (;;) {
     const step = steps.next();
     if (step.done) return step.value;

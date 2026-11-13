@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, notation, program, runAll, varData, hints } from "./testing";
+import { ast, notation, runAll, varData, hints } from "./testing";
 
-const { cont, for_, assign, num, v, bin, while_ } = ast;
+const { cont, for_, assign, num, v, bin, while_, program } = ast;
 
 describe("continue (blocks.md)", () => {
   it("emits `continue`", () => {

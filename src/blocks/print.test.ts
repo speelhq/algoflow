@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, eventTypes, notation, program, runAll, withInputs, hints } from "./testing";
+import { ast, eventTypes, notation, runAll, createProgramWithInputs, hints } from "./testing";
 
-const { print, num, float, str, bool, none, bin, v } = ast;
+const { print, num, float, str, bool, none, bin, v, program } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
   emit(program(main), {}).code.trimEnd().split("\n");
 
@@ -25,7 +25,7 @@ describe("print (blocks.md)", () => {
   });
 
   it("a list or a dict argument prints in repr form with single-quoted strings", () => {
-    const made = withInputs({ xs: [1, "a", { $float: 2 }], d: { a: 1 } }, [
+    const made = createProgramWithInputs({ xs: [1, "a", { $float: 2 }], d: { a: 1 } }, [
       print(v("xs")),
       print(v("d")),
     ]);

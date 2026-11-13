@@ -183,58 +183,63 @@ function generator(seed: number) {
     return item;
   };
   let n = 0;
-  const id = () => `g${String((n += 1)).padStart(11, "0")}`;
-  const gen = (depth: number): Expr => {
+  const createId = () => `g${String((n += 1)).padStart(11, "0")}`;
+  const createExpr = (depth: number): Expr => {
     const leaf = depth <= 0 || rand() < 0.3;
     const choice = Math.floor(rand() * (leaf ? 5 : 10));
     switch (choice) {
       case 0: {
         const raw = pick(RAWS);
-        return { id: id(), type: "num", value: Number(raw), float: /[.eE]/.test(raw), raw };
+        return { id: createId(), type: "num", value: Number(raw), float: /[.eE]/.test(raw), raw };
       }
       case 1:
-        return { id: id(), type: "str", value: pick(STRINGS) };
+        return { id: createId(), type: "str", value: pick(STRINGS) };
       case 2:
-        return { id: id(), type: "bool", value: rand() < 0.5 };
+        return { id: createId(), type: "bool", value: rand() < 0.5 };
       case 3:
-        return { id: id(), type: "none" };
+        return { id: createId(), type: "none" };
       case 4:
-        return { id: id(), type: "var", name: pick(NAMES) };
+        return { id: createId(), type: "var", name: pick(NAMES) };
       case 5:
         return {
-          id: id(),
+          id: createId(),
           type: "binop",
           op: pick(BINOPS),
-          left: gen(depth - 1),
-          right: gen(depth - 1),
+          left: createExpr(depth - 1),
+          right: createExpr(depth - 1),
         };
       case 6:
         return {
-          id: id(),
+          id: createId(),
           type: "unop",
           op: rand() < 0.5 ? "neg" : "not",
-          operand: gen(depth - 1),
+          operand: createExpr(depth - 1),
         };
       case 7:
         return {
-          id: id(),
+          id: createId(),
           type: "list",
-          items: Array.from({ length: Math.floor(rand() * 3) }, () => gen(depth - 1)),
+          items: Array.from({ length: Math.floor(rand() * 3) }, () => createExpr(depth - 1)),
         };
       case 8:
-        return { id: id(), type: "index", list: gen(depth - 1), index: gen(depth - 1) };
+        return {
+          id: createId(),
+          type: "index",
+          list: createExpr(depth - 1),
+          index: createExpr(depth - 1),
+        };
       default: {
         const def = pick(BUILTINS);
         return {
-          id: id(),
+          id: createId(),
           type: "call",
           fn: def.key.slice(5),
-          args: (def.params ?? []).map(() => gen(depth - 1)),
+          args: (def.params ?? []).map(() => createExpr(depth - 1)),
         };
       }
     }
   };
-  return () => gen(4);
+  return () => createExpr(4);
 }
 
 /** An expression with every block id removed, for comparing structure alone. */

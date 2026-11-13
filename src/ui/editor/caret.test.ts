@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
 import { addFunction } from "@/lang/edit";
-import { program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { joinSpans } from "@/ui/chart/text";
 import {
   caretMatches,
@@ -19,6 +19,8 @@ import { rowName, type LineContext, type Row } from "./choices";
 import { allEntries } from "./entries";
 import { explainOperation } from "./explain";
 import { menuGroups } from "./menu";
+
+const { program } = ast;
 
 const ctx: LineContext = {
   variables: ["i", "total", "n", "ok", "nums", "x"],

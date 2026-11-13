@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { forStmt } from "./for";
-import { ast, eventTypes, notation, program, runAll, varData, withInputs, hints } from "./testing";
+import {
+  ast,
+  eventTypes,
+  notation,
+  runAll,
+  varData,
+  createProgramWithInputs,
+  hints,
+} from "./testing";
 
-const { for_, forTo, assign, num, float, str, bin, v, item, list, brk, cont, if_ } = ast;
+const { for_, forTo, assign, num, float, str, bin, v, item, list, brk, cont, if_, program } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
   emit(program(main), {}).code.trimEnd().split("\n");
 
@@ -63,7 +71,7 @@ describe("for (blocks.md)", () => {
   });
 
   it("bounds are evaluated once; the variable stays visible after the loop", () => {
-    const made = withInputs({ n: 3 }, [
+    const made = createProgramWithInputs({ n: 3 }, [
       for_("i", num(0), v("n"), [assign("n", bin("+", v("n"), num(1)))]),
     ]);
     const result = runAll(made.program, made.inputs);
@@ -101,7 +109,7 @@ describe("for (blocks.md)", () => {
 
   it("each pass finds its target's place again and stores the value there (language.md, Semantics, Loops)", () => {
     // The body moves the target's position, as `k = 1` does in Python's `for nums[k] in range(3)`.
-    const made = withInputs({ k: 0, nums: [9, 9] }, [
+    const made = createProgramWithInputs({ k: 0, nums: [9, 9] }, [
       forTo(item(v("nums"), v("k")), num(0), num(3), [assign("k", num(1))]),
     ]);
     const result = runAll(made.program, made.inputs);

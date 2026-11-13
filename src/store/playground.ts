@@ -1,6 +1,6 @@
 // Playground programs: their ids and the index of their last saves under
 // `algoflow:playground`. Each program itself is stored under its own program key.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { isRecord } from "@/lang/record";
 import type { Program } from "@/lang/types";
 import { readStored, removeStored, writeStored } from "./storage";
@@ -15,8 +15,8 @@ export function isPlaygroundId(id: string): boolean {
   return id.startsWith(PLAYGROUND_ID_PREFIX);
 }
 
-export function newPlaygroundId(): string {
-  return `${PLAYGROUND_ID_PREFIX}${newId()}`;
+export function createPlaygroundId(): string {
+  return `${PLAYGROUND_ID_PREFIX}${createNodeId()}`;
 }
 
 /** The index as stored; malformed entries are dropped. */

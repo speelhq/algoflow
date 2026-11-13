@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { ifStmt } from "./if";
-import { ast, eventTypes, notation, program, runAll, varData, hints } from "./testing";
+import { ast, eventTypes, notation, runAll, varData, hints } from "./testing";
 
-const { if_, assign, num, bin, v, for_, brk } = ast;
+const { if_, assign, num, bin, v, for_, brk, program } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
   emit(program(main), {}).code.trimEnd().split("\n");
 

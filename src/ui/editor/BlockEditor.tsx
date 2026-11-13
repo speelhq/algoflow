@@ -14,7 +14,7 @@ import { visibleAt } from "@/lang/scope";
 import type { NodeId, Program, Stmt } from "@/lang/types";
 import { blocksById, getHoldingRoutine } from "@/lang/walk";
 import { cn } from "@/lib/utils";
-import { emptyDraft, getBlockDef, registryKey } from "@/blocks/registry";
+import { createEmptyDraft, getBlockDef, registryKey } from "@/blocks/registry";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { placeholderValue, slotSpans } from "@/ui/chart/text";
@@ -207,7 +207,7 @@ function Body(props: {
 
   /** `+ value` gives an optional slot an empty slot, whose field takes the keyboard. */
   const addValue = (slot: string) => {
-    if (!apply((p) => setExpr(p, stmt.id, slot, emptyDraft()))) return;
+    if (!apply((p) => setExpr(p, stmt.id, slot, createEmptyDraft()))) return;
     const now = current() ?? stmt;
     enter(stmtFields(now).find((field) => field.slot === slot) ?? null, "tab");
   };

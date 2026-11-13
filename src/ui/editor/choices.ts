@@ -6,7 +6,7 @@ import type { Kinds } from "@/lang/kinds";
 import type { Expr, Kind, Name, Program } from "@/lang/types";
 import { refusedDefinitions } from "@/lang/validate";
 import type { ValueGroup } from "@/blocks/types";
-import { emptyDraft } from "@/blocks/registry";
+import { createEmptyDraft } from "@/blocks/registry";
 import { isParseError, parse } from "@/python/parse";
 import { allEntries, firstSlot, GROUPS, takesValue, type Entry } from "./entries";
 import { isNewName, matchesName, type RoutineNames } from "./names";
@@ -82,12 +82,15 @@ export function callableFunctions(program: Program): LineFunction[] {
     .map((fn) => ({ name: fn.name, params: fn.params }));
 }
 
-/** A call of one of the program's functions, its arguments empty slots. */
-export function callExpr(fn: LineFunction): Expr | undefined {
+/**
+ * A call of one of the program's functions, its arguments empty slots; throws for a name that
+ * writes no call.
+ */
+export function createCall(fn: LineFunction): Expr {
   const call = parse(`${fn.name}()`);
   const args = isParseError(call) ? undefined : firstSlot(call);
-  if (isParseError(call) || args?.role !== "exprs") return undefined;
-  return { ...call, [args.name]: fn.params.map(() => emptyDraft()) };
+  if (isParseError(call) || args?.role !== "exprs") throw new Error(`"${fn.name}" names no call`);
+  return { ...call, [args.name]: fn.params.map(() => createEmptyDraft()) };
 }
 
 /** The variables visible at the statement, as rows. */

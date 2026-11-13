@@ -1,8 +1,8 @@
 // The `swap` block definition: `<a>, <b> = <b>, <a>`, run in Python's order, each `write` carrying the place
 // its value was read from, by which the driver shows an exchange as one step.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { defineStmt } from "./types";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 export const swap = defineStmt<"swap">({
   key: "swap",
@@ -11,7 +11,12 @@ export const swap = defineStmt<"swap">({
     { name: "a", role: "target", hint: "first" },
     { name: "b", role: "target", hint: "second" },
   ],
-  create: () => ({ id: newId(), type: "swap", a: emptyDraft(), b: emptyDraft() }),
+  create: () => ({
+    id: createNodeId(),
+    type: "swap",
+    a: createEmptyDraft(),
+    b: createEmptyDraft(),
+  }),
   *run(block, ctx) {
     // Python reads `b` then `a`, then finds `a` again and writes it, then `b`.
     const second = yield* ctx.read(block.b, block.id);

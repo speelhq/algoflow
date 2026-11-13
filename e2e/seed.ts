@@ -39,7 +39,7 @@ export async function seedPlayground(
  * A program whose print reads `total`, which a loop's body first assigns: its print carries the
  * diagnostic `E_DECLARE_FIRST`, with a fix, on the chart node `dgn-prnt-001`.
  */
-export function declareFirstProgram(): Record<string, unknown> {
+export function createDeclareFirstProgram(): Record<string, unknown> {
   const loop = {
     id: "dgn-loop-001",
     type: "for",
@@ -60,10 +60,10 @@ export function declareFirstProgram(): Record<string, unknown> {
     type: "print",
     args: [{ id: "dgn-tvar-001", type: "var", name: "total" }],
   };
-  return programWith([loop, out]);
+  return createStoredProgram([loop, out]);
 }
 
 /** A stored program for problem id with main as given (opening the problem restores challengeId and inputs). */
-export function programWith(main: unknown[]): Record<string, unknown> {
+export function createStoredProgram(main: unknown[]): Record<string, unknown> {
   return { version: 1, title: "", inputs: [], classes: [], functions: [], main };
 }

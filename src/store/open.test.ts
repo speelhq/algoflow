@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { findChallenge } from "@/challenges";
 import { useEditor } from "./editor";
 import { openProgram } from "./open";
-import { createPlaygroundProgram, emptyProgram, useProgram } from "./program";
+import { createPlaygroundProgram, createProgram, useProgram } from "./program";
 import { useRun } from "./run";
 import { settle } from "./testing";
 
@@ -46,7 +46,7 @@ describe("openProgram", () => {
   });
 
   it("a Playground program opens on the Result tab", () => {
-    const id = createPlaygroundProgram(emptyProgram("Mine"));
+    const id = createPlaygroundProgram(createProgram("Mine"));
     openProgram(id);
     expect(useProgram.getState()).toMatchObject({ id, program: { title: "Mine" } });
     expect(useEditor.getState().tab).toBe("result");

@@ -27,12 +27,12 @@ import {
   rowsAfter,
   sections,
   targetNames,
-  callExpr,
+  createCall,
   type LineContext,
   type Row,
   type Section,
 } from "./choices";
-import { firstSlot, makeEntry, takesValue } from "./entries";
+import { firstSlot, createEntryExpr, takesValue } from "./entries";
 
 /** A value line's text and its selection, from `start` to `end`: the caret where they are equal. */
 export type TextLine = { text: string; start: number; end: number };
@@ -164,14 +164,12 @@ function choiceAt(
     case "parentheses":
       return { line: caretLine("()", 1), filled: "(_)", from };
     case "function": {
-      const call = callExpr(row.fn);
-      if (!call) throw new Error(`"${row.fn.name}" names no call`);
-      return { ...writeChoice(call), from };
+      return { ...writeChoice(createCall(row.fn)), from };
     }
     case "entry":
       break;
   }
-  const made = makeEntry(row.entry);
+  const made = createEntryExpr(row.entry);
   if (place.place !== "after" || !takesValue(row.entry)) return { ...writeChoice(made), from };
   const first = firstSlot(made);
   const binds = first ? bindsAt(made, first.name) : undefined;

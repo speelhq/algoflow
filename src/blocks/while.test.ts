@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { whileStmt } from "./while";
-import { ast, eventTypes, notation, program, runAll, varData, withInputs, hints } from "./testing";
+import {
+  ast,
+  eventTypes,
+  notation,
+  runAll,
+  varData,
+  createProgramWithInputs,
+  hints,
+} from "./testing";
 
-const { while_, assign, num, bin, v, brk, bool } = ast;
+const { while_, assign, num, bin, v, brk, bool, program } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
   emit(program(main), {}).code.trimEnd().split("\n");
 
@@ -39,7 +47,7 @@ describe("while (blocks.md)", () => {
   it("a condition that is no comparison ends in a compare of its own each pass", () => {
     const cond = v("stack");
     const loop = while_(cond, [assign("stack", ast.none())]);
-    const made = withInputs({ stack: [1] }, [loop]);
+    const made = createProgramWithInputs({ stack: [1] }, [loop]);
     const result = runAll(made.program, made.inputs);
     expect(eventTypes(result.events)).toEqual([
       "enter",

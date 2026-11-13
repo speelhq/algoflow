@@ -7,7 +7,7 @@ import { migrate } from "@/lang/migrate";
 import type { Data, Expr, Name, Program, Stmt } from "@/lang/types";
 import { findVariableName } from "@/lang/walk";
 import { getBlockDef } from "@/blocks/registry";
-import { isParseError, parse, parseData } from "@/python/parse";
+import { isParseError, parse, createDataExpr } from "@/python/parse";
 import { createPlaygroundProgram, useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { navigate } from "@/ui/app/route";
@@ -23,7 +23,7 @@ function variableExpr(name: Name): Expr | undefined {
  * a caller's error: `pnpm check` refuses a challenge input that is one.
  */
 function inputAssignment(name: Name, data: Data): Stmt {
-  const value = parseData(data);
+  const value = createDataExpr(data);
   if (isParseError(value))
     throw new Error(`no block writes the value of input ${name}: ${JSON.stringify(data)}`);
   const assign = getBlockDef("assign").create() as Extract<Stmt, { type: "assign" }>;

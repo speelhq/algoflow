@@ -1,8 +1,8 @@
 // The `if` block definition: `if <cond>:` … `else:` (else omitted when empty; empty region → pass).
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { decide } from "@/runtime/condition";
 import { defineStmt } from "./types";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 export const ifStmt = defineStmt<"if">({
   key: "if",
@@ -14,9 +14,9 @@ export const ifStmt = defineStmt<"if">({
     { name: "else", role: "body" },
   ],
   create: () => ({
-    id: newId(),
+    id: createNodeId(),
     type: "if",
-    cond: emptyDraft(),
+    cond: createEmptyDraft(),
     then: [],
     else: [],
   }),

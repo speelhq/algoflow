@@ -1,11 +1,11 @@
 // The block menu's groups, order, disabled entries, search, and This program, which lists only
 // functions a call can name.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { joinSpans, notationWithHints } from "@/ui/chart/text";
 import { menuGroups, searchMenu } from "./menu";
 
-const { v, while_, for_, num } = ast;
+const { v, while_, for_, num, program } = ast;
 const MAIN = { parent: "main", slot: "main", index: 0 } as const;
 
 describe("block menu", () => {

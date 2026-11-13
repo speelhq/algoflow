@@ -1,6 +1,12 @@
 // Playground programs, their page, running one, persistence, Export and Import, and Open in Playground.
 import { expect, test } from "./fixtures";
-import { programWith, seedPlayground, seedProgram, seedProgress, readSolution } from "./seed";
+import {
+  createStoredProgram,
+  seedPlayground,
+  seedProgram,
+  seedProgress,
+  readSolution,
+} from "./seed";
 
 test.beforeEach(async ({ page }) => {
   await seedProgress(page, {});
@@ -35,7 +41,7 @@ test("a Playground program runs to its output, with no case selector and no Expe
     type: "print",
     args: [{ id: "pgr-text-001", type: "str", value: "hi" }],
   };
-  await seedProgram(page, id, { ...programWith([say]), title: "Say hi" });
+  await seedProgram(page, id, { ...createStoredProgram([say]), title: "Say hi" });
   await seedPlayground(page, { [id]: { edited: 0 } });
   await page.goto(`/#/play/${id}`);
   await page.getByRole("button", { name: "▶ Run" }).click();

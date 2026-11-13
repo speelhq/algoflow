@@ -4,7 +4,7 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import { getChallengePlan } from "../src/challenges/plans";
-import { programWith, seedProgram, seedProgress, readSolution } from "./seed";
+import { createStoredProgram, seedProgram, seedProgress, readSolution } from "./seed";
 
 /** Drags the position bar's thumb past its right end. */
 async function dragToEnd(page: Page): Promise<void> {
@@ -108,7 +108,7 @@ test("Wrong Answer shows the rows only, and Watch opens at the first difference"
 });
 
 test("a test that ends in an error shows its message in place of Output", async ({ page }) => {
-  const num = (id: string, value: number) => ({
+  const createNum = (id: string, value: number) => ({
     id,
     type: "num",
     value,
@@ -123,12 +123,12 @@ test("a test that ends in an error shows its message in place of Output", async 
       id: "div-binp-001",
       type: "binop",
       op: "/",
-      left: num("div-left-001", 1),
-      right: num("div-zero-001", 0),
+      left: createNum("div-left-001", 1),
+      right: createNum("div-zero-001", 0),
     },
   };
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", programWith([divide]));
+  await seedProgram(page, "fizzbuzz", createStoredProgram([divide]));
   await page.goto("/#/p/fizzbuzz");
   await page.getByTestId("tab-result").click();
   await page.getByRole("button", { name: "✓ Submit" }).click();

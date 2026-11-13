@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { isNodeId, newId } from "./id";
+import { isNodeId, createNodeId } from "./id";
 
 describe("NodeId (language.md, Program)", () => {
   it("is 12 characters from the nanoid alphabet", () => {
-    for (let i = 0; i < 100; i += 1) expect(isNodeId(newId())).toBe(true);
+    for (let i = 0; i < 100; i += 1) expect(isNodeId(createNodeId())).toBe(true);
   });
 
   it("does not repeat in practice", () => {
-    const ids = new Set(Array.from({ length: 1000 }, () => newId()));
+    const ids = new Set(Array.from({ length: 1000 }, () => createNodeId()));
     expect(ids.size).toBe(1000);
   });
 

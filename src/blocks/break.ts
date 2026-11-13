@@ -1,5 +1,5 @@
 // The `break` block definition
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { defineStmt } from "./types";
 
 export const breakStmt = defineStmt<"break">({
@@ -8,7 +8,7 @@ export const breakStmt = defineStmt<"break">({
   requires: "loop",
   chart: { jump: "exit" },
   slots: [],
-  create: () => ({ id: newId(), type: "break" }),
+  create: () => ({ id: createNodeId(), type: "break" }),
   *run() {
     return { type: "break" };
   },

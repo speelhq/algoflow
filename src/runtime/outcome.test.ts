@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { finish, collectOutcome } from "./outcome";
 import { run } from "./run";
 
-const { assign, num, print, v } = ast;
+const { assign, num, print, v, program } = ast;
 
 describe("finish and collectOutcome", () => {
   it("finish returns the Done of the run", () => {

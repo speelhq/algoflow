@@ -1,11 +1,11 @@
 // The taken path, marks, current chart node, and breakpoint drawn while running.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { estimatedWidth } from "./layout";
 import { currentNode, paint, type RunView } from "./paint";
 import { laidOut } from "./testing";
 
-const { bin, for_, if_, num, print, str, v } = ast;
+const { bin, for_, if_, num, print, str, v, program } = ast;
 
 const yes = print(str("zero"));
 const branch = if_(bin("==", v("i"), num(0)), [yes], [print(v("i"))]);

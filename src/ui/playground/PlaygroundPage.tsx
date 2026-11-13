@@ -5,7 +5,7 @@ import { getLocale, t } from "@/i18n/t";
 import {
   createPlaygroundProgram,
   deletePlaygroundProgram,
-  emptyProgram,
+  createProgram,
   flushSave,
   storedTitle,
 } from "@/store/program";
@@ -44,7 +44,7 @@ export function PlaygroundPage() {
   const file = useRef<HTMLInputElement>(null);
 
   const create = () => {
-    const id = createPlaygroundProgram(emptyProgram(t("playground.untitled")));
+    const id = createPlaygroundProgram(createProgram(t("playground.untitled")));
     navigate({ page: "program", id });
   };
   const load = async (picked: File | undefined) => {

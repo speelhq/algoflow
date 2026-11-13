@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import type { FunctionDef } from "@/lang/types";
 import { validate } from "@/lang/validate";
 import { emit, unparse } from "@/python/emit";
-import { ast, eventTypes, notation, program, runAll, varData } from "./testing";
+import { ast, eventTypes, notation, runAll, varData } from "./testing";
 
-const { call, num, bin, v, assign, ret, print, if_, exprStmt } = ast;
+const { call, num, bin, v, assign, ret, print, if_, exprStmt, program } = ast;
 
 const twice: FunctionDef = {
   id: "f0000000000f",

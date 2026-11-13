@@ -1,10 +1,10 @@
 // The `unop` block definition: `-x` and `not x`.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { PRECEDENCE } from "@/python/precedence";
 import { isNumber, makeNumber, truthy } from "@/runtime/values";
 import { defineExpr } from "./types";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 type Unop = Extract<Expr, { type: "unop" }>;
 
@@ -21,7 +21,7 @@ export const unop = defineExpr<"unop">({
     { name: "operand", role: "expr" },
   ],
   precedence: (block) => unopPrecedence(block as Unop),
-  create: () => ({ id: newId(), type: "unop", op: "neg", operand: emptyDraft() }),
+  create: () => ({ id: createNodeId(), type: "unop", op: "neg", operand: createEmptyDraft() }),
   fieldsError: (fields) =>
     typeof fields.op === "string" && Object.hasOwn(OPS, fields.op)
       ? undefined

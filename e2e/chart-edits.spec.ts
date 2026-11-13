@@ -1,7 +1,7 @@
 // Selecting, removing, duplicating, dragging, undo and redo.
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { programWith, seedProgram, seedProgress, readSolution } from "./seed";
+import { createStoredProgram, seedProgram, seedProgress, readSolution } from "./seed";
 
 const node = (page: Page, id: string) => page.locator(`[data-chart-node="${id}"]`);
 
@@ -147,7 +147,7 @@ test("a dragged chart node's ghost draws an empty slot's hint gray, as the chart
     target: { id: "gst-tgt0-001", type: "var", name: "x" },
     value: { id: "gst-emp0-001", type: "draft", text: "" },
   };
-  await seedProgram(page, "fizzbuzz", programWith([assign]));
+  await seedProgram(page, "fizzbuzz", createStoredProgram([assign]));
   await page.goto("/#/p/fizzbuzz");
   const drawn = await drawnSpans(node(page, assign.id).locator("tspan"));
   const hint = drawn.find((span) => span.text === "value");
@@ -167,7 +167,7 @@ test("a drop that takes break out of its loop is refused with a tooltip", async 
     cond: { id: "drg-cond-001", type: "bool", value: true },
     body: [{ id: "drg-stop-001", type: "break" }],
   };
-  await seedProgram(page, "fizzbuzz", programWith([loop]));
+  await seedProgram(page, "fizzbuzz", createStoredProgram([loop]));
   await page.goto("/#/p/fizzbuzz");
   await page.getByTestId("tab-python").click();
   await drag(page, "drg-stop-001", "main/main/0");

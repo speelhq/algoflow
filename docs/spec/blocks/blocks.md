@@ -25,7 +25,7 @@ export type BlockDef = {
   loop?: boolean; // its body regions are loop bodies
   requires?: "loop" | "function"; // where the statement may appear (E_BREAK_OUTSIDE, E_RETURN_OUTSIDE)
   hidden?: boolean; // not in the block menu (`draft`, `expr`)
-  zeroLike?(block: Expr): Expr; // a literal block's zero of the same type (`hoistAssign`)
+  createZero?(block: Expr): Expr; // a literal block's zero of the same type (`hoistAssign`)
   callee?(block: Expr): Callee; // a call-like block's callee and argument count
   create(): Stmt | Expr; // an expression slot it gives no value holds a draft with no text (`language.md`, Expressions, Drafts)
   run: StmtRunner | ExprRunner; // `interpreter.md`, Block definitions

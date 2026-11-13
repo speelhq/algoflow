@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, notation, program, runAll, varData } from "./testing";
+import { ast, evalExpr, notation, runAll, varData } from "./testing";
 import { list as listBlock } from "./list";
 
-const { list, num, str, bin, v, assign, call } = ast;
+const { list, num, str, bin, v, assign, call, program } = ast;
 
 describe("list (blocks.md)", () => {
   it("emits `[<a>, <b>]`, and `[]` with no item", () => {
@@ -34,7 +34,7 @@ describe("list (blocks.md)", () => {
 
   it("is created empty, and its zero is an empty list", () => {
     expect(listBlock.create()).toMatchObject({ type: "list", items: [] });
-    expect(listBlock.zeroLike?.(list(num(1)))).toMatchObject({ type: "list", items: [] });
+    expect(listBlock.createZero?.(list(num(1)))).toMatchObject({ type: "list", items: [] });
   });
 });
 
