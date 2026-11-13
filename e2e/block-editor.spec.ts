@@ -493,3 +493,71 @@ test("an operator is switched by typing its keys: `=` after the `<` of `i < n` g
   await expect(editor(page).locator("[data-value-line]").first()).toHaveValue("i <= n");
   await expect(chart(page)).toContainText("i <= n?");
 });
+
+test("the editor itself takes the keyboard on a block with no field to take it", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  const node = page.locator('[data-chart-node="fzb-prnt-001"]');
+  const dialog = page.getByRole("dialog", { name: "Edit block" });
+  // A click away from a slot opens the editor on no field: the editor itself has the keyboard, and
+  // its explanation line names the ways out.
+  await node.click({ position: { x: 8, y: 20 } });
+  await expect(dialog).toBeFocused();
+  await expect(editor(page).getByTestId("explanation")).toContainText("closes the editor");
+  // Delete and Backspace remove nothing while the editor is open.
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Delete");
+  await expect(node).toHaveCount(1);
+  // Enter closes the editor and keeps the selection, so Delete then removes the block.
+  await page.keyboard.press("Enter");
+  await expect(editor(page)).toHaveCount(0);
+  await page.keyboard.press("Delete");
+  await expect(node).toHaveCount(0);
+  await page.keyboard.press("ControlOrMeta+z");
+  // Esc closes the editor and clears the selection, so Delete then removes nothing.
+  await node.click({ position: { x: 8, y: 20 } });
+  await expect(dialog).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(editor(page)).toHaveCount(0);
+  await page.keyboard.press("Delete");
+  await expect(node).toHaveCount(1);
+});
+
+test("Tab and Shift+Tab go round the editor's controls through the editor itself", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  await page.locator('[data-chart-node="fzb-prnt-001"] [data-block-slot="args"]').click();
+  const dialog = page.getByRole("dialog", { name: "Edit block" });
+  const field = editor(page).locator("[data-value-line]");
+  await expect(field).toBeFocused();
+  await expect(editor(page).getByTestId("value-list")).toBeVisible();
+  // Tab past the last field goes to the editor itself, the value list closes, and the editor stays.
+  await page.keyboard.press("Tab");
+  await expect(dialog).toBeFocused();
+  await expect(editor(page).getByTestId("value-list")).toHaveCount(0);
+  // On the editor itself, Tab goes to the first control, and Shift+Tab back to the editor itself.
+  await page.keyboard.press("Tab");
+  await expect(editor(page).getByTestId("caption")).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(dialog).toBeFocused();
+  // Shift+Tab on the editor itself goes to the last control, the field.
+  await page.keyboard.press("Shift+Tab");
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("i");
+  // Leaving the field for another control closes its value list, and Tab back selects its text.
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("Shift+Tab");
+  await expect(editor(page).getByRole("button", { name: "Delete" })).toBeFocused();
+  await expect(editor(page).getByTestId("value-list")).toHaveCount(0);
+  await page.keyboard.press("Tab");
+  await expect(field).toBeFocused();
+  expect(
+    await field.evaluate((input: HTMLInputElement) => [input.selectionStart, input.selectionEnd]),
+  ).toEqual([0, 1]);
+});

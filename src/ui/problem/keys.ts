@@ -1,8 +1,9 @@
 // The page's keyboard table: Ctrl/Cmd+Enter is the play button; in run mode → steps, ← goes
 // back, Ctrl/Cmd+→ skips; Esc clears the breakpoint while running, else stops a run, else clears
 // the selection; Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z undo and redo, Ctrl/Cmd+D duplicates the
-// selected block, and Delete and Backspace remove it. Shift+→ (Step over) is not bound: the
-// driver has no Step over. A key goes to the page only when nothing focused owns it.
+// selected block, and Delete and Backspace remove it while its editor is closed. Shift+→ (Step
+// over) is not bound: the driver has no Step over. A key goes to the page only when nothing
+// focused owns it.
 import { useEffect } from "react";
 import { duplicateStmt, removeStmt } from "@/lang/edit";
 import { useEditor } from "@/store/editor";
@@ -48,11 +49,11 @@ export function ownsKeys(event: KeyEventLike): boolean {
 }
 
 /** Acts on a key the page owns; false when the table has nothing for it. */
-function act(event: KeyboardEvent): boolean {
+export function act(event: KeyboardEvent): boolean {
   const mod = event.ctrlKey || event.metaKey;
   const mode = currentMode();
   const run = useRun.getState();
-  const selected = useEditor.getState().selectedId;
+  const { selectedId: selected, editing } = useEditor.getState();
   if (mod && event.key === "Enter") togglePlay();
   else if (mod && event.key.toLowerCase() === "z") {
     if (editable(mode)) {
@@ -61,7 +62,9 @@ function act(event: KeyboardEvent): boolean {
     }
   } else if (mod && event.key.toLowerCase() === "d" && selected) {
     apply((program) => duplicateStmt(program, selected));
-  } else if (!mod && REMOVE.has(event.key) && selected) {
+  } else if (!mod && REMOVE.has(event.key) && selected && !editing) {
+    // While its editor is open, the block stays, wherever the keyboard is (`editor.md`, Block
+    // editor).
     if (apply((program) => removeStmt(program, selected))) useEditor.getState().select(null);
   } else if (inRun(mode) && mod && event.key === "ArrowRight") void run.skip();
   else if (inRun(mode) && !mod && !event.shiftKey && event.key === "ArrowRight") run.stepOnce();

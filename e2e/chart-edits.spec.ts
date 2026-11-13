@@ -54,6 +54,11 @@ test("Delete removes the selected block, and undo and redo walk it back", async 
   await expect(undo).toBeDisabled();
   await node(page, "fzb-prfz-001").click({ position: { x: 8, y: 20 } });
   await expect(page.getByTestId("block-editor")).toBeVisible();
+  // While the editor is open, Delete removes nothing; Enter closes it and keeps the selection.
+  await page.keyboard.press("Delete");
+  await expect(node(page, "fzb-prfz-001")).toHaveCount(1);
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("block-editor")).toHaveCount(0);
   await page.keyboard.press("Delete");
   await expect(node(page, "fzb-prfz-001")).toHaveCount(0);
   await page.keyboard.press("Control+z");

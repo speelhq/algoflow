@@ -6,7 +6,8 @@ import { ast, program } from "@/blocks/testing";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { togglePlay } from "./actions";
-import { ownsKeys } from "./keys";
+import { act, ownsKeys } from "./keys";
+import { useEditor } from "@/store/editor";
 import { settle } from "@/store/testing";
 
 const { for_, num, print, v } = ast;
@@ -51,6 +52,33 @@ describe("ownsKeys", () => {
     expect(ownsKeys(press(editor, "Backspace"))).toBe(true);
     expect(ownsKeys(press(editor, "z", true))).toBe(false);
     expect(ownsKeys(press(element("<button data-focus></button>"), "Delete"))).toBe(false);
+  });
+});
+
+describe("Delete and Backspace on the page (chart.md, Editing on the chart, Selection and keys)", () => {
+  const block = print(num(1));
+  beforeEach(() => {
+    useProgram.setState({ program: program([block]) });
+  });
+  const key = (name: string) => new KeyboardEvent("keydown", { key: name });
+
+  it("remove nothing while the selected block's editor is open", () => {
+    useEditor.getState().select(block.id);
+    for (const name of ["Delete", "Backspace"]) {
+      expect(act(key(name))).toBe(false);
+      expect(useProgram.getState().program.main).toHaveLength(1);
+    }
+  });
+
+  it("remove the selected block once its editor is closed", () => {
+    for (const name of ["Delete", "Backspace"]) {
+      useProgram.setState({ program: program([block]) });
+      useEditor.getState().select(block.id);
+      useEditor.getState().closeEditor();
+      expect(act(key(name))).toBe(true);
+      expect(useProgram.getState().program.main).toEqual([]);
+      expect(useEditor.getState().selectedId).toBeNull();
+    }
   });
 });
 

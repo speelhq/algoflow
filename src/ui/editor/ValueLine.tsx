@@ -14,6 +14,7 @@ import { variableSpans, type Span } from "@/python/parse";
 import { cn } from "@/lib/utils";
 import { spanStyle } from "@/ui/chart/style";
 import type { TextLine } from "./caret";
+import { composingKey } from "./composition";
 import { oneLine } from "./fields";
 
 type Props = {
@@ -157,10 +158,9 @@ export const ValueLine = forwardRef<HTMLInputElement, Props>(function ValueLine(
         onSelect={(event) => report(event.currentTarget)}
         onScroll={(event) => setScroll(event.currentTarget.scrollLeft)}
         onKeyDown={(event) => {
-          // A key of an input method's composition is the composition's, Esc and Enter included,
-          // so neither the editor nor the page acts on it. Safari reports the Enter that ends a
-          // composition with key code 229 once the composition has ended.
-          if (event.nativeEvent.isComposing || event.keyCode === 229) {
+          // A key of an input method's composition is the composition's, so neither the editor
+          // nor the page acts on it.
+          if (composingKey(event)) {
             event.stopPropagation();
             return;
           }

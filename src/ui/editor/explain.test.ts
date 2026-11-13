@@ -5,7 +5,7 @@ import { ast, program } from "@/blocks/testing";
 import { joinSpans } from "@/ui/chart/text";
 import { allEntries, labelOf, makeEntry } from "./entries";
 import type { TextLine } from "./caret";
-import { explainLine, explainVariable } from "./explain";
+import { explainEditor, explainLine, explainVariable } from "./explain";
 import type { LineContext } from "./choices";
 
 const { assign, num, bin, v, for_, print, empty } = ast;
@@ -112,5 +112,19 @@ describe("explanation line", () => {
 
   it("nothing where no row is highlighted and no operation holds the caret, which leaves the block's help", () => {
     expect(explainLine(at("n "), ctx, undefined, p, target.id)).toBeUndefined();
+  });
+});
+
+describe("the explanation line on the editor itself (editor.md, Explanation line)", () => {
+  it("names Enter and Esc as the ways to close the editor, and how to remove the block", () => {
+    const { name, spans } = explainEditor();
+    expect(name).toEqual([]);
+    expect(spans.filter((span) => "key" in span).map((span) => span.text)).toEqual([
+      "Enter",
+      "Esc",
+      "Enter",
+      "Delete",
+    ]);
+    expect(spans.map((span) => span.text).join("")).toContain("click Delete (the trash icon)");
   });
 });

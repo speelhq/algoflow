@@ -538,7 +538,8 @@
       "variablePlain": "A variable. It first gets a value in: {statement}.",
       "input": "A {kind} input of the problem.",
       "parameter": "A parameter: the value a call hands to this function.",
-      "newVariable": "Choosing it makes a new variable {name}, which gets its value here."
+      "newVariable": "Choosing it makes a new variable {name}, which gets its value here.",
+      "editor": "`Enter` closes the editor and keeps the block selected, and `Esc` closes it and clears the selection. To remove the block, click Delete (the trash icon), or press `Enter` and then `Delete`."
     }
   },
   "run": {
