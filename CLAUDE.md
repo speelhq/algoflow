@@ -80,6 +80,39 @@ a value where the next reader won't look for it:
 - a fix to a symptom that leaves its structural cause in place, unless you
   record where and why that structure should change
 
+## Naming
+
+A function whose name begins with one of these prefixes gives a caller
+what the prefix says:
+
+- `get…` returns the value and throws when there is none, unlike
+  `Map.prototype.get`, so a caller never checks for `undefined`.
+- `find…` returns the value or `undefined`, as `Array.prototype.find`
+  does.
+- `to…` returns the value in another form or type.
+- `parse…` reads a value from a text.
+- `is…` and `has…` return a boolean.
+- `create…` returns a new node, id, or object at each call, as
+  `document.createElement()` does.
+
+A function that builds a new `Program`, node, or id begins with
+`create`, because node ids are unique within a program (`language.md`,
+Program), so a reader must see where a new one is made. A function that
+reads one from a text begins with `parse` instead, and one that returns
+a changed copy of a node, such as `insertStmt()`, is named for the
+change.
+
+A method, or a function in an object literal, may be named for what it
+handles, without a verb or a prefix, such as `parser.or()`,
+`writer.blank()`, and `ast.num()`. A name destructured from such an
+object keeps the member's name. A member that implements an interface
+of a library or the platform, such as a storage's `getItem()`, keeps
+the interface's name.
+
+No name that the code declares ends in `Of`, because the suffix says
+neither whether a function can find nothing nor whether it makes
+something new.
+
 ## Working style
 
 Make targeted edits rather than rewriting files. Before you start, say in
