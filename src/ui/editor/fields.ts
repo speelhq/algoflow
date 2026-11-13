@@ -33,7 +33,7 @@ export type FieldValue = Expr | Expr[];
 
 type Bag = Record<string, unknown>;
 
-export const sameField = (a: Field | null, b: Field | null) =>
+export const isSameField = (a: Field | null, b: Field | null) =>
   a !== null && b !== null && a.slot === b.slot;
 
 /**
@@ -45,7 +45,7 @@ export function fieldBeside(
   field: Field,
   step: 1 | -1,
 ): Field | undefined {
-  const at = fields.findIndex((each) => sameField(each, field));
+  const at = fields.findIndex((each) => isSameField(each, field));
   return at < 0 ? undefined : fields[at + step];
 }
 

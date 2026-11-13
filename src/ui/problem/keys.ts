@@ -7,7 +7,7 @@
 import { useEffect } from "react";
 import { duplicateStmt, removeStmt } from "@/lang/edit";
 import { useEditor } from "@/store/editor";
-import { currentMode, editable, inRun } from "@/store/mode";
+import { currentMode, canEdit, isRunMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { apply } from "@/ui/editor/edits";
@@ -56,7 +56,7 @@ export function act(event: KeyboardEvent): boolean {
   const { selectedId: selected, editing } = useEditor.getState();
   if (mod && event.key === "Enter") togglePlay();
   else if (mod && event.key.toLowerCase() === "z") {
-    if (editable(mode)) {
+    if (canEdit(mode)) {
       if (event.shiftKey) useProgram.getState().redo();
       else useProgram.getState().undo();
     }
@@ -66,11 +66,11 @@ export function act(event: KeyboardEvent): boolean {
     // While its editor is open, the block stays, wherever the keyboard is (`editor.md`, Block
     // editor).
     if (apply((program) => removeStmt(program, selected))) useEditor.getState().select(null);
-  } else if (inRun(mode) && mod && event.key === "ArrowRight") void run.skip();
-  else if (inRun(mode) && !mod && !event.shiftKey && event.key === "ArrowRight") run.stepOnce();
-  else if (inRun(mode) && !mod && event.key === "ArrowLeft") void run.back();
+  } else if (isRunMode(mode) && mod && event.key === "ArrowRight") void run.skip();
+  else if (isRunMode(mode) && !mod && !event.shiftKey && event.key === "ArrowRight") run.stepOnce();
+  else if (isRunMode(mode) && !mod && event.key === "ArrowLeft") void run.back();
   else if (event.key === "Escape") {
-    if (!inRun(mode)) useEditor.getState().select(null);
+    if (!isRunMode(mode)) useEditor.getState().select(null);
     else if (mode === "running" && run.breakpoint !== null) run.setBreakpoint(null);
     else run.stop();
   } else return false;

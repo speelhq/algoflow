@@ -24,7 +24,7 @@ export function setValueAt(ref: Ref, value: Value, vars: Map<Name, Value>, heap:
   else throw new Error(`ref does not fit heap entry ${ref.heap}`);
 }
 
-export function sameRef(a: Ref, b: Ref): boolean {
+export function isSameRef(a: Ref, b: Ref): boolean {
   if ("var" in a || "var" in b) return "var" in a && "var" in b && a.var === b.var;
   if (a.heap !== b.heap) return false;
   if ("index" in a) return "index" in b && a.index === b.index;

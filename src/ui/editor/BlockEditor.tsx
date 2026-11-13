@@ -32,7 +32,7 @@ import {
   fieldLabel,
   fieldText,
   stmtFields,
-  sameField,
+  isSameField,
   startField,
   targetSlot,
   findFieldValue,
@@ -42,7 +42,7 @@ import {
 import { caretMatches, caretOffersAll, readCaret, wordAt } from "./caret";
 import { callableFunctions, type LineContext } from "./choices";
 import { CaptionField } from "./CaptionField";
-import { composingKey } from "./composition";
+import { isCompositionKey } from "./composition";
 import { tabTarget } from "./focus";
 import { routineNames } from "./names";
 import { valueList } from "./valueList";
@@ -72,7 +72,7 @@ import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 type Initial = { slot: string | null; insertedCaret: number | null };
 
 /** Whether a key is pressed with Ctrl, Cmd, Alt, or Shift. */
-const modified = (event: KeyboardEvent) =>
+const hasModifier = (event: KeyboardEvent) =>
   event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
 
 function Body(props: {
@@ -106,7 +106,7 @@ function Body(props: {
 
   // The focused field takes the keyboard once it is drawn.
   useEffect(() => {
-    if (focus && !sameField(focus, focused)) elements.current.get(focus.slot)?.focus();
+    if (focus && !isSameField(focus, focused)) elements.current.get(focus.slot)?.focus();
   }, [focus, focused]);
 
   // Where the keyboard goes in the editor. Anywhere but a field, no field has it, so the value list
@@ -243,7 +243,7 @@ function Body(props: {
   };
 
   const lineWidget = (field: Field, value: FieldValue): ReactNode => {
-    const shown = sameField(focus, field) ? line : null;
+    const shown = isSameField(focus, field) ? line : null;
     const text = shown ? shown.text : fieldText(value);
     const led = draftError !== undefined && fieldDraft(value)?.id === draftError.draft;
     return (
@@ -261,7 +261,7 @@ function Body(props: {
         onSelect={(start, end) => setSession((s) => selectText(s, start, end))}
         onFocus={(clicked) => {
           setFocused(field);
-          if (!sameField(focus, field)) enter(field, clicked ?? "tab");
+          if (!isSameField(focus, field)) enter(field, clicked ?? "tab");
         }}
       />
     );
@@ -445,11 +445,11 @@ export function BlockEditor({ id }: { id: NodeId }) {
    * Ctrl/Cmd+Enter stays the page's play button, and a key of a composition is the composition's.
    */
   const editorKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.defaultPrevented || composingKey(event) || !popup) return;
+    if (event.defaultPrevented || isCompositionKey(event) || !popup) return;
     if (event.key === "Tab") {
       event.preventDefault();
       tabTarget(popup, document.activeElement, event.shiftKey ? -1 : 1).focus();
-    } else if (event.key === "Enter" && event.target === popup && !modified(event)) {
+    } else if (event.key === "Enter" && event.target === popup && !hasModifier(event)) {
       event.preventDefault();
       closeEditor();
     }

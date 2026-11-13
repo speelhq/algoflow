@@ -4,7 +4,7 @@
 // pre-run that hit the event limit is reported above it, with the error's own hint.
 import { errorText, t } from "@/i18n/t";
 import { SPEED_NAMES, SPEEDS, useLayout } from "@/store/layout";
-import { inRun, useMode } from "@/store/mode";
+import { isRunMode, useMode } from "@/store/mode";
 import { useRun } from "@/store/run";
 import { cn } from "@/lib/utils";
 import { Button } from "@/ui/primitives/button";
@@ -73,7 +73,7 @@ export function RunBar() {
   const seek = useRun((s) => s.seek);
   const stop = useRun((s) => s.stop);
   const mode = useMode();
-  const runMode = inRun(mode);
+  const runMode = isRunMode(mode);
   const ended = mode === "ended";
   const limitError =
     outcome?.type === "error" && outcome.error.code === "E_EVENT_LIMIT" ? outcome.error : null;

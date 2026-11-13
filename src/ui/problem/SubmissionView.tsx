@@ -9,7 +9,7 @@ import { firstDifferingRow, resultRows } from "@/challenges/rows";
 import { errorText, localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor";
-import { inRun, useMode } from "@/store/mode";
+import { isRunMode, useMode } from "@/store/mode";
 import { findProgressStatus, useProgress } from "@/store/progress";
 import { useRun } from "@/store/run";
 import { useSubmission } from "@/store/submission";
@@ -115,7 +115,7 @@ function Accepted({ challenge }: { challenge: Challenge }) {
   const first = useSubmission((s) => s.outcomes[0]);
   const setTab = useEditor((s) => s.setTab);
   // The chart stays the run's in run mode.
-  const runMode = inRun(useMode());
+  const runMode = isRunMode(useMode());
   return (
     <>
       {first?.done.type === "done" && (

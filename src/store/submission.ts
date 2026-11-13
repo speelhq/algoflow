@@ -9,7 +9,7 @@ import { canRun } from "@/lang/validate";
 import { isDone, collectOutcome, type Outcome } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Done } from "@/runtime/types";
-import { inBatches } from "./batches";
+import { runInBatches } from "./batches";
 import { useProgress } from "./progress";
 import { useProgram } from "./program";
 
@@ -40,7 +40,7 @@ async function evaluate(program: Program, test: Test, mine: number): Promise<Out
     done = next;
     return true;
   };
-  const finished = await inBatches(
+  const finished = await runInBatches(
     step,
     () => {},
     () => mine !== generation,

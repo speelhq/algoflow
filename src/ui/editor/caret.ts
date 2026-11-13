@@ -210,14 +210,14 @@ export function choiceLine(expr: Expr): TextLine {
 // ---------------------------------------------------------------- the lists
 
 /** Whether the line's text is only the word being typed, or nothing. */
-function onlyWord(line: TextLine, word: Word): boolean {
+function isOnlyWord(line: TextLine, word: Word): boolean {
   return line.text.slice(0, word.start).trim() === "" && line.text.slice(line.end).trim() === "";
 }
 
 /** The names a target's line offers where its text is only the word being typed, or nothing. */
 function wholeTarget(line: TextLine, place: CaretPlace, ctx: LineContext): Row[] | undefined {
   if (!ctx.target || place.place === "text" || place.place === "none") return undefined;
-  if (!onlyWord(line, place.word)) return undefined;
+  if (!isOnlyWord(line, place.word)) return undefined;
   return targetNames(place.word.text, ctx.target);
 }
 

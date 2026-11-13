@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { HINTS, type Challenge } from "@/challenges";
 import { localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
-import { inRun, useMode } from "@/store/mode";
+import { isRunMode, useMode } from "@/store/mode";
 import { useProgress } from "@/store/progress";
 import { assignmentText, dataText, inputSpans, joinSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
@@ -120,7 +120,7 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
           className={cn("ml-auto", solution && "border-ring bg-accent")}
           aria-pressed={solution}
           // The chart stays the run's in run mode.
-          disabled={inRun(mode)}
+          disabled={isRunMode(mode)}
           onClick={() => revealSolution(id)}
         >
           {t("problem.solution.show")}

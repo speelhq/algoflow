@@ -22,7 +22,7 @@ import { validate } from "./validate";
 
 const { assign, print, num, str, bin, v, if_, for_, call, exprStmt, program } = ast;
 
-function idsUnique(p: Program): boolean {
+function hasUniqueIds(p: Program): boolean {
   return !validate(p).some((d) => d.code === "E_DUPLICATE_ID");
 }
 
@@ -60,7 +60,7 @@ describe("edit", () => {
       hoistAssign: (p) => hoistAssign(p, loop.id, "x"),
     };
     for (const [name, edit] of Object.entries(edits))
-      expect(idsUnique(edit(start)), name).toBe(true);
+      expect(hasUniqueIds(edit(start)), name).toBe(true);
   });
 
   it("every edit returns a new Program and leaves the input unchanged", () => {
@@ -85,7 +85,7 @@ describe("edit", () => {
     const collided = insertStmt(p, a, { parent: "main", slot: "main", index: 99 });
     expect(collided.main).toHaveLength(4);
     expect(collided.main[3]?.id).not.toBe(a.id);
-    expect(idsUnique(collided)).toBe(true);
+    expect(hasUniqueIds(collided)).toBe(true);
   });
 
   it("moveStmt removes then inserts, counting the index after removal", () => {
@@ -94,7 +94,7 @@ describe("edit", () => {
     expect(next.main.map((s) => s.id)).toEqual([loop.id, b.id, a.id]);
     const into = moveStmt(p, b.id, { parent: loop.id, slot: "body", index: 1 });
     expect(lines(into)).toEqual(["x = 1", "for i in range(3):", "    x = x + i", "    print(x)"]);
-    expect(idsUnique(into)).toBe(true);
+    expect(hasUniqueIds(into)).toBe(true);
   });
 
   it("removeStmt removes a compound statement with its contents; a missing id throws", () => {
@@ -117,7 +117,7 @@ describe("edit", () => {
       "print(x)",
     ]);
     expect(next.main[2]?.id).not.toBe(loop.id);
-    expect(idsUnique(next)).toBe(true);
+    expect(hasUniqueIds(next)).toBe(true);
   });
 
   it("setExpr sets a loop's variable, a target as an assignment's is", () => {
@@ -130,7 +130,7 @@ describe("edit", () => {
     const { p, loop } = createSample();
     const captioned = setCaption(p, loop.id, "  Count  to\n three ");
     expect(findStmt(captioned, loop.id)?.stmt.caption).toBe("Count to three");
-    expect(idsUnique(captioned)).toBe(true);
+    expect(hasUniqueIds(captioned)).toBe(true);
     expect(findStmt(p, loop.id)?.stmt.caption).toBeUndefined();
     const cleared = setCaption(captioned, loop.id, " \n ");
     expect(findStmt(cleared, loop.id)?.stmt).not.toHaveProperty("caption");
@@ -145,7 +145,7 @@ describe("edit", () => {
     const binop = (inner as Extract<Stmt, { type: "assign" }>).value;
     expect(lines(setExpr(p, binop.id, "right", num(2)))[2]).toBe("    x = x + 2");
     const reused = setExpr(p, a.id, "value", (inner as Extract<Stmt, { type: "assign" }>).value);
-    expect(idsUnique(reused)).toBe(true);
+    expect(hasUniqueIds(reused)).toBe(true);
     expect(unparse((reused.main[0] as Extract<Stmt, { type: "assign" }>).value)).toBe("x + i");
   });
 
@@ -157,7 +157,7 @@ describe("edit", () => {
     const placed = (next.main[0] as Extract<Stmt, { type: "assign" }>).value;
     expect(placed.id).toBe(wrapped.id);
     expect(placed.type === "binop" && placed.left.id).toBe(value.id);
-    expect(idsUnique(next)).toBe(true);
+    expect(hasUniqueIds(next)).toBe(true);
   });
 
   it("setExpr keeps the ids of the items it replaces, and refuses a value of another role's shape", () => {
@@ -166,7 +166,7 @@ describe("edit", () => {
     const next = setExpr(p, b.id, "args", [held, structuredClone(held)]);
     const items = (next.main[2] as Extract<Stmt, { type: "print" }>).args;
     expect(items[0]?.id).toBe(held.id);
-    expect(idsUnique(next)).toBe(true);
+    expect(hasUniqueIds(next)).toBe(true);
     expect(() => setExpr(p, b.id, "args", num(1))).toThrow(/no expression slot/);
     expect(() => setExpr(p, a.id, "value", [num(1)])).toThrow(/no exprs slot/);
   });
@@ -209,7 +209,7 @@ describe("edit", () => {
   it("addFunction / removeFunction", () => {
     let p = addFunction(program([]), "f", ["a"]);
     expect(p.functions).toEqual([{ id: expect.any(String), name: "f", params: ["a"], body: [] }]);
-    expect(idsUnique(p)).toBe(true);
+    expect(hasUniqueIds(p)).toBe(true);
     p = removeFunction(p, p.functions[0]!.id);
     expect(p.functions).toEqual([]);
     expect(() => removeFunction(p, "nope00000000")).toThrow(/no function/);

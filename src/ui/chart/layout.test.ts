@@ -285,8 +285,9 @@ describe.each([
           expect(crosses(edge.anchor, edge.anchor, node), `anchor of ${edge.id}`).toBe(false);
         }
         const [first, final] = [edge.points[0], edge.points.at(-1)];
-        if (from && first) expect(onBorder(first, from), `${edge.id} leaves ${from.id}`).toBe(true);
-        if (to && final) expect(onBorder(final, to), `${edge.id} reaches ${to.id}`).toBe(true);
+        if (from && first)
+          expect(isOnBorder(first, from), `${edge.id} leaves ${from.id}`).toBe(true);
+        if (to && final) expect(isOnBorder(final, to), `${edge.id} reaches ${to.id}`).toBe(true);
       }
     },
   );
@@ -425,7 +426,7 @@ describe.each([
   });
 });
 
-function onBorder(point: { x: number; y: number }, node: ChartNode): boolean {
+function isOnBorder(point: { x: number; y: number }, node: ChartNode): boolean {
   if (node.w === 0) return point.x === node.x && point.y === node.y;
   const onX = point.x === node.x || point.x === node.x + node.w;
   const onY = point.y === node.y || point.y === node.y + node.h;

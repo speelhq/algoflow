@@ -2,7 +2,7 @@
 // Submit; its top bar has `← Playground`, an editable title, and `Export` before undo. Its
 // route has opened the program before it draws (`route.ts`).
 import { t } from "@/i18n/t";
-import { editable, useMode } from "@/store/mode";
+import { canEdit, useMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
 import { download } from "@/ui/app/download";
 import { applyTyped } from "@/ui/editor/edits";
@@ -18,7 +18,7 @@ import { usePageKeys } from "@/ui/problem/keys";
 function TitleField() {
   const title = useProgram((s) => s.program.title);
   // The title is part of the program: it changes only in build mode.
-  const locked = !editable(useMode());
+  const locked = !canEdit(useMode());
   return (
     <Input
       value={title}

@@ -37,7 +37,7 @@ const isValue = (fieldValue: FieldValue | null) =>
   fieldValue !== null && fieldDraft(fieldValue) === undefined;
 
 /** Two values alike apart from their node ids. */
-function sameValue(a: FieldValue | null, b: FieldValue | null): boolean {
+function isSameValue(a: FieldValue | null, b: FieldValue | null): boolean {
   const plain = (value: FieldValue | null) =>
     JSON.stringify(value, (key, v) => (key === "id" ? 0 : v));
   return plain(a) === plain(b);
@@ -112,7 +112,7 @@ export function followStatement(session: Session, stmt: Stmt): Session {
   const { focus, fieldValue } = session;
   if (!focus) return session;
   const value = findFieldValue(stmt, focus) ?? null;
-  if (sameValue(value, fieldValue)) return session;
+  if (isSameValue(value, fieldValue)) return session;
   // A field the statement no longer has (an optional value taken out, by an undo) leaves the
   // keyboard.
   if (!value) return NO_FIELD;
@@ -130,7 +130,7 @@ export function changeText(session: Session, typed: TextLine, composing: boolean
   const next: Session = { ...session, line: typed, highlight: null };
   if (composing) return still(next);
   const value = parseFieldText(typed.text, focus.role);
-  if (sameValue(value, fieldValue)) return still(next);
+  if (isSameValue(value, fieldValue)) return still(next);
   return { session: { ...next, fieldValue: value }, edits: [{ field: focus, value }] };
 }
 

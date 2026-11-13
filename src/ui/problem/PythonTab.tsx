@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { isStatement } from "@/lang/walk";
 import { emit } from "@/python/emit";
 import { useEditor } from "@/store/editor";
-import { inRun, useMode } from "@/store/mode";
+import { isRunMode, useMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { download } from "@/ui/app/download";
@@ -35,7 +35,7 @@ function copy(code: string): void {
 export function PythonTab() {
   const program = useProgram((s) => s.program);
   const caseIndex = useRun((s) => s.caseIndex);
-  const runMode = inRun(useMode());
+  const runMode = isRunMode(useMode());
   const activeId = useRun((s) => s.activeId);
   const selectedId = useEditor((s) => s.selectedId);
   const setHovered = useEditor((s) => s.setHovered);

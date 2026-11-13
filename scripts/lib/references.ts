@@ -129,7 +129,7 @@ function longest(
 }
 
 /** Whether `heading` sits under `parent`, at any depth. */
-function under(heading: Heading, parent: Heading): boolean {
+function isUnder(heading: Heading, parent: Heading): boolean {
   const path = [...parent.path, parent.text];
   return heading.path.length >= path.length && path.every((text, i) => heading.path[i] === text);
 }
@@ -151,7 +151,7 @@ function unknownHeadings(text: string, start: number, among: readonly Heading[])
       const parents = found.headings;
       found = longest(
         text.slice(pos + 2),
-        among.filter((h) => parents.some((parent) => under(h, parent))),
+        among.filter((h) => parents.some((parent) => isUnder(h, parent))),
       );
       if (!found) return [pos + 2];
       pos += 2 + found.length;

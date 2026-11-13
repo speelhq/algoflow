@@ -128,14 +128,14 @@ export function filledSpans(
   const merged: NotationSpan[] = [];
   for (const { span } of out) {
     const before = merged[merged.length - 1];
-    if (before && plain(before) && plain(span) && before.slot === span.slot) {
+    if (before && isPlain(before) && isPlain(span) && before.slot === span.slot) {
       before.text += span.text;
     } else if (span.text !== "") merged.push({ ...span });
   }
   return merged;
 }
 
-const plain = (span: NotationSpan) => !span.variable && !span.hint && !span.underline;
+const isPlain = (span: NotationSpan) => !span.variable && !span.hint && !span.underline;
 
 /** Whether an expression is a call: its notation ends with its own parenthesis (`abs({x})`). */
 export function isCall(expr: Expr): boolean {
@@ -157,7 +157,7 @@ export function bindsAt(block: Block, slot: string): number | undefined {
 }
 
 /** Whether `child`, the value `held` places, is put in parentheses: as the emitter does. */
-export function parenthesized(
+export function isParenthesized(
   child: Expr,
   held: { binds: number | undefined; side: Side },
 ): boolean {
@@ -179,7 +179,7 @@ function operandSpans(
 ): NotationSpan[] {
   if (isEmptyDraft(child)) return [{ text: hint, hint: true }];
   const spans = exprSpans(child, program, writing);
-  return parenthesized(child, held) ? inParentheses(spans) : spans;
+  return isParenthesized(child, held) ? inParentheses(spans) : spans;
 }
 
 /**

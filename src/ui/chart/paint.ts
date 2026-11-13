@@ -70,11 +70,11 @@ export function paint(chart: ChartLayout, view: RunView): Paint {
     // it (control is elsewhere), its `No` edge is taken when what it leads to is: what follows
     // the loop, or its exit, unless a jump on the path is what reached the exit.
     const left = mark === undefined && from.owner !== null && from.owner !== view.activeId;
-    const jumped = (exit: ChartNode) =>
+    const isReachedByJump = (exit: ChartNode) =>
       chart.edges.some(
         (other) => other.to === exit.id && !other.label && takenNodes.has(other.from),
       );
-    const past = to.owner !== from.owner || (to.role === "exit" && !jumped(to));
+    const past = to.owner !== from.owner || (to.role === "exit" && !isReachedByJump(to));
     const follows =
       !edge.label || mark === (edge.label === "yes") || (left && edge.label === "no" && past);
     if (follows) takenEdges.add(edge.id);

@@ -14,7 +14,7 @@ import { variableSpans, type Span } from "@/python/parse";
 import { cn } from "@/lib/utils";
 import { spanStyle } from "@/ui/chart/style";
 import type { TextLine } from "./caret";
-import { composingKey } from "./composition";
+import { isCompositionKey } from "./composition";
 import { oneLine } from "./fields";
 
 type Props = {
@@ -160,7 +160,7 @@ export const ValueLine = forwardRef<HTMLInputElement, Props>(function ValueLine(
         onKeyDown={(event) => {
           // A key of an input method's composition is the composition's, so neither the editor
           // nor the page acts on it.
-          if (composingKey(event)) {
+          if (isCompositionKey(event)) {
             event.stopPropagation();
             return;
           }

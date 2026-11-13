@@ -50,7 +50,7 @@ const key = (name: string, shiftKey = false) => ({
 });
 
 /** A notation with a field before and after the focused one. */
-const both = () => true;
+const movesEitherWay = () => true;
 
 const entry = (label: string): Row => {
   const found = allEntries().find((each) => each.label === label);
@@ -150,40 +150,42 @@ describe("changing the text (editor.md, Value line)", () => {
 describe("the keys a value line acts on (editor.md, Value list; Block editor)", () => {
   it("Enter chooses the highlighted row, else closes; Tab is the editor's", () => {
     const open = openSession(assign("total", num(0)), value, null);
-    expect(valueKey(open, key("Enter"), [], ctx, both).after).toBe("close");
+    expect(valueKey(open, key("Enter"), [], ctx, movesEitherWay).after).toBe("close");
     // Ctrl/Cmd+Enter is the page's play button.
     const play = { ...key("Enter"), ctrlKey: true };
-    expect(valueKey(open, play, [], ctx, both).taken).toBe(false);
-    expect(valueKey(open, { ...play, ctrlKey: false, metaKey: true }, [], ctx, both).taken).toBe(
-      false,
-    );
-    expect(valueKey(open, key("a"), [], ctx, both).taken).toBe(false);
+    expect(valueKey(open, play, [], ctx, movesEitherWay).taken).toBe(false);
+    expect(
+      valueKey(open, { ...play, ctrlKey: false, metaKey: true }, [], ctx, movesEitherWay).taken,
+    ).toBe(false);
+    expect(valueKey(open, key("a"), [], ctx, movesEitherWay).taken).toBe(false);
     // The editor moves Tab and Shift+Tab round its controls (`focus.ts`).
-    expect(valueKey(open, key("Tab"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(open, key("Tab", true), [], ctx, both).taken).toBe(false);
+    expect(valueKey(open, key("Tab"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(open, key("Tab", true), [], ctx, movesEitherWay).taken).toBe(false);
   });
 
   it("← at the start and → at the end, with no text selected, move to the field beside", () => {
     const at = (start: number, end = start) =>
       selectText(openSession(assign("total", num(10)), value, null), start, end);
-    expect(valueKey(at(0), key("ArrowLeft"), [], ctx, both).after).toEqual({
+    expect(valueKey(at(0), key("ArrowLeft"), [], ctx, movesEitherWay).after).toEqual({
       go: -1,
       entry: "end",
     });
-    expect(valueKey(at(2), key("ArrowRight"), [], ctx, both).after).toEqual({
+    expect(valueKey(at(2), key("ArrowRight"), [], ctx, movesEitherWay).after).toEqual({
       go: 1,
       entry: "start",
     });
     // Inside the text, over a selection, or with Shift, they move the caret as in a text field.
-    expect(valueKey(at(1), key("ArrowLeft"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(1), key("ArrowRight"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(0, 2), key("ArrowRight"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(0, 2), key("ArrowLeft"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(0), key("ArrowLeft", true), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(0), { ...key("ArrowLeft"), altKey: true }, [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(2), { ...key("ArrowRight"), metaKey: true }, [], ctx, both).taken).toBe(
-      false,
-    );
+    expect(valueKey(at(1), key("ArrowLeft"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(at(1), key("ArrowRight"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(at(0, 2), key("ArrowRight"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(at(0, 2), key("ArrowLeft"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(at(0), key("ArrowLeft", true), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(
+      valueKey(at(0), { ...key("ArrowLeft"), altKey: true }, [], ctx, movesEitherWay).taken,
+    ).toBe(false);
+    expect(
+      valueKey(at(2), { ...key("ArrowRight"), metaKey: true }, [], ctx, movesEitherWay).taken,
+    ).toBe(false);
     // At the start of the first field and the end of the last, they do nothing.
     expect(valueKey(at(0), key("ArrowLeft"), [], ctx, () => false).taken).toBe(false);
     expect(valueKey(at(2), key("ArrowRight"), [], ctx, () => false).taken).toBe(false);
@@ -202,7 +204,7 @@ describe("the keys a value line acts on (editor.md, Value list; Block editor)", 
     const down = stepHighlight(word, 3, 2, 1);
     expect(down.highlight).toBe(0);
     expect(stepHighlight(word, 3, 0, -1).highlight).toBe(2);
-    expect(valueKey(word, key("ArrowUp"), [], ctx, both).taken).toBe(false);
+    expect(valueKey(word, key("ArrowUp"), [], ctx, movesEitherWay).taken).toBe(false);
   });
 
   it("a row chosen writes its text at the caret", () => {
@@ -226,9 +228,9 @@ describe("the keys a value line acts on (editor.md, Value list; Block editor)", 
 
   it("`,` is typed as any other character, in a list of values as in any value", () => {
     const open = typed(openSession(print(num(1)), args, null), "x").session;
-    expect(valueKey(open, key(","), [], ctx, both).taken).toBe(false);
+    expect(valueKey(open, key(","), [], ctx, movesEitherWay).taken).toBe(false);
     const single = openSession(assign("total", num(0)), value, null);
-    expect(valueKey(single, key(","), [], ctx, both).taken).toBe(false);
+    expect(valueKey(single, key(","), [], ctx, movesEitherWay).taken).toBe(false);
   });
 });
 

@@ -5,7 +5,7 @@ import { firstSetters, variableKinds, type Kinds } from "@/lang/kinds";
 import type { Diagnostic, Expr, Name, Kind, NodeId, Program } from "@/lang/types";
 import { getRoutineDef, isEmptyDraft, getHoldingRoutine } from "@/lang/walk";
 import {
-  parenthesized,
+  isParenthesized,
   exprHint,
   exprText,
   placeholderValue,
@@ -173,7 +173,7 @@ function operationSpans(operation: Expr, current: Expr, program: Program): Notat
     switch (held?.role) {
       case "expr":
         if (!held.expr) return [];
-        return parenthesized(held.expr, held)
+        return isParenthesized(held.expr, held)
           ? [{ text: "(" }, written(held.expr, undefined), { text: ")" }]
           : [written(held.expr, undefined)];
       case "exprs":

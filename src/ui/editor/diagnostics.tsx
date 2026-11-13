@@ -8,7 +8,7 @@ import { Button } from "@/ui/primitives/button";
 import { apply } from "./edits";
 
 /** Whether a diagnostic is of a draft, which the learner hasn't finished. */
-function ofDraft(program: Program, d: Diagnostic): boolean {
+function isOnDraft(program: Program, d: Diagnostic): boolean {
   return draftText(blocksById(program).get(d.nodeId)) !== undefined;
 }
 
@@ -22,14 +22,14 @@ export function flaggedOwners(program: Program, typing: NodeId | null): Map<Node
   const flagged = new Map<NodeId, Diagnostic[]>();
   for (const d of validate(program)) {
     const owner = getOwner(program, d.nodeId);
-    if (owner === typing || ofDraft(program, d)) continue;
+    if (owner === typing || isOnDraft(program, d)) continue;
     flagged.set(owner, [...(flagged.get(owner) ?? []), d]);
   }
   return flagged;
 }
 
 /** The same diagnostic in another validation of the program: same node, code, and params. */
-function sameDiagnostic(a: Diagnostic, b: Diagnostic): boolean {
+function isSameDiagnostic(a: Diagnostic, b: Diagnostic): boolean {
   return (
     a.nodeId === b.nodeId &&
     a.code === b.code &&
@@ -51,13 +51,13 @@ export function editorDiagnostics(
 ): Diagnostic[] {
   const shown = flaggedOwners(program, typing).get(id) ?? [];
   const still = ledStill(program, led);
-  const first = still && !ofDraft(program, still) && getOwner(program, still.nodeId) === id;
+  const first = still && !isOnDraft(program, still) && getOwner(program, still.nodeId) === id;
   return first ? [still, ...shown.filter((d) => d !== still)] : shown;
 }
 
 /** The diagnostic Run or Submit led to, while the program still has it. */
 function ledStill(program: Program, led: Diagnostic | null): Diagnostic | undefined {
-  return led ? validate(program).find((d) => sameDiagnostic(d, led)) : undefined;
+  return led ? validate(program).find((d) => isSameDiagnostic(d, led)) : undefined;
 }
 
 /**
@@ -71,7 +71,7 @@ export function ledDraft(
   led: Diagnostic | null,
 ): { diagnostic: Diagnostic; draft: NodeId; from: number } | undefined {
   const still = ledStill(program, led);
-  if (!still || !ofDraft(program, still) || getOwner(program, still.nodeId) !== stmt.id) {
+  if (!still || !isOnDraft(program, still) || getOwner(program, still.nodeId) !== stmt.id) {
     return undefined;
   }
   const { position } = still.params;

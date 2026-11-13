@@ -2,7 +2,7 @@
 // nothing that runs the program.
 import { useState, type ReactNode } from "react";
 import { t } from "@/i18n/t";
-import { editable, useMode } from "@/store/mode";
+import { canEdit, useMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
 import { HelpDialog } from "@/ui/app/HelpDialog";
 import { routeHash } from "@/ui/app/route";
@@ -31,7 +31,7 @@ function UndoRedo() {
   const undo = useProgram((s) => s.undo);
   const redo = useProgram((s) => s.redo);
   // Undo is an edit: only in build mode.
-  const locked = !editable(useMode());
+  const locked = !canEdit(useMode());
   return (
     <>
       <Button

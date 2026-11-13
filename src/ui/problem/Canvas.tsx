@@ -7,7 +7,7 @@ import { caseInputs } from "@/challenges/cases";
 import { t } from "@/i18n/t";
 import type { NodeId, Place, Program } from "@/lang/types";
 import { useEditor } from "@/store/editor";
-import { editable, inRun, useMode, type Mode } from "@/store/mode";
+import { canEdit, isRunMode, useMode, type Mode } from "@/store/mode";
 import { useProgram } from "@/store/program";
 import { useShallow } from "zustand/react/shallow";
 import { useRun, type RunState } from "@/store/run";
@@ -98,7 +98,7 @@ function useRunPaint(
     })),
   );
   return useMemo(() => {
-    if (!chart || !inRun(mode)) return { narration: null };
+    if (!chart || !isRunMode(mode)) return { narration: null };
     const painted = paint(chart, {
       finished: run.status === "done",
       activeId: run.activeId,
@@ -147,7 +147,7 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
   const mode = useMode();
   const solution = mode === "solution";
   // The chart can be changed only in build mode; elsewhere it is drawn read-only.
-  const readOnly = !editable(mode);
+  const readOnly = !canEdit(mode);
   const fonts = useFontLoads();
   const shown = solution && challenge !== undefined;
   const program: Program = shown ? challenge.solution : mine;
@@ -227,7 +227,7 @@ export function Canvas({ challenge }: { challenge?: Challenge }) {
           editor={readOnly || !selectedId || !editing ? undefined : <BlockEditor id={selectedId} />}
         />
       )}
-      {inRun(mode) && <NarrationLine narration={narrated} />}
+      {isRunMode(mode) && <NarrationLine narration={narrated} />}
       <RunBar />
     </section>
   );
