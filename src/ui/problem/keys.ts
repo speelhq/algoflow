@@ -49,7 +49,7 @@ export function ownsKeys(event: KeyEventLike): boolean {
 }
 
 /** Acts on a key the page owns; false when the table has nothing for it. */
-export function act(event: KeyboardEvent): boolean {
+export function handlePageKey(event: KeyboardEvent): boolean {
   const mod = event.ctrlKey || event.metaKey;
   const mode = currentMode();
   const run = useRun.getState();
@@ -82,7 +82,7 @@ export function usePageKeys(): void {
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
       if (event.defaultPrevented || ownsKeys(event)) return;
-      if (act(event)) event.preventDefault();
+      if (handlePageKey(event)) event.preventDefault();
     };
     window.addEventListener("keydown", keydown);
     return () => window.removeEventListener("keydown", keydown);

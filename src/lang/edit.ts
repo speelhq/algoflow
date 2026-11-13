@@ -60,7 +60,7 @@ function cloneWithUniqueIds(stmt: Stmt, program: Program): Stmt {
 }
 
 /** Gives `expr` fresh ids (in place) when one of its ids is taken; its ids are then taken. */
-function claim(expr: Expr, taken: Set<NodeId>): void {
+function reIdIfTaken(expr: Expr, taken: Set<NodeId>): void {
   const ids = () => [...allExprs(expr)].map((e) => e.id);
   if (reuses(ids(), taken)) reIdExpr(expr);
   for (const id of ids()) taken.add(id);
@@ -75,7 +75,7 @@ function cloneExprsWithUniqueIds(
   const taken = takenIds(program, replaced);
   return exprs.map((expr) => {
     const copy = clone(expr);
-    claim(copy, taken);
+    reIdIfTaken(copy, taken);
     return copy;
   });
 }

@@ -1,5 +1,5 @@
 // The `list` block definition: `[a, b]`, its items evaluated in order into a new list on the heap.
-import { alloc } from "@/lang/data";
+import { addToHeap } from "@/lang/data";
 import { createNodeId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { defineExpr } from "./types";
@@ -15,7 +15,7 @@ export const list = defineExpr<"list">({
   *run(block, ctx) {
     const items: Value[] = [];
     for (const item of block.items) items.push(yield* ctx.eval(item));
-    return { t: "list", ref: alloc(ctx.heap, { type: "list", items }) };
+    return { t: "list", ref: addToHeap(ctx.heap, { type: "list", items }) };
   },
   python: (block, ctx) => `[${block.items.map((item) => ctx.expr(item)).join(", ")}]`,
   notation: () => "[{items}]",

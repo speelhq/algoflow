@@ -86,8 +86,8 @@ export function dataError(json: unknown): DataFault | undefined {
   return faultAt(json, "");
 }
 
-/** A new heap entry, numbered after the last. */
-export function alloc(heap: Heap, entry: HeapEntry): HeapId {
+/** Adds `entry` to the heap, numbered after the last, and returns its id. */
+export function addToHeap(heap: Heap, entry: HeapEntry): HeapId {
   const id = heap.size + 1;
   heap.set(id, entry);
   return id;
@@ -145,7 +145,7 @@ export function toValue(data: Data, heap: Heap): Value {
   if (data === null) return { t: "none" };
   if (Array.isArray(data)) {
     const items = data.map((item) => toValue(item, heap));
-    return { t: "list", ref: alloc(heap, { type: "list", items }) };
+    return { t: "list", ref: addToHeap(heap, { type: "list", items }) };
   }
   if (isFloatData(data)) return { t: "float", v: floatNumber(data) };
   const entries = new Map<string, Value>();
@@ -154,7 +154,7 @@ export function toValue(data: Data, heap: Heap): Value {
     if (message !== undefined) throw new Error(`toValue: ${key}: ${message}`);
     entries.set(toHeapKey(dataKey(key)), toValue(item, heap));
   }
-  return { t: "dict", ref: alloc(heap, { type: "dict", entries }) };
+  return { t: "dict", ref: addToHeap(heap, { type: "dict", entries }) };
 }
 
 export function toData(value: Value, heap: Heap): Data {

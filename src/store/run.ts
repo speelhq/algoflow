@@ -142,7 +142,7 @@ function snapshot(): State | null {
 }
 
 /** Feeds one visible step's event into the projection (no store update). */
-function apply(event: StepEvent): void {
+function updateProjection(event: StepEvent): void {
   const p = projection;
   p.step += 1;
   p.lastEvent = event;
@@ -196,7 +196,7 @@ function advance(shown: boolean): void {
     projection.held = undefined;
     return;
   }
-  apply(next.event);
+  updateProjection(next.event);
   projection.held = next.state;
   // The last event of a finished run: one more `next()` lets the frames unwind.
   if (projection.step === findings.total) runner.next();
