@@ -11,7 +11,7 @@ import {
   childSlots,
   idsUnder,
   programIds,
-  findRoutine,
+  findRoutineDef,
   programStmts,
   routineStmts,
   bodyRegions,
@@ -98,8 +98,8 @@ export function findStmt(program: Program, id: NodeId): StmtAt | undefined {
 
 /** The region a place names, or undefined when the program has none there. */
 export function findRegion(program: Program, place: Place): Stmt[] | undefined {
-  const routine = findRoutine(program, place.parent);
-  if (routine) return routineStmts(program, routine);
+  const def = findRoutineDef(program, place.parent);
+  if (def) return routineStmts(program, def);
   const found = findStmt(program, place.parent);
   return found && bodyRegions(found.stmt).find((r) => r.slot === place.slot)?.stmts;
 }

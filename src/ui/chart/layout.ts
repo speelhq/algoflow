@@ -8,7 +8,7 @@
 // Reads `def.chart`, `def.requires`, and the regions of a statement, never a type.
 import { inputValue } from "@/lang/data";
 import type { Data, Name, NodeId, Place, Program, RegionParent, Routine, Stmt } from "@/lang/types";
-import { findRoutine, bodyRegions, routineStmts } from "@/lang/walk";
+import { findRoutineDef, bodyRegions, routineStmts } from "@/lang/walk";
 import { getBlockDef, registryKey } from "@/blocks/registry";
 import {
   CHART_TEXT,
@@ -712,9 +712,9 @@ class Builder {
  * routine that names no function.
  */
 export function layout(program: Program, opts: LayoutOptions): ChartLayout | undefined {
-  const routine = findRoutine(program, opts.routine);
-  if (routine === undefined) return undefined;
-  const fn = routine === "main" ? undefined : routine;
+  const def = findRoutineDef(program, opts.routine);
+  if (def === undefined) return undefined;
+  const fn = def === "main" ? undefined : def;
   const builder = new Builder(program, opts.measure);
   const frag = emptyFrag();
 
@@ -740,7 +740,7 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
   }
 
   const slot = fn ? "body" : "main";
-  const body = builder.region(routineStmts(program, routine), opts.routine, slot);
+  const body = builder.region(routineStmts(program, def), opts.routine, slot);
   const first: Place = { parent: opts.routine, slot, index: 0 };
   if (body.entry === null) out = { ...out, place: first };
   else {

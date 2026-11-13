@@ -5,7 +5,7 @@
 import { declaredBy } from "@/lang/scope";
 import type { Name, NodeId, Program, Routine } from "@/lang/types";
 import { isValidName } from "@/lang/validate";
-import { allStmts, getRoutine, routineStmts } from "@/lang/walk";
+import { allStmts, getRoutineDef, routineStmts } from "@/lang/walk";
 
 /** The words of a name: split at spaces, `_`, and `-`. */
 function nameWords(name: string): string[] {
@@ -33,7 +33,7 @@ export function routineNames(
   asked: readonly Name[],
   editing: NodeId,
 ): RoutineNames {
-  const def = getRoutine(program, routine);
+  const def = getRoutineDef(program, routine);
   const main = def === "main";
   const problem = main ? [...new Set(asked)] : [];
   const names = new Set<Name>(main ? program.inputs.map((input) => input.name) : def.params);

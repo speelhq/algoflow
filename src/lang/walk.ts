@@ -1,6 +1,6 @@
 // Traversal driven by each block's slots, so no module lists block types.
 import { getBlockDef, registryKey } from "@/blocks/registry";
-import type { Expr, Block, FunctionDef, NodeId, Program, Routine, Stmt } from "./types";
+import type { Expr, Block, NodeId, Program, Routine, RoutineDef, Stmt } from "./types";
 
 type Bag = Record<string, unknown>;
 
@@ -134,21 +134,21 @@ export function* idsUnder(stmts: Stmt[]): Generator<NodeId, void, void> {
 }
 
 /** The function that `routine` names, or "main"; undefined for a routine that names no function. */
-export function findRoutine(program: Program, routine: Routine): FunctionDef | "main" | undefined {
+export function findRoutineDef(program: Program, routine: Routine): RoutineDef | undefined {
   if (routine === "main") return "main";
   return program.functions.find((fn) => fn.id === routine);
 }
 
 /** The function that `routine` names, or "main"; throws for a routine that names no function. */
-export function getRoutine(program: Program, routine: Routine): FunctionDef | "main" {
-  const found = findRoutine(program, routine);
+export function getRoutineDef(program: Program, routine: Routine): RoutineDef {
+  const found = findRoutineDef(program, routine);
   if (found === undefined) throw new Error(`no function ${routine}`);
   return found;
 }
 
 /** The statements of a routine: `main`'s, or a function's body. */
-export function routineStmts(program: Program, routine: FunctionDef | "main"): Stmt[] {
-  return routine === "main" ? program.main : routine.body;
+export function routineStmts(program: Program, def: RoutineDef): Stmt[] {
+  return def === "main" ? program.main : def.body;
 }
 
 /** Every statement in the program: the functions' first, then `main`'s, each pre-order. */

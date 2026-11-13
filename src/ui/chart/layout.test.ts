@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { CHALLENGES } from "@/challenges";
 import { removeFunction } from "@/lang/edit";
 import type { Program, Routine, Stmt } from "@/lang/types";
-import { allStmts, getRoutine, bodyRegions, routineStmts } from "@/lang/walk";
+import { allStmts, getRoutineDef, bodyRegions, routineStmts } from "@/lang/walk";
 import { getBlockDef, registryKey } from "@/blocks/registry";
 import { ast, createTestId } from "@/blocks/testing";
 import {
@@ -158,7 +158,7 @@ const CASES: Case[] = [
   },
 ];
 
-const caseBody = (c: Case): Stmt[] => routineStmts(c.program, getRoutine(c.program, c.routine));
+const caseBody = (c: Case): Stmt[] => routineStmts(c.program, getRoutineDef(c.program, c.routine));
 
 const lay = (c: Case, measure: Measure): ChartLayout =>
   laidOut(c.program, {
