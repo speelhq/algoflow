@@ -7,7 +7,7 @@ import type { Expr, Kind } from "./types";
 
 const { assign, num, str, v, for_, print, program } = ast;
 
-function expr(python: string): Expr {
+function parseExpr(python: string): Expr {
   const parsed = parse(python);
   if (isParseError(parsed)) throw new Error(python);
   return parsed;
@@ -20,7 +20,7 @@ const known = new Map<string, Kind>([
   ["xs", "list"],
   ["d", "dict"],
 ]);
-const kind = (python: string) => exprKind(expr(python), known);
+const kind = (python: string) => exprKind(parseExpr(python), known);
 
 describe("kinds", () => {
   it("literals, unary operators, and the builtins give their kinds", () => {

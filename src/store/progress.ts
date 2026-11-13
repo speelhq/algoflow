@@ -38,7 +38,7 @@ export function solvedCount(entries: Progress, ids: readonly string[]): number {
   return ids.filter((id) => findProgressStatus(entries, id) === "solved").length;
 }
 
-function parseEntry(value: unknown): ProgressEntry | undefined {
+function toProgressEntry(value: unknown): ProgressEntry | undefined {
   if (!isRecord(value)) return undefined;
   if (value.status !== "attempted" && value.status !== "solved") return undefined;
   const hints = typeof value.hints === "number" && Number.isFinite(value.hints) ? value.hints : 0;
@@ -54,7 +54,7 @@ export function toProgress(stored: unknown): Progress {
   const entries: Progress = {};
   if (!isRecord(stored)) return entries;
   for (const [id, value] of Object.entries(stored)) {
-    const entry = parseEntry(value);
+    const entry = toProgressEntry(value);
     if (entry) entries[id] = entry;
   }
   return entries;

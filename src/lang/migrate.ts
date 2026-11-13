@@ -7,7 +7,7 @@ import { storeCaption } from "./edit";
 import { isNodeId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
 import { isRecord } from "./record";
-import { draftValue } from "./drafts";
+import { parseSlotText } from "./drafts";
 import { draftText, isTarget } from "./walk";
 
 export class MigrateError extends Error {
@@ -93,7 +93,7 @@ function readDrafts(block: Record<string, unknown>): void {
     // An `exprs` slot holds a draft only as its only item (`checkItemDrafts`).
     const text = draftText(slot.role === "exprs" && Array.isArray(held) ? held[0] : held);
     if (text === undefined) continue;
-    const read = draftValue(slot.role, text);
+    const read = parseSlotText(slot.role, text);
     if ("value" in read) block[slot.name] = read.value;
   }
 }

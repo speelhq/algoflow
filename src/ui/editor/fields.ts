@@ -1,7 +1,7 @@
 // The fields of a statement's notation in the block editor: each value, target, or values slot,
 // edited as one text, in the notation's reading order.
 import { blockText, t } from "@/i18n/t";
-import { draftValue } from "@/lang/drafts";
+import { parseSlotText } from "@/lang/drafts";
 import type { Expr, Stmt } from "@/lang/types";
 import { draftText, isExpr, type ExprRole } from "@/lang/walk";
 import {
@@ -129,11 +129,11 @@ export function fieldDraft(value: FieldValue): Expr | undefined {
  * `exprs` slot's text parses as values separated by commas, and it holds the draft as its only
  * item (`language.md`, Expressions, Drafts). No text is an empty slot, or no item.
  */
-export function textValue(text: string, role: "exprs"): Expr[];
-export function textValue(text: string, role: "expr" | "target"): Expr;
-export function textValue(text: string, role: ExprRole): FieldValue;
-export function textValue(text: string, role: ExprRole): FieldValue {
-  const read = draftValue(role, text);
+export function parseFieldText(text: string, role: "exprs"): Expr[];
+export function parseFieldText(text: string, role: "expr" | "target"): Expr;
+export function parseFieldText(text: string, role: ExprRole): FieldValue;
+export function parseFieldText(text: string, role: ExprRole): FieldValue {
+  const read = parseSlotText(role, text);
   if (role === "exprs") {
     return "value" in read && Array.isArray(read.value) ? read.value : [createDraft(text)];
   }

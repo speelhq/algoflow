@@ -12,7 +12,7 @@ import {
   type Program,
   type Stmt,
 } from "./types";
-import { draftValue } from "./drafts";
+import { parseSlotText } from "./drafts";
 import { declaredBy } from "./scope";
 import { draftSlots, programIds, bodyRegions, stmtExprs, findVariableName } from "./walk";
 
@@ -166,7 +166,7 @@ class Collector {
         this.report(draft.id, "E_EMPTY_SLOT", { slot });
         continue;
       }
-      const read = draftValue(role, text);
+      const read = parseSlotText(role, text);
       if (!("error" in read)) continue;
       const { error } = read;
       if (error === "E_NOT_TARGET") this.report(draft.id, error);

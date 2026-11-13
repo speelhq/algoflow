@@ -12,7 +12,7 @@ import { joinSpans, notationWithHints, type NotationSpan } from "@/ui/chart/text
 import { functionLabel } from "./explain";
 import { choiceLine, type TextLine } from "./caret";
 import { callableFunctions, createCall, type LineFunction } from "./choices";
-import { textValue } from "./fields";
+import { parseFieldText } from "./fields";
 
 export type BlockMenuEntry = {
   /** The registry key, or `call:<name>` for a function of the program. */
@@ -79,7 +79,7 @@ function callText(fn: LineFunction): TextLine {
 /** A statement calling `fn`, its slot holding the text a choice of the call writes. */
 function createCallStatement(fn: LineFunction): Stmt {
   const statement = getBlockDef("expr").create() as Extract<Stmt, { type: "expr" }>;
-  return { ...statement, expr: textValue(callText(fn).text, "expr") };
+  return { ...statement, expr: parseFieldText(callText(fn).text, "expr") };
 }
 
 /** The groups with only the entries whose label or help contains `query`. */

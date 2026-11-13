@@ -60,7 +60,7 @@ export function exportName(title: string, untitled: string): string {
 }
 
 /** Import: the program a file holds, or undefined when `migrate()` rejects it. */
-export function importedProgram(text: string): Program | undefined {
+export function parseProgramFile(text: string): Program | undefined {
   try {
     return migrate(JSON.parse(text));
   } catch {

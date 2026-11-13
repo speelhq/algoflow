@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { ast, createProgramWithInputs } from "@/blocks/testing";
 import { emit } from "@/python/emit";
-import { exportName, importedProgram, playgroundCopy } from "./programs";
+import { exportName, parseProgramFile, playgroundCopy } from "./programs";
 
 const { print, v, program } = ast;
 
@@ -33,8 +33,8 @@ describe("whole-program actions", () => {
 
   it("Import accepts a program that migrates and rejects anything else", () => {
     const p = program([print(v("x"))]);
-    expect(importedProgram(JSON.stringify(p))).toEqual(p);
-    expect(importedProgram("{nope")).toBeUndefined();
-    expect(importedProgram(JSON.stringify({ version: 9 }))).toBeUndefined();
+    expect(parseProgramFile(JSON.stringify(p))).toEqual(p);
+    expect(parseProgramFile("{nope")).toBeUndefined();
+    expect(parseProgramFile(JSON.stringify({ version: 9 }))).toBeUndefined();
   });
 });

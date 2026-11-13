@@ -14,7 +14,7 @@ import {
   oneLine,
   startField,
   targetSlot,
-  textValue,
+  parseFieldText,
   findFieldValue,
 } from "./fields";
 
@@ -119,23 +119,23 @@ describe("a value line's text (editor.md, Value line)", () => {
   it("writes a value as the emitter does and a draft as typed, and reads a text back", () => {
     expect(fieldText(bin("+", v("x"), num(1)))).toBe("x + 1");
     expect(fieldText(draft("x  +"))).toBe("x  +");
-    expect(textValue("x+1", "expr")).toMatchObject({ type: "binop", op: "+" });
-    expect(textValue("x +", "expr")).toMatchObject({ type: "draft", text: "x +" });
-    expect(textValue("", "expr")).toMatchObject({ type: "draft", text: "" });
-    expect(textValue("x + 1", "target")).toMatchObject({ type: "draft", text: "x + 1" });
+    expect(parseFieldText("x+1", "expr")).toMatchObject({ type: "binop", op: "+" });
+    expect(parseFieldText("x +", "expr")).toMatchObject({ type: "draft", text: "x +" });
+    expect(parseFieldText("", "expr")).toMatchObject({ type: "draft", text: "" });
+    expect(parseFieldText("x + 1", "target")).toMatchObject({ type: "draft", text: "x + 1" });
   });
 
   it("writes a list of values separated by commas, and reads values, no item, or one draft back", () => {
     expect(fieldText([v("x"), ast.str("a b"), bin("+", v("x"), num(1))])).toBe('x, "a b", x + 1');
     expect(fieldText([])).toBe("");
     expect(fieldText([draft("x,  y z")])).toBe("x,  y z");
-    expect(textValue("x, 1+2", "exprs")).toMatchObject([
+    expect(parseFieldText("x, 1+2", "exprs")).toMatchObject([
       { type: "var", name: "x" },
       { type: "binop", op: "+" },
     ]);
-    expect(textValue("", "exprs")).toEqual([]);
-    expect(textValue("x, y z", "exprs")).toMatchObject([{ type: "draft", text: "x, y z" }]);
-    expect(textValue("x,", "exprs")).toMatchObject([{ type: "draft", text: "x," }]);
+    expect(parseFieldText("", "exprs")).toEqual([]);
+    expect(parseFieldText("x, y z", "exprs")).toMatchObject([{ type: "draft", text: "x, y z" }]);
+    expect(parseFieldText("x,", "exprs")).toMatchObject([{ type: "draft", text: "x," }]);
   });
 
   it("shows its slot's hint with no text, or `optional` for an optional slot", () => {

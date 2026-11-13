@@ -8,7 +8,7 @@ import { isTarget, type ExprRole } from "./walk";
  * What `text` writes in a slot of `role`: its value, or why it is none. An `exprs` slot's text is
  * its values separated by commas, and a `target` slot keeps only a target.
  */
-export function draftValue(
+export function parseSlotText(
   role: ExprRole,
   text: string,
 ): { value: Expr | Expr[] } | { error: ParseError | "E_NOT_TARGET" } {

@@ -47,7 +47,7 @@ const { item } = ast;
 /** A program that defines no function. */
 const P = program([]);
 
-function expr(python: string): Expr {
+function parseExpr(python: string): Expr {
   const parsed = parse(python);
   if (isParseError(parsed)) throw new Error(python);
   return parsed;
@@ -115,56 +115,58 @@ describe("notation", () => {
   it("writes each operator as Python does, and names builtin arguments by parameter", () => {
     expect(exprText(bin("*", num(2, "2.50"), bin("/", v("a"), v("b"))), P)).toBe("2.50 * (a / b)");
     const ops = "+ - * / // % ** == != < <= > >= and or in".split(" ");
-    expect(ops.map((op) => exprText(expr(`a ${op} b`), P))).toEqual(ops.map((op) => `a ${op} b`));
+    expect(ops.map((op) => exprText(parseExpr(`a ${op} b`), P))).toEqual(
+      ops.map((op) => `a ${op} b`),
+    );
     expect(exprText(bool(false), P)).toBe("False");
     expect(exprText(neg(v("x")), P)).toBe("-x");
     expect(exprText(call("f", num(1), v("n")), P)).toBe("f(1, n)");
   });
 
   it("writes %, //, **, and in as Python writes them", () => {
-    expect(exprText(expr("i % 15"), P)).toBe("i % 15");
-    expect(exprText(expr("a // b"), P)).toBe("a // b");
-    expect(exprText(expr("2 ** 3"), P)).toBe("2 ** 3");
-    expect(exprText(expr("x in nums"), P)).toBe("x in nums");
+    expect(exprText(parseExpr("i % 15"), P)).toBe("i % 15");
+    expect(exprText(parseExpr("a // b"), P)).toBe("a // b");
+    expect(exprText(parseExpr("2 ** 3"), P)).toBe("2 ** 3");
+    expect(exprText(parseExpr("x in nums"), P)).toBe("x in nums");
   });
 
   it("writes a builtin as a call named as Python names it, without its module", () => {
-    expect(exprText(expr("abs(x)"), P)).toBe("abs(x)");
-    expect(exprText(expr("min(a, b)"), P)).toBe("min(a, b)");
-    expect(exprText(expr("str(n)"), P)).toBe("str(n)");
-    expect(exprText(expr("random.randint(1, 6)"), P)).toBe("randint(1, 6)");
+    expect(exprText(parseExpr("abs(x)"), P)).toBe("abs(x)");
+    expect(exprText(parseExpr("min(a, b)"), P)).toBe("min(a, b)");
+    expect(exprText(parseExpr("str(n)"), P)).toBe("str(n)");
+    expect(exprText(parseExpr("random.randint(1, 6)"), P)).toBe("randint(1, 6)");
   });
 
   it("parenthesizes operators among themselves exactly where the emitter would", () => {
-    expect(exprText(expr("(a + b) * c"), P)).toBe("(a + b) * c");
-    expect(exprText(expr("a + b * c"), P)).toBe("a + b * c");
-    expect(exprText(expr("a - (b - c)"), P)).toBe("a - (b - c)");
-    expect(exprText(expr("-(a + b)"), P)).toBe("-(a + b)");
-    expect(exprText(expr("a < b and b < c"), P)).toBe("a < b and b < c");
+    expect(exprText(parseExpr("(a + b) * c"), P)).toBe("(a + b) * c");
+    expect(exprText(parseExpr("a + b * c"), P)).toBe("a + b * c");
+    expect(exprText(parseExpr("a - (b - c)"), P)).toBe("a - (b - c)");
+    expect(exprText(parseExpr("-(a + b)"), P)).toBe("-(a + b)");
+    expect(exprText(parseExpr("a < b and b < c"), P)).toBe("a < b and b < c");
   });
 
   it("parenthesizes no call and no argument of one, and every operator as the emitter does", () => {
-    expect(exprText(expr("i % 15 == 0"), P)).toBe("i % 15 == 0");
-    expect(exprText(expr("(i + 1) % 3"), P)).toBe("(i + 1) % 3");
-    expect(exprText(expr("abs(i % 3)"), P)).toBe("abs(i % 3)");
-    expect(exprText(expr("min(a, abs(b))"), P)).toBe("min(a, abs(b))");
-    expect(exprText(expr("-x ** 2"), P)).toBe("-x ** 2");
-    expect(exprText(expr("(-x) ** 2"), P)).toBe("(-x) ** 2");
+    expect(exprText(parseExpr("i % 15 == 0"), P)).toBe("i % 15 == 0");
+    expect(exprText(parseExpr("(i + 1) % 3"), P)).toBe("(i + 1) % 3");
+    expect(exprText(parseExpr("abs(i % 3)"), P)).toBe("abs(i % 3)");
+    expect(exprText(parseExpr("min(a, abs(b))"), P)).toBe("min(a, abs(b))");
+    expect(exprText(parseExpr("-x ** 2"), P)).toBe("-x ** 2");
+    expect(exprText(parseExpr("(-x) ** 2"), P)).toBe("(-x) ** 2");
     expect(exprText(not(bin("<", v("a"), v("b"))), P)).toBe("not a < b");
-    expect(exprText(expr("not (a and b)"), P)).toBe("not (a and b)");
-    expect(exprText(expr("f(abs(x), y)"), P)).toBe("f(abs(x), y)");
-    expect(exprText(expr("str(n) + str(m)"), P)).toBe("str(n) + str(m)");
+    expect(exprText(parseExpr("not (a and b)"), P)).toBe("not (a and b)");
+    expect(exprText(parseExpr("f(abs(x), y)"), P)).toBe("f(abs(x), y)");
+    expect(exprText(parseExpr("str(n) + str(m)"), P)).toBe("str(n) + str(m)");
   });
 
   it("writes a list and an item as Python does, the list of an item as an atom", () => {
-    expect(exprText(expr("[]"), P)).toBe("[]");
-    expect(exprText(expr('[1, "a", [x]]'), P)).toBe('[1, "a", [x]]');
-    expect(exprText(expr("nums[i + 1]"), P)).toBe("nums[i + 1]");
-    expect(exprText(expr("nums[j] > nums[j + 1]"), P)).toBe("nums[j] > nums[j + 1]");
-    expect(exprText(expr("(a + b)[0]"), P)).toBe("(a + b)[0]");
-    expect(exprText(expr("(-xs)[0]"), P)).toBe("(-xs)[0]");
-    expect(exprText(expr("-xs[0]"), P)).toBe("-xs[0]");
-    expect(exprText(expr("len(nums) - 1"), P)).toBe("len(nums) - 1");
+    expect(exprText(parseExpr("[]"), P)).toBe("[]");
+    expect(exprText(parseExpr('[1, "a", [x]]'), P)).toBe('[1, "a", [x]]');
+    expect(exprText(parseExpr("nums[i + 1]"), P)).toBe("nums[i + 1]");
+    expect(exprText(parseExpr("nums[j] > nums[j + 1]"), P)).toBe("nums[j] > nums[j + 1]");
+    expect(exprText(parseExpr("(a + b)[0]"), P)).toBe("(a + b)[0]");
+    expect(exprText(parseExpr("(-xs)[0]"), P)).toBe("(-xs)[0]");
+    expect(exprText(parseExpr("-xs[0]"), P)).toBe("-xs[0]");
+    expect(exprText(parseExpr("len(nums) - 1"), P)).toBe("len(nums) - 1");
     expect(notationText(assignTo(item(v("nums"), v("i")), num(0)), P)).toBe("nums[i] ← 0");
   });
 
@@ -232,7 +234,7 @@ describe("notation", () => {
 
   it("writes a variable as its value when the writing gives one", () => {
     const values: Record<string, string> = { i: "3" };
-    expect(exprText(expr("i % 15 == 0"), P, { variableText: (name) => values[name] })).toBe(
+    expect(exprText(parseExpr("i % 15 == 0"), P, { variableText: (name) => values[name] })).toBe(
       "3 % 15 == 0",
     );
   });
@@ -252,8 +254,8 @@ describe("notation", () => {
 
 describe("diamonds and generated chart nodes", () => {
   it("a diamond is its condition followed by ?, or its hint without it while it is empty", () => {
-    expect(joinSpans(questionSpans(if_(expr("i % 15 == 0"), []), P))).toBe("i % 15 == 0?");
-    expect(joinSpans(questionSpans(if_(expr("abs(x) < 3"), []), P))).toBe("abs(x) < 3?");
+    expect(joinSpans(questionSpans(if_(parseExpr("i % 15 == 0"), []), P))).toBe("i % 15 == 0?");
+    expect(joinSpans(questionSpans(if_(parseExpr("abs(x) < 3"), []), P))).toBe("abs(x) < 3?");
     expect(joinSpans(questionSpans(if_(empty(), []), P))).toBe("condition");
     expect(questionSpans(while_(empty(), []), P)).toMatchObject([{ hint: true }]);
     // The condition's spans name its slot; the `?` names none.
