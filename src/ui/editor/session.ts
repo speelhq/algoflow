@@ -51,6 +51,15 @@ function openedLine(value: FieldValue, insertedCaret: number | null): TextLine {
   return { text, start: draft ? text.length : 0, end: text.length };
 }
 
+/** The session while no field has the keyboard: the editor itself or another control has it. */
+export const NO_FIELD: Session = {
+  focus: null,
+  line: null,
+  fieldValue: null,
+  highlight: null,
+  all: false,
+};
+
 /** A session on `field` of `stmt`, its line opened as `line` gives, or none. */
 function sessionOn(
   stmt: Stmt,
@@ -58,13 +67,8 @@ function sessionOn(
   line: (value: FieldValue) => TextLine,
 ): Session {
   const value = field ? valueOf(stmt, field) : undefined;
-  return {
-    focus: value ? field : null,
-    line: value ? line(value) : null,
-    fieldValue: value ?? null,
-    highlight: null,
-    all: false,
-  };
+  if (!field || !value) return NO_FIELD;
+  return { ...NO_FIELD, focus: field, line: line(value), fieldValue: value };
 }
 
 /**
@@ -79,27 +83,20 @@ export function openSession(
   return sessionOn(stmt, start, (value) => openedLine(value, insertedCaret));
 }
 
-/** The session while no field has the keyboard: the editor itself or another control has it. */
-export const NO_FIELD: Session = {
-  focus: null,
-  line: null,
-  fieldValue: null,
-  highlight: null,
-  all: false,
-};
-
 /**
- * The keyboard moves to `field`, or leaves every field: by Tab, its line opens as a field opens;
- * by a click, with the selection the click made.
+ * How the keyboard enters a field: by Tab, its line opens as a field opens; by ← or →, with the
+ * caret at the end or the start of its text; by a click, with the selection the click made.
  */
-export function enterField(
-  stmt: Stmt,
-  field: Field | null,
-  how: "tab" | { start: number; end: number },
-): Session {
+export type Entry = "tab" | "end" | "start" | { start: number; end: number };
+
+/** The keyboard moves to `field`, or leaves every field, its line opened as `how` says. */
+export function enterField(stmt: Stmt, field: Field | null, how: Entry): Session {
   return sessionOn(stmt, field, (value) => {
     if (how === "tab") return openedLine(value, null);
-    return { text: fieldText(value), ...how };
+    const text = fieldText(value);
+    if (how === "start") return { text, start: 0, end: 0 };
+    if (how === "end") return { text, start: text.length, end: text.length };
+    return { text, ...how };
   });
 }
 
@@ -111,7 +108,7 @@ export function followStatement(session: Session, stmt: Stmt): Session {
   if (sameValue(value, fieldValue)) return session;
   // A field the statement no longer has (an optional value taken out, by an undo) leaves the
   // keyboard.
-  if (!value) return { ...session, focus: null, line: null, fieldValue: null };
+  if (!value) return NO_FIELD;
   const text = fieldText(value);
   return { ...session, line: { text, start: text.length, end: text.length }, fieldValue: value };
 }
@@ -166,8 +163,8 @@ export function stepHighlight(
   return { ...session, highlight: next };
 }
 
-/** What a key in a value line leaves to the editor: closing it, or another field. */
-export type After = "close" | { go: 1 | -1 };
+/** What a key in a value line leaves to the editor: closing it, or the field beside, entered so. */
+export type After = "close" | { go: 1 | -1; entry: Extract<Entry, string> };
 
 /** A key pressed in the focused value line; `taken` is false when the field keeps it. */
 export type KeyTransition = Transition & { taken: boolean; after?: After };
@@ -186,26 +183,28 @@ export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransi
   if (!chosen) return taken(still(session));
   const changed = changeText(session, chosen, false);
   const target = session.focus?.role === "target" && isValue(changed.session.fieldValue);
-  return taken(changed, target ? { go: 1 } : undefined);
+  return taken(changed, target ? { go: 1, entry: "tab" } : undefined);
 }
 
 /**
  * A key the focused value line acts on, which a text field doesn't: ↑ and ↓ move the list's
- * highlight, Enter chooses the highlighted row or else closes the editor, Tab and Shift+Tab move to
- * the next and previous field while `moves` says the notation has one (`editor.md`, Value list;
- * Block editor). `rows` is the value list shown under the line, and every other key is the
- * field's: Tab past the last field among them, which leaves the notation.
+ * highlight, Enter chooses the highlighted row or else closes the editor, and ← at the start of
+ * the text and → at its end, with no text selected, move to the end of the previous field and the
+ * start of the next while `moves` says the notation has one (`editor.md`, Value list; Value line,
+ * Keys). `rows` is the value list shown under the line, and every other key is the field's, Tab
+ * included, which the editor moves round its controls (`focus.ts`).
  */
 export function valueKey(
   session: Session,
-  key: { key: string; shiftKey: boolean },
+  key: { key: string; shiftKey: boolean; altKey: boolean; ctrlKey: boolean; metaKey: boolean },
   rows: readonly Row[],
   ctx: LineContext,
   moves: (step: 1 | -1) => boolean,
 ): KeyTransition {
   const { line } = session;
   const left: KeyTransition = { ...still(session), taken: false };
-  if (!line) return left;
+  // A key with Ctrl or Cmd is the page's or the text field's (`editor.md`, Value line, Keys).
+  if (!line || key.ctrlKey || key.metaKey) return left;
   const shown = shownHighlight(session, rows.length);
   switch (key.key) {
     case "ArrowDown":
@@ -218,9 +217,14 @@ export function valueKey(
       const row = shown === null ? undefined : rows[shown];
       return row ? pickRow(session, row, ctx) : taken(still(session), "close");
     }
-    case "Tab": {
-      const step = key.shiftKey ? -1 : 1;
-      return moves(step) ? taken(still(session), { go: step }) : left;
+    case "ArrowLeft":
+    case "ArrowRight": {
+      const step = key.key === "ArrowLeft" ? -1 : 1;
+      const edge = step < 0 ? 0 : line.text.length;
+      const atEdge = line.start === edge && line.end === edge;
+      // With Shift or Alt, they select or move by word, as in a text field.
+      if (key.shiftKey || key.altKey || !atEdge || !moves(step)) return left;
+      return taken(still(session), { go: step, entry: step < 0 ? "end" : "start" });
     }
     default:
       return left;

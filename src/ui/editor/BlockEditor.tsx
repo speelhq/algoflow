@@ -60,6 +60,7 @@ import {
   valueKey,
   NO_FIELD,
   type After,
+  type Entry,
   type Session,
   type Transition,
 } from "./session";
@@ -188,18 +189,20 @@ function Body(props: {
     return transition.session;
   };
 
-  /** Moves the keyboard to `field`: by Tab, or by a click with the selection it made. */
-  const enter = (field: Field | null, how: "tab" | { start: number; end: number }): void => {
+  /** Moves the keyboard to `field`, its line opened as `how` says (`Entry`). */
+  const enter = (field: Field | null, how: Entry): void => {
     setSession(enterField(current() ?? stmt, field, how));
   };
 
   /**
-   * Leaves `field` for the next or previous field of the notation. A transition writes a value into
-   * its own field, which keeps the notation's fields as they are.
+   * Leaves `field` for the next or previous field of the notation, entered as `entry` says; past the
+   * last field, for the editor itself (`editor.md`, Targets). A transition writes a value into its
+   * own field, which keeps the notation's fields as they are.
    */
-  const go = (step: 1 | -1, field: Field | null): void => {
+  const go = (step: 1 | -1, field: Field | null, entry: Entry): void => {
     const next = field && fieldBeside(fields, field, step);
-    if (next) enter(next, "tab");
+    if (next) enter(next, entry);
+    else editor?.focus();
   };
 
   /** `+ value` gives an optional slot an empty slot, whose field takes the keyboard. */
@@ -221,10 +224,10 @@ function Body(props: {
   /** Runs what a key or a choice leaves to the editor, once the session it left is kept. */
   const runAfter = (left: Session, then: After | undefined) => {
     if (then === "close") closeEditor();
-    else if (then) go(then.go, left.focus);
+    else if (then) go(then.go, left.focus, then.entry);
   };
 
-  /** Whether the notation has a field `step` on from the focused one, which Tab moves to. */
+  /** Whether the notation has a field `step` on from the focused one, which ← and → move to. */
   const canMove = (step: 1 | -1) =>
     focus !== null && fieldBeside(fields, focus, step) !== undefined;
 
