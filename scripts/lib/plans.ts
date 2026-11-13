@@ -9,9 +9,8 @@ export type PlansResult = { plans: Plan[] | null; problems: string[] };
 export function checkPlans(
   json: unknown,
   knownIds: ReadonlySet<string>,
-  opts: { requireJa?: boolean } = {},
+  { requireJa }: { requireJa: boolean },
 ): PlansResult {
-  const requireJa = opts.requireJa ?? false;
   if (!Array.isArray(json)) return { plans: null, problems: ["plans.json must be an array"] };
   const problems: string[] = [];
   const planIds = new Set<string>();

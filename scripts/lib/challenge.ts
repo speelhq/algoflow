@@ -37,25 +37,29 @@ const KEYS: ReadonlySet<string> = new Set([
   "solution",
 ]);
 
+/** Whether a value is a `Localized` text, as the check requires it. */
+type TextCheck = (value: unknown) => value is Localized;
+
 export type SchemaResult = { challenge: Challenge | null; problems: string[] };
 
 /** Validates one challenge file's JSON. `fileId` is the file name without `.json`. */
 export function checkChallengeSchema(
   json: unknown,
   fileId: string,
-  opts: { requireJa?: boolean } = {},
+  opts: { requireJa: boolean },
 ): SchemaResult {
-  const requireJa = opts.requireJa ?? false;
+  // A `Localized` text, with its `ja` text when the check requires one (`challenges.md`, Checks).
+  const isLocalizedText: TextCheck = (value) => isLocalized(value, opts.requireJa);
   if (!isRecord(json)) return { challenge: null, problems: ["not an object"] };
   const { defines, problems: definitionProblems } = checkDefinitions(json);
   const { inputs, declared, problems: inputProblems } = checkInputs(json);
   const problems = [
     ...checkKeys(json, fileId),
-    ...checkPresentation(json, requireJa),
+    ...checkPresentation(json, isLocalizedText),
     ...definitionProblems,
     ...inputProblems,
     ...checkTestSchemas(json, declared),
-    ...checkHints(json, requireJa),
+    ...checkHints(json, isLocalizedText),
     ...checkSolution(json, fileId, inputs, defines),
   ];
   return { challenge: problems.length === 0 ? (json as unknown as Challenge) : null, problems };
@@ -71,9 +75,9 @@ function checkKeys(json: Record<string, unknown>, fileId: string): string[] {
 }
 
 /** What the challenge shows a learner: its title, difficulty, topics, description, and takeaway. */
-function checkPresentation(json: Record<string, unknown>, requireJa: boolean): string[] {
+function checkPresentation(json: Record<string, unknown>, isLocalizedText: TextCheck): string[] {
   const problems: string[] = [];
-  if (!isLocalized(json.title, requireJa)) problems.push("title must be { en, ja? }");
+  if (!isLocalizedText(json.title)) problems.push("title must be { en, ja? }");
   if (!DIFFICULTIES.some((d) => d === json.difficulty))
     problems.push(
       `difficulty "${String(json.difficulty)}" is not one of ${DIFFICULTIES.join(", ")}`,
@@ -84,8 +88,8 @@ function checkPresentation(json: Record<string, unknown>, requireJa: boolean): s
     for (const topic of json.topics)
       if (!TOPICS.some((t) => t === topic))
         problems.push(`topic "${String(topic)}" is not one of ${TOPICS.join(", ")}`);
-  if (!isLocalized(json.description, requireJa)) problems.push("description must be { en, ja? }");
-  if (json.takeaway !== undefined && !isLocalized(json.takeaway, requireJa))
+  if (!isLocalizedText(json.description)) problems.push("description must be { en, ja? }");
+  if (json.takeaway !== undefined && !isLocalizedText(json.takeaway))
     problems.push("takeaway must be { en, ja? }");
   return problems;
 }
@@ -207,14 +211,14 @@ function checkData(value: unknown, path: string): string[] {
 }
 
 /** Exactly `HINTS` hints, each a `Localized` text. */
-function checkHints(json: Record<string, unknown>, requireJa: boolean): string[] {
+function checkHints(json: Record<string, unknown>, isLocalizedText: TextCheck): string[] {
   const problems: string[] = [];
   const hints: unknown[] = Array.isArray(json.hints) ? json.hints : [];
   if (!Array.isArray(json.hints) || hints.length !== HINTS) {
     problems.push(`hints must be exactly ${HINTS}`);
   }
   hints.forEach((hint, i) => {
-    if (!isLocalized(hint, requireJa)) problems.push(`hints[${i}] must be { en, ja? }`);
+    if (!isLocalizedText(hint)) problems.push(`hints[${i}] must be { en, ja? }`);
   });
   return problems;
 }

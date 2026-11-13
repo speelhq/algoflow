@@ -11,6 +11,8 @@ import { execute } from "./lib/interp";
 import { checkPlans } from "./lib/plans";
 
 const { assign, num, bin, v, print, ret } = ast;
+/** The demo challenge and the plans hold English texts only. */
+const EN_ONLY = { requireJa: false };
 
 function valid() {
   const solution = program([assign("total", bin("+", v("n"), num(1)))], {
@@ -36,7 +38,7 @@ function valid() {
 
 describe("checkChallengeSchema", () => {
   it("accepts a complete challenge", () => {
-    expect(checkChallengeSchema(valid(), "demo").problems).toEqual([]);
+    expect(checkChallengeSchema(valid(), "demo", EN_ONLY).problems).toEqual([]);
   });
 
   it("reports each structural problem", () => {
@@ -46,7 +48,7 @@ describe("checkChallengeSchema", () => {
     c.tests[1]!.edge = false;
     delete (c.tests[2]!.inputs as Record<string, unknown>).n;
     c.solution.inputs = [{ name: "n", kind: "text" }];
-    const { problems } = checkChallengeSchema(c, "demo");
+    const { problems } = checkChallengeSchema(c, "demo", EN_ONLY);
     expect(problems).toEqual(
       expect.arrayContaining([
         expect.stringContaining("does not match the file name"),
@@ -61,7 +63,7 @@ describe("checkChallengeSchema", () => {
   it("rejects a key the schema does not have, such as the removed starter", () => {
     const c = valid() as unknown as Record<string, unknown>;
     c.starter = c.solution;
-    expect(checkChallengeSchema(c, "demo").problems).toEqual(['unknown key "starter"']);
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual(['unknown key "starter"']);
   });
 
   it("checks difficulty, topics, and takeaway", () => {
@@ -69,7 +71,7 @@ describe("checkChallengeSchema", () => {
     c.difficulty = "trivial";
     c.topics = [];
     c.takeaway = "plain text";
-    expect(checkChallengeSchema(c, "demo").problems).toEqual([
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
       expect.stringContaining('difficulty "trivial"'),
       expect.stringContaining("topics must be a non-empty array"),
       expect.stringContaining("takeaway must be { en, ja? }"),
@@ -77,7 +79,7 @@ describe("checkChallengeSchema", () => {
     c.difficulty = "hard";
     c.topics = ["loops", "knitting"];
     delete c.takeaway;
-    expect(checkChallengeSchema(c, "demo").problems).toEqual([
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
       expect.stringContaining('topic "knitting"'),
     ]);
   });
@@ -86,27 +88,29 @@ describe("checkChallengeSchema", () => {
     const c = valid() as unknown as Record<string, unknown>;
     c.module = "Heap";
     c.defines = ["twice", 3];
-    expect(checkChallengeSchema(c, "demo").problems).toEqual([
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
       "module must be a valid name",
       "defines must be an array of function names",
     ]);
     c.module = "heap";
     c.defines = ["twice", "Pair"];
-    expect(checkChallengeSchema(c, "demo").problems).toEqual([
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
       "defines must be an array of function names",
     ]);
     c.defines = ["twice"];
-    expect(checkChallengeSchema(c, "demo").problems).toEqual(['solution does not define "twice"']);
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
+      'solution does not define "twice"',
+    ]);
     const twice = { id: "f0000000000f", name: "twice", params: ["x"], body: [ret(v("x"))] };
     c.solution = { ...valid().solution, functions: [twice] };
-    expect(checkChallengeSchema(c, "demo").problems).toEqual([]);
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([]);
   });
 
   it("requires at least three tests and a non-empty expect", () => {
     const c = valid() as unknown as { tests: unknown[] };
     const [first, second] = valid().tests;
     c.tests = [first, { ...second, expect: {} }];
-    const { problems } = checkChallengeSchema(c, "demo");
+    const { problems } = checkChallengeSchema(c, "demo", EN_ONLY);
     expect(problems).toEqual(
       expect.arrayContaining([
         expect.stringContaining("at least 3"),
@@ -118,13 +122,13 @@ describe("checkChallengeSchema", () => {
   it("inputs are declared with a kind, and every test's value has it, as canonical Data the blocks write", () => {
     const c = valid();
     (c.tests[0]!.inputs as Record<string, unknown>).n = "one";
-    expect(checkChallengeSchema(c, "demo").problems).toEqual([
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
       "tests[0].inputs.n is not of the kind number",
     ]);
     const beyond = valid();
     (beyond.tests[1]!.inputs as Record<string, unknown>).n = 2 ** 53;
     (beyond.tests[2]!.expect.variables as Record<string, unknown>).total = [1, 2 ** 60];
-    expect(checkChallengeSchema(beyond, "demo").problems).toEqual([
+    expect(checkChallengeSchema(beyond, "demo", EN_ONLY).problems).toEqual([
       "tests[1].inputs.n: expected an integer within the int range",
       "tests[2].expect.variables.total[1]: expected an integer within the int range",
     ]);
@@ -133,12 +137,12 @@ describe("checkChallengeSchema", () => {
     dict.inputs = [{ name: "n", kind: "dict" }];
     dict.solution.inputs = [{ name: "n", kind: "dict" }];
     for (const test of dict.tests) (test.inputs as Record<string, unknown>).n = { a: 1 };
-    expect(checkChallengeSchema(dict, "demo").problems).toEqual(
+    expect(checkChallengeSchema(dict, "demo", EN_ONLY).problems).toEqual(
       expect.arrayContaining(["tests[0].inputs.n is a value no block writes"]),
     );
     const undeclared = valid();
     (undeclared.inputs[0] as Record<string, unknown>).kind = "word";
-    expect(checkChallengeSchema(undeclared, "demo").problems).toEqual(
+    expect(checkChallengeSchema(undeclared, "demo", EN_ONLY).problems).toEqual(
       expect.arrayContaining(["inputs[0] must be { name, kind }"]),
     );
   });
@@ -146,7 +150,7 @@ describe("checkChallengeSchema", () => {
   it("an object in a test is refused at its path, while no block constructs one", () => {
     const c = valid();
     (c.tests[0]!.expect.variables as Record<string, unknown>).total = { $cls: "Pair", a: 1 };
-    expect(checkChallengeSchema(c, "demo").problems).toEqual([
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
       'tests[0].expect.variables.total["$cls"]: expected no object: no block constructs one',
     ]);
   });
@@ -157,7 +161,7 @@ describe("checkChallengeSchema", () => {
       ...program([print(v("ghost"))], { inputs: [{ name: "n", kind: "number" }] }),
       challengeId: "demo",
     };
-    expect(checkChallengeSchema(c, "demo").problems).toEqual([
+    expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
       expect.stringMatching(/^solution: E_UNDEFINED/),
     ]);
   });
@@ -165,7 +169,7 @@ describe("checkChallengeSchema", () => {
   it("requires the solution in the current version, as the app reads it with no migrate()", () => {
     const c = valid();
     const old = { ...c.solution, version: 2 };
-    expect(checkChallengeSchema({ ...c, solution: old }, "demo").problems).toEqual([
+    expect(checkChallengeSchema({ ...c, solution: old }, "demo", EN_ONLY).problems).toEqual([
       "solution.version must be 1",
       "solution: version: unsupported version 2",
     ]);
@@ -179,7 +183,7 @@ describe("checkChallengeSchema", () => {
       }),
       challengeId: "demo",
     };
-    const { challenge, problems } = checkChallengeSchema(c, "demo");
+    const { challenge, problems } = checkChallengeSchema(c, "demo", EN_ONLY);
     expect(problems).toEqual([]);
     const draft = challenge?.solution.main[0];
     expect(draft?.type === "assign" && draft.value.type).toBe("draft");
@@ -206,7 +210,7 @@ describe("checkPlans", () => {
   });
 
   it("accepts plans whose members exist once, in one plan each", () => {
-    const result = checkPlans([plan("p", ["a", "b"]), plan("q", ["c"])], known);
+    const result = checkPlans([plan("p", ["a", "b"]), plan("q", ["c"])], known, EN_ONLY);
     expect(result.problems).toEqual([]);
     expect(result.plans?.map((p) => p.id)).toEqual(["p", "q"]);
   });
@@ -215,6 +219,7 @@ describe("checkPlans", () => {
     const { plans, problems } = checkPlans(
       [plan("p", ["a", "zzz", "a"]), plan("q", ["a"]), plan("q", []), { id: 3, problems: "a" }],
       known,
+      EN_ONLY,
     );
     expect(plans).toBeNull();
     expect(problems).toEqual([
@@ -230,15 +235,21 @@ describe("checkPlans", () => {
       '"b" is in no plan',
       '"c" is in no plan',
     ]);
-    expect(checkPlans({}, known).problems).toEqual(["plans.json must be an array"]);
+    expect(checkPlans({}, known, EN_ONLY).problems).toEqual(["plans.json must be an array"]);
   });
 
   it("reports a challenge in no plan", () => {
-    expect(checkPlans([plan("p", ["a", "b"])], known).problems).toEqual(['"c" is in no plan']);
+    expect(checkPlans([plan("p", ["a", "b"])], known, EN_ONLY).problems).toEqual([
+      '"c" is in no plan',
+    ]);
   });
 
   it("two plans sharing an id still report a member they both list", () => {
-    const { problems } = checkPlans([plan("p", ["a"]), plan("p", ["a", 7])], new Set(["a"]));
+    const { problems } = checkPlans(
+      [plan("p", ["a"]), plan("p", ["a", 7])],
+      new Set(["a"]),
+      EN_ONLY,
+    );
     expect(problems).toEqual([
       expect.stringContaining('plan "p" is listed twice'),
       expect.stringContaining('"a" is in plan "p" and plan "p"'),
@@ -272,7 +283,7 @@ describe("checkTest", () => {
     const json = valid();
     const inputs = [{ name: "n", kind: "number" as const }];
     json.solution = { ...program(main, { inputs }), challengeId: "demo" };
-    const checked = checkChallengeSchema(json, "demo").challenge;
+    const checked = checkChallengeSchema(json, "demo", EN_ONLY).challenge;
     if (!checked) throw new Error("the demo challenge does not check");
     return checked;
   };
