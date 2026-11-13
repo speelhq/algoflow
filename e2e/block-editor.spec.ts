@@ -366,6 +366,9 @@ test("a swap of two items and one of two variables are typed as the chart writes
   await keys(page, "y");
   await page.keyboard.press("Enter");
   await expect(chart(page)).toContainText("swap(x, y)");
+  // A choice past the last field moves the keyboard to the editor itself, which stays open.
+  await expect(page.getByRole("dialog", { name: "Edit block" })).toBeFocused();
+  await expect(editor(page)).toBeVisible();
 
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "▶ Run" }).click();
@@ -560,4 +563,35 @@ test("Tab and Shift+Tab go round the editor's controls through the editor itself
   expect(
     await field.evaluate((input: HTMLInputElement) => [input.selectionStart, input.selectionEnd]),
   ).toEqual([0, 1]);
+});
+
+test("← at a field's start and → at its end move to the field beside", async ({ page }) => {
+  await seedProgress(page, {});
+  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await page.goto("/#/p/fizzbuzz");
+  await page.locator('[data-owner="fzb-loop-001"] [data-block-slot="start"]').first().click();
+  const fields = editor(page).locator("[data-value-line]");
+  const caret = (index: number) =>
+    fields
+      .nth(index)
+      .evaluate((field: HTMLInputElement) => [field.selectionStart, field.selectionEnd]);
+  // The start opens selected; → first clears the selection, as in a text field.
+  await expect(fields.nth(1)).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(fields.nth(1)).toBeFocused();
+  // At the end, → goes to the start of the stop.
+  await page.keyboard.press("ArrowRight");
+  await expect(fields.nth(2)).toBeFocused();
+  expect(await caret(2)).toEqual([0, 0]);
+  // At the start, ← goes back to the end of the start.
+  await page.keyboard.press("ArrowLeft");
+  await expect(fields.nth(1)).toBeFocused();
+  expect(await caret(1)).toEqual([1, 1]);
+  // At the start of the first field, ← does nothing.
+  await page.keyboard.press("ArrowLeft");
+  await page.keyboard.press("ArrowLeft");
+  await expect(fields.nth(0)).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(fields.nth(0)).toBeFocused();
+  expect(await caret(0)).toEqual([0, 0]);
 });

@@ -41,7 +41,13 @@ const targetCtx: LineContext = { ...ctx, target: { asked: [], names: ["x"], bind
 const typed = (session: Session, text: string, composing = false) =>
   changeText(session, { text, start: text.length, end: text.length }, composing);
 
-const key = (name: string, shiftKey = false) => ({ key: name, shiftKey });
+const key = (name: string, shiftKey = false) => ({
+  key: name,
+  shiftKey,
+  altKey: false,
+  ctrlKey: false,
+  metaKey: false,
+});
 
 /** A notation with a field before and after the focused one. */
 const both = () => true;
@@ -142,14 +148,51 @@ describe("changing the text (editor.md, Value line)", () => {
 });
 
 describe("the keys a value line acts on (editor.md, Value list; Block editor)", () => {
-  it("Enter chooses the highlighted row, else closes; Tab and Shift+Tab move between fields", () => {
+  it("Enter chooses the highlighted row, else closes; Tab is the editor's", () => {
     const open = openSession(assign("total", num(0)), value, null);
     expect(valueKey(open, key("Enter"), [], ctx, both).after).toBe("close");
-    expect(valueKey(open, key("Tab"), [], ctx, both).after).toEqual({ go: 1 });
-    expect(valueKey(open, key("Tab", true), [], ctx, both).after).toEqual({ go: -1 });
+    // Ctrl/Cmd+Enter is the page's play button.
+    const play = { ...key("Enter"), ctrlKey: true };
+    expect(valueKey(open, play, [], ctx, both).taken).toBe(false);
+    expect(valueKey(open, { ...play, ctrlKey: false, metaKey: true }, [], ctx, both).taken).toBe(
+      false,
+    );
     expect(valueKey(open, key("a"), [], ctx, both).taken).toBe(false);
-    // Past the last field, Tab is the field's, which leaves the notation.
-    expect(valueKey(open, key("Tab"), [], ctx, () => false).taken).toBe(false);
+    // The editor moves Tab and Shift+Tab round its controls (`focus.ts`).
+    expect(valueKey(open, key("Tab"), [], ctx, both).taken).toBe(false);
+    expect(valueKey(open, key("Tab", true), [], ctx, both).taken).toBe(false);
+  });
+
+  it("← at the start and → at the end, with no text selected, move to the field beside", () => {
+    const at = (start: number, end = start) =>
+      selectText(openSession(assign("total", num(10)), value, null), start, end);
+    expect(valueKey(at(0), key("ArrowLeft"), [], ctx, both).after).toEqual({
+      go: -1,
+      entry: "end",
+    });
+    expect(valueKey(at(2), key("ArrowRight"), [], ctx, both).after).toEqual({
+      go: 1,
+      entry: "start",
+    });
+    // Inside the text, over a selection, or with Shift, they move the caret as in a text field.
+    expect(valueKey(at(1), key("ArrowLeft"), [], ctx, both).taken).toBe(false);
+    expect(valueKey(at(1), key("ArrowRight"), [], ctx, both).taken).toBe(false);
+    expect(valueKey(at(0, 2), key("ArrowRight"), [], ctx, both).taken).toBe(false);
+    expect(valueKey(at(0, 2), key("ArrowLeft"), [], ctx, both).taken).toBe(false);
+    expect(valueKey(at(0), key("ArrowLeft", true), [], ctx, both).taken).toBe(false);
+    expect(valueKey(at(0), { ...key("ArrowLeft"), altKey: true }, [], ctx, both).taken).toBe(false);
+    expect(valueKey(at(2), { ...key("ArrowRight"), metaKey: true }, [], ctx, both).taken).toBe(
+      false,
+    );
+    // At the start of the first field and the end of the last, they do nothing.
+    expect(valueKey(at(0), key("ArrowLeft"), [], ctx, () => false).taken).toBe(false);
+    expect(valueKey(at(2), key("ArrowRight"), [], ctx, () => false).taken).toBe(false);
+  });
+
+  it("a field entered by ← opens with the caret at its end, and by → at its start", () => {
+    const stmt = assign("x", num(10));
+    expect(enterField(stmt, value, "end").line).toEqual({ text: "10", start: 2, end: 2 });
+    expect(enterField(stmt, value, "start").line).toEqual({ text: "10", start: 0, end: 0 });
   });
 
   it("the first match of a word is highlighted, and ↓ and ↑ wrap round the list", () => {
@@ -173,7 +216,10 @@ describe("the keys a value line acts on (editor.md, Value list; Block editor)", 
   it("in a target's line, a choice that leaves a target moves on; one that leaves no target stays", () => {
     const open = openSession(assignTo(item(v("nums"), num(0)), num(1)), target, null);
     const name = changeText(open, { text: "", start: 0, end: 0 }, false).session;
-    expect(pickRow(name, { type: "variable", name: "x" }, targetCtx).after).toEqual({ go: 1 });
+    expect(pickRow(name, { type: "variable", name: "x" }, targetCtx).after).toEqual({
+      go: 1,
+      entry: "tab",
+    });
     const list = typed(open, "nums ").session;
     expect(pickRow(list, entry("Item at a position"), targetCtx).after).toBeUndefined();
   });
