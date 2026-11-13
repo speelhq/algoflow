@@ -1,8 +1,8 @@
 // The `while` block definition: a `loop` event after the compare of each iteration.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { decide } from "@/runtime/condition";
 import { defineStmt } from "./types";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 export const whileStmt = defineStmt<"while">({
   key: "while",
@@ -13,7 +13,7 @@ export const whileStmt = defineStmt<"while">({
     { name: "cond", role: "expr", hint: "condition" },
     { name: "body", role: "body" },
   ],
-  create: () => ({ id: newId(), type: "while", cond: emptyDraft(), body: [] }),
+  create: () => ({ id: createNodeId(), type: "while", cond: createEmptyDraft(), body: [] }),
   *run(block, ctx) {
     for (;;) {
       if (!(yield* decide(block.cond, ctx))) break;

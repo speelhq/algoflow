@@ -5,7 +5,7 @@ import { create } from "zustand";
 import { findChallenge } from "@/challenges";
 import { migrate } from "@/lang/migrate";
 import type { Program } from "@/lang/types";
-import { asPlayground, forget, isPlaygroundId, newPlaygroundId, touch } from "./playground";
+import { asPlayground, forget, isPlaygroundId, createPlaygroundId, touch } from "./playground";
 import { readStored, writeStored } from "./storage";
 
 export const PROGRAM_STORAGE_PREFIX = "algoflow:program:";
@@ -19,7 +19,7 @@ export function programKey(id: string): string {
   return `${PROGRAM_STORAGE_PREFIX}${id}`;
 }
 
-export function emptyProgram(title = ""): Program {
+export function createProgram(title: string): Program {
   return { version: 1, title, inputs: [], classes: [], functions: [], main: [] };
 }
 
@@ -45,10 +45,10 @@ export function storedTitle(id: string): string | undefined {
  */
 export function restore(id: string): Program {
   const stored = readProgram(id);
-  if (isPlaygroundId(id)) return asPlayground(stored ?? emptyProgram());
+  if (isPlaygroundId(id)) return asPlayground(stored ?? createProgram(""));
   const challenge = findChallenge(id);
-  if (!challenge) return emptyProgram();
-  const base = stored ?? emptyProgram();
+  if (!challenge) return createProgram("");
+  const base = stored ?? createProgram("");
   return { ...base, challengeId: challenge.id, inputs: structuredClone(challenge.inputs) };
 }
 
@@ -83,7 +83,7 @@ if (typeof window !== "undefined") window.addEventListener("pagehide", flushSave
 
 /** Stores `program` as a new Playground program at once and returns its id. */
 export function createPlaygroundProgram(program: Program): string {
-  const id = newPlaygroundId();
+  const id = createPlaygroundId();
   save(id, asPlayground(program));
   return id;
 }
@@ -148,7 +148,7 @@ export const useProgram = create<ProgramState>()((set, get) => {
     });
   };
   return {
-    program: emptyProgram(),
+    program: createProgram(""),
     id: "",
     past: [],
     future: [],

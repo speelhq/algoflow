@@ -1,6 +1,6 @@
 // Each edit does what it says, leaves the input untouched, and keeps node ids unique.
 import { describe, expect, it } from "vitest";
-import { ast, program, withInputs } from "@/blocks/testing";
+import { ast, createProgramWithInputs } from "@/blocks/testing";
 import {
   addFunction,
   duplicateStmt,
@@ -20,7 +20,7 @@ import { emit } from "@/python/emit";
 import type { Data, Program, Stmt } from "./types";
 import { validate } from "./validate";
 
-const { assign, print, num, str, bin, v, if_, for_, call, exprStmt } = ast;
+const { assign, print, num, str, bin, v, if_, for_, call, exprStmt, program } = ast;
 
 function idsUnique(p: Program): boolean {
   return !validate(p).some((d) => d.code === "E_DUPLICATE_ID");
@@ -30,7 +30,7 @@ function lines(p: Program, inputs: Record<string, Data> = {}): string[] {
   return emit(p, inputs).code.trimEnd().split("\n");
 }
 
-function sample(): { p: Program; a: Stmt; loop: Stmt; inner: Stmt; b: Stmt } {
+function createSample(): { p: Program; a: Stmt; loop: Stmt; inner: Stmt; b: Stmt } {
   const a = assign("x", num(1));
   const inner = assign("x", bin("+", v("x"), v("i")));
   const loop = for_("i", num(0), num(3), [inner]);
@@ -40,7 +40,7 @@ function sample(): { p: Program; a: Stmt; loop: Stmt; inner: Stmt; b: Stmt } {
 
 describe("edit", () => {
   it("every edit keeps the ids unique, also when what it adds reuses ids of the program", () => {
-    const { p: base, a, loop, inner, b } = sample();
+    const { p: base, a, loop, inner, b } = createSample();
     const start = addFunction(base, "f", ["a"]);
     const fn = start.functions[0]!;
     const value = (inner as Extract<Stmt, { type: "assign" }>).value;
@@ -64,7 +64,7 @@ describe("edit", () => {
   });
 
   it("every edit returns a new Program and leaves the input unchanged", () => {
-    const { p, a } = sample();
+    const { p, a } = createSample();
     const before = structuredClone(p);
     const next = removeStmt(p, a.id);
     expect(p).toEqual(before);
@@ -73,7 +73,7 @@ describe("edit", () => {
   });
 
   it("insertStmt places a statement at a Place and re-ids a colliding statement", () => {
-    const { p, a, loop } = sample();
+    const { p, a, loop } = createSample();
     const next = insertStmt(p, print(str("hi")), { parent: loop.id, slot: "body", index: 0 });
     expect(lines(next)).toEqual([
       "x = 1",
@@ -89,7 +89,7 @@ describe("edit", () => {
   });
 
   it("moveStmt removes then inserts, counting the index after removal", () => {
-    const { p, a, loop, b } = sample();
+    const { p, a, loop, b } = createSample();
     const next = moveStmt(p, a.id, { parent: "main", slot: "main", index: 2 });
     expect(next.main.map((s) => s.id)).toEqual([loop.id, b.id, a.id]);
     const into = moveStmt(p, b.id, { parent: loop.id, slot: "body", index: 1 });
@@ -98,7 +98,7 @@ describe("edit", () => {
   });
 
   it("removeStmt removes a compound statement with its contents; a missing id throws", () => {
-    const { p, loop, inner } = sample();
+    const { p, loop, inner } = createSample();
     const next = removeStmt(p, loop.id);
     expect(lines(next)).toEqual(["x = 1", "print(x)"]);
     expect(findStmt(next, inner.id)).toBeUndefined();
@@ -106,7 +106,7 @@ describe("edit", () => {
   });
 
   it("duplicateStmt inserts a deep copy with fresh ids right after the original", () => {
-    const { p, loop } = sample();
+    const { p, loop } = createSample();
     const next = duplicateStmt(p, loop.id);
     expect(lines(next)).toEqual([
       "x = 1",
@@ -121,13 +121,13 @@ describe("edit", () => {
   });
 
   it("setExpr sets a loop's variable, a target as an assignment's is", () => {
-    const { p, loop } = sample();
+    const { p, loop } = createSample();
     expect(lines(setExpr(p, loop.id, "var", v("k")))[1]).toBe("for k in range(3):");
     expect(lines(setExpr(p, loop.id, "var", ast.empty()))[1]).toBe("for ... in range(3):");
   });
 
   it("setCaption stores one trimmed line and removes an empty caption", () => {
-    const { p, loop } = sample();
+    const { p, loop } = createSample();
     const captioned = setCaption(p, loop.id, "  Count  to\n three ");
     expect(findStmt(captioned, loop.id)?.stmt.caption).toBe("Count to three");
     expect(idsUnique(captioned)).toBe(true);
@@ -138,7 +138,7 @@ describe("edit", () => {
   });
 
   it("setExpr replaces an expression slot, an exprs slot's items, or a nested expression block", () => {
-    const { p, a, inner, b } = sample();
+    const { p, a, inner, b } = createSample();
     expect(lines(setExpr(p, a.id, "value", num(42)))[0]).toBe("x = 42");
     expect(lines(setExpr(p, b.id, "args", [v("x"), str("more")]))[3]).toBe('print(x, "more")');
     expect(lines(setExpr(p, b.id, "args", []))[3]).toBe("print()");
@@ -150,7 +150,7 @@ describe("edit", () => {
   });
 
   it("setExpr keeps the ids of the expression it wraps", () => {
-    const { p, a } = sample();
+    const { p, a } = createSample();
     const value = (a as Extract<Stmt, { type: "assign" }>).value;
     const wrapped = bin("+", value, ast.empty());
     const next = setExpr(p, a.id, "value", wrapped);
@@ -161,7 +161,7 @@ describe("edit", () => {
   });
 
   it("setExpr keeps the ids of the items it replaces, and refuses a value of another role's shape", () => {
-    const { p, a, b } = sample();
+    const { p, a, b } = createSample();
     const held = (b as Extract<Stmt, { type: "print" }>).args[0]!;
     const next = setExpr(p, b.id, "args", [held, structuredClone(held)]);
     const items = (next.main[2] as Extract<Stmt, { type: "print" }>).args;
@@ -189,7 +189,7 @@ describe("edit", () => {
   });
 
   it("renameName rewrites variables, loop variables, and function names and calls", () => {
-    const { p } = sample();
+    const { p } = createSample();
     const renamed = renameName(p, "x", "total");
     expect(lines(renamed)).toEqual([
       "total = 1",
@@ -217,14 +217,14 @@ describe("edit", () => {
 
   it("hoistAssign inserts `name = <default of the same type>` before the compound statement", () => {
     const branch = if_(v("c"), [assign("x", num(1))], [assign("s", str("a"))]);
-    const { program: p, inputs } = withInputs({ c: 1 }, [branch, print(v("x"))]);
+    const { program: p, inputs } = createProgramWithInputs({ c: 1 }, [branch, print(v("x"))]);
     expect(validate(p).map((d) => d.code)).toEqual(["E_DECLARE_FIRST"]);
     const fixed = hoistAssign(p, branch.id, "x");
     expect(lines(fixed, inputs)[1]).toBe("x = 0");
     expect(validate(fixed)).toEqual([]);
     expect(lines(hoistAssign(p, branch.id, "s"), inputs)[1]).toBe('s = ""');
     const floatFrame = if_(v("c"), [assign("y", ast.float(1.5))]);
-    const floats = withInputs({ c: 1 }, [floatFrame]);
+    const floats = createProgramWithInputs({ c: 1 }, [floatFrame]);
     expect(lines(hoistAssign(floats.program, floatFrame.id, "y"), inputs)[1]).toBe("y = 0.0");
     expect(lines(hoistAssign(p, branch.id, "unknown"), inputs)[1]).toBe("unknown = None");
   });

@@ -2,17 +2,17 @@
 // The selection holds a statement of the open program only (`chart.md`, Editing on the chart,
 // Selection and keys): selecting or leading to any other node id throws.
 import { describe, expect, it } from "vitest";
-import { ast, program, tid } from "@/blocks/testing";
+import { ast, createTestId } from "@/blocks/testing";
 import type { Diagnostic } from "@/lang/types";
 import { useEditor } from "./editor";
 import { useProgram } from "./program";
 
-const { num, print, ret, v } = ast;
+const { num, print, ret, v, program } = ast;
 
 describe("the selection", () => {
   const value = v("a");
   const body = ret(value);
-  const fn = { id: tid(), name: "f", params: ["a"], body: [body] };
+  const fn = { id: createTestId(), name: "f", params: ["a"], body: [body] };
   const shown = print(num(1));
   const led = (nodeId: string): Diagnostic => ({ nodeId, code: "E_UNDEFINED", params: {} });
 
@@ -35,7 +35,7 @@ describe("the selection", () => {
 
   it("refuses a function, an expression, and a node id the program doesn't hold", () => {
     useProgram.setState({ program: program([shown], { functions: [fn] }) });
-    for (const id of [fn.id, value.id, tid()]) {
+    for (const id of [fn.id, value.id, createTestId()]) {
       expect(() => useEditor.getState().select(id)).toThrow();
       expect(() => useEditor.getState().lead(id, led(id))).toThrow();
     }

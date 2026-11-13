@@ -1,7 +1,7 @@
 // The schema checker; the plans checker; a test checked against its expectation and against
 // CPython, and the CPython script shape (no python run here).
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import type { Challenge } from "@/challenges/types";
 import type { Stmt } from "@/lang/types";
 import { checkTest, type PythonRunner } from "./lib/agreement";
@@ -10,7 +10,7 @@ import { buildScript, randomShims } from "./lib/cpython";
 import { execute } from "./lib/interp";
 import { checkPlans } from "./lib/plans";
 
-const { assign, num, bin, v, print, ret } = ast;
+const { assign, num, bin, v, print, ret, program } = ast;
 /** The demo challenge and the plans hold English texts only. */
 const EN_ONLY = { requireJa: false };
 
@@ -277,7 +277,7 @@ describe("execute (a run as the judge sees it)", () => {
 });
 
 describe("checkTest", () => {
-  const addOne = () => assign("total", bin("+", v("n"), num(1)));
+  const createAddOne = () => assign("total", bin("+", v("n"), num(1)));
   /** The demo challenge with `main` as its solution's. */
   const challenge = (main: Stmt[]): Challenge => {
     const json = valid();
@@ -298,14 +298,14 @@ describe("checkTest", () => {
   };
 
   it("passes when the interpreter meets expect and CPython agrees, given the code, draws, and names", () => {
-    const demo = challenge([addOne()]);
+    const demo = challenge([createAddOne()]);
     const { python, calls } = fake({ stdout: [], vars: { n: 1, total: 2 } });
     expect(checkTest(demo, demo.tests[0]!, 0, python)).toEqual([]);
     expect(calls).toEqual([["n = 1\ntotal = n + 1\n", [], ["n", "total"]]]);
   });
 
   it("reports each row that differs from expect", () => {
-    const demo = challenge([addOne()]);
+    const demo = challenge([createAddOne()]);
     const test = { ...demo.tests[0]!, expect: { variables: { total: 99 } } };
     const { python } = fake({ stdout: [], vars: { n: 1, total: 2 } });
     expect(checkTest(demo, test, 0, python)).toEqual([
@@ -324,7 +324,7 @@ describe("checkTest", () => {
   });
 
   it("reports CPython failing, and each line and variable where it differs from the interpreter", () => {
-    const demo = challenge([addOne()]);
+    const demo = challenge([createAddOne()]);
     expect(checkTest(demo, demo.tests[0]!, 0, fake({ error: "boom" }).python)).toEqual([
       'test[0] {"n":1}: python3 failed: boom',
     ]);

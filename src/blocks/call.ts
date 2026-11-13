@@ -1,5 +1,5 @@
 // The `call` block definition: a user function call, positional with exact arity.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { defineExpr } from "./types";
 
@@ -10,7 +10,7 @@ export const call = defineExpr<"call">({
     { name: "fn", role: "name" },
     { name: "args", role: "exprs" },
   ],
-  create: () => ({ id: newId(), type: "call", fn: "", args: [] }),
+  create: () => ({ id: createNodeId(), type: "call", fn: "", args: [] }),
   callee: (block) =>
     block.type === "call"
       ? { name: block.fn, argc: block.args.length, family: "function" }

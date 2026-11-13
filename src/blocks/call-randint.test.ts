@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { emit, unparse } from "@/python/emit";
-import { ast, evalExpr, notation, program, runAll, varData } from "./testing";
+import { ast, evalExpr, notation, runAll, varData } from "./testing";
 
-const { call, num, float, str, assign, for_ } = ast;
+const { call, num, float, str, assign, for_, program } = ast;
 
 describe("builtin randint (blocks.md)", () => {
   it("emits `random.randint(<a>, <b>)` and adds `import random`", () => {

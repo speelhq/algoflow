@@ -22,12 +22,6 @@ export type Entry = {
 const base = (def: BlockDef, declared: ValueEntry) =>
   declared.name === "" ? def.key : `${def.key}.${declared.name}`;
 
-// The preset is copied, so no expression shares a value with the block definition.
-const made = (def: BlockDef, declared: ValueEntry): Expr => ({
-  ...(def.create() as Expr),
-  ...structuredClone(declared.preset),
-});
-
 let cached: Entry[] | undefined;
 
 /** Every entry of the registered block definitions, in registry order (the order of the value list). */
@@ -39,7 +33,7 @@ export function allEntries(): Entry[] {
       declared,
       label: blockText(base(def, declared), "label"),
       help: blockText(base(def, declared), "help"),
-      call: isCall(made(def, declared)),
+      call: isCall(createEntryExpr({ def, declared })),
     })),
   );
   return cached;
@@ -60,9 +54,12 @@ export function takesValue(entry: Entry): boolean {
   return entry.declared.on !== undefined;
 }
 
-/** The entry's expression: its block's `create()` with the entry's preset. */
-export function makeEntry(entry: Entry): Expr {
-  return made(entry.def, entry.declared);
+/**
+ * The entry's expression: its block's `create()` with the entry's preset. The preset is copied,
+ * so no expression shares a value with the block definition.
+ */
+export function createEntryExpr({ def, declared }: Pick<Entry, "def" | "declared">): Expr {
+  return { ...(def.create() as Expr), ...structuredClone(declared.preset) };
 }
 
 /**

@@ -2,7 +2,7 @@
 // one `args` slot, positional parameters, the argument counts of `expectedArgs`, and the
 // name Python gives it, which the notation writes and a value line takes as its keys; one of
 // a module is called through the module in Python (`random.randint`) and imports it.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import type { Expr, Kind, Value } from "@/lang/types";
 import {
   builtinKey,
@@ -14,7 +14,7 @@ import {
   type RunContext,
 } from "./types";
 import type { Category } from "./categories";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 export type BuiltinDef = {
   name: string;
@@ -46,10 +46,10 @@ export function defineBuiltin(def: BuiltinDef): BlockDef {
       : {}),
     ...(def.yields ? { yields: (block, findKind) => def.yields?.(block.args, findKind) } : {}),
     create: () => ({
-      id: newId(),
+      id: createNodeId(),
       type: "call",
       fn: def.name,
-      args: def.params.filter((param) => !param.optional).map(() => emptyDraft()),
+      args: def.params.filter((param) => !param.optional).map(() => createEmptyDraft()),
     }),
     *run(block, ctx) {
       // Validation reports a wrong count before any run, as it does for a program function.

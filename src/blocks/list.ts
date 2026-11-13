@@ -1,17 +1,17 @@
 // The `list` block definition: `[a, b]`, its items evaluated in order into a new list on the heap.
 import { alloc } from "@/lang/data";
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import type { Value } from "@/lang/types";
 import { defineExpr } from "./types";
 
-const empty = () => ({ id: newId(), type: "list" as const, items: [] });
+const createEmptyList = () => ({ id: createNodeId(), type: "list" as const, items: [] });
 
 export const list = defineExpr<"list">({
   key: "list",
   category: "list",
   slots: [{ name: "items", role: "exprs" }],
-  create: empty,
-  zeroLike: empty,
+  create: createEmptyList,
+  createZero: createEmptyList,
   *run(block, ctx) {
     const items: Value[] = [];
     for (const item of block.items) items.push(yield* ctx.eval(item));

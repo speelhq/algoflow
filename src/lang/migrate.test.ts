@@ -1,10 +1,10 @@
 // Import validates and migrates by version; it refuses a field its block would not make,
 // a class, and an object input.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { MigrateError, migrate } from "./migrate";
 
-const { assign, print, num, float, str, bool, not, bin, v, for_, ret } = ast;
+const { assign, print, num, float, str, bool, not, bin, v, for_, ret, program } = ast;
 
 function json(value: unknown): unknown {
   return JSON.parse(JSON.stringify(value));

@@ -7,7 +7,7 @@ import { CURRENT_VERSION, isInputDecl, migrate } from "@/lang/migrate";
 import { isRecord } from "@/lang/record";
 import type { Data, Kind } from "@/lang/types";
 import { isValidName, validate } from "@/lang/validate";
-import { isParseError, parseData } from "@/python/parse";
+import { isParseError, createDataExpr } from "@/python/parse";
 
 export function isLocalized(value: unknown, requireJa: boolean): value is Localized {
   if (!isRecord(value) || typeof value.en !== "string") return false;
@@ -196,7 +196,7 @@ function checkTestInputs(
     if (dataProblems.length > 0) problems.push(...dataProblems);
     else if (dataKind(inputs[name] as Data) !== kind)
       problems.push(`${inputPath} is not of the kind ${kind}`);
-    else if (isParseError(parseData(inputs[name] as Data)))
+    else if (isParseError(createDataExpr(inputs[name] as Data)))
       problems.push(`${inputPath} is a value no block writes`);
   }
   for (const name of Object.keys(inputs))

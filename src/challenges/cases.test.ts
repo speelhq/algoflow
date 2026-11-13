@@ -1,9 +1,11 @@
 // The chosen case gives the values of a program's inputs, and its seed.
 import { describe, expect, it } from "vitest";
-import { program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { caseInputs, findCase } from "./cases";
 import { findChallenge } from "./index";
 import { testSeed } from "./types";
+
+const { program } = ast;
 
 describe("the chosen case", () => {
   const fizzbuzz = findChallenge("fizzbuzz");

@@ -1,11 +1,11 @@
 // Kinds known before the program runs.
 import { describe, expect, it } from "vitest";
-import { ast, program, tid } from "@/blocks/testing";
+import { ast, createTestId } from "@/blocks/testing";
 import { isParseError, parse } from "@/python/parse";
 import { dataKind, exprKind, firstSetters, variableKinds } from "./kinds";
 import type { Expr, Kind } from "./types";
 
-const { assign, num, str, v, for_, print } = ast;
+const { assign, num, str, v, for_, print, program } = ast;
 
 function expr(python: string): Expr {
   const parsed = parse(python);
@@ -132,6 +132,6 @@ describe("kinds", () => {
   });
 
   it("has no variables for a routine that names no function", () => {
-    expect(() => variableKinds(program([]), tid())).toThrow();
+    expect(() => variableKinds(program([]), createTestId())).toThrow();
   });
 });

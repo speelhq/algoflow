@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { t } from "@/i18n/t";
 import type { Data, Program } from "@/lang/types";
-import { ast, program, tid, withInputs } from "@/blocks/testing";
+import { ast, createTestId, createProgramWithInputs } from "@/blocks/testing";
 import { run } from "@/runtime/run";
 import type { Event } from "@/runtime/types";
 import type { Exchange } from "@/store/steps";
@@ -18,7 +18,7 @@ import {
   type Position,
 } from "./narrate";
 
-const { assign, num, float, str, bool, none, bin, not, v, print, for_, while_, if_ } = ast;
+const { assign, num, float, str, bool, none, bin, not, v, print, for_, while_, if_, program } = ast;
 const { exprStmt, call, ret } = ast;
 
 const say = (n: Narration) => t(n.key, n.params);
@@ -110,7 +110,12 @@ describe("narrate", () => {
   });
 
   it("write, loop, print, call, and return", () => {
-    const fn = { id: tid(), name: "f", params: ["x"], body: [ret(bin("*", v("x"), num(2)))] };
+    const fn = {
+      id: createTestId(),
+      name: "f",
+      params: ["x"],
+      body: [ret(bin("*", v("x"), num(2)))],
+    };
     const p = program(
       [
         for_("i", num(3), num(5), [assign("half", float(1.5)), print(str("Fizz"))]),
@@ -128,14 +133,14 @@ describe("narrate", () => {
   });
 
   it("loop: a loop's target is written as a location, an item by the variable that holds it", () => {
-    const { program: p, inputs } = withInputs({ nums: [4, 9] }, [
+    const { program: p, inputs } = createProgramWithInputs({ nums: [4, 9] }, [
       ast.forTo(ast.item(v("nums"), num(1)), num(7), num(9), []),
     ]);
     expect(told(p, "loop", 2, inputs)).toBe("Pass 2: nums[1] is 8");
   });
 
   it("read, swap, and write name an item as the blocks write it, by the variable that holds it", () => {
-    const { program: p, inputs } = withInputs({ nums: [4, 9, 5], x: 5 }, [
+    const { program: p, inputs } = createProgramWithInputs({ nums: [4, 9, 5], x: 5 }, [
       if_(bin("in", v("x"), v("nums")), []),
     ]);
     expect(told(p, "read", 1, inputs)).toBe("Read 3 items of nums");
@@ -164,7 +169,7 @@ describe("narrate", () => {
   });
 
   it("an item of a list that no variable of the frame references is one of `a list`", () => {
-    const { program: p, inputs } = withInputs({ grid: [[0, 7]] }, []);
+    const { program: p, inputs } = createProgramWithInputs({ grid: [[0, 7]] }, []);
     const state = run(p, inputs, 1).state();
     const ctx = { program: p, state, frame: 0, pass: null };
     // The inner list is allocated before the list that holds it.

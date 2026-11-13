@@ -2,7 +2,13 @@
 // typing and choosing in value lines, and submit it to Accepted.
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { programWith, seedPlayground, seedProgram, seedProgress, readSolution } from "./seed";
+import {
+  createStoredProgram,
+  seedPlayground,
+  seedProgram,
+  seedProgress,
+  readSolution,
+} from "./seed";
 
 const editor = (page: Page) => page.getByTestId("block-editor");
 const chart = (page: Page) => page.getByTestId("chart");
@@ -215,7 +221,7 @@ test("a stored print opens its values as one text, the slot clicked taking the k
 test("a list is typed, its item read, and one item set in the target's line", async ({ page }) => {
   await seedProgress(page, {});
   const id = "play-listitems001";
-  await seedProgram(page, id, { ...programWith([]), title: "Lists" });
+  await seedProgram(page, id, { ...createStoredProgram([]), title: "Lists" });
   await seedPlayground(page, { [id]: { edited: 0 } });
   await page.goto(`/#/play/${id}`);
 
@@ -263,7 +269,7 @@ test("a list is typed, its item read, and one item set in the target's line", as
 test("an item target is typed by keys alone, as the chart writes it", async ({ page }) => {
   await seedProgress(page, {});
   const id = "play-itemkeys0001";
-  await seedProgram(page, id, { ...programWith([]), title: "Items" });
+  await seedProgram(page, id, { ...createStoredProgram([]), title: "Items" });
   await seedPlayground(page, { [id]: { edited: 0 } });
   await page.goto(`/#/play/${id}`);
 
@@ -297,7 +303,7 @@ test("an item of a variable of no known kind is set by keys alone; no other valu
 }) => {
   await seedProgress(page, {});
   const id = "play-unknownkind";
-  await seedProgram(page, id, { ...programWith([]), title: "Rows" });
+  await seedProgram(page, id, { ...createStoredProgram([]), title: "Rows" });
   await seedPlayground(page, { [id]: { edited: 0 } });
   await page.goto(`/#/play/${id}`);
 
@@ -336,7 +342,7 @@ test("a swap of two items and one of two variables are typed as the chart writes
 }) => {
   await seedProgress(page, {});
   const id = "play-swapplaces1";
-  await seedProgram(page, id, { ...programWith([]), title: "Swaps" });
+  await seedProgram(page, id, { ...createStoredProgram([]), title: "Swaps" });
   await seedPlayground(page, { [id]: { edited: 0 } });
   await page.goto(`/#/play/${id}`);
 
@@ -389,7 +395,7 @@ test("the editor stays where it is while its list changes, within the canvas", a
   await page.setViewportSize({ width: 1440, height: 520 });
   await seedProgress(page, {});
   const id = "play-stillness001";
-  await seedProgram(page, id, { ...programWith([]), title: "Still" });
+  await seedProgram(page, id, { ...createStoredProgram([]), title: "Still" });
   await seedPlayground(page, { [id]: { edited: 0 } });
   await page.goto(`/#/play/${id}`);
   await insert(page, "main/main/0", "assign");

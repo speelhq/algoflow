@@ -2,10 +2,10 @@
 // in `main` the problem's names first.
 import { describe, expect, it } from "vitest";
 import { CHALLENGES } from "@/challenges";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { isNewName, routineNames } from "./names";
 
-const { assign, num, for_ } = ast;
+const { assign, num, for_, program } = ast;
 
 describe("name list", () => {
   it("the problem's names first, in order, then the program's other variables, with no limit", () => {

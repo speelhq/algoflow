@@ -1,6 +1,6 @@
 // Every node maps to the statement that contains it.
 import { describe, expect, it } from "vitest";
-import { ast, program, tid } from "@/blocks/testing";
+import { ast, createTestId } from "@/blocks/testing";
 import { removeFunction } from "./edit";
 import {
   bodyStmts,
@@ -17,7 +17,7 @@ import {
   routineStmts,
 } from "./walk";
 
-const { assign, num, bin, v, if_, for_, while_, print, ret, call, empty, draft } = ast;
+const { assign, num, bin, v, if_, for_, while_, print, ret, call, empty, draft, program } = ast;
 
 describe("draftSlots", () => {
   it("lists the drafts in a statement's slots, with their slots and their texts", () => {
@@ -84,7 +84,7 @@ describe("the node index", () => {
 
   it("throws for a node the program doesn't hold, such as one of a deleted function", () => {
     const deleted = removeFunction(p, fn.id);
-    for (const id of [tid(), value.id, fn.id]) {
+    for (const id of [createTestId(), value.id, fn.id]) {
       expect(() => getOwner(deleted, id)).toThrow();
       expect(() => getHoldingRoutine(deleted, id)).toThrow();
     }
@@ -96,7 +96,7 @@ describe("the node index", () => {
       true,
       true,
     ]);
-    expect([cond.id, value.id, fn.id, tid()].map((id) => isStatement(p, id))).toEqual([
+    expect([cond.id, value.id, fn.id, createTestId()].map((id) => isStatement(p, id))).toEqual([
       false,
       false,
       false,
@@ -146,9 +146,9 @@ describe("routines", () => {
     const p = program([], { functions: [fn] });
     expect(findRoutine(p, "main")).toBe("main");
     expect(findRoutine(p, fn.id)).toBe(p.functions[0]);
-    expect(findRoutine(p, tid())).toBeUndefined();
+    expect(findRoutine(p, createTestId())).toBeUndefined();
     expect(getRoutine(p, fn.id)).toBe(p.functions[0]);
-    expect(() => getRoutine(p, tid())).toThrow();
+    expect(() => getRoutine(p, createTestId())).toThrow();
     expect(routineStmts(p, "main")).toBe(p.main);
     expect(routineStmts(p, getRoutine(p, fn.id))).toBe(p.functions[0]?.body);
   });

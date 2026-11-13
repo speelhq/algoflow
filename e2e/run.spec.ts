@@ -1,7 +1,7 @@
 // Run mode on the pre-running driver.
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { programWith, seedProgram, seedProgress, readSolution } from "./seed";
+import { createStoredProgram, seedProgram, seedProgress, readSolution } from "./seed";
 
 /** `step k of N` as numbers. */
 async function position(page: Page): Promise<{ k: number; n: number }> {
@@ -192,7 +192,7 @@ test("Run with a diagnostic leads to its node instead of running", async ({ page
     target: { id: "run-tgt-0001", type: "var", name: "x" },
     value: { id: "val-empty-01", type: "draft", text: "" },
   };
-  await seedProgram(page, "fizzbuzz", programWith([assign]));
+  await seedProgram(page, "fizzbuzz", createStoredProgram([assign]));
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "▶ Run" }).click();
   // A draft's message is on the explanation line (`editor.md`, Value line, Drafts).
@@ -214,7 +214,7 @@ test("a runtime error outlines its chart node and says its message, and playback
   page,
 }) => {
   await seedProgress(page, {});
-  const num = (id: string, value: number) => ({
+  const createNum = (id: string, value: number) => ({
     id,
     type: "num",
     value,
@@ -229,11 +229,11 @@ test("a runtime error outlines its chart node and says its message, and playback
       id: "div-divz-001",
       type: "binop",
       op: "/",
-      left: num("one-divz-001", 1),
-      right: num("zro-divz-001", 0),
+      left: createNum("one-divz-001", 1),
+      right: createNum("zro-divz-001", 0),
     },
   };
-  await seedProgram(page, "fizzbuzz", programWith([divide]));
+  await seedProgram(page, "fizzbuzz", createStoredProgram([divide]));
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "▶ Run" }).click();
   await expect(page.locator('[data-chart-node="asg-divz-001"]')).toHaveAttribute(
@@ -252,7 +252,7 @@ test("a run that never ends reports it before playback", async ({ page }) => {
     cond: { id: "cnd-endless1", type: "bool", value: true },
     body: [],
   };
-  await seedProgram(page, "fizzbuzz", programWith([loop]));
+  await seedProgram(page, "fizzbuzz", createStoredProgram([loop]));
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "▶ Run" }).click();
   await expect(page.getByTestId("endless")).toBeVisible({ timeout: 30_000 });

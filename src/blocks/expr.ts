@@ -1,7 +1,7 @@
 // The `expr` block definition: an expression evaluated for its effect (method statements wrap one).
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { defineStmt } from "./types";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 export const exprStmt = defineStmt<"expr">({
   key: "expr",
@@ -9,7 +9,7 @@ export const exprStmt = defineStmt<"expr">({
   // The menu offers it only as method statements and calls.
   hidden: true,
   slots: [{ name: "expr", role: "expr", hint: "expression" }],
-  create: () => ({ id: newId(), type: "expr", expr: emptyDraft() }),
+  create: () => ({ id: createNodeId(), type: "expr", expr: createEmptyDraft() }),
   *run(block, ctx) {
     yield* ctx.eval(block.expr);
     return undefined;

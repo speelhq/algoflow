@@ -1,5 +1,5 @@
 // The `num` block definition: `raw` is the source text; float when raw has `.`, `e`, or `E`.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { numberLiteral } from "@/python/number";
 import { makeNumber } from "@/runtime/values";
 import { defineExpr } from "./types";
@@ -8,9 +8,9 @@ export const num = defineExpr<"num">({
   key: "num",
   category: "basic",
   slots: [{ name: "value", role: "literal" }],
-  create: () => ({ id: newId(), type: "num", value: 0, float: false, raw: "0" }),
-  zeroLike: (block) => ({
-    id: newId(),
+  create: () => ({ id: createNodeId(), type: "num", value: 0, float: false, raw: "0" }),
+  createZero: (block) => ({
+    id: createNodeId(),
     type: "num",
     value: 0,
     float: block.type === "num" && block.float,

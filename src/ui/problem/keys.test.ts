@@ -2,7 +2,7 @@
 // What the focused element owns; the keyboard table's Delete and Backspace stay in an open
 // editor; Ctrl/Cmd+Enter and the play button run, pause, play, and replay as one.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { togglePlay } from "./actions";
@@ -10,7 +10,7 @@ import { act, ownsKeys } from "./keys";
 import { useEditor } from "@/store/editor";
 import { settle } from "@/store/testing";
 
-const { for_, num, print, v } = ast;
+const { for_, num, print, v, program } = ast;
 
 function press(target: Element, key: string, mod = false) {
   return { target, key, ctrlKey: mod, metaKey: false, getModifierState: () => false };

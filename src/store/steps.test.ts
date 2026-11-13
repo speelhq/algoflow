@@ -2,13 +2,13 @@
 // one `swap`; any other write is its own step, shown with the state from before the event read
 // past it.
 import { describe, expect, it } from "vitest";
-import { ast, program, runAll, tid, withInputs } from "@/blocks/testing";
+import { ast, runAll, createTestId, createProgramWithInputs } from "@/blocks/testing";
 import type { Data, Program, Stmt } from "@/lang/types";
 import { run } from "@/runtime/run";
 import type { Done } from "@/runtime/types";
 import { createSteps, type Step } from "./steps";
 
-const { assign, call, item, num, ret, swap, v } = ast;
+const { assign, call, item, num, ret, swap, v, program } = ast;
 
 /** Every step of the run, each read as a step to be shown. */
 function stepsThrough(p: Program, inputs: Record<string, Data> = {}): Array<Step | Done> {
@@ -25,7 +25,7 @@ const types = (all: Array<Step | Done>) =>
   all.map((step) => ("event" in step ? step.event.type : step.type));
 
 const runWith = (values: Record<string, Data>, main: Stmt[]) => {
-  const made = withInputs(values, main);
+  const made = createProgramWithInputs(values, main);
   return stepsThrough(made.program, made.inputs);
 };
 
@@ -62,9 +62,9 @@ describe("steps (interpreter.md, Steps and batches)", () => {
   });
 
   it("a write before a call shows the state from before the call pushed its frame", () => {
-    const f = { id: tid(), name: "f", params: [], body: [ret(num(2))] };
+    const f = { id: createTestId(), name: "f", params: [], body: [ret(num(2))] };
     const stmt = swap(item(v("nums"), num(0)), item(v("nums"), call("f")));
-    const made = withInputs({ nums: [1, 2, 3] }, [stmt], { functions: [f] });
+    const made = createProgramWithInputs({ nums: [1, 2, 3] }, [stmt], { functions: [f] });
     const all = stepsThrough(made.program, made.inputs);
     const at = types(all).indexOf("write");
     expect(types(all).slice(at)).toEqual(["write", "call", "enter", "return", "write", "done"]);
@@ -75,7 +75,9 @@ describe("steps (interpreter.md, Steps and batches)", () => {
   });
 
   it("a step not to be shown copies no state, though it reads past the write", () => {
-    const made = withInputs({ i: 0, nums: [1, 9] }, [swap(v("i"), item(v("nums"), v("i")))]);
+    const made = createProgramWithInputs({ i: 0, nums: [1, 9] }, [
+      swap(v("i"), item(v("nums"), v("i"))),
+    ]);
     const steps = createSteps(run(made.program, made.inputs, 1));
     const shown: Array<Step | Done> = [];
     for (let next = steps.next(false); ; next = steps.next(false)) {
@@ -87,7 +89,9 @@ describe("steps (interpreter.md, Steps and batches)", () => {
   });
 
   it("the steps hold every event of the run once, in order", () => {
-    const made = withInputs({ i: 0, nums: [1, 9] }, [swap(v("i"), item(v("nums"), v("i")))]);
+    const made = createProgramWithInputs({ i: 0, nums: [1, 9] }, [
+      swap(v("i"), item(v("nums"), v("i"))),
+    ]);
     const events = runAll(made.program, made.inputs).events;
     const shown = stepsThrough(made.program, made.inputs).flatMap((step) =>
       "event" in step && step.event.type !== "swap" ? [step.event] : [],

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { ast, program, withInputs } from "@/blocks/testing";
+import { ast, createProgramWithInputs } from "@/blocks/testing";
 import { dataToPython, emit, unparse } from "./emit";
 import { EXPRESSION_FIXTURE } from "./fixtures/expressions";
 import { isParseError, parse } from "./parse";
 import { pyString } from "./strings";
 
-const { assign, print, if_, for_, while_, num, str, bin, v, call } = ast;
+const { assign, print, if_, for_, while_, num, str, bin, v, call, program } = ast;
 
 const CR = String.fromCharCode(13);
 const SOH = String.fromCharCode(1);
@@ -64,7 +64,7 @@ describe("emit (emitter.md)", () => {
   });
 
   it("inputs are emitted as assignments of their values, in declaration order", () => {
-    const made = withInputs(
+    const made = createProgramWithInputs(
       {
         nums: [5, 3, 1],
         name: "Claude",
@@ -109,7 +109,7 @@ describe("emit (emitter.md)", () => {
 
   it("emits an empty program as an empty file and an empty main region under inputs", () => {
     expect(emit(program([]), {}).code).toBe("\n");
-    const made = withInputs({ n: 1 }, []);
+    const made = createProgramWithInputs({ n: 1 }, []);
     expect(emit(made.program, made.inputs).code).toBe("n = 1\n");
   });
 });

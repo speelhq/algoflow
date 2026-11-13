@@ -1,13 +1,13 @@
 // Equality per expectation kind; a runtime error fails the test.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { finish, collectOutcome, type Outcome } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Program } from "@/lang/types";
 import { judge } from "./judge";
 import type { Test } from "./types";
 
-const { assign, num, float, bin, v, print, str } = ast;
+const { assign, num, float, bin, v, print, str, program } = ast;
 
 function outcome(p: Program, inputs = {}): Outcome {
   const runner = run(p, inputs, 1);

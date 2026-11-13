@@ -11,7 +11,7 @@ import { CATEGORIES, type Category } from "@/blocks/categories";
 import { joinSpans, notationWithHints, type NotationSpan } from "@/ui/chart/text";
 import { functionLabel } from "./explain";
 import { choiceLine, type TextLine } from "./caret";
-import { callableFunctions, callExpr, type LineFunction } from "./choices";
+import { callableFunctions, createCall, type LineFunction } from "./choices";
 import { textValue } from "./fields";
 
 export type BlockMenuEntry = {
@@ -63,7 +63,7 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
       id: `call:${fn.name}`,
       label: functionLabel(fn),
       help: blockText("call", "help"),
-      create: () => callStatement(fn),
+      create: () => createCallStatement(fn),
       caret: callText(fn).start,
     };
   });
@@ -73,13 +73,11 @@ export function menuGroups(program: Program, place: Place): BlockMenuGroup[] {
 
 /** The text that a choice of a call of `fn` writes, and its caret: `greet()`. */
 function callText(fn: LineFunction): TextLine {
-  const call = callExpr(fn);
-  if (!call) throw new Error(`"${fn.name}" is no function of the program`);
-  return choiceLine(call);
+  return choiceLine(createCall(fn));
 }
 
 /** A statement calling `fn`, its slot holding the text a choice of the call writes. */
-function callStatement(fn: LineFunction): Stmt {
+function createCallStatement(fn: LineFunction): Stmt {
   const statement = getBlockDef("expr").create() as Extract<Stmt, { type: "expr" }>;
   return { ...statement, expr: textValue(callText(fn).text, "expr") };
 }

@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import type { Data, Stmt } from "@/lang/types";
-import { ast, eventTypes, notation, program, runAll, varData, withInputs, hints } from "./testing";
+import {
+  ast,
+  eventTypes,
+  notation,
+  runAll,
+  varData,
+  createProgramWithInputs,
+  hints,
+} from "./testing";
 
-const { assign, bin, for_, item, num, swap, v } = ast;
+const { assign, bin, for_, item, num, swap, v, program } = ast;
 const runWith = (values: Record<string, Data>, main: Stmt[]) => {
-  const made = withInputs(values, main);
+  const made = createProgramWithInputs(values, main);
   return runAll(made.program, made.inputs);
 };
 

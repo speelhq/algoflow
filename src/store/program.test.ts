@@ -3,12 +3,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Challenge } from "@/challenges/types";
 import type { Program } from "@/lang/types";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { isPlaygroundId, PLAYGROUND_STORAGE_KEY, playgroundRows, readIndex } from "./playground";
 import {
   createPlaygroundProgram,
   deletePlaygroundProgram,
-  emptyProgram,
+  createProgram,
   flushSave,
   HISTORY,
   programKey,
@@ -18,7 +18,7 @@ import {
   useProgram,
 } from "./program";
 
-const { assign, num, print, v } = ast;
+const { assign, num, print, v, program } = ast;
 
 const bare: Challenge = {
   id: "bare",
@@ -51,7 +51,7 @@ describe("program store", () => {
 
   it("creates an empty main when nothing is stored, with challengeId and inputs set", () => {
     expect(restore("bare")).toEqual({
-      ...emptyProgram(),
+      ...createProgram(""),
       challengeId: "bare",
       inputs: [{ name: "m", kind: "number" }],
     });
@@ -193,11 +193,11 @@ describe("program store", () => {
 
   it("a Playground program has a play- id, and its saves are indexed by time", () => {
     vi.setSystemTime(1000);
-    const id = createPlaygroundProgram({ ...emptyProgram("Mine"), challengeId: "bare" });
+    const id = createPlaygroundProgram({ ...createProgram("Mine"), challengeId: "bare" });
     expect(isPlaygroundId(id)).toBe(true);
     expect(id).toMatch(/^play-[A-Za-z0-9_-]{12}$/);
     expect(readIndex()).toEqual({ [id]: { edited: 1000 } });
-    expect(stored(id)).toEqual(emptyProgram("Mine"));
+    expect(stored(id)).toEqual(createProgram("Mine"));
 
     useProgram.getState().load(id);
     vi.setSystemTime(5000);

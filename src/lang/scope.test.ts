@@ -1,9 +1,9 @@
 // What is visible where; the places `loop` and `requires` allow; the value list's Variables.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { declaredBy, placeContext, visibleAt } from "./scope";
 
-const { assign, num, v, bin, print, for_, if_, while_, ret } = ast;
+const { assign, num, v, bin, print, for_, if_, while_, ret, program } = ast;
 
 describe("scope", () => {
   it("a binding target declares its variable with the value its slot stores; a loop's stores none", () => {

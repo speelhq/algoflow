@@ -1,5 +1,5 @@
 // The `return` block definition: `return <value>` / `return`; no value → None.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { defineStmt } from "./types";
 
 export const returnStmt = defineStmt<"return">({
@@ -7,7 +7,7 @@ export const returnStmt = defineStmt<"return">({
   category: "function",
   requires: "function",
   slots: [{ name: "value", role: "expr", hint: "value", optional: true }],
-  create: () => ({ id: newId(), type: "return" }),
+  create: () => ({ id: createNodeId(), type: "return" }),
   *run(block, ctx) {
     const value = block.value ? yield* ctx.eval(block.value) : { t: "none" as const };
     return { type: "return", value };

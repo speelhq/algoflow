@@ -1,18 +1,18 @@
 // A diagnostic goes to the chart node of its node's owner, a statement's or a function's `Start`.
 import { describe, expect, it } from "vitest";
-import { ast, program, tid } from "@/blocks/testing";
+import { ast, createTestId } from "@/blocks/testing";
 import { estimatedWidth } from "@/ui/chart/layout";
 import { nodeFor } from "@/ui/chart/paint";
 import { laidOut } from "@/ui/chart/testing";
 import { validate } from "@/lang/validate";
 import { editorDiagnostics, flaggedOwners, ledDraft } from "./diagnostics";
 
-const { assign, assignTo, bin, call, draft, empty, num, print, ret, v } = ast;
+const { assign, assignTo, bin, call, draft, empty, num, print, ret, v, program } = ast;
 
 describe("flaggedOwners", () => {
   it("puts a function's diagnostic on its chart's Start, and an expression's on its statement", () => {
     const body = ret(v("a"));
-    const twice = { id: tid(), name: "twice", params: ["a", "a"], body: [body] };
+    const twice = { id: createTestId(), name: "twice", params: ["a", "a"], body: [body] };
     const unknown = call("missing");
     const shown = print(unknown);
     const p = program([assign("n", num(1)), shown], { functions: [twice] });

@@ -7,7 +7,7 @@ import { removeFunction } from "@/lang/edit";
 import type { Program, Routine, Stmt } from "@/lang/types";
 import { allStmts, getRoutine, bodyRegions, routineStmts } from "@/lang/walk";
 import { getBlockDef, registryKey } from "@/blocks/registry";
-import { ast, program, tid } from "@/blocks/testing";
+import { ast, createTestId } from "@/blocks/testing";
 import {
   estimatedWidth,
   layout,
@@ -20,15 +20,24 @@ import {
 import { CHART_TEXT } from "./text";
 import { laidOut } from "./testing";
 
-const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont } = ast;
+const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont, program } = ast;
 
 const wide: Measure = (span) => span.text.length * 14.4;
 
-const lt = (name: string, n: number) => bin("<", v(name), num(n));
-const chain = (depth: number): Stmt =>
-  if_(lt("x", depth), [print(num(depth))], depth > 1 ? [chain(depth - 1)] : [print(str("else"))]);
+const createLessThan = (name: string, n: number) => bin("<", v(name), num(n));
+const createIfChain = (depth: number): Stmt =>
+  if_(
+    createLessThan("x", depth),
+    [print(num(depth))],
+    depth > 1 ? [createIfChain(depth - 1)] : [print(str("else"))],
+  );
 
-const fn = (name: string, body: Stmt[]) => ({ id: tid(), name, params: ["x"], body });
+const createFunction = (name: string, body: Stmt[]) => ({
+  id: createTestId(),
+  name,
+  params: ["x"],
+  body,
+});
 
 const SYNTHETIC: Array<[string, Program]> = [
   ["an empty main", program([])],
@@ -37,7 +46,7 @@ const SYNTHETIC: Array<[string, Program]> = [
     "a for in a for with an if/else and a statement after the inner loop",
     program([
       for_("i", num(0), num(3), [
-        for_("j", num(0), v("i"), [if_(lt("j", 1), [print(v("j"))], [print(v("i"))])]),
+        for_("j", num(0), v("i"), [if_(createLessThan("j", 1), [print(v("j"))], [print(v("i"))])]),
         print(str("row")),
       ]),
     ]),
@@ -47,8 +56,8 @@ const SYNTHETIC: Array<[string, Program]> = [
     program([
       assign("x", num(0)),
       if_(
-        lt("x", 3),
-        [while_(lt("x", 3), [assign("x", bin("+", v("x"), num(1)))]), print(v("x"))],
+        createLessThan("x", 3),
+        [while_(createLessThan("x", 3), [assign("x", bin("+", v("x"), num(1)))]), print(v("x"))],
         [for_("k", num(0), num(2), [print(v("k"))])],
       ),
       print(str("after")),
@@ -58,24 +67,27 @@ const SYNTHETIC: Array<[string, Program]> = [
     "every region empty",
     program([
       assign("x", num(0)),
-      if_(lt("x", 1), []),
-      while_(lt("x", 0), []),
+      if_(createLessThan("x", 1), []),
+      while_(createLessThan("x", 0), []),
       for_("i", num(0), num(2), []),
     ]),
   ],
-  ["an else-if chain five deep", program([assign("x", num(2)), chain(5)])],
+  ["an else-if chain five deep", program([assign("x", num(2)), createIfChain(5)])],
   [
     "an if inside a Yes region, and a loop ending a Yes region",
     program([
       assign("x", num(0)),
-      if_(lt("x", 5), [if_(lt("x", 2), [print(str("small"))]), while_(lt("x", 1), [])]),
+      if_(createLessThan("x", 5), [
+        if_(createLessThan("x", 2), [print(str("small"))]),
+        while_(createLessThan("x", 1), []),
+      ]),
     ]),
   ],
   [
     "a long sentence three levels deep",
     program([
       for_("i", num(0), num(2), [
-        if_(lt("i", 1), [while_(lt("i", 0), [print(str("x".repeat(80)))])]),
+        if_(createLessThan("i", 1), [while_(createLessThan("i", 0), [print(str("x".repeat(80)))])]),
       ]),
     ]),
   ],
@@ -83,8 +95,8 @@ const SYNTHETIC: Array<[string, Program]> = [
     "break and continue in a for, with a print after them",
     program([
       for_("i", num(0), num(9), [
-        if_(lt("i", 2), [cont()]),
-        if_(lt("i", 5), [], [brk()]),
+        if_(createLessThan("i", 2), [cont()]),
+        if_(createLessThan("i", 5), [], [brk()]),
         print(str("go on")),
       ]),
       print(str("after")),
@@ -94,31 +106,37 @@ const SYNTHETIC: Array<[string, Program]> = [
     "break and continue in a while, and a while ending in break",
     program([
       assign("i", num(0)),
-      while_(lt("i", 9), [
+      while_(createLessThan("i", 9), [
         assign("i", bin("+", v("i"), num(1))),
-        if_(lt("i", 2), [cont()]),
-        if_(lt("i", 5), [print(v("i"))], [brk()]),
+        if_(createLessThan("i", 2), [cont()]),
+        if_(createLessThan("i", 5), [print(v("i"))], [brk()]),
       ]),
-      while_(lt("i", 20), [assign("i", bin("+", v("i"), num(1))), brk()]),
+      while_(createLessThan("i", 20), [assign("i", bin("+", v("i"), num(1))), brk()]),
     ]),
   ],
   [
     "a continue and a break in nested loops",
     program([
       for_("i", num(0), num(3), [
-        while_(lt("i", 2), [cont()]),
-        for_("j", num(0), num(2), [if_(lt("j", 1), [brk()])]),
+        while_(createLessThan("i", 2), [cont()]),
+        for_("j", num(0), num(2), [if_(createLessThan("j", 1), [brk()])]),
       ]),
     ]),
   ],
 ];
 
-const returning = fn("find", [
-  if_(lt("x", 0), [for_("i", num(0), v("x"), [if_(lt("i", 2), [ret(v("i"))])])], [ret(num(0))]),
-  while_(lt("x", 9), [ret(v("x"))]),
+const returning = createFunction("find", [
+  if_(
+    createLessThan("x", 0),
+    [for_("i", num(0), v("x"), [if_(createLessThan("i", 2), [ret(v("i"))])])],
+    [ret(num(0))],
+  ),
+  while_(createLessThan("x", 9), [ret(v("x"))]),
   ret(num(-1)),
 ]);
-const bothReturn = fn("sign", [if_(lt("x", 0), [ret(num(-1))], [ret(num(1))])]);
+const bothReturn = createFunction("sign", [
+  if_(createLessThan("x", 0), [ret(num(-1))], [ret(num(1))]),
+]);
 
 type Case = { name: string; program: Program; routine: Routine };
 const CASES: Case[] = [
@@ -423,7 +441,7 @@ describe("layout of jumps", () => {
   it("in a for, break leads past the loop and continue to its update", () => {
     const stop = brk();
     const skip = cont();
-    const loop = for_("i", num(0), num(9), [if_(lt("i", 2), [skip], [stop])]);
+    const loop = for_("i", num(0), num(9), [if_(createLessThan("i", 2), [skip], [stop])]);
     const after = print(str("after"));
     const chart = laidOut(program([loop, after]), {
       routine: "main",
@@ -442,7 +460,7 @@ describe("layout of jumps", () => {
   it("in a while, continue meets the back edge and break leads past the loop", () => {
     const stop = brk();
     const skip = cont();
-    const loop = while_(lt("i", 9), [if_(lt("i", 2), [skip]), stop]);
+    const loop = while_(createLessThan("i", 9), [if_(createLessThan("i", 2), [skip]), stop]);
     const chart = laidOut(program([assign("i", num(0)), loop]), {
       routine: "main",
       inputs: {},
@@ -504,7 +522,7 @@ describe("layout texts", () => {
     const found = ret(v("x"));
     const fallback = ret(num(0));
     const check = if_(bin("==", bin("%", v("x"), num(15)), num(0)), [found]);
-    const f = fn("f", [check, fallback]);
+    const f = createFunction("f", [check, fallback]);
     const chart = laidOut(
       program([], { functions: [f], inputs: [{ name: "n", kind: "number" }] }),
       {
@@ -521,7 +539,7 @@ describe("layout texts", () => {
   });
 
   it("gives a function chart's Start its function as owner, and main's terminals none", () => {
-    const f = fn("f", [ret(v("x"))]);
+    const f = createFunction("f", [ret(v("x"))]);
     const p = program([print(num(1))], { functions: [f] });
     const opts = { inputs: {}, measure: estimatedWidth };
     const owners = (routine: Routine) =>
@@ -539,7 +557,7 @@ describe("layout texts", () => {
   });
 
   it("gives no chart for a routine that names no function, rather than main's", () => {
-    const f = fn("f", [ret(num(0))]);
+    const f = createFunction("f", [ret(num(0))]);
     const p = program([print(num(1))], { functions: [f] });
     const opts = { routine: f.id, inputs: {}, measure: estimatedWidth };
     expect(layout(p, opts)).toBeDefined();
@@ -574,9 +592,9 @@ describe("layout texts", () => {
 
   it("a long diamond's text is drawn on two lines, split at a space between words", () => {
     const measure: Measure = (span) => span.text.length * 7;
-    const divides = (by: number) => bin("==", bin("%", v("i"), num(by)), num(0));
-    const check = if_(bin("and", divides(15), bin("<", v("i"), ast.empty())), []);
-    const short = if_(divides(15), []);
+    const createDivisibleCheck = (by: number) => bin("==", bin("%", v("i"), num(by)), num(0));
+    const check = if_(bin("and", createDivisibleCheck(15), bin("<", v("i"), ast.empty())), []);
+    const short = if_(createDivisibleCheck(15), []);
     const chart = laidOut(program([assign("i", num(1)), check, short]), {
       routine: "main",
       inputs: {},

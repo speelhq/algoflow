@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { getBlockDef } from "./registry";
-import { ast, eventTypes, notation, program, runAll, hints } from "./testing";
+import { ast, eventTypes, notation, runAll, hints } from "./testing";
 
-const { exprStmt, call, num, bin } = ast;
+const { exprStmt, call, num, bin, program } = ast;
 
 describe("expr (blocks.md)", () => {
   it("is hidden from the block menu", () => {

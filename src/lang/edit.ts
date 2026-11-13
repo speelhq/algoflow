@@ -1,7 +1,7 @@
 // Pure edit functions. Each returns a new Program and keeps
 // every NodeId unique. Statements are addressed by id or by Place.
 import { getBlockDef, registryKey, findSlot } from "@/blocks/registry";
-import { newId } from "./id";
+import { createNodeId } from "./id";
 import { declaredBy } from "./scope";
 import type { Expr, FunctionDef, Name, NodeId, Place, Program, Stmt } from "./types";
 import {
@@ -29,13 +29,13 @@ function clone<T>(value: T): T {
 
 /** Gives every block under `stmt` a fresh id (in place). */
 function reIdStmt(stmt: Stmt): void {
-  stmt.id = newId();
+  stmt.id = createNodeId();
   for (const { expr } of childSlots(stmt)) reIdExpr(expr);
   for (const region of bodyRegions(stmt)) for (const child of region.stmts) reIdStmt(child);
 }
 
 function reIdExpr(expr: Expr): void {
-  expr.id = newId();
+  expr.id = createNodeId();
   for (const { expr: child } of childSlots(expr)) reIdExpr(child);
 }
 
@@ -241,7 +241,7 @@ export function renameName(program: Program, from: Name, to: Name): Program {
 
 export function addFunction(program: Program, name: Name, params: Name[] = []): Program {
   const next = clone(program);
-  const fn: FunctionDef = { id: newId(), name, params: [...params], body: [] };
+  const fn: FunctionDef = { id: createNodeId(), name, params: [...params], body: [] };
   next.functions.push(fn);
   return next;
 }
@@ -266,15 +266,12 @@ export function setParams(program: Program, id: NodeId, params: Name[]): Program
 // ---------------------------------------------------------------- the E_DECLARE_FIRST fix
 
 /** The zero-like literal of the first value assigned to `name` inside `stmts`, else None. */
-function defaultFor(stmts: Stmt[], name: Name): Expr {
-  const none = (): Expr => ({ id: newId(), type: "none" });
-  for (const stmt of allStmts(stmts)) {
-    const value = declaredBy(stmt).find(
-      (declared) => declared.name === name && declared.stores !== undefined,
-    )?.stores;
-    if (value) return getBlockDef(registryKey(value)).zeroLike?.(value) ?? none();
-  }
-  return none();
+function createDefault(stmts: Stmt[], name: Name): Expr {
+  const value = [...allStmts(stmts)]
+    .flatMap((stmt) => declaredBy(stmt))
+    .find((declared) => declared.name === name && declared.stores !== undefined)?.stores;
+  const zero = value && getBlockDef(registryKey(value)).createZero?.(value);
+  return zero ?? (getBlockDef("none").create() as Expr);
 }
 
 /** Inserts `name = <default>` immediately before the compound statement `compound`. */
@@ -283,10 +280,10 @@ export function hoistAssign(program: Program, compound: NodeId, name: Name): Pro
   const { stmt, region, index } = getStmt(next, compound);
   const inner = bodyRegions(stmt).flatMap((r) => r.stmts);
   const assign: Stmt = {
-    id: newId(),
+    id: createNodeId(),
     type: "assign",
-    target: { id: newId(), type: "var", name },
-    value: defaultFor(inner, name),
+    target: { id: createNodeId(), type: "var", name },
+    value: createDefault(inner, name),
   };
   region.splice(index, 0, assign);
   return next;

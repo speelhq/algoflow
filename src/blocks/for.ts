@@ -1,10 +1,10 @@
 // The `for` block definition: bounds evaluated once, ints only; at each pass the value stored at
 // its target's place, found again, and a `loop` event that carries the place.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { typeError } from "@/runtime/access";
 import { defineStmt, type Counted } from "./types";
-import { emptyDraft } from "./draft";
+import { createEmptyDraft } from "./draft";
 
 const isZero = (expr: Expr) => expr.type === "num" && !expr.float && expr.value === 0;
 
@@ -29,11 +29,11 @@ export const forStmt = defineStmt<"for">({
     { name: "body", role: "body" },
   ],
   create: () => ({
-    id: newId(),
+    id: createNodeId(),
     type: "for",
-    var: emptyDraft(),
-    start: { id: newId(), type: "num", value: 0, float: false, raw: "0" },
-    stop: emptyDraft(),
+    var: createEmptyDraft(),
+    start: { id: createNodeId(), type: "num", value: 0, float: false, raw: "0" },
+    stop: createEmptyDraft(),
     body: [],
   }),
   *run(block, ctx) {

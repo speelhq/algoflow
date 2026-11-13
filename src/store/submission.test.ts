@@ -1,13 +1,13 @@
 // Submit judges every test on its own runner.
 import { beforeEach, describe, expect, it } from "vitest";
 import { findChallenge } from "@/challenges";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { useProgress } from "./progress";
 import { useProgram } from "./program";
 import { useRun } from "./run";
 import { useSubmission } from "./submission";
 
-const { assign, num, bin, print, str } = ast;
+const { assign, num, bin, print, str, program } = ast;
 
 const fizzbuzz = () => {
   const challenge = findChallenge("fizzbuzz");

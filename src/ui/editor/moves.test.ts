@@ -1,10 +1,10 @@
 // Where a dragged statement lands, which connectors accept it, and refused drops.
 import { describe, expect, it } from "vitest";
-import { ast, program } from "@/blocks/testing";
+import { ast } from "@/blocks/testing";
 import { emit } from "@/python/emit";
 import { accepts, moveTarget, tryMove } from "./moves";
 
-const { assign, num, print, v, while_, brk, if_ } = ast;
+const { assign, num, print, v, while_, brk, if_, program } = ast;
 const code = (p: ReturnType<typeof program>) => emit(p, {}).code.trim().split("\n");
 
 describe("moves", () => {

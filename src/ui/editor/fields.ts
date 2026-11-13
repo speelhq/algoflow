@@ -6,7 +6,7 @@ import type { Expr, Stmt } from "@/lang/types";
 import { draftText, isExpr, type ExprRole } from "@/lang/walk";
 import {
   createDraft,
-  emptyDraft,
+  createEmptyDraft,
   getBlockDef,
   registryKey,
   findSlot,
@@ -137,7 +137,7 @@ export function textValue(text: string, role: ExprRole): FieldValue {
   if (role === "exprs") {
     return "value" in read && Array.isArray(read.value) ? read.value : [createDraft(text)];
   }
-  if (text === "") return emptyDraft();
+  if (text === "") return createEmptyDraft();
   return "value" in read && !Array.isArray(read.value) ? read.value : createDraft(text);
 }
 

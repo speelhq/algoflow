@@ -192,7 +192,7 @@ export type BlockDef = {
   /** Not in the block menu (`draft`, `expr`). */
   hidden?: boolean;
   /** For literal blocks: the zero-like literal of the same type. */
-  zeroLike?(block: Expr): Expr;
+  createZero?(block: Expr): Expr;
   /** For call-like expressions: what is called and with how many arguments. */
   callee?(block: Expr): Callee;
   /** Its body regions are loop bodies (`break` / `continue` allowed inside). */

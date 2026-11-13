@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { FunctionDef } from "@/lang/types";
 import { emit } from "@/python/emit";
-import { ast, notation, program, runAll, varData, hints } from "./testing";
+import { ast, notation, runAll, varData, hints } from "./testing";
 
-const { call, num, bin, v, assign, ret, for_, if_ } = ast;
+const { call, num, bin, v, assign, ret, for_, if_, program } = ast;
 
 describe("return (blocks.md)", () => {
   it("emits `return <value>` or `return`", () => {

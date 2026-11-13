@@ -4,8 +4,8 @@
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
 import {
-  declareFirstProgram,
-  programWith,
+  createDeclareFirstProgram,
+  createStoredProgram,
   seedPlayground,
   seedProgram,
   seedProgress,
@@ -128,7 +128,7 @@ test("Playground", async ({ page }) => {
   const index: Record<string, { edited: number }> = {};
   for (const [id, title, time] of programs) {
     index[id] = { edited: new Date(time).getTime() };
-    await seedProgram(page, id, { ...programWith([]), title });
+    await seedProgram(page, id, { ...createStoredProgram([]), title });
   }
   await seedPlayground(page, index);
   await page.goto("/#/play");
@@ -150,7 +150,7 @@ test("Block menu with the program's own functions", async ({ page }) => {
 
 test("Diagnostic", async ({ page }) => {
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", declareFirstProgram());
+  await seedProgram(page, "fizzbuzz", createDeclareFirstProgram());
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-chart-node="dgn-prnt-001"]').hover();
   await expect(page.getByTestId("diagnostic-message")).toBeVisible();
@@ -173,7 +173,7 @@ test("Playground program", async ({ page }) => {
       },
     ],
   };
-  await seedProgram(page, id, { ...programWith([square]), title: "Seven squared" });
+  await seedProgram(page, id, { ...createStoredProgram([square]), title: "Seven squared" });
   await seedPlayground(page, { [id]: { edited: 0 } });
   await page.goto(`/#/play/${id}`);
   await expect(page.getByTestId("chart")).toBeVisible();
@@ -203,7 +203,7 @@ test.describe("Block editor", () => {
         })),
       },
     };
-    await seedProgram(page, "sum-to-n", programWith([init, nums, { ...loop, body: [] }]));
+    await seedProgram(page, "sum-to-n", createStoredProgram([init, nums, { ...loop, body: [] }]));
     await page.goto("/#/p/sum-to-n");
   });
 

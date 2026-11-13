@@ -1,17 +1,17 @@
 // The `bool` block definition
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { defineExpr } from "./types";
 
 export const bool = defineExpr<"bool">({
   key: "bool",
   category: "basic",
   slots: [],
-  create: () => ({ id: newId(), type: "bool", value: true }),
+  create: () => ({ id: createNodeId(), type: "bool", value: true }),
   fieldsError: (fields) =>
     typeof fields.value === "boolean"
       ? undefined
       : { field: "value", message: "expected true or false" },
-  zeroLike: () => ({ id: newId(), type: "bool", value: false }),
+  createZero: () => ({ id: createNodeId(), type: "bool", value: false }),
   *run(block) {
     return { t: "bool", v: block.value };
   },

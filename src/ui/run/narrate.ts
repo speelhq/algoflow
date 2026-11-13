@@ -12,7 +12,7 @@ import {
   blocksById,
   findVariableName,
 } from "@/lang/walk";
-import { isParseError, parseData } from "@/python/parse";
+import { isParseError, createDataExpr } from "@/python/parse";
 import { valueAt } from "@/runtime/refs";
 import type { Done, Frame, Ref, State } from "@/runtime/types";
 import type { StepEvent } from "@/store/steps";
@@ -39,8 +39,8 @@ function heapName(ref: number, frame: Frame | undefined, heap: Heap): string {
 }
 
 /** A position or a key as the block of its value writes it. */
-function literal(data: Data): Expr {
-  const expr = parseData(data);
+function createLiteral(data: Data): Expr {
+  const expr = createDataExpr(data);
   if (isParseError(expr)) throw new Error(`no block writes ${JSON.stringify(data)}`);
   return expr;
 }
@@ -54,8 +54,8 @@ function refText(ref: Ref, frame: Frame | undefined, heap: Heap, program: Progra
   const holder: Expr = { id: "", type: "var", name: heapName(ref.heap, frame, heap) };
   const target: Expr =
     "index" in ref
-      ? { id: "", type: "index", list: holder, index: literal(ref.index) }
-      : { id: "", type: "key", dict: holder, key: literal(toData(keyValue(ref.key), heap)) };
+      ? { id: "", type: "index", list: holder, index: createLiteral(ref.index) }
+      : { id: "", type: "key", dict: holder, key: createLiteral(toData(keyValue(ref.key), heap)) };
   return exprText(target, program);
 }
 

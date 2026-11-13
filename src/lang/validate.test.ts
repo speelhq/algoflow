@@ -1,6 +1,6 @@
 // Every validation code has a failing and a passing case; scope.
 import { describe, expect, it } from "vitest";
-import { ast, program, runAll } from "@/blocks/testing";
+import { ast, runAll } from "@/blocks/testing";
 import { isParseError, parse } from "@/python/parse";
 import type { Diagnostic, Program, Stmt } from "./types";
 import { validate } from "./validate";
@@ -22,10 +22,12 @@ const {
   exprStmt,
   empty,
   bool,
+  program,
 } = ast;
 
 const codes = (p: Program) => validate(p).map((d) => d.code);
-const withInput = (main: Stmt[]) => program(main, { inputs: [{ name: "c", kind: "number" }] });
+const createProgramWithInput = (main: Stmt[]) =>
+  program(main, { inputs: [{ name: "c", kind: "number" }] });
 
 describe("validate (language.md, Validation)", () => {
   it("returns no diagnostics for a well-formed program", () => {
@@ -44,7 +46,7 @@ describe("validate (language.md, Validation)", () => {
   it("E_DECLARE_FIRST: first assigned inside a compound statement and read after it, with the hoist fix", () => {
     const branch = if_(v("c"), [assign("x", num(1))]);
     const use = print(v("x"));
-    expect(validate(withInput([branch, use]))).toEqual([
+    expect(validate(createProgramWithInput([branch, use]))).toEqual([
       {
         nodeId: use.id,
         code: "E_DECLARE_FIRST",
@@ -52,7 +54,7 @@ describe("validate (language.md, Validation)", () => {
         fix: "hoistAssign",
       },
     ]);
-    expect(codes(withInput([assign("x", num(0)), branch, use]))).toEqual([]);
+    expect(codes(createProgramWithInput([assign("x", num(0)), branch, use]))).toEqual([]);
     const loop = for_("i", num(0), num(3), [assign("y", v("i"))]);
     expect(codes(program([loop, print(v("y"))]))).toEqual(["E_DECLARE_FIRST"]);
   });
@@ -60,7 +62,7 @@ describe("validate (language.md, Validation)", () => {
   it("E_DECLARE_FIRST: a name assigned two compound statements deep points at the outermost one", () => {
     const outer = if_(v("c"), [if_(v("c"), [assign("x", num(1))])]);
     const use = print(v("x"));
-    expect(validate(withInput([outer, use]))).toEqual([
+    expect(validate(createProgramWithInput([outer, use]))).toEqual([
       {
         nodeId: use.id,
         code: "E_DECLARE_FIRST",
@@ -69,7 +71,7 @@ describe("validate (language.md, Validation)", () => {
       },
     ]);
     const nested = for_("i", num(0), num(2), [if_(v("c"), [assign("z", num(1))]), print(v("z"))]);
-    expect(codes(withInput([nested]))).toEqual(["E_DECLARE_FIRST"]);
+    expect(codes(createProgramWithInput([nested]))).toEqual(["E_DECLARE_FIRST"]);
   });
 
   it("E_DUPLICATE_NAME: a variable may not shadow a function or a builtin; params are unique", () => {
@@ -132,10 +134,10 @@ describe("validate (language.md, Validation)", () => {
     expect(validate(program([stray]))).toEqual([
       { nodeId: stray.id, code: "E_BREAK_OUTSIDE", params: {} },
     ]);
-    expect(codes(withInput([if_(v("c"), [cont()])]))).toEqual(["E_BREAK_OUTSIDE"]);
-    expect(codes(withInput([for_("i", num(0), num(3), [if_(v("c"), [brk()]), cont()])]))).toEqual(
-      [],
-    );
+    expect(codes(createProgramWithInput([if_(v("c"), [cont()])]))).toEqual(["E_BREAK_OUTSIDE"]);
+    expect(
+      codes(createProgramWithInput([for_("i", num(0), num(3), [if_(v("c"), [brk()]), cont()])])),
+    ).toEqual([]);
   });
 
   it("E_RETURN_OUTSIDE: return in main", () => {

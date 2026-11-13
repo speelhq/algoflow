@@ -1,12 +1,12 @@
 // The `none` block definition
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { defineExpr } from "./types";
 
 export const none = defineExpr<"none">({
   key: "none",
   category: "basic",
   slots: [],
-  create: () => ({ id: newId(), type: "none" }),
+  create: () => ({ id: createNodeId(), type: "none" }),
   *run() {
     return { t: "none" };
   },

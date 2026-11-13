@@ -1,5 +1,5 @@
 // Typed expression text → Expr. No third-party imports.
-import { newId } from "@/lang/id";
+import { createNodeId } from "@/lang/id";
 import { CLASS_NAME_PATTERN, type BinOp, type Data, type Expr, type NodeId } from "@/lang/types";
 import { allExprs, childSlots, isEmptyDraft } from "@/lang/walk";
 import {
@@ -257,7 +257,7 @@ class Parser {
       const right = next();
       left = this.block(
         pos,
-        this.mark(this.spanStart(left), { id: newId(), type: "binop", op, left, right }),
+        this.mark(this.spanStart(left), { id: createNodeId(), type: "binop", op, left, right }),
       );
     }
     return left;
@@ -275,7 +275,10 @@ class Parser {
     if (this.isWord("not")) {
       const pos = this.take().pos;
       const operand = this.not();
-      return this.block(pos, this.mark(pos, { id: newId(), type: "unop", op: "not", operand }));
+      return this.block(
+        pos,
+        this.mark(pos, { id: createNodeId(), type: "unop", op: "not", operand }),
+      );
     }
     return this.cmp();
   }
@@ -289,7 +292,7 @@ class Parser {
     if (this.binopAt(PRECEDENCE.compare) !== undefined) fail("E_PARSE_CHAIN", this.peek().pos);
     return this.block(
       pos,
-      this.mark(this.spanStart(left), { id: newId(), type: "binop", op, left, right }),
+      this.mark(this.spanStart(left), { id: createNodeId(), type: "binop", op, left, right }),
     );
   }
 
@@ -305,7 +308,10 @@ class Parser {
     if (this.isOp("-")) {
       const pos = this.take().pos;
       const operand = this.factor();
-      return this.block(pos, this.mark(pos, { id: newId(), type: "unop", op: "neg", operand }));
+      return this.block(
+        pos,
+        this.mark(pos, { id: createNodeId(), type: "unop", op: "neg", operand }),
+      );
     }
     return this.power();
   }
@@ -318,7 +324,13 @@ class Parser {
       const right = this.factor();
       return this.block(
         pos,
-        this.mark(this.spanStart(base), { id: newId(), type: "binop", op, left: base, right }),
+        this.mark(this.spanStart(base), {
+          id: createNodeId(),
+          type: "binop",
+          op,
+          left: base,
+          right,
+        }),
       );
     }
     return base;
@@ -350,7 +362,10 @@ class Parser {
         const pos = this.take().pos;
         const index = this.or();
         this.expectOp("]");
-        expr = this.block(pos, this.mark(start, { id: newId(), type: "index", list: expr, index }));
+        expr = this.block(
+          pos,
+          this.mark(start, { id: createNodeId(), type: "index", list: expr, index }),
+        );
       } else if (this.isOp(".")) {
         this.take();
         const name = this.take();
@@ -379,17 +394,17 @@ class Parser {
     // A class name is a `new`, which no registered block definition constructs yet, so `Expr`
     // has no `new` to make.
     if (CLASS_NAME_PATTERN.test(name)) return fail("E_PARSE_SYNTAX", position);
-    return this.block(position, { id: newId(), type: "call", fn: name, args });
+    return this.block(position, { id: createNodeId(), type: "call", fn: name, args });
   }
 
   /** Builtin aliases and method calls. */
   private resolveMethod(obj: Expr, name: Token, args: Expr[]): Expr {
     if (obj.type === "var") {
       const fn = this.aliases.get(`${obj.name}.${name.text}`);
-      if (fn) return { id: newId(), type: "call", fn, args };
+      if (fn) return { id: createNodeId(), type: "call", fn, args };
     }
     if (hasBlockDef(methodKey(name.text))) {
-      return { id: newId(), type: "method", obj, name: name.text, args };
+      return { id: createNodeId(), type: "method", obj, name: name.text, args };
     }
     return fail("E_UNKNOWN_CALL", name.pos, { name: name.text });
   }
@@ -408,17 +423,17 @@ class Parser {
       case "num": {
         const literal = numberLiteral(token.text);
         if (!literal) return fail("E_PARSE_SYNTAX", token.pos);
-        return { id: newId(), type: "num", ...literal, raw: token.text };
+        return { id: createNodeId(), type: "num", ...literal, raw: token.text };
       }
       case "str":
-        return { id: newId(), type: "str", value: token.value };
+        return { id: createNodeId(), type: "str", value: token.value };
       case "name":
         if (token.text === "True" || token.text === "False") {
-          return { id: newId(), type: "bool", value: token.text === "True" };
+          return { id: createNodeId(), type: "bool", value: token.text === "True" };
         }
-        if (token.text === "None") return { id: newId(), type: "none" };
+        if (token.text === "None") return { id: createNodeId(), type: "none" };
         if (KEYWORDS.has(token.text)) return fail("E_PARSE_SYNTAX", token.pos);
-        return { id: newId(), type: "var", name: token.text };
+        return { id: createNodeId(), type: "var", name: token.text };
       case "op":
         if (token.text === "(") {
           const inner = this.or();
@@ -427,12 +442,12 @@ class Parser {
           return inner;
         }
         if (token.text === "[") {
-          return this.block(token.pos, { id: newId(), type: "list", items: this.args("]") });
+          return this.block(token.pos, { id: createNodeId(), type: "list", items: this.args("]") });
         }
         if (token.text === "{") return this.dict(token.pos);
         return fail("E_PARSE_SYNTAX", token.pos);
       case "hole":
-        return { id: newId(), type: "draft", text: "" };
+        return { id: createNodeId(), type: "draft", text: "" };
       case "other":
       case "end":
         return fail("E_PARSE_SYNTAX", token.pos);
@@ -443,7 +458,7 @@ class Parser {
     const entries: Array<{ key: Expr; value: Expr }> = [];
     if (this.isOp("}")) {
       this.take();
-      return this.block(pos, { id: newId(), type: "dict", entries });
+      return this.block(pos, { id: createNodeId(), type: "dict", entries });
     }
     for (;;) {
       const key = this.or();
@@ -455,7 +470,7 @@ class Parser {
         continue;
       }
       this.expectOp("}");
-      return this.block(pos, { id: newId(), type: "dict", entries });
+      return this.block(pos, { id: createNodeId(), type: "dict", entries });
     }
   }
 }
@@ -479,7 +494,7 @@ export function parseArgs(text: string): Expr[] | ParseError {
 }
 
 /** A value as the blocks write it: its Python text parsed, or the error where no block writes it. */
-export function parseData(data: Data): Expr | ParseError {
+export function createDataExpr(data: Data): Expr | ParseError {
   return parse(dataToPython(data));
 }
 
