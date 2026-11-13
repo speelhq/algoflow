@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, eventTypes, notation, runAll, createProgramWithInputs, hints } from "./testing";
+import { ast, eventTypes, runAll, createProgramWithInputs, hints } from "./testing";
+import { blockNotation } from "./registry";
 
 const { print, num, float, str, bool, none, bin, v, program } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -40,6 +41,6 @@ describe("notation (blocks.md, Notation)", () => {
   });
 
   it("writes the notation of its table", () => {
-    expect(notation(print(v("a"), v("b")))).toBe("print({args})");
+    expect(blockNotation(print(v("a"), v("b")))).toBe("print({args})");
   });
 });

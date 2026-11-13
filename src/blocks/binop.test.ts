@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, notation } from "./testing";
+import { ast, evalExpr } from "./testing";
+import { blockNotation } from "./registry";
 
 const { num, float, str, bin, v, neg, bool } = ast;
 
@@ -169,6 +170,6 @@ describe("binop (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(bin("%", v("i"), num(15)))).toBe("{left} {op} {right}");
+    expect(blockNotation(bin("%", v("i"), num(15)))).toBe("{left} {op} {right}");
   });
 });

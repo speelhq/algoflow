@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, notation } from "./testing";
+import { ast, evalExpr } from "./testing";
+import { blockNotation } from "./registry";
 
 const { call, num, float, str, neg } = ast;
 
@@ -25,6 +26,6 @@ describe("builtin abs (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(call("abs", num(3)))).toBe("abs({x})");
+    expect(blockNotation(call("abs", num(3)))).toBe("abs({x})");
   });
 });

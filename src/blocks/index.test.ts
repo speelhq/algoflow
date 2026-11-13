@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import {
-  ast,
-  evalExpr,
-  eventTypes,
-  notation,
-  runAll,
-  varData,
-  createProgramWithInputs,
-} from "./testing";
+import { ast, evalExpr, eventTypes, runAll, varData, createProgramWithInputs } from "./testing";
+import { blockNotation } from "./registry";
 
 const { assignTo, item, list, num, str, bin, neg, v } = ast;
 
@@ -77,6 +70,6 @@ describe("index (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(item(v("nums"), num(0)))).toBe("{list}[{index}]");
+    expect(blockNotation(item(v("nums"), num(0)))).toBe("{list}[{index}]");
   });
 });

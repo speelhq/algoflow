@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, notation } from "./testing";
+import { ast, evalExpr } from "./testing";
+import { blockNotation } from "./registry";
 
 describe("none (blocks.md)", () => {
   it("emits None", () => {
@@ -14,6 +15,6 @@ describe("none (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(ast.none())).toBe("None");
+    expect(blockNotation(ast.none())).toBe("None");
   });
 });

@@ -15,7 +15,7 @@ import type {
 import { isDone } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Done, Event, State } from "@/runtime/types";
-import { createEmptyDraft, getBlockDef, registryKey } from "./registry";
+import { createEmptyDraft, getBlockDef } from "./registry";
 
 let counter = 0;
 
@@ -114,11 +114,6 @@ export const ast = {
     main,
   }),
 };
-
-/** The notation its block definition writes `block` in (`blocks.md`, Notation). */
-export function notation(block: Expr | Stmt): string {
-  return getBlockDef(registryKey(block)).notation(block);
-}
 
 /** The `hint` of each `expr`, `target`, and `exprs` slot of block definition `key`, in slot order. */
 export function hints(key: string): Array<string | undefined> {

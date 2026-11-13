@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { FunctionDef } from "@/lang/types";
 import { validate } from "@/lang/validate";
 import { emit, unparse } from "@/python/emit";
-import { ast, eventTypes, notation, runAll, varData } from "./testing";
+import { ast, eventTypes, runAll, varData } from "./testing";
+import { blockNotation } from "./registry";
 
 const { call, num, bin, v, assign, ret, print, if_, exprStmt, program } = ast;
 
@@ -86,6 +87,6 @@ describe("call (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(call("f", v("x")))).toBe("{fn}({args})");
+    expect(blockNotation(call("f", v("x")))).toBe("{fn}({args})");
   });
 });

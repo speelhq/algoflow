@@ -1,15 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import type { Data, Stmt } from "@/lang/types";
-import {
-  ast,
-  eventTypes,
-  notation,
-  runAll,
-  varData,
-  createProgramWithInputs,
-  hints,
-} from "./testing";
+import { ast, eventTypes, runAll, varData, createProgramWithInputs, hints } from "./testing";
+import { blockNotation } from "./registry";
 
 const { assign, bin, for_, item, num, swap, v, program } = ast;
 const runWith = (values: Record<string, Data>, main: Stmt[]) => {
@@ -143,6 +136,6 @@ describe("notation (blocks.md, Notation)", () => {
   });
 
   it("writes the notation of its table", () => {
-    expect(notation(swap(v("x"), v("y")))).toBe("swap({a}, {b})");
+    expect(blockNotation(swap(v("x"), v("y")))).toBe("swap({a}, {b})");
   });
 });

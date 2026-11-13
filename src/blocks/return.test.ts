@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { FunctionDef } from "@/lang/types";
 import { emit } from "@/python/emit";
-import { ast, notation, runAll, varData, hints } from "./testing";
+import { ast, runAll, varData, hints } from "./testing";
+import { blockNotation } from "./registry";
 
 const { call, num, bin, v, assign, ret, for_, if_, program } = ast;
 
@@ -44,7 +45,7 @@ describe("notation (blocks.md, Notation)", () => {
   });
 
   it("writes the notation of its table", () => {
-    expect(notation(ret(v("x")))).toBe("return {value}");
-    expect(notation(ret())).toBe("return {value}");
+    expect(blockNotation(ret(v("x")))).toBe("return {value}");
+    expect(blockNotation(ret())).toBe("return {value}");
   });
 });

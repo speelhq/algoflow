@@ -14,7 +14,7 @@ import {
   paramArg,
   findVariableName,
 } from "@/lang/walk";
-import { getBlockDef, registryKey, findSlot } from "@/blocks/registry";
+import { getBlockDef, registryKey, findSlot, blockNotation } from "@/blocks/registry";
 import type { Generated, BlockDef, Side } from "@/blocks/types";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
 import { str, writeValue } from "@/runtime/values";
@@ -136,11 +136,6 @@ export function filledSpans(
 }
 
 const plain = (span: NotationSpan) => !span.variable && !span.hint && !span.underline;
-
-/** A block's notation (`blocks.md`, Notation). */
-export function blockNotation(block: Block): string {
-  return getBlockDef(registryKey(block)).notation(block);
-}
 
 /** Whether an expression is a call: its notation ends with its own parenthesis (`abs({x})`). */
 export function isCall(expr: Expr): boolean {
