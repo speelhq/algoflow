@@ -1,6 +1,6 @@
 // Routes, the Problems page, Help, first launch.
 import { expect, test } from "./fixtures";
-import { planOf } from "../src/challenges/plans";
+import { getChallengePlan } from "../src/challenges/plans";
 import { seedProgress } from "./seed";
 
 test.describe("first launch", () => {
@@ -37,7 +37,7 @@ test.describe("Problems page", () => {
     await page.goto("/#/");
     const plan = page.getByTestId("plan-course");
     await expect(plan.getByRole("heading", { name: "3-Day Course" })).toBeVisible();
-    await expect(plan).toContainText(`2 of ${planOf("tutorial").problems.length} solved`);
+    await expect(plan).toContainText(`2 of ${getChallengePlan("tutorial").problems.length} solved`);
     await expect(
       plan.getByRole("link", { name: "Continue: FizzBuzz ▶", exact: true }),
     ).toHaveAttribute("href", "#/p/fizzbuzz");

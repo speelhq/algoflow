@@ -29,13 +29,13 @@ export type ProgressState = {
 const FRESH: ProgressEntry = { status: "attempted", hints: 0, solution: false };
 
 /** The status of a problem row; undefined while untouched. */
-export function statusOf(entries: Progress, id: string): ProgressStatus | undefined {
+export function findProgressStatus(entries: Progress, id: string): ProgressStatus | undefined {
   return Object.hasOwn(entries, id) ? entries[id]?.status : undefined;
 }
 
 /** `n of m solved`. */
 export function solvedCount(entries: Progress, ids: readonly string[]): number {
-  return ids.filter((id) => statusOf(entries, id) === "solved").length;
+  return ids.filter((id) => findProgressStatus(entries, id) === "solved").length;
 }
 
 function parseEntry(value: unknown): ProgressEntry | undefined {

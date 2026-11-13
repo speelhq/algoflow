@@ -18,7 +18,7 @@ export type SpeedName = keyof typeof SPEEDS;
 export const SPEED_NAMES = Object.keys(SPEEDS) as SpeedName[];
 
 /** A stored or requested speed as one of the three: the nearest, else `fallback`. */
-function speedOf(value: unknown, fallback: number): number {
+function nearestSpeed(value: unknown, fallback: number): number {
   if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
   const speeds = Object.values(SPEEDS) as number[];
   return speeds.reduce((best, speed) =>
@@ -61,7 +61,7 @@ function toLayout(persisted: unknown): Persisted {
   return {
     panel: size(stored.panel, PANEL.default, PANEL.min, Number.MAX_SAFE_INTEGER),
     collapsed: typeof stored.collapsed === "boolean" ? stored.collapsed : false,
-    speed: speedOf(stored.speed, SPEEDS.normal),
+    speed: nearestSpeed(stored.speed, SPEEDS.normal),
   };
 }
 
@@ -86,7 +86,7 @@ export const useLayout = create<LayoutState>()(
             : { panel: s.panel },
         ),
       setCollapsed: (collapsed) => set({ collapsed }),
-      setSpeed: (speed) => set((s) => ({ speed: speedOf(speed, s.speed) })),
+      setSpeed: (speed) => set((s) => ({ speed: nearestSpeed(speed, s.speed) })),
     }),
     {
       name: LAYOUT_STORAGE_KEY,

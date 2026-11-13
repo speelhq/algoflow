@@ -1,7 +1,7 @@
 // Selecting, removing, duplicating, dragging, undo and redo.
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { programWith, seedProgram, seedProgress, solutionOf } from "./seed";
+import { programWith, seedProgram, seedProgress, readSolution } from "./seed";
 
 const node = (page: Page, id: string) => page.locator(`[data-chart-node="${id}"]`);
 
@@ -47,7 +47,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("Delete removes the selected block, and undo and redo walk it back", async ({ page }) => {
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   const undo = page.getByRole("button", { name: "Undo" });
   const redo = page.getByRole("button", { name: "Redo" });
@@ -90,7 +90,7 @@ test("undo, redo, and duplicate act while a value line has the keyboard", async 
 });
 
 test("Ctrl+D duplicates the selected block, and Esc clears the selection", async ({ page }) => {
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await node(page, "fzb-prfz-001").click({ position: { x: 8, y: 20 } });
   await page.keyboard.press("Control+d");
@@ -103,7 +103,7 @@ test("Ctrl+D duplicates the selected block, and Esc clears the selection", async
 });
 
 test("a block dragged onto another connector moves there", async ({ page }) => {
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   // The tab is chosen first: dnd-kit stops every click for 50 ms after a drop.
   await page.getByTestId("tab-python").click();
@@ -114,7 +114,7 @@ test("a block dragged onto another connector moves there", async ({ page }) => {
 });
 
 test("a dragged chart node's ghost draws its spans as the chart node does", async ({ page }) => {
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   const ghost = page.getByTestId("drag-ghost");
   // A generated chart node, `i ← 1`, gray with its variable bold in the variable color.

@@ -2,7 +2,7 @@
 // owns frames, dispatch, counting, limits, and the Runner contract.
 import { inputValue, toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Name, NodeId, Program, Stmt, Value } from "@/lang/types";
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { getBlockDef, registryKey } from "@/blocks/registry";
 import type { ExprRunner, RunContext, Signal, StmtRunner } from "@/blocks/types";
 import { RuntimeFailure } from "./errors";
 import { createRandom } from "./random";
@@ -30,20 +30,20 @@ export function run(program: Program, inputs: Readonly<Record<Name, Data>>, seed
     program,
     heap,
     *eval(expr: Expr) {
-      const def = getBlockDef(keyOf(expr));
+      const def = getBlockDef(registryKey(expr));
       return yield* (def.run as ExprRunner)(expr, ctx);
     },
     *exec(body: Stmt[]) {
       for (const stmt of body) {
         yield { type: "enter", nodeId: stmt.id };
-        const def = getBlockDef(keyOf(stmt));
+        const def = getBlockDef(registryKey(stmt));
         const signal: Signal = yield* (def.run as StmtRunner)(stmt, ctx);
         if (signal) return signal;
       }
       return undefined;
     },
     *locate(target, at) {
-      const def = getBlockDef(keyOf(target));
+      const def = getBlockDef(registryKey(target));
       if (!def.locate) throw new Error(`${def.key} is no target`);
       return yield* def.locate(target, ctx, at);
     },
@@ -94,10 +94,10 @@ export function run(program: Program, inputs: Readonly<Record<Name, Data>>, seed
     },
     // The operation is named by the expression's registry key; a message writes its label.
     valueError(block, value) {
-      return ctx.fail(block.id, "E_VALUE", { op: keyOf(block), type: typeName(value) });
+      return ctx.fail(block.id, "E_VALUE", { op: registryKey(block), type: typeName(value) });
     },
     textError(block, text) {
-      return ctx.fail(block.id, "E_NUMBER_TEXT", { op: keyOf(block), text });
+      return ctx.fail(block.id, "E_NUMBER_TEXT", { op: registryKey(block), text });
     },
     random: {
       int: (a, b) => random.int(a, b),

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
 import { ast } from "@/blocks/testing";
 import { allEntries } from "./entries";
-import { fieldsOf, startField, type Field } from "./fields";
+import { stmtFields, startField, type Field } from "./fields";
 import type { LineContext, Row } from "./choices";
 import {
   changeText,
@@ -61,12 +61,12 @@ const entry = (label: string): Row => {
 describe("opening a field (editor.md, Block editor; Value line, Selected text)", () => {
   it("the slot clicked takes the keyboard, else the first field that holds a draft", () => {
     const stmt = assign("total", draft("x +"));
-    const fields = fieldsOf(stmt);
+    const fields = stmtFields(stmt);
     expect(fields).toEqual([target, value]);
     expect(startField(stmt, fields, null)).toEqual(fields[1]);
     expect(startField(stmt, fields, "target")).toEqual(fields[0]);
     const settled = assign("total", num(1));
-    expect(startField(settled, fieldsOf(settled), null)).toBeNull();
+    expect(startField(settled, stmtFields(settled), null)).toBeNull();
   });
 
   it("a value opens selected, a draft with the caret at its end, and an inserted block at the caret given", () => {

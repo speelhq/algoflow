@@ -1,7 +1,7 @@
 // Equality per expectation kind; a runtime error fails the test.
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/blocks/testing";
-import { finish, outcomeOf, type Outcome } from "@/runtime/outcome";
+import { finish, collectOutcome, type Outcome } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Program } from "@/lang/types";
 import { judge } from "./judge";
@@ -11,7 +11,7 @@ const { assign, num, float, bin, v, print, str } = ast;
 
 function outcome(p: Program, inputs = {}): Outcome {
   const runner = run(p, inputs, 1);
-  return outcomeOf(runner, finish(runner));
+  return collectOutcome(runner, finish(runner));
 }
 
 const test = (expected: Test["expect"], inputs = {}): Test => ({ inputs, expect: expected });

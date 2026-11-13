@@ -1,6 +1,6 @@
 // Every challenge file is bundled; the list follows the plans.
 import { describe, expect, it, vi } from "vitest";
-import { CHALLENGES, challengesOf, findChallenge, PLANS, planOf } from "./index";
+import { CHALLENGES, getPlanChallenges, findChallenge, PLANS, getChallengePlan } from "./index";
 
 describe("challenge bundle", () => {
   it("loads every challenges/*.json with id, tests, and solution; plans.json is not one", () => {
@@ -16,12 +16,14 @@ describe("challenge bundle", () => {
 
   it("lists each plan's members in its order, the plans in theirs", () => {
     expect(CHALLENGES.map((c) => c.id)).toEqual(PLANS.flatMap((plan) => plan.problems));
-    for (const plan of PLANS) expect(challengesOf(plan).map((c) => c.id)).toEqual(plan.problems);
+    for (const plan of PLANS)
+      expect(getPlanChallenges(plan).map((c) => c.id)).toEqual(plan.problems);
   });
 
   it("finds the plan of each challenge; an id in no plan throws", () => {
-    for (const plan of PLANS) for (const id of plan.problems) expect(planOf(id)).toBe(plan);
-    expect(() => planOf("nope")).toThrow('challenge "nope" is in no plan');
+    for (const plan of PLANS)
+      for (const id of plan.problems) expect(getChallengePlan(id)).toBe(plan);
+    expect(() => getChallengePlan("nope")).toThrow('challenge "nope" is in no plan');
   });
 
   it("a plan member with no file fails the bundle at load", async () => {

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Kind } from "@/lang/types";
 import { ast, program } from "@/blocks/testing";
 import { joinSpans } from "@/ui/chart/text";
-import { allEntries, labelOf, makeEntry } from "./entries";
+import { allEntries, exprLabel, makeEntry } from "./entries";
 import type { TextLine } from "./caret";
 import { explainEditor, explainLine, explainVariable } from "./explain";
 import type { LineContext } from "./choices";
@@ -81,7 +81,7 @@ describe("explanation line", () => {
     const blank = allEntries().find((entry) => entry.id === "list.empty");
     if (!blank) throw new Error("no Empty list");
     const [one, two] = [makeEntry(blank), makeEntry(blank)];
-    expect(labelOf(one, lists.kinds)).toBe("Empty list");
+    expect(exprLabel(one, lists.kinds)).toBe("Empty list");
     const explained = explainLine(at(""), ctx, { type: "entry", entry: blank }, p, target.id);
     expect(explained?.spans.filter((span) => "key" in span)).toEqual([{ text: "[]", key: true }]);
     // Each made list has its own items, none shared with the block definition.

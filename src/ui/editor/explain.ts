@@ -3,10 +3,10 @@
 import { errorText, t } from "@/i18n/t";
 import { firstSetters, variableKinds, type Kinds } from "@/lang/kinds";
 import type { Diagnostic, Expr, Name, Kind, NodeId, Program } from "@/lang/types";
-import { getRoutine, isEmptyDraft, routineOf } from "@/lang/walk";
+import { getRoutine, isEmptyDraft, getHoldingRoutine } from "@/lang/walk";
 import {
   parenthesized,
-  notationOf,
+  blockNotation,
   exprHint,
   exprText,
   placeholderValue,
@@ -15,7 +15,7 @@ import {
   type NotationSpan,
   SEPARATOR,
 } from "@/ui/chart/text";
-import { labelOf } from "./entries";
+import { exprLabel } from "./entries";
 import { caretMatches, caretOperation, caretWordRows, wordAt, type TextLine } from "./caret";
 import { PARENTHESES_KEY, type LineContext, type Row } from "./choices";
 
@@ -56,7 +56,7 @@ export const kindName = (kind: Kind) => t(`editor.kind.${kind}`);
 
 /** A variable of the routine that holds statement `at`: its kind and where it is first set. */
 export function explainVariable(program: Program, at: NodeId, name: Name): string {
-  const routine = routineOf(program, at);
+  const routine = getHoldingRoutine(program, at);
   const def = getRoutine(program, routine);
   const kind = variableKinds(program, routine).get(name);
   if (def === "main") {
@@ -168,7 +168,7 @@ function operationSpans(operation: Expr, current: Expr, program: Program): Notat
       ...(value === current ? { underline: true } : {}),
     };
   };
-  return filledSpans(notationOf(operation), (name) => {
+  return filledSpans(blockNotation(operation), (name) => {
     const held = placeholderValue(operation, name);
     switch (held?.role) {
       case "expr":
@@ -228,7 +228,7 @@ export function explainOperation(
   program: Program,
 ): Explanation {
   return {
-    name: [{ text: labelOf(inside.operation, kinds) }],
+    name: [{ text: exprLabel(inside.operation, kinds) }],
     spans: operationSpans(inside.operation, inside.value, program),
   };
 }

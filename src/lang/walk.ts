@@ -1,5 +1,5 @@
 // Traversal driven by each block's slots, so no module lists block types.
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { getBlockDef, registryKey } from "@/blocks/registry";
 import type { Expr, Block, FunctionDef, NodeId, Program, Routine, Stmt } from "./types";
 
 type Bag = Record<string, unknown>;
@@ -20,15 +20,15 @@ export function isEmptyDraft(value: unknown): boolean {
 
 /** Whether an expression names where a value is stored: its block declares `locate`. */
 export function isTarget(expr: Expr): boolean {
-  return getBlockDef(keyOf(expr)).locate !== undefined;
+  return getBlockDef(registryKey(expr)).locate !== undefined;
 }
 
 /**
  * The name an expression reads, when it is a variable: the block whose one slot is a name.
  * Read from the block's slots, so no module names the variable block.
  */
-export function variableOf(expr: Expr): string | undefined {
-  const { slots } = getBlockDef(keyOf(expr));
+export function findVariableName(expr: Expr): string | undefined {
+  const { slots } = getBlockDef(registryKey(expr));
   const [slot] = slots;
   if (slots.length !== 1 || slot?.role !== "name") return undefined;
   const name = (expr as unknown as Bag)[slot.name];
@@ -40,7 +40,8 @@ export function variableOf(expr: Expr): string | undefined {
  * arguments; undefined when the block has no such parameter or that argument is not passed.
  */
 export function paramArg(block: Block, name: string): { arg: Expr; index: number } | undefined {
-  const index = getBlockDef(keyOf(block)).params?.findIndex((param) => param.name === name) ?? -1;
+  const index =
+    getBlockDef(registryKey(block)).params?.findIndex((param) => param.name === name) ?? -1;
   const args = (block as unknown as Bag).args;
   const arg: unknown = index >= 0 && Array.isArray(args) ? args[index] : undefined;
   return isExpr(arg) ? { arg, index } : undefined;
@@ -53,7 +54,7 @@ export type ExprRole = "expr" | "target" | "exprs";
 
 /** Direct expression children with the slot each sits in, and its role; a target is one too. */
 export function childSlots(block: Block): Array<SlotExpr & { role: ExprRole }> {
-  const def = getBlockDef(keyOf(block));
+  const def = getBlockDef(registryKey(block));
   const bag = block as unknown as Bag;
   const out: Array<SlotExpr & { role: ExprRole }> = [];
   for (const slot of def.slots) {
@@ -92,8 +93,8 @@ function childExprs(block: Block): Expr[] {
 }
 
 /** Body regions of a statement, in slot order (empty for simple statements). */
-export function regionsOf(stmt: Stmt): Array<{ slot: string; stmts: Stmt[] }> {
-  const def = getBlockDef(keyOf(stmt));
+export function bodyRegions(stmt: Stmt): Array<{ slot: string; stmts: Stmt[] }> {
+  const def = getBlockDef(registryKey(stmt));
   const bag = stmt as unknown as Bag;
   const out: Array<{ slot: string; stmts: Stmt[] }> = [];
   for (const slot of def.slots) {
@@ -109,7 +110,7 @@ export function regionsOf(stmt: Stmt): Array<{ slot: string; stmts: Stmt[] }> {
 export function* allStmts(stmts: Stmt[]): Generator<Stmt, void, void> {
   for (const stmt of stmts) {
     yield stmt;
-    for (const region of regionsOf(stmt)) yield* allStmts(region.stmts);
+    for (const region of bodyRegions(stmt)) yield* allStmts(region.stmts);
   }
 }
 
@@ -164,8 +165,8 @@ export function* programExprs(program: Program): Generator<Expr, void, void> {
  * The condition a diamond asks: the slot its block's `branch` or `checked` names, and what it
  * holds.
  */
-export function conditionOf(block: Block): SlotExpr | undefined {
-  const chart = getBlockDef(keyOf(block)).chart;
+export function findCondition(block: Block): SlotExpr | undefined {
+  const chart = getBlockDef(registryKey(block)).chart;
   if (!chart || !("branch" in chart || "checked" in chart)) return undefined;
   const slot = "branch" in chart ? chart.branch.cond : chart.checked.cond;
   const value = (block as unknown as Bag)[slot];
@@ -180,7 +181,7 @@ export function diamondConditions(program: Program): Map<NodeId, NodeId> {
   if (!found) {
     found = new Map();
     for (const stmt of programStmts(program)) {
-      const condition = conditionOf(stmt);
+      const condition = findCondition(stmt);
       if (condition) found.set(condition.expr.id, stmt.id);
     }
     conditions.set(program, found);
@@ -195,7 +196,7 @@ export function diamondConditions(program: Program): Map<NodeId, NodeId> {
 export function bodyStmts(program: Program): Map<NodeId, NodeId[]> {
   const bodies = new Map<NodeId, NodeId[]>();
   for (const stmt of programStmts(program)) {
-    const regions = regionsOf(stmt);
+    const regions = bodyRegions(stmt);
     if (regions.length === 0) continue;
     const ids: NodeId[] = [];
     for (const region of regions) for (const inner of allStmts(region.stmts)) ids.push(inner.id);
@@ -242,7 +243,7 @@ function nodeIndex(program: Program): NodeIndex {
 }
 
 /** Where node `id` stands; throws for a node id the program doesn't hold. */
-function standingOf(program: Program, id: NodeId): Standing {
+function getStanding(program: Program, id: NodeId): Standing {
   const standing = nodeIndex(program).standings.get(id);
   if (!standing) throw new Error(`no node ${id}`);
   return standing;
@@ -257,16 +258,16 @@ export function blocksById(program: Program): Map<NodeId, Block> {
  * The owner of node `id`, the statement or function that stands for it on a chart (`chart.md`,
  * Shapes). Throws for a node id the program doesn't hold.
  */
-export function ownerOf(program: Program, id: NodeId): NodeId {
-  return standingOf(program, id).owner;
+export function getOwner(program: Program, id: NodeId): NodeId {
+  return getStanding(program, id).owner;
 }
 
 /**
  * The routine that holds node `id`: a function holds itself and every node of its body, and
  * `main` every node of its own. Throws for a node id the program doesn't hold.
  */
-export function routineOf(program: Program, id: NodeId): Routine {
-  return standingOf(program, id).routine;
+export function getHoldingRoutine(program: Program, id: NodeId): Routine {
+  return getStanding(program, id).routine;
 }
 
 /** Whether node `id` is a statement of the program, a block that owns itself. */

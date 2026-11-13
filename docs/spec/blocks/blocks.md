@@ -34,7 +34,7 @@ export type BlockDef = {
   notation(block: Stmt | Expr): string; // Notation
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined; // `language.md`, Data
   text?(block: Stmt | Expr, slot: string): string; // Notation
-  yields?(block: Expr, kindOf: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
+  yields?(block: Expr, findKind: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
   declares?: Kind; // a loop's: the kind of the variable its binding target names (`language.md`, Kinds)
   locate?(block: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>; // a target's place (`interpreter.md`, Block definitions)
   entries?: ValueEntry[]; // the entries of the value list (Value list entries)
@@ -142,10 +142,10 @@ it would have to strip a mark such as `n?`.
 `src/blocks/registry.ts` registers every block definition, and it is the
 only registry. Every other module reaches a block definition through it.
 
-No module other than a block definition's file and the registry's `keyOf`
-branches on a block's `type`, a builtin name, or a method name. Traversal,
-validation, the block menu, the value list, and the chart read a block
-definition's `slots`, `entries`, and flags instead.
+No module other than a block definition's file and the registry's
+`registryKey` branches on a block's `type`, a builtin name, or a method
+name. Traversal, validation, the block menu, the value list, and the chart
+read a block definition's `slots`, `entries`, and flags instead.
 
 ## Catalog keys
 

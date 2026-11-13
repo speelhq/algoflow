@@ -23,7 +23,7 @@ export type BuiltinDef = {
   /** The module Python calls it through (`random.randint`), which the emitted file imports. */
   module?: "random";
   /** The call's kind, given its arguments. */
-  yields?: (args: Expr[], kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
+  yields?: (args: Expr[], findKind: (expr: Expr) => Kind | undefined) => Kind | undefined;
   entries?: readonly ValueEntry[];
   evaluate(args: Value[], block: Extract<Expr, { type: "call" }>, ctx: RunContext): Value;
 };
@@ -44,7 +44,7 @@ export function defineBuiltin(def: BuiltinDef): BlockDef {
     ...(def.entries
       ? { entries: def.entries.map((entry) => ({ ...entry, typed: def.name })) }
       : {}),
-    ...(def.yields ? { yields: (block, kindOf) => def.yields?.(block.args, kindOf) } : {}),
+    ...(def.yields ? { yields: (block, findKind) => def.yields?.(block.args, findKind) } : {}),
     create: () => ({
       id: newId(),
       type: "call",

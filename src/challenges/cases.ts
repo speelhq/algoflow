@@ -8,13 +8,13 @@ import type { Test } from "./types";
 const NONE: Readonly<Record<Name, Data>> = Object.freeze({});
 
 /** The test at `caseIndex` of the program's challenge; undefined for a program with none. */
-export function caseOf(program: Program, caseIndex: number): Test | undefined {
+export function findCase(program: Program, caseIndex: number): Test | undefined {
   return findChallenge(program.challengeId)?.tests[caseIndex];
 }
 
 /** The values of the program's inputs in the chosen case. */
 export function caseInputs(program: Program, caseIndex: number): Readonly<Record<Name, Data>> {
-  const test = caseOf(program, caseIndex);
+  const test = findCase(program, caseIndex);
   if (test) return test.inputs;
   if (program.inputs.length > 0) {
     throw new Error(`no case ${caseIndex} gives the inputs of "${program.title}"`);

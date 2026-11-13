@@ -5,7 +5,14 @@
 import type { Stmt } from "@/lang/types";
 import { choose, wordAt, type TextLine } from "./caret";
 import type { LineContext, Row } from "./choices";
-import { fieldDraft, fieldText, textValue, valueOf, type Field, type FieldValue } from "./fields";
+import {
+  fieldDraft,
+  fieldText,
+  textValue,
+  findFieldValue,
+  type Field,
+  type FieldValue,
+} from "./fields";
 
 export type Session = {
   focus: Field | null;
@@ -66,7 +73,7 @@ function sessionOn(
   field: Field | null,
   line: (value: FieldValue) => TextLine,
 ): Session {
-  const value = field ? valueOf(stmt, field) : undefined;
+  const value = field ? findFieldValue(stmt, field) : undefined;
   if (!field || !value) return NO_FIELD;
   return { ...NO_FIELD, focus: field, line: line(value), fieldValue: value };
 }
@@ -104,7 +111,7 @@ export function enterField(stmt: Stmt, field: Field | null, how: Entry): Session
 export function followStatement(session: Session, stmt: Stmt): Session {
   const { focus, fieldValue } = session;
   if (!focus) return session;
-  const value = valueOf(stmt, focus) ?? null;
+  const value = findFieldValue(stmt, focus) ?? null;
   if (sameValue(value, fieldValue)) return session;
   // A field the statement no longer has (an optional value taken out, by an undo) leaves the
   // keyboard.

@@ -7,13 +7,13 @@ import type { Event } from "@/runtime/types";
 import { defineExpr } from "./types";
 
 /** A draft that holds `text`, as a value line makes one for text that writes no value. */
-export function draftOf(text: string): Extract<Expr, { type: "draft" }> {
+export function createDraft(text: string): Extract<Expr, { type: "draft" }> {
   return { id: newId(), type: "draft", text };
 }
 
 /** A new empty slot's value, a draft with no text, as every block's `create()` and the editor make one. */
 export function emptyDraft(): Extract<Expr, { type: "draft" }> {
-  return draftOf("");
+  return createDraft("");
 }
 
 export const draft = defineExpr<"draft">({

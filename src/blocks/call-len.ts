@@ -3,7 +3,7 @@ import type { HeapEntry } from "@/lang/types";
 import { getHeapEntry } from "@/runtime/values";
 import { defineBuiltin } from "./builtin";
 
-const countOf = (entry: HeapEntry): number =>
+const itemCount = (entry: HeapEntry): number =>
   entry.type === "list" ? entry.items.length : entry.entries.size;
 
 export const len = defineBuiltin({
@@ -19,7 +19,7 @@ export const len = defineBuiltin({
         return { t: "int", v: [...a.v].length };
       case "list":
       case "dict":
-        return { t: "int", v: countOf(getHeapEntry(ctx.heap, a.ref)) };
+        return { t: "int", v: itemCount(getHeapEntry(ctx.heap, a.ref)) };
       default:
         return ctx.valueError(block, a);
     }

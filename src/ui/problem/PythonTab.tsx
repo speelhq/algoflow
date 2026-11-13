@@ -14,7 +14,7 @@ import { useRun } from "@/store/run";
 import { download } from "@/ui/app/download";
 import { Button } from "@/ui/primitives/button";
 import { highlight, type Token } from "@/ui/python/highlight";
-import { lineOwners, linesOf } from "@/ui/python/lines";
+import { lineOwners, nodeLines } from "@/ui/python/lines";
 
 const COLOR: Record<Token["kind"], string> = {
   keyword: "text-code-keyword",
@@ -47,8 +47,8 @@ export function PythonTab() {
   );
   const lines = useMemo(() => code.replace(/\n$/, "").split("\n").map(highlight), [code]);
   const owners = useMemo(() => lineOwners(map), [map]);
-  const selected = useMemo(() => linesOf(map, selectedId), [map, selectedId]);
-  const active = useMemo(() => linesOf(map, runMode ? activeId : null), [map, runMode, activeId]);
+  const selected = useMemo(() => nodeLines(map, selectedId), [map, selectedId]);
+  const active = useMemo(() => nodeLines(map, runMode ? activeId : null), [map, runMode, activeId]);
 
   // One delegated listener pair on the list, so the lines stay plain markup.
   const list = useRef<HTMLOListElement>(null);

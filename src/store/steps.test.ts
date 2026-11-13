@@ -6,13 +6,13 @@ import { ast, program, runAll, tid, withInputs } from "@/blocks/testing";
 import type { Data, Program, Stmt } from "@/lang/types";
 import { run } from "@/runtime/run";
 import type { Done } from "@/runtime/types";
-import { stepsOf, type Step } from "./steps";
+import { createSteps, type Step } from "./steps";
 
 const { assign, call, item, num, ret, swap, v } = ast;
 
 /** Every step of the run, each read as a step to be shown. */
 function stepsThrough(p: Program, inputs: Record<string, Data> = {}): Array<Step | Done> {
-  const steps = stepsOf(run(p, inputs, 1));
+  const steps = createSteps(run(p, inputs, 1));
   const all: Array<Step | Done> = [];
   for (;;) {
     const next = steps.next(true);
@@ -76,7 +76,7 @@ describe("steps (interpreter.md, Steps and batches)", () => {
 
   it("a step not to be shown copies no state, though it reads past the write", () => {
     const made = withInputs({ i: 0, nums: [1, 9] }, [swap(v("i"), item(v("nums"), v("i")))]);
-    const steps = stepsOf(run(made.program, made.inputs, 1));
+    const steps = createSteps(run(made.program, made.inputs, 1));
     const shown: Array<Step | Done> = [];
     for (let next = steps.next(false); ; next = steps.next(false)) {
       shown.push(next);

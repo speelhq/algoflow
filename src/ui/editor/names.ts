@@ -8,14 +8,14 @@ import { isValidName } from "@/lang/validate";
 import { allStmts, getRoutine, routineStmts } from "@/lang/walk";
 
 /** The words of a name: split at spaces, `_`, and `-`. */
-function wordsOf(name: string): string[] {
+function nameWords(name: string): string[] {
   return name.toLowerCase().split(/[\s_-]+/);
 }
 
 /** Whether a typed word matches a name: the name, or one of its words, starts with it. */
 export function matchesName(name: string, word: string): boolean {
   const w = word.toLowerCase();
-  return wordsOf(name).some((part) => part.startsWith(w)) || name.toLowerCase().startsWith(w);
+  return nameWords(name).some((part) => part.startsWith(w)) || name.toLowerCase().startsWith(w);
 }
 
 /** The names a routine's list offers: the problem's expected ones first, then the routine's others. */

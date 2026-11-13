@@ -1,6 +1,6 @@
 // The Problem page, its panel, and the Problem and Python tabs.
 import { expect, test } from "./fixtures";
-import { seedProgram, seedProgress, solutionOf } from "./seed";
+import { seedProgram, seedProgress, readSolution } from "./seed";
 
 test.describe("Problem page", () => {
   test.beforeEach(async ({ page }) => {
@@ -77,7 +77,7 @@ test.describe("Python tab", () => {
     page,
   }) => {
     await seedProgress(page, {});
-    await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+    await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
     await page.goto("/#/p/fizzbuzz");
     await page.getByTestId("tab-python").click();
     const lines = page.getByTestId("python-line");
@@ -92,7 +92,7 @@ test.describe("Python tab", () => {
   test("Copy and Download .py give the shown file", async ({ page, context }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
     await seedProgress(page, {});
-    await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+    await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
     await page.goto("/#/p/fizzbuzz");
     await page.getByTestId("tab-python").click();
     await page.getByRole("button", { name: "Copy", exact: true }).click();

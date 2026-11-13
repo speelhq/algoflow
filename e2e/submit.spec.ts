@@ -3,8 +3,8 @@
 // problem. Also Wrong Answer, an error, and `▶ Watch this case`.
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { planOf } from "../src/challenges/plans";
-import { programWith, seedProgram, seedProgress, solutionOf } from "./seed";
+import { getChallengePlan } from "../src/challenges/plans";
+import { programWith, seedProgram, seedProgress, readSolution } from "./seed";
 
 /** Drags the position bar's thumb past its right end. */
 async function dragToEnd(page: Page): Promise<void> {
@@ -23,7 +23,7 @@ async function dragToEnd(page: Page): Promise<void> {
 
 /** FizzBuzz's solution with the loop starting at 0: the first line printed is `FizzBuzz`. */
 function fromZero(): Record<string, unknown> {
-  const program = solutionOf("fizzbuzz");
+  const program = readSolution("fizzbuzz");
   const main = program.main as Array<Record<string, unknown>>;
   const loop = main[0] ?? {};
   loop.start = { id: "fzb-one0-001", type: "num", value: 0, float: false, raw: "0" };
@@ -31,7 +31,7 @@ function fromZero(): Record<string, unknown> {
 }
 
 test("FizzBuzz from the list to Accepted, Python, and the next problem", async ({ page }) => {
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/");
   await page.getByTestId("problem-row-fizzbuzz").click();
   await expect(page).toHaveTitle("FizzBuzz — AlgoFlow");
@@ -150,12 +150,12 @@ test("a submission is recorded as attempted, and solved only when accepted", asy
 });
 
 test("after a plan's last problem, Accepted says Plan complete", async ({ page }) => {
-  const { problems } = planOf("tutorial");
+  const { problems } = getChallengePlan("tutorial");
   const last = problems.at(-1);
   if (last === undefined) throw new Error("the plan is empty");
   const solved = { status: "solved", hints: 0, solution: false };
   await seedProgress(page, Object.fromEntries(problems.slice(0, -1).map((id) => [id, solved])));
-  await seedProgram(page, last, solutionOf(last));
+  await seedProgram(page, last, readSolution(last));
   await page.goto(`/#/p/${last}`);
   await page.getByTestId("tab-result").click();
   await page.getByRole("button", { name: "✓ Submit" }).click();

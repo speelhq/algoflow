@@ -3,10 +3,10 @@
 import { create } from "zustand";
 import { findChallenge } from "@/challenges";
 import { judge, type TestResult } from "@/challenges/judge";
-import { seedOf, type Test } from "@/challenges/types";
+import { testSeed, type Test } from "@/challenges/types";
 import type { Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
-import { isDone, outcomeOf, type Outcome } from "@/runtime/outcome";
+import { isDone, collectOutcome, type Outcome } from "@/runtime/outcome";
 import { run } from "@/runtime/run";
 import type { Done } from "@/runtime/types";
 import { inBatches } from "./batches";
@@ -32,7 +32,7 @@ let generation = 0;
 
 /** One test on its own runner, in batches; undefined once a later action took over. */
 async function evaluate(program: Program, test: Test, mine: number): Promise<Outcome | undefined> {
-  const runner = run(program, test.inputs, seedOf(test));
+  const runner = run(program, test.inputs, testSeed(test));
   let done: Done | undefined;
   const step = (): boolean => {
     const next = runner.next();
@@ -45,7 +45,7 @@ async function evaluate(program: Program, test: Test, mine: number): Promise<Out
     () => {},
     () => mine !== generation,
   );
-  return finished && done ? outcomeOf(runner, done) : undefined;
+  return finished && done ? collectOutcome(runner, done) : undefined;
 }
 
 function current(): { id: string; program: Program; tests: Test[] } | null {

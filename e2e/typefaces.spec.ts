@@ -1,7 +1,7 @@
 // The typefaces: code in JetBrains Mono with no ligature, words in Geist (`pages.md`, Typefaces).
 import type { Locator } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { seedProgram, seedProgress, solutionOf } from "./seed";
+import { seedProgram, seedProgress, readSolution } from "./seed";
 
 const style = (locator: Locator) =>
   locator.evaluate((el) => {
@@ -11,7 +11,7 @@ const style = (locator: Locator) =>
 
 test("code is drawn in JetBrains Mono with no ligature, and words in Geist", async ({ page }) => {
   await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   const chart = page.getByTestId("chart");
 

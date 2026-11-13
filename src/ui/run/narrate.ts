@@ -5,7 +5,13 @@ import type { WatchStep } from "@/challenges/rows";
 import { keyValue, toData } from "@/lang/data";
 import { errorKey, errorParams, t, type MessageKey, type Params } from "@/i18n/t";
 import type { Data, Expr, Heap, Program } from "@/lang/types";
-import { conditionOf, diamondConditions, isExpr, blocksById, variableOf } from "@/lang/walk";
+import {
+  findCondition,
+  diamondConditions,
+  isExpr,
+  blocksById,
+  findVariableName,
+} from "@/lang/walk";
 import { isParseError, parseData } from "@/python/parse";
 import { valueAt } from "@/runtime/refs";
 import type { Done, Frame, Ref, State } from "@/runtime/types";
@@ -25,7 +31,7 @@ export type NarrateContext = {
 };
 
 /** The name a heap entry goes by: the first variable of the frame that holds it. */
-function nameOf(ref: number, frame: Frame | undefined, heap: Heap): string {
+function heapName(ref: number, frame: Frame | undefined, heap: Heap): string {
   for (const [name, value] of frame?.vars ?? []) {
     if ("ref" in value && value.ref === ref) return name;
   }
@@ -45,7 +51,7 @@ function literal(data: Data): Expr {
  */
 function refText(ref: Ref, frame: Frame | undefined, heap: Heap, program: Program): string {
   if ("var" in ref) return ref.var;
-  const holder: Expr = { id: "", type: "var", name: nameOf(ref.heap, frame, heap) };
+  const holder: Expr = { id: "", type: "var", name: heapName(ref.heap, frame, heap) };
   const target: Expr =
     "index" in ref
       ? { id: "", type: "index", list: holder, index: literal(ref.index) }
@@ -68,7 +74,7 @@ function comparedText(expr: Expr, frame: Frame | undefined, heap: Heap, program:
 
 /** A diamond's question: its condition as compared, except that one variable keeps its name. */
 function questionText(expr: Expr, frame: Frame | undefined, heap: Heap, program: Program): string {
-  return variableOf(expr) === undefined
+  return findVariableName(expr) === undefined
     ? comparedText(expr, frame, heap, program)
     : exprText(expr, program);
 }
@@ -80,7 +86,7 @@ export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
   switch (event.type) {
     case "enter": {
       if (!block) return { key: "run.narrate.enter", params: { notation: "" } };
-      const condition = conditionOf(block);
+      const condition = findCondition(block);
       return condition
         ? { key: "run.narrate.check", params: { condition: exprText(condition.expr, ctx.program) } }
         : {
@@ -94,7 +100,7 @@ export function narrate(event: StepEvent, ctx: NarrateContext): Narration {
         const heapRef = first && "heap" in first ? first.heap : -1;
         return {
           key: "run.narrate.readMany",
-          params: { count: event.refs.length, name: nameOf(heapRef, frame, heap) },
+          params: { count: event.refs.length, name: heapName(heapRef, frame, heap) },
         };
       }
       const value = valueAt(first, frame?.vars ?? new Map(), heap);

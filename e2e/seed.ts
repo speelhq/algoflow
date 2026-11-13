@@ -10,7 +10,7 @@ export async function seedProgress(page: Page, entries: Record<string, unknown>)
 }
 
 /** A challenge's solution, as `challenges/<id>.json` holds it. */
-export function solutionOf(id: string): Record<string, unknown> {
+export function readSolution(id: string): Record<string, unknown> {
   const file: unknown = JSON.parse(readFileSync(`challenges/${id}.json`, "utf8"));
   const solution = (file as { solution: Record<string, unknown> }).solution;
   return solution;

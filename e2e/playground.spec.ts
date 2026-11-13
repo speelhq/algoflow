@@ -1,6 +1,6 @@
 // Playground programs, their page, running one, persistence, Export and Import, and Open in Playground.
 import { expect, test } from "./fixtures";
-import { programWith, seedPlayground, seedProgram, seedProgress, solutionOf } from "./seed";
+import { programWith, seedPlayground, seedProgram, seedProgress, readSolution } from "./seed";
 
 test.beforeEach(async ({ page }) => {
   await seedProgress(page, {});
@@ -96,7 +96,7 @@ test("a Playground route the Playground does not list shows Problems", async ({ 
 test("Open in Playground carries the inputs as assignments, and its ⋯ holds Help alone", async ({
   page,
 }) => {
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "More" }).click();
   await page.getByRole("menuitem", { name: "Open in Playground" }).click();

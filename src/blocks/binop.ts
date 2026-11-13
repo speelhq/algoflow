@@ -150,10 +150,10 @@ export const binop = defineExpr<"binop">({
     return `${ctx.operand(block.left, precedence, "left")} ${block.op} ${ctx.operand(block.right, precedence, "right")}`;
   },
   notation: () => "{left} {op} {right}",
-  yields: (block, kindOf) => {
+  yields: (block, findKind) => {
     if (isComparison(block.op)) return "truefalse";
-    const left = kindOf(block.left);
-    const right = kindOf(block.right);
+    const left = findKind(block.left);
+    const right = findKind(block.right);
     const same = left !== undefined && left === right ? left : undefined;
     if (block.op === "and" || block.op === "or") return same;
     if (block.op === "+") return same === "truefalse" ? undefined : same;

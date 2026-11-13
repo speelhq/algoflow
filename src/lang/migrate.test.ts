@@ -246,15 +246,15 @@ describe("migrate", () => {
   });
 
   it("refuses a field its block would not make, at its path", () => {
-    const valueOf = (expr: unknown) => json(program([assign("x", expr as never)]));
+    const assignmentJson = (expr: unknown) => json(program([assign("x", expr as never)]));
     const at = (fields: Record<string, unknown>, of: unknown) => {
-      const p = valueOf(of) as { main: Array<{ value: Record<string, unknown> }> };
+      const p = assignmentJson(of) as { main: Array<{ value: Record<string, unknown> }> };
       Object.assign(p.main[0]!.value, fields);
       return () => migrate(p);
     };
-    expect(() => migrate(valueOf(num(7)))).not.toThrow();
-    expect(() => migrate(valueOf(float(2, "2.0")))).not.toThrow();
-    expect(() => migrate(valueOf(num(2 ** 53 - 1)))).not.toThrow();
+    expect(() => migrate(assignmentJson(num(7)))).not.toThrow();
+    expect(() => migrate(assignmentJson(float(2, "2.0")))).not.toThrow();
+    expect(() => migrate(assignmentJson(num(2 ** 53 - 1)))).not.toThrow();
     expect(at({ raw: "007", value: 7 }, num(7))).toThrow(
       /^main\[0\]\.value\.raw: expected a number literal/,
     );

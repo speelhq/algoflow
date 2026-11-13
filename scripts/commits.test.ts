@@ -1,6 +1,6 @@
 // The commit-message check (CLAUDE.md, Issues and commits).
 import { describe, expect, it } from "vitest";
-import { commitProblems, scopesOf } from "./lib/commits";
+import { commitProblems, commitScopes } from "./lib/commits";
 
 const scopes = new Set(["lang", "ui", "scripts", "docs", "ci"]);
 const check = (message: string) => commitProblems(message, scopes);
@@ -46,9 +46,9 @@ describe("commitProblems", () => {
   });
 });
 
-describe("scopesOf", () => {
+describe("commitScopes", () => {
   it("names each folder of src/, and scripts, docs, and ci", () => {
-    const found = scopesOf(".");
+    const found = commitScopes(".");
     for (const scope of ["lang", "blocks", "runtime", "python", "store", "ui", "scripts", "ci"])
       expect(found.has(scope), scope).toBe(true);
     expect(found.has("main.tsx")).toBe(false);

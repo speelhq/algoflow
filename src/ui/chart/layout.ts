@@ -8,8 +8,8 @@
 // Reads `def.chart`, `def.requires`, and the regions of a statement, never a type.
 import { inputValue } from "@/lang/data";
 import type { Data, Name, NodeId, Place, Program, RegionParent, Routine, Stmt } from "@/lang/types";
-import { findRoutine, regionsOf, routineStmts } from "@/lang/walk";
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { findRoutine, bodyRegions, routineStmts } from "@/lang/walk";
+import { getBlockDef, registryKey } from "@/blocks/registry";
 import {
   CHART_TEXT,
   generatedSpans,
@@ -203,7 +203,7 @@ function shift(frag: Frag, dx: number, dy: number): Frag {
  * The middle of the first or last vertical segment; of the first segment when there is none,
  * and for `start` (a flow leaving sideways, whose vertical segment is far from its chart node).
  */
-function anchorOf(points: Point[], which: "first" | "last" | "start"): Point {
+function anchorPoint(points: Point[], which: "first" | "last" | "start"): Point {
   const vertical: Array<[Point, Point]> = [];
   for (let i = 1; i < points.length; i += 1) {
     const a = points[i - 1];
@@ -233,7 +233,7 @@ function edge(
     to,
     points,
     place: stub.place,
-    anchor: anchorOf(points, opts.anchor ?? "last"),
+    anchor: anchorPoint(points, opts.anchor ?? "last"),
   };
   if (stub.label) made.label = stub.label;
   return made;
@@ -430,13 +430,13 @@ class Builder {
     return frag;
   }
 
-  private regionOf(stmt: Stmt, slot: string): Frag {
-    const stmts = regionsOf(stmt).find((region) => region.slot === slot)?.stmts ?? [];
+  private slotRegion(stmt: Stmt, slot: string): Frag {
+    const stmts = bodyRegions(stmt).find((region) => region.slot === slot)?.stmts ?? [];
     return this.region(stmts, stmt.id, slot as RegionSlot);
   }
 
   statement(stmt: Stmt): Frag {
-    const def = getBlockDef(keyOf(stmt));
+    const def = getBlockDef(registryKey(stmt));
     const chart = def.chart;
     if (!chart) return this.box(stmt, def.requires === "function" ? "end" : null);
     if ("jump" in chart) return this.box(stmt, this.depth > 0 ? chart.jump : null);
@@ -473,8 +473,8 @@ class Builder {
   /** `branch`: Yes to the right, No below on the axis, both merging below. */
   private branch(stmt: Stmt, slots: { yes: string; no: string }): Frag {
     const d = this.diamond(stmt, 0);
-    const no = this.regionOf(stmt, slots.no);
-    const yes = this.regionOf(stmt, slots.yes);
+    const no = this.slotRegion(stmt, slots.no);
+    const yes = this.slotRegion(stmt, slots.yes);
     const frag: Frag = {
       left: Math.max(d.w / 2, no.left),
       right: 0,
@@ -615,7 +615,7 @@ class Builder {
    */
   private placeLoopBody(stmt: Stmt, slot: RegionSlot, frag: Frag, check: ChartNode): LoopBody {
     this.depth += 1;
-    const region = this.regionOf(stmt, slot);
+    const region = this.slotRegion(stmt, slot);
     this.depth -= 1;
     const y = check.y + check.h + GAP_Y;
     const yes: Stub = {

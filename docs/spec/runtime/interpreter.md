@@ -211,7 +211,7 @@ The params hold:
 - `left` and `right`, of `E_TYPE`: the type names of the two operands,
   `int`, `float`, `str`, `bool`, `none`, `list`, `dict`, or the class name
 - `op`, of `E_VALUE` and `E_NUMBER_TEXT`: the registry key of the failing
-  expression (`keyOf`)
+  expression (`registryKey`)
 - `type`, of `E_VALUE`: the type name of the value
 
 A `bool` isn't a number for arithmetic, ordering, a list index, or `sum`,

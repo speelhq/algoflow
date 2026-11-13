@@ -3,12 +3,12 @@ import { newId } from "@/lang/id";
 import { CLASS_NAME_PATTERN, type BinOp, type Data, type Expr, type NodeId } from "@/lang/types";
 import { allExprs, childSlots, isEmptyDraft } from "@/lang/walk";
 import {
-  builtinOf,
+  findBuiltinName,
   methodKey,
   BLOCK_DEFS,
   getBlockDef,
   hasBlockDef,
-  keyOf,
+  registryKey,
 } from "@/blocks/registry";
 import { dataToPython } from "./emit";
 import { NUMBER, numberLiteral } from "./number";
@@ -160,7 +160,7 @@ const endAt = (pos: number): Token => ({ type: "end", text: "", value: "", pos }
 function aliasTable(): Map<string, string> {
   const table = new Map<string, string>();
   for (const def of BLOCK_DEFS.values()) {
-    const name = builtinOf(def.key);
+    const name = findBuiltinName(def.key);
     if (name === undefined) continue;
     for (const alias of def.aliases ?? []) table.set(alias, name);
   }
@@ -200,7 +200,7 @@ class Parser {
     return expr;
   }
 
-  private startOf(expr: Expr): number {
+  private spanStart(expr: Expr): number {
     return (this.parenthesized.get(expr.id) ?? this.spans.get(expr.id))?.start ?? 0;
   }
 
@@ -229,7 +229,7 @@ class Parser {
 
   /** Every block must have a registered block definition; the registry is the arbiter of the language. */
   private block(pos: number, expr: Expr): Expr {
-    if (!hasBlockDef(keyOf(expr))) fail("E_PARSE_SYNTAX", pos);
+    if (!hasBlockDef(registryKey(expr))) fail("E_PARSE_SYNTAX", pos);
     return expr;
   }
 
@@ -257,7 +257,7 @@ class Parser {
       const right = next();
       left = this.block(
         pos,
-        this.mark(this.startOf(left), { id: newId(), type: "binop", op, left, right }),
+        this.mark(this.spanStart(left), { id: newId(), type: "binop", op, left, right }),
       );
     }
     return left;
@@ -289,7 +289,7 @@ class Parser {
     if (this.binopAt(PRECEDENCE.compare) !== undefined) fail("E_PARSE_CHAIN", this.peek().pos);
     return this.block(
       pos,
-      this.mark(this.startOf(left), { id: newId(), type: "binop", op, left, right }),
+      this.mark(this.spanStart(left), { id: newId(), type: "binop", op, left, right }),
     );
   }
 
@@ -318,7 +318,7 @@ class Parser {
       const right = this.factor();
       return this.block(
         pos,
-        this.mark(this.startOf(base), { id: newId(), type: "binop", op, left: base, right }),
+        this.mark(this.spanStart(base), { id: newId(), type: "binop", op, left: base, right }),
       );
     }
     return base;
@@ -525,7 +525,7 @@ function stillOpen(tokens: readonly Token[]): Token[] {
 }
 
 /** The closers of the parentheses and brackets that `tokens` leaves open, innermost first. */
-function closersOf(tokens: readonly Token[], pos: number): Token[] {
+function closingTokens(tokens: readonly Token[], pos: number): Token[] {
   return stillOpen(tokens)
     .toReversed()
     .map((opener): Token => {
@@ -543,7 +543,7 @@ export function endsInText(text: string): boolean {
 export function parseClosed(text: string): Expr | ParseError {
   const { tokens, unclosed } = scan(text);
   if (unclosed !== undefined) return { code: "E_PARSE_SYNTAX", position: unclosed };
-  const closers = closersOf(tokens, text.length);
+  const closers = closingTokens(tokens, text.length);
   return attempt(() => new Parser([...tokens, ...closers, endAt(text.length)]).parseAll());
 }
 
@@ -564,7 +564,7 @@ function parseLargestSuffix(
     if (suffix.length === 0 && !expected) return undefined;
     const hole: Token[] = expected ? [{ type: "hole", text: "", value: "", pos: caret }] : [];
     // A closer the text lacks stands just past the caret, so no expression it ends ends there.
-    const closers = closersOf(suffix, caret);
+    const closers = closingTokens(suffix, caret);
     const parser = new Parser([...suffix, ...hole, ...closers, endAt(caret + 1)]);
     const root = attempt(() => parser.parseAll());
     if (!isParseError(root)) return { exprs: [...allExprs(root)], parser };
@@ -596,7 +596,7 @@ function exprsEndingAt(parsed: ParsedSuffix, end: number): EndingExpr[] {
       if (outer?.end === end) return { ...outer, expr, isAtom: true };
       const span = parser.spans.get(expr.id);
       if (span?.end !== end) return undefined;
-      const isAtom = getBlockDef(keyOf(expr)).precedence?.(expr) === undefined;
+      const isAtom = getBlockDef(registryKey(expr)).precedence?.(expr) === undefined;
       return { ...span, expr, isAtom };
     })
     .filter((ending) => ending !== undefined)

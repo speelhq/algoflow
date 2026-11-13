@@ -1,6 +1,6 @@
 // Pure edit functions. Each returns a new Program and keeps
 // every NodeId unique. Statements are addressed by id or by Place.
-import { getBlockDef, keyOf, findSlot } from "@/blocks/registry";
+import { getBlockDef, registryKey, findSlot } from "@/blocks/registry";
 import { newId } from "./id";
 import { declaredBy } from "./scope";
 import type { Expr, FunctionDef, Name, NodeId, Place, Program, Stmt } from "./types";
@@ -14,7 +14,7 @@ import {
   findRoutine,
   programStmts,
   routineStmts,
-  regionsOf,
+  bodyRegions,
 } from "./walk";
 
 type Bag = Record<string, unknown>;
@@ -31,7 +31,7 @@ function clone<T>(value: T): T {
 function reIdStmt(stmt: Stmt): void {
   stmt.id = newId();
   for (const { expr } of childSlots(stmt)) reIdExpr(expr);
-  for (const region of regionsOf(stmt)) for (const child of region.stmts) reIdStmt(child);
+  for (const region of bodyRegions(stmt)) for (const child of region.stmts) reIdStmt(child);
 }
 
 function reIdExpr(expr: Expr): void {
@@ -84,7 +84,7 @@ function* regions(program: Program): Generator<Stmt[], void, void> {
   yield program.main;
   for (const fn of program.functions) yield fn.body;
   for (const stmt of programStmts(program))
-    for (const region of regionsOf(stmt)) yield region.stmts;
+    for (const region of bodyRegions(stmt)) yield region.stmts;
 }
 
 export function findStmt(program: Program, id: NodeId): StmtAt | undefined {
@@ -101,7 +101,7 @@ export function findRegion(program: Program, place: Place): Stmt[] | undefined {
   const routine = findRoutine(program, place.parent);
   if (routine) return routineStmts(program, routine);
   const found = findStmt(program, place.parent);
-  return found && regionsOf(found.stmt).find((r) => r.slot === place.slot)?.stmts;
+  return found && bodyRegions(found.stmt).find((r) => r.slot === place.slot)?.stmts;
 }
 
 function getRegion(program: Program, place: Place): Stmt[] {
@@ -223,7 +223,7 @@ export function renameName(program: Program, from: Name, to: Name): Program {
   }
   const renameIdSlots = (block: Stmt | Expr) => {
     const bag = block as unknown as Bag;
-    for (const slot of getBlockDef(keyOf(block)).slots) {
+    for (const slot of getBlockDef(registryKey(block)).slots) {
       if (slot.role === "name" && typeof bag[slot.name] === "string") {
         bag[slot.name] = swap(bag[slot.name] as string);
       }
@@ -272,7 +272,7 @@ function defaultFor(stmts: Stmt[], name: Name): Expr {
     const value = declaredBy(stmt).find(
       (declared) => declared.name === name && declared.stores !== undefined,
     )?.stores;
-    if (value) return getBlockDef(keyOf(value)).zeroLike?.(value) ?? none();
+    if (value) return getBlockDef(registryKey(value)).zeroLike?.(value) ?? none();
   }
   return none();
 }
@@ -281,7 +281,7 @@ function defaultFor(stmts: Stmt[], name: Name): Expr {
 export function hoistAssign(program: Program, compound: NodeId, name: Name): Program {
   const next = clone(program);
   const { stmt, region, index } = getStmt(next, compound);
-  const inner = regionsOf(stmt).flatMap((r) => r.stmts);
+  const inner = bodyRegions(stmt).flatMap((r) => r.stmts);
   const assign: Stmt = {
     id: newId(),
     type: "assign",

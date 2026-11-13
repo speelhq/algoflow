@@ -12,9 +12,9 @@ import { duplicateStmt, removeStmt, setExpr } from "@/lang/edit";
 import { variableKinds } from "@/lang/kinds";
 import { visibleAt } from "@/lang/scope";
 import type { NodeId, Program, Stmt } from "@/lang/types";
-import { blocksById, routineOf } from "@/lang/walk";
+import { blocksById, getHoldingRoutine } from "@/lang/walk";
 import { cn } from "@/lib/utils";
-import { emptyDraft, getBlockDef, keyOf } from "@/blocks/registry";
+import { emptyDraft, getBlockDef, registryKey } from "@/blocks/registry";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
 import { placeholderValue, slotSpans } from "@/ui/chart/text";
@@ -31,11 +31,11 @@ import {
   fieldHint,
   fieldLabel,
   fieldText,
-  fieldsOf,
+  stmtFields,
   sameField,
   startField,
   targetSlot,
-  valueOf,
+  findFieldValue,
   type Field,
   type FieldValue,
 } from "./fields";
@@ -83,13 +83,13 @@ function Body(props: {
   editor: HTMLElement | null;
 }) {
   const { stmt, program, initial, editor } = props;
-  const def = getBlockDef(keyOf(stmt));
+  const def = getBlockDef(registryKey(stmt));
   const ledDiagnostic = useEditor((s) => s.ledDiagnostic);
   const typing = useEditor((s) => s.typing);
   const setTyping = useEditor((s) => s.setTyping);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
-  const fields = fieldsOf(stmt);
+  const fields = stmtFields(stmt);
   const elements = useRef(new Map<string, HTMLElement | null>());
   const [kept, setSession] = useState(() => {
     // A block the block menu has just inserted opens on its first field (`editor.md`, Block
@@ -141,7 +141,7 @@ function Body(props: {
     if (editor && focus === null && !editor.contains(document.activeElement)) editor.focus();
   }, [editor, focus]);
 
-  const routine = routineOf(program, stmt.id);
+  const routine = getHoldingRoutine(program, stmt.id);
   const kinds = variableKinds(program, routine);
   // The names the problem expects, which a binding target's list offers first (`editor.md`, Name
   // list).
@@ -209,7 +209,7 @@ function Body(props: {
   const addValue = (slot: string) => {
     if (!apply((p) => setExpr(p, stmt.id, slot, emptyDraft()))) return;
     const now = current() ?? stmt;
-    enter(fieldsOf(now).find((field) => field.slot === slot) ?? null, "tab");
+    enter(stmtFields(now).find((field) => field.slot === slot) ?? null, "tab");
   };
 
   // ------------------------------------------------------------ the value line
@@ -271,9 +271,9 @@ function Body(props: {
 
   const widget = (name: string): ReactNode => {
     const field = fields.find((each) => each.slot === name);
-    const value = field && valueOf(stmt, field);
+    const value = field && findFieldValue(stmt, field);
     if (field && value) return lineWidget(field, value);
-    // An optional slot that holds no value is no field (`fieldsOf`).
+    // An optional slot that holds no value is no field (`stmtFields`).
     return placeholderValue(stmt, name)?.role === "expr" ? (
       <AddValue key={name} onAdd={() => addValue(name)} />
     ) : null;

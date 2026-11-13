@@ -1,6 +1,6 @@
 // A plan's button on the Problems page, and where `Next problem →` leads. Status comes in as
 // a function so this module stays below the stores.
-import { planOf } from "./plans";
+import { getChallengePlan } from "./plans";
 
 /** A problem's status by its id: attempted, solved, or not yet opened. */
 export type FindStatus = (id: string) => "attempted" | "solved" | undefined;
@@ -23,7 +23,7 @@ export type NextProblem = { kind: "next"; id: string } | { kind: "complete" };
  * is solved, the next problem; after the last one, `Plan complete`.
  */
 export function nextProblem(id: string, findStatus: FindStatus): NextProblem {
-  const problems = planOf(id).problems;
+  const problems = getChallengePlan(id).problems;
   const at = problems.indexOf(id);
   const after = [...problems.slice(at + 1), ...problems.slice(0, at)];
   const unsolved = after.find((other) => findStatus(other) !== "solved");

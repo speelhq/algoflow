@@ -4,7 +4,14 @@ import { blockText, t } from "@/i18n/t";
 import { draftValue } from "@/lang/drafts";
 import type { Expr, Stmt } from "@/lang/types";
 import { draftText, isExpr, type ExprRole } from "@/lang/walk";
-import { draftOf, emptyDraft, getBlockDef, keyOf, findSlot, type Slot } from "@/blocks/registry";
+import {
+  createDraft,
+  emptyDraft,
+  getBlockDef,
+  registryKey,
+  findSlot,
+  type Slot,
+} from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
   generatedNotation,
@@ -61,7 +68,7 @@ export function editedLines(stmt: Stmt): { token: NotationToken; again: boolean 
   const notations =
     init !== undefined && check !== undefined
       ? [init, check]
-      : [getBlockDef(keyOf(stmt)).notation(stmt)];
+      : [getBlockDef(registryKey(stmt)).notation(stmt)];
   const seen = new Set<string>();
   return notations.map((notation) =>
     notationTokens(notation).map((token) => {
@@ -76,21 +83,21 @@ export function editedLines(stmt: Stmt): { token: NotationToken; again: boolean 
  * The fields of the notation, in its reading order. An optional slot that holds no value is no
  * field, because `+ value` gives it one.
  */
-export function fieldsOf(stmt: Stmt): Field[] {
+export function stmtFields(stmt: Stmt): Field[] {
   const out: Field[] = [];
   for (const { token, again } of editedLines(stmt).flat()) {
     if ("text" in token || again) continue;
     const slot = findSlot(stmt, token.placeholder);
     if (slot?.role !== "expr" && slot?.role !== "target" && slot?.role !== "exprs") continue;
     const field = { slot: slot.name, role: slot.role };
-    if (valueOf(stmt, field) !== undefined) out.push(field);
+    if (findFieldValue(stmt, field) !== undefined) out.push(field);
   }
   return out;
 }
 
 /** A field's accessible name: the block's label and the slot's name (`Set variable, value`). */
 export function fieldLabel(stmt: Stmt, field: Field): string {
-  const { key } = getBlockDef(keyOf(stmt));
+  const { key } = getBlockDef(registryKey(stmt));
   return t("editor.fieldName", {
     label: blockText(key, "label"),
     slot: blockText(key, `slot.${field.slot}`),
@@ -128,10 +135,10 @@ export function textValue(text: string, role: ExprRole): FieldValue;
 export function textValue(text: string, role: ExprRole): FieldValue {
   const read = draftValue(role, text);
   if (role === "exprs") {
-    return "value" in read && Array.isArray(read.value) ? read.value : [draftOf(text)];
+    return "value" in read && Array.isArray(read.value) ? read.value : [createDraft(text)];
   }
   if (text === "") return emptyDraft();
-  return "value" in read && !Array.isArray(read.value) ? read.value : draftOf(text);
+  return "value" in read && !Array.isArray(read.value) ? read.value : createDraft(text);
 }
 
 /** The word an optional slot's field shows while it has no text, the same in every locale. */
@@ -147,7 +154,7 @@ export function fieldHint(stmt: Stmt, field: Field): string {
 }
 
 /** What a field holds, or undefined while an optional slot holds no value. */
-export function valueOf(stmt: Stmt, field: Field): FieldValue | undefined {
+export function findFieldValue(stmt: Stmt, field: Field): FieldValue | undefined {
   const value = (stmt as unknown as Bag)[field.slot];
   if (field.role === "exprs") return Array.isArray(value) ? value.filter(isExpr) : undefined;
   return isExpr(value) ? value : undefined;
@@ -165,7 +172,7 @@ export function startField(
   if (clicked !== null) return fields.find((field) => field.slot === clicked) ?? null;
   return (
     fields.find((field) => {
-      const value = valueOf(stmt, field);
+      const value = findFieldValue(stmt, field);
       return value !== undefined && fieldDraft(value) !== undefined;
     }) ?? null
   );

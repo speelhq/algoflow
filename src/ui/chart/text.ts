@@ -6,15 +6,15 @@
 import { toValue } from "@/lang/data";
 import type { Data, Expr, Heap, Block, Program, Stmt, Value } from "@/lang/types";
 import {
-  conditionOf,
+  findCondition,
   draftSlots,
   draftText,
   isEmptyDraft,
   isExpr,
   paramArg,
-  variableOf,
+  findVariableName,
 } from "@/lang/walk";
-import { getBlockDef, keyOf, findSlot } from "@/blocks/registry";
+import { getBlockDef, registryKey, findSlot } from "@/blocks/registry";
 import type { Generated, BlockDef, Side } from "@/blocks/types";
 import { needsParens, PRECEDENCE } from "@/python/precedence";
 import { str, writeValue } from "@/runtime/values";
@@ -42,7 +42,7 @@ export function notationTokens(template: string): NotationToken[] {
 
 /** A statement's notation with every slot written as its hint, as the block menu lists it. */
 export function notationWithHints(stmt: Stmt): string {
-  return notationTokens(notationOf(stmt))
+  return notationTokens(blockNotation(stmt))
     .map((token) => ("text" in token ? token.text : slotHint(stmt, token.placeholder)))
     .join("");
 }
@@ -74,7 +74,7 @@ const VALUE_HINT = "value";
 export function slotHint(stmt: Block, slot: string): string {
   const found = findSlot(stmt, slot);
   const hint = found && "hint" in found ? found.hint : undefined;
-  if (hint === undefined) throw new Error(`slot ${slot} of ${keyOf(stmt)} declares no hint`);
+  if (hint === undefined) throw new Error(`slot ${slot} of ${registryKey(stmt)} declares no hint`);
   return hint;
 }
 
@@ -83,7 +83,7 @@ export function slotHint(stmt: Block, slot: string): string {
  * argument of a call of the program's function, else `value`.
  */
 export function exprHint(holder: Expr, index: number | undefined, program: Program): string {
-  const callee = getBlockDef(keyOf(holder)).callee?.(holder);
+  const callee = getBlockDef(registryKey(holder)).callee?.(holder);
   const fn =
     callee?.family === "function"
       ? program.functions.find((each) => each.name === callee.name)
@@ -138,24 +138,24 @@ export function filledSpans(
 const plain = (span: NotationSpan) => !span.variable && !span.hint && !span.underline;
 
 /** A block's notation (`blocks.md`, Notation). */
-export function notationOf(block: Block): string {
-  return getBlockDef(keyOf(block)).notation(block);
+export function blockNotation(block: Block): string {
+  return getBlockDef(registryKey(block)).notation(block);
 }
 
 /** Whether an expression is a call: its notation ends with its own parenthesis (`abs({x})`). */
 export function isCall(expr: Expr): boolean {
-  const last = notationTokens(notationOf(expr)).at(-1);
+  const last = notationTokens(blockNotation(expr)).at(-1);
   return last !== undefined && "text" in last && last.text.endsWith(")");
 }
 
-const precedenceOf = (expr: Expr) => getBlockDef(keyOf(expr)).precedence?.(expr);
+const exprPrecedence = (expr: Expr) => getBlockDef(registryKey(expr)).precedence?.(expr);
 
 /**
  * The precedence the value in slot `slot` of `block` binds at: the block's own, as an operator's
  * values do, else an atom's where the slot declares one (the list of an item), else none.
  */
 export function bindsAt(block: Block, slot: string): number | undefined {
-  const def = getBlockDef(keyOf(block));
+  const def = getBlockDef(registryKey(block));
   const own = def.shape === "expr" ? def.precedence?.(block as Expr) : undefined;
   const found = findSlot(block, slot);
   return own ?? (found?.role === "expr" && found.atom ? PRECEDENCE.atom : undefined);
@@ -166,7 +166,7 @@ export function parenthesized(
   child: Expr,
   held: { binds: number | undefined; side: Side },
 ): boolean {
-  const own = precedenceOf(child);
+  const own = exprPrecedence(child);
   return own !== undefined && held.binds !== undefined && needsParens(own, held.binds, held.side);
 }
 
@@ -201,7 +201,7 @@ export type Held =
 
 /** What the placeholder `name` of `block`'s notation or template holds. */
 export function placeholderValue(block: Block, name: string): Held | undefined {
-  const def = getBlockDef(keyOf(block));
+  const def = getBlockDef(registryKey(block));
   const slot = findSlot(block, name);
   if (!slot) {
     // A builtin's notation names its parameters (`{a}`, `{b}`).
@@ -241,12 +241,12 @@ export function exprSpans(expr: Expr, program: Program, writing: Writing = {}): 
   // A draft's text is no template: a `{` in it is the learner's.
   const typed = draftText(expr);
   if (typed !== undefined) return [{ text: typed }];
-  const name = variableOf(expr);
+  const name = findVariableName(expr);
   if (name !== undefined) {
     const text = writing.variableText?.(name);
     return text === undefined ? [{ text: name, variable: true }] : [{ text }];
   }
-  return filledSpans(notationOf(expr), (placeholderName) => {
+  return filledSpans(blockNotation(expr), (placeholderName) => {
     const held = placeholderValue(expr, placeholderName);
     switch (held?.role) {
       case "expr":
@@ -328,7 +328,7 @@ function stmtSpans(notation: string, block: Block, program: Program): NotationSp
 
 /** A block's notation as spans: an expression as the chart writes it, a statement by its slots. */
 export function notationSpans(block: Block, program: Program): NotationSpan[] {
-  const def = getBlockDef(keyOf(block));
+  const def = getBlockDef(registryKey(block));
   return def.shape === "expr"
     ? exprSpans(block as Expr, program)
     : stmtSpans(def.notation(block), block, program);
@@ -364,7 +364,7 @@ export const CHART_TEXT = {
  * check asked as every diamond asks its condition; none for another block.
  */
 export function generatedNotation(block: Block, which: Generated): string | undefined {
-  const chart = getBlockDef(keyOf(block)).chart;
+  const chart = getBlockDef(registryKey(block)).chart;
   if (!chart || !("counted" in chart)) return undefined;
   const text = chart.counted[which];
   if (which !== "check") return text;
@@ -381,7 +381,7 @@ export function generatedSpans(block: Block, which: Generated, program: Program)
 
 /** A diamond's text: its condition followed by `?`, or its hint without it while it is empty. */
 export function questionSpans(block: Block, program: Program): NotationSpan[] {
-  const condition = conditionOf(block);
+  const condition = findCondition(block);
   if (!condition) return [];
   const spans = slotSpans(block, condition.slot, program);
   if (isEmptyDraft(condition.expr)) return spans;
@@ -409,7 +409,7 @@ const ASSIGN = getBlockDef("assign").create();
  * the target's place, a variable, and the value's text in the value's.
  */
 function assignmentSpans(name: string, value: string): NotationSpan[] {
-  return filledSpans(notationOf(ASSIGN), (placeholderName) =>
+  return filledSpans(blockNotation(ASSIGN), (placeholderName) =>
     findSlot(ASSIGN, placeholderName)?.role === "target"
       ? [{ text: name, variable: true }]
       : [{ text: value }],

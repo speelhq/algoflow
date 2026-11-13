@@ -19,7 +19,7 @@ export function lineOwners(map: LineMap): Map<number, NodeId> {
 }
 
 /** The lines of `id`, as a set; empty for an id with no line. */
-export function linesOf(map: LineMap, id: NodeId | null): Set<number> {
+export function nodeLines(map: LineMap, id: NodeId | null): Set<number> {
   const range = id === null ? undefined : map[id];
   const lines = new Set<number>();
   if (range) for (let line = range.start; line <= range.end; line += 1) lines.add(line);

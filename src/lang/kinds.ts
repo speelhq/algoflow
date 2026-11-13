@@ -2,11 +2,11 @@
 // expression's kind from its block's `yields`, and a variable's from its input's declared kind,
 // else the value its first assignment stores, else the kind its loop block declares.
 // Registry-driven.
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { getBlockDef, registryKey } from "@/blocks/registry";
 import { isFloatData } from "./data";
 import { declaredBy } from "./scope";
 import type { Data, Expr, Name, Kind, Program, Routine, Stmt } from "./types";
-import { allStmts, getRoutine, routineStmts, variableOf } from "./walk";
+import { allStmts, getRoutine, routineStmts, findVariableName } from "./walk";
 
 /** The kind of a value written as Data. */
 export function dataKind(data: Data): Kind {
@@ -22,9 +22,9 @@ export type Kinds = ReadonlyMap<Name, Kind>;
 
 /** The kind of `expr`, its variables' kinds being `variables`; undefined when it cannot be told. */
 export function exprKind(expr: Expr, variables: Kinds): Kind | undefined {
-  const name = variableOf(expr);
+  const name = findVariableName(expr);
   if (name !== undefined) return variables.get(name);
-  return getBlockDef(keyOf(expr)).yields?.(expr, (inner) => exprKind(inner, variables));
+  return getBlockDef(registryKey(expr)).yields?.(expr, (inner) => exprKind(inner, variables));
 }
 
 /**
@@ -54,7 +54,7 @@ function routineKinds(program: Program, routine: Routine): RoutineKinds {
     }
   }
   for (const stmt of allStmts(routineStmts(program, routineDef))) {
-    const def = getBlockDef(keyOf(stmt));
+    const def = getBlockDef(registryKey(stmt));
     for (const { name, stores } of declaredBy(stmt)) {
       if (!setters.has(name)) setters.set(name, stmt);
       if (stores === undefined) {

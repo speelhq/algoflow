@@ -3,7 +3,7 @@ import { errorText, t } from "@/i18n/t";
 import { hoistAssign } from "@/lang/edit";
 import type { Diagnostic, NodeId, Program, Stmt } from "@/lang/types";
 import { validate } from "@/lang/validate";
-import { blocksById, draftText, ownerOf } from "@/lang/walk";
+import { blocksById, draftText, getOwner } from "@/lang/walk";
 import { Button } from "@/ui/primitives/button";
 import { apply } from "./edits";
 
@@ -21,7 +21,7 @@ function ofDraft(program: Program, d: Diagnostic): boolean {
 export function flaggedOwners(program: Program, typing: NodeId | null): Map<NodeId, Diagnostic[]> {
   const flagged = new Map<NodeId, Diagnostic[]>();
   for (const d of validate(program)) {
-    const owner = ownerOf(program, d.nodeId);
+    const owner = getOwner(program, d.nodeId);
     if (owner === typing || ofDraft(program, d)) continue;
     flagged.set(owner, [...(flagged.get(owner) ?? []), d]);
   }
@@ -51,7 +51,7 @@ export function editorDiagnostics(
 ): Diagnostic[] {
   const shown = flaggedOwners(program, typing).get(id) ?? [];
   const still = ledStill(program, led);
-  const first = still && !ofDraft(program, still) && ownerOf(program, still.nodeId) === id;
+  const first = still && !ofDraft(program, still) && getOwner(program, still.nodeId) === id;
   return first ? [still, ...shown.filter((d) => d !== still)] : shown;
 }
 
@@ -71,7 +71,7 @@ export function ledDraft(
   led: Diagnostic | null,
 ): { diagnostic: Diagnostic; draft: NodeId; from: number } | undefined {
   const still = ledStill(program, led);
-  if (!still || !ofDraft(program, still) || ownerOf(program, still.nodeId) !== stmt.id) {
+  if (!still || !ofDraft(program, still) || getOwner(program, still.nodeId) !== stmt.id) {
     return undefined;
   }
   const { position } = still.params;

@@ -1,6 +1,6 @@
 // Hovering or clicking a line acts on its innermost statement; a node lights its lines.
 import { describe, expect, it } from "vitest";
-import { lineOwners, linesOf } from "./lines";
+import { lineOwners, nodeLines } from "./lines";
 
 const map = { loop: { start: 2, end: 2 }, call: { start: 4, end: 6 }, inner: { start: 5, end: 5 } };
 
@@ -15,10 +15,10 @@ describe("lineOwners", () => {
   });
 });
 
-describe("linesOf", () => {
+describe("nodeLines", () => {
   it("lists every line of a statement's range, none for an unknown id or null", () => {
-    expect([...linesOf(map, "call")]).toEqual([4, 5, 6]);
-    expect(linesOf(map, "nope").size).toBe(0);
-    expect(linesOf(map, null).size).toBe(0);
+    expect([...nodeLines(map, "call")]).toEqual([4, 5, 6]);
+    expect(nodeLines(map, "nope").size).toBe(0);
+    expect(nodeLines(map, null).size).toBe(0);
   });
 });

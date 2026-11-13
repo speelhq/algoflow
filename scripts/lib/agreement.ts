@@ -2,7 +2,7 @@
 // against the interpreter's.
 import { judge } from "@/challenges/judge";
 import { resultRows, type Rows } from "@/challenges/rows";
-import { seedOf, type Challenge, type Test } from "@/challenges/types";
+import { testSeed, type Challenge, type Test } from "@/challenges/types";
 import type { Name } from "@/lang/types";
 import { emit } from "@/python/emit";
 import type { PythonResult } from "./cpython";
@@ -36,7 +36,7 @@ export function checkTest(
   python: PythonRunner,
 ): string[] {
   const label = `test[${index}] ${JSON.stringify(test.inputs)}`;
-  const outcome = execute(challenge.solution, test.inputs, seedOf(test));
+  const outcome = execute(challenge.solution, test.inputs, testSeed(test));
   const verdict = judge(test, outcome);
   if (verdict.status === "error") {
     const { code, nodeId, params } = verdict.error;

@@ -1,6 +1,6 @@
 // The chart, its Input chart nodes, zoom, path bar, and the solution.
 import { expect, test } from "./fixtures";
-import { seedProgram, seedProgress, solutionOf } from "./seed";
+import { seedProgram, seedProgress, readSolution } from "./seed";
 
 test.beforeEach(async ({ page }) => {
   await seedProgress(page, {});
@@ -21,7 +21,7 @@ test("an empty main draws Start, the Input chart node, and End under a path bar 
 test("FizzBuzz draws its loop's generated chart nodes, diamonds as questions, and Yes/No edges", async ({
   page,
 }) => {
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   const chart = page.getByTestId("chart");
   for (const text of ["i ← 1", "i < n + 1?", "i ← i + 1", "i % 15 == 0?"]) {
@@ -34,7 +34,7 @@ test("FizzBuzz draws its loop's generated chart nodes, diamonds as questions, an
 test("clicking a chart node selects its statement and highlights its Python lines", async ({
   page,
 }) => {
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-chart-node="fzb-prfz-001"]').click();
   await expect(page.locator('[data-chart-node="fzb-prfz-001"]')).toHaveAttribute(

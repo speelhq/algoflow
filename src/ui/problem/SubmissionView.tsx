@@ -10,7 +10,7 @@ import { errorText, localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor";
 import { inRun, useMode } from "@/store/mode";
-import { statusOf, useProgress } from "@/store/progress";
+import { findProgressStatus, useProgress } from "@/store/progress";
 import { useRun } from "@/store/run";
 import { useSubmission } from "@/store/submission";
 import { navigate, routeHash } from "@/ui/app/route";
@@ -93,7 +93,7 @@ function SelectedRows({ challenge }: { challenge: Challenge }) {
 /** `Next problem →`, or `Plan complete` with `Back to Problems` after a plan's last. */
 function Next({ id }: { id: string }) {
   const entries = useProgress((s) => s.entries);
-  const next = nextProblem(id, (other) => statusOf(entries, other));
+  const next = nextProblem(id, (other) => findProgressStatus(entries, other));
   if (next.kind === "complete") {
     return (
       <div className="flex items-center gap-3">
