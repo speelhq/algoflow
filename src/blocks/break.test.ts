@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, notation, runAll, varData, hints } from "./testing";
+import { ast, runAll, varData, hints } from "./testing";
+import { blockNotation } from "./registry";
 
 const { brk, for_, assign, num, v, while_, bool, program } = ast;
 
@@ -30,6 +31,6 @@ describe("notation (blocks.md, Notation)", () => {
   });
 
   it("writes the notation of its table", () => {
-    expect(notation(brk())).toBe("break");
+    expect(blockNotation(brk())).toBe("break");
   });
 });

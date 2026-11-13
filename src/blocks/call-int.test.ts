@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, notation } from "./testing";
+import { ast, evalExpr } from "./testing";
+import { blockNotation } from "./registry";
 
 const { call, num, float, str, bool, none } = ast;
 
@@ -30,6 +31,6 @@ describe("builtin int (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(call("int", num(1)))).toBe("int({x})");
+    expect(blockNotation(call("int", num(1)))).toBe("int({x})");
   });
 });

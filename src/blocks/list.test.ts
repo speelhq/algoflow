@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, notation, runAll, varData } from "./testing";
+import { ast, evalExpr, runAll, varData } from "./testing";
 import { list as listBlock } from "./list";
+import { blockNotation } from "./registry";
 
 const { list, num, str, bin, v, assign, call, program } = ast;
 
@@ -40,6 +41,6 @@ describe("list (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(list(num(1)))).toBe("[{items}]");
+    expect(blockNotation(list(num(1)))).toBe("[{items}]");
   });
 });

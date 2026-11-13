@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
-import { ast, notation, runAll, varData, hints } from "./testing";
+import { ast, runAll, varData, hints } from "./testing";
+import { blockNotation } from "./registry";
 
 const { cont, for_, assign, num, v, bin, while_, program } = ast;
 
@@ -43,6 +44,6 @@ describe("notation (blocks.md, Notation)", () => {
   });
 
   it("writes the notation of its table", () => {
-    expect(notation(cont())).toBe("continue");
+    expect(blockNotation(cont())).toBe("continue");
   });
 });

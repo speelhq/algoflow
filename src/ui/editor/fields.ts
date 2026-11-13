@@ -11,6 +11,7 @@ import {
   registryKey,
   findSlot,
   type Slot,
+  blockNotation,
 } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
@@ -66,9 +67,7 @@ export function editedLines(stmt: Stmt): { token: NotationToken; again: boolean 
   const init = generatedNotation(stmt, "init");
   const check = generatedNotation(stmt, "check");
   const notations =
-    init !== undefined && check !== undefined
-      ? [init, check]
-      : [getBlockDef(registryKey(stmt)).notation(stmt)];
+    init !== undefined && check !== undefined ? [init, check] : [blockNotation(stmt)];
   const seen = new Set<string>();
   return notations.map((notation) =>
     notationTokens(notation).map((token) => {

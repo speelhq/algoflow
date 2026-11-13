@@ -1,15 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { forStmt } from "./for";
-import {
-  ast,
-  eventTypes,
-  notation,
-  runAll,
-  varData,
-  createProgramWithInputs,
-  hints,
-} from "./testing";
+import { ast, eventTypes, runAll, varData, createProgramWithInputs, hints } from "./testing";
+import { blockNotation } from "./registry";
 
 const { for_, forTo, assign, num, float, str, bin, v, item, list, brk, cont, if_, program } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -165,6 +158,6 @@ describe("notation (blocks.md, Notation)", () => {
   });
 
   it("writes the notation of its table", () => {
-    expect(notation(for_("i", num(1), v("n"), []))).toBe("{var} ← {start}");
+    expect(blockNotation(for_("i", num(1), v("n"), []))).toBe("{var} ← {start}");
   });
 });

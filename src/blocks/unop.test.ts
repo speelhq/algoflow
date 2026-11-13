@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, notation } from "./testing";
+import { ast, evalExpr } from "./testing";
+import { blockNotation } from "./registry";
 
 const { num, float, str, bin, v, neg, not } = ast;
 
@@ -34,7 +35,7 @@ describe("unop (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(neg(v("x")))).toBe("-{operand}");
-    expect(notation(not(v("x")))).toBe("not {operand}");
+    expect(blockNotation(neg(v("x")))).toBe("-{operand}");
+    expect(blockNotation(not(v("x")))).toBe("not {operand}");
   });
 });

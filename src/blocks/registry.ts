@@ -95,6 +95,11 @@ export function findSlot(block: Block, name: string): Slot | undefined {
   return getBlockDef(registryKey(block)).slots.find((slot) => slot.name === name);
 }
 
+/** A block's notation (`blocks.md`, Notation). */
+export function blockNotation(block: Block): string {
+  return getBlockDef(registryKey(block)).notation(block);
+}
+
 /** Block menu entries of one category, in registration order. */
 export function menuBlockDefs(category: Category): BlockDef[] {
   return ALL.filter((def) => def.category === category && !def.hidden);

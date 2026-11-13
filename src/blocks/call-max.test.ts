@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { ast, evalExpr, notation } from "./testing";
+import { ast, evalExpr } from "./testing";
+import { blockNotation } from "./registry";
 
 const { call, num, float, str } = ast;
 
@@ -25,6 +26,6 @@ describe("builtin max (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(call("max", num(1), num(2)))).toBe("max({a}, {b})");
+    expect(blockNotation(call("max", num(1), num(2)))).toBe("max({a}, {b})");
   });
 });

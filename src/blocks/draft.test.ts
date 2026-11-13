@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
-import { createDraft, createEmptyDraft, getBlockDef, menuBlockDefs } from "./registry";
-import { ast, evalExpr, notation } from "./testing";
+import {
+  createDraft,
+  createEmptyDraft,
+  getBlockDef,
+  menuBlockDefs,
+  blockNotation,
+} from "./registry";
+import { ast, evalExpr } from "./testing";
 
 describe("draft (language.md, Expressions, Drafts)", () => {
   it("emits its text, so the Python tab shows what the learner is correcting", () => {
@@ -43,7 +49,7 @@ describe("draft (language.md, Expressions, Drafts)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes its text", () => {
-    expect(notation(ast.draft("nums.pop("))).toBe("nums.pop(");
-    expect(notation(ast.empty())).toBe("");
+    expect(blockNotation(ast.draft("nums.pop("))).toBe("nums.pop(");
+    expect(blockNotation(ast.empty())).toBe("");
   });
 });

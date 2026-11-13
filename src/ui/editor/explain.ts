@@ -6,7 +6,6 @@ import type { Diagnostic, Expr, Name, Kind, NodeId, Program } from "@/lang/types
 import { getRoutineDef, isEmptyDraft, getHoldingRoutine } from "@/lang/walk";
 import {
   parenthesized,
-  blockNotation,
   exprHint,
   exprText,
   placeholderValue,
@@ -18,6 +17,7 @@ import {
 import { exprLabel } from "./entries";
 import { caretMatches, caretOperation, caretWordRows, wordAt, type TextLine } from "./caret";
 import { PARENTHESES_KEY, type LineContext, type Row } from "./choices";
+import { blockNotation } from "@/blocks/registry";
 
 /** A span of an explanation: a span of a block's text, or a key to type. */
 export type ExplanationSpan = NotationSpan | { text: string; key: true };

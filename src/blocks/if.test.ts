@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { emit } from "@/python/emit";
 import { ifStmt } from "./if";
-import { ast, eventTypes, notation, runAll, varData, hints } from "./testing";
+import { ast, eventTypes, runAll, varData, hints } from "./testing";
+import { blockNotation } from "./registry";
 
 const { if_, assign, num, bin, v, for_, brk, program } = ast;
 const lines = (main: Parameters<typeof program>[0]) =>
@@ -60,6 +61,6 @@ describe("notation (blocks.md, Notation)", () => {
   });
 
   it("writes the notation of its table", () => {
-    expect(notation(if_(v("ok"), []))).toBe("{cond}");
+    expect(blockNotation(if_(v("ok"), []))).toBe("{cond}");
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emit, unparse } from "@/python/emit";
-import { ast, evalExpr, notation, runAll, varData } from "./testing";
+import { ast, evalExpr, runAll, varData } from "./testing";
+import { blockNotation } from "./registry";
 
 const { call, num, float, str, assign, for_, program } = ast;
 
@@ -47,6 +48,6 @@ describe("builtin randint (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
-    expect(notation(call("randint", num(1), num(6)))).toBe("randint({a}, {b})");
+    expect(blockNotation(call("randint", num(1), num(6)))).toBe("randint({a}, {b})");
   });
 });
