@@ -237,10 +237,13 @@ No edge and no connector follow a branch whose regions all end in a
 A click on a chart node whose owner is a statement block (Shapes) selects
 that block. These keys work on the selection:
 
-- Delete and Backspace remove it, and a compound statement goes with
-  its regions
+- Delete and Backspace remove it while its editor is closed, and a
+  compound statement goes with its regions (`editor.md`, Block editor)
 - Ctrl/Cmd+D duplicates it
 - Esc closes the editor and clears the selection
+
+Delete removing the block while Backspace doesn't was rejected, because a
+Mac laptop has no separate Delete key.
 
 The selection holds a statement block only, never a function, and only
 `Delete function` in the function's editor removes a function (Charts and

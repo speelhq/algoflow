@@ -174,20 +174,42 @@ When the editor opens, a field takes the keyboard:
   the caret where a choice would put it (Value list, Choosing)
 - otherwise: the first field that holds a draft
 
-When no field takes it, the keyboard stays with the chart, so Delete
-removes the block (`chart.md`, Editing on the chart).
+When no field takes it, the editor itself takes it: the popup, outside
+every field and control.
+
+Tab and Shift+Tab never move the keyboard out of an open editor.
 
 Tab and Shift+Tab move the keyboard to the next and previous field of the
 notation.
 
-Tab past the notation's last field, and Shift+Tab before its first, move
-the keyboard on as in any form, rather than keeping it in the notation,
-because a learner who works by the keyboard alone would otherwise find no
-way out of it.
+Tab past the editor's last control, and Shift+Tab before its first, move
+the keyboard to the editor itself, and the value list closes. On the
+editor itself, Tab moves the keyboard to the editor's first control, and
+Shift+Tab to its last.
+
+Moving the keyboard on past the last control, as in any form, was
+rejected, because the keyboard would land outside an editor that stays
+open, where the learner can't see it.
+
+On the editor itself:
+
+- Enter closes the editor and keeps the selection.
+- Esc closes the editor and clears the selection.
+
+While a block's editor is open, Delete and Backspace never remove the
+block, wherever the keyboard is. The editor's `Delete` removes it, or
+Enter on the editor itself and then Delete (`chart.md`, Editing on the
+chart, Selection and keys). Removing the block while the keyboard is
+outside the editor's fields, as a click on the chart node followed by
+Delete would, was rejected, because a learner can't see whether the chart
+or the editor has the keyboard.
 
 An edit applies at once.
 
-Esc or a press outside the editor closes it.
+Esc or a press outside the editor closes it. Esc closes it from anywhere
+in it, as it closes any dialog, and the editor itself names Enter and Esc
+on its explanation line (Explanation line), so a learner who works by the
+keyboard alone finds the way out.
 
 The chart node holds no control for the editor: nothing there takes the
 keyboard or announces a popup.
@@ -199,6 +221,10 @@ symbols before a field name nothing a screen reader can say. For example:
 the field after `←` in a `Set variable` block is named
 `Set variable, value`, and the field after `print(` is named
 `Print, values`.
+
+The editor itself takes its explanation line as its accessible
+description, so a screen reader reads the ways out when the editor itself
+takes the keyboard.
 
 ## Value line
 
@@ -235,6 +261,17 @@ expression: each `expr` slot, and each item of an `exprs` slot.
 A value line takes the keys of a text field: every key types its
 character, and ←, →, Home, End, and a click move the caret, with Shift to
 select.
+
+← with the caret at the start of the line's text and no text selected
+moves the keyboard to the end of the previous field of the notation. →
+with the caret at the end of the line's text and no text selected moves
+it to the start of the next field of the notation. They move only with no
+text selected,
+because ← and → first clear a selection, as in a text field, and Tab
+selects a field's text (Selected text).
+
+At the start of the notation's first field and the end of its last, ←
+and → do nothing and show nothing, as in a text field.
 
 Backspace and Delete remove the selected text, or else one character,
 not a whole name, because a name that the learner typed is corrected by
@@ -514,7 +551,8 @@ typed, or nothing, ends with no `Show all`, because every name it could
 list is in it.
 
 In a target's line, Enter or a click that chooses a row and leaves a
-target in the line moves the keyboard to the next field. So `total`,
+target in the line moves the keyboard to the next field, or to the editor
+itself after the last field (Block editor). So `total`,
 Enter, and the value are typed in turn. Staying in the line was rejected,
 because a target is a name far more often than an item, and a second
 Enter there would close the editor before its value.
@@ -593,6 +631,7 @@ list highlights or the caret is in:
 | inside an operation's slot, read from the text before the caret as the value list reads it (Value list) | the operation's name (the entry offered after the kind of the value in its first slot, `Join with another list` for `+` after a list) and its notation with every slot as the text in it, parenthesized as the chart parenthesizes it, a slot with no text as its hint (`blocks.md`, Notation, Drawing), and the slot the caret is in underlined (`dp[value]`, its `value` underlined) |
 | a draft that `Run` or `Submit` led to | its error's message (Value line, Drafts) |
 | a word that matches nothing | the closest name (Value line), or `editor.nothingLike` when none is close |
+| the editor itself (Block editor) | that Enter closes the editor and keeps the selection, that Esc closes it and clears the selection, and that the editor's `Delete`, or Enter and then Delete, removes the block (`editor.explain.editor`) |
 | anything else | the block definition's help (`block.<key>.help`) |
 
 Where several rows apply, the line shows the first of these, in this
@@ -602,6 +641,7 @@ order:
 - a word that matches nothing
 - what the value list highlights
 - the operation one of whose slots holds the caret
+- the editor itself
 - the block definition's help
 
 A draft's message comes before what the value list highlights, rather
