@@ -2,7 +2,7 @@
 // typing and choosing in value lines, and submit it to Accepted.
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { programWith, seedPlayground, seedProgram, seedProgress, solutionOf } from "./seed";
+import { programWith, seedPlayground, seedProgram, seedProgress, readSolution } from "./seed";
 
 const editor = (page: Page) => page.getByTestId("block-editor");
 const chart = (page: Page) => page.getByTestId("chart");
@@ -119,7 +119,7 @@ test("a typed word that names nothing is underlined with the closest name", asyn
 
 test("a caption shows on its chart node and as a comment in Python", async ({ page }) => {
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-chart-node="fzb-if15-001"]').click({ position: { x: 20, y: 30 } });
   await editor(page).getByTestId("caption").fill("Is i a multiple of 15?");
@@ -137,7 +137,7 @@ test("the editor opens on the chart node's right inside the canvas, the chart sc
   page,
 }) => {
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   // The rightmost chart node: the centered chart leaves no room for the editor beside it.
   const node = page.locator('[data-chart-node="fzb-prfb-001"]');
@@ -158,7 +158,7 @@ test("the editor opens on the chart node's right inside the canvas, the chart sc
 
 test("the editor is placed by its chart node without a control on it", async ({ page }) => {
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-chart-node="fzb-prfz-001"]').click({ position: { x: 8, y: 20 } });
   await expect(editor(page)).toBeVisible();
@@ -203,7 +203,7 @@ test("a stored print opens its values as one text, the slot clicked taking the k
   page,
 }) => {
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-chart-node="fzb-prnt-001"] [data-block-slot="args"]').click();
   const field = editor(page).locator("[data-value-line]");
@@ -501,7 +501,7 @@ test("the editor itself takes the keyboard on a block with no field to take it",
   page,
 }) => {
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   const node = page.locator('[data-chart-node="fzb-prnt-001"]');
   const dialog = page.getByRole("dialog", { name: "Edit block" });
@@ -533,7 +533,7 @@ test("Tab and Shift+Tab go round the editor's controls through the editor itself
   page,
 }) => {
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-chart-node="fzb-prnt-001"] [data-block-slot="args"]').click();
   const dialog = page.getByRole("dialog", { name: "Edit block" });
@@ -567,7 +567,7 @@ test("Tab and Shift+Tab go round the editor's controls through the editor itself
 
 test("← at a field's start and → at its end move to the field beside", async ({ page }) => {
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-owner="fzb-loop-001"] [data-block-slot="start"]').first().click();
   const fields = editor(page).locator("[data-value-line]");

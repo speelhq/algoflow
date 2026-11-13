@@ -33,7 +33,7 @@ export function builtinKey(name: string): string {
 }
 
 /** The builtin a registry key names, or undefined for a key of another block. */
-export function builtinOf(key: string): string | undefined {
+export function findBuiltinName(key: string): string | undefined {
   return key.startsWith(BUILTIN) ? key.slice(BUILTIN.length) : undefined;
 }
 
@@ -214,7 +214,7 @@ export type BlockDef = {
   /** How the chart draws the block's regions; absent = a box with the notation. */
   chart?: ChartForm;
   /** The kind of the expression, given the kinds of the expressions inside it. */
-  yields?: (block: Expr, kindOf: (expr: Expr) => Kind | undefined) => Kind | undefined;
+  yields?: (block: Expr, findKind: (expr: Expr) => Kind | undefined) => Kind | undefined;
   /** A loop's: the kind of the variable its binding target names (`language.md`, Kinds). */
   declares?: Kind;
   /** The entries of the value list. */
@@ -226,27 +226,27 @@ export type BlockDef = {
   locate?(block: Expr, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
 };
 
-type StmtOf<K extends StmtType> = Extract<Stmt, { type: K }>;
-type ExprOf<K extends ExprType> = Extract<Expr, { type: K }>;
+type TypedStmt<K extends StmtType> = Extract<Stmt, { type: K }>;
+type TypedExpr<K extends ExprType> = Extract<Expr, { type: K }>;
 
 type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "yields" | "locate";
 
 type StmtDef<K extends StmtType> = Omit<BlockDef, Generic> & {
-  create(): StmtOf<K>;
-  run(block: StmtOf<K>, ctx: RunContext): Generator<Event, Signal, void>;
-  python(block: StmtOf<K>, ctx: EmitContext): PyLine[];
-  notation(block: StmtOf<K>): string;
-  text?(block: StmtOf<K>, slot: string): string;
+  create(): TypedStmt<K>;
+  run(block: TypedStmt<K>, ctx: RunContext): Generator<Event, Signal, void>;
+  python(block: TypedStmt<K>, ctx: EmitContext): PyLine[];
+  notation(block: TypedStmt<K>): string;
+  text?(block: TypedStmt<K>, slot: string): string;
 };
 
 type ExprDef<K extends ExprType> = Omit<BlockDef, Generic> & {
-  create(): ExprOf<K>;
-  run(block: ExprOf<K>, ctx: RunContext): Generator<Event, Value, void>;
-  python(block: ExprOf<K>, ctx: EmitContext): string;
-  notation(block: ExprOf<K>): string;
-  text?(block: ExprOf<K>, slot: string): string;
-  yields?(block: ExprOf<K>, kindOf: (expr: Expr) => Kind | undefined): Kind | undefined;
-  locate?(block: ExprOf<K>, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
+  create(): TypedExpr<K>;
+  run(block: TypedExpr<K>, ctx: RunContext): Generator<Event, Value, void>;
+  python(block: TypedExpr<K>, ctx: EmitContext): string;
+  notation(block: TypedExpr<K>): string;
+  text?(block: TypedExpr<K>, slot: string): string;
+  yields?(block: TypedExpr<K>, findKind: (expr: Expr) => Kind | undefined): Kind | undefined;
+  locate?(block: TypedExpr<K>, ctx: RunContext, at: NodeId): Generator<Event, Ref, void>;
 };
 
 export function defineStmt<K extends StmtType>(def: StmtDef<K>): BlockDef {

@@ -10,12 +10,12 @@ import {
   fieldHint,
   fieldLabel,
   fieldText,
-  fieldsOf,
+  stmtFields,
   oneLine,
   startField,
   targetSlot,
   textValue,
-  valueOf,
+  findFieldValue,
 } from "./fields";
 
 const { assign, assignTo, print, for_, num, v, exprStmt, ret, bin, draft } = ast;
@@ -45,7 +45,7 @@ describe("the notation the editor shows", () => {
       ["{var}", " ← ", "{start}"],
       ["={var}", " < ", "{stop}", "?"],
     ]);
-    expect(fieldsOf(loop)).toEqual([
+    expect(stmtFields(loop)).toEqual([
       { slot: "var", role: "target" },
       { slot: "start", role: "expr" },
       { slot: "stop", role: "expr" },
@@ -53,7 +53,7 @@ describe("the notation the editor shows", () => {
   });
 
   it("gives the field beside one in reading order, and none past either end", () => {
-    const fields = fieldsOf(for_("i", num(1), v("n"), []));
+    const fields = stmtFields(for_("i", num(1), v("n"), []));
     const [first, second, last] = fields;
     expect(fieldBeside(fields, first!, 1)).toEqual(second);
     expect(fieldBeside(fields, second!, -1)).toEqual(first);
@@ -66,14 +66,14 @@ describe("the notation the editor shows", () => {
     expect(
       tokens.some(({ token }) => "placeholder" in token && token.placeholder === "value"),
     ).toBe(true);
-    expect(fieldsOf(ret())).toEqual([]);
+    expect(stmtFields(ret())).toEqual([]);
   });
 
   it("is the block's notation otherwise, a list of values one field with or without items", () => {
     const shown = print(v("a"), v("b"));
     expect(editedLines(shown)).toHaveLength(1);
-    expect(fieldsOf(shown)).toEqual([{ slot: "args", role: "exprs" }]);
-    expect(fieldsOf(print())).toEqual([{ slot: "args", role: "exprs" }]);
+    expect(stmtFields(shown)).toEqual([{ slot: "args", role: "exprs" }]);
+    expect(stmtFields(print())).toEqual([{ slot: "args", role: "exprs" }]);
   });
 });
 
@@ -82,30 +82,30 @@ describe("a target", () => {
     const stmt = assignTo(ast.item(v("nums"), v("i")), num(5));
     const target = { slot: "target", role: "target" } as const;
     const value = { slot: "value", role: "expr" } as const;
-    expect(fieldsOf(stmt)).toEqual([target, value]);
-    expect(valueOf(stmt, target)).toBe(stmt.target);
+    expect(stmtFields(stmt)).toEqual([target, value]);
+    expect(findFieldValue(stmt, target)).toBe(stmt.target);
     expect(targetSlot(stmt, target)).toMatchObject({ binds: true });
     expect(targetSlot(stmt, value)).toBeUndefined();
     // A new assignment's target is the first empty slot; a click on the target opens it.
-    const fields = fieldsOf(stmt);
+    const fields = stmtFields(stmt);
     const fresh = getBlockDef("assign").create() as Stmt;
-    expect(startField(fresh, fieldsOf(fresh), null)).toEqual(fields[0]);
+    expect(startField(fresh, stmtFields(fresh), null)).toEqual(fields[0]);
     expect(startField(stmt, fields, "target")).toEqual(fields[0]);
   });
 
   it("gives the keyboard to the first field that holds a draft, or to the slot clicked", () => {
     const args = { slot: "args", role: "exprs" } as const;
     const unread = print(draft("1, x y"));
-    expect(startField(unread, fieldsOf(unread), null)).toEqual(args);
+    expect(startField(unread, stmtFields(unread), null)).toEqual(args);
     // A click on a print's values opens its one field.
     const filled = print(num(1), ast.call("abs", v("n")));
-    expect(startField(filled, fieldsOf(filled), "args")).toEqual(args);
-    expect(startField(filled, fieldsOf(filled), null)).toBeNull();
-    expect(startField(print(), fieldsOf(print()), null)).toBeNull();
+    expect(startField(filled, stmtFields(filled), "args")).toEqual(args);
+    expect(startField(filled, stmtFields(filled), null)).toBeNull();
+    expect(startField(print(), stmtFields(print()), null)).toBeNull();
     // A loop's variable is a target, an empty slot until it is filled.
     const fresh = getBlockDef("for").create() as Stmt;
     const variable = { slot: "var", role: "target" } as const;
-    expect(startField(fresh, fieldsOf(fresh), null)).toEqual(variable);
+    expect(startField(fresh, stmtFields(fresh), null)).toEqual(variable);
     expect(targetSlot(fresh, variable)).toMatchObject({ binds: true });
   });
 

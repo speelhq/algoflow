@@ -10,7 +10,7 @@ const files = import.meta.glob<Challenge>(
 const byId = new Map(Object.values(files).map((challenge) => [challenge.id, challenge]));
 
 /** The challenges of one plan, in its order; a member with no file throws. */
-export function challengesOf(plan: Plan): Challenge[] {
+export function getPlanChallenges(plan: Plan): Challenge[] {
   return plan.problems.map((id) => {
     const challenge = byId.get(id);
     if (!challenge) throw new Error(`plan "${plan.id}" lists "${id}", which has no file`);
@@ -18,12 +18,12 @@ export function challengesOf(plan: Plan): Challenge[] {
   });
 }
 
-export const CHALLENGES: readonly Challenge[] = PLANS.flatMap(challengesOf);
+export const CHALLENGES: readonly Challenge[] = PLANS.flatMap(getPlanChallenges);
 
 export function findChallenge(id: string | undefined): Challenge | undefined {
   return id === undefined ? undefined : CHALLENGES.find((challenge) => challenge.id === id);
 }
 
-export { PLANS, planOf } from "./plans";
+export { PLANS, getChallengePlan } from "./plans";
 export { HINTS } from "./types";
 export type { Challenge, Difficulty, Localized, Plan, Test, Topic } from "./types";

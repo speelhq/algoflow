@@ -1,9 +1,9 @@
 // What the editor asks of a program's structure: the names visible at a statement,
 // and whether a place lies inside a loop or a function.
 // Registry-driven: slots, `loop`, and regions, never a type.
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { getBlockDef, registryKey } from "@/blocks/registry";
 import type { Expr, Name, NodeId, Place, Program, RegionParent, Stmt } from "./types";
-import { findRoutine, isExpr, regionsOf, variableOf } from "./walk";
+import { findRoutine, isExpr, bodyRegions, findVariableName } from "./walk";
 
 type Bag = Record<string, unknown>;
 
@@ -21,10 +21,10 @@ export type Declared = { name: Name; target: Expr; stores: Expr | undefined };
 export function declaredBy(stmt: Stmt): Declared[] {
   const bag = stmt as unknown as Bag;
   const declared: Declared[] = [];
-  for (const slot of getBlockDef(keyOf(stmt)).slots) {
+  for (const slot of getBlockDef(registryKey(stmt)).slots) {
     if (slot.role !== "target" || !slot.binds) continue;
     const target = bag[slot.name];
-    const name = isExpr(target) ? variableOf(target) : undefined;
+    const name = isExpr(target) ? findVariableName(target) : undefined;
     if (!isExpr(target) || name === undefined) continue;
     const stored = slot.stores === undefined ? undefined : bag[slot.stores];
     declared.push({ name, target, stores: isExpr(stored) ? stored : undefined });
@@ -48,7 +48,7 @@ export function visibleAt(program: Program, id: NodeId): Name[] | undefined {
     for (const stmt of stmts) {
       if (stmt.id === id) return names;
       const own = declaredBy(stmt).map((declared) => declared.name);
-      for (const region of regionsOf(stmt)) {
+      for (const region of bodyRegions(stmt)) {
         const found = walk(region.stmts, bump(names, own));
         if (found) return found;
       }
@@ -69,7 +69,7 @@ function parents(program: Program): Map<NodeId, RegionParent> {
   const walk = (stmts: Stmt[], parent: RegionParent) => {
     for (const stmt of stmts) {
       map.set(stmt.id, parent);
-      for (const region of regionsOf(stmt)) walk(region.stmts, stmt.id);
+      for (const region of bodyRegions(stmt)) walk(region.stmts, stmt.id);
     }
   };
   walk(program.main, "main");
@@ -84,7 +84,7 @@ export function placeContext(program: Program, place: Place): { loop: boolean; f
   const index = (list: Stmt[]) => {
     for (const stmt of list) {
       stmts.set(stmt.id, stmt);
-      for (const region of regionsOf(stmt)) index(region.stmts);
+      for (const region of bodyRegions(stmt)) index(region.stmts);
     }
   };
   index(program.main);
@@ -94,7 +94,7 @@ export function placeContext(program: Program, place: Place): { loop: boolean; f
   let at: RegionParent | undefined = place.parent;
   while (at !== undefined && findRoutine(program, at) === undefined) {
     const stmt = stmts.get(at);
-    if (stmt && getBlockDef(keyOf(stmt)).loop) loop = true;
+    if (stmt && getBlockDef(registryKey(stmt)).loop) loop = true;
     at = up.get(at);
   }
   return { loop, fn: at !== undefined && at !== "main" };

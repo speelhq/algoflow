@@ -8,7 +8,7 @@ import { ERROR_CODES } from "@/i18n/codes";
 import { flatten } from "@/i18n/flatten";
 import { errorKey, blockPrefix } from "@/i18n/t";
 import { BLOCK_DEFS } from "@/blocks/registry";
-import { lineOf, lineStarts } from "./lines";
+import { lineAt, lineStarts } from "./lines";
 
 export type Source = { file: string; text: string };
 export type Usage = { file: string; line: number; key: string };
@@ -73,7 +73,7 @@ export function scan(source: Source): Scan {
       if (node.callee.type !== "Identifier" || node.callee.name !== "t") return;
       if (!arg || arg.type === "SpreadElement") return;
       if (arg.type === "Literal" && typeof arg.value === "string") {
-        found.usages.push({ file: source.file, line: lineOf(starts, arg.start), key: arg.value });
+        found.usages.push({ file: source.file, line: lineAt(starts, arg.start), key: arg.value });
       }
       for (const outcome of outcomes(arg)) {
         const pattern = outcome.type === "TemplateLiteral" ? templatePattern(outcome) : undefined;

@@ -147,7 +147,7 @@ export function toValue(data: Data, heap: Heap): Value {
     const items = data.map((item) => toValue(item, heap));
     return { t: "list", ref: alloc(heap, { type: "list", items }) };
   }
-  if (isFloatData(data)) return { t: "float", v: floatOf(data) };
+  if (isFloatData(data)) return { t: "float", v: floatNumber(data) };
   const entries = new Map<string, Value>();
   for (const [key, item] of Object.entries(data)) {
     const message = keyError(key);
@@ -190,15 +190,15 @@ function entryToData(entry: HeapEntry, heap: Heap): Data {
 const FLOAT_TOLERANCE = 1e-6;
 
 /** The number a float holds, in either form. */
-export function floatOf(data: number | { $float: number }): number {
+export function floatNumber(data: number | { $float: number }): number {
   return typeof data === "number" ? data : data.$float;
 }
 
 /** Test equality: ints exactly, floats within 1e-6, containers structurally. */
 export function dataEquals(expected: Data, actual: Data): boolean {
   if (isFloatData(expected) || isFloatData(actual)) {
-    const e = typeof expected === "number" || isFloatData(expected) ? floatOf(expected) : NaN;
-    const a = typeof actual === "number" || isFloatData(actual) ? floatOf(actual) : NaN;
+    const e = typeof expected === "number" || isFloatData(expected) ? floatNumber(expected) : NaN;
+    const a = typeof actual === "number" || isFloatData(actual) ? floatNumber(actual) : NaN;
     return isFloatData(expected) === isFloatData(actual) && Math.abs(e - a) <= FLOAT_TOLERANCE;
   }
   if (typeof expected !== typeof actual) return false;

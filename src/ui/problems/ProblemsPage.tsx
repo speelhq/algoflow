@@ -1,10 +1,10 @@
 // One section per study plan, in plan order; the status icons and plan counts come from
 // progress.
-import { challengesOf, findChallenge, PLANS, type Challenge, type Plan } from "@/challenges";
+import { getPlanChallenges, findChallenge, PLANS, type Challenge, type Plan } from "@/challenges";
 import { planAction, type FindStatus } from "@/challenges/next";
 import { localized, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
-import { solvedCount, statusOf, useProgress, type Progress } from "@/store/progress";
+import { solvedCount, findProgressStatus, useProgress, type Progress } from "@/store/progress";
 import { Header } from "@/ui/app/Header";
 import { routeHash } from "@/ui/app/route";
 import { useTitle } from "@/ui/hooks/useTitle";
@@ -27,7 +27,7 @@ export function ProblemsPage() {
 
 function PlanSection({ plan, entries }: { plan: Plan; entries: Progress }) {
   const { problems } = plan;
-  const findStatus: FindStatus = (id) => statusOf(entries, id);
+  const findStatus: FindStatus = (id) => findProgressStatus(entries, id);
   const action = planAction(problems, findStatus);
   const solved = solvedCount(entries, problems);
   const next = action && findChallenge(action.id);
@@ -55,7 +55,7 @@ function PlanSection({ plan, entries }: { plan: Plan; entries: Progress }) {
         )}
       </div>
       <ul className="mt-1">
-        {challengesOf(plan).map((challenge) => (
+        {getPlanChallenges(plan).map((challenge) => (
           <ProblemRow key={challenge.id} challenge={challenge} status={findStatus(challenge.id)} />
         ))}
       </ul>

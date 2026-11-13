@@ -4,7 +4,7 @@
 // letter.
 import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { lineOf, lineStarts } from "./lines";
+import { lineAt, lineStarts } from "./lines";
 
 /** A reference to a heading that the cited spec file doesn't hold. */
 export type Broken = { file: string; line: number; cited: string; heading: string };
@@ -166,7 +166,7 @@ function unknownHeadings(text: string, start: number, among: readonly Heading[])
 export function checkReferences(opts: { root: string; files: readonly string[] }): Broken[] {
   const read = (file: string) => readFileSync(join(opts.root, file), "utf8");
   const specFiles = opts.files.filter((file) => SPEC.test(file));
-  const headingsOf = new Map(specFiles.map((file) => [file, headings(read(file))]));
+  const headingsByFile = new Map(specFiles.map((file) => [file, headings(read(file))]));
   const byName = new Map(specFiles.map((file) => [basename(file), file]));
 
   const broken: Broken[] = [];
@@ -178,19 +178,19 @@ export function checkReferences(opts: { root: string; files: readonly string[] }
       let end = pos;
       while (end < flat.text.length && !AFTER.test(flat.text.slice(end, end + 2))) end += 1;
       const heading = flat.text.slice(pos, end).trim();
-      broken.push({ file, line: lineOf(starts, flat.at[pos] ?? 0), cited, heading });
+      broken.push({ file, line: lineAt(starts, flat.at[pos] ?? 0), cited, heading });
     };
 
     const flat = flatten(original, !file.endsWith(".md"));
     for (const match of flat.text.matchAll(FILE)) {
       const cited = match[1] ?? "";
       // A name that no spec file has names a file outside the spec, such as `CLAUDE.md`.
-      const among = headingsOf.get(byName.get(cited) ?? cited);
+      const among = headingsByFile.get(byName.get(cited) ?? cited);
       if (among)
         for (const pos of unknownHeadings(flat.text, match.index + match[0].length, among))
           report(flat, pos, cited);
     }
-    const own = headingsOf.get(file);
+    const own = headingsByFile.get(file);
     if (own) {
       // Prose only: a parenthesis in fenced code or in a code span, `print(None)`, isn't read.
       const prose = flatten(withoutFences(original), false);

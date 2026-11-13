@@ -26,7 +26,7 @@ const TRAILER = /^[A-Za-z0-9][A-Za-z0-9-]*: /;
 const UNFOLDED = /^(fixup|squash|amend)! /;
 
 /** The scopes a commit may name: each folder of `src/`, and `scripts`, `docs`, and `ci`. */
-export function scopesOf(root: string): Set<string> {
+export function commitScopes(root: string): Set<string> {
   const folders = readdirSync(join(root, "src"), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name);

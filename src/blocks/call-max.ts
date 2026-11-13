@@ -7,7 +7,7 @@ export const max = defineBuiltin({
   name: "max",
   category: "basic",
   params: [{ name: "a" }, { name: "b" }],
-  yields: ([first], kindOf) => (first ? kindOf(first) : undefined),
+  yields: ([first], findKind) => (first ? findKind(first) : undefined),
   entries: [{ name: "", group: "calculate", on: ["number", "text"] }],
   evaluate([a = { t: "none" }, b = { t: "none" }], block, ctx) {
     const c = compare(a, b);

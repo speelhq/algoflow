@@ -5,7 +5,7 @@ import { caseInputs } from "@/challenges/cases";
 import { inputValue } from "@/lang/data";
 import { migrate } from "@/lang/migrate";
 import type { Data, Expr, Name, Program, Stmt } from "@/lang/types";
-import { variableOf } from "@/lang/walk";
+import { findVariableName } from "@/lang/walk";
 import { getBlockDef } from "@/blocks/registry";
 import { isParseError, parse, parseData } from "@/python/parse";
 import { createPlaygroundProgram, useProgram } from "@/store/program";
@@ -15,7 +15,7 @@ import { navigate } from "@/ui/app/route";
 /** `name` as a variable. */
 function variableExpr(name: Name): Expr | undefined {
   const made = parse(name);
-  return !isParseError(made) && variableOf(made) === name ? made : undefined;
+  return !isParseError(made) && findVariableName(made) === name ? made : undefined;
 }
 
 /**

@@ -4,22 +4,22 @@
 // scope; the store holds what the UI renders. A backward Seek replays a fresh runner
 // that reaches the same position, so a step number fully identifies a position.
 import { create } from "zustand";
-import { caseInputs, caseOf } from "@/challenges/cases";
+import { caseInputs, findCase } from "@/challenges/cases";
 import { judge, type TestResult } from "@/challenges/judge";
 import { firstDifferingRow, watchStep, type WatchStep } from "@/challenges/rows";
-import { seedOf, type Test } from "@/challenges/types";
+import { testSeed, type Test } from "@/challenges/types";
 import type { Data, Name, NodeId, Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
-import { bodyStmts, diamondConditions, blocksById, isStatement, ownerOf } from "@/lang/walk";
+import { bodyStmts, diamondConditions, blocksById, isStatement, getOwner } from "@/lang/walk";
 import { clamp } from "@/lib/utils";
-import { getBlockDef, keyOf } from "@/blocks/registry";
-import { outcomeOf } from "@/runtime/outcome";
+import { getBlockDef, registryKey } from "@/blocks/registry";
+import { collectOutcome } from "@/runtime/outcome";
 import { run as startRunner } from "@/runtime/run";
 import type { Done, Runner, State } from "@/runtime/types";
 import { inBatches } from "./batches";
 import { useLayout } from "./layout";
 import { useProgram } from "./program";
-import { copyState, stepsOf, type StepEvent, type Steps } from "./steps";
+import { copyState, createSteps, type StepEvent, type Steps } from "./steps";
 
 export type Status = "idle" | "paused" | "playing" | "done" | "error";
 
@@ -173,7 +173,7 @@ function loopBodies(program: Program, all: Map<NodeId, NodeId[]>): Map<NodeId, S
   const found = new Map<NodeId, Set<NodeId>>();
   for (const [id, inside] of all) {
     const block = blocks.get(id);
-    if (block && getBlockDef(keyOf(block)).loop) found.set(id, new Set(inside));
+    if (block && getBlockDef(registryKey(block)).loop) found.set(id, new Set(inside));
   }
   return found;
 }
@@ -214,7 +214,7 @@ function atBreakpoint(): boolean {
 }
 
 /** The print of the verdict's first differing line, or the last step of the run. */
-function differenceOf(verdict: TestResult | null, prints: number[], total: number): WatchStep {
+function differenceStep(verdict: TestResult | null, prints: number[], total: number): WatchStep {
   const first = verdict?.status === "fail" ? firstDifferingRow(verdict.rows) : null;
   return watchStep(first, prints, total);
 }
@@ -222,20 +222,20 @@ function differenceOf(verdict: TestResult | null, prints: number[], total: numbe
 function originFor(caseIndex: number): Origin | null {
   const program = useProgram.getState().program;
   if (!canRun(program)) return null;
-  const test = caseOf(program, caseIndex);
-  return { program, inputs: caseInputs(program, caseIndex), seed: seedOf(test), test };
+  const test = findCase(program, caseIndex);
+  return { program, inputs: caseInputs(program, caseIndex), seed: testSeed(test), test };
 }
 
 function reset(from: Origin): void {
   runner = startRunner(from.program, from.inputs, from.seed);
-  steps = stepsOf(runner);
+  steps = createSteps(runner);
   projection = freshProjection();
 }
 
 /** The whole run on a throwaway runner, in batches; undefined when another action took over. */
 async function prerun(from: Origin, mine: number): Promise<Findings | undefined> {
   const probe = startRunner(from.program, from.inputs, from.seed);
-  const visible = stepsOf(probe);
+  const visible = createSteps(probe);
   const prints: number[] = [];
   let count = 0;
   let found: Findings | undefined;
@@ -244,13 +244,13 @@ async function prerun(from: Origin, mine: number): Promise<Findings | undefined>
     const next = visible.next(false);
     if (!("event" in next)) {
       const total = next.type === "error" ? count + 1 : count;
-      const verdict = from.test ? judge(from.test, outcomeOf(probe, next)) : null;
+      const verdict = from.test ? judge(from.test, collectOutcome(probe, next)) : null;
       found = {
         total,
         outcome: next,
         prints,
         verdict,
-        difference: differenceOf(verdict, prints, total),
+        difference: differenceStep(verdict, prints, total),
       };
       return true;
     }
@@ -287,7 +287,7 @@ export const useRun = create<RunState>()((set, get) => {
       prints: findings?.prints ?? NO_PRINTS,
       lastEvent: p.lastEvent,
       pass: p.lastEvent?.type === "loop" ? (p.passes.get(p.lastEvent.nodeId) ?? null) : null,
-      activeId: focus === undefined || !origin ? null : ownerOf(origin.program, focus),
+      activeId: focus === undefined || !origin ? null : getOwner(origin.program, focus),
       state,
       frame: state ? state.frames.length - 1 : 0,
       stdout: runner?.stdout() ?? [],

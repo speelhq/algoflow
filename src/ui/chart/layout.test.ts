@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 import { CHALLENGES } from "@/challenges";
 import { removeFunction } from "@/lang/edit";
 import type { Program, Routine, Stmt } from "@/lang/types";
-import { allStmts, getRoutine, regionsOf, routineStmts } from "@/lang/walk";
-import { getBlockDef, keyOf } from "@/blocks/registry";
+import { allStmts, getRoutine, bodyRegions, routineStmts } from "@/lang/walk";
+import { getBlockDef, registryKey } from "@/blocks/registry";
 import { ast, program, tid } from "@/blocks/testing";
 import {
   estimatedWidth,
@@ -140,7 +140,7 @@ const CASES: Case[] = [
   },
 ];
 
-const bodyOf = (c: Case): Stmt[] => routineStmts(c.program, getRoutine(c.program, c.routine));
+const caseBody = (c: Case): Stmt[] => routineStmts(c.program, getRoutine(c.program, c.routine));
 
 const lay = (c: Case, measure: Measure): ChartLayout =>
   laidOut(c.program, {
@@ -151,16 +151,16 @@ const lay = (c: Case, measure: Measure): ChartLayout =>
 
 /** A Return, or a jump (every jump of these cases is inside a loop): no edge to the next chart node. */
 const leaves = (stmt: Stmt): boolean => {
-  const def = getBlockDef(keyOf(stmt));
+  const def = getBlockDef(registryKey(stmt));
   return def.requires === "function" || (def.chart !== undefined && "jump" in def.chart);
 };
 
 /** Something flows out of the bottom of the statement: not a Return or jump, nor a branch whose regions all leave. */
 function flows(stmt: Stmt): boolean {
-  const form = getBlockDef(keyOf(stmt)).chart;
+  const form = getBlockDef(registryKey(stmt)).chart;
   if (!form || "jump" in form) return !leaves(stmt);
   if (!("branch" in form)) return true; // a loop's No edge
-  return regionsOf(stmt).some((region) => {
+  return bodyRegions(stmt).some((region) => {
     const final = region.stmts.at(-1);
     return final === undefined || flows(final);
   });
@@ -213,8 +213,8 @@ describe.each([
       expect(nodes.size).toBe(chart.nodes.length);
       expect(chart.nodes[0]?.role).toBe("start");
       expect(chart.nodes.at(-1)?.role).toBe("end");
-      for (const stmt of allStmts(bodyOf(c))) {
-        const form = getBlockDef(keyOf(stmt)).chart;
+      for (const stmt of allStmts(caseBody(c))) {
+        const form = getBlockDef(registryKey(stmt)).chart;
         const ids =
           form && "counted" in form
             ? ["init", "check", "update"].map((r) => `${stmt.id}:${r}`)
@@ -300,13 +300,13 @@ describe.each([
       const nodes = byId(chart);
       const out = (id: string, label: "yes" | "no") =>
         chart.edges.filter((edge) => edge.from === id && edge.label === label);
-      for (const stmt of allStmts(bodyOf(c))) {
-        const form = getBlockDef(keyOf(stmt)).chart;
+      for (const stmt of allStmts(caseBody(c))) {
+        const form = getBlockDef(registryKey(stmt)).chart;
         if (!form || "jump" in form) {
           expect(nodes.get(stmt.id)?.shape).toBe("box");
           continue;
         }
-        const inside = regionsOf(stmt).flatMap((region) => [...allStmts(region.stmts)]);
+        const inside = bodyRegions(stmt).flatMap((region) => [...allStmts(region.stmts)]);
         const under = chart.nodes.filter(
           (node) => node.owner !== null && inside.some((s) => s.id === node.owner),
         );
@@ -327,7 +327,8 @@ describe.each([
             expect(center(merge)).toBe(center(d));
             for (const node of under) expect(node.y + node.h).toBeLessThan(merge.y);
             const bare =
-              regionsOf(stmt).find((region) => region.slot === form.branch.no)?.stmts.length === 0;
+              bodyRegions(stmt).find((region) => region.slot === form.branch.no)?.stmts.length ===
+              0;
             if (bare)
               expect(no).toMatchObject({
                 to: merge.id,
@@ -394,9 +395,9 @@ describe.each([
           );
         }
       };
-      expectRegion(c.routine, c.routine === "main" ? "main" : "body", bodyOf(c));
-      for (const stmt of allStmts(bodyOf(c))) {
-        for (const region of regionsOf(stmt)) expectRegion(stmt.id, region.slot, region.stmts);
+      expectRegion(c.routine, c.routine === "main" ? "main" : "body", caseBody(c));
+      for (const stmt of allStmts(caseBody(c))) {
+        for (const region of bodyRegions(stmt)) expectRegion(stmt.id, region.slot, region.stmts);
       }
     },
   );
@@ -416,7 +417,7 @@ function onBorder(point: { x: number; y: number }, node: ChartNode): boolean {
 }
 
 describe("layout of jumps", () => {
-  const jumpsOf = (chart: ChartLayout, id: string) =>
+  const edgesFrom = (chart: ChartLayout, id: string) =>
     chart.edges.filter((edge) => edge.from === id);
 
   it("in a for, break leads past the loop and continue to its update", () => {
@@ -429,11 +430,11 @@ describe("layout of jumps", () => {
       inputs: {},
       measure: estimatedWidth,
     });
-    expect(jumpsOf(chart, stop.id).map((edge) => edge.to)).toEqual([`${loop.id}:exit`]);
-    expect(jumpsOf(chart, skip.id).map((edge) => edge.to)).toEqual([`${loop.id}:update`]);
+    expect(edgesFrom(chart, stop.id).map((edge) => edge.to)).toEqual([`${loop.id}:exit`]);
+    expect(edgesFrom(chart, skip.id).map((edge) => edge.to)).toEqual([`${loop.id}:update`]);
     const no = chart.edges.find((edge) => edge.from === `${loop.id}:check` && edge.label === "no");
     expect(no?.to).toBe(`${loop.id}:exit`);
-    expect(jumpsOf(chart, `${loop.id}:exit`)).toMatchObject([
+    expect(edgesFrom(chart, `${loop.id}:exit`)).toMatchObject([
       { to: after.id, place: { parent: "main", slot: "main", index: 1 } },
     ]);
   });
@@ -447,8 +448,8 @@ describe("layout of jumps", () => {
       inputs: {},
       measure: estimatedWidth,
     });
-    expect(jumpsOf(chart, skip.id).map((edge) => edge.to)).toEqual([`${loop.id}:next`]);
-    expect(jumpsOf(chart, stop.id)).toMatchObject([
+    expect(edgesFrom(chart, skip.id).map((edge) => edge.to)).toEqual([`${loop.id}:next`]);
+    expect(edgesFrom(chart, stop.id)).toMatchObject([
       { to: `${loop.id}:exit`, place: { parent: loop.id, slot: "body", index: 2 } },
     ]);
     const top = chart.nodes.find((node) => node.id === `${loop.id}:top`);
@@ -464,7 +465,7 @@ describe("layout of jumps", () => {
       inputs: {},
       measure: estimatedWidth,
     });
-    expect(jumpsOf(chart, stop.id).map((edge) => edge.to)).toEqual([after.id]);
+    expect(edgesFrom(chart, stop.id).map((edge) => edge.to)).toEqual([after.id]);
   });
 });
 

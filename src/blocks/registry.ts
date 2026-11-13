@@ -1,5 +1,5 @@
 // The only registry. The interpreter, the emitter, the parser, validation, the chart, the block
-// menu, and the block editor all dispatch through `getBlockDef(keyOf(block))`.
+// menu, and the block editor all dispatch through `getBlockDef(registryKey(block))`.
 import type { Block } from "@/lang/types";
 import { assign } from "./assign";
 import { binop } from "./binop";
@@ -83,7 +83,7 @@ export function getBlockDef(key: string): BlockDef {
 }
 
 /** Registry key of a block: its type, or `call:<fn>` / `method:<name>` for builtins. */
-export function keyOf(block: Block): string {
+export function registryKey(block: Block): string {
   if (block.type === "call")
     return BLOCK_DEFS.has(builtinKey(block.fn)) ? builtinKey(block.fn) : "call";
   if (block.type === "method") return methodKey(block.name);
@@ -92,7 +92,7 @@ export function keyOf(block: Block): string {
 
 /** The slot `name` that `block`'s definition declares, if it declares one. */
 export function findSlot(block: Block, name: string): Slot | undefined {
-  return getBlockDef(keyOf(block)).slots.find((slot) => slot.name === name);
+  return getBlockDef(registryKey(block)).slots.find((slot) => slot.name === name);
 }
 
 /** Block menu entries of one category, in registration order. */
@@ -100,6 +100,6 @@ export function menuBlockDefs(category: Category): BlockDef[] {
   return ALL.filter((def) => def.category === category && !def.hidden);
 }
 
-export { draftOf, emptyDraft } from "./draft";
-export { builtinKey, builtinOf, methodKey } from "./types";
+export { createDraft, emptyDraft } from "./draft";
+export { builtinKey, findBuiltinName, methodKey } from "./types";
 export type { EmitContext, BlockDef, Param, PyLine, RunContext, Signal, Slot } from "./types";

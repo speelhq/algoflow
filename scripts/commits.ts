@@ -2,7 +2,7 @@
 // the commits of a pull request.
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { commitProblems, scopesOf } from "./lib/commits";
+import { commitProblems, commitScopes } from "./lib/commits";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const [range] = process.argv.slice(2);
@@ -11,7 +11,7 @@ if (range === undefined) {
   process.exit(2);
 }
 
-const scopes = scopesOf(root);
+const scopes = commitScopes(root);
 // Each commit is its hash and its message, each ended by a NUL.
 const log = execFileSync("git", ["log", "--format=%H%x00%B%x00", range], {
   cwd: root,

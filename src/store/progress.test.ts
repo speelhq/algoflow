@@ -1,6 +1,12 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PROGRESS_STORAGE_KEY, toProgress, solvedCount, statusOf, useProgress } from "./progress";
+import {
+  PROGRESS_STORAGE_KEY,
+  toProgress,
+  solvedCount,
+  findProgressStatus,
+  useProgress,
+} from "./progress";
 
 const stored = (): unknown => JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) ?? "null");
 
@@ -17,7 +23,7 @@ describe("progress store", () => {
   });
 
   it("an entry appears on the first submission, hint, or shown solution", () => {
-    expect(statusOf(useProgress.getState().entries, "fizzbuzz")).toBeUndefined();
+    expect(findProgressStatus(useProgress.getState().entries, "fizzbuzz")).toBeUndefined();
     useProgress.getState().submitted("fizzbuzz", false);
     useProgress.getState().hintShown("gcd", 1);
     useProgress.getState().solutionShown("hanoi");
@@ -49,9 +55,9 @@ describe("progress store", () => {
     submitted("tutorial", true);
     submitted("sum-to-n", false);
     const { entries } = useProgress.getState();
-    expect(statusOf(entries, "tutorial")).toBe("solved");
-    expect(statusOf(entries, "sum-to-n")).toBe("attempted");
-    expect(statusOf(entries, "toString")).toBeUndefined();
+    expect(findProgressStatus(entries, "tutorial")).toBe("solved");
+    expect(findProgressStatus(entries, "sum-to-n")).toBe("attempted");
+    expect(findProgressStatus(entries, "toString")).toBeUndefined();
     expect(solvedCount(entries, ["tutorial", "sum-to-n", "fizzbuzz"])).toBe(1);
   });
 

@@ -4,16 +4,16 @@ import { ast, program, tid } from "@/blocks/testing";
 import { removeFunction } from "./edit";
 import {
   bodyStmts,
-  conditionOf,
+  findCondition,
   diamondConditions,
   draftSlots,
   draftText,
   findRoutine,
   getRoutine,
   isStatement,
-  ownerOf,
+  getOwner,
   paramArg,
-  routineOf,
+  getHoldingRoutine,
   routineStmts,
 } from "./walk";
 
@@ -66,27 +66,27 @@ describe("the node index", () => {
   const p = program([assign("n", num(1)), branch], { functions: [fn] });
 
   it("gives an expression its statement as owner, and a statement or a function itself", () => {
-    expect(ownerOf(p, cond.id)).toBe(branch.id);
-    expect(ownerOf(p, cond.type === "binop" ? cond.left.id : "")).toBe(branch.id);
-    expect(ownerOf(p, inner.id)).toBe(inner.id);
-    expect(ownerOf(p, value.id)).toBe(body.id);
-    expect(ownerOf(p, body.id)).toBe(body.id);
-    expect(ownerOf(p, fn.id)).toBe(fn.id);
+    expect(getOwner(p, cond.id)).toBe(branch.id);
+    expect(getOwner(p, cond.type === "binop" ? cond.left.id : "")).toBe(branch.id);
+    expect(getOwner(p, inner.id)).toBe(inner.id);
+    expect(getOwner(p, value.id)).toBe(body.id);
+    expect(getOwner(p, body.id)).toBe(body.id);
+    expect(getOwner(p, fn.id)).toBe(fn.id);
   });
 
   it("gives the routine of an expression, of a statement, and of a function", () => {
-    expect(routineOf(p, value.id)).toBe(fn.id);
-    expect(routineOf(p, body.id)).toBe(fn.id);
-    expect(routineOf(p, fn.id)).toBe(fn.id);
-    expect(routineOf(p, cond.id)).toBe("main");
-    expect(routineOf(p, inner.id)).toBe("main");
+    expect(getHoldingRoutine(p, value.id)).toBe(fn.id);
+    expect(getHoldingRoutine(p, body.id)).toBe(fn.id);
+    expect(getHoldingRoutine(p, fn.id)).toBe(fn.id);
+    expect(getHoldingRoutine(p, cond.id)).toBe("main");
+    expect(getHoldingRoutine(p, inner.id)).toBe("main");
   });
 
   it("throws for a node the program doesn't hold, such as one of a deleted function", () => {
     const deleted = removeFunction(p, fn.id);
     for (const id of [tid(), value.id, fn.id]) {
-      expect(() => ownerOf(deleted, id)).toThrow();
-      expect(() => routineOf(deleted, id)).toThrow();
+      expect(() => getOwner(deleted, id)).toThrow();
+      expect(() => getHoldingRoutine(deleted, id)).toThrow();
     }
   });
 
@@ -105,15 +105,15 @@ describe("the node index", () => {
   });
 });
 
-describe("conditionOf and diamondConditions", () => {
+describe("findCondition and diamondConditions", () => {
   it("give the condition a branch or a checked loop asks, by its declared slot, and nothing else", () => {
     const asked = v("ok");
     const branch = if_(asked, []);
     const loop = while_(bin("<", v("i"), num(3)), []);
     const counted = for_("i", num(0), num(3), [branch]);
-    expect(conditionOf(branch)).toEqual({ slot: "cond", expr: asked });
-    expect(conditionOf(counted)).toBeUndefined();
-    expect(conditionOf(print(v("i")))).toBeUndefined();
+    expect(findCondition(branch)).toEqual({ slot: "cond", expr: asked });
+    expect(findCondition(counted)).toBeUndefined();
+    expect(findCondition(print(v("i")))).toBeUndefined();
     const p = program([counted, loop]);
     expect(diamondConditions(p)).toEqual(
       new Map([

@@ -17,7 +17,7 @@ const chart = laidOut(program([loop, after]), {
   measure: estimatedWidth,
 });
 
-const nodeOf = (owner: string, role: string) =>
+const findNodeId = (owner: string, role: string) =>
   chart.nodes.find((node) => node.owner === owner && node.role === role)?.id;
 
 function view(partial: Partial<RunView>): RunView {
@@ -35,9 +35,9 @@ function view(partial: Partial<RunView>): RunView {
 describe("currentNode", () => {
   it("is a counted loop's init on its enter and its check on a pass", () => {
     const enter = view({ activeId: loop.id, lastEvent: { type: "enter", nodeId: loop.id } });
-    expect(currentNode(chart, enter)).toBe(nodeOf(loop.id, "init"));
+    expect(currentNode(chart, enter)).toBe(findNodeId(loop.id, "init"));
     const pass = view({ activeId: loop.id, lastEvent: { type: "loop", nodeId: loop.id } });
-    expect(currentNode(chart, pass)).toBe(nodeOf(loop.id, "check"));
+    expect(currentNode(chart, pass)).toBe(findNodeId(loop.id, "check"));
   });
 
   it("is the statement's own chart node otherwise, and none before the first step", () => {
@@ -62,7 +62,7 @@ describe("paint", () => {
     const taken = labeled.filter((edge) => p.takenEdges.has(edge.id)).map((edge) => edge.label);
     expect(taken).toEqual(["yes"]);
     expect(p.marks.get(branch.id)).toBe(true);
-    expect(p.marks.get(nodeOf(loop.id, "check") ?? "")).toBe(true);
+    expect(p.marks.get(findNodeId(loop.id, "check") ?? "")).toBe(true);
   });
 
   it("takes a loop's No edge to the next statement once the loop's mark is cleared", () => {
@@ -71,7 +71,7 @@ describe("paint", () => {
       view({ activeId: after.id, taken: { [loop.id]: true, [after.id]: true } }),
     );
     const no = chart.edges.find(
-      (edge) => edge.from === nodeOf(loop.id, "check") && edge.label === "no",
+      (edge) => edge.from === findNodeId(loop.id, "check") && edge.label === "no",
     );
     expect(no && p.takenEdges.has(no.id)).toBe(true);
   });
@@ -115,7 +115,7 @@ describe("paint", () => {
 
   it("marks the breakpoint on a loop's check and End once the run has ended", () => {
     const p = paint(chart, view({ breakpoint: loop.id, finished: true }));
-    expect(p.breakpoint).toBe(nodeOf(loop.id, "check"));
+    expect(p.breakpoint).toBe(findNodeId(loop.id, "check"));
     expect(p.takenNodes.has("end")).toBe(true);
   });
 });

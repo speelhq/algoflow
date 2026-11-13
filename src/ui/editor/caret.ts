@@ -7,7 +7,7 @@
 import { exprKind, type Kinds } from "@/lang/kinds";
 import type { Expr, Kind } from "@/lang/types";
 import { isEmptyDraft, isTarget } from "@/lang/walk";
-import { draftOf, getBlockDef, keyOf } from "@/blocks/registry";
+import { createDraft, getBlockDef, registryKey } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
 import {
   endsInText,
@@ -107,21 +107,21 @@ type Bag = Record<string, unknown>;
  * no text; and with `TAKEN` in its first slot when it takes a value.
  */
 function marked(expr: Expr, takes: boolean): Expr {
-  const def = getBlockDef(keyOf(expr));
+  const def = getBlockDef(registryKey(expr));
   const copy: Bag = { ...expr };
   const first = takes ? firstSlot(expr) : undefined;
   const mark = (value: unknown): unknown => {
-    if (isEmptyDraft(value)) return draftOf(EMPTY);
+    if (isEmptyDraft(value)) return createDraft(EMPTY);
     return value && typeof value === "object" ? marked(value as Expr, false) : value;
   };
   for (const slot of def.slots) {
     const value = copy[slot.name];
     if (slot.role === "literal" && value === "") copy[slot.name] = EMPTY;
     else if (slot.role === "expr" || slot.role === "target") {
-      copy[slot.name] = slot === first ? draftOf(TAKEN) : mark(value);
+      copy[slot.name] = slot === first ? createDraft(TAKEN) : mark(value);
     } else if (slot.role === "exprs" && Array.isArray(value)) {
       copy[slot.name] = value.map((item, i) =>
-        slot === first && i === 0 ? draftOf(TAKEN) : mark(item),
+        slot === first && i === 0 ? createDraft(TAKEN) : mark(item),
       );
     }
   }

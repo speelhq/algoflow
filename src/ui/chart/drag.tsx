@@ -74,7 +74,7 @@ export function DropZone(props: { edge: ChartEdge; disabled: boolean; children: 
   );
 }
 
-const placeOf = (data: unknown): Place | undefined =>
+const findPlace = (data: unknown): Place | undefined =>
   data && typeof data === "object" && "place" in data ? (data.place as Place) : undefined;
 
 /** The drag context of one chart, with the ghost of the dragged chart node and a refusal's note. */
@@ -106,7 +106,7 @@ export function ChartDrag(props: {
   const end = (event: DragEndEvent) => {
     const owner = dragged?.owner;
     setDragged(null);
-    const place = placeOf(event.over?.data.current);
+    const place = findPlace(event.over?.data.current);
     if (!owner || !place || !moves || !event.over) return;
     const reason = moves.onMove(owner, place);
     const edge = edges.find((e) => e.id === event.over?.id);

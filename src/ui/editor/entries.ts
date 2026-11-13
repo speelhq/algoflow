@@ -3,7 +3,7 @@
 import { exprKind, type Kinds } from "@/lang/kinds";
 import type { Expr } from "@/lang/types";
 import { childSlots } from "@/lang/walk";
-import { BLOCK_DEFS, getBlockDef, keyOf, type BlockDef } from "@/blocks/registry";
+import { BLOCK_DEFS, getBlockDef, registryKey, type BlockDef } from "@/blocks/registry";
 import type { ValueEntry, ValueGroup } from "@/blocks/types";
 import { blockText } from "@/i18n/t";
 import { isCall } from "@/ui/chart/text";
@@ -50,7 +50,7 @@ export function allEntries(): Entry[] {
  * `exprs` slot, in the order its block definition lists them.
  */
 export function firstSlot(expr: Expr) {
-  return getBlockDef(keyOf(expr)).slots.find(
+  return getBlockDef(registryKey(expr)).slots.find(
     (slot) => slot.role === "expr" || slot.role === "exprs",
   );
 }
@@ -73,7 +73,7 @@ export function makeEntry(entry: Entry): Expr {
  */
 function findEntry(expr: Expr, kinds: Kinds): Entry | undefined {
   const bag = expr as unknown as Record<string, unknown>;
-  const key = keyOf(expr);
+  const key = registryKey(expr);
   const held = allEntries().filter(
     (entry) =>
       entry.def.key === key &&
@@ -87,8 +87,8 @@ function findEntry(expr: Expr, kinds: Kinds): Entry | undefined {
 }
 
 /** The label of what an expression is: its entry's, else its block's. */
-export function labelOf(expr: Expr, kinds: Kinds): string {
-  return findEntry(expr, kinds)?.label ?? blockText(getBlockDef(keyOf(expr)).key, "label");
+export function exprLabel(expr: Expr, kinds: Kinds): string {
+  return findEntry(expr, kinds)?.label ?? blockText(getBlockDef(registryKey(expr)).key, "label");
 }
 
 export const GROUPS: readonly ValueGroup[] = [

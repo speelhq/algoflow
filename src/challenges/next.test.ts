@@ -6,7 +6,12 @@ import { nextProblem, planAction, type FindStatus } from "./next";
 const course = ["tutorial", "sum-to-n", "fizzbuzz", "max-of-three", "countdown"];
 
 vi.mock("./plans", () => ({
-  planOf: () => ({ id: "course", title: { en: "" }, description: { en: "" }, problems: course }),
+  getChallengePlan: () => ({
+    id: "course",
+    title: { en: "" },
+    description: { en: "" },
+    problems: course,
+  }),
 }));
 
 function statuses(entries: Record<string, "attempted" | "solved">): FindStatus {

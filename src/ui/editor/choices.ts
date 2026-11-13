@@ -141,7 +141,7 @@ const LIST_GROUPS: readonly ListGroup[] = ["problem", "variables", "new", ...GRO
 export type Section = { group: ListGroup; rows: Row[] };
 
 /** The group a row is listed under: among a target's names, one the problem expects under `This problem`. */
-function groupOf(row: Row, asked: readonly string[]): ListGroup {
+function rowGroup(row: Row, asked: readonly string[]): ListGroup {
   switch (row.type) {
     case "variable":
       return asked.includes(row.name) ? "problem" : "variables";
@@ -159,7 +159,7 @@ function groupOf(row: Row, asked: readonly string[]): ListGroup {
 export function sections(rows: readonly Row[], asked: readonly string[]): Section[] {
   return LIST_GROUPS.map((group) => ({
     group,
-    rows: rows.filter((row) => groupOf(row, asked) === group),
+    rows: rows.filter((row) => rowGroup(row, asked) === group),
   })).filter((section) => section.rows.length > 0);
 }
 
@@ -189,7 +189,7 @@ export function rowsAfter(kind: Kind | undefined, all: boolean): Row[] {
 export function matchSections(rows: readonly Row[], asked: readonly string[]): Section[] {
   const out: Section[] = [];
   for (const row of rows) {
-    const group = groupOf(row, asked);
+    const group = rowGroup(row, asked);
     const last = out.at(-1);
     if (last?.group === group) last.rows.push(row);
     else out.push({ group, rows: [row] });

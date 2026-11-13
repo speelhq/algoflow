@@ -4,7 +4,7 @@
 // play button's action, what a click on a chart node does in each mode, and showing the solution.
 import { validate } from "@/lang/validate";
 import type { NodeId } from "@/lang/types";
-import { isStatement, ownerOf } from "@/lang/walk";
+import { isStatement, getOwner } from "@/lang/walk";
 import { useEditor } from "@/store/editor";
 import { currentMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
@@ -28,7 +28,7 @@ function prepareRun(): boolean {
   editor.showSolution(false);
   const [first] = validate(program);
   if (!first) return true;
-  const owner = ownerOf(program, first.nodeId);
+  const owner = getOwner(program, first.nodeId);
   // A function's diagnostic belongs to the function's editor, which is not built yet.
   if (isStatement(program, owner)) editor.lead(owner, first);
   else editor.select(null);

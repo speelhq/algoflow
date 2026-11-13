@@ -31,6 +31,6 @@ export function mainVars(state: State): Record<Name, Data> {
   return vars;
 }
 
-export function outcomeOf(runner: Runner, done: Done): Outcome {
+export function collectOutcome(runner: Runner, done: Done): Outcome {
   return { done, stdout: runner.stdout(), vars: mainVars(runner.state()), draws: runner.draws() };
 }

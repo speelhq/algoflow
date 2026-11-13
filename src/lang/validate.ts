@@ -1,7 +1,7 @@
 // Every validation code, run after every edit and before every run: node ids, names, scope rules,
 // jumps and returns, drafts, and calls.
 // Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
-import { builtinKey, getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
+import { builtinKey, getBlockDef, hasBlockDef, registryKey } from "@/blocks/registry";
 import { expectedArgs, type BlockDef } from "@/blocks/types";
 import {
   NAME_PATTERN,
@@ -14,7 +14,7 @@ import {
 } from "./types";
 import { draftValue } from "./drafts";
 import { declaredBy } from "./scope";
-import { draftSlots, programIds, regionsOf, stmtExprs, variableOf } from "./walk";
+import { draftSlots, programIds, bodyRegions, stmtExprs, findVariableName } from "./walk";
 
 export function isValidName(name: string): boolean {
   return NAME_PATTERN.test(name) && !RESERVED.has(name);
@@ -107,7 +107,7 @@ class Collector {
   ): Set<Name> {
     const declared = new Set<Name>();
     for (const stmt of stmts) {
-      const def = getBlockDef(keyOf(stmt));
+      const def = getBlockDef(registryKey(stmt));
       this.drafts(stmt);
       this.calls(stmt);
       this.reads(stmt, visible, inner);
@@ -123,7 +123,7 @@ class Collector {
       }
 
       const inBody = def.loop ? { ...enclosing, loop: enclosing.loop + 1 } : enclosing;
-      for (const region of regionsOf(stmt)) {
+      for (const region of bodyRegions(stmt)) {
         const nestedDeclared = this.region(region.stmts, new Set(visible), new Map(inner), inBody);
         for (const name of nestedDeclared) {
           if (visible.has(name)) continue;
@@ -139,7 +139,7 @@ class Collector {
     const bound = new Set(declaredBy(stmt).map((declared) => declared.target));
     for (const expr of stmtExprs(stmt)) {
       if (bound.has(expr)) continue;
-      const name = variableOf(expr);
+      const name = findVariableName(expr);
       if (name === undefined || visible.has(name)) continue;
       const compound = inner.get(name);
       if (compound === undefined) this.report(stmt.id, "E_UNDEFINED", { name });
@@ -178,7 +178,7 @@ class Collector {
 
   private calls(stmt: Stmt): void {
     for (const expr of stmtExprs(stmt)) {
-      const def = getBlockDef(keyOf(expr));
+      const def = getBlockDef(registryKey(expr));
       const callee = def.callee?.(expr);
       if (!callee) continue;
       switch (callee.family) {

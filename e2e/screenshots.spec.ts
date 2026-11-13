@@ -9,7 +9,7 @@ import {
   seedPlayground,
   seedProgram,
   seedProgress,
-  solutionOf,
+  readSolution,
 } from "./seed";
 
 /** Where the screenshot `name` goes: the tracked folder only when snapshots are being updated. */
@@ -41,7 +41,7 @@ test("Problems", async ({ page }) => {
 test.describe("FizzBuzz", () => {
   test.beforeEach(async ({ page }) => {
     await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 1, solution: false } });
-    await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+    await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   });
 
   test("Build", async ({ page }) => {
@@ -106,7 +106,7 @@ test.describe("FizzBuzz", () => {
 
 test("Wrong Answer", async ({ page }) => {
   await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
-  const program = solutionOf("fizzbuzz");
+  const program = readSolution("fizzbuzz");
   const [loop] = program.main as Array<Record<string, unknown>>;
   if (loop) loop.start = { id: "fzb-one0-001", type: "num", value: 0, float: false, raw: "0" };
   await seedProgram(page, "fizzbuzz", program);
@@ -139,7 +139,7 @@ test("Playground", async ({ page }) => {
 test("Block menu with the program's own functions", async ({ page }) => {
   await seedProgress(page, { fizzbuzz: { status: "attempted", hints: 0, solution: false } });
   const greet = { id: "shf-func-001", name: "greet", params: ["name"], body: [] };
-  await seedProgram(page, "fizzbuzz", { ...solutionOf("fizzbuzz"), functions: [greet] });
+  await seedProgram(page, "fizzbuzz", { ...readSolution("fizzbuzz"), functions: [greet] });
   await page.goto("/#/p/fizzbuzz");
   await page.locator('[data-testid="connector"][data-place="main/main/0"]').click();
   const own = page.getByRole("region", { name: "This program" });
@@ -186,7 +186,7 @@ test.describe("Block editor", () => {
 
   test.beforeEach(async ({ page }) => {
     await seedProgress(page, { "sum-to-n": { status: "attempted", hints: 0, solution: false } });
-    const [init, loop] = solutionOf("sum-to-n").main as Array<Record<string, unknown>>;
+    const [init, loop] = readSolution("sum-to-n").main as Array<Record<string, unknown>>;
     const nums = {
       id: "she-nums-001",
       type: "assign",

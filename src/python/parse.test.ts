@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Expr } from "@/lang/types";
-import { BLOCK_DEFS, keyOf } from "@/blocks/registry";
+import { BLOCK_DEFS, registryKey } from "@/blocks/registry";
 import { mulberry32 } from "@/runtime/random";
 import { unparse } from "./emit";
 import {
@@ -96,12 +96,12 @@ describe("parse", () => {
 describe("call resolution", () => {
   it("reads a name that names a builtin as the builtin's call", () => {
     expect(ok("abs(x)")).toMatchObject({ type: "call", fn: "abs" });
-    expect(keyOf(ok("abs(x)"))).toBe("call:abs");
+    expect(registryKey(ok("abs(x)"))).toBe("call:abs");
   });
 
   it("reads any other name as a call of the program's function, whatever the program defines", () => {
     expect(ok("fib(n)")).toMatchObject({ type: "call", fn: "fib", args: [{ name: "n" }] });
-    expect(keyOf(ok("nope(1)"))).toBe("call");
+    expect(registryKey(ok("nope(1)"))).toBe("call");
     expect(ok("1 + nope (1)")).toMatchObject({ right: { type: "call", fn: "nope" } });
   });
 

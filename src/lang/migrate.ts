@@ -2,7 +2,7 @@
 // wrong shape, an unknown type, a bad id, a field its block would not write, a class,
 // which no registered block definition constructs. What editing reaches is validate()'s job. A
 // draft whose text is now a value of its slot is read as that value.
-import { getBlockDef, hasBlockDef, keyOf } from "@/blocks/registry";
+import { getBlockDef, hasBlockDef, registryKey } from "@/blocks/registry";
 import { storeCaption } from "./edit";
 import { isNodeId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
@@ -50,7 +50,7 @@ function expectNodeId(value: unknown, path: string): void {
 
 /** The fields that `fieldsError` checks, as the block's definition would write them. */
 function checkFields(block: Record<string, unknown>, path: string): void {
-  const fault = getBlockDef(keyOf(block as unknown as Expr)).fieldsError?.(block);
+  const fault = getBlockDef(registryKey(block as unknown as Expr)).fieldsError?.(block);
   if (fault) throw new MigrateError(`${path}.${fault.field}`, fault.message);
 }
 
@@ -63,7 +63,7 @@ function rawChildren(
   path: string,
 ): Array<{ value: unknown; path: string }> {
   const out: Array<{ value: unknown; path: string }> = [];
-  for (const slot of getBlockDef(keyOf(block as unknown as Expr)).slots) {
+  for (const slot of getBlockDef(registryKey(block as unknown as Expr)).slots) {
     const value = block[slot.name];
     if (slot.role === "expr" || slot.role === "target") {
       const mayBeAbsent = slot.role === "expr" && slot.optional;
@@ -87,7 +87,7 @@ function rawChildren(
  * item, as a field with no text holds it.
  */
 function readDrafts(block: Record<string, unknown>): void {
-  for (const slot of getBlockDef(keyOf(block as unknown as Expr)).slots) {
+  for (const slot of getBlockDef(registryKey(block as unknown as Expr)).slots) {
     if (slot.role !== "expr" && slot.role !== "target" && slot.role !== "exprs") continue;
     const held = block[slot.name];
     // An `exprs` slot holds a draft only as its only item (`checkItemDrafts`).
@@ -106,7 +106,7 @@ const DRAFT_ELSEWHERE = "expected a draft only as a statement's slot";
 
 /** Rejects a draft beside other items of a statement's `exprs` slot, which no edit makes. */
 function checkItemDrafts(stmt: Record<string, unknown>, path: string): void {
-  for (const slot of getBlockDef(keyOf(stmt as unknown as Expr)).slots) {
+  for (const slot of getBlockDef(registryKey(stmt as unknown as Expr)).slots) {
     const items = stmt[slot.name];
     if (slot.role !== "exprs" || !Array.isArray(items) || items.length <= 1) continue;
     items.forEach((item, i) => {
@@ -121,14 +121,14 @@ function checkExpr(value: unknown, path: string): void {
   if (!isRecord(value)) throw new MigrateError(path, "expected an expression");
   expectNodeId(value.id, `${path}.id`);
   const type = expectString(value.type, `${path}.type`);
-  if (!hasBlockDef(keyOf(value as unknown as Expr))) {
+  if (!hasBlockDef(registryKey(value as unknown as Expr))) {
     throw new MigrateError(`${path}.type`, `unknown type "${type}"`);
   }
   checkFields(value, path);
   // No edit leaves an expression's name holding nothing, and nothing would show the fault, because
   // a field and a chart node write it as no text (`language.md`, Data, Faults that `migrate()`
   // rejects).
-  const nothing = getBlockDef(keyOf(value as unknown as Expr)).slots.find(
+  const nothing = getBlockDef(registryKey(value as unknown as Expr)).slots.find(
     (slot) => slot.role === "name" && value[slot.name] === "",
   );
   if (nothing) throw new MigrateError(`${path}.${nothing.name}`, "expected the slot filled");
@@ -166,7 +166,7 @@ function checkStmts(value: unknown, path: string): void {
         throw new MigrateError(`${at}.${slot.name}`, "expected a target");
       }
     }
-    // Every region by the block's slots: `regionsOf` passes over one that is no array.
+    // Every region by the block's slots: `bodyRegions` passes over one that is no array.
     for (const slot of getBlockDef(type).slots) {
       if (slot.role === "body") checkStmts(stmt[slot.name], `${at}.${slot.name}`);
     }

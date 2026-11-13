@@ -51,7 +51,8 @@ tests.
   heap (`data.ts`). `validate()` returns `Diagnostic[]` and runs after every
   edit and before every run. One index in `walk.ts` holds every block and
   function of a program with its owner (`chart.md`, Shapes) and its
-  routine, and `blocksById()`, `ownerOf()`, and `routineOf()` read it.
+  routine, and `blocksById()`, `getOwner()`, and `getHoldingRoutine()`
+  read it.
   Never change a `Program` in place: `validate()`,
   `refusedDefinitions()`, and that index are memoized per `Program`
   object, and the undo history keeps earlier programs. Its spec is

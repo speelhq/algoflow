@@ -6,7 +6,7 @@ export function lineStarts(text: string): number[] {
 }
 
 /** The 1-based line of an offset, given the offsets where the lines start. */
-export function lineOf(starts: readonly number[], offset: number): number {
+export function lineAt(starts: readonly number[], offset: number): number {
   let low = 0;
   let high = starts.length - 1;
   while (low < high) {

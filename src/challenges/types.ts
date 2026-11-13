@@ -30,7 +30,7 @@ export type Test = {
   expect: { variables?: Record<Name, Data>; stdout?: string[] };
 };
 /** The seed of a run of `test`: its own, else 1; a run with no test takes 1 too. */
-export function seedOf(test: Test | undefined): number {
+export function testSeed(test: Test | undefined): number {
   return test?.seed ?? 1;
 }
 

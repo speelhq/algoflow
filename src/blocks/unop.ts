@@ -11,7 +11,7 @@ type Unop = Extract<Expr, { type: "unop" }>;
 /** Each operator with its precedence. */
 const OPS: Record<Unop["op"], number> = { neg: PRECEDENCE.unary, not: PRECEDENCE.not };
 
-const precedenceOf = (block: Unop) => OPS[block.op];
+const unopPrecedence = (block: Unop) => OPS[block.op];
 
 export const unop = defineExpr<"unop">({
   key: "unop",
@@ -20,7 +20,7 @@ export const unop = defineExpr<"unop">({
     { name: "op", role: "operator" },
     { name: "operand", role: "expr" },
   ],
-  precedence: (block) => precedenceOf(block as Unop),
+  precedence: (block) => unopPrecedence(block as Unop),
   create: () => ({ id: newId(), type: "unop", op: "neg", operand: emptyDraft() }),
   fieldsError: (fields) =>
     typeof fields.op === "string" && Object.hasOwn(OPS, fields.op)
@@ -34,7 +34,7 @@ export const unop = defineExpr<"unop">({
     return makeNumber(-value.v, value.t === "float");
   },
   python: (block, ctx) => {
-    const operand = ctx.operand(block.operand, precedenceOf(block), "right");
+    const operand = ctx.operand(block.operand, unopPrecedence(block), "right");
     return block.op === "neg" ? `-${operand}` : `not ${operand}`;
   },
   notation: (block) => (block.op === "not" ? "not {operand}" : "-{operand}"),

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ast, program } from "@/blocks/testing";
-import { finish, outcomeOf } from "./outcome";
+import { finish, collectOutcome } from "./outcome";
 import { run } from "./run";
 
 const { assign, num, print, v } = ast;
 
-describe("finish and outcomeOf", () => {
+describe("finish and collectOutcome", () => {
   it("finish returns the Done of the run", () => {
     const runner = run(program([assign("x", num(2))]), {}, 1);
     const done = finish(runner);
@@ -24,9 +24,14 @@ describe("finish and outcomeOf", () => {
     expect(failed.next()).toBe(error);
   });
 
-  it("outcomeOf reports main variables as Data, stdout, and draws", () => {
+  it("collectOutcome reports main variables as Data, stdout, and draws", () => {
     const runner = run(program([assign("x", num(2)), print(v("x"))]), {}, 1);
     const done = finish(runner);
-    expect(outcomeOf(runner, done)).toEqual({ done, stdout: ["2"], vars: { x: 2 }, draws: [] });
+    expect(collectOutcome(runner, done)).toEqual({
+      done,
+      stdout: ["2"],
+      vars: { x: 2 },
+      draws: [],
+    });
   });
 });

@@ -1,8 +1,8 @@
 // Program → Python text plus the NodeId → line map. No third-party imports.
 import type { Data, Expr, FunctionDef, Name, NodeId, Program, Stmt } from "@/lang/types";
-import { dataKey, floatOf, inputValue, isFloatData } from "@/lang/data";
+import { dataKey, floatNumber, inputValue, isFloatData } from "@/lang/data";
 import { programExprs } from "@/lang/walk";
-import { getBlockDef, keyOf, findSlot } from "@/blocks/registry";
+import { getBlockDef, registryKey, findSlot } from "@/blocks/registry";
 import type { EmitContext, PyLine, Side } from "@/blocks/types";
 import { floatRepr } from "@/runtime/values";
 import { PRECEDENCE, needsParens } from "./precedence";
@@ -20,7 +20,7 @@ export function dataToPython(data: Data): string {
   if (typeof data === "boolean") return data ? "True" : "False";
   if (data === null) return "None";
   if (Array.isArray(data)) return `[${data.map(dataToPython).join(", ")}]`;
-  if (isFloatData(data)) return floatRepr(floatOf(data));
+  if (isFloatData(data)) return floatRepr(floatNumber(data));
   const entries = Object.entries(data).map(([key, value]) => {
     const stands = dataKey(key);
     return `${typeof stands === "number" ? String(stands) : pyString(stands)}: ${dataToPython(value)}`;
@@ -32,13 +32,13 @@ export function dataToPython(data: Data): string {
 
 /** `text`, the text of `child`, in parentheses where the operator table needs them under `parent`. */
 function parenthesize(child: Expr, text: string, parent: number, side: Side): string {
-  const own = getBlockDef(keyOf(child)).precedence?.(child) ?? PRECEDENCE.atom;
+  const own = getBlockDef(registryKey(child)).precedence?.(child) ?? PRECEDENCE.atom;
   return needsParens(own, parent, side) ? `(${text})` : text;
 }
 
 const ctx: EmitContext = {
   expr(expr: Expr) {
-    return getBlockDef(keyOf(expr)).python(expr, ctx) as string;
+    return getBlockDef(registryKey(expr)).python(expr, ctx) as string;
   },
   operand(expr: Expr, parent: number, side) {
     return parenthesize(expr, ctx.expr(expr), parent, side);
@@ -81,7 +81,7 @@ class Writer {
   }
 
   stmt(stmt: Stmt, indent: number): void {
-    const pyLines = getBlockDef(keyOf(stmt)).python(stmt, ctx) as PyLine[];
+    const pyLines = getBlockDef(registryKey(stmt)).python(stmt, ctx) as PyLine[];
     // A captioned statement's lines start at the comment holding its caption.
     const captioned = stmt.caption === undefined ? undefined : this.lines.length + 1;
     if (stmt.caption !== undefined) this.line(`# ${stmt.caption}`, indent);
@@ -116,10 +116,10 @@ class Writer {
 }
 
 /** Modules required by the blocks a program uses. */
-function importsOf(program: Program): string[] {
+function requiredModules(program: Program): string[] {
   const modules = new Set<string>();
   for (const expr of programExprs(program)) {
-    const module = getBlockDef(keyOf(expr)).imports;
+    const module = getBlockDef(registryKey(expr)).imports;
     if (module) modules.add(module);
   }
   return [...modules].toSorted();
@@ -132,7 +132,7 @@ export function emit(program: Program, inputs: Readonly<Record<Name, Data>>): Em
   const writer = new Writer();
   const sections: Section[] = [];
 
-  const imports = importsOf(program);
+  const imports = requiredModules(program);
   if (imports.length > 0) {
     sections.push({
       kind: "imports",

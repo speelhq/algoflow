@@ -6,7 +6,7 @@ import { useRun, type Status } from "./run";
 
 export type Mode = "build" | "solution" | "running" | "ended";
 
-export function modeOf(status: Status, solution: boolean): Mode {
+export function deriveMode(status: Status, solution: boolean): Mode {
   if (status === "done" || status === "error") return "ended";
   if (status !== "idle") return "running";
   return solution ? "solution" : "build";
@@ -25,9 +25,9 @@ export function inRun(mode: Mode): boolean {
 export function useMode(): Mode {
   const status = useRun((s) => s.status);
   const solution = useEditor((s) => s.solution);
-  return modeOf(status, solution);
+  return deriveMode(status, solution);
 }
 
 export function currentMode(): Mode {
-  return modeOf(useRun.getState().status, useEditor.getState().solution);
+  return deriveMode(useRun.getState().status, useEditor.getState().solution);
 }

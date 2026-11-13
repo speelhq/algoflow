@@ -1,7 +1,7 @@
 // Run mode on the pre-running driver.
 import type { Page } from "@playwright/test";
 import { expect, test } from "./fixtures";
-import { programWith, seedProgram, seedProgress, solutionOf } from "./seed";
+import { programWith, seedProgram, seedProgress, readSolution } from "./seed";
 
 /** `step k of N` as numbers. */
 async function position(page: Page): Promise<{ k: number; n: number }> {
@@ -20,7 +20,7 @@ async function runPaused(page: Page): Promise<void> {
 test.describe("running FizzBuzz", () => {
   test.beforeEach(async ({ page }) => {
     await seedProgress(page, {});
-    await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+    await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
     await page.goto("/#/p/fizzbuzz");
   });
 
@@ -151,7 +151,7 @@ test.describe("running FizzBuzz", () => {
 
 test("while running, the case and the solution stay put", async ({ page }) => {
   await seedProgress(page, {});
-  await seedProgram(page, "fizzbuzz", solutionOf("fizzbuzz"));
+  await seedProgram(page, "fizzbuzz", readSolution("fizzbuzz"));
   await page.goto("/#/p/fizzbuzz");
   await runPaused(page);
   await expect(page.getByTestId("case-selector")).toBeDisabled();

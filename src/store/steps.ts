@@ -51,7 +51,7 @@ function exchanges(
  * exchange it copies the runner's state when the step is to be shown, the state the step shows
  * when the write is alone.
  */
-export function stepsOf(runner: Runner): Steps {
+export function createSteps(runner: Runner): Steps {
   let ahead: Event | Done | undefined;
   return {
     next(keep) {
