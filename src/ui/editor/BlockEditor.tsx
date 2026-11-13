@@ -23,7 +23,7 @@ import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics, ledDraft } from "./diagnostics";
 import { apply } from "./edits";
 import { EditorList } from "./EditorList";
-import { explainDraft, explainLine, helpSpans, type Explanation } from "./explain";
+import { explainDraft, explainEditor, explainLine, helpSpans, type Explanation } from "./explain";
 import {
   editedLines,
   fieldBeside,
@@ -42,6 +42,8 @@ import {
 import { caretMatches, caretOffersAll, readCaret, wordAt } from "./caret";
 import { callableFunctions, type LineContext } from "./choices";
 import { CaptionField } from "./CaptionField";
+import { composingKey } from "./composition";
+import { tabTarget } from "./focus";
 import { routineNames } from "./names";
 import { valueList } from "./valueList";
 import {
@@ -56,6 +58,7 @@ import {
   shownHighlight,
   showAll,
   valueKey,
+  NO_FIELD,
   type After,
   type Session,
   type Transition,
@@ -67,7 +70,18 @@ import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 
 type Initial = { slot: string | null; insertedCaret: number | null };
 
-function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initial: Initial }) {
+/** Whether a key is pressed with Ctrl, Cmd, Alt, or Shift. */
+const modified = (event: KeyboardEvent) =>
+  event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
+
+function Body(props: {
+  stmt: Stmt;
+  program: Program;
+  initial: Initial;
+  /** The editor itself: the popup, outside every field and control (`editor.md`, Block editor). */
+  editor: HTMLElement | null;
+}) {
+  const { stmt, program, initial, editor } = props;
   const def = getBlockDef(keyOf(stmt));
   const ledDiagnostic = useEditor((s) => s.ledDiagnostic);
   const typing = useEditor((s) => s.typing);
@@ -93,6 +107,38 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
   useEffect(() => {
     if (focus && !sameField(focus, focused)) elements.current.get(focus.slot)?.focus();
   }, [focus, focused]);
+
+  // Where the keyboard goes in the editor. Anywhere but a field, no field has it, so the value list
+  // closes, and Tab back into a field opens it as Tab does (`editor.md`, Value line, Selected
+  // text). On the editor itself, the explanation line names the ways out. The listener comes before
+  // the effect below, which can give the editor itself the keyboard as the editor opens; a body
+  // drawn again while the editor itself has it starts there.
+  const [onEditor, setOnEditor] = useState(
+    () => editor !== null && document.activeElement === editor,
+  );
+  useEffect(() => {
+    if (!editor) return;
+    const taken = (event: FocusEvent) => {
+      const target = event.target instanceof Element ? event.target : null;
+      setOnEditor(target === editor);
+      if (!target?.closest("[data-value-line]")) setSession(NO_FIELD);
+    };
+    const left = (event: FocusEvent) => {
+      if (event.target === editor) setOnEditor(false);
+    };
+    editor.addEventListener("focusin", taken);
+    editor.addEventListener("focusout", left);
+    return () => {
+      editor.removeEventListener("focusin", taken);
+      editor.removeEventListener("focusout", left);
+    };
+  }, [editor]);
+
+  // While no field has it, the keyboard stays in the editor: the editor itself takes it when the
+  // editor opens on no field, and when the field that had it goes (`editor.md`, Block editor).
+  useEffect(() => {
+    if (editor && focus === null && !editor.contains(document.activeElement)) editor.focus();
+  }, [editor, focus]);
 
   const routine = routineOf(program, stmt.id);
   const kinds = variableKinds(program, routine);
@@ -285,6 +331,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
       stmt.id,
     );
   }
+  if (onEditor) explanation ??= explainEditor();
   explanation ??= {
     name: [{ text: blockText(def.key, "label") }],
     spans: helpSpans(blockText(def.key, "help")),
@@ -346,7 +393,10 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
         {notation}
       </div>
       {list && <div className="flex h-0 min-h-24 flex-1 flex-col border-b">{list}</div>}
-      <div
+      {/* The popup's description, which a screen reader reads when the editor itself takes the
+          keyboard (`editor.md`, Block editor). */}
+      <PopoverPrimitive.Description
+        render={<div />}
         className={cn(
           "flex items-baseline gap-2 rounded-b-lg bg-muted/40 px-2.5 py-2 text-[0.85rem]",
           // Four lines, the longest help's, so the highlight does not change the list's height.
@@ -372,7 +422,7 @@ function Body({ stmt, program, initial }: { stmt: Stmt; program: Program; initia
             ),
           )}
         </span>
-      </div>
+      </PopoverPrimitive.Description>
     </div>
   );
 }
@@ -384,6 +434,23 @@ export function BlockEditor({ id }: { id: NodeId }) {
   const insertedCaret = useEditor((s) => s.insertedCaret);
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
+  const [popup, setPopup] = useState<HTMLDivElement | null>(null);
+
+  /**
+   * A key that no field or control took (`editor.md`, Block editor): Tab and Shift+Tab, which never
+   * move the keyboard out of an open editor, and on the editor itself Enter, which closes it.
+   * Ctrl/Cmd+Enter stays the page's play button, and a key of a composition is the composition's.
+   */
+  const editorKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.defaultPrevented || composingKey(event) || !popup) return;
+    if (event.key === "Tab") {
+      event.preventDefault();
+      tabTarget(popup, document.activeElement, event.shiftKey ? -1 : 1).focus();
+    } else if (event.key === "Enter" && event.target === popup && !modified(event)) {
+      event.preventDefault();
+      closeEditor();
+    }
+  };
   // The chart node's box, which the editor is placed beside; it is no control of its own.
   const [anchor, setAnchor] = useState<Element | null>(null);
   // The selection holds a statement of the open program (`useEditor`).
@@ -413,17 +480,20 @@ export function BlockEditor({ id }: { id: NodeId }) {
         >
           <PopoverPrimitive.Popup
             style={{ width: EDITOR_WIDTH }}
+            ref={setPopup}
             className="z-50 flex flex-col rounded-lg bg-popover text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden"
             aria-label={t("editor.label")}
-            // The keyboard stays with the chart unless a slot takes it.
+            // A field, or else the editor itself, takes the keyboard once the editor is drawn.
             initialFocus={false}
             finalFocus={false}
+            onKeyDown={editorKey}
           >
             <Body
               key={`${id}:${slot ?? ""}:${insertedCaret ?? ""}`}
               stmt={stmt}
               program={program}
               initial={{ slot, insertedCaret }}
+              editor={popup}
             />
           </PopoverPrimitive.Popup>
         </PopoverPrimitive.Positioner>

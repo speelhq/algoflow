@@ -33,6 +33,14 @@ export function explainDraft(diagnostic: Diagnostic): Explanation {
   return { name: [], spans: [{ text: errorText(diagnostic) }] };
 }
 
+/**
+ * The editor itself, outside every field: how to close it and how to remove its block (`editor.md`,
+ * Explanation line).
+ */
+export function explainEditor(): Explanation {
+  return { name: [], spans: helpSpans(t("editor.explain.editor")) };
+}
+
 /** A help text, each piece in backticks a key to type. */
 export function helpSpans(text: string): ExplanationSpan[] {
   return text

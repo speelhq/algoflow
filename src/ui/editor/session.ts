@@ -79,6 +79,15 @@ export function openSession(
   return sessionOn(stmt, start, (value) => openedLine(value, insertedCaret));
 }
 
+/** The session while no field has the keyboard: the editor itself or another control has it. */
+export const NO_FIELD: Session = {
+  focus: null,
+  line: null,
+  fieldValue: null,
+  highlight: null,
+  all: false,
+};
+
 /**
  * The keyboard moves to `field`, or leaves every field: by Tab, its line opens as a field opens;
  * by a click, with the selection the click made.

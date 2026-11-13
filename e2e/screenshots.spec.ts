@@ -214,6 +214,18 @@ test.describe("Block editor", () => {
     await expect(editor(page)).toBeVisible();
   }
 
+  test("on the editor itself", async ({ page }) => {
+    await insert(page, "assign");
+    await page.keyboard.type("total");
+    await page.keyboard.press("Enter");
+    await page.keyboard.type("0");
+    // Tab past the last field gives the editor itself the keyboard.
+    await page.keyboard.press("Tab");
+    await expect(page.getByRole("dialog", { name: "Edit block" })).toBeFocused();
+    await expect(editor(page).getByTestId("explanation")).toContainText("closes the editor");
+    await page.screenshot({ path: shot("editor-itself"), animations: "disabled" });
+  });
+
   test("choosing a variable", async ({ page }) => {
     await insert(page, "assign");
     await page.keyboard.type("to");
