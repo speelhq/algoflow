@@ -21,6 +21,8 @@ export type InputDecl = { name: Name; kind: Kind };
 export type FunctionDef = { id: NodeId; name: Name; params: Name[]; body: Stmt[] };
 /** `main`, or a function by its node id; `"main"` is never a node id, which has 12 characters. */
 export type Routine = "main" | NodeId;
+/** What a `Routine` names: the function, or `"main"` for `main`. */
+export type RoutineDef = FunctionDef | "main";
 
 // ---------------------------------------------------------------- Data (JSON form)
 

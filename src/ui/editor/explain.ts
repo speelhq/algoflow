@@ -3,7 +3,7 @@
 import { errorText, t } from "@/i18n/t";
 import { firstSetters, variableKinds, type Kinds } from "@/lang/kinds";
 import type { Diagnostic, Expr, Name, Kind, NodeId, Program } from "@/lang/types";
-import { getRoutine, isEmptyDraft, getHoldingRoutine } from "@/lang/walk";
+import { getRoutineDef, isEmptyDraft, getHoldingRoutine } from "@/lang/walk";
 import {
   parenthesized,
   blockNotation,
@@ -57,7 +57,7 @@ export const kindName = (kind: Kind) => t(`editor.kind.${kind}`);
 /** A variable of the routine that holds statement `at`: its kind and where it is first set. */
 export function explainVariable(program: Program, at: NodeId, name: Name): string {
   const routine = getHoldingRoutine(program, at);
-  const def = getRoutine(program, routine);
+  const def = getRoutineDef(program, routine);
   const kind = variableKinds(program, routine).get(name);
   if (def === "main") {
     const input = program.inputs.find((candidate) => candidate.name === name);

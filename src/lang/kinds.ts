@@ -6,7 +6,7 @@ import { getBlockDef, registryKey } from "@/blocks/registry";
 import { isFloatData } from "./data";
 import { declaredBy } from "./scope";
 import type { Data, Expr, Name, Kind, Program, Routine, Stmt } from "./types";
-import { allStmts, getRoutine, routineStmts, findVariableName } from "./walk";
+import { allStmts, getRoutineDef, routineStmts, findVariableName } from "./walk";
 
 /** The kind of a value written as Data. */
 export function dataKind(data: Data): Kind {
@@ -43,7 +43,7 @@ function routineKinds(program: Program, routine: Routine): RoutineKinds {
   }
   const known = routines.get(routine);
   if (known) return known;
-  const routineDef = getRoutine(program, routine);
+  const routineDef = getRoutineDef(program, routine);
   const kinds = new Map<Name, Kind>();
   const setters = new Map<Name, Stmt>();
   const assigned = new Set<Name>();

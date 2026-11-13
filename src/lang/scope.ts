@@ -3,7 +3,7 @@
 // Registry-driven: slots, `loop`, and regions, never a type.
 import { getBlockDef, registryKey } from "@/blocks/registry";
 import type { Expr, Name, NodeId, Place, Program, RegionParent, Stmt } from "./types";
-import { findRoutine, isExpr, bodyRegions, findVariableName } from "./walk";
+import { findRoutineDef, isExpr, bodyRegions, findVariableName } from "./walk";
 
 type Bag = Record<string, unknown>;
 
@@ -92,7 +92,7 @@ export function placeContext(program: Program, place: Place): { loop: boolean; f
 
   let loop = false;
   let at: RegionParent | undefined = place.parent;
-  while (at !== undefined && findRoutine(program, at) === undefined) {
+  while (at !== undefined && findRoutineDef(program, at) === undefined) {
     const stmt = stmts.get(at);
     if (stmt && getBlockDef(registryKey(stmt)).loop) loop = true;
     at = up.get(at);

@@ -8,8 +8,8 @@ import {
   diamondConditions,
   draftSlots,
   draftText,
-  findRoutine,
-  getRoutine,
+  findRoutineDef,
+  getRoutineDef,
   isStatement,
   getOwner,
   paramArg,
@@ -144,12 +144,12 @@ describe("routines", () => {
   it("finds a routine's function, or main, and nothing for a routine that names no function", () => {
     const fn = { id: "fun000000004", name: "main", params: [], body: [] };
     const p = program([], { functions: [fn] });
-    expect(findRoutine(p, "main")).toBe("main");
-    expect(findRoutine(p, fn.id)).toBe(p.functions[0]);
-    expect(findRoutine(p, createTestId())).toBeUndefined();
-    expect(getRoutine(p, fn.id)).toBe(p.functions[0]);
-    expect(() => getRoutine(p, createTestId())).toThrow();
+    expect(findRoutineDef(p, "main")).toBe("main");
+    expect(findRoutineDef(p, fn.id)).toBe(p.functions[0]);
+    expect(findRoutineDef(p, createTestId())).toBeUndefined();
+    expect(getRoutineDef(p, fn.id)).toBe(p.functions[0]);
+    expect(() => getRoutineDef(p, createTestId())).toThrow();
     expect(routineStmts(p, "main")).toBe(p.main);
-    expect(routineStmts(p, getRoutine(p, fn.id))).toBe(p.functions[0]?.body);
+    expect(routineStmts(p, getRoutineDef(p, fn.id))).toBe(p.functions[0]?.body);
   });
 });
