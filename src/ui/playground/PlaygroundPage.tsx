@@ -30,7 +30,7 @@ const rows = () => {
   return playgroundRows(storedTitle);
 };
 
-function edited(time: number): string {
+function formatDateTime(time: number): string {
   return new Intl.DateTimeFormat(getLocale(), { dateStyle: "medium", timeStyle: "short" }).format(
     time,
   );
@@ -103,7 +103,7 @@ export function PlaygroundPage() {
                 >
                   {row.title || t("playground.untitled")}
                 </a>
-                <span className="text-sm text-muted-foreground">{edited(row.edited)}</span>
+                <span className="text-sm text-muted-foreground">{formatDateTime(row.edited)}</span>
                 <Button variant="outline" size="sm" onClick={() => setDoomed(row)}>
                   {t("playground.delete")}
                 </Button>

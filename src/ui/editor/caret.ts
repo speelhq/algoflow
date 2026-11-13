@@ -106,13 +106,13 @@ type Bag = Record<string, unknown>;
  * `expr` with a mark in each slot that holds nothing: each empty slot, and each literal that holds
  * no text; and with `TAKEN` in its first slot when it takes a value.
  */
-function marked(expr: Expr, takes: boolean): Expr {
+function markEmptySlots(expr: Expr, takes: boolean): Expr {
   const def = getBlockDef(registryKey(expr));
   const copy: Bag = { ...expr };
   const first = takes ? firstSlot(expr) : undefined;
   const mark = (value: unknown): unknown => {
     if (isEmptyDraft(value)) return createDraft(EMPTY);
-    return value && typeof value === "object" ? marked(value as Expr, false) : value;
+    return value && typeof value === "object" ? markEmptySlots(value as Expr, false) : value;
   };
   for (const slot of def.slots) {
     const value = copy[slot.name];
@@ -135,7 +135,7 @@ function marked(expr: Expr, takes: boolean): Expr {
  * the text of the value it takes into its first slot.
  */
 function writeChoice(made: Expr, taken?: string): Choice {
-  const full = unparse(marked(made, taken !== undefined));
+  const full = unparse(markEmptySlots(made, taken !== undefined));
   const firstEmpty = full.indexOf(EMPTY);
   const dropped = full.replace(TRAILING, (run: string, offset: number) =>
     offset <= firstEmpty && firstEmpty < offset + run.length ? CARET : "",
@@ -226,7 +226,7 @@ function wholeTarget(line: TextLine, place: CaretPlace, ctx: LineContext): Row[]
  * (`editor.md`, Targets), read with each slot it doesn't fill as a name and each parenthesis and
  * bracket still open closed, so a row inside the target's slots stays.
  */
-function kept(
+function keptRows(
   line: TextLine,
   place: Extract<CaretPlace, { place: "expected" | "after" }>,
   rows: readonly Row[],
@@ -246,7 +246,7 @@ function wordRows(line: TextLine, place: CaretPlace, ctx: LineContext): Row[] {
   if (place.place === "text" || place.place === "none") return [];
   const whole = wholeTarget(line, place, ctx);
   if (whole) return whole;
-  return kept(
+  return keptRows(
     line,
     place,
     place.place === "expected" ? expectedWordRows(ctx) : rowsAfter(undefined, false),
@@ -279,7 +279,7 @@ export function caretSections(line: TextLine, ctx: LineContext, all: boolean): S
   if (place.word.text !== "") return matchSections(matchesAt(line, place, ctx), asked);
   const rows =
     whole ??
-    kept(
+    keptRows(
       line,
       place,
       place.place === "expected" ? expectedRows(ctx, all) : rowsAfter(place.kind, all),

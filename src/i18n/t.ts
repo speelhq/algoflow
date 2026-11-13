@@ -81,6 +81,6 @@ export function errorText(error: { code: ErrorCode; params: Params }): string {
 }
 
 /** A challenge-file text (`Localized`) in the current locale, falling back to `en`. */
-export function localized(text: { en: string; ja?: string }): string {
+export function localize(text: { en: string; ja?: string }): string {
   return text[current] ?? text.en;
 }

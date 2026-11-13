@@ -13,17 +13,20 @@ export type PythonRunner = (code: string, draws: number[], names: Name[]) => Pyt
 
 /** What each differing row says: its line or variable, what was expected, and what came. */
 function differences(rows: Rows): string[] {
-  const shown = (value: unknown) => (value === undefined ? "nothing" : JSON.stringify(value));
+  const formatValue = (value: unknown) => (value === undefined ? "nothing" : JSON.stringify(value));
   return [
     ...rows.output
       .filter((row) => row.differs)
-      .map((row) => `line ${row.line}: expected ${shown(row.expected)}, got ${shown(row.actual)}`),
+      .map(
+        (row) =>
+          `line ${row.line}: expected ${formatValue(row.expected)}, got ${formatValue(row.actual)}`,
+      ),
     ...rows.variables
       .filter((row) => row.differs)
       .map((row) =>
         row.actual === undefined
           ? `variable ${row.name} was never assigned`
-          : `${row.name}: expected ${shown(row.expected)}, got ${shown(row.actual)}`,
+          : `${row.name}: expected ${formatValue(row.expected)}, got ${formatValue(row.actual)}`,
       ),
   ];
 }

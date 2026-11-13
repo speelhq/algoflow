@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ast } from "@/blocks/testing";
 import { estimatedWidth } from "./layout";
 import { currentNode, paint, type RunView } from "./paint";
-import { laidOut } from "./testing";
+import { getLayout } from "./testing";
 
 const { bin, for_, if_, num, print, str, v, program } = ast;
 
@@ -11,7 +11,7 @@ const yes = print(str("zero"));
 const branch = if_(bin("==", v("i"), num(0)), [yes], [print(v("i"))]);
 const loop = for_("i", num(0), num(3), [branch]);
 const after = print(str("done"));
-const chart = laidOut(program([loop, after]), {
+const chart = getLayout(program([loop, after]), {
   routine: "main",
   inputs: {},
   measure: estimatedWidth,
@@ -79,25 +79,25 @@ describe("paint", () => {
   it("takes a loop's No edge into a following loop's first chart node once control is there", () => {
     const first = for_("i", num(0), num(2), [print(v("i"))]);
     const second = for_("j", num(0), num(2), [print(v("j"))]);
-    const twice = laidOut(program([first, second]), {
+    const twice = getLayout(program([first, second]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
     });
     const check = twice.nodes.find((node) => node.owner === first.id && node.role === "check");
     const no = twice.edges.find((edge) => edge.from === check?.id && edge.label === "no");
-    const at = (activeId: string) =>
+    const paintActive = (activeId: string) =>
       paint(twice, view({ activeId, taken: { [first.id]: true, [second.id]: true } }));
-    expect(no && at(second.id).takenEdges.has(no.id)).toBe(true);
+    expect(no && paintActive(second.id).takenEdges.has(no.id)).toBe(true);
     // Before its first check the loop is current and has no mark: its No edge is not taken.
-    expect(no && at(first.id).takenEdges.has(no.id)).toBe(false);
+    expect(no && paintActive(first.id).takenEdges.has(no.id)).toBe(false);
   });
 
   it("after a loop with a break, the No edge is taken unless the break reached the exit", () => {
     const stop = ast.brk();
     const jumpy = for_("i", num(0), num(3), [if_(bin("==", v("i"), num(1)), [stop])]);
     const next = print(str("done"));
-    const drawn = laidOut(program([jumpy, next]), {
+    const drawn = getLayout(program([jumpy, next]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
@@ -105,10 +105,11 @@ describe("paint", () => {
     const check = drawn.nodes.find((node) => node.owner === jumpy.id && node.role === "check");
     const no = drawn.edges.find((edge) => edge.from === check?.id && edge.label === "no");
     const jump = drawn.edges.find((edge) => edge.from === stop.id);
-    const at = (taken: Record<string, true>) => paint(drawn, view({ activeId: next.id, taken }));
-    const ended = at({ [jumpy.id]: true, [next.id]: true });
+    const paintTaken = (taken: Record<string, true>) =>
+      paint(drawn, view({ activeId: next.id, taken }));
+    const ended = paintTaken({ [jumpy.id]: true, [next.id]: true });
     expect(no && ended.takenEdges.has(no.id)).toBe(true);
-    const broke = at({ [jumpy.id]: true, [stop.id]: true, [next.id]: true });
+    const broke = paintTaken({ [jumpy.id]: true, [stop.id]: true, [next.id]: true });
     expect(no && broke.takenEdges.has(no.id)).toBe(false);
     expect(jump && broke.takenEdges.has(jump.id)).toBe(true);
   });

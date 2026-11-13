@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import type { Challenge } from "@/challenges";
 import { nextProblem } from "@/challenges/next";
 import { firstDifferingRow, resultRows } from "@/challenges/rows";
-import { errorText, localized, t } from "@/i18n/t";
+import { errorText, localize, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { useEditor } from "@/store/editor";
 import { isRunMode, useMode } from "@/store/mode";
@@ -91,7 +91,7 @@ function SelectedRows({ challenge }: { challenge: Challenge }) {
 }
 
 /** `Next problem →`, or `Plan complete` with `Back to Problems` after a plan's last. */
-function Next({ id }: { id: string }) {
+function NextProblemView({ id }: { id: string }) {
   const entries = useProgress((s) => s.entries);
   const next = nextProblem(id, (other) => findProgressStatus(entries, other));
   if (next.kind === "complete") {
@@ -111,7 +111,7 @@ function Next({ id }: { id: string }) {
   );
 }
 
-function Accepted({ challenge }: { challenge: Challenge }) {
+function AcceptedSubmission({ challenge }: { challenge: Challenge }) {
   const first = useSubmission((s) => s.outcomes[0]);
   const setTab = useEditor((s) => s.setTab);
   // The chart stays the run's in run mode.
@@ -128,7 +128,7 @@ function Accepted({ challenge }: { challenge: Challenge }) {
           <h3 className="mb-1 text-xs tracking-wide text-muted-foreground uppercase">
             {t("result.whatYouUsed")}
           </h3>
-          <Markdown text={localized(challenge.takeaway)} />
+          <Markdown text={localize(challenge.takeaway)} />
         </section>
       )}
       <div className="flex flex-col items-start gap-2 border-t pt-3">
@@ -138,10 +138,10 @@ function Accepted({ challenge }: { challenge: Challenge }) {
         <Button variant="outline" disabled={runMode} onClick={() => revealSolution(challenge.id)}>
           {t("result.compare")}
         </Button>
-        <Button variant="outline" onClick={() => openInPlayground(localized(challenge.title))}>
+        <Button variant="outline" onClick={() => openInPlayground(localize(challenge.title))}>
           {t("problem.openInPlayground")}
         </Button>
-        <Next id={challenge.id} />
+        <NextProblemView id={challenge.id} />
       </div>
     </>
   );
@@ -168,7 +168,7 @@ export function SubmissionView({ challenge }: { challenge: Challenge }) {
       {!accepted && <p>{t("result.passedCount", { k: passed, n: challenge.tests.length })}</p>}
       <Chips challenge={challenge} />
       {accepted ? (
-        <Accepted challenge={challenge} />
+        <AcceptedSubmission challenge={challenge} />
       ) : (
         <>
           <SelectedRows challenge={challenge} />

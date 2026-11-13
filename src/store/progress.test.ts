@@ -8,7 +8,8 @@ import {
   useProgress,
 } from "./progress";
 
-const stored = (): unknown => JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) ?? "null");
+const readStoredProgress = (): unknown =>
+  JSON.parse(localStorage.getItem(PROGRESS_STORAGE_KEY) ?? "null");
 
 /** The store of a second tab: a new instance of the module, loaded from storage as it is now. */
 async function anotherTab(): Promise<typeof useProgress> {
@@ -63,7 +64,9 @@ describe("progress store", () => {
 
   it("persists the bare record under algoflow:progress", () => {
     useProgress.getState().submitted("fizzbuzz", true);
-    expect(stored()).toEqual({ fizzbuzz: { status: "solved", hints: 0, solution: false } });
+    expect(readStoredProgress()).toEqual({
+      fizzbuzz: { status: "solved", hints: 0, solution: false },
+    });
     expect(localStorage.length).toBe(1);
   });
 
@@ -75,7 +78,7 @@ describe("progress store", () => {
       fizzbuzz: { status: "solved", hints: 0, solution: false },
       gcd: { status: "attempted", hints: 2, solution: false },
     };
-    expect(stored()).toEqual(both);
+    expect(readStoredProgress()).toEqual(both);
     expect(other.getState().entries).toEqual(both);
   });
 
@@ -84,7 +87,7 @@ describe("progress store", () => {
     useProgress.getState().submitted("gcd", true);
     other.getState().solutionShown("gcd");
     useProgress.getState().hintShown("gcd", 1);
-    expect(stored()).toEqual({ gcd: { status: "solved", hints: 1, solution: true } });
+    expect(readStoredProgress()).toEqual({ gcd: { status: "solved", hints: 1, solution: true } });
     other.getState().submitted("gcd", false);
     expect(other.getState().entries.gcd).toEqual({ status: "solved", hints: 1, solution: true });
   });

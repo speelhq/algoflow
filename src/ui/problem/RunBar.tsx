@@ -11,7 +11,7 @@ import { Button } from "@/ui/primitives/button";
 import { Slider } from "@/ui/primitives/slider";
 import { togglePlay } from "./actions";
 
-function first(value: number | readonly number[]): number {
+function firstValue(value: number | readonly number[]): number {
   return typeof value === "number" ? value : (value[0] ?? 0);
 }
 
@@ -107,7 +107,7 @@ export function RunBar() {
               min={0}
               max={total}
               value={[step]}
-              onValueChange={(value) => void seek(first(value))}
+              onValueChange={(value) => void seek(firstValue(value))}
               aria-label={t("run.position.label")}
               data-testid="position"
             />

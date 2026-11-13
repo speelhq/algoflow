@@ -14,7 +14,7 @@ const { assign, num, bin, v, print, ret, program } = ast;
 /** The demo challenge and the plans hold English texts only. */
 const EN_ONLY = { requireJa: false };
 
-function valid() {
+function createValidChallenge() {
   const solution = program([assign("total", bin("+", v("n"), num(1)))], {
     inputs: [{ name: "n", kind: "number" }],
   });
@@ -38,11 +38,11 @@ function valid() {
 
 describe("checkChallengeSchema", () => {
   it("accepts a complete challenge", () => {
-    expect(checkChallengeSchema(valid(), "demo", EN_ONLY).problems).toEqual([]);
+    expect(checkChallengeSchema(createValidChallenge(), "demo", EN_ONLY).problems).toEqual([]);
   });
 
   it("reports each structural problem", () => {
-    const c = valid();
+    const c = createValidChallenge();
     c.id = "other";
     c.hints = c.hints.slice(0, 2);
     c.tests[1]!.edge = false;
@@ -61,13 +61,13 @@ describe("checkChallengeSchema", () => {
   });
 
   it("rejects a key the schema does not have, such as the removed starter", () => {
-    const c = valid() as unknown as Record<string, unknown>;
+    const c = createValidChallenge() as unknown as Record<string, unknown>;
     c.starter = c.solution;
     expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual(['unknown key "starter"']);
   });
 
   it("checks difficulty, topics, and takeaway", () => {
-    const c = valid() as unknown as Record<string, unknown>;
+    const c = createValidChallenge() as unknown as Record<string, unknown>;
     c.difficulty = "trivial";
     c.topics = [];
     c.takeaway = "plain text";
@@ -85,7 +85,7 @@ describe("checkChallengeSchema", () => {
   });
 
   it("module is a name, and defines lists functions the solution itself defines", () => {
-    const c = valid() as unknown as Record<string, unknown>;
+    const c = createValidChallenge() as unknown as Record<string, unknown>;
     c.module = "Heap";
     c.defines = ["twice", 3];
     expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
@@ -102,13 +102,13 @@ describe("checkChallengeSchema", () => {
       'solution does not define "twice"',
     ]);
     const twice = { id: "f0000000000f", name: "twice", params: ["x"], body: [ret(v("x"))] };
-    c.solution = { ...valid().solution, functions: [twice] };
+    c.solution = { ...createValidChallenge().solution, functions: [twice] };
     expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([]);
   });
 
   it("requires at least three tests and a non-empty expect", () => {
-    const c = valid() as unknown as { tests: unknown[] };
-    const [first, second] = valid().tests;
+    const c = createValidChallenge() as unknown as { tests: unknown[] };
+    const [first, second] = createValidChallenge().tests;
     c.tests = [first, { ...second, expect: {} }];
     const { problems } = checkChallengeSchema(c, "demo", EN_ONLY);
     expect(problems).toEqual(
@@ -120,12 +120,12 @@ describe("checkChallengeSchema", () => {
   });
 
   it("inputs are declared with a kind, and every test's value has it, as canonical Data the blocks write", () => {
-    const c = valid();
+    const c = createValidChallenge();
     (c.tests[0]!.inputs as Record<string, unknown>).n = "one";
     expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
       "tests[0].inputs.n is not of the kind number",
     ]);
-    const beyond = valid();
+    const beyond = createValidChallenge();
     (beyond.tests[1]!.inputs as Record<string, unknown>).n = 2 ** 53;
     (beyond.tests[2]!.expect.variables as Record<string, unknown>).total = [1, 2 ** 60];
     expect(checkChallengeSchema(beyond, "demo", EN_ONLY).problems).toEqual([
@@ -133,14 +133,14 @@ describe("checkChallengeSchema", () => {
       "tests[2].expect.variables.total[1]: expected an integer within the int range",
     ]);
     // No dict block exists yet, so no block writes a dict.
-    const dict = valid();
+    const dict = createValidChallenge();
     dict.inputs = [{ name: "n", kind: "dict" }];
     dict.solution.inputs = [{ name: "n", kind: "dict" }];
     for (const test of dict.tests) (test.inputs as Record<string, unknown>).n = { a: 1 };
     expect(checkChallengeSchema(dict, "demo", EN_ONLY).problems).toEqual(
       expect.arrayContaining(["tests[0].inputs.n is a value no block writes"]),
     );
-    const undeclared = valid();
+    const undeclared = createValidChallenge();
     (undeclared.inputs[0] as Record<string, unknown>).kind = "word";
     expect(checkChallengeSchema(undeclared, "demo", EN_ONLY).problems).toEqual(
       expect.arrayContaining(["inputs[0] must be { name, kind }"]),
@@ -148,7 +148,7 @@ describe("checkChallengeSchema", () => {
   });
 
   it("an object in a test is refused at its path, while no block constructs one", () => {
-    const c = valid();
+    const c = createValidChallenge();
     (c.tests[0]!.expect.variables as Record<string, unknown>).total = { $cls: "Pair", a: 1 };
     expect(checkChallengeSchema(c, "demo", EN_ONLY).problems).toEqual([
       'tests[0].expect.variables.total["$cls"]: expected no object: no block constructs one',
@@ -156,7 +156,7 @@ describe("checkChallengeSchema", () => {
   });
 
   it("runs validate() on the solution and reports diagnostics", () => {
-    const c = valid();
+    const c = createValidChallenge();
     c.solution = {
       ...program([print(v("ghost"))], { inputs: [{ name: "n", kind: "number" }] }),
       challengeId: "demo",
@@ -167,7 +167,7 @@ describe("checkChallengeSchema", () => {
   });
 
   it("requires the solution in the current version, as the app reads it with no migrate()", () => {
-    const c = valid();
+    const c = createValidChallenge();
     const old = { ...c.solution, version: 2 };
     expect(checkChallengeSchema({ ...c, solution: old }, "demo", EN_ONLY).problems).toEqual([
       "solution.version must be 1",
@@ -176,7 +176,7 @@ describe("checkChallengeSchema", () => {
   });
 
   it("runs the solution as the build bundles it, not as migrate() reads it", () => {
-    const c = valid();
+    const c = createValidChallenge();
     c.solution = {
       ...program([assign("total", ast.draft("n + 1"))], {
         inputs: [{ name: "n", kind: "number" }],
@@ -194,9 +194,9 @@ describe("checkChallengeSchema", () => {
   });
 
   it("requires ja texts only when asked", () => {
-    expect(checkChallengeSchema(valid(), "demo", { requireJa: true }).problems).toEqual(
-      expect.arrayContaining([expect.stringContaining("title must be { en, ja? }")]),
-    );
+    expect(
+      checkChallengeSchema(createValidChallenge(), "demo", { requireJa: true }).problems,
+    ).toEqual(expect.arrayContaining([expect.stringContaining("title must be { en, ja? }")]));
   });
 });
 
@@ -280,7 +280,7 @@ describe("checkTest", () => {
   const createAddOne = () => assign("total", bin("+", v("n"), num(1)));
   /** The demo challenge with `main` as its solution's. */
   const challenge = (main: Stmt[]): Challenge => {
-    const json = valid();
+    const json = createValidChallenge();
     const inputs = [{ name: "n", kind: "number" as const }];
     json.solution = { ...program(main, { inputs }), challengeId: "demo" };
     const checked = checkChallengeSchema(json, "demo", EN_ONLY).challenge;
@@ -288,7 +288,7 @@ describe("checkTest", () => {
     return checked;
   };
   /** A CPython that answers `result` and records what it was given. */
-  const fake = (result: ReturnType<PythonRunner>) => {
+  const createFakePython = (result: ReturnType<PythonRunner>) => {
     const calls: Parameters<PythonRunner>[] = [];
     const python: PythonRunner = (...args) => {
       calls.push(args);
@@ -299,7 +299,7 @@ describe("checkTest", () => {
 
   it("passes when the interpreter meets expect and CPython agrees, given the code, draws, and names", () => {
     const demo = challenge([createAddOne()]);
-    const { python, calls } = fake({ stdout: [], vars: { n: 1, total: 2 } });
+    const { python, calls } = createFakePython({ stdout: [], vars: { n: 1, total: 2 } });
     expect(checkTest(demo, demo.tests[0]!, 0, python)).toEqual([]);
     expect(calls).toEqual([["n = 1\ntotal = n + 1\n", [], ["n", "total"]]]);
   });
@@ -307,7 +307,7 @@ describe("checkTest", () => {
   it("reports each row that differs from expect", () => {
     const demo = challenge([createAddOne()]);
     const test = { ...demo.tests[0]!, expect: { variables: { total: 99 } } };
-    const { python } = fake({ stdout: [], vars: { n: 1, total: 2 } });
+    const { python } = createFakePython({ stdout: [], vars: { n: 1, total: 2 } });
     expect(checkTest(demo, test, 0, python)).toEqual([
       'test[0] {"n":1}: total: expected 99, got 2',
     ]);
@@ -316,7 +316,7 @@ describe("checkTest", () => {
   it("reports an interpreter error alone, without running CPython", () => {
     const div = bin("/", num(1), num(0));
     const demo = challenge([assign("total", div)]);
-    const { python, calls } = fake({ stdout: [], vars: {} });
+    const { python, calls } = createFakePython({ stdout: [], vars: {} });
     expect(checkTest(demo, demo.tests[0]!, 0, python)).toEqual([
       `test[0] {"n":1}: interpreter E_DIV_ZERO at ${div.id} {}`,
     ]);
@@ -325,11 +325,16 @@ describe("checkTest", () => {
 
   it("reports CPython failing, and each line and variable where it differs from the interpreter", () => {
     const demo = challenge([createAddOne()]);
-    expect(checkTest(demo, demo.tests[0]!, 0, fake({ error: "boom" }).python)).toEqual([
+    expect(checkTest(demo, demo.tests[0]!, 0, createFakePython({ error: "boom" }).python)).toEqual([
       'test[0] {"n":1}: python3 failed: boom',
     ]);
     expect(
-      checkTest(demo, demo.tests[0]!, 0, fake({ stdout: ["x"], vars: { n: 1 } }).python),
+      checkTest(
+        demo,
+        demo.tests[0]!,
+        0,
+        createFakePython({ stdout: ["x"], vars: { n: 1 } }).python,
+      ),
     ).toEqual([
       'test[0] {"n":1}: CPython line 1: expected nothing, got "x"',
       'test[0] {"n":1}: CPython variable total was never assigned',

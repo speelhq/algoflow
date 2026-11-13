@@ -35,7 +35,7 @@ const AFTER = /^(?:[,;:.)"'`]| *\||\n|$)/;
 const HANDLES = / \((?:`[^`]*`(?:, )?)+\)$/;
 
 /** Whether each line of a Markdown text is fenced code, its fences included. */
-function fenced(lines: readonly string[]): boolean[] {
+function fencedLineMask(lines: readonly string[]): boolean[] {
   let inside = false;
   return lines.map((line) => {
     const fence = /^[ \t]*```/.test(line);
@@ -48,7 +48,7 @@ function fenced(lines: readonly string[]): boolean[] {
 /** The text with each line of fenced code blanked, so it keeps its offsets and line breaks. */
 function withoutFences(text: string): string {
   const lines = text.split("\n");
-  const code = fenced(lines);
+  const code = fencedLineMask(lines);
   return lines.map((line, i) => (code[i] ? " ".repeat(line.length) : line)).join("\n");
 }
 
@@ -88,7 +88,7 @@ const CONTINUATION = /^[ \t]*(?:\/\/ ?|\* ?|> ?)?[ \t]*/;
 function flatten(text: string, code: boolean): Flat {
   const flat: Flat = { text: "", at: [] };
   const lines = text.split("\n");
-  const inCode = code ? lines.map(() => true) : fenced(lines);
+  const inCode = code ? lines.map(() => true) : fencedLineMask(lines);
   let offset = 0;
   // Where this line's text starts: past the continuation the break before it read as a space.
   let from = 0;
@@ -114,7 +114,7 @@ function flatten(text: string, code: boolean): Flat {
  * The headings of `among` with the longest name that `text` starts with, followed by what may
  * follow a heading, and that name's length. Two headings may share a name under different parents.
  */
-function longest(
+function longestMatch(
   text: string,
   among: readonly Heading[],
 ): { headings: Heading[]; length: number } | undefined {
@@ -144,12 +144,12 @@ function unknownHeadings(text: string, start: number, among: readonly Heading[])
   const startsHeading = (pos: number) => /^[A-Z]/.test(text.slice(pos));
   let pos = start;
   for (;;) {
-    let found = longest(text.slice(pos), among);
+    let found = longestMatch(text.slice(pos), among);
     if (!found) return startsHeading(pos) ? [pos] : [];
     pos += found.length;
     while (text.startsWith(", ", pos) && startsHeading(pos + 2)) {
       const parents = found.headings;
-      found = longest(
+      found = longestMatch(
         text.slice(pos + 2),
         among.filter((h) => parents.some((parent) => isUnder(h, parent))),
       );

@@ -57,7 +57,7 @@ export type EditorState = {
  * `id`, when it is a statement of the open program; the selection holds a statement only
  * (`chart.md`, Editing on the chart, Selection and keys), so any other node id throws.
  */
-function selectable(id: NodeId): NodeId {
+function requireStatement(id: NodeId): NodeId {
   if (!isStatement(useProgram.getState().program, id)) throw new Error(`${id} is no statement`);
   return id;
 }
@@ -75,7 +75,7 @@ export const useEditor = create<EditorState>()((set) => ({
   setTab: (tab) => set({ tab }),
   select: (id, slot, edit = true) =>
     set({
-      selectedId: id === null ? null : selectable(id),
+      selectedId: id === null ? null : requireStatement(id),
       slot: slot ?? null,
       insertedCaret: null,
       editing: id !== null && edit,
@@ -83,7 +83,7 @@ export const useEditor = create<EditorState>()((set) => ({
     }),
   selectInserted: (id, caret) =>
     set({
-      selectedId: selectable(id),
+      selectedId: requireStatement(id),
       slot: null,
       insertedCaret: caret,
       editing: true,
@@ -95,7 +95,7 @@ export const useEditor = create<EditorState>()((set) => ({
   showSolution: (shown) => set({ solution: shown }),
   lead: (owner, diagnostic) =>
     set({
-      selectedId: selectable(owner),
+      selectedId: requireStatement(owner),
       slot: null,
       insertedCaret: null,
       editing: true,

@@ -53,7 +53,7 @@ function reuses(ids: Iterable<NodeId>, taken: ReadonlySet<NodeId>): boolean {
 }
 
 /** A statement entering the program must not reuse an existing id. */
-function fresh(stmt: Stmt, program: Program): Stmt {
+function cloneWithUniqueIds(stmt: Stmt, program: Program): Stmt {
   const copy = clone(stmt);
   if (reuses(idsUnder([copy]), takenIds(program, []))) reIdStmt(copy);
   return copy;
@@ -67,7 +67,11 @@ function claim(expr: Expr, taken: Set<NodeId>): void {
 }
 
 /** Expressions entering the program; ids of `replaced`, which they take the place of, may stay. */
-function freshExprs(exprs: readonly Expr[], program: Program, replaced: readonly Expr[]): Expr[] {
+function cloneExprsWithUniqueIds(
+  exprs: readonly Expr[],
+  program: Program,
+  replaced: readonly Expr[],
+): Expr[] {
   const taken = takenIds(program, replaced);
   return exprs.map((expr) => {
     const copy = clone(expr);
@@ -133,7 +137,7 @@ export function insertStmt(program: Program, stmt: Stmt, place: Place): Program 
   const next = clone(program);
   const region = getRegion(next, place);
   const index = Math.max(0, Math.min(place.index, region.length));
-  region.splice(index, 0, fresh(stmt, next));
+  region.splice(index, 0, cloneWithUniqueIds(stmt, next));
   return next;
 }
 
@@ -177,9 +181,13 @@ export function setExpr(program: Program, id: NodeId, slot: string, value: Expr 
   const bag = block as unknown as Bag;
   const held = bag[slot];
   if ((role === "expr" || role === "target") && !Array.isArray(value)) {
-    [bag[slot]] = freshExprs([value], next, isExpr(held) ? [held] : []);
+    [bag[slot]] = cloneExprsWithUniqueIds([value], next, isExpr(held) ? [held] : []);
   } else if (role === "exprs" && Array.isArray(value)) {
-    bag[slot] = freshExprs(value, next, Array.isArray(held) ? held.filter(isExpr) : []);
+    bag[slot] = cloneExprsWithUniqueIds(
+      value,
+      next,
+      Array.isArray(held) ? held.filter(isExpr) : [],
+    );
   } else {
     throw new EditError(
       `block ${id} has no ${Array.isArray(value) ? "exprs" : "expression"} slot ${slot}`,

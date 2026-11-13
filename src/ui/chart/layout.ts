@@ -176,7 +176,7 @@ function emptyFrag(): Frag {
   };
 }
 
-const last = (points: Point[]): Point => points[points.length - 1] ?? { x: 0, y: 0 };
+const lastPoint = (points: Point[]): Point => points[points.length - 1] ?? { x: 0, y: 0 };
 
 function shiftPoints(points: Point[], dx: number, dy: number): void {
   for (const point of points) {
@@ -212,7 +212,7 @@ function anchorPoint(points: Point[], which: "first" | "last" | "start"): Point 
   }
   const segment =
     which === "start" ? undefined : which === "first" ? vertical[0] : vertical[vertical.length - 1];
-  const [a, b] = segment ?? [points[0] ?? { x: 0, y: 0 }, points[1] ?? last(points)];
+  const [a, b] = segment ?? [points[0] ?? { x: 0, y: 0 }, points[1] ?? lastPoint(points)];
   return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
 }
 
@@ -322,7 +322,7 @@ function routeNextToUpdate(
 
 /** Extends a leaving flow sideways to `x`. */
 function extendTo(escape: Stub, x: number): void {
-  escape.points.push({ x, y: last(escape.points).y });
+  escape.points.push({ x, y: lastPoint(escape.points).y });
 }
 
 class Builder {
@@ -342,10 +342,10 @@ class Builder {
     unplaced: NotationSpan[],
     y: number,
   ): ChartNode {
-    const measured = (span: NotationSpan) => (span === BREAK ? 0 : this.measure(span));
-    const whole = unplaced.reduce((sum, span) => sum + measured(span), 0);
-    const lines = shape === "diamond" && whole > WRAP ? inTwo(unplaced, measured) : [unplaced];
-    const lineWidths = lines.map((line) => line.reduce((sum, span) => sum + measured(span), 0));
+    const spanWidth = (span: NotationSpan) => (span === BREAK ? 0 : this.measure(span));
+    const whole = unplaced.reduce((sum, span) => sum + spanWidth(span), 0);
+    const lines = shape === "diamond" && whole > WRAP ? inTwo(unplaced, spanWidth) : [unplaced];
+    const lineWidths = lines.map((line) => line.reduce((sum, span) => sum + spanWidth(span), 0));
     const width = Math.max(0, ...lineWidths);
     const padded =
       shape === "diamond"
@@ -361,7 +361,7 @@ class Builder {
       let dx = (w - (lineWidths[index] ?? 0)) / 2;
       const dy = (index - (lines.length - 1) / 2) * LINE;
       return line.map((span) => {
-        const placed: PlacedSpan = { ...span, dx, dy, w: measured(span) };
+        const placed: PlacedSpan = { ...span, dx, dy, w: spanWidth(span) };
         dx += placed.w;
         return placed;
       });
@@ -529,7 +529,7 @@ class Builder {
     frag.height = yMerge;
     const row = yMerge + LANE / 2;
     for (const escape of no.escapes) {
-      const from = last(escape.points);
+      const from = lastPoint(escape.points);
       escape.points.push({ x: lane, y: from.y }, { x: lane, y: row }, { x: frag.right, y: row });
       frag.height = yMerge + LANE;
     }
@@ -764,7 +764,7 @@ export function layout(program: Program, opts: LayoutOptions): ChartLayout | und
     const yEnd = y + end.h / 2;
     for (const escape of body.escapes) {
       const into = [
-        { x: trunk, y: last(escape.points).y },
+        { x: trunk, y: lastPoint(escape.points).y },
         { x: trunk, y: yEnd },
         { x: end.w / 2, y: yEnd },
       ];

@@ -529,7 +529,7 @@ function expectsValue(token: Token): boolean {
 }
 
 /** The parentheses and brackets that `tokens` opens and leaves open, innermost last. */
-function stillOpen(tokens: readonly Token[]): Token[] {
+function unclosedOpeners(tokens: readonly Token[]): Token[] {
   const open: Token[] = [];
   for (const token of tokens) {
     if (token.type !== "op") continue;
@@ -541,7 +541,7 @@ function stillOpen(tokens: readonly Token[]): Token[] {
 
 /** The closers of the parentheses and brackets that `tokens` leaves open, innermost first. */
 function closingTokens(tokens: readonly Token[], pos: number): Token[] {
-  return stillOpen(tokens)
+  return unclosedOpeners(tokens)
     .toReversed()
     .map((opener): Token => {
       const text = CLOSERS[opener.text] ?? "";
@@ -652,7 +652,7 @@ export function readBefore(text: string): CaretReading {
   const { tokens, unclosed } = scan(text);
   if (unclosed !== undefined) return { place: "text" };
   // The caret's text starts after the innermost parenthesis or bracket still open.
-  const innermost = stillOpen(tokens).at(-1);
+  const innermost = unclosedOpeners(tokens).at(-1);
   const open = innermost ? innermost.pos + 1 : 0;
   const last = tokens.at(-1);
   const expected = last === undefined || last.pos < open || expectsValue(last);

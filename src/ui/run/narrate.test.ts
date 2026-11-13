@@ -24,7 +24,7 @@ const { exprStmt, call, ret } = ast;
 const say = (n: Narration) => t(n.key, n.params);
 
 /** Runs to the `nth` event of `type` and narrates it with the state of that moment. */
-function told(p: Program, type: Event["type"], nth = 1, inputs: Record<string, Data> = {}) {
+function narrateNth(p: Program, type: Event["type"], nth = 1, inputs: Record<string, Data> = {}) {
   const runner = run(p, inputs, 1);
   let seen = 0;
   for (;;) {
@@ -41,15 +41,15 @@ describe("narrate", () => {
   it("enter: `Checking …` for a condition, `Running …` and the block's notation otherwise", () => {
     const check = if_(bin("==", bin("%", v("i"), num(3)), num(0)), []);
     const p = program([assign("i", num(6)), check, while_(bin(">", v("i"), num(9)), [])]);
-    expect(told(p, "enter", 1)).toBe("Running i ← 6");
-    expect(told(p, "enter", 2)).toBe("Checking i % 3 == 0");
-    expect(told(p, "enter", 3)).toBe("Checking i > 9");
-    expect(told(program([for_("i", num(1), num(3), [])]), "enter")).toBe("Running i ← 1");
+    expect(narrateNth(p, "enter", 1)).toBe("Running i ← 6");
+    expect(narrateNth(p, "enter", 2)).toBe("Checking i % 3 == 0");
+    expect(narrateNth(p, "enter", 3)).toBe("Checking i > 9");
+    expect(narrateNth(program([for_("i", num(1), num(3), [])]), "enter")).toBe("Running i ← 1");
   });
 
   it("enter: a block with a caption is narrated by its statement, not its caption", () => {
     const captioned = { ...assign("i", num(6)), caption: "start counting" };
-    expect(told(program([captioned]), "enter")).toBe("Running i ← 6");
+    expect(narrateNth(program([captioned]), "enter")).toBe("Running i ← 6");
   });
 
   it("compare: a diamond's whole condition is its question with the values, and its answer", () => {
@@ -58,8 +58,8 @@ describe("narrate", () => {
       if_(bin(">", bin("+", v("n"), num(1)), num(3)), []),
       if_(bin("==", v("n"), num(5)), []),
     ]);
-    expect(told(p, "compare", 1)).toBe("4 + 1 > 3? Yes");
-    expect(told(p, "compare", 2)).toBe("4 == 5? No");
+    expect(narrateNth(p, "compare", 1)).toBe("4 + 1 > 3? Yes");
+    expect(narrateNth(p, "compare", 2)).toBe("4 == 5? No");
   });
 
   it("compare: FizzBuzz at i = 3 writes its operations as the chart does", () => {
@@ -68,8 +68,8 @@ describe("narrate", () => {
       if_(bin("==", bin("%", v("i"), num(15)), num(0)), []),
       if_(bin("==", bin("%", bin("+", v("i"), num(1)), num(2)), num(0)), []),
     ]);
-    expect(told(p, "compare", 1)).toBe("3 % 15 == 0? No");
-    expect(told(p, "compare", 2)).toBe("(3 + 1) % 2 == 0? Yes");
+    expect(narrateNth(p, "compare", 1)).toBe("3 % 15 == 0? No");
+    expect(narrateNth(p, "compare", 2)).toBe("(3 + 1) % 2 == 0? Yes");
   });
 
   it("compare: any other comparison, such as a side of and, says its value as the blocks write it", () => {
@@ -79,12 +79,12 @@ describe("narrate", () => {
       if_(both, []),
       assign("ok", bin("!=", v("a"), num(1))),
     ]);
-    expect(told(p, "compare", 1)).toBe("1 < 2 is True");
-    expect(told(p, "compare", 3)).toBe("1 < 2 and 1 < 9? Yes");
-    expect(told(p, "compare", 4)).toBe("1 != 1 is False");
+    expect(narrateNth(p, "compare", 1)).toBe("1 < 2 is True");
+    expect(narrateNth(p, "compare", 3)).toBe("1 < 2 and 1 < 9? Yes");
+    expect(narrateNth(p, "compare", 4)).toBe("1 != 1 is False");
     const negated = program([assign("a", num(1)), while_(not(bin(">=", v("a"), num(1))), [])]);
-    expect(told(negated, "compare", 1)).toBe("1 >= 1 is True");
-    expect(told(negated, "compare", 2)).toBe("not 1 >= 1? No");
+    expect(narrateNth(negated, "compare", 1)).toBe("1 >= 1 is True");
+    expect(narrateNth(negated, "compare", 2)).toBe("not 1 >= 1? No");
   });
 
   it("compare: a condition that is one variable keeps its name; inside one it is a value", () => {
@@ -94,8 +94,8 @@ describe("narrate", () => {
       if_(v("found"), []),
       while_(bin("and", not(v("found")), bin("<", v("i"), num(15))), []),
     ]);
-    expect(told(p, "compare", 1)).toBe("found? Yes");
-    expect(told(p, "compare", 2)).toBe("not True and 3 < 15? No");
+    expect(narrateNth(p, "compare", 1)).toBe("found? Yes");
+    expect(narrateNth(p, "compare", 2)).toBe("not True and 3 < 15? No");
   });
 
   it("compare: values are written as the blocks write them", () => {
@@ -105,8 +105,8 @@ describe("narrate", () => {
       if_(bin("==", v("done"), bool(false)), []),
       if_(bin("!=", v("name"), none()), []),
     ]);
-    expect(told(p, "compare", 1)).toBe("True == False? No");
-    expect(told(p, "compare", 2)).toBe('"Fizz" != None? Yes');
+    expect(narrateNth(p, "compare", 1)).toBe("True == False? No");
+    expect(narrateNth(p, "compare", 2)).toBe('"Fizz" != None? Yes');
   });
 
   it("write, loop, print, call, and return", () => {
@@ -124,28 +124,28 @@ describe("narrate", () => {
       ],
       { functions: [fn] },
     );
-    expect(told(p, "loop", 1)).toBe("Pass 1: i is 3");
-    expect(told(p, "write", 1)).toBe("half is now 1.5");
-    expect(told(p, "print", 1)).toBe('Printed "Fizz"');
-    expect(told(p, "loop", 3)).toBe("Pass 3"); // a while: no variable (the pass comes from the driver)
-    expect(told(p, "call")).toBe("Calling f(2)");
-    expect(told(p, "return")).toBe("f returned 4");
+    expect(narrateNth(p, "loop", 1)).toBe("Pass 1: i is 3");
+    expect(narrateNth(p, "write", 1)).toBe("half is now 1.5");
+    expect(narrateNth(p, "print", 1)).toBe('Printed "Fizz"');
+    expect(narrateNth(p, "loop", 3)).toBe("Pass 3"); // a while: no variable (the pass comes from the driver)
+    expect(narrateNth(p, "call")).toBe("Calling f(2)");
+    expect(narrateNth(p, "return")).toBe("f returned 4");
   });
 
   it("loop: a loop's target is written as a location, an item by the variable that holds it", () => {
     const { program: p, inputs } = createProgramWithInputs({ nums: [4, 9] }, [
       ast.forTo(ast.item(v("nums"), num(1)), num(7), num(9), []),
     ]);
-    expect(told(p, "loop", 2, inputs)).toBe("Pass 2: nums[1] is 8");
+    expect(narrateNth(p, "loop", 2, inputs)).toBe("Pass 2: nums[1] is 8");
   });
 
   it("read, swap, and write name an item as the blocks write it, by the variable that holds it", () => {
     const { program: p, inputs } = createProgramWithInputs({ nums: [4, 9, 5], x: 5 }, [
       if_(bin("in", v("x"), v("nums")), []),
     ]);
-    expect(told(p, "read", 1, inputs)).toBe("Read 3 items of nums");
+    expect(narrateNth(p, "read", 1, inputs)).toBe("Read 3 items of nums");
     // A list keeps its name: its items were narrated by the read before the comparison.
-    expect(told(p, "compare", 1, inputs)).toBe("5 in nums? Yes");
+    expect(narrateNth(p, "compare", 1, inputs)).toBe("5 in nums? Yes");
 
     const runner = run(p, inputs, 1);
     const state = runner.state();
@@ -208,7 +208,7 @@ describe("narrate", () => {
       error: { nodeId: "x", code: "E_INDEX", params: { index: 5, length: 3 } },
       events: 2,
     } as const;
-    const at = (position: Partial<Position>) => {
+    const narrateAt = (position: Partial<Position>) => {
       const line = narratePosition(
         {
           step: 1,
@@ -225,20 +225,20 @@ describe("narrate", () => {
       );
       return line && { text: say(line.narration), error: line.error };
     };
-    expect(at({})).toEqual({ text: 'Printed "a"', error: false });
-    expect(at({ difference: { step: 1, line: 1 } })).toEqual({
+    expect(narrateAt({})).toEqual({ text: 'Printed "a"', error: false });
+    expect(narrateAt({ difference: { step: 1, line: 1 } })).toEqual({
       text: "This printed line 1",
       error: false,
     });
-    expect(at({ step: 2 })).toEqual({ text: "Finished in 2 steps", error: false });
-    expect(at({ step: 2, difference: { step: 2 } })).toEqual({
+    expect(narrateAt({ step: 2 })).toEqual({ text: "Finished in 2 steps", error: false });
+    expect(narrateAt({ step: 2, difference: { step: 2 } })).toEqual({
       text: "The run ended here",
       error: false,
     });
-    expect(at({ step: 2, outcome: error, difference: { step: 2 } })).toEqual({
+    expect(narrateAt({ step: 2, outcome: error, difference: { step: 2 } })).toEqual({
       text: "Item 5 does not exist (length 3)",
       error: true,
     });
-    expect(at({ step: 0, lastEvent: null, state: null })).toBeNull();
+    expect(narrateAt({ step: 0, lastEvent: null, state: null })).toBeNull();
   });
 });

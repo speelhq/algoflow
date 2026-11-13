@@ -36,7 +36,8 @@ vi.mock("@/challenges", () => ({
   findChallenge: (id: string | undefined) => [bare].find((challenge) => challenge.id === id),
 }));
 
-const stored = (id: string): unknown => JSON.parse(localStorage.getItem(programKey(id)) ?? "null");
+const readStoredProgram = (id: string): unknown =>
+  JSON.parse(localStorage.getItem(programKey(id)) ?? "null");
 const withMain = (p: Program, main: Program["main"]): Program => ({ ...p, main });
 
 describe("program store", () => {
@@ -170,13 +171,13 @@ describe("program store", () => {
 
   it("an edit is saved 500 ms after the last edit, and opening alone saves nothing", () => {
     useProgram.getState().load("bare");
-    expect(stored("bare")).toBeNull();
+    expect(readStoredProgram("bare")).toBeNull();
     const next = withMain(useProgram.getState().program, [print(num(1))]);
     useProgram.getState().edit(next);
     vi.advanceTimersByTime(SAVE_DELAY - 1);
-    expect(stored("bare")).toBeNull();
+    expect(readStoredProgram("bare")).toBeNull();
     vi.advanceTimersByTime(1);
-    expect(stored("bare")).toEqual(next);
+    expect(readStoredProgram("bare")).toEqual(next);
   });
 
   it("hiding the page saves at once, and opening another program saves the pending edit", () => {
@@ -184,11 +185,11 @@ describe("program store", () => {
     const next = withMain(useProgram.getState().program, [print(num(1))]);
     useProgram.getState().edit(next);
     window.dispatchEvent(new Event("pagehide"));
-    expect(stored("bare")).toEqual(next);
+    expect(readStoredProgram("bare")).toEqual(next);
     localStorage.clear();
     useProgram.getState().edit(withMain(next, [print(num(2))]));
     useProgram.getState().load("play-abcdefghijkl");
-    expect(stored("bare")).toMatchObject({ main: [{ type: "print" }] });
+    expect(readStoredProgram("bare")).toMatchObject({ main: [{ type: "print" }] });
   });
 
   it("a Playground program has a play- id, and its saves are indexed by time", () => {
@@ -197,7 +198,7 @@ describe("program store", () => {
     expect(isPlaygroundId(id)).toBe(true);
     expect(id).toMatch(/^play-[A-Za-z0-9_-]{12}$/);
     expect(readIndex()).toEqual({ [id]: { edited: 1000 } });
-    expect(stored(id)).toEqual(createProgram("Mine"));
+    expect(readStoredProgram(id)).toEqual(createProgram("Mine"));
 
     useProgram.getState().load(id);
     vi.setSystemTime(5000);
@@ -211,7 +212,7 @@ describe("program store", () => {
 
     deletePlaygroundProgram(id);
     expect(readIndex()).toEqual({});
-    expect(stored(id)).toBeNull();
+    expect(readStoredProgram(id)).toBeNull();
     expect(localStorage.getItem(PLAYGROUND_STORAGE_KEY)).toBe("{}");
   });
 

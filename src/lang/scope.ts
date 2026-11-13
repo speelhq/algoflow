@@ -42,7 +42,7 @@ function bump(names: Name[], latest: Name[]): Name[] {
  * what was assigned before it in its region and the regions around it, the loop variables
  * of the loops around it, and the inputs or parameters. Undefined for an unknown id.
  */
-export function visibleAt(program: Program, id: NodeId): Name[] | undefined {
+export function findVisibleNames(program: Program, id: NodeId): Name[] | undefined {
   const walk = (stmts: Stmt[], visible: Name[]): Name[] | undefined => {
     let names = visible;
     for (const stmt of stmts) {

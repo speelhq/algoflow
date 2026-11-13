@@ -10,7 +10,7 @@ import { findChallenge } from "@/challenges";
 import { blockText, t } from "@/i18n/t";
 import { duplicateStmt, removeStmt, setExpr } from "@/lang/edit";
 import { variableKinds } from "@/lang/kinds";
-import { visibleAt } from "@/lang/scope";
+import { findVisibleNames } from "@/lang/scope";
 import type { NodeId, Program, Stmt } from "@/lang/types";
 import { blocksById, getHoldingRoutine } from "@/lang/walk";
 import { cn } from "@/lib/utils";
@@ -119,19 +119,19 @@ function Body(props: {
   );
   useEffect(() => {
     if (!editor) return;
-    const taken = (event: FocusEvent) => {
+    const handleFocusIn = (event: FocusEvent) => {
       const target = event.target instanceof Element ? event.target : null;
       setOnEditor(target === editor);
       if (!target?.closest("[data-value-line]")) setSession(NO_FIELD);
     };
-    const left = (event: FocusEvent) => {
+    const handleFocusOut = (event: FocusEvent) => {
       if (event.target === editor) setOnEditor(false);
     };
-    editor.addEventListener("focusin", taken);
-    editor.addEventListener("focusout", left);
+    editor.addEventListener("focusin", handleFocusIn);
+    editor.addEventListener("focusout", handleFocusOut);
     return () => {
-      editor.removeEventListener("focusin", taken);
-      editor.removeEventListener("focusout", left);
+      editor.removeEventListener("focusin", handleFocusIn);
+      editor.removeEventListener("focusout", handleFocusOut);
     };
   }, [editor]);
 
@@ -157,7 +157,7 @@ function Body(props: {
   const target = focus ? targetSlot(stmt, focus) : undefined;
   const binds = target ? target.binds === true : undefined;
   const ctx: LineContext = useMemo(() => {
-    const variables = visibleAt(program, stmt.id) ?? [];
+    const variables = findVisibleNames(program, stmt.id) ?? [];
     return {
       variables,
       kinds,
@@ -178,7 +178,8 @@ function Body(props: {
   // ------------------------------------------------------------ transitions
 
   /** The statement as the program holds it now, after the edits applied so far. */
-  const current = () => blocksById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
+  const findCurrentStmt = () =>
+    blocksById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
 
   /** Writes a transition's values into the program and keeps the session it leaves. */
   const applyTransition = (transition: Transition): Session => {
@@ -191,7 +192,7 @@ function Body(props: {
 
   /** Moves the keyboard to `field`, its line opened as `how` says (`Entry`). */
   const enter = (field: Field | null, how: Entry): void => {
-    setSession(enterField(current() ?? stmt, field, how));
+    setSession(enterField(findCurrentStmt() ?? stmt, field, how));
   };
 
   /**
@@ -208,7 +209,7 @@ function Body(props: {
   /** `+ value` gives an optional slot an empty slot, whose field takes the keyboard. */
   const addValue = (slot: string) => {
     if (!apply((p) => setExpr(p, stmt.id, slot, createEmptyDraft()))) return;
-    const now = current() ?? stmt;
+    const now = findCurrentStmt() ?? stmt;
     enter(stmtFields(now).find((field) => field.slot === slot) ?? null, "tab");
   };
 

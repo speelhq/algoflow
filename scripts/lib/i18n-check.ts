@@ -84,11 +84,12 @@ export function scan(source: Source): Scan {
   return found;
 }
 
-/** Whether `key` is one the code builds from data: a registered block definition's, or an error code's. */
-function builtFromData(): (key: string) => boolean {
-  const prefixes = [...BLOCK_DEFS.keys()].map(blockPrefix);
-  const errors = new Set<string>(ERROR_CODES.map(errorKey));
-  return (key) => errors.has(key) || prefixes.some((prefix) => key.startsWith(prefix));
+/** Whether `key` is one the code builds from data: a block definition's, or an error code's. */
+function isBuiltKey(key: string): boolean {
+  return (
+    ERROR_CODES.some((code) => errorKey(code) === key) ||
+    [...BLOCK_DEFS.keys()].some((def) => key.startsWith(blockPrefix(def)))
+  );
 }
 
 /** Checks the keys used in `files` (paths relative to `root`, as `repoFiles` lists them). */
@@ -107,10 +108,9 @@ export function checkI18n(opts: {
   const unknown = usages.filter((u) => !enKeys.has(u.key));
   const literals = new Set(scans.flatMap((s) => s.literals));
   const patterns = scans.flatMap((s) => s.patterns);
-  const built = builtFromData();
-  const named = (key: string) =>
-    literals.has(key) || patterns.some((pattern) => pattern.test(key)) || built(key);
-  const unused = [...enKeys].filter((key) => !named(key));
+  const isUsed = (key: string) =>
+    literals.has(key) || patterns.some((pattern) => pattern.test(key)) || isBuiltKey(key);
+  const unused = [...enKeys].filter((key) => !isUsed(key));
 
   const missing: Missing[] = [];
   const jaPath = join(opts.i18nDir, "ja.json");

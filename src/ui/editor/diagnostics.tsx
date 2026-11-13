@@ -50,13 +50,13 @@ export function editorDiagnostics(
   typing: NodeId | null,
 ): Diagnostic[] {
   const shown = flaggedOwners(program, typing).get(id) ?? [];
-  const still = ledStill(program, led);
+  const still = findLedDiagnostic(program, led);
   const first = still && !isOnDraft(program, still) && getOwner(program, still.nodeId) === id;
   return first ? [still, ...shown.filter((d) => d !== still)] : shown;
 }
 
 /** The diagnostic Run or Submit led to, while the program still has it. */
-function ledStill(program: Program, led: Diagnostic | null): Diagnostic | undefined {
+function findLedDiagnostic(program: Program, led: Diagnostic | null): Diagnostic | undefined {
   return led ? validate(program).find((d) => isSameDiagnostic(d, led)) : undefined;
 }
 
@@ -70,7 +70,7 @@ export function ledDraft(
   stmt: Stmt,
   led: Diagnostic | null,
 ): { diagnostic: Diagnostic; draft: NodeId; from: number } | undefined {
-  const still = ledStill(program, led);
+  const still = findLedDiagnostic(program, led);
   if (!still || !isOnDraft(program, still) || getOwner(program, still.nodeId) !== stmt.id) {
     return undefined;
   }

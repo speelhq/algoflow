@@ -48,12 +48,13 @@ async function evaluate(program: Program, test: Test, mine: number): Promise<Out
   return finished && done ? collectOutcome(runner, done) : undefined;
 }
 
-function current(): { id: string; program: Program; tests: Test[] } | null {
+/** What Submit judges: the open program and its challenge's tests, when the program can run. */
+function findTarget(): { id: string; program: Program; tests: Test[] } | undefined {
   const program = useProgram.getState().program;
   const challenge = findChallenge(program.challengeId);
   return challenge && canRun(program)
     ? { id: challenge.id, program, tests: challenge.tests }
-    : null;
+    : undefined;
 }
 
 export const useSubmission = create<SubmissionState>()((set, get) => ({
@@ -64,7 +65,7 @@ export const useSubmission = create<SubmissionState>()((set, get) => ({
   selected: 0,
 
   async submit() {
-    const target = current();
+    const target = findTarget();
     if (!target) return;
     const mine = ++generation;
     set({ results: [], outcomes: [], submitting: true, accepted: false, selected: 0 });

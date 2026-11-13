@@ -305,7 +305,7 @@ export const useRun = create<RunState>()((set, get) => {
    * Steps up to `until` in batches, publishing `status` once per batch; with `breaks`
    * it also stops on arriving at the breakpoint. False when another action took over.
    */
-  const batched = (until: number, breaks: boolean, status: Status): Promise<boolean> => {
+  const stepUntil = (until: number, breaks: boolean, status: Status): Promise<boolean> => {
     const mine = generation;
     return runInBatches(
       (last) => {
@@ -379,7 +379,7 @@ export const useRun = create<RunState>()((set, get) => {
       reset(from);
       watching = opts?.watch === true;
       if (watching) {
-        if (await batched(made.difference.step, false, "paused")) publish("paused", false);
+        if (await stepUntil(made.difference.step, false, "paused")) publish("paused", false);
         return;
       }
       if (!isAtEnd()) armTimer();
@@ -413,7 +413,7 @@ export const useRun = create<RunState>()((set, get) => {
       target = to;
       // Forward: the current runner goes on; backward: a fresh runner from step 0.
       if (to < projection.step) reset(origin);
-      if (!(await batched(to, false, "paused"))) return;
+      if (!(await stepUntil(to, false, "paused"))) return;
       target = null;
       publish("paused", false);
     },
@@ -426,7 +426,7 @@ export const useRun = create<RunState>()((set, get) => {
       if (!isRunning() || !findings) return;
       cancel();
       publish("playing", true);
-      if (await batched(findings.total, true, "playing")) publish("paused", false);
+      if (await stepUntil(findings.total, true, "playing")) publish("paused", false);
     },
 
     stop() {
