@@ -24,7 +24,7 @@ type Binop = Extract<Expr, { type: "binop" }>;
 /** The kinds `<`, `<=`, `>`, and `>=` order. */
 const ORDERED = ["number", "text"] as const;
 
-function arithmetic(block: Binop, l: Value, r: Value, ctx: RunContext): Value {
+function evaluateArithmetic(block: Binop, l: Value, r: Value, ctx: RunContext): Value {
   if (block.op === "+" && l.t === "str" && r.t === "str") return { t: "str", v: l.v + r.v };
   if (!isNumber(l) || !isNumber(r)) return typeError(block.id, l, r, ctx);
   const float = l.t === "float" || r.t === "float";
@@ -77,7 +77,7 @@ function evaluateComparison(block: Binop, l: Value, r: Value, ctx: RunContext): 
 }
 
 /** One ref per compared list element. */
-function* membership(
+function* evaluateMembership(
   block: Binop,
   l: Value,
   r: Value,
@@ -144,12 +144,12 @@ export const binop = defineExpr<"binop">({
     if (isComparison(block.op)) {
       const result =
         block.op === "in"
-          ? yield* membership(block, left, right, ctx)
+          ? yield* evaluateMembership(block, left, right, ctx)
           : evaluateComparison(block, left, right, ctx);
       yield { type: "compare", nodeId: block.id, result };
       return { t: "bool", v: result };
     }
-    return arithmetic(block, left, right, ctx);
+    return evaluateArithmetic(block, left, right, ctx);
   },
   python: (block, ctx) => {
     const precedence = binopPrecedence(block.op);
