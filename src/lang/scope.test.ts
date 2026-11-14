@@ -1,9 +1,14 @@
-// What is visible where; the places `loop` and `requires` allow; the value list's Variables.
+// What is visible where; the places `loop` and `requires` allow; the value list's Variables;
+// each node's owner and routine.
 import { describe, expect, it } from "vitest";
-import { ast } from "@/blocks/testing";
+import { ast, createTestId } from "@/blocks/testing";
+import { removeFunction } from "./edit";
 import type { Program, Stmt } from "./types";
 import {
   declaredBy,
+  getHoldingRoutine,
+  getOwner,
+  isStatement,
   declarationsUnder,
   eachVisible,
   isVisible,
@@ -178,5 +183,54 @@ describe("scope", () => {
         ["b", inner, pass],
       ],
     );
+  });
+});
+
+describe("the node index", () => {
+  const cond = bin("==", v("n"), num(1));
+  const inner = print(v("n"));
+  const branch = if_(cond, [inner]);
+  const value = bin("+", v("a"), num(1));
+  const body = ret(value);
+  const fn = { id: "fun000000003", name: "inc", params: ["a"], body: [body] };
+  const p = program([assign("n", num(1)), branch], { functions: [fn] });
+
+  it("gives an expression its statement as owner, and a statement or a function itself", () => {
+    expect(getOwner(p, cond.id)).toBe(branch.id);
+    expect(getOwner(p, cond.type === "binop" ? cond.left.id : "")).toBe(branch.id);
+    expect(getOwner(p, inner.id)).toBe(inner.id);
+    expect(getOwner(p, value.id)).toBe(body.id);
+    expect(getOwner(p, body.id)).toBe(body.id);
+    expect(getOwner(p, fn.id)).toBe(fn.id);
+  });
+
+  it("gives the routine of an expression, of a statement, and of a function", () => {
+    expect(getHoldingRoutine(p, value.id)).toBe(fn.id);
+    expect(getHoldingRoutine(p, body.id)).toBe(fn.id);
+    expect(getHoldingRoutine(p, fn.id)).toBe(fn.id);
+    expect(getHoldingRoutine(p, cond.id)).toBe("main");
+    expect(getHoldingRoutine(p, inner.id)).toBe("main");
+  });
+
+  it("throws for a node the program doesn't hold, such as one of a deleted function", () => {
+    const deleted = removeFunction(p, fn.id);
+    for (const id of [createTestId(), value.id, fn.id]) {
+      expect(() => getOwner(deleted, id)).toThrow();
+      expect(() => getHoldingRoutine(deleted, id)).toThrow();
+    }
+  });
+
+  it("counts a statement as a statement, and neither an expression nor a function", () => {
+    expect([inner.id, branch.id, body.id].map((id) => isStatement(p, id))).toEqual([
+      true,
+      true,
+      true,
+    ]);
+    expect([cond.id, value.id, fn.id, createTestId()].map((id) => isStatement(p, id))).toEqual([
+      false,
+      false,
+      false,
+      false,
+    ]);
   });
 });

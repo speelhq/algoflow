@@ -26,18 +26,18 @@ tests.
   functions that return a new `Program` (`edit.ts`), and the conversion
   between `Data` and `Value`, which places lists, dicts, and objects on the
   heap (`data.ts`). `validate()` returns `Diagnostic[]` and runs after every
-  edit and before every run. One index in `walk.ts` holds every block and
-  function of a program with its owner (`chart.md`, Shapes) and its
-  routine, and `blocksById()`, `getOwner()`, and `getHoldingRoutine()`
-  read it. `scope.ts` walks a program's statements once and says where
-  each sits: its routine, whether a loop holds it, and the variables
-  visible there with what declares each (`language.md`, Scope,
+  edit and before every run. `walk.ts` traverses blocks by their slots.
+  `scope.ts` walks a program's statements once and
+  says where each sits: its routine, whether a loop holds it, and the
+  variables visible there with what declares each (`language.md`, Scope,
   Visibility). Validation, the value list, and the block menu read that
-  walk. Its `declarationsUnder()` gives the variables that a region's
-  statements declare, which the kinds, the name list, and `hoistAssign`
-  read.
+  walk, and so does the one index of every block and function with its
+  owner (`chart.md`, Shapes) and its routine, which `blocksById()`,
+  `getOwner()`, and `getHoldingRoutine()` read. `declarationsUnder()`
+  gives the variables that a region's statements declare, which the
+  kinds, the name list, and `hoistAssign` read.
   Never change a `Program` in place: `validate()`,
-  `refusedDefinitions()`, the scopes, the kinds, and that index are
+  `refusedDefinitions()`, the scopes, the index, and the kinds are
   memoized per `Program` object, and the undo history keeps earlier
   programs. Its spec is `docs/spec/language/language.md`.
 - `src/blocks`: one block definition (`BlockDef`) per file. It owns its slots,

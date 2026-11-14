@@ -3,7 +3,8 @@
 import { errorText, t } from "@/i18n/t";
 import { firstSetters, variableKinds, type Kinds } from "@/lang/kinds";
 import type { Diagnostic, Expr, Name, Kind, NodeId, Program } from "@/lang/types";
-import { getRoutineDef, isEmptyDraft, getHoldingRoutine } from "@/lang/walk";
+import { getHoldingRoutine } from "@/lang/scope";
+import { getRoutineDef, isEmptyDraft } from "@/lang/walk";
 import {
   isParenthesized,
   exprHint,

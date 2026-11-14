@@ -10,7 +10,8 @@ import { firstDifferingRow, watchStep, type WatchStep } from "@/challenges/rows"
 import { testSeed, type Test } from "@/challenges/types";
 import type { Data, Name, NodeId, Program } from "@/lang/types";
 import { canRun } from "@/lang/validate";
-import { bodyStmts, diamondConditions, blocksById, isStatement, getOwner } from "@/lang/walk";
+import { blocksById, isStatement, getOwner } from "@/lang/scope";
+import { bodyStmts, diamondConditions } from "@/lang/walk";
 import { clamp } from "@/lib/utils";
 import { getBlockDef, registryKey } from "@/blocks/registry";
 import { collectOutcome } from "@/runtime/outcome";

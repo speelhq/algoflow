@@ -4,7 +4,7 @@
 // whose editor has a field with the keyboard.
 import { create } from "zustand";
 import type { Diagnostic, NodeId } from "@/lang/types";
-import { isStatement } from "@/lang/walk";
+import { isStatement } from "@/lang/scope";
 import { useProgram } from "./program";
 
 export type PanelTab = "problem" | "result" | "python";

@@ -4,7 +4,7 @@
 // play button's action, what a click on a chart node does in each mode, and showing the solution.
 import { validate } from "@/lang/validate";
 import type { NodeId } from "@/lang/types";
-import { isStatement, getOwner } from "@/lang/walk";
+import { isStatement, getOwner } from "@/lang/scope";
 import { useEditor } from "@/store/editor";
 import { currentMode } from "@/store/mode";
 import { useProgram } from "@/store/program";

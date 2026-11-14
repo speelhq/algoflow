@@ -5,13 +5,8 @@ import type { WatchStep } from "@/challenges/rows";
 import { keyValue, toData } from "@/lang/data";
 import { errorKey, errorParams, t, type MessageKey, type Params } from "@/i18n/t";
 import type { Data, Expr, Heap, Program } from "@/lang/types";
-import {
-  findCondition,
-  diamondConditions,
-  isExpr,
-  blocksById,
-  findVariableName,
-} from "@/lang/walk";
+import { blocksById } from "@/lang/scope";
+import { findCondition, diamondConditions, isExpr, findVariableName } from "@/lang/walk";
 import { isParseError, createDataExpr } from "@/python/parse";
 import { valueAt } from "@/runtime/refs";
 import type { Done, Frame, Ref, State } from "@/runtime/types";

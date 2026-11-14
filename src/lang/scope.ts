@@ -4,8 +4,18 @@
 // whether a loop or a function holds a statement or a place.
 // Registry-driven: slots, `loop`, and regions, never a type.
 import { getBlockDef, registryKey } from "@/blocks/registry";
-import type { Expr, Name, NodeId, Place, Program, RegionParent, Routine, Stmt } from "./types";
-import { allStmts, bodyRegions, findRoutineDef, findVariableName, isExpr } from "./walk";
+import type {
+  Block,
+  Expr,
+  Name,
+  NodeId,
+  Place,
+  Program,
+  RegionParent,
+  Routine,
+  Stmt,
+} from "./types";
+import { allStmts, bodyRegions, findRoutineDef, findVariableName, isExpr, stmtExprs } from "./walk";
 
 type Bag = Record<string, unknown>;
 
@@ -157,9 +167,82 @@ export function statementScopes(program: Program): readonly StatementScope[] {
   return scopes;
 }
 
+/** Where a node stands: its owner (`chart.md`, Shapes) and the routine that holds it. */
+type Standing = { owner: NodeId; routine: Routine };
+type NodeIndex = {
+  blocks: Map<NodeId, Block>;
+  standings: Map<NodeId, Standing>;
+  scopes: Map<NodeId, StatementScope>;
+};
+
+const indexes = new WeakMap<Program, NodeIndex>();
+
+/**
+ * Every block and function of the program by id, and every statement's scope, read from the
+ * statements' scopes once per Program, so a statement's routine is recorded in one walk: a
+ * function owns itself and is its own routine, a statement owns itself, and an expression's owner
+ * is its statement. A statement held in two places (`E_DUPLICATE_ID`) is indexed by its last.
+ */
+function nodeIndex(program: Program): NodeIndex {
+  let index = indexes.get(program);
+  if (!index) {
+    const blocks = new Map<NodeId, Block>();
+    const standings = new Map<NodeId, Standing>();
+    const scopes = new Map<NodeId, StatementScope>();
+    for (const fn of program.functions) standings.set(fn.id, { owner: fn.id, routine: fn.id });
+    for (const scope of statementScopes(program)) {
+      const { stmt, routine } = scope;
+      blocks.set(stmt.id, stmt);
+      scopes.set(stmt.id, scope);
+      standings.set(stmt.id, { owner: stmt.id, routine });
+      for (const expr of stmtExprs(stmt)) {
+        blocks.set(expr.id, expr);
+        standings.set(expr.id, { owner: stmt.id, routine });
+      }
+    }
+    index = { blocks, standings, scopes };
+    indexes.set(program, index);
+  }
+  return index;
+}
+
+/** Where node `id` stands; throws for a node id the program doesn't hold. */
+function getStanding(program: Program, id: NodeId): Standing {
+  const standing = nodeIndex(program).standings.get(id);
+  if (!standing) throw new Error(`no node ${id}`);
+  return standing;
+}
+
+/** Every statement and expression of the program by id. */
+export function blocksById(program: Program): Map<NodeId, Block> {
+  return nodeIndex(program).blocks;
+}
+
+/**
+ * The owner of node `id`, the statement or function that stands for it on a chart (`chart.md`,
+ * Shapes). Throws for a node id the program doesn't hold.
+ */
+export function getOwner(program: Program, id: NodeId): NodeId {
+  return getStanding(program, id).owner;
+}
+
+/**
+ * The routine that holds node `id`: a function holds itself and every node of its body, and
+ * `main` every node of its own. Throws for a node id the program doesn't hold.
+ */
+export function getHoldingRoutine(program: Program, id: NodeId): Routine {
+  return getStanding(program, id).routine;
+}
+
+/** Whether node `id` is a statement of the program, a block that owns itself. */
+export function isStatement(program: Program, id: NodeId): boolean {
+  const { blocks, standings } = nodeIndex(program);
+  return blocks.has(id) && standings.get(id)?.owner === id;
+}
+
 /** The scope of the statement with node id `id`, or undefined when the program holds none. */
 function findScope(program: Program, id: NodeId): StatementScope | undefined {
-  return statementScopes(program).find((scope) => scope.stmt.id === id);
+  return nodeIndex(program).scopes.get(id);
 }
 
 /**

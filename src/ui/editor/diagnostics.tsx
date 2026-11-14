@@ -3,7 +3,8 @@ import { errorText, t } from "@/i18n/t";
 import { hoistAssign } from "@/lang/edit";
 import type { Diagnostic, NodeId, Program, Stmt } from "@/lang/types";
 import { validate } from "@/lang/validate";
-import { blocksById, draftText, getOwner } from "@/lang/walk";
+import { blocksById, getOwner } from "@/lang/scope";
+import { draftText } from "@/lang/walk";
 import { Button } from "@/ui/primitives/button";
 import { apply } from "./edits";
 

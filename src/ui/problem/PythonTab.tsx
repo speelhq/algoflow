@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { caseInputs } from "@/challenges/cases";
 import { t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
-import { isStatement } from "@/lang/walk";
+import { isStatement } from "@/lang/scope";
 import { emit } from "@/python/emit";
 import { useEditor } from "@/store/editor";
 import { isRunMode, useMode } from "@/store/mode";
