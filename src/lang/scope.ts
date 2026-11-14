@@ -159,39 +159,16 @@ export function findVisibleNames(program: Program, id: NodeId): Name[] | undefin
   return scope && [...new Set([...eachVisible(scope.visible)].map((each) => each.name))];
 }
 
-/** The statement whose region holds each statement; a top-level statement maps to its routine. */
-function parents(program: Program): Map<NodeId, RegionParent> {
-  const map = new Map<NodeId, RegionParent>();
-  const walk = (stmts: Stmt[], parent: RegionParent) => {
-    for (const stmt of stmts) {
-      map.set(stmt.id, parent);
-      for (const region of bodyRegions(stmt)) walk(region.stmts, stmt.id);
-    }
-  };
-  walk(program.main, "main");
-  for (const fn of program.functions) walk(fn.body, fn.id);
-  return map;
-}
-
-/** Whether a statement at `place` would be inside a loop body and inside a function. */
+/**
+ * Whether a statement at `place` would be inside a loop body and inside a function: inside one
+ * when its region is a loop's body or lies inside one, and inside a function when its routine is
+ * one. A place whose parent the program doesn't hold is inside neither.
+ */
 export function placeContext(program: Program, place: Place): { loop: boolean; fn: boolean } {
-  const up = parents(program);
-  const stmts = new Map<NodeId, Stmt>();
-  const index = (list: Stmt[]) => {
-    for (const stmt of list) {
-      stmts.set(stmt.id, stmt);
-      for (const region of bodyRegions(stmt)) index(region.stmts);
-    }
-  };
-  index(program.main);
-  for (const fn of program.functions) index(fn.body);
-
-  let loop = false;
-  let at: RegionParent | undefined = place.parent;
-  while (at !== undefined && findRoutineDef(program, at) === undefined) {
-    const stmt = stmts.get(at);
-    if (stmt && getBlockDef(registryKey(stmt)).loop) loop = true;
-    at = up.get(at);
+  if (findRoutineDef(program, place.parent) !== undefined) {
+    return { loop: false, fn: place.parent !== "main" };
   }
-  return { loop, fn: at !== undefined && at !== "main" };
+  const parent = findScope(program, place.parent);
+  if (!parent) return { loop: false, fn: false };
+  return { loop: isRegionInLoop(parent.stmt, parent.inLoop), fn: parent.routine !== "main" };
 }
