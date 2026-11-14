@@ -3,7 +3,7 @@
 import type { Expr } from "@/lang/types";
 import type { RunContext } from "@/blocks/types";
 import type { Event } from "./types";
-import { truthy } from "./values";
+import { isTruthy } from "./values";
 
 /**
  * Evaluates `cond`, passing on its events, and adds its `compare` unless the last event was it.
@@ -16,7 +16,7 @@ export function* decide(cond: Expr, ctx: RunContext): Generator<Event, boolean, 
   for (;;) {
     const step = evaluation.next();
     if (step.done) {
-      const result = truthy(step.value, ctx.heap);
+      const result = isTruthy(step.value, ctx.heap);
       if (last?.type !== "compare" || last.nodeId !== cond.id) {
         yield { type: "compare", nodeId: cond.id, result };
       }

@@ -38,7 +38,7 @@ const ctx: LineContext = {
 const targetCtx: LineContext = { ...ctx, target: { asked: [], names: ["x"], binds: true } };
 
 /** The field's text changes to `text`, the caret at its end. */
-const typed = (session: Session, text: string, composing = false) =>
+const typeText = (session: Session, text: string, composing = false) =>
   changeText(session, { text, start: text.length, end: text.length }, composing);
 
 const key = (name: string, shiftKey = false) => ({
@@ -50,7 +50,7 @@ const key = (name: string, shiftKey = false) => ({
 });
 
 /** A notation with a field before and after the focused one. */
-const both = () => true;
+const movesEitherWay = () => true;
 
 const entry = (label: string): Row => {
   const found = allEntries().find((each) => each.label === label);
@@ -100,10 +100,10 @@ describe("opening a field (editor.md, Block editor; Value line, Selected text)",
 });
 
 describe("changing the text (editor.md, Value line)", () => {
-  const opened = () => openSession(assign("total", empty()), value, 0);
+  const openEmptyField = () => openSession(assign("total", empty()), value, 0);
 
   it("writes the value the text parses as, and keeps the text as typed", () => {
-    const changed = typed(opened(), "x+1");
+    const changed = typeText(openEmptyField(), "x+1");
     expect(changed.edits).toHaveLength(1);
     expect(changed.edits[0]?.field).toEqual(value);
     expect(changed.edits[0]?.value).toMatchObject({ type: "binop", op: "+" });
@@ -111,27 +111,30 @@ describe("changing the text (editor.md, Value line)", () => {
   });
 
   it("writes text that doesn't parse as a draft, spaces included, and no text as an empty slot", () => {
-    expect(typed(opened(), "x + ").edits[0]?.value).toMatchObject({ type: "draft", text: "x + " });
-    const cleared = typed(typed(opened(), "x").session, "");
+    expect(typeText(openEmptyField(), "x + ").edits[0]?.value).toMatchObject({
+      type: "draft",
+      text: "x + ",
+    });
+    const cleared = typeText(typeText(openEmptyField(), "x").session, "");
     expect(cleared.edits[0]?.value).toMatchObject({ type: "draft", text: "" });
   });
 
   it("writes nothing when the text writes the value it already holds", () => {
-    const first = typed(opened(), "x+1");
-    expect(typed(first.session, "x + 1").edits).toEqual([]);
+    const first = typeText(openEmptyField(), "x+1");
+    expect(typeText(first.session, "x + 1").edits).toEqual([]);
   });
 
   it("writes nothing while an input method composes, and the text once it ends", () => {
-    const composing = typed(opened(), "x", true);
+    const composing = typeText(openEmptyField(), "x", true);
     expect(composing.edits).toEqual([]);
     expect(composing.session.line?.text).toBe("x");
-    expect(typed(composing.session, "x").edits).toHaveLength(1);
+    expect(typeText(composing.session, "x").edits).toHaveLength(1);
   });
 
   it("keeps in a target's line only a target, else the text as a draft", () => {
     const open = openSession(assign("total", num(0)), target, null);
-    expect(typed(open, "nums[0]").edits[0]?.value).toMatchObject({ type: "index" });
-    expect(typed(open, "x + 1").edits[0]?.value).toMatchObject({
+    expect(typeText(open, "nums[0]").edits[0]?.value).toMatchObject({ type: "index" });
+    expect(typeText(open, "x + 1").edits[0]?.value).toMatchObject({
       type: "draft",
       text: "x + 1",
     });
@@ -150,43 +153,45 @@ describe("changing the text (editor.md, Value line)", () => {
 describe("the keys a value line acts on (editor.md, Value list; Block editor)", () => {
   it("Enter chooses the highlighted row, else closes; Tab is the editor's", () => {
     const open = openSession(assign("total", num(0)), value, null);
-    expect(valueKey(open, key("Enter"), [], ctx, both).after).toBe("close");
+    expect(valueKey(open, key("Enter"), [], ctx, movesEitherWay).after).toBe("close");
     // Ctrl/Cmd+Enter is the page's play button.
     const play = { ...key("Enter"), ctrlKey: true };
-    expect(valueKey(open, play, [], ctx, both).taken).toBe(false);
-    expect(valueKey(open, { ...play, ctrlKey: false, metaKey: true }, [], ctx, both).taken).toBe(
-      false,
-    );
-    expect(valueKey(open, key("a"), [], ctx, both).taken).toBe(false);
+    expect(valueKey(open, play, [], ctx, movesEitherWay).taken).toBe(false);
+    expect(
+      valueKey(open, { ...play, ctrlKey: false, metaKey: true }, [], ctx, movesEitherWay).taken,
+    ).toBe(false);
+    expect(valueKey(open, key("a"), [], ctx, movesEitherWay).taken).toBe(false);
     // The editor moves Tab and Shift+Tab round its controls (`focus.ts`).
-    expect(valueKey(open, key("Tab"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(open, key("Tab", true), [], ctx, both).taken).toBe(false);
+    expect(valueKey(open, key("Tab"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(open, key("Tab", true), [], ctx, movesEitherWay).taken).toBe(false);
   });
 
   it("← at the start and → at the end, with no text selected, move to the field beside", () => {
-    const at = (start: number, end = start) =>
+    const openAt = (start: number, end = start) =>
       selectText(openSession(assign("total", num(10)), value, null), start, end);
-    expect(valueKey(at(0), key("ArrowLeft"), [], ctx, both).after).toEqual({
+    expect(valueKey(openAt(0), key("ArrowLeft"), [], ctx, movesEitherWay).after).toEqual({
       go: -1,
       entry: "end",
     });
-    expect(valueKey(at(2), key("ArrowRight"), [], ctx, both).after).toEqual({
+    expect(valueKey(openAt(2), key("ArrowRight"), [], ctx, movesEitherWay).after).toEqual({
       go: 1,
       entry: "start",
     });
     // Inside the text, over a selection, or with Shift, they move the caret as in a text field.
-    expect(valueKey(at(1), key("ArrowLeft"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(1), key("ArrowRight"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(0, 2), key("ArrowRight"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(0, 2), key("ArrowLeft"), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(0), key("ArrowLeft", true), [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(0), { ...key("ArrowLeft"), altKey: true }, [], ctx, both).taken).toBe(false);
-    expect(valueKey(at(2), { ...key("ArrowRight"), metaKey: true }, [], ctx, both).taken).toBe(
-      false,
-    );
+    expect(valueKey(openAt(1), key("ArrowLeft"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(openAt(1), key("ArrowRight"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(openAt(0, 2), key("ArrowRight"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(openAt(0, 2), key("ArrowLeft"), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(valueKey(openAt(0), key("ArrowLeft", true), [], ctx, movesEitherWay).taken).toBe(false);
+    expect(
+      valueKey(openAt(0), { ...key("ArrowLeft"), altKey: true }, [], ctx, movesEitherWay).taken,
+    ).toBe(false);
+    expect(
+      valueKey(openAt(2), { ...key("ArrowRight"), metaKey: true }, [], ctx, movesEitherWay).taken,
+    ).toBe(false);
     // At the start of the first field and the end of the last, they do nothing.
-    expect(valueKey(at(0), key("ArrowLeft"), [], ctx, () => false).taken).toBe(false);
-    expect(valueKey(at(2), key("ArrowRight"), [], ctx, () => false).taken).toBe(false);
+    expect(valueKey(openAt(0), key("ArrowLeft"), [], ctx, () => false).taken).toBe(false);
+    expect(valueKey(openAt(2), key("ArrowRight"), [], ctx, () => false).taken).toBe(false);
   });
 
   it("a field entered by ← opens with the caret at its end, and by → at its start", () => {
@@ -196,17 +201,17 @@ describe("the keys a value line acts on (editor.md, Value list; Block editor)", 
   });
 
   it("the first match of a word is highlighted, and ↓ and ↑ wrap round the list", () => {
-    const word = typed(openSession(assign("total", empty()), value, 0), "to").session;
+    const word = typeText(openSession(assign("total", empty()), value, 0), "to").session;
     expect(shownHighlight(word, 3)).toBe(0);
     expect(shownHighlight(openSession(assign("total", empty()), value, 0), 3)).toBeNull();
     const down = stepHighlight(word, 3, 2, 1);
     expect(down.highlight).toBe(0);
     expect(stepHighlight(word, 3, 0, -1).highlight).toBe(2);
-    expect(valueKey(word, key("ArrowUp"), [], ctx, both).taken).toBe(false);
+    expect(valueKey(word, key("ArrowUp"), [], ctx, movesEitherWay).taken).toBe(false);
   });
 
   it("a row chosen writes its text at the caret", () => {
-    const open = typed(openSession(assign("total", empty()), value, 0), "x ").session;
+    const open = typeText(openSession(assign("total", empty()), value, 0), "x ").session;
     const picked = pickRow(open, entry("Add"), ctx);
     expect(picked.session.line).toEqual({ text: "x + ", start: 4, end: 4 });
     expect(picked.edits[0]?.value).toMatchObject({ type: "draft", text: "x + " });
@@ -220,15 +225,15 @@ describe("the keys a value line acts on (editor.md, Value list; Block editor)", 
       go: 1,
       entry: "tab",
     });
-    const list = typed(open, "nums ").session;
+    const list = typeText(open, "nums ").session;
     expect(pickRow(list, entry("Item at a position"), targetCtx).after).toBeUndefined();
   });
 
   it("`,` is typed as any other character, in a list of values as in any value", () => {
-    const open = typed(openSession(print(num(1)), args, null), "x").session;
-    expect(valueKey(open, key(","), [], ctx, both).taken).toBe(false);
+    const open = typeText(openSession(print(num(1)), args, null), "x").session;
+    expect(valueKey(open, key(","), [], ctx, movesEitherWay).taken).toBe(false);
     const single = openSession(assign("total", num(0)), value, null);
-    expect(valueKey(single, key(","), [], ctx, both).taken).toBe(false);
+    expect(valueKey(single, key(","), [], ctx, movesEitherWay).taken).toBe(false);
   });
 });
 
@@ -247,30 +252,30 @@ describe("a list of values (editor.md, Block editor; language.md, Expressions, D
 
   it("writes the values the text parses as, no item for no text, and one draft otherwise", () => {
     const open = openSession(print(), args, 0);
-    expect(typed(open, "x, 1+2").edits[0]).toMatchObject({
+    expect(typeText(open, "x, 1+2").edits[0]).toMatchObject({
       field: args,
       value: [
         { type: "var", name: "x" },
         { type: "binop", op: "+" },
       ],
     });
-    expect(typed(typed(open, "x").session, "").edits[0]?.value).toEqual([]);
-    expect(typed(open, "x, y z").edits[0]?.value).toMatchObject([
+    expect(typeText(typeText(open, "x").session, "").edits[0]?.value).toEqual([]);
+    expect(typeText(open, "x, y z").edits[0]?.value).toMatchObject([
       { type: "draft", text: "x, y z" },
     ]);
   });
 
   it("removes and adds a value by its text", () => {
     const open = openSession(print(num(1), num(2)), args, null);
-    const removed = typed(open, "1");
+    const removed = typeText(open, "1");
     expect(removed.edits[0]?.value).toMatchObject([{ type: "num", value: 1 }]);
-    const added = typed(removed.session, "1, 3");
+    const added = typeText(removed.session, "1, 3");
     expect(added.edits[0]?.value).toMatchObject([
       { type: "num", value: 1 },
       { type: "num", value: 3 },
     ]);
     // The text as typed stays while the list is the same.
-    expect(typed(added.session, "1,3").edits).toEqual([]);
+    expect(typeText(added.session, "1,3").edits).toEqual([]);
   });
 
   it("a value changed elsewhere reopens the line on the list's text", () => {

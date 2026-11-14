@@ -26,14 +26,16 @@ describe("registry", () => {
   });
 
   it("only an expression has a literal, an operator, or a name slot", () => {
-    const fixed = (def: BlockDef) =>
+    const fixedSlots = (def: BlockDef) =>
       def.slots.filter(
         (slot) => slot.role === "literal" || slot.role === "operator" || slot.role === "name",
       );
     const statements = [...BLOCK_DEFS.values()].filter((def) => def.shape === "stmt");
     expect(statements.length).toBeGreaterThan(0);
-    for (const def of statements) expect(fixed(def), def.key).toEqual([]);
-    const roles = [...BLOCK_DEFS.values()].flatMap((def) => fixed(def).map((slot) => slot.role));
+    for (const def of statements) expect(fixedSlots(def), def.key).toEqual([]);
+    const roles = [...BLOCK_DEFS.values()].flatMap((def) =>
+      fixedSlots(def).map((slot) => slot.role),
+    );
     expect(new Set(roles)).toEqual(new Set(["literal", "operator", "name"]));
   });
 

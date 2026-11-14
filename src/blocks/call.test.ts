@@ -78,10 +78,10 @@ describe("call (blocks.md)", () => {
       ],
     };
     // `main` and one frame per call: down(198) … down(0) make 200 frames, down(199) 201.
-    const deepest = (n: number) =>
+    const runDown = (n: number) =>
       runAll(program([assign("r", call("down", num(n)))], { functions: [down] })).done;
-    expect(deepest(198)).toMatchObject({ type: "done" });
-    expect(deepest(199)).toMatchObject({ type: "error", error: { code: "E_RECURSION" } });
+    expect(runDown(198)).toMatchObject({ type: "done" });
+    expect(runDown(199)).toMatchObject({ type: "error", error: { code: "E_RECURSION" } });
   });
 });
 

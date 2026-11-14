@@ -9,7 +9,7 @@ import { firstDifferingRow, resultRows } from "@/challenges/rows";
 import { t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { mainVars } from "@/runtime/outcome";
-import { inRun, useMode } from "@/store/mode";
+import { isRunMode, useMode } from "@/store/mode";
 import { useRun } from "@/store/run";
 import { useSubmission } from "@/store/submission";
 import { assignmentText, valueText } from "@/ui/chart/text";
@@ -30,7 +30,7 @@ function CaseSelector({ challenge }: { challenge: Challenge }) {
   const caseIndex = useRun((s) => s.caseIndex);
   const selectCase = useRun((s) => s.selectCase);
   // The case stays the run's in run mode.
-  const runMode = inRun(useMode());
+  const runMode = isRunMode(useMode());
   const items = challenge.tests.map((test, index) => ({
     value: index,
     label: caseText(test.inputs),
@@ -63,7 +63,7 @@ function CaseSelector({ challenge }: { challenge: Challenge }) {
 
 /** The case selector and `Submit`, which judges every case it lists. */
 function CaseBar({ challenge }: { challenge: Challenge }) {
-  const runMode = inRun(useMode());
+  const runMode = isRunMode(useMode());
   const submitting = useSubmission((s) => s.submitting);
   return (
     <div className="flex items-center justify-between gap-2">
@@ -118,7 +118,7 @@ export function ResultTab({ challenge }: { challenge?: Challenge }) {
 
 /** The rows of the run shown, empty in build mode; a Playground program has no `Expected`. */
 function RunResult({ challenge }: { challenge: Challenge | undefined }) {
-  const building = !inRun(useMode());
+  const building = !isRunMode(useMode());
   const caseIndex = useRun((s) => s.caseIndex);
   const stdout = useRun((s) => s.stdout);
   const state = useRun((s) => s.state);

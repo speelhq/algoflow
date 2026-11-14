@@ -6,7 +6,7 @@ import { ast } from "@/blocks/testing";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { togglePlay } from "./actions";
-import { act, ownsKeys } from "./keys";
+import { handlePageKey, ownsKeys } from "./keys";
 import { useEditor } from "@/store/editor";
 import { settle } from "@/store/testing";
 
@@ -65,7 +65,7 @@ describe("Delete and Backspace on the page (chart.md, Editing on the chart, Sele
   it("remove nothing while the selected block's editor is open", () => {
     useEditor.getState().select(block.id);
     for (const name of ["Delete", "Backspace"]) {
-      expect(act(key(name))).toBe(false);
+      expect(handlePageKey(key(name))).toBe(false);
       expect(useProgram.getState().program.main).toHaveLength(1);
     }
   });
@@ -75,7 +75,7 @@ describe("Delete and Backspace on the page (chart.md, Editing on the chart, Sele
       useProgram.setState({ program: program([block]) });
       useEditor.getState().select(block.id);
       useEditor.getState().closeEditor();
-      expect(act(key(name))).toBe(true);
+      expect(handlePageKey(key(name))).toBe(true);
       expect(useProgram.getState().program.main).toEqual([]);
       expect(useEditor.getState().selectedId).toBeNull();
     }

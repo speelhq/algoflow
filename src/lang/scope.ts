@@ -33,7 +33,7 @@ export function declaredBy(stmt: Stmt): Declared[] {
 }
 
 /** `names` with `latest` moved to the front, in their order. */
-function bump(names: Name[], latest: Name[]): Name[] {
+function moveToFront(names: Name[], latest: Name[]): Name[] {
   return [...latest, ...names.filter((name) => !latest.includes(name))];
 }
 
@@ -42,17 +42,17 @@ function bump(names: Name[], latest: Name[]): Name[] {
  * what was assigned before it in its region and the regions around it, the loop variables
  * of the loops around it, and the inputs or parameters. Undefined for an unknown id.
  */
-export function visibleAt(program: Program, id: NodeId): Name[] | undefined {
+export function findVisibleNames(program: Program, id: NodeId): Name[] | undefined {
   const walk = (stmts: Stmt[], visible: Name[]): Name[] | undefined => {
     let names = visible;
     for (const stmt of stmts) {
       if (stmt.id === id) return names;
       const own = declaredBy(stmt).map((declared) => declared.name);
       for (const region of bodyRegions(stmt)) {
-        const found = walk(region.stmts, bump(names, own));
+        const found = walk(region.stmts, moveToFront(names, own));
         if (found) return found;
       }
-      names = bump(names, own);
+      names = moveToFront(names, own);
     }
     return undefined;
   };

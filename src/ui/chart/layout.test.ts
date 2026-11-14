@@ -18,11 +18,11 @@ import {
   type Measure,
 } from "./layout";
 import { CHART_TEXT } from "./text";
-import { laidOut } from "./testing";
+import { getLayout } from "./testing";
 
 const { assign, num, str, bin, v, print, for_, while_, if_, ret, brk, cont, program } = ast;
 
-const wide: Measure = (span) => span.text.length * 14.4;
+const wideMeasure: Measure = (span) => span.text.length * 14.4;
 
 const createLessThan = (name: string, n: number) => bin("<", v(name), num(n));
 const createIfChain = (depth: number): Stmt =>
@@ -161,7 +161,7 @@ const CASES: Case[] = [
 const caseBody = (c: Case): Stmt[] => routineStmts(c.program, getRoutineDef(c.program, c.routine));
 
 const lay = (c: Case, measure: Measure): ChartLayout =>
-  laidOut(c.program, {
+  getLayout(c.program, {
     routine: c.routine,
     inputs: caseInputs(c.program, 0),
     measure,
@@ -221,7 +221,7 @@ function segments(edge: ChartEdge) {
 
 describe.each([
   ["an estimated measure", estimatedWidth],
-  ["a measure twice as wide", wide],
+  ["a measure twice as wide", wideMeasure],
 ] as const)("layout with %s", (_, measure) => {
   it.each(CASES.map((c) => [c.name, c] as const))(
     "%s: every node placed once, inside the chart",
@@ -285,8 +285,9 @@ describe.each([
           expect(crosses(edge.anchor, edge.anchor, node), `anchor of ${edge.id}`).toBe(false);
         }
         const [first, final] = [edge.points[0], edge.points.at(-1)];
-        if (from && first) expect(onBorder(first, from), `${edge.id} leaves ${from.id}`).toBe(true);
-        if (to && final) expect(onBorder(final, to), `${edge.id} reaches ${to.id}`).toBe(true);
+        if (from && first)
+          expect(isOnBorder(first, from), `${edge.id} leaves ${from.id}`).toBe(true);
+        if (to && final) expect(isOnBorder(final, to), `${edge.id} reaches ${to.id}`).toBe(true);
       }
     },
   );
@@ -316,7 +317,7 @@ describe.each([
     (_n, c) => {
       const chart = lay(c, measure);
       const nodes = byId(chart);
-      const out = (id: string, label: "yes" | "no") =>
+      const labeledEdges = (id: string, label: "yes" | "no") =>
         chart.edges.filter((edge) => edge.from === id && edge.label === label);
       for (const stmt of allStmts(caseBody(c))) {
         const form = getBlockDef(registryKey(stmt)).chart;
@@ -330,8 +331,8 @@ describe.each([
         );
         if ("branch" in form) {
           const d = nodes.get(stmt.id);
-          const [yes] = out(stmt.id, "yes");
-          const [no] = out(stmt.id, "no");
+          const [yes] = labeledEdges(stmt.id, "yes");
+          const [no] = labeledEdges(stmt.id, "no");
           if (!d || !yes || !no) throw new Error(`branch ${stmt.id}`);
           expect(d.shape).toBe("diamond");
           expect(yes.points[0]).toEqual({ x: d.x + d.w, y: d.y + d.h / 2 }); // Yes leaves by the right vertex
@@ -362,8 +363,8 @@ describe.each([
         expect(d.shape).toBe("diamond");
         expect(center(top)).toBe(center(d));
         expect(top.y).toBeLessThan(d.y);
-        const [yes] = out(d.id, "yes");
-        const [no] = out(d.id, "no");
+        const [yes] = labeledEdges(d.id, "yes");
+        const [no] = labeledEdges(d.id, "no");
         if (!yes || !no) throw new Error(`loop ${stmt.id} edges`);
         expect(yes.points[0]).toEqual({ x: center(d), y: d.y + d.h }); // Yes leads down into the body
         expect(no.points[0]).toEqual({ x: d.x + d.w, y: d.y + d.h / 2 }); // No leaves to the right
@@ -425,7 +426,7 @@ describe.each([
   });
 });
 
-function onBorder(point: { x: number; y: number }, node: ChartNode): boolean {
+function isOnBorder(point: { x: number; y: number }, node: ChartNode): boolean {
   if (node.w === 0) return point.x === node.x && point.y === node.y;
   const onX = point.x === node.x || point.x === node.x + node.w;
   const onY = point.y === node.y || point.y === node.y + node.h;
@@ -443,7 +444,7 @@ describe("layout of jumps", () => {
     const skip = cont();
     const loop = for_("i", num(0), num(9), [if_(createLessThan("i", 2), [skip], [stop])]);
     const after = print(str("after"));
-    const chart = laidOut(program([loop, after]), {
+    const chart = getLayout(program([loop, after]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
@@ -461,7 +462,7 @@ describe("layout of jumps", () => {
     const stop = brk();
     const skip = cont();
     const loop = while_(createLessThan("i", 9), [if_(createLessThan("i", 2), [skip]), stop]);
-    const chart = laidOut(program([assign("i", num(0)), loop]), {
+    const chart = getLayout(program([assign("i", num(0)), loop]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
@@ -478,7 +479,7 @@ describe("layout of jumps", () => {
   it("a jump outside every loop is an ordinary box with an edge to the next chart node", () => {
     const stop = brk();
     const after = print(num(1));
-    const chart = laidOut(program([stop, after]), {
+    const chart = getLayout(program([stop, after]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
@@ -491,14 +492,14 @@ describe("layout texts", () => {
   it("main: Start, one Input chart node per input with the chosen values, the statements, End", () => {
     const sum = CHALLENGES.find((challenge) => challenge.id === "sum-to-n");
     if (!sum) throw new Error("sum-to-n missing");
-    const chart = laidOut(sum.solution, {
+    const chart = getLayout(sum.solution, {
       routine: "main",
       inputs: { n: 0 },
       measure: estimatedWidth,
     });
     expect(chart.nodes.slice(0, 2).map((node) => node.text)).toEqual(["Start", "Input n ← 0"]);
     expect(
-      laidOut(sum.solution, {
+      getLayout(sum.solution, {
         routine: "main",
         inputs: caseInputs(sum.solution, 0),
         measure: estimatedWidth,
@@ -523,7 +524,7 @@ describe("layout texts", () => {
     const fallback = ret(num(0));
     const check = if_(bin("==", bin("%", v("x"), num(15)), num(0)), [found]);
     const f = createFunction("f", [check, fallback]);
-    const chart = laidOut(
+    const chart = getLayout(
       program([], { functions: [f], inputs: [{ name: "n", kind: "number" }] }),
       {
         routine: f.id,
@@ -543,7 +544,7 @@ describe("layout texts", () => {
     const p = program([print(num(1))], { functions: [f] });
     const opts = { inputs: {}, measure: estimatedWidth };
     const owners = (routine: Routine) =>
-      laidOut(p, { routine, ...opts })
+      getLayout(p, { routine, ...opts })
         .nodes.filter((node) => node.shape === "terminal")
         .map((node) => [node.role, node.owner]);
     expect(owners(f.id)).toEqual([
@@ -569,7 +570,7 @@ describe("layout texts", () => {
     const unfinished = { ...print(ast.empty()), caption: "Show y" };
     const loop = { ...for_("i", num(0), num(3), []), caption: "Three times" };
     const check = { ...if_(bin("<", v("x"), num(2)), []), caption: "Small?" };
-    const chart = laidOut(program([assign("x", num(1)), captioned, unfinished, loop, check]), {
+    const chart = getLayout(program([assign("x", num(1)), captioned, unfinished, loop, check]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
@@ -581,7 +582,7 @@ describe("layout texts", () => {
     expect(node(`${loop.id}:check`)).toMatchObject({ text: "Three times", title: "i < 3?" });
     expect(node(`${loop.id}:init`)?.text).toBe("i ← 0");
     const startless = { ...for_("k", ast.empty(), num(3), []), caption: "Counting" };
-    const unfinishedLoop = laidOut(program([startless]), {
+    const unfinishedLoop = getLayout(program([startless]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
@@ -595,7 +596,7 @@ describe("layout texts", () => {
     const createDivisibleCheck = (by: number) => bin("==", bin("%", v("i"), num(by)), num(0));
     const check = if_(bin("and", createDivisibleCheck(15), bin("<", v("i"), ast.empty())), []);
     const short = if_(createDivisibleCheck(15), []);
-    const chart = laidOut(program([assign("i", num(1)), check, short]), {
+    const chart = getLayout(program([assign("i", num(1)), check, short]), {
       routine: "main",
       inputs: {},
       measure,
@@ -619,7 +620,7 @@ describe("layout texts", () => {
   it("a variable's span is measured bold", () => {
     const measure: Measure = (span) => span.text.length * (span.variable ? 10 : 5);
     const shown = print(v("abc"));
-    const chart = laidOut(program([shown]), { routine: "main", inputs: {}, measure });
+    const chart = getLayout(program([shown]), { routine: "main", inputs: {}, measure });
     const spans = chart.nodes.find((n) => n.id === shown.id)?.spans ?? [];
     expect(spans.map((span) => [span.text, span.w, span.variable])).toEqual([
       ["print(", 30, undefined],
@@ -630,7 +631,7 @@ describe("layout texts", () => {
 
   it("every chart node's text is the chart's own or the learner's, none from a catalog (chart.md, Shapes)", () => {
     const named = { ...print(v("n")), caption: "Show it" };
-    const chart = laidOut(program([named, if_(bin("<", v("n"), num(3)), [])]), {
+    const chart = getLayout(program([named, if_(bin("<", v("n"), num(3)), [])]), {
       routine: "main",
       inputs: {},
       measure: estimatedWidth,
@@ -644,7 +645,7 @@ describe("layout texts", () => {
   });
 
   it("an empty main offers its one connector between Start and End", () => {
-    const chart = laidOut(program([]), { routine: "main", inputs: {}, measure: estimatedWidth });
+    const chart = getLayout(program([]), { routine: "main", inputs: {}, measure: estimatedWidth });
     expect(chart.edges).toHaveLength(1);
     expect(chart.edges[0]).toMatchObject({
       from: "start",

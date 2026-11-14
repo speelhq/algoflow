@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { isStatement } from "@/lang/walk";
 import { emit } from "@/python/emit";
 import { useEditor } from "@/store/editor";
-import { inRun, useMode } from "@/store/mode";
+import { isRunMode, useMode } from "@/store/mode";
 import { useProgram } from "@/store/program";
 import { useRun } from "@/store/run";
 import { download } from "@/ui/app/download";
@@ -35,7 +35,7 @@ function copy(code: string): void {
 export function PythonTab() {
   const program = useProgram((s) => s.program);
   const caseIndex = useRun((s) => s.caseIndex);
-  const runMode = inRun(useMode());
+  const runMode = isRunMode(useMode());
   const activeId = useRun((s) => s.activeId);
   const selectedId = useEditor((s) => s.selectedId);
   const setHovered = useEditor((s) => s.setHovered);
@@ -60,21 +60,21 @@ export function PythonTab() {
       const number = Number(target?.closest<HTMLElement>("[data-line]")?.dataset.line);
       return Number.isFinite(number) ? (owners.get(number) ?? null) : null;
     };
-    const over = (event: MouseEvent) => setHovered(ownerAt(event));
-    const out = () => setHovered(null);
-    const click = (event: MouseEvent) => {
+    const handleMouseOver = (event: MouseEvent) => setHovered(ownerAt(event));
+    const handleMouseLeave = () => setHovered(null);
+    const handleClick = (event: MouseEvent) => {
       const owner = ownerAt(event);
       // A line selects its statement, which the chart outlines; the editor opens from the chart.
       // A `def` line's owner is its function, which is never selected.
       if (owner !== null) select(isStatement(program, owner) ? owner : null, undefined, false);
     };
-    element.addEventListener("mouseover", over);
-    element.addEventListener("mouseleave", out);
-    element.addEventListener("click", click);
+    element.addEventListener("mouseover", handleMouseOver);
+    element.addEventListener("mouseleave", handleMouseLeave);
+    element.addEventListener("click", handleClick);
     return () => {
-      element.removeEventListener("mouseover", over);
-      element.removeEventListener("mouseleave", out);
-      element.removeEventListener("click", click);
+      element.removeEventListener("mouseover", handleMouseOver);
+      element.removeEventListener("mouseleave", handleMouseLeave);
+      element.removeEventListener("click", handleClick);
       setHovered(null); // the tab may unmount while a line is hovered
     };
   }, [owners, program, setHovered, select]);

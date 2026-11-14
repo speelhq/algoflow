@@ -13,12 +13,12 @@ export function deriveMode(status: Status, solution: boolean): Mode {
 }
 
 /** The learner's program can be edited: only in build mode. */
-export function editable(mode: Mode): boolean {
+export function canEdit(mode: Mode): boolean {
   return mode === "build";
 }
 
 /** The page is in run mode: a run is on the chart, still going or ended. */
-export function inRun(mode: Mode): boolean {
+export function isRunMode(mode: Mode): boolean {
   return mode === "running" || mode === "ended";
 }
 

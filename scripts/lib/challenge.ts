@@ -17,7 +17,7 @@ export function isLocalized(value: unknown, requireJa: boolean): value is Locali
 
 const isName = (value: unknown): value is string => typeof value === "string" && isValidName(value);
 
-function sameData(a: unknown, b: unknown): boolean {
+function isSameData(a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
@@ -241,7 +241,7 @@ function checkSolution(
     // A copy, because migrate() reads a draft as the value its text writes, while the build bundles
     // the solution as it is: the tests run the solution as the page gets it.
     const program = migrate(structuredClone(json.solution));
-    if (!sameData(program.inputs, inputs)) problems.push("solution.inputs must equal inputs");
+    if (!isSameData(program.inputs, inputs)) problems.push("solution.inputs must equal inputs");
     if (program.challengeId !== undefined && program.challengeId !== fileId)
       problems.push(`solution.challengeId must be "${fileId}"`);
     for (const d of validate(program))

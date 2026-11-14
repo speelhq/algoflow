@@ -14,7 +14,7 @@ import {
   floatMod,
   isNumber,
   makeNumber,
-  truthy,
+  isTruthy,
 } from "@/runtime/values";
 import { defineExpr, type RunContext } from "./types";
 import { createEmptyDraft } from "./draft";
@@ -24,7 +24,7 @@ type Binop = Extract<Expr, { type: "binop" }>;
 /** The kinds `<`, `<=`, `>`, and `>=` order. */
 const ORDERED = ["number", "text"] as const;
 
-function arithmetic(block: Binop, l: Value, r: Value, ctx: RunContext): Value {
+function evaluateArithmetic(block: Binop, l: Value, r: Value, ctx: RunContext): Value {
   if (block.op === "+" && l.t === "str" && r.t === "str") return { t: "str", v: l.v + r.v };
   if (!isNumber(l) || !isNumber(r)) return typeError(block.id, l, r, ctx);
   const float = l.t === "float" || r.t === "float";
@@ -57,7 +57,7 @@ function arithmetic(block: Binop, l: Value, r: Value, ctx: RunContext): Value {
   }
 }
 
-function ordered(block: Binop, l: Value, r: Value, ctx: RunContext): boolean {
+function evaluateComparison(block: Binop, l: Value, r: Value, ctx: RunContext): boolean {
   if (block.op === "==") return equals(l, r, ctx.heap);
   if (block.op === "!=") return !equals(l, r, ctx.heap);
   const c = compare(l, r);
@@ -77,7 +77,7 @@ function ordered(block: Binop, l: Value, r: Value, ctx: RunContext): boolean {
 }
 
 /** One ref per compared list element. */
-function* membership(
+function* evaluateMembership(
   block: Binop,
   l: Value,
   r: Value,
@@ -135,7 +135,7 @@ export const binop = defineExpr<"binop">({
     if (block.op === "and" || block.op === "or") {
       // Short-circuit, returning the deciding operand
       const left = yield* ctx.eval(block.left);
-      const decided = block.op === "and" ? !truthy(left, ctx.heap) : truthy(left, ctx.heap);
+      const decided = block.op === "and" ? !isTruthy(left, ctx.heap) : isTruthy(left, ctx.heap);
       if (decided) return left;
       return yield* ctx.eval(block.right);
     }
@@ -144,12 +144,12 @@ export const binop = defineExpr<"binop">({
     if (isComparison(block.op)) {
       const result =
         block.op === "in"
-          ? yield* membership(block, left, right, ctx)
-          : ordered(block, left, right, ctx);
+          ? yield* evaluateMembership(block, left, right, ctx)
+          : evaluateComparison(block, left, right, ctx);
       yield { type: "compare", nodeId: block.id, result };
       return { t: "bool", v: result };
     }
-    return arithmetic(block, left, right, ctx);
+    return evaluateArithmetic(block, left, right, ctx);
   },
   python: (block, ctx) => {
     const precedence = binopPrecedence(block.op);

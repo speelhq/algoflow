@@ -15,7 +15,7 @@ function sleep(): Promise<void> {
  * wait or once it finished (another action took over, also one made right after the call, before
  * the work could resume).
  */
-export async function inBatches(
+export async function runInBatches(
   step: (last: boolean) => boolean,
   between: () => void,
   stale: () => boolean,

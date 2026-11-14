@@ -6,6 +6,6 @@ import type { KeyboardEvent } from "react";
  * Whether a key belongs to an input method's composition. Safari reports the Enter that ends a
  * composition with key code 229 once the composition has ended.
  */
-export function composingKey(event: KeyboardEvent): boolean {
+export function isCompositionKey(event: KeyboardEvent): boolean {
   return event.nativeEvent.isComposing || event.keyCode === 229;
 }

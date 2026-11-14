@@ -14,13 +14,17 @@ describe("the selection", () => {
   const body = ret(value);
   const fn = { id: createTestId(), name: "f", params: ["a"], body: [body] };
   const shown = print(num(1));
-  const led = (nodeId: string): Diagnostic => ({ nodeId, code: "E_UNDEFINED", params: {} });
+  const createDiagnostic = (nodeId: string): Diagnostic => ({
+    nodeId,
+    code: "E_UNDEFINED",
+    params: {},
+  });
 
   it("takes a statement of the open program, a function's statement among them", () => {
     useProgram.setState({ program: program([shown], { functions: [fn] }) });
     useEditor.getState().select(shown.id);
     expect(useEditor.getState().selectedId).toBe(shown.id);
-    useEditor.getState().lead(body.id, led(value.id));
+    useEditor.getState().lead(body.id, createDiagnostic(value.id));
     expect(useEditor.getState()).toMatchObject({ selectedId: body.id, editing: true });
     useEditor.getState().select(null);
     expect(useEditor.getState().selectedId).toBeNull();
@@ -37,7 +41,7 @@ describe("the selection", () => {
     useProgram.setState({ program: program([shown], { functions: [fn] }) });
     for (const id of [fn.id, value.id, createTestId()]) {
       expect(() => useEditor.getState().select(id)).toThrow();
-      expect(() => useEditor.getState().lead(id, led(id))).toThrow();
+      expect(() => useEditor.getState().lead(id, createDiagnostic(id))).toThrow();
     }
     expect(useEditor.getState().selectedId).toBeNull();
   });

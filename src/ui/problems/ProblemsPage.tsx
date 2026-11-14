@@ -2,7 +2,7 @@
 // progress.
 import { getPlanChallenges, findChallenge, PLANS, type Challenge, type Plan } from "@/challenges";
 import { planAction, type FindStatus } from "@/challenges/next";
-import { localized, t } from "@/i18n/t";
+import { localize, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
 import { solvedCount, findProgressStatus, useProgress, type Progress } from "@/store/progress";
 import { Header } from "@/ui/app/Header";
@@ -35,8 +35,8 @@ function PlanSection({ plan, entries }: { plan: Plan; entries: Progress }) {
     <section className="mb-6" data-testid={`plan-${plan.id}`}>
       <div className="flex items-center gap-4 rounded-xl border bg-muted/40 px-4 py-3">
         <div className="min-w-0 flex-1">
-          <h2 className="font-semibold">{localized(plan.title)}</h2>
-          <p className="text-sm text-muted-foreground">{localized(plan.description)}</p>
+          <h2 className="font-semibold">{localize(plan.title)}</h2>
+          <p className="text-sm text-muted-foreground">{localize(plan.description)}</p>
         </div>
         <span className="text-sm text-muted-foreground">
           {t("problems.solved", { n: solved, m: problems.length })}
@@ -49,7 +49,7 @@ function PlanSection({ plan, entries }: { plan: Plan; entries: Progress }) {
             })}
           >
             {action.kind === "continue" && next
-              ? t("problems.continue", { title: localized(next.title) })
+              ? t("problems.continue", { title: localize(next.title) })
               : t("problems.start")}
           </a>
         )}
@@ -89,7 +89,7 @@ function ProblemRow({
         >
           {status ? t(`problems.status.${status}.icon`) : ""}
         </span>
-        <span>{localized(challenge.title)}</span>
+        <span>{localize(challenge.title)}</span>
         <span className="text-sm text-muted-foreground">
           {t(`challenge.difficulty.${challenge.difficulty}`)}
         </span>

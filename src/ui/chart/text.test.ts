@@ -267,11 +267,12 @@ describe("diamonds and generated chart nodes", () => {
 
   it("a counted loop's generated chart nodes carry the loop's own slots", () => {
     const loop = for_("i", num(1), bin("+", v("n"), num(1)), []);
-    const drawn = (which: "init" | "check" | "update") => joinSpans(generatedSpans(loop, which, P));
-    expect(drawn("init")).toBe("i ← 1");
+    const generatedText = (which: "init" | "check" | "update") =>
+      joinSpans(generatedSpans(loop, which, P));
+    expect(generatedText("init")).toBe("i ← 1");
     // The check is asked as every diamond asks its condition.
-    expect(drawn("check")).toBe("i < n + 1?");
-    expect(drawn("update")).toBe("i ← i + 1");
+    expect(generatedText("check")).toBe("i < n + 1?");
+    expect(generatedText("update")).toBe("i ← i + 1");
     expect(notationText(loop, P)).toBe("i ← 1");
   });
 

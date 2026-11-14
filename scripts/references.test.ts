@@ -17,7 +17,7 @@ function write(rel: string, text: string) {
 }
 
 const run = () => checkReferences({ root, files: repoFiles(root) });
-const named = () => run().map((b) => `${b.cited} ${b.heading}`);
+const brokenReferences = () => run().map((b) => `${b.cited} ${b.heading}`);
 const SPEC = [
   "# Sample",
   "",
@@ -94,13 +94,13 @@ describe("the reference check", () => {
 
   it("reports words after a heading that no comma, semicolon, colon, period, or parenthesis ends", () => {
     write("src/b.ts", "// (`sample.md`, Shapes of loops) and as `sample.md`, Shapes states it.\n");
-    expect(named()).toEqual(["sample.md Shapes of loops", "sample.md Shapes states it"]);
+    expect(brokenReferences()).toEqual(["sample.md Shapes of loops", "sample.md Shapes states it"]);
   });
 
   it("reads a file name with capitals, digits, or hyphens", () => {
     write("docs/spec/Sample-2.md", "# Sample\n\n## Kinds\n");
     write("src/c.ts", "// (`Sample-2.md`, Kinds) and (`docs/spec/Sample-2.md`, Kind)\n");
-    expect(named()).toEqual(["docs/spec/Sample-2.md Kind"]);
+    expect(brokenReferences()).toEqual(["docs/spec/Sample-2.md Kind"]);
   });
 
   it("reads a heading wrapped across lines, in Markdown and in a comment", () => {
@@ -129,7 +129,7 @@ describe("the reference check", () => {
 
   it("reports a heading that doesn't sit under the one before it", () => {
     write("docs/spec/ui/other.md", "# Other\n\nSee (`sample.md`, Input chart nodes, Loops).\n");
-    expect(named()).toEqual(["sample.md Loops"]);
+    expect(brokenReferences()).toEqual(["sample.md Loops"]);
   });
 
   it("finds a heading under any of the headings that share a name", () => {
@@ -142,7 +142,7 @@ describe("the reference check", () => {
       "docs/design/README.md",
       "| a | `sample.md`, Shapes; Input chart nodes; Inputs; `other.md`, Gone |\n",
     );
-    expect(named()).toEqual(["sample.md Inputs", "other.md Gone"]);
+    expect(brokenReferences()).toEqual(["sample.md Inputs", "other.md Gone"]);
   });
 
   it("ends a reference at a lower-case word or a code span, and skips a file outside the spec", () => {

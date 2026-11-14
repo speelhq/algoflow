@@ -33,15 +33,15 @@ const widths = new Map<string, number>();
 let loads = 0;
 const listeners = new Set<() => void>();
 
-function fontsLoaded(): void {
+function invalidateWidths(): void {
   loads += 1;
   widths.clear();
   for (const listener of listeners) listener();
 }
 
 if (typeof document !== "undefined") {
-  document.fonts.addEventListener("loadingdone", fontsLoaded);
-  void document.fonts.ready.then(fontsLoaded);
+  document.fonts.addEventListener("loadingdone", invalidateWidths);
+  void document.fonts.ready.then(invalidateWidths);
 }
 
 export const measureText: Measure = (span) => {

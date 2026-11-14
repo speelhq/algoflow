@@ -15,6 +15,11 @@ function asStored(value: unknown): Record<string, unknown> {
   return json(value) as Record<string, unknown>;
 }
 
+/** A program that assigns `value` to `x`, as stored JSON. */
+function assignmentJson(value: unknown): unknown {
+  return json(program([assign("x", value as never)]));
+}
+
 describe("migrate", () => {
   it("accepts a version 1 program unchanged", () => {
     const p = program(
@@ -227,13 +232,12 @@ describe("migrate", () => {
   });
 
   it("refuses an expression whose name holds nothing, at its path", () => {
-    const stored = (value: unknown) => json(program([assign("x", value as never)]));
-    expect(() => migrate(stored(v("")))).toThrow(
+    expect(() => migrate(assignmentJson(v("")))).toThrow(
       /^main\[0\]\.value\.name: expected the slot filled/,
     );
     // A call with too few arguments is a fault validate() reports (E_ARITY).
-    expect(() => migrate(stored(ast.call("abs")))).not.toThrow();
-    expect(() => migrate(stored(bin("+", num(1), ast.call("f"))))).not.toThrow();
+    expect(() => migrate(assignmentJson(ast.call("abs")))).not.toThrow();
+    expect(() => migrate(assignmentJson(bin("+", num(1), ast.call("f"))))).not.toThrow();
   });
 
   it("reads a loop's variable as a target, an empty slot until it is filled", () => {
@@ -246,8 +250,7 @@ describe("migrate", () => {
   });
 
   it("refuses a field its block would not make, at its path", () => {
-    const assignmentJson = (expr: unknown) => json(program([assign("x", expr as never)]));
-    const at = (fields: Record<string, unknown>, of: unknown) => {
+    const migration = (fields: Record<string, unknown>, of: unknown) => {
       const p = assignmentJson(of) as { main: Array<{ value: Record<string, unknown> }> };
       Object.assign(p.main[0]!.value, fields);
       return () => migrate(p);
@@ -255,24 +258,26 @@ describe("migrate", () => {
     expect(() => migrate(assignmentJson(num(7)))).not.toThrow();
     expect(() => migrate(assignmentJson(float(2, "2.0")))).not.toThrow();
     expect(() => migrate(assignmentJson(num(2 ** 53 - 1)))).not.toThrow();
-    expect(at({ raw: "007", value: 7 }, num(7))).toThrow(
+    expect(migration({ raw: "007", value: 7 }, num(7))).toThrow(
       /^main\[0\]\.value\.raw: expected a number literal/,
     );
-    expect(at({ raw: "9007199254740992", value: 2 ** 53 }, num(1))).toThrow(
+    expect(migration({ raw: "9007199254740992", value: 2 ** 53 }, num(1))).toThrow(
       /value\.raw: expected a number/,
     );
-    expect(at({ raw: "-3", value: -3 }, num(1))).toThrow(/value\.raw: expected a number/);
-    expect(at({ value: 8 }, num(7))).toThrow(
+    expect(migration({ raw: "-3", value: -3 }, num(1))).toThrow(/value\.raw: expected a number/);
+    expect(migration({ value: 8 }, num(7))).toThrow(
       /^main\[0\]\.value\.value: expected the number raw writes/,
     );
-    expect(at({ float: true }, num(7))).toThrow(/value\.float: expected whether raw/);
-    expect(at({ float: false }, float(2, "2.0"))).toThrow(/value\.float: expected whether raw/);
-    expect(at({ op: "^" }, bin("+", num(1), num(2)))).toThrow(
+    expect(migration({ float: true }, num(7))).toThrow(/value\.float: expected whether raw/);
+    expect(migration({ float: false }, float(2, "2.0"))).toThrow(
+      /value\.float: expected whether raw/,
+    );
+    expect(migration({ op: "^" }, bin("+", num(1), num(2)))).toThrow(
       /value\.op: expected a known operator/,
     );
-    expect(at({ op: "neg!" }, not(v("a")))).toThrow(/value\.op: expected a known operator/);
-    expect(at({ value: 3 }, str("a"))).toThrow(/value\.value: expected a text/);
-    expect(at({ value: "yes" }, bool(true))).toThrow(/value\.value: expected true or false/);
+    expect(migration({ op: "neg!" }, not(v("a")))).toThrow(/value\.op: expected a known operator/);
+    expect(migration({ value: 3 }, str("a"))).toThrow(/value\.value: expected a text/);
+    expect(migration({ value: "yes" }, bool(true))).toThrow(/value\.value: expected true or false/);
   });
 
   it("refuses a class and an input of the kind object, while no block constructs one", () => {

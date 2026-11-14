@@ -5,7 +5,7 @@ import { firstSetters, variableKinds, type Kinds } from "@/lang/kinds";
 import type { Diagnostic, Expr, Name, Kind, NodeId, Program } from "@/lang/types";
 import { getRoutineDef, isEmptyDraft, getHoldingRoutine } from "@/lang/walk";
 import {
-  parenthesized,
+  isParenthesized,
   exprHint,
   exprText,
   placeholderValue,
@@ -159,7 +159,7 @@ function closestName(word: string, rows: readonly Row[]): string | undefined {
  * (`blocks.md`, Notation, Drawing).
  */
 function operationSpans(operation: Expr, current: Expr, program: Program): NotationSpan[] {
-  const written = (value: Expr, index: number | undefined): NotationSpan => {
+  const valueSpan = (value: Expr, index: number | undefined): NotationSpan => {
     const empty = isEmptyDraft(value);
     const text = empty ? exprHint(operation, index, program) : exprText(value, program);
     return {
@@ -173,12 +173,12 @@ function operationSpans(operation: Expr, current: Expr, program: Program): Notat
     switch (held?.role) {
       case "expr":
         if (!held.expr) return [];
-        return parenthesized(held.expr, held)
-          ? [{ text: "(" }, written(held.expr, undefined), { text: ")" }]
-          : [written(held.expr, undefined)];
+        return isParenthesized(held.expr, held)
+          ? [{ text: "(" }, valueSpan(held.expr, undefined), { text: ")" }]
+          : [valueSpan(held.expr, undefined)];
       case "exprs":
         return held.items.flatMap((item, i) =>
-          i === 0 ? [written(item, i)] : [{ text: SEPARATOR }, written(item, i)],
+          i === 0 ? [valueSpan(item, i)] : [{ text: SEPARATOR }, valueSpan(item, i)],
         );
       case "literal":
       case "operator":

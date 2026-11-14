@@ -1,7 +1,7 @@
 // What is visible where; the places `loop` and `requires` allow; the value list's Variables.
 import { describe, expect, it } from "vitest";
 import { ast } from "@/blocks/testing";
-import { declaredBy, placeContext, visibleAt } from "./scope";
+import { declaredBy, placeContext, findVisibleNames } from "./scope";
 
 const { assign, num, v, bin, print, for_, if_, while_, ret, program } = ast;
 
@@ -25,10 +25,10 @@ describe("scope", () => {
     const again = assign("a", num(3));
     const here = print(v("a"));
     const p = program([a, b, again, here], { inputs: [{ name: "n", kind: "number" }] });
-    expect(visibleAt(p, a.id)).toEqual(["n"]);
-    expect(visibleAt(p, b.id)).toEqual(["a", "n"]);
-    expect(visibleAt(p, here.id)).toEqual(["a", "b", "n"]);
-    expect(visibleAt(p, "nope00000000")).toBeUndefined();
+    expect(findVisibleNames(p, a.id)).toEqual(["n"]);
+    expect(findVisibleNames(p, b.id)).toEqual(["a", "n"]);
+    expect(findVisibleNames(p, here.id)).toEqual(["a", "b", "n"]);
+    expect(findVisibleNames(p, "nope00000000")).toBeUndefined();
   });
 
   it("a loop variable is visible in the body and after the loop, not in its own bounds", () => {
@@ -36,9 +36,9 @@ describe("scope", () => {
     const loop = for_("i", num(0), v("n"), [inner]);
     const after = print(v("i"));
     const p = program([loop, after], { inputs: [{ name: "n", kind: "number" }] });
-    expect(visibleAt(p, loop.id)).toEqual(["n"]);
-    expect(visibleAt(p, inner.id)).toEqual(["i", "n"]);
-    expect(visibleAt(p, after.id)).toEqual(["i", "n"]);
+    expect(findVisibleNames(p, loop.id)).toEqual(["n"]);
+    expect(findVisibleNames(p, inner.id)).toEqual(["i", "n"]);
+    expect(findVisibleNames(p, after.id)).toEqual(["i", "n"]);
   });
 
   it("a name first assigned inside a compound statement is not visible after it", () => {
@@ -46,7 +46,7 @@ describe("scope", () => {
     const branch = if_(v("c"), [inside]);
     const after = print(v("y"));
     const p = program([assign("c", num(1)), branch, after]);
-    expect(visibleAt(p, after.id)).toEqual(["c"]);
+    expect(findVisibleNames(p, after.id)).toEqual(["c"]);
   });
 
   it("a function sees its parameters", () => {
@@ -54,7 +54,7 @@ describe("scope", () => {
     const p = program([], {
       functions: [{ id: "fn0000000001", name: "f", params: ["x", "y"], body: [body] }],
     });
-    expect(visibleAt(p, body.id)).toEqual(["y", "x"]);
+    expect(findVisibleNames(p, body.id)).toEqual(["y", "x"]);
   });
 
   it("a place is in a loop under a loop's body at any depth, and in a function under one", () => {

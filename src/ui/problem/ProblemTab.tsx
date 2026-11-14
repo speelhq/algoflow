@@ -2,9 +2,9 @@
 // (recorded), and `Show solution` (recorded).
 import type { ReactNode } from "react";
 import { HINTS, type Challenge } from "@/challenges";
-import { localized, t } from "@/i18n/t";
+import { localize, t } from "@/i18n/t";
 import { cn } from "@/lib/utils";
-import { inRun, useMode } from "@/store/mode";
+import { isRunMode, useMode } from "@/store/mode";
 import { useProgress } from "@/store/progress";
 import { assignmentText, dataText, inputSpans, joinSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
@@ -74,13 +74,13 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
   return (
     <div className="space-y-4" data-testid="problem-tab">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-base font-semibold">{localized(challenge.title)}</h2>
+        <h2 className="text-base font-semibold">{localize(challenge.title)}</h2>
         <Tag>{t(`challenge.difficulty.${challenge.difficulty}`)}</Tag>
         {challenge.topics.map((topic) => (
           <Tag key={topic}>{t(`challenge.topic.${topic}`)}</Tag>
         ))}
       </div>
-      <Markdown text={localized(challenge.description)} />
+      <Markdown text={localize(challenge.description)} />
       <Example challenge={challenge} />
       <section>
         <Heading>{t("problem.cases")}</Heading>
@@ -107,7 +107,7 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
           {challenge.hints.slice(0, revealed).map((hint, i) => (
             // oxlint-disable-next-line react/no-array-index-key -- hints are ordered and never move
             <li key={i}>
-              <Markdown text={localized(hint)} />
+              <Markdown text={localize(hint)} />
             </li>
           ))}
         </ol>
@@ -120,7 +120,7 @@ export function ProblemTab({ challenge }: { challenge: Challenge }) {
           className={cn("ml-auto", solution && "border-ring bg-accent")}
           aria-pressed={solution}
           // The chart stays the run's in run mode.
-          disabled={inRun(mode)}
+          disabled={isRunMode(mode)}
           onClick={() => revealSolution(id)}
         >
           {t("problem.solution.show")}

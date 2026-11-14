@@ -10,7 +10,7 @@ import { findChallenge } from "@/challenges";
 import { blockText, t } from "@/i18n/t";
 import { duplicateStmt, removeStmt, setExpr } from "@/lang/edit";
 import { variableKinds } from "@/lang/kinds";
-import { visibleAt } from "@/lang/scope";
+import { findVisibleNames } from "@/lang/scope";
 import type { NodeId, Program, Stmt } from "@/lang/types";
 import { blocksById, getHoldingRoutine } from "@/lang/walk";
 import { cn } from "@/lib/utils";
@@ -32,7 +32,7 @@ import {
   fieldLabel,
   fieldText,
   stmtFields,
-  sameField,
+  isSameField,
   startField,
   targetSlot,
   findFieldValue,
@@ -42,7 +42,7 @@ import {
 import { caretMatches, caretOffersAll, readCaret, wordAt } from "./caret";
 import { callableFunctions, type LineContext } from "./choices";
 import { CaptionField } from "./CaptionField";
-import { composingKey } from "./composition";
+import { isCompositionKey } from "./composition";
 import { tabTarget } from "./focus";
 import { routineNames } from "./names";
 import { valueList } from "./valueList";
@@ -72,7 +72,7 @@ import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 type Initial = { slot: string | null; insertedCaret: number | null };
 
 /** Whether a key is pressed with Ctrl, Cmd, Alt, or Shift. */
-const modified = (event: KeyboardEvent) =>
+const hasModifier = (event: KeyboardEvent) =>
   event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
 
 function Body(props: {
@@ -106,7 +106,7 @@ function Body(props: {
 
   // The focused field takes the keyboard once it is drawn.
   useEffect(() => {
-    if (focus && !sameField(focus, focused)) elements.current.get(focus.slot)?.focus();
+    if (focus && !isSameField(focus, focused)) elements.current.get(focus.slot)?.focus();
   }, [focus, focused]);
 
   // Where the keyboard goes in the editor. Anywhere but a field, no field has it, so the value list
@@ -119,19 +119,19 @@ function Body(props: {
   );
   useEffect(() => {
     if (!editor) return;
-    const taken = (event: FocusEvent) => {
+    const handleFocusIn = (event: FocusEvent) => {
       const target = event.target instanceof Element ? event.target : null;
       setOnEditor(target === editor);
       if (!target?.closest("[data-value-line]")) setSession(NO_FIELD);
     };
-    const left = (event: FocusEvent) => {
+    const handleFocusOut = (event: FocusEvent) => {
       if (event.target === editor) setOnEditor(false);
     };
-    editor.addEventListener("focusin", taken);
-    editor.addEventListener("focusout", left);
+    editor.addEventListener("focusin", handleFocusIn);
+    editor.addEventListener("focusout", handleFocusOut);
     return () => {
-      editor.removeEventListener("focusin", taken);
-      editor.removeEventListener("focusout", left);
+      editor.removeEventListener("focusin", handleFocusIn);
+      editor.removeEventListener("focusout", handleFocusOut);
     };
   }, [editor]);
 
@@ -157,7 +157,7 @@ function Body(props: {
   const target = focus ? targetSlot(stmt, focus) : undefined;
   const binds = target ? target.binds === true : undefined;
   const ctx: LineContext = useMemo(() => {
-    const variables = visibleAt(program, stmt.id) ?? [];
+    const variables = findVisibleNames(program, stmt.id) ?? [];
     return {
       variables,
       kinds,
@@ -178,7 +178,8 @@ function Body(props: {
   // ------------------------------------------------------------ transitions
 
   /** The statement as the program holds it now, after the edits applied so far. */
-  const current = () => blocksById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
+  const findCurrentStmt = () =>
+    blocksById(useProgram.getState().program).get(stmt.id) as Stmt | undefined;
 
   /** Writes a transition's values into the program and keeps the session it leaves. */
   const applyTransition = (transition: Transition): Session => {
@@ -191,7 +192,7 @@ function Body(props: {
 
   /** Moves the keyboard to `field`, its line opened as `how` says (`Entry`). */
   const enter = (field: Field | null, how: Entry): void => {
-    setSession(enterField(current() ?? stmt, field, how));
+    setSession(enterField(findCurrentStmt() ?? stmt, field, how));
   };
 
   /**
@@ -208,7 +209,7 @@ function Body(props: {
   /** `+ value` gives an optional slot an empty slot, whose field takes the keyboard. */
   const addValue = (slot: string) => {
     if (!apply((p) => setExpr(p, stmt.id, slot, createEmptyDraft()))) return;
-    const now = current() ?? stmt;
+    const now = findCurrentStmt() ?? stmt;
     enter(stmtFields(now).find((field) => field.slot === slot) ?? null, "tab");
   };
 
@@ -243,7 +244,7 @@ function Body(props: {
   };
 
   const lineWidget = (field: Field, value: FieldValue): ReactNode => {
-    const shown = sameField(focus, field) ? line : null;
+    const shown = isSameField(focus, field) ? line : null;
     const text = shown ? shown.text : fieldText(value);
     const led = draftError !== undefined && fieldDraft(value)?.id === draftError.draft;
     return (
@@ -261,7 +262,7 @@ function Body(props: {
         onSelect={(start, end) => setSession((s) => selectText(s, start, end))}
         onFocus={(clicked) => {
           setFocused(field);
-          if (!sameField(focus, field)) enter(field, clicked ?? "tab");
+          if (!isSameField(focus, field)) enter(field, clicked ?? "tab");
         }}
       />
     );
@@ -445,11 +446,11 @@ export function BlockEditor({ id }: { id: NodeId }) {
    * Ctrl/Cmd+Enter stays the page's play button, and a key of a composition is the composition's.
    */
   const editorKey = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.defaultPrevented || composingKey(event) || !popup) return;
+    if (event.defaultPrevented || isCompositionKey(event) || !popup) return;
     if (event.key === "Tab") {
       event.preventDefault();
       tabTarget(popup, document.activeElement, event.shiftKey ? -1 : 1).focus();
-    } else if (event.key === "Enter" && event.target === popup && !modified(event)) {
+    } else if (event.key === "Enter" && event.target === popup && !hasModifier(event)) {
       event.preventDefault();
       closeEditor();
     }

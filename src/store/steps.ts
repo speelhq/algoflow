@@ -3,7 +3,7 @@
 // read through it, so every count of steps agrees.
 import type { HeapEntry, NodeId } from "@/lang/types";
 import { isDone } from "@/runtime/outcome";
-import { sameRef } from "@/runtime/refs";
+import { isSameRef } from "@/runtime/refs";
 import type { Done, Event, Ref, Runner, State } from "@/runtime/types";
 
 /** Two writes of a `swap` that exchange their places. */
@@ -41,8 +41,8 @@ function exchanges(
     second.type === "write" &&
     first.from !== undefined &&
     second.from !== undefined &&
-    sameRef(first.from, second.ref) &&
-    sameRef(second.from, first.ref)
+    isSameRef(first.from, second.ref) &&
+    isSameRef(second.from, first.ref)
   );
 }
 

@@ -49,7 +49,7 @@ export function typeName(value: Value): string {
   return value.t;
 }
 
-export function truthy(value: Value, heap: Heap): boolean {
+export function isTruthy(value: Value, heap: Heap): boolean {
   switch (value.t) {
     case "int":
     case "float":

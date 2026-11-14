@@ -30,17 +30,18 @@ export type Edit = { field: Field; value: FieldValue };
 /** A transition's result: the next session and the values it writes, in order. */
 export type Transition = { session: Session; edits: Edit[] };
 
-const still = (session: Session): Transition => ({ session, edits: [] });
+/** A transition to `session` that writes no value. */
+const withoutEdits = (session: Session): Transition => ({ session, edits: [] });
 
 /** Whether a field holds a value: no draft. */
 const isValue = (fieldValue: FieldValue | null) =>
   fieldValue !== null && fieldDraft(fieldValue) === undefined;
 
 /** Two values alike apart from their node ids. */
-function sameValue(a: FieldValue | null, b: FieldValue | null): boolean {
-  const plain = (value: FieldValue | null) =>
+function isSameValue(a: FieldValue | null, b: FieldValue | null): boolean {
+  const toJsonWithoutIds = (value: FieldValue | null) =>
     JSON.stringify(value, (key, v) => (key === "id" ? 0 : v));
-  return plain(a) === plain(b);
+  return toJsonWithoutIds(a) === toJsonWithoutIds(b);
 }
 
 /**
@@ -112,7 +113,7 @@ export function followStatement(session: Session, stmt: Stmt): Session {
   const { focus, fieldValue } = session;
   if (!focus) return session;
   const value = findFieldValue(stmt, focus) ?? null;
-  if (sameValue(value, fieldValue)) return session;
+  if (isSameValue(value, fieldValue)) return session;
   // A field the statement no longer has (an optional value taken out, by an undo) leaves the
   // keyboard.
   if (!value) return NO_FIELD;
@@ -126,11 +127,11 @@ export function followStatement(session: Session, stmt: Stmt): Session {
  */
 export function changeText(session: Session, typed: TextLine, composing: boolean): Transition {
   const { focus, fieldValue } = session;
-  if (!focus) return still(session);
+  if (!focus) return withoutEdits(session);
   const next: Session = { ...session, line: typed, highlight: null };
-  if (composing) return still(next);
+  if (composing) return withoutEdits(next);
   const value = parseFieldText(typed.text, focus.role);
-  if (sameValue(value, fieldValue)) return still(next);
+  if (isSameValue(value, fieldValue)) return withoutEdits(next);
   return { session: { ...next, fieldValue: value }, edits: [{ field: focus, value }] };
 }
 
@@ -176,7 +177,7 @@ export type After = "close" | { go: 1 | -1; entry: Extract<Entry, string> };
 /** A key pressed in the focused value line; `taken` is false when the field keeps it. */
 export type KeyTransition = Transition & { taken: boolean; after?: After };
 
-const taken = (transition: Transition, after?: After): KeyTransition =>
+const takeKey = (transition: Transition, after?: After): KeyTransition =>
   after === undefined ? { ...transition, taken: true } : { ...transition, taken: true, after };
 
 /**
@@ -187,10 +188,10 @@ const taken = (transition: Transition, after?: After): KeyTransition =>
 export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransition {
   const { line } = session;
   const chosen = line ? choose(line, row, ctx.kinds) : undefined;
-  if (!chosen) return taken(still(session));
+  if (!chosen) return takeKey(withoutEdits(session));
   const changed = changeText(session, chosen, false);
   const target = session.focus?.role === "target" && isValue(changed.session.fieldValue);
-  return taken(changed, target ? { go: 1, entry: "tab" } : undefined);
+  return takeKey(changed, target ? { go: 1, entry: "tab" } : undefined);
 }
 
 /**
@@ -209,7 +210,7 @@ export function valueKey(
   moves: (step: 1 | -1) => boolean,
 ): KeyTransition {
   const { line } = session;
-  const left: KeyTransition = { ...still(session), taken: false };
+  const left: KeyTransition = { ...withoutEdits(session), taken: false };
   // A key with Ctrl or Cmd is the page's or the text field's (`editor.md`, Value line, Keys).
   if (!line || key.ctrlKey || key.metaKey) return left;
   const shown = shownHighlight(session, rows.length);
@@ -217,12 +218,12 @@ export function valueKey(
     case "ArrowDown":
     case "ArrowUp":
       if (rows.length === 0) return left;
-      return taken(
-        still(stepHighlight(session, rows.length, shown, key.key === "ArrowDown" ? 1 : -1)),
+      return takeKey(
+        withoutEdits(stepHighlight(session, rows.length, shown, key.key === "ArrowDown" ? 1 : -1)),
       );
     case "Enter": {
       const row = shown === null ? undefined : rows[shown];
-      return row ? pickRow(session, row, ctx) : taken(still(session), "close");
+      return row ? pickRow(session, row, ctx) : takeKey(withoutEdits(session), "close");
     }
     case "ArrowLeft":
     case "ArrowRight": {
@@ -231,7 +232,7 @@ export function valueKey(
       const atEdge = line.start === edge && line.end === edge;
       // With Shift or Alt, they select or move by word, as in a text field.
       if (key.shiftKey || key.altKey || !atEdge || !moves(step)) return left;
-      return taken(still(session), { go: step, entry: step < 0 ? "end" : "start" });
+      return takeKey(withoutEdits(session), { go: step, entry: step < 0 ? "end" : "start" });
     }
     default:
       return left;

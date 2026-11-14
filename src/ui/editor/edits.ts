@@ -3,7 +3,7 @@
 import { EditError, insertStmt } from "@/lang/edit";
 import type { Place, Program, Stmt } from "@/lang/types";
 import { useEditor } from "@/store/editor";
-import { currentMode, editable } from "@/store/mode";
+import { currentMode, canEdit } from "@/store/mode";
 import { useProgram } from "@/store/program";
 
 /**
@@ -14,7 +14,7 @@ function applyWith(
   change: (program: Program) => Program,
   record: (next: Program) => void,
 ): boolean {
-  if (!editable(currentMode())) return false;
+  if (!canEdit(currentMode())) return false;
   try {
     record(change(useProgram.getState().program));
     return true;

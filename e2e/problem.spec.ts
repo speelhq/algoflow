@@ -96,13 +96,13 @@ test.describe("Python tab", () => {
     await page.goto("/#/p/fizzbuzz");
     await page.getByTestId("tab-python").click();
     await page.getByRole("button", { name: "Copy", exact: true }).click();
-    const copied = () => page.evaluate(() => navigator.clipboard.readText());
-    await expect.poll(copied).toMatch(/^n = 15\nfor i in range\(1, n \+ 1\):\n/);
+    const readClipboard = () => page.evaluate(() => navigator.clipboard.readText());
+    await expect.poll(readClipboard).toMatch(/^n = 15\nfor i in range\(1, n \+ 1\):\n/);
     const downloading = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download .py" }).click();
     const file = await downloading;
     expect(file.suggestedFilename()).toBe("main.py");
     const chunks = await (await file.createReadStream()).toArray();
-    expect(Buffer.concat(chunks).toString("utf8")).toBe(await copied());
+    expect(Buffer.concat(chunks).toString("utf8")).toBe(await readClipboard());
   });
 });

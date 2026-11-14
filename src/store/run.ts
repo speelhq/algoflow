@@ -16,7 +16,7 @@ import { getBlockDef, registryKey } from "@/blocks/registry";
 import { collectOutcome } from "@/runtime/outcome";
 import { run as startRunner } from "@/runtime/run";
 import type { Done, Runner, State } from "@/runtime/types";
-import { inBatches } from "./batches";
+import { runInBatches } from "./batches";
 import { useLayout } from "./layout";
 import { useProgram } from "./program";
 import { copyState, createSteps, type StepEvent, type Steps } from "./steps";
@@ -142,7 +142,7 @@ function snapshot(): State | null {
 }
 
 /** Feeds one visible step's event into the projection (no store update). */
-function apply(event: StepEvent): void {
+function updateProjection(event: StepEvent): void {
   const p = projection;
   p.step += 1;
   p.lastEvent = event;
@@ -178,7 +178,7 @@ function loopBodies(program: Program, all: Map<NodeId, NodeId[]>): Map<NodeId, S
   return found;
 }
 
-function atEnd(): boolean {
+function isAtEnd(): boolean {
   return findings !== null && projection.step >= findings.total;
 }
 
@@ -196,14 +196,14 @@ function advance(shown: boolean): void {
     projection.held = undefined;
     return;
   }
-  apply(next.event);
+  updateProjection(next.event);
   projection.held = next.state;
   // The last event of a finished run: one more `next()` lets the frames unwind.
   if (projection.step === findings.total) runner.next();
 }
 
 /** The step just taken arrived at the breakpoint (its `enter`, or a pass of that loop). */
-function atBreakpoint(): boolean {
+function isAtBreakpoint(): boolean {
   const event = projection.lastEvent;
   return (
     breakpoint !== null &&
@@ -258,7 +258,7 @@ async function prerun(from: Origin, mine: number): Promise<Findings | undefined>
     if (next.event.type === "print") prints.push(count);
     return false;
   };
-  const finished = await inBatches(
+  const finished = await runInBatches(
     step,
     () => {},
     () => mine !== generation,
@@ -273,7 +273,7 @@ export const useRun = create<RunState>()((set, get) => {
    */
   const publish = (status: Status, busy: boolean) => {
     const p = projection;
-    const ended = runner !== null && atEnd();
+    const ended = runner !== null && isAtEnd();
     if (ended) clearTimer();
     const outcome = findings?.outcome ?? null;
     const focus = ended && outcome?.type === "error" ? outcome.error.nodeId : p.lastEvent?.nodeId;
@@ -299,20 +299,20 @@ export const useRun = create<RunState>()((set, get) => {
     });
   };
 
-  const running = () => runner !== null && !atEnd();
+  const isRunning = () => runner !== null && !isAtEnd();
 
   /**
    * Steps up to `until` in batches, publishing `status` once per batch; with `breaks`
    * it also stops on arriving at the breakpoint. False when another action took over.
    */
-  const batched = (until: number, breaks: boolean, status: Status): Promise<boolean> => {
+  const stepUntil = (until: number, breaks: boolean, status: Status): Promise<boolean> => {
     const mine = generation;
-    return inBatches(
+    return runInBatches(
       (last) => {
         if (projection.step >= until) return true;
         // Published: the step reached, and the last of a batch (`between`).
         advance(last || projection.step + 1 === until);
-        return breaks && !atEnd() && atBreakpoint();
+        return breaks && !isAtEnd() && isAtBreakpoint();
       },
       () => publish(status, true),
       () => mine !== generation,
@@ -321,12 +321,12 @@ export const useRun = create<RunState>()((set, get) => {
 
   /** Takes one step of Play, and pauses at the breakpoint. */
   const tick = () => {
-    if (!running()) {
+    if (!isRunning()) {
       clearTimer();
       return;
     }
     advance(true);
-    if (!atEnd() && atBreakpoint()) {
+    if (!isAtEnd() && isAtBreakpoint()) {
       clearTimer();
       publish("paused", false);
     } else publish("playing", false);
@@ -379,29 +379,29 @@ export const useRun = create<RunState>()((set, get) => {
       reset(from);
       watching = opts?.watch === true;
       if (watching) {
-        if (await batched(made.difference.step, false, "paused")) publish("paused", false);
+        if (await stepUntil(made.difference.step, false, "paused")) publish("paused", false);
         return;
       }
-      if (!atEnd()) armTimer();
+      if (!isAtEnd()) armTimer();
       publish("playing", false);
     },
 
     stepOnce() {
-      if (!running() || get().busy) return;
+      if (!isRunning() || get().busy) return;
       cancel();
       advance(true);
       publish("paused", false);
     },
 
     play() {
-      if (!running() || get().busy || timer !== null) return;
+      if (!isRunning() || get().busy || timer !== null) return;
       cancel();
       armTimer();
       publish("playing", false);
     },
 
     pause() {
-      if (!running()) return;
+      if (!isRunning()) return;
       cancel();
       publish("paused", false);
     },
@@ -413,7 +413,7 @@ export const useRun = create<RunState>()((set, get) => {
       target = to;
       // Forward: the current runner goes on; backward: a fresh runner from step 0.
       if (to < projection.step) reset(origin);
-      if (!(await batched(to, false, "paused"))) return;
+      if (!(await stepUntil(to, false, "paused"))) return;
       target = null;
       publish("paused", false);
     },
@@ -423,10 +423,10 @@ export const useRun = create<RunState>()((set, get) => {
     },
 
     async skip() {
-      if (!running() || !findings) return;
+      if (!isRunning() || !findings) return;
       cancel();
       publish("playing", true);
-      if (await batched(findings.total, true, "playing")) publish("paused", false);
+      if (await stepUntil(findings.total, true, "playing")) publish("paused", false);
     },
 
     stop() {
@@ -442,7 +442,7 @@ export const useRun = create<RunState>()((set, get) => {
     },
 
     setBreakpoint(id) {
-      if (!running() || !origin) return;
+      if (!isRunning() || !origin) return;
       // The breakpoint is a statement's `NodeId` (`interpreter.md`, Controls).
       if (id !== null && !isStatement(origin.program, id)) throw new Error(`${id} is no statement`);
       breakpoint = id;

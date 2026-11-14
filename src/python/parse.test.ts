@@ -285,7 +285,7 @@ describe("readBefore (parser.md, Reading before a caret)", () => {
   function read(text: string): Read {
     const reading = readBefore(text);
     if (reading.place === "text" || reading.place === "none") return reading;
-    const written = (spanned: { expr: Expr; start: number }) => ({
+    const unparseSpanned = (spanned: { expr: Expr; start: number }) => ({
       text: unparse(spanned.expr),
       start: spanned.start,
     });
@@ -297,8 +297,8 @@ describe("readBefore (parser.md, Reading before a caret)", () => {
       ? { place: reading.place, operation }
       : {
           place: reading.place,
-          before: written(reading.before),
-          atom: written(reading.atom),
+          before: unparseSpanned(reading.before),
+          atom: unparseSpanned(reading.atom),
           operation,
         };
   }

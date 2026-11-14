@@ -1,6 +1,6 @@
 // The page's mode, from the driver's status and the shown solution.
 import { describe, expect, it } from "vitest";
-import { editable, inRun, deriveMode, type Mode } from "./mode";
+import { canEdit, isRunMode, deriveMode, type Mode } from "./mode";
 
 const MODES: Mode[] = ["build", "solution", "running", "ended"];
 
@@ -15,7 +15,7 @@ describe("deriveMode", () => {
   });
 
   it("only build mode edits; running and ended are run mode", () => {
-    expect(MODES.map(editable)).toEqual([true, false, false, false]);
-    expect(MODES.map(inRun)).toEqual([false, false, true, true]);
+    expect(MODES.map(canEdit)).toEqual([true, false, false, false]);
+    expect(MODES.map(isRunMode)).toEqual([false, false, true, true]);
   });
 });

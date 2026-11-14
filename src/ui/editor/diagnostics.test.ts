@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ast, createTestId } from "@/blocks/testing";
 import { estimatedWidth } from "@/ui/chart/layout";
 import { nodeFor } from "@/ui/chart/paint";
-import { laidOut } from "@/ui/chart/testing";
+import { getLayout } from "@/ui/chart/testing";
 import { validate } from "@/lang/validate";
 import { editorDiagnostics, flaggedOwners, ledDraft } from "./diagnostics";
 
@@ -20,7 +20,7 @@ describe("flaggedOwners", () => {
 
     expect(flagged.get(twice.id)?.map((d) => d.code)).toEqual(["E_DUPLICATE_NAME"]);
     expect(flagged.get(shown.id)?.map((d) => d.code)).toEqual(["E_UNKNOWN_CALL"]);
-    const chart = laidOut(p, { routine: twice.id, inputs: {}, measure: estimatedWidth });
+    const chart = getLayout(p, { routine: twice.id, inputs: {}, measure: estimatedWidth });
     expect(nodeFor(chart.nodes, twice.id)?.role).toBe("start");
   });
 

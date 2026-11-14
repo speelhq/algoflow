@@ -2,7 +2,7 @@
 import { createNodeId } from "@/lang/id";
 import type { Expr } from "@/lang/types";
 import { PRECEDENCE } from "@/python/precedence";
-import { isNumber, makeNumber, truthy } from "@/runtime/values";
+import { isNumber, makeNumber, isTruthy } from "@/runtime/values";
 import { defineExpr } from "./types";
 import { createEmptyDraft } from "./draft";
 
@@ -28,7 +28,7 @@ export const unop = defineExpr<"unop">({
       : { field: "op", message: "expected a known operator" },
   *run(block, ctx) {
     const value = yield* ctx.eval(block.operand);
-    if (block.op === "not") return { t: "bool", v: !truthy(value, ctx.heap) };
+    if (block.op === "not") return { t: "bool", v: !isTruthy(value, ctx.heap) };
     if (!isNumber(value)) return ctx.valueError(block, value);
     // `-x` keeps the sign rules of Python: `-(0.0)` is `-0.0`; ints have no negative zero.
     return makeNumber(-value.v, value.t === "float");

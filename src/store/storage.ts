@@ -3,7 +3,7 @@
 // write that fails reports false instead of throwing out of a store's `set`.
 import type { PersistStorage } from "zustand/middleware";
 
-function store(): Storage | undefined {
+function findStorage(): Storage | undefined {
   try {
     return typeof localStorage === "undefined" ? undefined : localStorage;
   } catch {
@@ -17,7 +17,7 @@ export function readStored<T>(
   parse: (stored: unknown) => T | undefined,
 ): T | undefined {
   try {
-    const raw = store()?.getItem(key);
+    const raw = findStorage()?.getItem(key);
     return raw === null || raw === undefined ? undefined : parse(JSON.parse(raw));
   } catch {
     return undefined;
@@ -27,7 +27,7 @@ export function readStored<T>(
 /** Writes `value` as JSON; false when storage is absent or refuses it. */
 export function writeStored(key: string, value: unknown): boolean {
   try {
-    const target = store();
+    const target = findStorage();
     if (!target) return false;
     target.setItem(key, JSON.stringify(value));
     return true;
@@ -38,7 +38,7 @@ export function writeStored(key: string, value: unknown): boolean {
 
 export function removeStored(key: string): void {
   try {
-    store()?.removeItem(key);
+    findStorage()?.removeItem(key);
   } catch {
     // Nothing to remove from storage that cannot be reached.
   }
@@ -46,7 +46,7 @@ export function removeStored(key: string): void {
 
 /** Every key in storage. */
 export function storedKeys(): string[] {
-  const target = store();
+  const target = findStorage();
   if (!target) return [];
   const keys: string[] = [];
   for (let i = 0; i < target.length; i += 1) {
