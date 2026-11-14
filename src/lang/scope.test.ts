@@ -1,9 +1,25 @@
 // What is visible where; the places `loop` and `requires` allow; the value list's Variables.
 import { describe, expect, it } from "vitest";
 import { ast } from "@/blocks/testing";
-import { declaredBy, placeContext, findVisibleNames } from "./scope";
+import type { Program, Stmt } from "./types";
+import {
+  declaredBy,
+  eachVisible,
+  isVisible,
+  placeContext,
+  findVisibleNames,
+  statementScopes,
+} from "./scope";
 
 const { assign, num, v, bin, print, for_, if_, while_, ret, program } = ast;
+
+/** The scopes of `stmt`, one for each place the program holds it. */
+const scopesOf = (p: Program, stmt: Stmt) =>
+  statementScopes(p).filter((scope) => scope.stmt === stmt);
+
+/** The variables visible at the one place the program holds `stmt`. */
+const visibleAt = (p: Program, stmt: Stmt) =>
+  scopesOf(p, stmt).map(({ visible }) => [...eachVisible(visible)]);
 
 describe("scope", () => {
   it("a binding target declares its variable with the value its slot stores; a loop's stores none", () => {
@@ -79,5 +95,71 @@ describe("scope", () => {
       loop: false,
       fn: true,
     });
+  });
+
+  it("names what declares each visible variable: a statement, a function, or main", () => {
+    const set = assign("a", num(1));
+    const inner = print(v("i"));
+    const loop = for_("i", num(0), v("n"), [inner]);
+    const body = ret(v("x"));
+    const fn = { id: "fn0000000001", name: "f", params: ["x"], body: [body] };
+    const p = program([set, loop], { inputs: [{ name: "n", kind: "number" }], functions: [fn] });
+    expect(visibleAt(p, inner)).toEqual([
+      [
+        { name: "i", declarer: loop.id },
+        { name: "a", declarer: set.id },
+        { name: "n", declarer: "main" },
+      ],
+    ]);
+    expect(visibleAt(p, body)).toEqual([[{ name: "x", declarer: fn.id }]]);
+  });
+
+  it("lists a name declared again once per declaration, the latest first", () => {
+    const first = assign("a", num(1));
+    const again = assign("a", num(3));
+    const here = print(v("a"));
+    const p = program([first, again, here]);
+    expect(visibleAt(p, here)).toEqual([
+      [
+        { name: "a", declarer: again.id },
+        { name: "a", declarer: first.id },
+      ],
+    ]);
+    expect(findVisibleNames(p, here.id)).toEqual(["a"]);
+  });
+
+  it("names the compound statement inside which a name not yet visible is first declared", () => {
+    const branch = if_(v("c"), [assign("x", num(1))]);
+    const read = print(v("x"));
+    const set = assign("x", num(2));
+    const after = print(v("x"));
+    const p = program([assign("c", num(1)), branch, read, set, after]);
+    const [atRead] = scopesOf(p, read);
+    expect(atRead?.declaredInside).toEqual(new Map([["x", branch.id]]));
+    expect(isVisible(atRead?.visible, "x")).toBe(false);
+    // Once the name is visible, a read finds the variable rather than the compound statement.
+    expect(isVisible(scopesOf(p, after)[0]?.visible, "x")).toBe(true);
+  });
+
+  it("gives a statement held in two places a scope for each", () => {
+    const read = print(v("x"));
+    const p = program([read, assign("x", num(1)), read]);
+    expect(scopesOf(p, read).map(({ visible }) => isVisible(visible, "x"))).toEqual([false, true]);
+  });
+
+  it("says whether a loop holds each statement, and in which routine it is", () => {
+    const inner = print(v("i"));
+    const branch = if_(v("i"), [inner]);
+    const loop = for_("i", num(0), num(3), [branch]);
+    const body = ret(num(1));
+    const fn = { id: "fn0000000001", name: "f", params: [], body: [body] };
+    const p = program([loop], { functions: [fn] });
+    const sits = (stmt: Stmt) => scopesOf(p, stmt).map(({ routine, inLoop }) => [routine, inLoop]);
+    expect([sits(loop), sits(branch), sits(inner), sits(body)]).toEqual([
+      [["main", false]],
+      [["main", true]],
+      [["main", true]],
+      [[fn.id, false]],
+    ]);
   });
 });

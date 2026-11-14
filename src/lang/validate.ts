@@ -1,8 +1,9 @@
 // Every validation code, run after every edit and before every run: node ids, names, scope rules,
 // jumps and returns, drafts, and calls.
-// Dispatch is registry-driven: slots, `requires`, `loop`, `params`, `callee`.
+// Dispatch is registry-driven: slots, `requires`, `params`, `callee`; where a statement sits and
+// what it may read come from `statementScopes`.
 import { builtinKey, getBlockDef, hasBlockDef, registryKey } from "@/blocks/registry";
-import { expectedArgs, type BlockDef } from "@/blocks/types";
+import { expectedArgs } from "@/blocks/types";
 import {
   NAME_PATTERN,
   RESERVED,
@@ -13,8 +14,8 @@ import {
   type Stmt,
 } from "./types";
 import { parseSlotText } from "./drafts";
-import { declaredBy } from "./scope";
-import { draftSlots, programIds, bodyRegions, stmtExprs, findVariableName } from "./walk";
+import { declaredBy, isVisible, statementScopes, type StatementScope } from "./scope";
+import { draftSlots, programIds, stmtExprs, findVariableName } from "./walk";
 
 export function isValidName(name: string): boolean {
   return NAME_PATTERN.test(name) && !RESERVED.has(name);
@@ -24,9 +25,6 @@ export function isValidName(name: string): boolean {
 function isBuiltinName(name: string): boolean {
   return hasBlockDef(builtinKey(name));
 }
-
-/** Where a statement sits: inside how many loops, and whether inside a function. */
-type Enclosing = { loop: number; inFunction: boolean };
 
 class Collector {
   readonly diagnostics: Diagnostic[] = [];
@@ -83,74 +81,41 @@ class Collector {
     }
   }
 
-  // ------------------------------------------------------------ regions
+  // ------------------------------------------------------------ statements
 
-  routines(): void {
-    for (const fn of this.program.functions) {
-      this.region(fn.body, new Set(fn.params), new Map(), { loop: 0, inFunction: true });
-    }
-    const visible = new Set(this.program.inputs.map((input) => input.name));
-    this.region(this.program.main, visible, new Map(), { loop: 0, inFunction: false });
-  }
-
-  /**
-   * Walks one region. `visible` gains the names assigned directly in it; `inner`
-   * maps names first assigned inside an earlier compound statement of this region
-   * to that statement's id. Returns every name first assigned anywhere inside
-   * the region, so an enclosing region can attribute it to its compound statement.
-   */
-  private region(
-    stmts: Stmt[],
-    visible: Set<Name>,
-    inner: Map<Name, NodeId>,
-    enclosing: Enclosing,
-  ): Set<Name> {
-    const declared = new Set<Name>();
-    for (const stmt of stmts) {
-      const def = getBlockDef(registryKey(stmt));
+  /** Checks every statement in program order, each where it sits (`statementScopes`). */
+  statements(): void {
+    for (const scope of statementScopes(this.program)) {
+      const { stmt } = scope;
       this.drafts(stmt);
       this.calls(stmt);
-      this.reads(stmt, visible, inner);
-      this.control(stmt, def, enclosing);
-
+      this.reads(scope);
+      this.control(scope);
       for (const { name } of declaredBy(stmt)) {
         if (!isValidName(name)) this.report(stmt.id, "E_BAD_NAME", { name });
         else if (this.callables.has(name) || isBuiltinName(name)) {
           this.report(stmt.id, "E_DUPLICATE_NAME", { name });
         }
-        if (!visible.has(name)) declared.add(name);
-        visible.add(name);
-      }
-
-      const inBody = def.loop ? { ...enclosing, loop: enclosing.loop + 1 } : enclosing;
-      for (const region of bodyRegions(stmt)) {
-        const nestedDeclared = this.region(region.stmts, new Set(visible), new Map(inner), inBody);
-        for (const name of nestedDeclared) {
-          if (visible.has(name)) continue;
-          declared.add(name);
-          if (!inner.has(name)) inner.set(name, stmt.id);
-        }
       }
     }
-    return declared;
   }
 
-  private reads(stmt: Stmt, visible: Set<Name>, inner: Map<Name, NodeId>): void {
+  private reads({ stmt, visible, declaredInside }: StatementScope): void {
     const bound = new Set(declaredBy(stmt).map((declared) => declared.target));
     for (const expr of stmtExprs(stmt)) {
       if (bound.has(expr)) continue;
       const name = findVariableName(expr);
-      if (name === undefined || visible.has(name)) continue;
-      const compound = inner.get(name);
+      if (name === undefined || isVisible(visible, name)) continue;
+      const compound = declaredInside.get(name);
       if (compound === undefined) this.report(stmt.id, "E_UNDEFINED", { name });
       else this.report(stmt.id, "E_DECLARE_FIRST", { name, compound }, "hoistAssign");
     }
   }
 
-  private control(stmt: Stmt, def: BlockDef, enclosing: Enclosing): void {
-    if (def.requires === "loop" && enclosing.loop === 0) this.report(stmt.id, "E_BREAK_OUTSIDE");
-    if (def.requires === "function" && !enclosing.inFunction)
-      this.report(stmt.id, "E_RETURN_OUTSIDE");
+  private control({ stmt, routine, inLoop }: StatementScope): void {
+    const { requires } = getBlockDef(registryKey(stmt));
+    if (requires === "loop" && !inLoop) this.report(stmt.id, "E_BREAK_OUTSIDE");
+    if (requires === "function" && routine === "main") this.report(stmt.id, "E_RETURN_OUTSIDE");
   }
 
   // ------------------------------------------------------------ drafts
@@ -222,7 +187,7 @@ function analyze(program: Program): Analysis {
     const collector = new Collector(program);
     collector.ids();
     collector.declarations();
-    collector.routines();
+    collector.statements();
     analysis = {
       diagnostics: collector.diagnostics,
       refusedDefinitions: collector.refusedDefinitions,
