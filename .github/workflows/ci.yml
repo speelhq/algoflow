@@ -1,19 +1,20 @@
 # lint, format, test, check, build, test:e2e on every pull request and on
-# every push to main; on a pull request, beside them, the message of each of
-# its commits; main deploys dist/ to Cloudflare Workers once it passes.
+# every push to develop or main; on a pull request, beside them, the message
+# of each of its commits; main, which holds the latest release, deploys dist/
+# to Cloudflare Workers once it passes.
 name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [develop, main]
   pull_request:
 
 permissions:
   contents: read
 
-# A newer push to a pull request cancels the run of the one before. On main a run waits for the
-# one before, and of the runs waiting only the latest starts, so main's latest commit is always
-# checked and deployed.
+# A newer push to a pull request cancels the run of the one before. On develop or main a run waits
+# for the one before, and of the runs waiting only the latest starts, so the branch's latest commit
+# is always checked, and main's is deployed.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
