@@ -1,6 +1,12 @@
 // Pure edit functions. Each returns a new Program and keeps
 // every NodeId unique. Statements are addressed by id or by Place.
-import { getBlockDef, registryKey, findSlot } from "@/blocks/registry";
+import {
+  createAssignment,
+  createVariable,
+  getBlockDef,
+  registryKey,
+  findSlot,
+} from "@/blocks/registry";
 import { createNodeId } from "./id";
 import { declarationsUnder } from "./scope";
 import type { Expr, FunctionDef, Name, NodeId, Place, Program, Stmt } from "./types";
@@ -286,12 +292,6 @@ export function hoistAssign(program: Program, compound: NodeId, name: Name): Pro
   const next = clone(program);
   const { stmt, region, index } = getStmt(next, compound);
   const inner = bodyRegions(stmt).flatMap((r) => r.stmts);
-  const assign: Stmt = {
-    id: createNodeId(),
-    type: "assign",
-    target: { id: createNodeId(), type: "var", name },
-    value: createDefault(inner, name),
-  };
-  region.splice(index, 0, assign);
+  region.splice(index, 0, createAssignment(createVariable(name), createDefault(inner, name)));
   return next;
 }

@@ -105,6 +105,8 @@ export function menuBlockDefs(category: Category): BlockDef[] {
   return ALL.filter((def) => def.category === category && !def.hidden);
 }
 
+export { createAssignment } from "./assign";
 export { createDraft, createEmptyDraft } from "./draft";
+export { createVariable } from "./var";
 export { builtinKey, findBuiltinName, methodKey } from "./types";
 export type { EmitContext, BlockDef, Param, PyLine, RunContext, Signal, Slot } from "./types";

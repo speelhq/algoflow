@@ -228,4 +228,13 @@ describe("edit", () => {
     expect(lines(hoistAssign(floats.program, floatFrame.id, "y"), inputs)[1]).toBe("y = 0.0");
     expect(lines(hoistAssign(p, branch.id, "unknown"), inputs)[1]).toBe("unknown = None");
   });
+
+  it("hoistAssign declares a name that validate() refuses, which stays the learner's to fix", () => {
+    const loop = for_("i", num(0), num(3), [assign("myTotal", v("i"))]);
+    const p = program([loop, print(v("myTotal"))]);
+    expect(validate(p).map((d) => d.code)).toEqual(["E_BAD_NAME", "E_DECLARE_FIRST"]);
+    const fixed = hoistAssign(p, loop.id, "myTotal");
+    expect(lines(fixed, {})[0]).toBe("myTotal = None");
+    expect(validate(fixed).map((d) => d.code)).toEqual(["E_BAD_NAME", "E_BAD_NAME"]);
+  });
 });

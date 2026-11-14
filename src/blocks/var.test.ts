@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { unparse } from "@/python/emit";
 import { ast, evalExpr, runAll, createProgramWithInputs } from "./testing";
-import { blockNotation } from "./registry";
+import { blockNotation, createVariable } from "./registry";
 
 const { v, num, for_, print } = ast;
 
@@ -35,5 +35,19 @@ describe("var (blocks.md)", () => {
 describe("notation (blocks.md, Notation)", () => {
   it("writes the notation of its table", () => {
     expect(blockNotation(v("n"))).toBe("{name}");
+  });
+});
+
+describe("createVariable (blocks.md, Expressions)", () => {
+  it("makes the variable of any name with text, a reserved or a capitalized one included", () => {
+    expect(createVariable("total")).toMatchObject({ type: "var", name: "total" });
+    for (const name of ["len", "myTotal"]) {
+      expect(createVariable(name)).toMatchObject({ type: "var", name });
+    }
+    expect(createVariable("i").id).not.toBe(createVariable("i").id);
+  });
+
+  it("refuses a name with no text, which migrate() rejects", () => {
+    expect(() => createVariable("")).toThrow(/no variable can be named/);
   });
 });

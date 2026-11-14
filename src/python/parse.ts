@@ -3,11 +3,12 @@ import { createNodeId } from "@/lang/id";
 import { CLASS_NAME_PATTERN, type BinOp, type Data, type Expr, type NodeId } from "@/lang/types";
 import { allExprs, childSlots, isEmptyDraft } from "@/lang/walk";
 import {
-  findBuiltinName,
-  methodKey,
   BLOCK_DEFS,
+  createVariable,
+  findBuiltinName,
   getBlockDef,
   hasBlockDef,
+  methodKey,
   registryKey,
 } from "@/blocks/registry";
 import { dataToPython } from "./emit";
@@ -433,7 +434,7 @@ class Parser {
         }
         if (token.text === "None") return { id: createNodeId(), type: "none" };
         if (KEYWORDS.has(token.text)) return fail("E_PARSE_SYNTAX", token.pos);
-        return { id: createNodeId(), type: "var", name: token.text };
+        return createVariable(token.text);
       case "op":
         if (token.text === "(") {
           const inner = this.or();

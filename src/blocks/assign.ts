@@ -1,7 +1,14 @@
 // The `assign` block definition: `<target> = <value>`; the value is stored at its target's place.
+// An assignment of a target and a value is made by `createAssignment()` (`blocks.md`, Statements).
 import { createNodeId } from "@/lang/id";
+import type { Expr, Stmt } from "@/lang/types";
 import { defineStmt } from "./types";
 import { createEmptyDraft } from "./draft";
+
+/** The assignment that stores `value` at `target`. */
+export function createAssignment(target: Expr, value: Expr): Extract<Stmt, { type: "assign" }> {
+  return { id: createNodeId(), type: "assign", target, value };
+}
 
 export const assign = defineStmt<"assign">({
   key: "assign",
@@ -10,12 +17,7 @@ export const assign = defineStmt<"assign">({
     { name: "target", role: "target", hint: "variable", binds: true, stores: "value" },
     { name: "value", role: "expr", hint: "value" },
   ],
-  create: () => ({
-    id: createNodeId(),
-    type: "assign",
-    target: createEmptyDraft(),
-    value: createEmptyDraft(),
-  }),
+  create: () => createAssignment(createEmptyDraft(), createEmptyDraft()),
   *run(block, ctx) {
     const value = yield* ctx.eval(block.value);
     yield* ctx.store(block.target, value, block.id);
