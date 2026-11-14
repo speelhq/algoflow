@@ -136,6 +136,6 @@ describe("notation (blocks.md, Notation)", () => {
   });
 
   it("writes the notation of its table", () => {
-    expect(blockNotation(swap(v("x"), v("y")))).toBe("swap({a}, {b})");
+    expect(blockNotation(swap(v("x"), v("y")))).toBe("{a} ↔ {b}");
   });
 });

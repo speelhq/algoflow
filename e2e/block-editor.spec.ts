@@ -363,7 +363,7 @@ test("a swap of two items and one of two variables are typed as the chart writes
   await page.keyboard.press("Tab");
   await keys(page, "nums[2]");
   await page.keyboard.press("Enter");
-  await expect(chart(page)).toContainText("swap(nums[0], nums[2])");
+  await expect(chart(page)).toContainText("nums[0] ↔ nums[2]");
 
   // A variable completes the first place, so Enter moves on to the second.
   await insert(page, "main/main/4", "swap");
@@ -371,7 +371,7 @@ test("a swap of two items and one of two variables are typed as the chart writes
   await page.keyboard.press("Enter");
   await keys(page, "y");
   await page.keyboard.press("Enter");
-  await expect(chart(page)).toContainText("swap(x, y)");
+  await expect(chart(page)).toContainText("x ↔ y");
   // A choice past the last field moves the keyboard to the editor itself, which stays open.
   await expect(page.getByRole("dialog", { name: "Edit block" })).toBeFocused();
   await expect(editor(page)).toBeVisible();
@@ -386,7 +386,7 @@ test("a swap of two items and one of two variables are typed as the chart writes
   // The last step is the end of the run; two before it, the exchange of the items.
   const back = page.getByRole("button", { name: "|◀ Back" });
   await back.click();
-  await expect(page.getByTestId("narration")).toHaveText("Running swap(x, y)");
+  await expect(page.getByTestId("narration")).toHaveText("Running x ↔ y");
   await back.click();
   await expect(page.getByTestId("narration")).toHaveText("Swapped nums[0] and nums[2]");
 });
