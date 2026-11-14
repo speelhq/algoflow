@@ -12,7 +12,8 @@
     "lint": "oxlint --type-aware --type-check --deny-warnings",
     "format": "oxfmt",
     "check": "tsx scripts/check.ts",
-    "commits": "tsx scripts/commits.ts"
+    "commits": "tsx scripts/commits.ts",
+    "size": "tsx scripts/size.ts"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

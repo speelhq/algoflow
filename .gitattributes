@@ -1,2 +1,5 @@
 * text=auto eol=lf
 *.png binary
+# Generated: GitHub hides these in a diff, and `pnpm size` leaves them out.
+pnpm-lock.yaml linguist-generated
+e2e/screenshots/** linguist-generated
