@@ -5,7 +5,7 @@
 // Registry-driven: slots, `loop`, and regions, never a type.
 import { getBlockDef, registryKey } from "@/blocks/registry";
 import type { Expr, Name, NodeId, Place, Program, RegionParent, Routine, Stmt } from "./types";
-import { bodyRegions, findRoutineDef, findVariableName, isExpr } from "./walk";
+import { allStmts, bodyRegions, findRoutineDef, findVariableName, isExpr } from "./walk";
 
 type Bag = Record<string, unknown>;
 
@@ -32,6 +32,19 @@ export function declaredBy(stmt: Stmt): Declared[] {
     declared.push({ name, target, stores: isExpr(stored) ? stored : undefined });
   }
   return declared;
+}
+
+/** A variable that a statement declares, with that statement. */
+export type Declaration = Declared & { stmt: Stmt };
+
+/**
+ * Every variable that the statements under `stmts` declare, at any depth, in program order: a
+ * routine's when `stmts` are its statements.
+ */
+export function declarationsUnder(stmts: readonly Stmt[]): Declaration[] {
+  return [...allStmts(stmts)].flatMap((stmt) =>
+    declaredBy(stmt).map((declared) => ({ ...declared, stmt })),
+  );
 }
 
 /**

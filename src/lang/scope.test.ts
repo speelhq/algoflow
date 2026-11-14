@@ -4,6 +4,7 @@ import { ast } from "@/blocks/testing";
 import type { Program, Stmt } from "./types";
 import {
   declaredBy,
+  declarationsUnder,
   eachVisible,
   isVisible,
   placeContext,
@@ -161,5 +162,21 @@ describe("scope", () => {
       [["main", true]],
       [[fn.id, false]],
     ]);
+  });
+
+  it("gives every variable that the statements under a region declare, in program order", () => {
+    const one = num(1);
+    const set = assign("a", one);
+    const pass = v("i");
+    const inner = assign("b", pass);
+    const loop = for_("i", num(0), num(3), [inner]);
+    const p = program([set, loop, print(v("a"))]);
+    expect(declarationsUnder(p.main).map(({ name, stmt, stores }) => [name, stmt, stores])).toEqual(
+      [
+        ["a", set, one],
+        ["i", loop, undefined],
+        ["b", inner, pass],
+      ],
+    );
   });
 });

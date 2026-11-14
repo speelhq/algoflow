@@ -29,11 +29,17 @@ tests.
   edit and before every run. One index in `walk.ts` holds every block and
   function of a program with its owner (`chart.md`, Shapes) and its
   routine, and `blocksById()`, `getOwner()`, and `getHoldingRoutine()`
-  read it.
+  read it. `scope.ts` walks a program's statements once and says where
+  each sits: its routine, whether a loop holds it, and the variables
+  visible there with what declares each (`language.md`, Scope,
+  Visibility). Validation, the value list, and the block menu read that
+  walk. Its `declarationsUnder()` gives the variables that a region's
+  statements declare, which the kinds, the name list, and `hoistAssign`
+  read.
   Never change a `Program` in place: `validate()`,
-  `refusedDefinitions()`, and that index are memoized per `Program`
-  object, and the undo history keeps earlier programs. Its spec is
-  `docs/spec/language/language.md`.
+  `refusedDefinitions()`, the scopes, the kinds, and that index are
+  memoized per `Program` object, and the undo history keeps earlier
+  programs. Its spec is `docs/spec/language/language.md`.
 - `src/blocks`: one block definition (`BlockDef`) per file. It owns its slots,
   `create()`, `run` (what the interpreter does), `python()` (the exact
   Python it emits), and `chart` (`docs/spec/blocks/`). `registry.ts` is the

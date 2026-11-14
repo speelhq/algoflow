@@ -4,9 +4,9 @@
 // Registry-driven.
 import { getBlockDef, registryKey } from "@/blocks/registry";
 import { isFloatData } from "./data";
-import { declaredBy } from "./scope";
+import { declarationsUnder } from "./scope";
 import type { Data, Expr, Name, Kind, Program, Routine, Stmt } from "./types";
-import { allStmts, getRoutineDef, routineStmts, findVariableName } from "./walk";
+import { findVariableName, getRoutineDef, routineStmts } from "./walk";
 
 /** The kind of a value written as Data. */
 export function dataKind(data: Data): Kind {
@@ -43,30 +43,28 @@ function routineKinds(program: Program, routine: Routine): RoutineKinds {
   }
   const known = routines.get(routine);
   if (known) return known;
-  const routineDef = getRoutineDef(program, routine);
   const kinds = new Map<Name, Kind>();
   const setters = new Map<Name, Stmt>();
   const assigned = new Set<Name>();
-  if (routineDef === "main") {
+  if (routine === "main") {
     for (const input of program.inputs) {
       kinds.set(input.name, input.kind);
       assigned.add(input.name);
     }
   }
-  for (const stmt of allStmts(routineStmts(program, routineDef))) {
-    const def = getBlockDef(registryKey(stmt));
-    for (const { name, stores } of declaredBy(stmt)) {
-      if (!setters.has(name)) setters.set(name, stmt);
-      if (stores === undefined) {
-        // A loop's kind holds until an assignment says otherwise.
-        if (!assigned.has(name) && !kinds.has(name) && def.declares) kinds.set(name, def.declares);
-        continue;
-      }
-      if (assigned.has(name)) continue;
-      assigned.add(name);
-      const kind = exprKind(stores, kinds);
-      if (kind) kinds.set(name, kind);
+  const declarations = declarationsUnder(routineStmts(program, getRoutineDef(program, routine)));
+  for (const { name, stores, stmt } of declarations) {
+    if (!setters.has(name)) setters.set(name, stmt);
+    if (stores === undefined) {
+      // A loop's kind holds until an assignment says otherwise.
+      const { declares } = getBlockDef(registryKey(stmt));
+      if (!assigned.has(name) && !kinds.has(name) && declares) kinds.set(name, declares);
+      continue;
     }
+    if (assigned.has(name)) continue;
+    assigned.add(name);
+    const kind = exprKind(stores, kinds);
+    if (kind) kinds.set(name, kind);
   }
   const made = { kinds, setters };
   routines.set(routine, made);

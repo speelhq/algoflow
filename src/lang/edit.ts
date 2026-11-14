@@ -2,12 +2,11 @@
 // every NodeId unique. Statements are addressed by id or by Place.
 import { getBlockDef, registryKey, findSlot } from "@/blocks/registry";
 import { createNodeId } from "./id";
-import { declaredBy } from "./scope";
+import { declarationsUnder } from "./scope";
 import type { Expr, FunctionDef, Name, NodeId, Place, Program, Stmt } from "./types";
 import {
   allExprs,
   isExpr,
-  allStmts,
   childSlots,
   idsUnder,
   programIds,
@@ -275,9 +274,9 @@ export function setParams(program: Program, id: NodeId, params: Name[]): Program
 
 /** The zero-like literal of the first value assigned to `name` inside `stmts`, else None. */
 function createDefault(stmts: Stmt[], name: Name): Expr {
-  const value = [...allStmts(stmts)]
-    .flatMap((stmt) => declaredBy(stmt))
-    .find((declared) => declared.name === name && declared.stores !== undefined)?.stores;
+  const value = declarationsUnder(stmts).find(
+    (declared) => declared.name === name && declared.stores !== undefined,
+  )?.stores;
   const zero = value && getBlockDef(registryKey(value)).createZero?.(value);
   return zero ?? (getBlockDef("none").create() as Expr);
 }

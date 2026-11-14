@@ -2,10 +2,10 @@
 // expected variables under `This problem`, the routine's other variables under `Variables`, each
 // kept while one of its words begins with the word typed, and a typed name none of them is
 // offered as a new variable.
-import { declaredBy } from "@/lang/scope";
+import { declarationsUnder } from "@/lang/scope";
 import type { Name, NodeId, Program, Routine } from "@/lang/types";
 import { isValidName } from "@/lang/validate";
-import { allStmts, getRoutineDef, routineStmts } from "@/lang/walk";
+import { getRoutineDef, routineStmts } from "@/lang/walk";
 
 /** The words of a name: split at spaces, `_`, and `-`. */
 function nameWords(name: string): string[] {
@@ -37,9 +37,8 @@ export function routineNames(
   const main = def === "main";
   const problem = main ? [...new Set(asked)] : [];
   const names = new Set<Name>(main ? program.inputs.map((input) => input.name) : def.params);
-  for (const stmt of allStmts(routineStmts(program, def))) {
-    if (stmt.id === editing) continue;
-    for (const { name } of declaredBy(stmt)) names.add(name);
+  for (const { name, stmt } of declarationsUnder(routineStmts(program, def))) {
+    if (stmt.id !== editing) names.add(name);
   }
   return { asked: problem, names: [...names].filter((name) => !problem.includes(name)) };
 }

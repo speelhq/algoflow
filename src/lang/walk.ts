@@ -107,7 +107,7 @@ export function bodyRegions(stmt: Stmt): Array<{ slot: string; stmts: Stmt[] }> 
 }
 
 /** Every statement under `stmts`, pre-order. */
-export function* allStmts(stmts: Stmt[]): Generator<Stmt, void, void> {
+export function* allStmts(stmts: readonly Stmt[]): Generator<Stmt, void, void> {
   for (const stmt of stmts) {
     yield stmt;
     for (const region of bodyRegions(stmt)) yield* allStmts(region.stmts);
