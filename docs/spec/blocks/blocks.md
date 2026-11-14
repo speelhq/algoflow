@@ -198,6 +198,10 @@ A new `for`'s variable is an empty slot, because `create()` receives no
 context, and filling in the first unused name of `i`, `j`, and `k` would
 be a special case.
 
+An assignment is made from its target and its value by
+`createAssignment()` in `assign.ts`, whether an edit, a copy of a
+program, or the `create()` of `assign` makes it.
+
 ## Expressions
 
 The expression block definitions:
@@ -218,6 +222,25 @@ The expression block definitions:
 | `attribute` | class    | obj, attr       | `{obj}.{attr}`                                                      | `<obj>.<attr>`         |
 | `new`       | class    | cls, args       | `{cls}({args})`                                                     | `<Cls>(<args>)`        |
 | `call`      | function | fn, args        | `{fn}({args})`                                                      | `<fn>(<args>)`         |
+
+A variable is made from its name by `createVariable()` in `var.ts`,
+whether the parser, an edit, or a copy of a program makes it. Writing the
+variable in each of those places was rejected, because a check of a
+variable's name would then have to be made in each place.
+
+`createVariable()` refuses only `""`, the name that `migrate()` rejects
+(`language.md`, Data, Faults that `migrate()` rejects). `validate()`
+reports any other name that a statement declares and that breaks
+`language.md`, Identifiers, as `E_BAD_NAME`. Refusing such a name in
+`createVariable()` was rejected, because `hoistAssign` makes a variable
+of a name that the program already assigns, such as `myTotal`, and the
+fix would then fail.
+
+The `create()` of `var` gives a variable whose name holds `""`, and
+nothing calls it. It stays because every block definition declares
+`create()` (The block definition). Making `create()` optional was
+rejected, because the block menu and the value list would then have to
+show that each block definition they make declares one.
 
 ## Builtin calls (`key = "call:<name>"`, shape expr)
 
