@@ -420,7 +420,7 @@ values, Int range), is stricter and ends in an error:
 
 | Rule | Example |
 | --- | --- |
-| `swap(a, b)` runs as `a, b = b, a`: `b`'s place is found and its value read, then `a`'s; then `a`'s place is found again and written, then `b`'s | `swap(nums[0], nums[2])` on `[1, 2, 3]` → `[3, 2, 1]`; `swap(i, nums[i])` with `i = 0`, `nums = [1, 9]` → `i = 1`, `nums = [1, 0]` |
+| `a ↔ b` runs as `a, b = b, a`: `b`'s place is found and its value read, then `a`'s; then `a`'s place is found again and written, then `b`'s | `nums[0] ↔ nums[2]` on `[1, 2, 3]` → `[3, 2, 1]`; `i ↔ nums[i]` with `i = 0`, `nums = [1, 9]` → `i = 1`, `nums = [1, 0]` |
 | `copy()` copies one list level | |
 
 ### Calls (`call`, `print`, `call:randint`)

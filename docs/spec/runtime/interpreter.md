@@ -332,7 +332,7 @@ The driver shows each `write` of a `swap` as a step of its own in two
 cases:
 
 - when the `swap` finds its places again elsewhere. For example:
-  `swap(i, nums[i])`.
+  `i ↔ nums[i]`.
 - when the `swap` emits an event while it finds the second place again.
 
 The driver shows the writes of such a `swap` apart, because one `swap`

@@ -191,7 +191,7 @@ each `expr`, `target`, and `exprs` slot, in the order of the slots
 | `print`    | basic    | args                   | `values`                    | `print({args})`                                | `print(<a>, <b>)`                                                                   |
 | `return`   | function | value?                 | `value`                     | `return {value}`, drawn `return` with no value | `return <value>` / `return`                                                         |
 | `expr`     | basic    | expr                   | `expression`                | `{expr}`                                       | `<expr>`                                                                            |
-| `swap`     | list     | a, b                   | `first`, `second`           | `swap({a}, {b})`                               | `<a>, <b> = <b>, <a>`                                                               |
+| `swap`     | list     | a, b                   | `first`, `second`           | `{a} ↔ {b}`                                    | `<a>, <b> = <b>, <a>`                                                               |
 | `delete`   | list     | target                 | `item`                      | `del {target}`                                 | `del <target>`                                                                      |
 
 A new `for`'s variable is an empty slot, because `create()` receives no
@@ -355,6 +355,19 @@ Python's `=`. For example: `total ← 0`. A first assignment has no
 form of its own, because Python has none, and a separate `create` form
 would draw one statement two ways.
 
+A swap joins the two places it exchanges with `↔`, as an assignment
+gives a variable its value with `←`. These were rejected:
+
+- a call, such as `swap(nums[j], nums[j + 1])`, because Python has no
+  `swap` function, so the learner would look in Python for a call that
+  isn't there
+- Python's exchange, such as
+  `nums[j], nums[j + 1] ← nums[j + 1], nums[j]`, because it writes each
+  place twice, and the learner would have to check that both sides name
+  the same two places
+
+For example: `nums[j] ↔ nums[j + 1]`.
+
 ### Calls and statements
 
 A builtin and a method are written as calls, named as Python names them.
@@ -362,10 +375,6 @@ A builtin is written without its module. For example: `randint`.
 
 `print`, `return`, `break`, `continue`, and `del` are written as Python
 writes them.
-
-`swap` is a call of its own. For example: `swap(nums[j], nums[j + 1])`.
-It names the two places it exchanges, and the `Python` tab writes it as
-their exchange.
 
 The `Python` tab writes Python (`emitter.md`), where `←` becomes `=`.
 
