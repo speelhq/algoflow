@@ -5,32 +5,9 @@ in the browser (`docs/spec/scope/`). Its blocks cover a fixed subset of
 Python. Functions and classes can be moved into modules and reused across
 programs (`docs/spec/modules/`).
 
-## Fixed choices
-
-These choices are settled. Change one only through a proposal to the
-developer (`CLAUDE.md`, Judgment).
-
-- Use TypeScript 7, whose Go compiler is the `tsc` binary, with Oxlint
-  (`oxlint-tsgolint`) and Oxfmt. Don't add ESLint or Prettier, and don't use a
-  TypeScript earlier than 7.
-- The app uses shadcn/ui on Base UI (not Radix), dnd-kit, and Zustand.
-- Don't add a graph, flow, or editor library. The app lays the chart out
-  from the `Program` and nothing is positioned by hand
-  (`docs/spec/ui/chart.md`), so a library for freely placed chart nodes and
-  edges would have nothing to do.
-- `src/lang`, `src/runtime`, `src/python`, and `src/blocks` import only from
-  one another: through `@/` across folders and `./` within one, never
-  `../`. Their tests may also import `vitest` and `@/i18n`. `.oxlintrc.json`
-  enforces this.
-- Each block definition lives in its own file in `src/blocks/`, and no
-  other code branches on a block's type or name (`docs/spec/blocks/`).
-  Every consumer reads the block definition's declarations instead, so a
-  new block definition works in the menu, the chart, and the editor with
-  no other change.
-- Every user-visible string comes from `src/i18n/en.json`, so adding
-  Japanese means adding one more catalog with the same keys.
-- `int` and `float` are distinct values, and lists, dicts, and objects live
-  on the heap (`docs/spec/language/`).
+This file maps the code: what each folder owns and which spec it follows.
+The choices that no change may undo without a proposal are in
+`CLAUDE.md`, Fixed choices.
 
 ## Code map
 

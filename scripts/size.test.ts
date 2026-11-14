@@ -1,4 +1,4 @@
-// The size of a pull request (CLAUDE.md, Issues and commits).
+// The size of a pull request (CLAUDE.md, Issues and pull requests).
 import { describe, expect, it } from "vitest";
 import { countLines, parseGeneratedPaths, parseNumstat } from "./lib/size";
 

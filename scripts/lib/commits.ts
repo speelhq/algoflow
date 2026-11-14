@@ -1,4 +1,4 @@
-// The rules a commit message follows (CLAUDE.md, Issues and commits), for the commits
+// The rules a commit message follows (CLAUDE.md, Issues and pull requests), for the commits
 // of a pull request.
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -26,7 +26,7 @@ const TRAILER = /^[A-Za-z0-9][A-Za-z0-9-]*: /;
 const UNFOLDED = /^(fixup|squash|amend)! /;
 /**
  * A keyword that closes an issue, with the issue it names: a rebase merge puts each commit on
- * `main`, where the keyword closes the issue as a pull request's body would.
+ * `develop`, where the keyword closes the issue as a pull request's body would.
  */
 const CLOSES =
   /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+(?:(?:[\w.-]+\/[\w.-]+)?#|https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/issues\/)\d+/i;

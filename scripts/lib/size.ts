@@ -1,4 +1,4 @@
-// The size of a pull request (CLAUDE.md, Issues and commits): the lines it adds and deletes,
+// The size of a pull request (CLAUDE.md, Issues and pull requests): the lines it adds and deletes,
 // without the files that `.gitattributes` marks `linguist-generated`, which GitHub's diff hides.
 
 /** The most lines a pull request changes, unless the developer allows more in its issue. */

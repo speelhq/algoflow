@@ -1,13 +1,17 @@
 # CLAUDE.md
 
-@ARCHITECTURE.md
+Guidance for Claude Code in this repository: a block-based tool for
+learning algorithms that runs entirely in the browser (`README.md`). Each
+area's rules load from `.claude/rules/` when you read or edit its files,
+and the skills hold the procedures.
 
 ## Commands
 
 ```
 pnpm dev · pnpm test [path] · pnpm lint · pnpm format · pnpm build
-pnpm check [challenge.json]   # schema, interpreter, CPython 3.12+ (python3 or $PYTHON), i18n
+pnpm check [challenge.json]   # schema, interpreter, CPython 3.12+ (python3 or $PYTHON), i18n, references
 pnpm commits <base>..<head>   # each commit's message, as CI checks a pull request
+pnpm size [base]              # the lines a branch changes since develop, without generated files
 pnpm test:e2e · pnpm screenshots   # after build; screenshots rewrites e2e/screenshots/
 ```
 
@@ -21,14 +25,45 @@ again.
 
 ## Sources of truth
 
-`docs/spec/` states what must be true of the app and its code, and
-`docs/spec/README.md` explains how the spec is written. Each file in
-`.claude/rules/` names the spec for one area of the code. Read that spec
-before you change the area.
+- `docs/spec/` states what must be true of the app and its code, and
+  `docs/spec/README.md` explains how the spec is written. Read an area's
+  spec before you change the area. The area's rule in `.claude/rules/`
+  names it.
+- `docs/design/README.md` says how a screen's design is made and where
+  each design is.
+- `ARCHITECTURE.md` maps the code: what each folder owns and which spec it
+  follows. Read it before a change that crosses folders.
 
 To find what to work on next, read the open milestone, its issues, and the
 open pull requests. Don't write a handoff file for the next session,
 because it would repeat what GitHub already records and fall out of date.
+
+## Fixed choices
+
+These choices are settled. Change one only through a proposal to the
+developer (Judgment).
+
+- Use TypeScript 7, whose Go compiler is the `tsc` binary, with Oxlint
+  (`oxlint-tsgolint`) and Oxfmt. Don't add ESLint or Prettier, and don't use a
+  TypeScript earlier than 7.
+- The app uses shadcn/ui on Base UI (not Radix), dnd-kit, and Zustand.
+- Don't add a graph, flow, or editor library. The app lays the chart out
+  from the `Program` and nothing is positioned by hand
+  (`docs/spec/ui/chart.md`), so a library for freely placed chart nodes and
+  edges would have nothing to do.
+- `src/lang`, `src/runtime`, `src/python`, and `src/blocks` import only from
+  one another: through `@/` across folders and `./` within one, never
+  `../`. Their tests may also import `vitest` and `@/i18n`. `.oxlintrc.json`
+  enforces this.
+- Each block definition lives in its own file in `src/blocks/`, and no
+  other code branches on a block's type or name (`docs/spec/blocks/`).
+  Every consumer reads the block definition's declarations instead, so a
+  new block definition works in the menu, the chart, and the editor with
+  no other change.
+- Every user-visible string comes from `src/i18n/en.json`, so adding
+  Japanese means adding one more catalog with the same keys.
+- `int` and `float` are distinct values, and lists, dicts, and objects live
+  on the heap (`docs/spec/language/`).
 
 ## Judgment
 
@@ -80,76 +115,6 @@ a value where the next reader won't look for it:
 - a fix to a symptom that leaves its structural cause in place, unless you
   record where and why that structure should change
 
-## Naming
-
-A function whose name begins with one of these prefixes gives a caller
-what the prefix says:
-
-- `get…` returns the value and throws when there is none, unlike
-  `Map.prototype.get`, so a caller never checks for `undefined`.
-- `find…` returns the value or `undefined`, as `Array.prototype.find`
-  does.
-- `to…` returns the value in another form or type.
-- `parse…` reads a value from a text.
-- `is…` and `has…` return a boolean.
-- `create…` returns a new node, id, or object at each call, as
-  `document.createElement()` does.
-
-A function that builds a new `Program`, node, or id begins with
-`create`, because node ids are unique within a program (`language.md`,
-Program), so a reader must see where a new one is made. A function that
-reads one from a text begins with `parse` instead, and one that returns
-a changed copy of a node, such as `insertStmt()`, is named for the
-change.
-
-A method, or a function in an object literal, may be named for what it
-handles, without a verb or a prefix, such as `parser.or()`,
-`writer.blank()`, and `ast.num()`. A name destructured from such an
-object keeps the member's name. A member that implements an interface
-of a library or the platform, such as a storage's `getItem()`, keeps
-the interface's name.
-
-A function that returns a boolean and changes nothing reads as a claim:
-it begins with `is`, `has`, `can`, or `should`, or it says what
-something does, as `includes()`, `startsWith()`, and `rectsOverlap()`
-do. A function that changes something and returns whether it succeeded
-begins with a verb, as `Set.prototype.delete()` does. A React hook
-begins with `use`, whatever it returns. The function that evaluates a
-comparison operator, such as `<`, is the one exception. It begins with
-`evaluate`, because its boolean is the value of an expression, not an
-answer about its arguments.
-
-No function name is only an adjective, a participle, or a preposition,
-such as `plain`, `kept`, or `under`, unless it is a method or a function
-in an object literal named for what it handles, because such a name says
-neither what a function does nor what it returns. A React component is
-named for what it renders, such as `RunBar`.
-
-No name that the code declares ends in `Of`, because the suffix says
-neither whether a function can find nothing nor whether it makes
-something new.
-
-## Working style
-
-Make targeted edits rather than rewriting files. Before you start, say in
-one line what you are going to do. When you finish, write a recap that
-makes sense on its own: the files you changed, the evidence that the
-change works, and what remains.
-
-Keep going while the next step is an edit, a test run, or a commit. Don't
-stop there to present a plan, ask a question, or report status. Stop when
-you have a proposal for the developer, a conflict with the spec, or a step
-that needs permission (`git push`, `rm`, or a write to GitHub), and say
-what is ready and what is waiting.
-
-When compacting, keep:
-
-- the changed files
-- the current issue and its Done when section
-- open findings and proposals
-- the test commands
-- any decision not yet recorded in `docs/spec/`
-
 ## Writing
 
 People and agents act on what these files say, so write every document,
@@ -165,16 +130,45 @@ commit message, pull request, and issue this way:
 - Spell in American English, as the code's identifiers do (`Localized`,
   `color`).
 
-## Issues and commits
+## Issues and pull requests
 
-An issue becomes one pull request from `main`. Keep it to about 1,500
-changed lines at most, and leave `main` releasable when it merges. Split a
-larger issue before you start it. File each issue from the template for
-its kind in `.github/ISSUE_TEMPLATE/` (`.claude/rules/github.md`).
+`develop` is the default branch, and every change reaches it through a
+pull request. `main` holds the latest release, which its CI deploys, and
+`/milestone` moves it to `develop` when a release closes.
 
-Commit one vertical slice at a time, once `pnpm lint && pnpm test` passes.
-Commit a cross-cutting change to a type, an event, or the spec first, on
-its own.
+A pull request is one logical change from `develop`, and it leaves
+`develop` releasable when it merges. It usually resolves one issue. It
+resolves several when they are one change:
+
+- one change completes the Done when of each, such as a feature and the
+  test that a decision asks for
+- the issues share one cause
+- separate pull requests would change the same lines
+
+Issues that are only near each other get a pull request each, because a
+pull request that mixes them is harder to review and to revert.
+
+A pull request changes at most 2,000 lines, as `pnpm size` counts them.
+Split a larger issue into sub-issues of a parent issue before you start
+it, each sized for one pull request. A mechanical change made by a tool,
+such as a rename through the language service, may pass the limit when
+the developer allows it in the issue.
+
+Write the text of each issue, pull request, and comment through
+`github-writing`. A pull request names in its body each issue that it
+resolves. Close an issue that a change only makes moot as not planned,
+with a comment that names the change, because `Closes` records an issue
+as completed.
+
+`develop` accepts only rebase merges, after CI passes, so every commit of
+a pull request ends up on `develop`, and then on `main`. There, a commit
+that a later commit undoes would mislead `git blame` and `git bisect`, so:
+
+- Commit one vertical slice at a time, once `pnpm lint && pnpm test`
+  passes. Commit a change to the spec, a type, or an event first, on its
+  own.
+- Keep the branch's commits final (`/issue`, Finish). Once the pull
+  request is open, rewrite them only to rebase onto `develop`.
 
 Write commit messages in Conventional Commits form:
 
@@ -185,41 +179,42 @@ Write commit messages in Conventional Commits form:
 - a body only when the reason isn't evident from the subject
 - no trailers, including `Co-Authored-By`
 
-In CI, `pnpm commits` checks the type, the scope, the subject's length,
-trailers, and fixup commits left unfolded.
+`pnpm commits` checks each message as CI does. Title a pull request in the
+same form as a commit subject.
 
-Title a pull request in the same form as a commit subject. Open its body
-with one sentence on what it does, then fill in the sections of
-`.github/pull_request_template.md`.
+Before you publish, ask the developer to approve, as one list, the pull
+request and the issues it files or edits and the comments it adds. Merge
+only when the developer asks. A push to the session's own branch needs no
+approval, and only `/milestone` pushes to `main`.
 
-`main` accepts only rebase merges, after CI passes, so every commit of a
-pull request ends up on `main`. There, a commit that a later commit undoes
-would mislead `git blame` and `git bisect`, so keep the branch's commits
-final:
+## Working style
 
-- Fold each fix into the commit it fixes: run `git commit --fixup <sha>`,
-  then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash --keep-base origin/main`.
-- Drop a commit that a later one withdraws, together with that later
-  commit.
+Make targeted edits rather than rewriting files. Before you start, say in
+one line what you are going to do. When you finish, write a recap that
+makes sense on its own: the files you changed, the evidence that the
+change works, and what remains.
 
-Until the pull request is open, only you use the branch, so do this to
-pushed commits too and push the result with `git push --force-with-lease`.
-Once the pull request is open, rewrite its commits only to rebase onto
-`main`.
+Keep going while the next step is an edit, a test run, or a commit. Don't
+stop there to present a plan, ask a question, or report status. Stop when
+you have a proposal for the developer, a conflict with the spec, or a step
+that needs approval (Issues and pull requests), and say what is ready and
+what is waiting.
 
-## Tooling notes
+When compacting, keep:
 
-- `pnpm lint` treats every warning as an error. Fix the code, turn the rule
-  off in `.oxlintrc.json` with the reason beside it, or disable it for one
-  line with `// oxlint-disable-next-line <rule> -- <reason>`. The
-  `no-base-to-string` rule rejects `String(unknown)`.
+- the changed files
+- the current issue and its Done when section
+- open findings and proposals
+- the test commands
+- any decision not yet recorded in `docs/spec/`
+
+## Things that will bite you
+
 - A hook runs oxfmt on every file you write in the repository, except under
   `docs/`. It can change the file after your edit, so re-read the file
   before you edit it again. Files that a script writes aren't formatted, so
   run `pnpm format` on them.
 - A hook runs `pnpm lint` before each `git commit` and blocks the commit if
   lint fails.
-- In Markdown, oxfmt unindents a list item's continuation line that falls
-  inside a code span, so keep each code span on one line.
 - Write a multi-line edit script to a file in the scratchpad and run that
   file. A heredoc passed to the Bash tool turns `\\` into `\`.

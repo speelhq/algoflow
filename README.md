@@ -21,14 +21,14 @@ The other commands are in `CLAUDE.md`.
 
 ## Where things are
 
-| Path              | Holds                                                          |
-| ----------------- | -------------------------------------------------------------- |
-| `docs/spec/`      | the specification, one folder per area, with its reasons       |
-| `docs/design/`    | how a design is made and kept, and each screen's design        |
-| `src/`            | the application (`ARCHITECTURE.md` maps it)                    |
-| `challenges/`     | the problems and the study plans, as JSON                      |
-| `scripts/`        | `pnpm check` and `pnpm commits`                                |
-| `e2e/`            | the end-to-end tests and their screenshots                     |
-| `.claude/`        | the coding agent's rules per area, skills, and hooks           |
-| `ARCHITECTURE.md` | the code's structure and the fixed choices, with their reasons |
-| `CLAUDE.md`       | how to work in this repository                                 |
+| Path              | Holds                                                        |
+| ----------------- | ------------------------------------------------------------ |
+| `docs/spec/`      | the specification, one folder per area, with its reasons     |
+| `docs/design/`    | how a design is made and kept, and each screen's design      |
+| `src/`            | the application (`ARCHITECTURE.md` maps it)                  |
+| `challenges/`     | the problems and the study plans, as JSON                    |
+| `scripts/`        | `pnpm check`, `pnpm commits`, and `pnpm size`                |
+| `e2e/`            | the end-to-end tests and their screenshots                   |
+| `.claude/`        | the coding agent's rules per area, skills, agents, and hooks |
+| `ARCHITECTURE.md` | the code's structure: what each folder owns, and its spec    |
+| `CLAUDE.md`       | how to work in this repository                               |

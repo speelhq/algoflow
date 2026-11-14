@@ -38,16 +38,26 @@
       "Bash(pnpm build)",
       "Bash(pnpm exec oxfmt*)",
       "Bash(pnpm commits*)",
+      "Bash(pnpm size*)",
       "Bash(pnpm format*)",
       "Bash(pnpm screenshots)",
       "Bash(git add *)",
       "Bash(git commit *)",
+      "Bash(git push *)",
       "Bash(gh issue list*)",
       "Bash(gh issue view*)",
       "Bash(gh pr list*)",
       "Bash(gh pr view*)",
       "Bash(gh pr checks*)"
     ],
-    "ask": ["Bash(git push*)", "Bash(rm *)"]
+    "ask": ["Bash(rm *)"],
+    "deny": [
+      "Bash(git push origin main)",
+      "Bash(git push origin main *)",
+      "Bash(git push origin HEAD:main*)",
+      "Bash(git push origin develop)",
+      "Bash(git push origin develop *)",
+      "Bash(git push origin HEAD:develop*)"
+    ]
   }
 }

@@ -20,7 +20,8 @@
 ## Testing
 
 <!-- Paste the output of each check that `.github/workflows/ci.yml` runs,
-     so a reviewer can check the result without running them. -->
+     and of `pnpm size`, so a reviewer can check the result without running
+     them. -->
 
 ## Screenshots
 
