@@ -24,6 +24,12 @@ const SUBJECT = /^([a-z]+)(?:\(([^()]*)\))?!?: \S/;
 const TRAILER = /^[A-Za-z0-9][A-Za-z0-9-]*: /;
 /** What `git commit --fixup` and `--squash` write, left for an autosquash. */
 const UNFOLDED = /^(fixup|squash|amend)! /;
+/**
+ * A keyword that closes an issue, with the issue it names: a rebase merge puts each commit on
+ * `main`, where the keyword closes the issue as a pull request's body would.
+ */
+const CLOSES =
+  /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+(?:(?:[\w.-]+\/[\w.-]+)?#|https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/issues\/)\d+/i;
 
 /** The scopes a commit may name: each folder of `src/`, and `scripts`, `docs`, and `ci`. */
 export function commitScopes(root: string): Set<string> {
@@ -57,5 +63,7 @@ export function commitProblems(message: string, scopes: ReadonlySet<string>): st
     last.every((line) => TRAILER.test(line) || /^\s/.test(line))
   )
     problems.push("the message ends in a trailer");
+  if (CLOSES.test(message))
+    problems.push("the message closes an issue, which only the pull request may");
   return problems;
 }

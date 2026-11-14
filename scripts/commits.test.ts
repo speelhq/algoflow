@@ -44,6 +44,17 @@ describe("commitProblems", () => {
     expect(check("fixup! fix: keep ids")).toEqual(["a fixup or squash is left unfolded"]);
     expect(check("squash! fix: keep ids")).toEqual(["a fixup or squash is left unfolded"]);
   });
+
+  it("refuses a message that closes an issue with a keyword, in its subject or its body", () => {
+    const closes = ["the message closes an issue, which only the pull request may"];
+    expect(check("fix(ui): keep the caret\n\nFixes #12\n")).toEqual(closes);
+    expect(check("fix: resolve #5")).toEqual(closes);
+    expect(check("docs: close speelhq/algoflow#7\n")).toEqual(closes);
+    expect(check("fix: keep ids\n\nCloses https://github.com/speelhq/algoflow/issues/8\n")).toEqual(
+      closes,
+    );
+    expect(check("docs: name what #12 asks\n\nThe menu closes (#12) on Escape.\n")).toEqual([]);
+  });
 });
 
 describe("commitScopes", () => {
