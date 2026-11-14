@@ -136,10 +136,11 @@ period, a closing parenthesis, or the end of a table cell or a line.
 `pnpm check` fails on a reference to a heading that the cited file
 doesn't hold. It reads two forms as references:
 
-- in a Markdown or TypeScript file, a spec file's name followed by a
-  comma and a word that begins with a capital letter. Each heading after
-  a further comma sits under the one before it, and a heading after a
-  semicolon is in the same file.
+- in a Markdown or TypeScript file, the name of a spec file,
+  `CLAUDE.md`, `ARCHITECTURE.md`, or `docs/design/README.md`, followed
+  by a comma and a word that begins with a capital letter. Each heading
+  after a further comma sits under the one before it, and a heading
+  after a semicolon is in the same file.
 - in a spec file's prose, outside code, a parenthesis that opens with a
   capital letter, as a reference to a heading of that file.
 
