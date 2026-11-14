@@ -1,7 +1,7 @@
-// Every reference to a heading of the spec names a heading that exists (`docs/spec/README.md`,
-// References). Two forms are read: a spec file's name followed by a comma and a heading, in a
-// Markdown or TypeScript file, and a parenthesis in a spec file's prose that opens with a capital
-// letter.
+// Every reference to a heading of the spec or a guide names a heading that exists
+// (`docs/spec/README.md`, References). Two forms are read: the name of a spec file or a guide
+// followed by a comma and a heading, in a Markdown or TypeScript file, and a parenthesis in a spec
+// file's prose that opens with a capital letter.
 import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { lineAt, lineStarts } from "./lines";
@@ -20,12 +20,19 @@ type Heading = { text: string; names: readonly string[]; path: readonly string[]
 type Flat = { text: string; at: number[] };
 
 const SPEC = /^docs\/spec\/.*\.md$/;
+/** The guides outside the spec whose headings a reference may name. */
+const GUIDES: ReadonlySet<string> = new Set([
+  "CLAUDE.md",
+  "ARCHITECTURE.md",
+  "docs/design/README.md",
+]);
 const CITING = /\.(md|ts|tsx)$/;
 /**
  * A file's name and the comma after it, as a reference writes it: `` `chart.md`, ``,
- * `` `docs/spec/ui/chart.md`, ``, or, in a test's title, `chart.md, `.
+ * `` `docs/spec/ui/chart.md`, ``, `` `docs/design/README.md`, ``, or, in a test's title,
+ * `chart.md, `.
  */
-const FILE = /(?<![\w/.-])`?((?:docs\/spec\/(?:[a-z]+\/)?)?[\w-]+\.md)`?, /g;
+const FILE = /(?<![\w/.-])`?((?:docs\/(?:spec\/(?:[a-z]+\/)?|design\/))?[\w-]+\.md)`?, /g;
 /**
  * What may follow a heading's name: a comma, a semicolon, a colon, a period, `)`, a quote, the
  * end of a table cell, or the end of the line.
@@ -165,9 +172,14 @@ function unknownHeadings(text: string, start: number, among: readonly Heading[])
 /** Checks the references in `files` (paths relative to `root`, as `repoFiles` lists them). */
 export function checkReferences(opts: { root: string; files: readonly string[] }): Broken[] {
   const read = (file: string) => readFileSync(join(opts.root, file), "utf8");
-  const specFiles = opts.files.filter((file) => SPEC.test(file));
-  const headingsByFile = new Map(specFiles.map((file) => [file, headings(read(file))]));
-  const byName = new Map(specFiles.map((file) => [basename(file), file]));
+  const citable = opts.files.filter((file) => SPEC.test(file) || GUIDES.has(file));
+  const headingsByFile = new Map(citable.map((file) => [file, headings(read(file))]));
+  // `README.md` alone names the spec's, so `docs/design/README.md` is named by its whole path.
+  const byName = new Map(
+    citable
+      .filter((file) => !file.startsWith("docs/design/"))
+      .map((file) => [basename(file), file]),
+  );
 
   const broken: Broken[] = [];
   for (const file of opts.files.filter((f) => CITING.test(f))) {
@@ -183,14 +195,14 @@ export function checkReferences(opts: { root: string; files: readonly string[] }
 
     const flat = flatten(original, !file.endsWith(".md"));
     for (const match of flat.text.matchAll(FILE)) {
-      const cited = match[1] ?? "";
-      // A name that no spec file has names a file outside the spec, such as `CLAUDE.md`.
-      const among = headingsByFile.get(byName.get(cited) ?? cited);
+      const name = match[1] ?? "";
+      // A name that neither a spec file nor a guide has names a file the check doesn't read.
+      const among = headingsByFile.get(byName.get(name) ?? name);
       if (among)
         for (const pos of unknownHeadings(flat.text, match.index + match[0].length, among))
-          report(flat, pos, cited);
+          report(flat, pos, name);
     }
-    const own = headingsByFile.get(file);
+    const own = SPEC.test(file) ? headingsByFile.get(file) : undefined;
     if (own) {
       // Prose only: a parenthesis in fenced code or in a code span, `print(None)`, isn't read.
       const prose = flatten(withoutFences(original), false);

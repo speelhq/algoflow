@@ -145,10 +145,32 @@ describe("the reference check", () => {
     expect(brokenReferences()).toEqual(["sample.md Inputs", "other.md Gone"]);
   });
 
-  it("ends a reference at a lower-case word or a code span, and skips a file outside the spec", () => {
+  it("reads the headings of the guides, such as CLAUDE.md and docs/design/README.md", () => {
+    // Built here, because the check reads this file's text against the real guides.
+    const cite = (file: string, heading: string) => `(\`${file}\`, ${heading})`;
+    write("CLAUDE.md", "# CLAUDE.md\n\n## Judgment\n");
+    write("ARCHITECTURE.md", "# Architecture\n\n## Code map\n");
+    write("docs/design/README.md", "# Designs\n\n## Screens\n");
+    write(
+      ".claude/skills/demo/SKILL.md",
+      [
+        `${cite("CLAUDE.md", "Judgment")} ${cite("CLAUDE.md", "Writing")}`,
+        `${cite("ARCHITECTURE.md", "Code map")} ${cite("ARCHITECTURE.md", "Fixed choices")}`,
+        `${cite("docs/design/README.md", "Screens")} ${cite("docs/design/README.md", "Pages")}`,
+        "",
+      ].join("\n"),
+    );
+    expect(brokenReferences()).toEqual([
+      "CLAUDE.md Writing",
+      "ARCHITECTURE.md Fixed choices",
+      "docs/design/README.md Pages",
+    ]);
+  });
+
+  it("ends a reference at a lower-case word or a code span, and skips a file the check doesn't read", () => {
     write(
       "docs/spec/ui/other.md",
-      "# Other\n\nOf `sample.md`, not `hidden`. (`sample.md`, `x`) (`CLAUDE.md`, Judgment)\n",
+      "# Other\n\nOf `sample.md`, not `hidden`. (`sample.md`, `x`) (`notes.md`, Judgment)\n",
     );
     expect(run()).toEqual([]);
   });
