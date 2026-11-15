@@ -624,9 +624,17 @@ its loop hides no other variable:
 - a loop around it, or a loop inside it that keeps its name
 - another variable of its routine: a parameter, an input, or a variable
   that an assignment declares
-- a read in the loop's body of a name from outside the loop
+- a read in the loop's body of a name from outside the loop, other than
+  a loop's variable visible at the read
 
 For example: a loop inside a loop of `i` takes `j`.
+
+A read of a loop's variable counts only through its loop, by the name
+that loop holds after the edit. Counting the read by the name it holds
+before the edit was rejected, because a loop inside a loop that the edit
+renames would then avoid a name that no variable keeps. For example:
+moving a loop of `j` out of a loop of `i`, when a loop of `k` inside it
+reads `j`, names them `i` and `j`.
 
 Loops one after another may share a name, because a loop's variable is
 visible only inside the loop (Scope, Visibility).
