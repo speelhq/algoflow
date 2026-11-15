@@ -417,8 +417,8 @@ values, Int range), is stricter and ends in an error:
 - Recursion stops at 200.
 - A name that is first assigned inside a compound statement and read
   after it gives `E_DECLARE_FIRST` (Scope).
-- A loop's variable read after its loop gives `E_UNDEFINED` (Scope,
-  Visibility).
+- A loop's variable read outside its loop gives
+  `E_LOOP_VARIABLE_OUTSIDE` (Scope, Visibility).
 - A variable that shares its name with a loop's variable of its routine
   gives `E_DUPLICATE_NAME` (Scope, Names a definition can't take).
 
@@ -540,10 +540,23 @@ would shadow the function.
 
 A variable that an assignment or a parameter declares can't take the name
 of a loop's variable in its routine, and a loop's variable can't take the
-name of an input or of a loop around it (`E_DUPLICATE_NAME`). Letting a
-loop's variable hide another variable of its name, as JavaScript does, was
-rejected, because Python keeps one variable per name in a function, so the
-two would be one variable.
+name of an input or of a loop around it (`E_DUPLICATE_NAME`). Two
+alternatives were rejected:
+
+- letting a loop's variable hide another variable of its name, as
+  JavaScript does, because Python keeps one variable per name in a
+  function, so the two would be one variable
+- letting a variable take a loop's name where the loop hides nothing,
+  because the name that a loop takes would then depend on where its
+  routine's assignments sit, and moving such an assignment above the loop
+  would make the loop hide it
+
+For example: `i = 10` after a loop of `i` gives `E_DUPLICATE_NAME`,
+although the loop hides no variable.
+
+When a function and a loop's variable share a name, the function reports
+`E_DUPLICATE_NAME` and the loop doesn't, because the learner names the
+function and can't rename the loop's variable (Edits, Loop variables).
 
 ### Resolving a call
 
@@ -570,6 +583,7 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 | ------------------ | ----------------------------------------------------------- | ------------------------- |
 | `E_UNDEFINED`      | a name not visible (Scope)                                  | `name`                    |
 | `E_DECLARE_FIRST`  | a name first assigned in a compound statement and read after it (Scope) | `name`, `compound` |
+| `E_LOOP_VARIABLE_OUTSIDE` | a name not visible that a loop of its routine has (Scope, Visibility) | `name` |
 | `E_BAD_NAME`       | a name that breaks Identifiers                              | `name`                    |
 | `E_DUPLICATE_NAME` | a name taken twice (Program; Scope)                         | `name`                    |
 | `E_BREAK_OUTSIDE`  | `break`/`continue` outside a loop                           |                           |
@@ -582,6 +596,18 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 | `E_NOT_TARGET`     | a draft in a `target` slot whose text parses (Expressions, Drafts) |                    |
 | `E_DEFAULT`        | an attribute default that Semantics, Objects doesn't allow  | `attr`                    |
 | `E_DUPLICATE_ID`   | two nodes share a node id (Program)                         |                           |
+
+No other variable of a routine takes a loop's name (Scope, Names a
+definition can't take), so a read of that name where no variable of it is
+visible is a read outside the loop. It gives `E_LOOP_VARIABLE_OUTSIDE`
+rather than `E_UNDEFINED`, because the message of `E_UNDEFINED` says that
+the variable has no value yet, while the loop gives it one in its body.
+
+Such a read gives `E_LOOP_VARIABLE_OUTSIDE` even where an assignment
+inside an earlier compound statement takes the loop's name too, which
+reports `E_DUPLICATE_NAME`. It doesn't give `E_DECLARE_FIRST` there,
+because the fix `hoistAssign` would insert one more variable of the loop's
+name.
 
 ## Edits
 
