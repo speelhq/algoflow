@@ -333,6 +333,17 @@ describe("loop variables (language.md, Edits, Loop variables)", () => {
     expect(validate(next).map((d) => d.code)).toEqual(["E_UNDEFINED"]);
   });
 
+  it("counts a read of a loop that the same edit renames by the loop's new name", () => {
+    const inner = for_("k", num(0), num(2), [print(v("j"), v("k"))]);
+    const moved = for_("j", num(0), num(2), [inner]);
+    const p = program([for_("i", num(0), num(2), [moved])]);
+    expect(lines(moveStmt(p, moved.id, at("main", 1))).slice(2)).toEqual([
+      "for i in range(2):",
+      "    for j in range(2):",
+      "        print(i, j)",
+    ]);
+  });
+
   it("changes an assignment of a renamed variable inside the loop with it", () => {
     const outer = for_("i", num(0), num(3), []);
     const moved = for_("i", num(0), num(2), [assign("i", bin("+", v("i"), num(1))), print(v("i"))]);

@@ -73,22 +73,17 @@ function useLoops(program: Program, stmts: Iterable<Stmt>): Map<NodeId, NodeId> 
 
 /**
  * The names that a loop's body reads from outside the loop, which the loop would hide if it took
- * one: each read in its body that neither its variable nor a variable of a loop inside it that
- * `naming` names owns. A loop's own target declares its variable, so it is no read.
+ * one: each read in its body that no loop's variable owns, because a read of a loop's variable
+ * counts only through that loop, by the name that loop holds after the edit (`language.md`, Edits,
+ * Loop variables). A loop's own target declares its variable, so it is no read.
  */
-function outsideReads(
-  loop: Stmt,
-  owners: ReadonlyMap<NodeId, NodeId>,
-  naming: ReadonlySet<Stmt>,
-): Name[] {
+function outsideReads(loop: Stmt, owners: ReadonlyMap<NodeId, NodeId>): Name[] {
   const inner = bodyRegions(loop).flatMap((region) => [...allStmts(region.stmts)]);
-  const renamed = new Set([loop.id, ...inner.filter((stmt) => naming.has(stmt)).map((s) => s.id)]);
   return inner.flatMap((stmt) => {
     const declarations = isLoop(stmt) ? declaredBy(stmt).map((declared) => declared.target) : [];
     return [...stmtExprs(stmt)].flatMap((expr) => {
       const name = findVariableName(expr);
-      const owner = owners.get(expr.id);
-      const own = declarations.includes(expr) || (owner !== undefined && renamed.has(owner));
+      const own = declarations.includes(expr) || owners.has(expr.id);
       return name === undefined || own ? [] : [name];
     });
   });
@@ -129,7 +124,7 @@ export function nameLoops(program: Program, stmts: Iterable<Stmt>): Program {
       ...scope.loops.flatMap(loopNames),
       ...keptInsideNames(scope.stmt, naming),
       ...otherNames(program, scope.routine),
-      ...outsideReads(scope.stmt, owners, naming),
+      ...outsideReads(scope.stmt, owners),
     ]);
     const free = slot.names.find((each) => !taken.has(each) && !isDefinitionName(program, each));
     if (free !== undefined && free !== name) given.set(scope.stmt.id, free);
