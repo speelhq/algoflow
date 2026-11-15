@@ -120,6 +120,18 @@ describe("migrate", () => {
     expect(migrate(json(typed))).toEqual(typed);
   });
 
+  it("reads a stored return whose value is a draft with no text as a return of no value", () => {
+    const back = ret(ast.empty());
+    const fn = { id: "f0000000000f", name: "f", params: [], body: [back] };
+    const read = migrate(asStored(program([], { functions: [fn] })));
+    expect(read.functions[0]?.body[0]).not.toHaveProperty("value");
+    expect(emit(read, {}).code).toContain("    return\n");
+    // A draft with text stays the return's value.
+    const typed = { ...fn, body: [ret(ast.draft("x y"))] };
+    const kept = asStored(program([], { functions: [typed] }));
+    expect(migrate(json(kept))).toEqual(kept);
+  });
+
   it("rejects a draft whose text isn't one line, at its path", () => {
     const broken = asStored(program([assign("x", ast.draft("1 +\n2"))]));
     expect(() => migrate(broken)).toThrow(/^main\[0\]\.value\.text: expected one line of text/);

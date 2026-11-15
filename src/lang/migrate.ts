@@ -86,7 +86,7 @@ function rawChildren(
  * release can register what the text names (`language.md`, Expressions, Drafts): an `expr` slot's
  * text that parses, a `target` slot's that parses as a target, and an `exprs` slot's only item
  * whose text parses as values separated by commas. An `exprs` slot's only item with no text is no
- * item, as a field with no text holds it.
+ * item, and an optional slot's draft with no text is no value, as a field with no text holds them.
  */
 function readDrafts(block: Record<string, unknown>): void {
   for (const slot of getBlockDef(registryKey(block as unknown as Expr)).slots) {
@@ -95,6 +95,10 @@ function readDrafts(block: Record<string, unknown>): void {
     // An `exprs` slot holds a draft only as its only item (`checkItemDrafts`).
     const text = draftText(slot.role === "exprs" && Array.isArray(held) ? held[0] : held);
     if (text === undefined) continue;
+    if (slot.role === "expr" && slot.optional && text === "") {
+      delete block[slot.name];
+      continue;
+    }
     const read = parseSlotText(slot.role, text);
     if ("value" in read) block[slot.name] = read.value;
   }

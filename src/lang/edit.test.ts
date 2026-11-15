@@ -5,10 +5,12 @@ import { ast, createProgramWithInputs } from "@/blocks/testing";
 import {
   addFunction,
   duplicateStmt,
+  EditError,
   hoistAssign,
   insertStmt,
   findStmt,
   moveStmt,
+  removeExpr,
   removeFunction,
   removeStmt,
   renameName,
@@ -127,6 +129,19 @@ describe("edit", () => {
     const { p, loop } = createSample();
     expect(lines(setExpr(p, loop.id, "var", v("k")))[1]).toBe("for k in range(3):");
     expect(lines(setExpr(p, loop.id, "var", ast.empty()))[1]).toBe("for ... in range(3):");
+  });
+
+  it("removeExpr takes the value out of an optional slot, and refuses any other slot", () => {
+    const back = ast.ret(v("a"));
+    const p = program([], {
+      functions: [{ id: "f0000000000f", name: "f", params: ["a"], body: [back] }],
+    });
+    const next = removeExpr(p, back.id, "value");
+    expect(lines(next)).toEqual(["def f(a):", "    return"]);
+    expect(lines(p)).toEqual(["def f(a):", "    return a"]);
+    expect(hasUniqueIds(next)).toBe(true);
+    const { p: sample, a } = createSample();
+    expect(() => removeExpr(sample, a.id, "value")).toThrow(EditError);
   });
 
   it("setCaption stores one trimmed line and removes an empty caption", () => {

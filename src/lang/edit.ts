@@ -209,6 +209,21 @@ export function setExpr(program: Program, id: NodeId, slot: string, value: Expr 
   return next;
 }
 
+/**
+ * `program` with the value of the optional `expr` slot `slot` of block `id` taken out, as a value
+ * line with no text holds it (`language.md`, Edits, Statement positions).
+ */
+export function removeExpr(program: Program, id: NodeId, slot: string): Program {
+  const next = clone(program);
+  const block = getBlock(next, id);
+  const found = findSlot(block, slot);
+  if (found?.role !== "expr" || !found.optional) {
+    throw new EditError(`block ${id} has no optional expression slot ${slot}`);
+  }
+  delete (block as unknown as Bag)[slot];
+  return next;
+}
+
 // ---------------------------------------------------------------- names
 
 /** A caption as stored: each run of spaces and line breaks one space, trimmed. */
