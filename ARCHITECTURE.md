@@ -35,7 +35,10 @@ tests.
   owner (`chart.md`, Shapes) and its routine, which `blocksById()`,
   `getOwner()`, and `getHoldingRoutine()` read. `declarationsUnder()`
   gives the variables that a region's statements declare, which the
-  kinds, the name list, and `hoistAssign` read.
+  kinds, the name list, and `hoistAssign` read. `naming.ts` names loop
+  variables from those scopes where `insertStmt` and `moveStmt` place a
+  statement and where `migrate()` reads a program (`language.md`, Edits,
+  Loop variables).
   Never change a `Program` in place: `validate()`,
   `refusedDefinitions()`, the scopes, the index, and the kinds are
   memoized per `Program` object, and the undo history keeps earlier

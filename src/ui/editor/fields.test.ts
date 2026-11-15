@@ -102,11 +102,9 @@ describe("a target", () => {
     expect(startField(filled, stmtFields(filled), "args")).toEqual(args);
     expect(startField(filled, stmtFields(filled), null)).toBeNull();
     expect(startField(print(), stmtFields(print()), null)).toBeNull();
-    // A loop's variable is a target, an empty slot until it is filled.
+    // A new loop's first empty slot is its stop.
     const fresh = getBlockDef("for").create() as Stmt;
-    const variable = { slot: "var", role: "target" } as const;
-    expect(startField(fresh, stmtFields(fresh), null)).toEqual(variable);
-    expect(targetSlot(fresh, variable)).toMatchObject({ binds: true });
+    expect(startField(fresh, stmtFields(fresh), null)).toEqual({ slot: "stop", role: "expr" });
   });
 
   it("is named by the block's label and the slot's name", () => {

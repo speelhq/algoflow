@@ -1,5 +1,6 @@
 // Each edit does what it says, leaves the input untouched, and keeps node ids unique.
 import { describe, expect, it } from "vitest";
+import { getBlockDef } from "@/blocks/registry";
 import { ast, createProgramWithInputs } from "@/blocks/testing";
 import {
   addFunction,
@@ -21,6 +22,8 @@ import type { Data, Program, Stmt } from "./types";
 import { validate } from "./validate";
 
 const { assign, print, num, str, bin, v, if_, for_, call, exprStmt, program } = ast;
+
+type For = Extract<Stmt, { type: "for" }>;
 
 function hasUniqueIds(p: Program): boolean {
   return !validate(p).some((d) => d.code === "E_DUPLICATE_ID");
@@ -236,5 +239,128 @@ describe("edit", () => {
     const fixed = hoistAssign(p, loop.id, "myTotal");
     expect(lines(fixed, {})[0]).toBe("myTotal = None");
     expect(validate(fixed).map((d) => d.code)).toEqual(["E_BAD_NAME", "E_BAD_NAME"]);
+  });
+});
+
+describe("loop variables (language.md, Edits, Loop variables)", () => {
+  const createLoop = () => getBlockDef("for").create() as For;
+  const at = (parent: string, index = 0) =>
+    ({ parent, slot: parent === "main" ? "main" : "body", index }) as const;
+
+  it("names an inserted loop i, a loop inside it j, and a loop after it i again", () => {
+    let p = insertStmt(program([]), createLoop(), at("main"));
+    const outer = p.main[0]!;
+    p = insertStmt(p, createLoop(), at(outer.id));
+    const middle = (p.main[0] as For).body[0]!;
+    p = insertStmt(p, createLoop(), at(middle.id));
+    p = insertStmt(p, createLoop(), at("main", 1));
+    expect(lines(p)).toEqual([
+      "for i in range(...):",
+      "    for j in range(...):",
+      "        for k in range(...):",
+      "            pass",
+      "for i in range(...):",
+      "    pass",
+    ]);
+  });
+
+  it("gives an inserted loop the first name that no input, parameter, or assignment has", () => {
+    const made = createProgramWithInputs({ i: 3 }, [assign("j", num(0))]);
+    const inMain = insertStmt(made.program, createLoop(), at("main", 1));
+    expect(unparse((inMain.main[1] as For).var)).toBe("k");
+    const withFn = addFunction(program([]), "f", ["i"]);
+    const fn = withFn.functions[0]!;
+    const inFn = insertStmt(withFn, createLoop(), at(fn.id));
+    expect(unparse((inFn.functions[0]!.body[0] as For).var)).toBe("j");
+  });
+
+  it("gives a loop no name that a function holds, which no variable can take", () => {
+    const withFn = addFunction(program([]), "j");
+    let p = insertStmt(withFn, createLoop(), at("main"));
+    p = insertStmt(p, createLoop(), at(p.main[0]!.id));
+    expect(lines(p).slice(-3)).toEqual([
+      "for i in range(...):",
+      "    for k in range(...):",
+      "        pass",
+    ]);
+  });
+
+  it("keeps the name of a loop whose place leaves none of its names free", () => {
+    const slot = getBlockDef("for").slots[0];
+    const names = slot?.role === "target" ? (slot.names ?? []) : [];
+    const p = program(names.map((name) => assign(name, num(0))));
+    const next = insertStmt(p, createLoop(), at("main", names.length));
+    expect(unparse((next.main.at(-1) as For).var)).toBe("i");
+  });
+
+  it("keeps the name of an inserted loop whose own body reads its variable", () => {
+    const loop = for_("i", num(0), num(3), [print(v("i"))]);
+    expect(lines(insertStmt(program([]), loop, at("main")))).toEqual([
+      "for i in range(3):",
+      "    print(i)",
+    ]);
+  });
+
+  it("names a moved loop by how deep it sits, then each loop inside it, with each use inside", () => {
+    const outer = for_("i", num(0), num(3), [print(v("i"))]);
+    const inner = for_("j", num(0), num(2), [print(v("i"), v("j"))]);
+    const moved = for_("i", num(0), num(2), [inner, print(v("i"))]);
+    const p = program([outer, moved]);
+    expect(lines(moveStmt(p, moved.id, at(outer.id, 1)))).toEqual([
+      "for i in range(3):",
+      "    print(i)",
+      "    for j in range(2):",
+      "        for k in range(2):",
+      "            print(j, k)",
+      "        print(j)",
+    ]);
+    const nested = program([
+      for_("i", num(0), num(3), [for_("j", num(0), num(2), [print(v("j"))])]),
+    ]);
+    const out = (nested.main[0] as For).body[0]!;
+    expect(lines(moveStmt(nested, out.id, at("main", 1))).slice(2)).toEqual([
+      "for i in range(2):",
+      "    print(i)",
+    ]);
+  });
+
+  it("gives a loop no name that its body reads from outside it", () => {
+    const inner = for_("j", num(0), num(2), [print(v("i"), v("j"))]);
+    const p = program([for_("i", num(0), num(3), [inner])]);
+    const next = moveStmt(p, inner.id, at("main", 1));
+    // The read of the outer i is left with no variable, so the moved loop keeps j rather than i.
+    expect(lines(next).slice(2)).toEqual(["for j in range(2):", "    print(i, j)"]);
+    expect(validate(next).map((d) => d.code)).toEqual(["E_UNDEFINED"]);
+  });
+
+  it("changes an assignment of a renamed variable inside the loop with it", () => {
+    const outer = for_("i", num(0), num(3), []);
+    const moved = for_("i", num(0), num(2), [assign("i", bin("+", v("i"), num(1))), print(v("i"))]);
+    const next = moveStmt(program([outer, moved]), moved.id, at(outer.id));
+    expect(lines(next)).toEqual([
+      "for i in range(3):",
+      "    for j in range(2):",
+      "        j = j + 1",
+      "        print(j)",
+    ]);
+  });
+
+  it("gives a loop no name that a variable its body declares has", () => {
+    const outer = for_("i", num(0), num(3), []);
+    const moved = for_("i", num(0), num(2), [assign("j", bin("*", v("i"), num(2))), print(v("j"))]);
+    const next = moveStmt(program([outer, moved]), moved.id, at(outer.id));
+    expect(lines(next)).toEqual([
+      "for i in range(3):",
+      "    for k in range(2):",
+      "        j = k * 2",
+      "        print(j)",
+    ]);
+  });
+
+  it("renames a loop moved into another routine for a parameter that has its name", () => {
+    const loop = for_("i", num(0), num(2), [print(v("i"))]);
+    const fn = { id: "fn0000000001", name: "f", params: ["i"], body: [] };
+    const next = moveStmt(program([loop], { functions: [fn] }), loop.id, at(fn.id));
+    expect(lines(next)).toEqual(["def f(i):", "    for j in range(2):", "        print(j)"]);
   });
 });

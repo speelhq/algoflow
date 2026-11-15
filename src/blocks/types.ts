@@ -83,11 +83,24 @@ export type Slot =
        * passes give the value (`blocks.md`, Slots).
        */
       stores?: string;
+      /**
+       * The names the application gives the variable it holds, which the learner never names
+       * (`for`'s): one free at its place (`language.md`, Edits, Loop variables).
+       */
+      names?: readonly [Name, ...Name[]];
     })
   | (Hinted & { name: string; role: "exprs" })
   | { name: string; role: "name" | "body" | "literal" | "operator" };
 
 export type SlotRole = Slot["role"];
+
+/** A target slot whose variable the application names, with its names (`blocks.md`, Slots). */
+export type NamedSlot = Extract<Slot, { role: "target" }> & { names: readonly [Name, ...Name[]] };
+
+/** Whether the application names the variable that `slot` holds, which is then no field. */
+export function isNamedSlot(slot: Slot): slot is NamedSlot {
+  return slot.role === "target" && slot.names !== undefined;
+}
 
 /** The groups of the value list, in its order. */
 export type ValueGroup = "values" | "conditions" | "calculate" | "items" | "compare" | "convert";

@@ -25,10 +25,10 @@ describe("for (blocks.md)", () => {
     );
   });
 
-  it("a new for's variable is an empty slot, and it starts at 0", () => {
+  it("a new for's variable is i, the first of its names, and it starts at 0", () => {
     expect(forStmt.create()).toMatchObject({
       type: "for",
-      var: { type: "draft", text: "" },
+      var: { type: "var", name: "i" },
       start: { type: "num", value: 0, raw: "0" },
       stop: { type: "draft", text: "" },
       body: [],
@@ -38,6 +38,7 @@ describe("for (blocks.md)", () => {
       role: "target",
       hint: "variable",
       binds: true,
+      names: ["i", "j", "k", ..."lmnopqrstuvwxyz".split("")],
     });
   });
 

@@ -2,9 +2,11 @@
 // a class, and an object input.
 import { describe, expect, it } from "vitest";
 import { ast } from "@/blocks/testing";
+import { emit } from "@/python/emit";
 import { MigrateError, migrate } from "./migrate";
+import type { Expr, Stmt } from "./types";
 
-const { assign, print, num, float, str, bool, not, bin, v, for_, ret, program } = ast;
+const { assign, print, num, float, str, bool, not, bin, v, for_, forTo, ret, program } = ast;
 
 function json(value: unknown): unknown {
   return JSON.parse(JSON.stringify(value));
@@ -287,5 +289,30 @@ describe("migrate", () => {
     );
     const object = { ...program([]), inputs: [{ name: "p", kind: "object" }] };
     expect(() => migrate(object)).toThrow(/^inputs\[0\]: expected \{ name, kind \}/);
+  });
+
+  it("names a loop's variable that holds a draft, outermost first, and keeps a stored name", () => {
+    const draftLoop = (variable: Expr, body: Stmt[]) => forTo(variable, num(0), num(3), body);
+    const p = program([
+      assign("j", num(0)),
+      draftLoop(ast.empty(), [draftLoop(ast.draft("x y"), [])]),
+      draftLoop(ast.empty(), [for_("i", num(0), num(2), [print(v("i"))])]),
+      for_("idx", num(0), num(2), [print(v("idx"))]),
+    ]);
+    const lines = emit(migrate(json(p)), {})
+      .code.trimEnd()
+      .split("\n");
+    // The second draft takes k: j is assigned, and the loop inside it keeps its i.
+    expect(lines).toEqual([
+      "j = 0",
+      "for i in range(3):",
+      "    for k in range(3):",
+      "        pass",
+      "for k in range(3):",
+      "    for i in range(2):",
+      "        print(i)",
+      "for idx in range(2):",
+      "    print(idx)",
+    ]);
   });
 });

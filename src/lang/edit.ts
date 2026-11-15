@@ -1,5 +1,6 @@
 // Pure edit functions. Each returns a new Program and keeps
-// every NodeId unique. Statements are addressed by id or by Place.
+// every NodeId unique. Statements are addressed by id or by Place. A statement placed by
+// `insertStmt` or `moveStmt` has its loops named (`naming.ts`).
 import {
   createAssignment,
   createVariable,
@@ -8,10 +9,12 @@ import {
   findSlot,
 } from "@/blocks/registry";
 import { createNodeId } from "./id";
+import { nameLoops } from "./naming";
 import { declarationsUnder } from "./scope";
 import type { Expr, FunctionDef, Name, NodeId, Place, Program, Stmt } from "./types";
 import {
   allExprs,
+  allStmts,
   isExpr,
   childSlots,
   idsUnder,
@@ -138,12 +141,14 @@ function getStmt(program: Program, id: NodeId): StmtAt {
 
 // ---------------------------------------------------------------- statements
 
+/** Inserts `stmt` at `place`, its loops named for the place (`language.md`, Edits, Loop variables). */
 export function insertStmt(program: Program, stmt: Stmt, place: Place): Program {
   const next = clone(program);
   const region = getRegion(next, place);
   const index = Math.max(0, Math.min(place.index, region.length));
-  region.splice(index, 0, cloneWithUniqueIds(stmt, next));
-  return next;
+  const placed = cloneWithUniqueIds(stmt, next);
+  region.splice(index, 0, placed);
+  return nameLoops(next, allStmts([placed]));
 }
 
 export function removeStmt(program: Program, id: NodeId): Program {
@@ -153,14 +158,17 @@ export function removeStmt(program: Program, id: NodeId): Program {
   return next;
 }
 
-/** Moves a statement; `place.index` counts positions in the target region after the removal. */
+/**
+ * Moves a statement, its loops named for the place (`language.md`, Edits, Loop variables);
+ * `place.index` counts positions in the target region after the removal.
+ */
 export function moveStmt(program: Program, id: NodeId, place: Place): Program {
   const next = clone(program);
   const { stmt, region, index } = getStmt(next, id);
   region.splice(index, 1);
   const target = getRegion(next, place);
   target.splice(Math.max(0, Math.min(place.index, target.length)), 0, stmt);
-  return next;
+  return nameLoops(next, allStmts([stmt]));
 }
 
 export function duplicateStmt(program: Program, id: NodeId): Program {

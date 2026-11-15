@@ -1,11 +1,13 @@
 // Import validates a program of the current `version`. It refuses what no edit could make: a
 // wrong shape, an unknown type, a bad id, a field its block would not write, a class,
 // which no registered block definition constructs. What editing reaches is validate()'s job. A
-// draft whose text is now a value of its slot is read as that value.
+// draft whose text is now a value of its slot is read as that value, and a loop's variable that
+// still holds a draft is named (`naming.ts`).
 import { getBlockDef, hasBlockDef, registryKey } from "@/blocks/registry";
 import { storeCaption } from "./edit";
 import { isNodeId } from "./id";
 import { KINDS, type Expr, type InputDecl, type Program } from "./types";
+import { nameDraftLoops } from "./naming";
 import { isRecord } from "./record";
 import { parseSlotText } from "./drafts";
 import { draftText, isTarget } from "./walk";
@@ -204,5 +206,5 @@ export function migrate(json: unknown): Program {
   if (version !== CURRENT_VERSION) {
     throw new MigrateError("version", `unsupported version ${String(version)}`);
   }
-  return checkProgram(json);
+  return nameDraftLoops(checkProgram(json));
 }

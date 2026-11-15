@@ -1,12 +1,36 @@
 // The `for` block definition: bounds evaluated once, ints only; at each pass the value stored at
-// its target's place, found again, and a `loop` event that carries the place.
+// its target's place, found again, and a `loop` event that carries the place. The application
+// names its variable (`blocks.md`, Slots).
 import { createNodeId } from "@/lang/id";
-import type { Expr } from "@/lang/types";
+import type { Expr, Name } from "@/lang/types";
 import { typeError } from "@/runtime/access";
 import { defineStmt, type Counted } from "./types";
 import { createEmptyDraft } from "./draft";
+import { createVariable } from "./var";
 
 const isZero = (expr: Expr) => expr.type === "num" && !expr.float && expr.value === 0;
+
+/** The names of a `for`'s variable: `i`, `j`, `k`, and the letters after `k`. */
+const NAMES: readonly [Name, ...Name[]] = [
+  "i",
+  "j",
+  "k",
+  "l",
+  "m",
+  "n",
+  "o",
+  "p",
+  "q",
+  "r",
+  "s",
+  "t",
+  "u",
+  "v",
+  "w",
+  "x",
+  "y",
+  "z",
+];
 
 /** The generated chart nodes in the order a `for` runs them, written in the notation. */
 const COUNTED: Counted = {
@@ -23,7 +47,7 @@ export const forStmt = defineStmt<"for">({
   chart: { counted: COUNTED },
   declares: "number",
   slots: [
-    { name: "var", role: "target", hint: "variable", binds: true },
+    { name: "var", role: "target", hint: "variable", binds: true, names: NAMES },
     { name: "start", role: "expr", hint: "start" },
     { name: "stop", role: "expr", hint: "stop" },
     { name: "body", role: "body" },
@@ -31,7 +55,7 @@ export const forStmt = defineStmt<"for">({
   create: () => ({
     id: createNodeId(),
     type: "for",
-    var: createEmptyDraft(),
+    var: createVariable(NAMES[0]),
     start: { id: createNodeId(), type: "num", value: 0, float: false, raw: "0" },
     stop: createEmptyDraft(),
     body: [],

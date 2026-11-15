@@ -1,6 +1,6 @@
 // Traversal driven by each block's slots, so no module lists block types.
 import { getBlockDef, registryKey } from "@/blocks/registry";
-import type { Expr, Block, NodeId, Program, Routine, RoutineDef, Stmt } from "./types";
+import type { Expr, Block, Name, NodeId, Program, Routine, RoutineDef, Stmt } from "./types";
 
 type Bag = Record<string, unknown>;
 
@@ -24,15 +24,27 @@ export function isTarget(expr: Expr): boolean {
 }
 
 /**
- * The name an expression reads, when it is a variable: the block whose one slot is a name.
- * Read from the block's slots, so no module names the variable block.
+ * The slot that holds a variable's name: a variable is the block whose one slot is a name. Read
+ * from the block's slots, so no module names the variable block.
  */
-export function findVariableName(expr: Expr): string | undefined {
+function findNameSlot(expr: Expr): string | undefined {
   const { slots } = getBlockDef(registryKey(expr));
   const [slot] = slots;
-  if (slots.length !== 1 || slot?.role !== "name") return undefined;
-  const name = (expr as unknown as Bag)[slot.name];
+  return slots.length === 1 && slot?.role === "name" ? slot.name : undefined;
+}
+
+/** The name an expression reads, when it is a variable. */
+export function findVariableName(expr: Expr): string | undefined {
+  const slot = findNameSlot(expr);
+  const name = slot === undefined ? undefined : (expr as unknown as Bag)[slot];
   return typeof name === "string" ? name : undefined;
+}
+
+/** Renames the variable `expr` (in place); throws for an expression that is no variable. */
+export function renameVariable(expr: Expr, name: Name): void {
+  const slot = findNameSlot(expr);
+  if (slot === undefined) throw new Error(`${expr.type} is no variable`);
+  (expr as unknown as Bag)[slot] = name;
 }
 
 /**
