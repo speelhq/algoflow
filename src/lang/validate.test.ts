@@ -85,9 +85,30 @@ describe("validate (language.md, Validation)", () => {
     expect(codes(program([for_("randint", num(0), num(1), [])]))).toEqual(["E_DUPLICATE_NAME"]);
   });
 
-  it("a for variable stays visible after its loop; a while body cannot define its condition", () => {
-    expect(codes(program([for_("i", num(0), num(3), []), print(v("i"))]))).toEqual([]);
+  it("a for variable is visible only in its loop; a while body cannot define its condition", () => {
+    expect(codes(program([for_("i", num(0), num(3), []), print(v("i"))]))).toEqual(["E_UNDEFINED"]);
+    expect(codes(program([for_("i", num(0), num(3), [print(v("i"))])]))).toEqual([]);
     expect(codes(program([while_(v("k"), [assign("k", num(0))])]))).toEqual(["E_UNDEFINED"]);
+  });
+
+  it("no other variable of a routine takes the name of one of its loop variables", () => {
+    const loop = () => for_("i", num(0), num(3), [assign("i", bin("+", v("i"), num(1)))]);
+    expect(codes(program([loop()]))).toEqual([]);
+    expect(codes(program([assign("i", num(0)), loop()]))).toEqual(["E_DUPLICATE_NAME"]);
+    expect(codes(program([loop(), assign("i", num(0))]))).toEqual(["E_DUPLICATE_NAME"]);
+    const fn = { id: "f0000000000f", name: "f", params: ["i"], body: [loop()] };
+    expect(codes(program([], { functions: [fn] }))).toEqual(["E_DUPLICATE_NAME"]);
+    expect(codes(program([for_("i", num(0), num(3), []), for_("i", num(0), num(3), [])]))).toEqual(
+      [],
+    );
+    // A loop's variable takes no input's name, nor the name of a loop around it.
+    const input = program([for_("n", num(0), num(3), [])], {
+      inputs: [{ name: "n", kind: "number" }],
+    });
+    expect(codes(input)).toEqual(["E_DUPLICATE_NAME"]);
+    expect(codes(program([for_("i", num(0), num(3), [for_("i", num(0), num(2), [])])]))).toEqual([
+      "E_DUPLICATE_NAME",
+    ]);
   });
 
   it("functions see only their parameters and body", () => {

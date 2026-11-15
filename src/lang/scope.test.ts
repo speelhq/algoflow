@@ -53,14 +53,14 @@ describe("scope", () => {
     expect(findVisibleNames(p, "nope00000000")).toBeUndefined();
   });
 
-  it("a loop variable is visible in the body and after the loop, not in its own bounds", () => {
+  it("a loop variable is visible only in the loop's body, not in its bounds or after it", () => {
     const inner = print(v("i"));
     const loop = for_("i", num(0), v("n"), [inner]);
     const after = print(v("i"));
     const p = program([loop, after], { inputs: [{ name: "n", kind: "number" }] });
     expect(findVisibleNames(p, loop.id)).toEqual(["n"]);
     expect(findVisibleNames(p, inner.id)).toEqual(["i", "n"]);
-    expect(findVisibleNames(p, after.id)).toEqual(["i", "n"]);
+    expect(findVisibleNames(p, after.id)).toEqual(["n"]);
   });
 
   it("a name first assigned inside a compound statement is not visible after it", () => {

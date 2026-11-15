@@ -11,10 +11,11 @@ import {
   type Name,
   type NodeId,
   type Program,
+  type Routine,
   type Stmt,
 } from "./types";
 import { parseSlotText } from "./drafts";
-import { declaredBy, isVisible, statementScopes, type StatementScope } from "./scope";
+import { declaredBy, isLoop, isVisible, statementScopes, type StatementScope } from "./scope";
 import { draftSlots, programIds, stmtExprs, findVariableName } from "./walk";
 
 export function isValidName(name: string): boolean {
@@ -33,7 +34,22 @@ class Collector {
   /** Functions: names a variable may not shadow (they would call a different thing in CPython). */
   private readonly callables = new Set<Name>();
 
-  constructor(private readonly program: Program) {}
+  /** The names of each routine's loop variables, which no other variable of it may take. */
+  private readonly loopNames = new Map<Routine, Set<Name>>();
+
+  constructor(private readonly program: Program) {
+    for (const { stmt, routine } of statementScopes(program)) {
+      if (!isLoop(stmt)) continue;
+      const held = this.loopNames.get(routine) ?? new Set<Name>();
+      for (const declared of declaredBy(stmt)) held.add(declared.name);
+      this.loopNames.set(routine, held);
+    }
+  }
+
+  /** Whether a loop of `routine` has a variable named `name`. */
+  private hasLoopName(routine: Routine, name: Name): boolean {
+    return this.loopNames.get(routine)?.has(name) === true;
+  }
 
   report(
     nodeId: NodeId,
@@ -74,7 +90,9 @@ class Collector {
       const params = new Set<Name>();
       for (const param of fn.params) {
         if (!isValidName(param)) this.report(fn.id, "E_BAD_NAME", { name: param });
-        if (params.has(param)) this.report(fn.id, "E_DUPLICATE_NAME", { name: param });
+        if (params.has(param) || this.hasLoopName(fn.id, param)) {
+          this.report(fn.id, "E_DUPLICATE_NAME", { name: param });
+        }
         params.add(param);
       }
       claim(fn.name, fn.id);
@@ -92,12 +110,28 @@ class Collector {
       this.reads(scope);
       this.control(scope);
       for (const { name } of declaredBy(stmt)) {
+        // A loop's variable and any other variable keep apart (`language.md`, Scope, Names a
+        // definition can't take).
+        const shared = isLoop(stmt)
+          ? this.isLoopNameTaken(scope, name)
+          : this.takesLoopName(scope, name);
         if (!isValidName(name)) this.report(stmt.id, "E_BAD_NAME", { name });
-        else if (this.callables.has(name) || isBuiltinName(name)) {
+        else if (this.callables.has(name) || isBuiltinName(name) || shared) {
           this.report(stmt.id, "E_DUPLICATE_NAME", { name });
         }
       }
     }
+  }
+
+  /** Whether a statement declares `name` as a new variable that a loop of its routine has. */
+  private takesLoopName({ routine, visible }: StatementScope, name: Name): boolean {
+    return !isVisible(visible, name) && this.hasLoopName(routine, name);
+  }
+
+  /** Whether a loop's variable `name` is one that an input or a loop around it has. */
+  private isLoopNameTaken({ routine, loops }: StatementScope, name: Name): boolean {
+    const input = routine === "main" && this.program.inputs.some((each) => each.name === name);
+    return input || loops.some((loop) => declaredBy(loop).some((d) => d.name === name));
   }
 
   private reads({ stmt, visible, declaredInside }: StatementScope): void {

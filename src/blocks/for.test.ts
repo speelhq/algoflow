@@ -63,7 +63,7 @@ describe("for (blocks.md)", () => {
     expect(result.done).toEqual({ type: "done", events: 7, loops: 2 });
   });
 
-  it("bounds are evaluated once; the variable stays visible after the loop", () => {
+  it("bounds are evaluated once; the variable keeps its last value after the loop", () => {
     const made = createProgramWithInputs({ n: 3 }, [
       for_("i", num(0), v("n"), [assign("n", bin("+", v("n"), num(1)))]),
     ]);

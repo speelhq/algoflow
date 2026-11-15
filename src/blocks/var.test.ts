@@ -22,7 +22,7 @@ describe("var (blocks.md)", () => {
     });
   });
 
-  it("a loop variable read after a loop that ran no pass → E_UNDEFINED at run time", () => {
+  it("a variable never assigned → E_UNDEFINED at run time, which validation refuses first", () => {
     const read = v("i");
     const made = createProgramWithInputs({ n: 0 }, [for_("i", num(0), v("n"), []), print(read)]);
     expect(runAll(made.program, made.inputs).done).toMatchObject({

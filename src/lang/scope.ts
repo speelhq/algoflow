@@ -119,13 +119,21 @@ function walkScopes(
   const declared = new Set<Name>();
   for (const stmt of stmts) {
     out.push({ ...around, stmt, visible, declaredInside });
+    let inBody = visible;
     for (const { name } of declaredBy(stmt)) {
-      if (!isVisible(visible, name)) declared.add(name);
-      visible = { first: { name, declarer: stmt.id }, rest: visible };
+      const first = { name, declarer: stmt.id };
+      if (isLoop(stmt)) {
+        // A loop's variable is visible only inside its body (`language.md`, Scope, Visibility).
+        inBody = { first, rest: inBody };
+      } else {
+        if (!isVisible(visible, name)) declared.add(name);
+        visible = { first, rest: visible };
+        inBody = visible;
+      }
     }
     const loops = loopsInside(stmt, around.loops);
     for (const region of bodyRegions(stmt)) {
-      const inside = { ...around, loops, visible, declaredInside };
+      const inside = { ...around, loops, visible: inBody, declaredInside };
       for (const name of walkScopes(region.stmts, inside, out)) {
         if (isVisible(visible, name)) continue;
         declared.add(name);
