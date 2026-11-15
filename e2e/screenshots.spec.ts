@@ -226,6 +226,25 @@ test.describe("Block editor", () => {
     await page.screenshot({ path: shot("editor-itself"), animations: "disabled" });
   });
 
+  test("an empty assignment", async ({ page }) => {
+    await insert(page, "assign");
+    // Each empty field reads its slot's hint, and the target has the keyboard.
+    const fields = editor(page).locator("[data-value-line]");
+    await expect(fields.first()).toHaveAttribute("placeholder", "variable");
+    await expect(fields.last()).toHaveAttribute("placeholder", "value");
+    await expect(fields.first()).toBeFocused();
+    await page.screenshot({ path: shot("editor-empty"), animations: "disabled" });
+  });
+
+  test("Run led to an empty slot", async ({ page }) => {
+    await insert(page, "if");
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "▶ Run" }).click();
+    await expect(editor(page).locator("[data-value-line]")).toHaveAttribute("aria-invalid", "true");
+    await expect(editor(page).getByTestId("explanation")).toContainText("Fill in this field.");
+    await page.screenshot({ path: shot("editor-led"), animations: "disabled" });
+  });
+
   test("choosing a variable", async ({ page }) => {
     await insert(page, "assign");
     await page.keyboard.type("to");
