@@ -2,7 +2,7 @@
 // jumps and returns, drafts, and calls.
 // Dispatch is registry-driven: slots, `requires`, `params`, `callee`; where a statement sits and
 // what it may read come from `statementScopes`.
-import { builtinKey, getBlockDef, hasBlockDef, registryKey } from "@/blocks/registry";
+import { getBlockDef, registryKey } from "@/blocks/registry";
 import { expectedArgs } from "@/blocks/types";
 import {
   NAME_PATTERN,
@@ -15,24 +15,25 @@ import {
   type Stmt,
 } from "./types";
 import { parseSlotText } from "./drafts";
-import { declaredBy, isLoop, isVisible, statementScopes, type StatementScope } from "./scope";
+import {
+  declaredBy,
+  isBuiltinName,
+  isDefinitionName,
+  isLoop,
+  isVisible,
+  statementScopes,
+  type StatementScope,
+} from "./scope";
 import { draftSlots, programIds, stmtExprs, findVariableName } from "./walk";
 
 export function isValidName(name: string): boolean {
   return NAME_PATTERN.test(name) && !RESERVED.has(name);
 }
 
-/** A builtin call key (`abs`, `randint`, …) may not be redefined. */
-function isBuiltinName(name: string): boolean {
-  return hasBlockDef(builtinKey(name));
-}
-
 class Collector {
   readonly diagnostics: Diagnostic[] = [];
   /** Functions whose own name a diagnostic refuses: no call can name them. */
   readonly refusedDefinitions = new Set<NodeId>();
-  /** Functions: names a variable may not shadow (they would call a different thing in CPython). */
-  private readonly callables = new Set<Name>();
 
   /** The names of each routine's loop variables, which no other variable of it may take. */
   private readonly loopNames = new Map<Routine, Set<Name>>();
@@ -83,7 +84,6 @@ class Collector {
     const claim = (name: Name, nodeId: NodeId) => {
       if (taken.has(name) || isBuiltinName(name)) this.refuseName(nodeId, "E_DUPLICATE_NAME", name);
       taken.add(name);
-      this.callables.add(name);
     };
     for (const fn of this.program.functions) {
       if (!isValidName(fn.name)) this.refuseName(fn.id, "E_BAD_NAME", fn.name);
@@ -116,7 +116,7 @@ class Collector {
           ? this.isLoopNameTaken(scope, name)
           : this.takesLoopName(scope, name);
         if (!isValidName(name)) this.report(stmt.id, "E_BAD_NAME", { name });
-        else if (this.callables.has(name) || isBuiltinName(name) || shared) {
+        else if (isDefinitionName(this.program, name) || shared) {
           this.report(stmt.id, "E_DUPLICATE_NAME", { name });
         }
       }

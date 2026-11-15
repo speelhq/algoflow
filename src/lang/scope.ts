@@ -3,7 +3,7 @@
 // each statement declares, the variables visible at each statement and what declares them, the
 // loops that hold a statement, and whether a loop or a function holds a place.
 // Registry-driven: slots, `loop`, and regions, never a type.
-import { getBlockDef, registryKey } from "@/blocks/registry";
+import { builtinKey, getBlockDef, hasBlockDef, registryKey } from "@/blocks/registry";
 import type {
   Block,
   Expr,
@@ -42,6 +42,19 @@ export function declaredBy(stmt: Stmt): Declared[] {
     declared.push({ name, target, stores: isExpr(stored) ? stored : undefined });
   }
   return declared;
+}
+
+/** Whether `name` is a builtin's, which no definition may take (`abs`, `randint`, …). */
+export function isBuiltinName(name: Name): boolean {
+  return hasBlockDef(builtinKey(name));
+}
+
+/**
+ * Whether a variable can't take `name`, because a function of the program or a builtin holds it
+ * (`language.md`, Scope, Names a definition can't take).
+ */
+export function isDefinitionName(program: Program, name: Name): boolean {
+  return program.functions.some((fn) => fn.name === name) || isBuiltinName(name);
 }
 
 /** A variable that a statement declares, with that statement. */
