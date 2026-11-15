@@ -54,7 +54,6 @@ function routineKinds(program: Program, routine: Routine): RoutineKinds {
   }
   const declarations = declarationsUnder(routineStmts(program, getRoutineDef(program, routine)));
   for (const { name, stores, stmt } of declarations) {
-    if (!setters.has(name)) setters.set(name, stmt);
     if (stores === undefined) {
       // A loop's kind holds until an assignment says otherwise.
       const { declares } = getBlockDef(registryKey(stmt));
@@ -63,6 +62,7 @@ function routineKinds(program: Program, routine: Routine): RoutineKinds {
     }
     if (assigned.has(name)) continue;
     assigned.add(name);
+    setters.set(name, stmt);
     const kind = exprKind(stores, kinds);
     if (kind) kinds.set(name, kind);
   }
@@ -76,7 +76,10 @@ export function variableKinds(program: Program, routine: Routine): Kinds {
   return routineKinds(program, routine).kinds;
 }
 
-/** The statement that first sets each variable of `main` or of one function. */
+/**
+ * The assignment that first sets each assigned variable of `main` or of one function. A loop's
+ * variable is set by its loop, which `findVisibleLoop()` gives where the variable is visible.
+ */
 export function firstSetters(program: Program, routine: Routine): ReadonlyMap<Name, Stmt> {
   return routineKinds(program, routine).setters;
 }

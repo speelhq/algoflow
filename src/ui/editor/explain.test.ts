@@ -53,6 +53,14 @@ describe("explanation line", () => {
     expect(nameAndText(plain)?.[1]).toBe("A piece of text, typed between quotes.");
   });
 
+  it("a loop's variable first gets a value in the loop around the statement, not an earlier one", () => {
+    const read = print(v("i"));
+    const p2 = program([for_("i", num(0), num(3), []), for_("i", num(5), num(8), [read])]);
+    expect(explainVariable(p2, read.id, "i")).toBe(
+      "A number variable. It first gets a value in: i ← 5.",
+    );
+  });
+
   it("a variable: its kind and where it first gets a value; an input; a new name", () => {
     expect(explainVariable(p, target.id, "i")).toBe(
       "A number variable. It first gets a value in: i ← 1.",

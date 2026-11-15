@@ -269,6 +269,21 @@ export function findVisibleNames(program: Program, id: NodeId): Name[] | undefin
 }
 
 /**
+ * The loop whose variable `name` is visible to the slots of statement `id`, or undefined: the last
+ * loop that declares it there, because an assignment of a visible name sets that variable rather
+ * than declaring another (Visibility).
+ */
+export function findVisibleLoop(program: Program, id: NodeId, name: Name): Stmt | undefined {
+  const scope = findScope(program, id);
+  const { scopes } = nodeIndex(program);
+  for (const each of eachVisible(scope?.visible)) {
+    const declarer = each.name === name ? scopes.get(each.declarer)?.stmt : undefined;
+    if (declarer && isLoop(declarer)) return declarer;
+  }
+  return undefined;
+}
+
+/**
  * Whether a statement at `place` would be inside a loop body and inside a function: inside one
  * when its region is a loop's body or lies inside one, and inside a function when its routine is
  * one. A place whose parent the program doesn't hold is inside neither.

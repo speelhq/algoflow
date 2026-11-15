@@ -13,9 +13,10 @@ describe("name list", () => {
       [assign("count", num(0)), for_("k", num(0), num(3), []), assign("total", num(1))],
       { inputs: [{ name: "n", kind: "number" }] },
     );
+    // A loop's variable is no assigned name, which no other variable may take.
     expect(routineNames(p, "main", ["total", "best"], "nothing")).toEqual({
       asked: ["total", "best"],
-      names: ["n", "count", "k"],
+      names: ["n", "count"],
     });
     const many = program(["a", "b", "c", "d", "e", "f", "g"].map((name) => assign(name, num(0))));
     expect(routineNames(many, "main", [], "nothing").names).toHaveLength(7);
@@ -45,10 +46,19 @@ describe("name list", () => {
   });
 
   it("leaves out the names that the statement being edited assigns, its line holding the name typed", () => {
-    const typed = for_("i", num(0), num(3), []);
-    const p = program([assign("count", num(0)), typed, assign("i", num(1))]);
-    expect(routineNames(p, "main", [], typed.id).names).toEqual(["count", "i"]);
+    const typed = assign("best", num(0));
+    const p = program([assign("count", num(0)), typed, assign("best", num(1))]);
+    expect(routineNames(p, "main", [], typed.id).names).toEqual(["count", "best"]);
     expect(routineNames(program([typed]), "main", [], typed.id).names).toEqual([]);
+  });
+
+  it("leaves out a loop's variable, even where an assignment declares its name too", () => {
+    const p = program([
+      assign("count", num(0)),
+      for_("i", num(0), num(3), []),
+      assign("i", num(1)),
+    ]);
+    expect(routineNames(p, "main", [], "nothing").names).toEqual(["count"]);
   });
 
   it("offers a typed name as a new variable when no name is it and Identifiers allows it", () => {

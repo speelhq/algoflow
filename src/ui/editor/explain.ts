@@ -3,7 +3,7 @@
 import { errorText, t } from "@/i18n/t";
 import { firstSetters, variableKinds, type Kinds } from "@/lang/kinds";
 import type { Diagnostic, Expr, Name, Kind, NodeId, Program } from "@/lang/types";
-import { getHoldingRoutine } from "@/lang/scope";
+import { findVisibleLoop, getHoldingRoutine } from "@/lang/scope";
 import { getRoutineDef, isEmptyDraft } from "@/lang/walk";
 import {
   isParenthesized,
@@ -64,7 +64,8 @@ export function explainVariable(program: Program, at: NodeId, name: Name): strin
     const input = program.inputs.find((candidate) => candidate.name === name);
     if (input) return t("editor.explain.input", { kind: kindName(input.kind) });
   } else if (def.params.includes(name)) return t("editor.explain.parameter");
-  const setter = firstSetters(program, routine).get(name);
+  // A loop's variable is visible only inside its loop, which first gives it a value.
+  const setter = findVisibleLoop(program, at, name) ?? firstSetters(program, routine).get(name);
   if (!setter) return t("editor.explain.newVariable", { name });
   // A counted loop's notation is its init, where its variable first gets a value.
   const statement = notationText(setter, program);
