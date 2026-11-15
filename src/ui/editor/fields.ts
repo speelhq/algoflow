@@ -8,6 +8,7 @@ import {
   createDraft,
   createEmptyDraft,
   getBlockDef,
+  isNamedSlot,
   registryKey,
   findSlot,
   type Slot,
@@ -60,20 +61,18 @@ export function targetSlot(
 
 /**
  * The lines the editor shows, each as its tokens: a counted loop's init and check (`i ← 1`,
- * `i < n + 1?`), else the block's notation. `again` marks a slot written before, which is drawn
- * as its value rather than as a field.
+ * `i < n + 1?`), else the block's notation. `drawn` marks a slot drawn as its value rather than
+ * as a field: one whose variable the application names (`editor.md`, Block editor).
  */
-export function editedLines(stmt: Stmt): { token: NotationToken; again: boolean }[][] {
+export function editedLines(stmt: Stmt): { token: NotationToken; drawn: boolean }[][] {
   const init = generatedNotation(stmt, "init");
   const check = generatedNotation(stmt, "check");
   const notations =
     init !== undefined && check !== undefined ? [init, check] : [blockNotation(stmt)];
-  const seen = new Set<string>();
   return notations.map((notation) =>
     notationTokens(notation).map((token) => {
-      const again = "placeholder" in token && seen.has(token.placeholder);
-      if ("placeholder" in token) seen.add(token.placeholder);
-      return { token, again };
+      const slot = "placeholder" in token ? findSlot(stmt, token.placeholder) : undefined;
+      return { token, drawn: slot !== undefined && isNamedSlot(slot) };
     }),
   );
 }
@@ -84,8 +83,8 @@ export function editedLines(stmt: Stmt): { token: NotationToken; again: boolean 
  */
 export function stmtFields(stmt: Stmt): Field[] {
   const out: Field[] = [];
-  for (const { token, again } of editedLines(stmt).flat()) {
-    if ("text" in token || again) continue;
+  for (const { token, drawn } of editedLines(stmt).flat()) {
+    if ("text" in token || drawn) continue;
     const slot = findSlot(stmt, token.placeholder);
     if (slot?.role !== "expr" && slot?.role !== "target" && slot?.role !== "exprs") continue;
     const field = { slot: slot.name, role: slot.role };
@@ -161,18 +160,19 @@ export function findFieldValue(stmt: Stmt, field: Field): FieldValue | undefined
 
 /**
  * The field that takes the keyboard when the editor opens (`editor.md`, Block editor): the slot
- * clicked on the chart node, else the first field that holds a draft, else none.
+ * clicked on the chart node; else the first field that holds a draft; else, in a block that the
+ * block menu has just inserted, its first field; else none.
  */
 export function startField(
   stmt: Stmt,
   fields: readonly Field[],
   clicked: string | null,
+  inserted: boolean,
 ): Field | null {
   if (clicked !== null) return fields.find((field) => field.slot === clicked) ?? null;
-  return (
-    fields.find((field) => {
-      const value = findFieldValue(stmt, field);
-      return value !== undefined && fieldDraft(value) !== undefined;
-    }) ?? null
-  );
+  const draft = fields.find((field) => {
+    const value = findFieldValue(stmt, field);
+    return value !== undefined && fieldDraft(value) !== undefined;
+  });
+  return draft ?? (inserted ? (fields[0] ?? null) : null);
 }

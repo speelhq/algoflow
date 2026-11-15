@@ -41,8 +41,8 @@ export function applyTyped(change: (program: Program) => Program, field: string)
 }
 
 /**
- * Inserts a block at a connector's place and opens its editor, its first field's caret at `caret`
- * (`editor.md`, Block editor).
+ * Inserts a block at a connector's place and opens its editor, the caret of the field it opens on
+ * at `caret` (`editor.md`, Block editor).
  */
 export function insertBlock(stmt: Stmt, place: Place, caret: number): void {
   if (apply((program) => insertStmt(program, stmt, place))) {

@@ -4,7 +4,7 @@ import en from "@/i18n/en.json";
 import { flatten } from "@/i18n/flatten";
 import { CATEGORIES } from "./categories";
 import { BLOCK_DEFS } from "./registry";
-import type { BlockDef, ChartForm } from "./types";
+import { isNamedSlot, type BlockDef, type ChartForm } from "./types";
 
 const keys = new Set(Object.keys(flatten(en)));
 
@@ -86,13 +86,14 @@ describe("registry", () => {
     }
   });
 
-  it("each slot a statement's editor shows as a field has its name", () => {
+  it("each slot a statement's editor shows as a field has its name, and no other slot has one", () => {
     for (const def of BLOCK_DEFS.values()) {
       if (def.shape !== "stmt") continue;
       for (const slot of def.slots) {
-        if (slot.role === "body") continue;
+        // A body is no field, nor a variable that the application names (`blocks.md`, Slots).
+        const field = slot.role !== "body" && !isNamedSlot(slot);
         const key = `block.${def.key}.slot.${slot.name}`;
-        expect(keys.has(key), key).toBe(true);
+        expect(keys.has(key), key).toBe(field);
       }
     }
   });

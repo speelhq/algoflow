@@ -26,8 +26,9 @@ export type BlockMenuEntry = {
   disabled?: string;
   create: () => Stmt;
   /**
-   * Where the caret goes in the first field of the block inserted: where a choice of the operation
-   * it holds puts it (`editor.md`, Block menu), and at the start of a block's field with no text.
+   * Where the caret goes in the field that the inserted block opens on (`editor.md`, Block editor):
+   * where a choice of the operation it holds puts it (`editor.md`, Block menu), and at the start of
+   * a block's field with no text.
    */
   caret: number;
 };

@@ -20,8 +20,8 @@ export type EditorState = {
   /** The slot the editor opens focused on: the one clicked on the chart node. */
   slot: string | null;
   /**
-   * In a block that the block menu has just inserted, where its first field's caret goes: where a
-   * choice of the operation it holds puts it (`editor.md`, Block editor).
+   * In a block that the block menu has just inserted, where the caret goes in the field it opens
+   * on: where a choice of the operation it holds puts it (`editor.md`, Block editor).
    */
   insertedCaret: number | null;
   /** The selected node's editor is open; a press outside it closes it and keeps the selection. */

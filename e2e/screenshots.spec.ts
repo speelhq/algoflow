@@ -275,6 +275,14 @@ test.describe("Block editor", () => {
     await page.screenshot({ path: shot("editor-check"), animations: "disabled" });
   });
 
+  test("a loop inside a loop", async ({ page }) => {
+    await insert(page, "for");
+    // The variable, `j`, is drawn as text, and the stop has the keyboard.
+    await expect(editor(page).getByTestId("editor-notation")).toContainText("j");
+    await expect(list(page)).toBeVisible();
+    await page.screenshot({ path: shot("editor-loop"), animations: "disabled" });
+  });
+
   test("setting an item", async ({ page }) => {
     await insert(page, "assign");
     await page.keyboard.type("nums[");

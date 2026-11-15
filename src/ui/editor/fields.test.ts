@@ -1,5 +1,5 @@
 // A field of the editor's notation is named by the block's label and the slot's name; a
-// counted loop shows its init and its check, its variable a field only at the first.
+// counted loop shows its init and its check, its variable, which the application names, as text.
 import { describe, expect, it } from "vitest";
 import { ast } from "@/blocks/testing";
 import { getBlockDef } from "@/blocks/registry";
@@ -34,29 +34,28 @@ describe("fieldLabel", () => {
 });
 
 describe("the notation the editor shows", () => {
-  it("is a counted loop's init and check, its variable a field at its first place only", () => {
+  it("is a counted loop's init and check, its variable drawn as text and its bounds fields", () => {
     const loop = for_("i", num(1), v("n"), []);
     const lines = editedLines(loop).map((line) =>
-      line.map(({ token, again }) =>
-        "text" in token ? token.text : `${again ? "=" : ""}{${token.placeholder}}`,
+      line.map(({ token, drawn }) =>
+        "text" in token ? token.text : `${drawn ? "=" : ""}{${token.placeholder}}`,
       ),
     );
     expect(lines).toEqual([
-      ["{var}", " ← ", "{start}"],
+      ["={var}", " ← ", "{start}"],
       ["={var}", " < ", "{stop}", "?"],
     ]);
     expect(stmtFields(loop)).toEqual([
-      { slot: "var", role: "target" },
       { slot: "start", role: "expr" },
       { slot: "stop", role: "expr" },
     ]);
   });
 
   it("gives the field beside one in reading order, and none past either end", () => {
-    const fields = stmtFields(for_("i", num(1), v("n"), []));
-    const [first, second, last] = fields;
-    expect(fieldBeside(fields, first!, 1)).toEqual(second);
-    expect(fieldBeside(fields, second!, -1)).toEqual(first);
+    const fields = stmtFields(assign("total", bin("+", v("total"), num(1))));
+    const [first, last] = fields;
+    expect(fieldBeside(fields, first!, 1)).toEqual(last);
+    expect(fieldBeside(fields, last!, -1)).toEqual(first);
     expect(fieldBeside(fields, last!, 1)).toBeUndefined();
     expect(fieldBeside(fields, first!, -1)).toBeUndefined();
   });
@@ -89,22 +88,34 @@ describe("a target", () => {
     // A new assignment's target is the first empty slot; a click on the target opens it.
     const fields = stmtFields(stmt);
     const fresh = getBlockDef("assign").create() as Stmt;
-    expect(startField(fresh, stmtFields(fresh), null)).toEqual(fields[0]);
-    expect(startField(stmt, fields, "target")).toEqual(fields[0]);
+    expect(startField(fresh, stmtFields(fresh), null, false)).toEqual(fields[0]);
+    expect(startField(stmt, fields, "target", false)).toEqual(fields[0]);
   });
 
   it("gives the keyboard to the first field that holds a draft, or to the slot clicked", () => {
     const args = { slot: "args", role: "exprs" } as const;
     const unread = print(draft("1, x y"));
-    expect(startField(unread, stmtFields(unread), null)).toEqual(args);
+    expect(startField(unread, stmtFields(unread), null, false)).toEqual(args);
     // A click on a print's values opens its one field.
     const filled = print(num(1), ast.call("abs", v("n")));
-    expect(startField(filled, stmtFields(filled), "args")).toEqual(args);
-    expect(startField(filled, stmtFields(filled), null)).toBeNull();
-    expect(startField(print(), stmtFields(print()), null)).toBeNull();
-    // A new loop's first empty slot is its stop.
+    expect(startField(filled, stmtFields(filled), "args", false)).toEqual(args);
+    expect(startField(filled, stmtFields(filled), null, false)).toBeNull();
+    expect(startField(print(), stmtFields(print()), null, false)).toBeNull();
+  });
+
+  it("opens a block the block menu has just inserted on its first draft, else its first field", () => {
+    // A new loop opens on its stop, not on its start, which holds `0`.
     const fresh = getBlockDef("for").create() as Stmt;
-    expect(startField(fresh, stmtFields(fresh), null)).toEqual({ slot: "stop", role: "expr" });
+    expect(startField(fresh, stmtFields(fresh), null, true)).toEqual({
+      slot: "stop",
+      role: "expr",
+    });
+    const call = exprStmt(ast.call("abs", v("n")));
+    expect(startField(call, stmtFields(call), null, true)).toEqual({ slot: "expr", role: "expr" });
+    expect(startField(print(), stmtFields(print()), null, true)).toEqual({
+      slot: "args",
+      role: "exprs",
+    });
   });
 
   it("is named by the block's label and the slot's name", () => {

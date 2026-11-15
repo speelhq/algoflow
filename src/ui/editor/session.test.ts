@@ -63,10 +63,10 @@ describe("opening a field (editor.md, Block editor; Value line, Selected text)",
     const stmt = assign("total", draft("x +"));
     const fields = stmtFields(stmt);
     expect(fields).toEqual([target, value]);
-    expect(startField(stmt, fields, null)).toEqual(fields[1]);
-    expect(startField(stmt, fields, "target")).toEqual(fields[0]);
+    expect(startField(stmt, fields, null, false)).toEqual(fields[1]);
+    expect(startField(stmt, fields, "target", false)).toEqual(fields[0]);
     const settled = assign("total", num(1));
-    expect(startField(settled, stmtFields(settled), null)).toBeNull();
+    expect(startField(settled, stmtFields(settled), null, false)).toBeNull();
   });
 
   it("a value opens selected, a draft with the caret at its end, and an inserted block at the caret given", () => {

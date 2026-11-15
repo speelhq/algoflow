@@ -47,14 +47,11 @@ test("FizzBuzz is built from an empty chart by typing and choosing, and accepted
   await expect(page.getByRole("button", { name: "Add your first block" })).toBeVisible();
 
   const loop = await insert(page, "main/main/0", "for");
-  // The variable's target line has the keyboard: a typed name is offered as a new variable.
-  await keys(page, "i");
-  await expect(editor(page).getByTestId("value-list")).toContainText("New variable");
-  await page.keyboard.press("Enter");
-  // The start value is selected: a digit replaces it; Tab reaches the stop.
-  await keys(page, "1");
-  await page.keyboard.press("Tab");
+  // The loop's variable is `i`, and its stop, the first empty slot, has the keyboard.
   await keys(page, "n+1");
+  // Shift+Tab reaches the start, its value selected: a digit replaces it.
+  await page.keyboard.press("Shift+Tab");
+  await keys(page, "1");
   await page.keyboard.press("Enter");
   await expect(editor(page)).toHaveCount(0);
   await expect(chart(page)).toContainText("i < n + 1?");
@@ -88,6 +85,27 @@ test("FizzBuzz is built from an empty chart by typing and choosing, and accepted
   await page.getByTestId("tab-python").click();
   await expect(page.getByTestId("python-code")).toContainText("for i in range(1, n + 1):");
   await expect(page.getByTestId("python-code")).toContainText("if i % 15 == 0:");
+});
+
+test("a loop inside a loop is named j, its variable drawn as text", async ({ page }) => {
+  await seedProgress(page, {});
+  await page.goto("/#/p/fizzbuzz");
+  const outer = await insert(page, "main/main/0", "for");
+  await keys(page, "3");
+  await page.keyboard.press("Enter");
+  await expect(editor(page)).toHaveCount(0);
+  await insert(page, `${outer}/body/0`, "for");
+  // The variable is no field: the start and the stop are, and the stop has the keyboard.
+  const fields = editor(page).locator("[data-value-line]");
+  await expect(fields).toHaveCount(2);
+  await expect(fields.last()).toBeFocused();
+  await expect(editor(page).getByTestId("editor-notation")).toContainText("j");
+  await keys(page, "2");
+  await page.keyboard.press("Enter");
+  await expect(chart(page)).toContainText("j < 2?");
+  await page.getByTestId("tab-python").click();
+  await expect(page.getByTestId("python-code")).toContainText("for i in range(3):");
+  await expect(page.getByTestId("python-code")).toContainText("    for j in range(2):");
 });
 
 test("the list follows what is before the caret, and a choice after a value takes it", async ({
@@ -582,21 +600,19 @@ test("← at a field's start and → at its end move to the field beside", async
       .nth(index)
       .evaluate((field: HTMLInputElement) => [field.selectionStart, field.selectionEnd]);
   // The start opens selected; → first clears the selection, as in a text field.
-  await expect(fields.nth(1)).toBeFocused();
+  await expect(fields.nth(0)).toBeFocused();
   await page.keyboard.press("ArrowRight");
-  await expect(fields.nth(1)).toBeFocused();
+  await expect(fields.nth(0)).toBeFocused();
   // At the end, → goes to the start of the stop.
   await page.keyboard.press("ArrowRight");
-  await expect(fields.nth(2)).toBeFocused();
-  expect(await caret(2)).toEqual([0, 0]);
+  await expect(fields.nth(1)).toBeFocused();
+  expect(await caret(1)).toEqual([0, 0]);
   // At the start, ← goes back to the end of the start.
   await page.keyboard.press("ArrowLeft");
-  await expect(fields.nth(1)).toBeFocused();
-  expect(await caret(1)).toEqual([1, 1]);
+  await expect(fields.nth(0)).toBeFocused();
+  expect(await caret(0)).toEqual([1, 1]);
   // At the start of the first field, ← does nothing.
   await page.keyboard.press("ArrowLeft");
-  await page.keyboard.press("ArrowLeft");
-  await expect(fields.nth(0)).toBeFocused();
   await page.keyboard.press("ArrowLeft");
   await expect(fields.nth(0)).toBeFocused();
   expect(await caret(0)).toEqual([0, 0]);

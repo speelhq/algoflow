@@ -227,7 +227,6 @@
     "for": {
       "label": "For loop",
       "slot": {
-        "var": "variable",
         "start": "start",
         "stop": "stop"
       },

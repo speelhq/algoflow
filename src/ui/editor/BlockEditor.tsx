@@ -91,10 +91,8 @@ function Body(props: {
   const fields = stmtFields(stmt);
   const elements = useRef(new Map<string, HTMLElement | null>());
   const [kept, setSession] = useState(() => {
-    // A block the block menu has just inserted opens on its first field (`editor.md`, Block
-    // editor).
-    const start =
-      initial.insertedCaret === null ? startField(stmt, fields, initial.slot) : (fields[0] ?? null);
+    const inserted = initial.insertedCaret !== null;
+    const start = startField(stmt, fields, initial.slot, inserted);
     return openSession(stmt, start, initial.insertedCaret);
   });
   // A value changed elsewhere (an undo) reopens the line on it.
@@ -280,17 +278,17 @@ function Body(props: {
   };
 
   // A counted loop shows its init and its check, one line each, as the chart draws them; a slot
-  // written again is drawn as its value.
+  // that is no field is drawn as its value.
   const notation = editedLines(stmt).map((tokens, l) => (
     // oxlint-disable-next-line react/no-array-index-key -- the lines keep their order
     <div key={l} className="flex flex-wrap items-center gap-1.5">
-      {tokens.map(({ token, again }, i) => {
+      {tokens.map(({ token, drawn }, i) => {
         if ("text" in token) {
           const text = token.text.trim();
           // oxlint-disable-next-line react/no-array-index-key -- a notation's tokens keep their order
           return text === "" ? null : <span key={`t${i}`}>{text}</span>;
         }
-        if (!again) return widget(token.placeholder);
+        if (!drawn) return widget(token.placeholder);
         // oxlint-disable-next-line react/no-array-index-key -- a notation's tokens keep their order
         return <Spans key={`v${i}`} spans={slotSpans(stmt, token.placeholder, program)} />;
       })}
