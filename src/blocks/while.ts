@@ -26,4 +26,5 @@ export const whileStmt = defineStmt<"while">({
   },
   python: (block, ctx) => [`while ${ctx.expr(block.cond)}:`, ctx.region(block.body)],
   notation: () => "{cond}",
+  lines: [{ label: "line.condition", notation: "{cond}" }],
 });

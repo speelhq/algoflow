@@ -1,7 +1,7 @@
-// A value line: a text field that holds its slot's text (`editor.md`, Value line). The field's own
-// text is transparent over a copy of it drawn in spans, so each variable takes its weight and
-// color from `spanStyle()`, as on the chart, and a word that matches nothing, or a draft's text
-// from its error, is underlined. With no text, the field shows its slot's hint.
+// A value line: the application's input holding its slot's text (`editor.md`, Value line). The
+// field's own text is transparent over a copy of it drawn in spans, so each variable takes its
+// weight and color from `spanStyle()`, as on the chart, and a word that matches nothing, or a
+// draft's text from its error, is underlined. With no text, the field shows its slot's hint.
 import {
   forwardRef,
   useLayoutEffect,
@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { spanStyle } from "@/ui/chart/style";
 import type { TextLine } from "./caret";
 import { isCompositionKey } from "./composition";
+import { FieldInput } from "./FieldInput";
 import { oneLine } from "./fields";
 
 type Props = {
@@ -109,17 +110,15 @@ export const ValueLine = forwardRef<HTMLInputElement, Props>(function ValueLine(
     ...(props.unmatched ? [{ span: props.unmatched, kind: "unmatched" as const }] : []),
     ...(props.error ? [{ span: props.error, kind: "error" as const }] : []),
   ];
-  // The field is as wide as its text or its hint, in the line's monospaced characters.
-  const width = `calc(${Math.max(text.length, hint.length, 1) + 1}ch + 1rem + 2px)`;
+  // The field is at least as wide as its text or its hint, in its monospaced characters, and it
+  // shares the room its line leaves with the line's other fields.
+  const width = `calc(${Math.max(text.length, hint.length, 1) + 1}ch + 1.25rem + 2px)`;
 
   return (
-    <span
-      className="relative inline-flex max-w-full rounded-md border border-input font-mono focus-within:border-selection focus-within:ring-1 focus-within:ring-selection"
-      style={{ width }}
-    >
+    <span className="relative inline-flex max-w-full min-w-0 flex-1" style={{ flexBasis: width }}>
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-0 overflow-hidden px-2 py-1 whitespace-pre"
+        className="pointer-events-none absolute inset-px flex items-center overflow-hidden px-2.5 font-mono text-base whitespace-pre md:text-sm"
       >
         <span className="inline-block" style={{ transform: `translateX(${-scroll}px)` }}>
           {pieces(text, marks).map((piece) => {
@@ -140,7 +139,8 @@ export const ValueLine = forwardRef<HTMLInputElement, Props>(function ValueLine(
           })}
         </span>
       </span>
-      <input
+      {/* Transparent in every theme, so the spans below draw its text. */}
+      <FieldInput
         ref={(element) => {
           input.current = element;
           if (typeof ref === "function") ref(element);
@@ -153,7 +153,7 @@ export const ValueLine = forwardRef<HTMLInputElement, Props>(function ValueLine(
         spellCheck={false}
         autoComplete="off"
         data-value-line
-        className="relative min-w-0 flex-1 bg-transparent px-2 py-1 text-transparent caret-foreground outline-none selection:bg-selection/30 placeholder:font-normal placeholder:text-muted-foreground"
+        className="relative font-mono text-transparent caret-foreground selection:bg-selection/30 placeholder:font-normal dark:bg-transparent"
         onChange={(event) => change(event.currentTarget)}
         onSelect={(event) => report(event.currentTarget)}
         onScroll={(event) => setScroll(event.currentTarget.scrollLeft)}

@@ -20,4 +20,5 @@ export const print = defineStmt<"print">({
   },
   python: (block, ctx) => [`print(${block.args.map((arg) => ctx.expr(arg)).join(", ")})`],
   notation: () => "print({args})",
+  lines: [{ label: "label", notation: "{args}" }],
 });

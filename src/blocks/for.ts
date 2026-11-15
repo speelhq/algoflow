@@ -80,6 +80,11 @@ export const forStmt = defineStmt<"for">({
     `for ${ctx.expr(block.var)} in range(${isZero(block.start) ? "" : `${ctx.expr(block.start)}, `}${ctx.expr(block.stop)}):`,
     ctx.region(block.body),
   ],
-  // Its init names it in the block menu and the editor.
+  // Its init names it in the block menu.
   notation: () => COUNTED.init,
+  // Its init and its check, without the check's `?` (`blocks.md`, Editor lines).
+  lines: [
+    { label: "line.start", notation: COUNTED.init },
+    { label: "line.condition", notation: COUNTED.check },
+  ],
 });

@@ -99,7 +99,7 @@ test("a loop inside a loop is named j, its variable drawn as text", async ({ pag
   const fields = editor(page).locator("[data-value-line]");
   await expect(fields).toHaveCount(2);
   await expect(fields.last()).toBeFocused();
-  await expect(editor(page).getByTestId("editor-notation")).toContainText("j");
+  await expect(editor(page).getByTestId("editor-lines")).toContainText("j");
   await keys(page, "2");
   await page.keyboard.press("Enter");
   await expect(chart(page)).toContainText("j < 2?");
@@ -235,7 +235,7 @@ test("a print's values are one field, typed, removed, and added by their text", 
   await expect(chart(page)).toContainText("print(1, 2)");
   await expect(field).toHaveCount(1);
   // No button removes or adds a value: the text does.
-  await expect(editor(page).getByTestId("editor-notation").getByRole("button")).toHaveCount(0);
+  await expect(editor(page).getByTestId("editor-lines").getByRole("button")).toHaveCount(0);
   await page.keyboard.press("Backspace");
   await page.keyboard.press("Backspace");
   await expect(chart(page)).toContainText("print(1)");
@@ -447,7 +447,7 @@ test("the editor stays where it is while its list changes, within the canvas", a
   await page.keyboard.press("Enter");
 
   const popup = page.getByRole("dialog");
-  const line = editor(page).getByTestId("editor-notation");
+  const line = editor(page).getByTestId("editor-lines");
   const place = async () => ({
     popup: (await popup.boundingBox())?.y,
     line: (await line.boundingBox())?.y,

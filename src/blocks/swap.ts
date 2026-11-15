@@ -5,6 +5,9 @@ import { createNodeId } from "@/lang/id";
 import { defineStmt } from "./types";
 import { createEmptyDraft } from "./draft";
 
+/** Its notation, which its one editor line writes too (`blocks.md`, Editor lines). */
+const NOTATION = "{a} ↔ {b}";
+
 export const swap = defineStmt<"swap">({
   key: "swap",
   category: "list",
@@ -36,5 +39,6 @@ export const swap = defineStmt<"swap">({
     const [a, b] = [ctx.expr(block.a), ctx.expr(block.b)];
     return [`${a}, ${b} = ${b}, ${a}`];
   },
-  notation: () => "{a} ↔ {b}",
+  notation: () => NOTATION,
+  lines: [{ label: "label", notation: NOTATION }],
 });

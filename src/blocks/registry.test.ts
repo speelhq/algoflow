@@ -98,6 +98,47 @@ describe("registry", () => {
     }
   });
 
+  it("each statement declares the editor's lines as blocks.md, Editor lines, gives them", () => {
+    const rows = [...BLOCK_DEFS.values()].flatMap((def) =>
+      (def.lines ?? []).map((line) => `${def.key} | ${line.label} | ${line.notation}`),
+    );
+    expect(rows).toEqual([
+      "assign | label | {target} ← {value}",
+      "if | line.condition | {cond}",
+      "for | line.start | {var} ← {start}",
+      "for | line.condition | {var} < {stop}",
+      "while | line.condition | {cond}",
+      "print | label | {args}",
+      "expr | label | {expr}",
+      "return | label | {value}",
+      "swap | label | {a} ↔ {b}",
+    ]);
+  });
+
+  it("only a statement declares lines, each label a catalog key, and each field in one line", () => {
+    for (const def of BLOCK_DEFS.values()) {
+      expect(def.lines !== undefined, def.key).toBe(def.shape === "stmt");
+      const labels = (def.lines ?? []).map((line) => `block.${def.key}.${line.label}`);
+      for (const label of labels) expect(keys.has(label), label).toBe(true);
+      // A line key no line declares would name nothing.
+      const lineKeys = [...keys].filter((key) => key.startsWith(`block.${def.key}.line.`));
+      expect(
+        lineKeys.filter((key) => !labels.includes(key)),
+        def.key,
+      ).toEqual([]);
+      const placeholders = (def.lines ?? []).flatMap((line) =>
+        [...line.notation.matchAll(/\{(\w+)\}/g)].map((match) => match[1]),
+      );
+      for (const slot of def.slots) {
+        const edited = slot.role === "expr" || slot.role === "target" || slot.role === "exprs";
+        const times = placeholders.filter((name) => name === slot.name).length;
+        // A for's variable stands in both of its lines, drawn as text.
+        if (def.shape === "stmt" && edited && !isNamedSlot(slot))
+          expect(times, `${def.key}.${slot.name}`).toBe(1);
+      }
+    }
+  });
+
   it("expression blocks declare the value list's entries in the table's order", () => {
     const any = "number,text,truefalse,none,list,dict";
     const rows = [...BLOCK_DEFS.values()].flatMap((def) =>

@@ -34,7 +34,7 @@ export type EditorState = {
    */
   ledDiagnostic: Diagnostic | null;
   /**
-   * The statement a field of whose notation has the keyboard, which the learner hasn't finished
+   * The statement a field of whose lines has the keyboard, which the learner hasn't finished
    * (`chart.md`, Editing on the chart, Diagnostics).
    */
   typing: NodeId | null;

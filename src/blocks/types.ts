@@ -188,6 +188,15 @@ export type Counted = { body: string; init: string; check: string; update: strin
 /** A counted loop's generated chart nodes. */
 export type Generated = "init" | "check" | "update";
 
+// ---------------------------------------------------------------- editor lines
+
+/**
+ * A line of the block editor (`blocks.md`, Editor lines): its label, a catalog key under
+ * `block.<key>.`, the block definition's own `label` or a `line.<line>` of the line's own, and its
+ * notation with `{slot}` placeholders, which writes no keyword of the block.
+ */
+export type EditorLine = { label: "label" | `line.${string}`; notation: string };
+
 // ---------------------------------------------------------------- BlockDef
 
 export type BlockDef = {
@@ -217,6 +226,8 @@ export type BlockDef = {
   python(block: Stmt | Expr, ctx: EmitContext): PyLine[] | string;
   /** The block's notation with `{slot}` placeholders, the same in every locale (Notation). */
   notation(block: Stmt | Expr): string;
+  /** A statement's: the lines of the block editor below its caption line. */
+  lines?: readonly EditorLine[];
   /**
    * Which of a stored block's fields no edit could have written (an operator, a number's text),
    * and why; undefined when its block would make them.
@@ -244,7 +255,9 @@ type TypedExpr<K extends ExprType> = Extract<Expr, { type: K }>;
 
 type Generic = "shape" | "create" | "run" | "python" | "notation" | "text" | "yields" | "locate";
 
-type StmtDef<K extends StmtType> = Omit<BlockDef, Generic> & {
+type StmtDef<K extends StmtType> = Omit<BlockDef, Generic | "lines"> & {
+  /** Every statement declares its lines, none for one with no slot to fill. */
+  lines: readonly EditorLine[];
   create(): TypedStmt<K>;
   run(block: TypedStmt<K>, ctx: RunContext): Generator<Event, Signal, void>;
   python(block: TypedStmt<K>, ctx: EmitContext): PyLine[];

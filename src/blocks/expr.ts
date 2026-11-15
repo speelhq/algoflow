@@ -16,4 +16,5 @@ export const exprStmt = defineStmt<"expr">({
   },
   python: (block, ctx) => [ctx.expr(block.expr)],
   notation: () => "{expr}",
+  lines: [{ label: "label", notation: "{expr}" }],
 });

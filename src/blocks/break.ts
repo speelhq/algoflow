@@ -14,4 +14,6 @@ export const breakStmt = defineStmt<"break">({
   },
   python: () => ["break"],
   notation: () => "break",
+  // No slot to fill, so no line (`blocks.md`, Editor lines).
+  lines: [],
 });

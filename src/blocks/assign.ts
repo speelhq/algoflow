@@ -10,6 +10,9 @@ export function createAssignment(target: Expr, value: Expr): Extract<Stmt, { typ
   return { id: createNodeId(), type: "assign", target, value };
 }
 
+/** Its notation, which its one editor line writes too (`blocks.md`, Editor lines). */
+const NOTATION = "{target} ← {value}";
+
 export const assign = defineStmt<"assign">({
   key: "assign",
   category: "basic",
@@ -25,5 +28,6 @@ export const assign = defineStmt<"assign">({
   },
   python: (block, ctx) => [`${ctx.expr(block.target)} = ${ctx.expr(block.value)}`],
   // The first value and every later one alike: Python has no form of its own for the first.
-  notation: () => "{target} ← {value}",
+  notation: () => NOTATION,
+  lines: [{ label: "label", notation: NOTATION }],
 });

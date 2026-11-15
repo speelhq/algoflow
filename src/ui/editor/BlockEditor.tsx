@@ -1,10 +1,18 @@
-// The block editor: a popover beside the selected block's chart node holding its caption field
-// with `Duplicate` and `Delete`, the block's notation with its slots editable in place (values,
-// targets, and lists of values as value lines), the value list of the focused slot, and the
-// explanation line. Reads slot roles, never a type. The editing state is a session
-// (`session.ts`) that only its transitions change.
+// The block editor: a popover beside the selected block's chart node holding its caption line
+// with `Duplicate` and `Delete`, the block's lines, each a label and its notation with its slots
+// editable in place (values, targets, and lists of values as value lines), the value list of the
+// focused slot, and the explanation line. Reads slot roles, never a type. The editing state is a
+// session (`session.ts`) that only its transitions change.
 import { Copy, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { findChallenge } from "@/challenges";
 import { blockText, t } from "@/i18n/t";
@@ -69,6 +77,9 @@ import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
 
 type Initial = { slot: string | null; insertedCaret: number | null };
 
+/** A line's label, every line's in one column (`editor.md`, Block editor). */
+const LINE_LABEL = "w-16 shrink-0 text-xs text-muted-foreground";
+
 /** Whether a key is pressed with Ctrl, Cmd, Alt, or Shift. */
 const hasModifier = (event: KeyboardEvent) =>
   event.ctrlKey || event.metaKey || event.altKey || event.shiftKey;
@@ -88,6 +99,7 @@ function Body(props: {
   const select = useEditor((s) => s.select);
   const closeEditor = useEditor((s) => s.closeEditor);
   const fields = stmtFields(stmt);
+  const captionId = useId();
   const elements = useRef(new Map<string, HTMLElement | null>());
   const [kept, setSession] = useState(() => {
     const inserted = initial.insertedCaret !== null;
@@ -198,9 +210,9 @@ function Body(props: {
   };
 
   /**
-   * Leaves `field` for the next or previous field of the notation, entered as `entry` says; past the
+   * Leaves `field` for the next or previous field of the lines, entered as `entry` says; past the
    * last field, for the editor itself (`editor.md`, Targets). A transition writes a value into its
-   * own field, which keeps the notation's fields as they are.
+   * own field, which keeps the lines' fields as they are.
    */
   const go = (step: 1 | -1, field: Field | null, entry: Entry): void => {
     const next = field && fieldBeside(fields, field, step);
@@ -223,7 +235,7 @@ function Body(props: {
     else if (then) go(then.go, left.focus, then.entry);
   };
 
-  /** Whether the notation has a field `step` on from the focused one, which ← and → move to. */
+  /** Whether the lines have a field `step` on from the focused one, which ← and → move to. */
   const canMove = (step: 1 | -1) =>
     focus !== null && fieldBeside(fields, focus, step) !== undefined;
 
@@ -263,28 +275,30 @@ function Body(props: {
     );
   };
 
-  // ------------------------------------------------------------ the notation
+  // ------------------------------------------------------------ the lines
 
   const widget = (name: string): ReactNode => {
     const field = fields.find((each) => each.slot === name);
     return field ? lineWidget(field, findFieldValue(stmt, field) ?? null) : null;
   };
 
-  // A counted loop shows its init and its check, one line each, as the chart draws them; a slot
-  // that is no field is drawn as its value.
-  const notation = editedLines(stmt).map((tokens, l) => (
+  // Each line is its label and its notation, a slot that is no field drawn as its value.
+  const lines = editedLines(stmt).map(({ label, tokens }, l) => (
     // oxlint-disable-next-line react/no-array-index-key -- the lines keep their order
-    <div key={l} className="flex flex-wrap items-center gap-1.5">
-      {tokens.map(({ token, drawn }, i) => {
-        if ("text" in token) {
-          const text = token.text.trim();
+    <div key={l} className="flex items-center gap-2">
+      <span className={LINE_LABEL}>{blockText(def.key, label)}</span>
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 font-mono">
+        {tokens.map(({ token, drawn }, i) => {
+          if ("text" in token) {
+            const text = token.text.trim();
+            // oxlint-disable-next-line react/no-array-index-key -- a notation's tokens keep their order
+            return text === "" ? null : <span key={`t${i}`}>{text}</span>;
+          }
+          if (!drawn) return widget(token.placeholder);
           // oxlint-disable-next-line react/no-array-index-key -- a notation's tokens keep their order
-          return text === "" ? null : <span key={`t${i}`}>{text}</span>;
-        }
-        if (!drawn) return widget(token.placeholder);
-        // oxlint-disable-next-line react/no-array-index-key -- a notation's tokens keep their order
-        return <Spans key={`v${i}`} spans={slotSpans(stmt, token.placeholder, program)} />;
-      })}
+          return <Spans key={`v${i}`} spans={slotSpans(stmt, token.placeholder, program)} />;
+        })}
+      </div>
     </div>
   ));
 
@@ -350,7 +364,10 @@ function Body(props: {
         </div>
       )}
       <div className="flex items-center gap-2 border-b p-2.5">
-        <CaptionField stmt={stmt} />
+        <label htmlFor={captionId} className={LINE_LABEL}>
+          {t("editor.caption.label")}
+        </label>
+        <CaptionField id={captionId} stmt={stmt} />
         <Button
           variant="outline"
           size="icon"
@@ -372,20 +389,23 @@ function Body(props: {
           <Trash2 />
         </Button>
       </div>
-      <div
-        className="flex flex-col gap-1.5 border-b p-2.5 font-mono text-[0.95rem]"
-        data-testid="editor-notation"
-        // While a field has the keyboard, the learner hasn't finished the block (`chart.md`,
-        // Editing on the chart, Diagnostics).
-        onFocus={() => setTyping(stmt.id)}
-        onBlur={(event) => {
-          // A window left behind keeps its field's keyboard.
-          const leaving = !event.currentTarget.contains(event.relatedTarget) && document.hasFocus();
-          if (leaving) setTyping(null);
-        }}
-      >
-        {notation}
-      </div>
+      {lines.length > 0 && (
+        <div
+          className="flex flex-col gap-2 border-b p-2.5"
+          data-testid="editor-lines"
+          // While a field has the keyboard, the learner hasn't finished the block (`chart.md`,
+          // Editing on the chart, Diagnostics).
+          onFocus={() => setTyping(stmt.id)}
+          onBlur={(event) => {
+            // A window left behind keeps its field's keyboard.
+            const leaving =
+              !event.currentTarget.contains(event.relatedTarget) && document.hasFocus();
+            if (leaving) setTyping(null);
+          }}
+        >
+          {lines}
+        </div>
+      )}
       {list && <div className="flex h-0 min-h-24 flex-1 flex-col border-b">{list}</div>}
       {/* The popup's description, which a screen reader reads when the editor itself takes the
           keyboard (`editor.md`, Block editor). */}

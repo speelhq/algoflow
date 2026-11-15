@@ -1,5 +1,6 @@
-// A field of the editor's notation is named by the block's label and the slot's name; a
-// counted loop shows its init and its check, its variable, which the application names, as text.
+// The editor's lines are a label and a notation each, as the block definition declares them; a
+// field of the lines is named by the block's label and the slot's name, and a for's variable, which
+// the application names, is drawn as text.
 import { describe, expect, it } from "vitest";
 import { ast } from "@/blocks/testing";
 import { getBlockDef } from "@/blocks/registry";
@@ -34,17 +35,21 @@ describe("fieldLabel", () => {
   });
 });
 
-describe("the notation the editor shows", () => {
-  it("is a counted loop's init and check, its variable drawn as text and its bounds fields", () => {
-    const loop = for_("i", num(1), v("n"), []);
-    const lines = editedLines(loop).map((line) =>
-      line.map(({ token, drawn }) =>
+describe("the lines the editor shows (blocks.md, Editor lines)", () => {
+  /** Each line as its label, then its tokens, a slot drawn as its value marked with `=`. */
+  const readLines = (stmt: Stmt) =>
+    editedLines(stmt).map(({ label, tokens }) => [
+      label,
+      ...tokens.map(({ token, drawn }) =>
         "text" in token ? token.text : `${drawn ? "=" : ""}{${token.placeholder}}`,
       ),
-    );
-    expect(lines).toEqual([
-      ["={var}", " ← ", "{start}"],
-      ["={var}", " < ", "{stop}", "?"],
+    ]);
+
+  it("are a for's start and condition, its variable drawn as text and its bounds fields", () => {
+    const loop = for_("i", num(1), v("n"), []);
+    expect(readLines(loop)).toEqual([
+      ["line.start", "={var}", " ← ", "{start}"],
+      ["line.condition", "={var}", " < ", "{stop}"],
     ]);
     expect(stmtFields(loop)).toEqual([
       { slot: "start", role: "expr" },
@@ -69,9 +74,11 @@ describe("the notation the editor shows", () => {
     expect(fieldText(null)).toBe("");
   });
 
-  it("is the block's notation otherwise, a list of values one field with or without items", () => {
+  it("write no keyword of the block, a list of values one field with or without items", () => {
     const shown = print(v("a"), v("b"));
-    expect(editedLines(shown)).toHaveLength(1);
+    expect(readLines(shown)).toEqual([["label", "{args}"]]);
+    expect(readLines(ret())).toEqual([["label", "{value}"]]);
+    expect(readLines(ast.brk())).toEqual([]);
     expect(stmtFields(shown)).toEqual([{ slot: "args", role: "exprs" }]);
     expect(stmtFields(print())).toEqual([{ slot: "args", role: "exprs" }]);
   });

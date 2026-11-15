@@ -13,6 +13,7 @@ export const returnStmt = defineStmt<"return">({
     return { type: "return", value };
   },
   python: (block, ctx) => [block.value ? `return ${ctx.expr(block.value)}` : "return"],
-  // With no value its slot draws nothing (`return`), and the editor offers `+ value` for it.
+  // With no value its slot draws nothing (`return`).
   notation: () => "return {value}",
+  lines: [{ label: "label", notation: "{value}" }],
 });

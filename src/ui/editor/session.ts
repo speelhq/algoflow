@@ -198,7 +198,7 @@ export function pickRow(session: Session, row: Row, ctx: LineContext): KeyTransi
  * A key the focused value line acts on, which a text field doesn't: ↑ and ↓ move the list's
  * highlight, Enter chooses the highlighted row or else closes the editor, and ← at the start of
  * the text and → at its end, with no text selected, move to the end of the previous field and the
- * start of the next while `moves` says the notation has one (`editor.md`, Value list; Value line,
+ * start of the next while `moves` says the lines have one (`editor.md`, Value list; Value line,
  * Keys). `rows` is the value list shown under the line, and every other key is the field's, Tab
  * included, which the editor moves round its controls (`focus.ts`).
  */

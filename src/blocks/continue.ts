@@ -14,4 +14,6 @@ export const continueStmt = defineStmt<"continue">({
   },
   python: () => ["continue"],
   notation: () => "continue",
+  // No slot to fill, so no line (`blocks.md`, Editor lines).
+  lines: [],
 });

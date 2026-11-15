@@ -29,7 +29,7 @@ import { print } from "./print";
 import { returnStmt } from "./return";
 import { str } from "./str";
 import { swap } from "./swap";
-import { builtinKey, methodKey, type BlockDef, type Slot } from "./types";
+import { builtinKey, methodKey, type BlockDef, type EditorLine, type Slot } from "./types";
 import { unop } from "./unop";
 import { variable } from "./var";
 import { whileStmt } from "./while";
@@ -100,6 +100,13 @@ export function blockNotation(block: Block): string {
   return getBlockDef(registryKey(block)).notation(block);
 }
 
+/** A statement's lines in the block editor (`blocks.md`, Editor lines); throws for an expression. */
+export function getEditorLines(block: Block): readonly EditorLine[] {
+  const { lines } = getBlockDef(registryKey(block));
+  if (!lines) throw new Error(`${registryKey(block)} declares no editor lines`);
+  return lines;
+}
+
 /** Block menu entries of one category, in registration order. */
 export function menuBlockDefs(category: Category): BlockDef[] {
   return ALL.filter((def) => def.category === category && !def.hidden);
@@ -110,6 +117,7 @@ export { createDraft, createEmptyDraft } from "./draft";
 export { createVariable } from "./var";
 export { builtinKey, findBuiltinName, isNamedSlot, methodKey } from "./types";
 export type {
+  EditorLine,
   EmitContext,
   BlockDef,
   NamedSlot,

@@ -222,6 +222,9 @@
       "slot": {
         "cond": "condition"
       },
+      "line": {
+        "condition": "Condition"
+      },
       "help": "Runs the then region when the condition is true, otherwise the else region."
     },
     "for": {
@@ -230,12 +233,19 @@
         "start": "start",
         "stop": "stop"
       },
+      "line": {
+        "start": "Start",
+        "condition": "Condition"
+      },
       "help": "Counts the variable from start up to, but not including, stop."
     },
     "while": {
       "label": "While loop",
       "slot": {
         "cond": "condition"
+      },
+      "line": {
+        "condition": "Condition"
       },
       "help": "Repeats the body as long as the condition stays true."
     },

@@ -30,4 +30,5 @@ export const ifStmt = defineStmt<"if">({
     ...(block.else.length > 0 ? ["else:", ctx.region(block.else)] : []),
   ],
   notation: () => "{cond}",
+  lines: [{ label: "line.condition", notation: "{cond}" }],
 });

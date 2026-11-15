@@ -1,5 +1,5 @@
-// The fields of a statement's notation in the block editor: each value, target, or values slot,
-// edited as one text, in the notation's reading order.
+// The lines of a statement in the block editor and their fields: each value, target, or values
+// slot, edited as one text, in the lines' reading order.
 import { blockText, t } from "@/i18n/t";
 import { parseSlotText } from "@/lang/drafts";
 import type { Expr, Stmt } from "@/lang/types";
@@ -8,20 +8,15 @@ import {
   createDraft,
   createEmptyDraft,
   getBlockDef,
+  getEditorLines,
   isNamedSlot,
   registryKey,
   findSlot,
+  type EditorLine,
   type Slot,
-  blockNotation,
 } from "@/blocks/registry";
 import { unparse } from "@/python/emit";
-import {
-  generatedNotation,
-  notationTokens,
-  SEPARATOR,
-  slotHint,
-  type NotationToken,
-} from "@/ui/chart/text";
+import { notationTokens, SEPARATOR, slotHint, type NotationToken } from "@/ui/chart/text";
 
 /**
  * One field of the lines: a slot of a statement, edited as one text (`editor.md`, Block editor),
@@ -39,7 +34,7 @@ export const isSameField = (a: Field | null, b: Field | null) =>
   a !== null && b !== null && a.slot === b.slot;
 
 /**
- * The field `step` on from `field` in the notation's reading order, which Tab and Shift+Tab move
+ * The field `step` on from `field` in the lines' reading order, which Tab and Shift+Tab move
  * to (`editor.md`, Block editor), or undefined past either end.
  */
 export function fieldBeside(
@@ -60,22 +55,25 @@ export function targetSlot(
   return slot?.role === "target" ? slot : undefined;
 }
 
+/** A line the editor shows: its label's catalog key under the block's, and its notation's tokens. */
+export type EditedLine = {
+  label: EditorLine["label"];
+  tokens: { token: NotationToken; drawn: boolean }[];
+};
+
 /**
- * The lines the editor shows, each as its tokens: a counted loop's init and check (`i ← 1`,
- * `i < n + 1?`), else the block's notation. `drawn` marks a slot drawn as its value rather than
- * as a field: one whose variable the application names (`editor.md`, Block editor).
+ * The lines the editor shows below the caption line, as the block definition declares them
+ * (`blocks.md`, Editor lines). `drawn` marks a slot drawn as its value rather than as a field: one
+ * whose variable the application names (`editor.md`, Block editor).
  */
-export function editedLines(stmt: Stmt): { token: NotationToken; drawn: boolean }[][] {
-  const init = generatedNotation(stmt, "init");
-  const check = generatedNotation(stmt, "check");
-  const notations =
-    init !== undefined && check !== undefined ? [init, check] : [blockNotation(stmt)];
-  return notations.map((notation) =>
-    notationTokens(notation).map((token) => {
+export function editedLines(stmt: Stmt): EditedLine[] {
+  return getEditorLines(stmt).map(({ label, notation }) => ({
+    label,
+    tokens: notationTokens(notation).map((token) => {
       const slot = "placeholder" in token ? findSlot(stmt, token.placeholder) : undefined;
       return { token, drawn: slot !== undefined && isNamedSlot(slot) };
     }),
-  );
+  }));
 }
 
 /**
@@ -84,7 +82,7 @@ export function editedLines(stmt: Stmt): { token: NotationToken; drawn: boolean 
  */
 export function stmtFields(stmt: Stmt): Field[] {
   const out: Field[] = [];
-  for (const { token, drawn } of editedLines(stmt).flat()) {
+  for (const { token, drawn } of editedLines(stmt).flatMap((line) => line.tokens)) {
     if ("text" in token || drawn) continue;
     const slot = findSlot(stmt, token.placeholder);
     if (slot?.role === "expr" && slot.optional)
@@ -96,7 +94,7 @@ export function stmtFields(stmt: Stmt): Field[] {
   return out;
 }
 
-/** A field's accessible name: the block's label and the slot's name (`Set variable, value`). */
+/** A field's accessible name: the block's label and the slot's name (`Assign, value`). */
 export function fieldLabel(stmt: Stmt, field: Field): string {
   const { key } = getBlockDef(registryKey(stmt));
   return t("editor.fieldName", {

@@ -49,7 +49,7 @@ const key = (name: string, shiftKey = false) => ({
   metaKey: false,
 });
 
-/** A notation with a field before and after the focused one. */
+/** Lines with a field before and after the focused one. */
 const movesEitherWay = () => true;
 
 const entry = (label: string): Row => {
