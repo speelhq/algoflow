@@ -28,6 +28,8 @@ type Props = {
   unmatched: Span | null;
   /** A draft's text from its error, underlined once Run or Submit led to it. */
   error: Span | null;
+  /** The field holds the draft Run or Submit led to, which draws its red border. */
+  invalid: boolean;
   /** The text changes; `composing` while an input method composes it. */
   onChange: (line: TextLine, composing: boolean) => void;
   onSelect: (start: number, end: number) => void;
@@ -150,6 +152,7 @@ export const ValueLine = forwardRef<HTMLInputElement, Props>(function ValueLine(
         value={text}
         placeholder={hint}
         aria-label={props.label}
+        aria-invalid={props.invalid || undefined}
         spellCheck={false}
         autoComplete="off"
         data-value-line

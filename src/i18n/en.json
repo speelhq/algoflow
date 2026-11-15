@@ -605,7 +605,7 @@
     "E_RETURN_OUTSIDE": "Return only works inside a function",
     "E_ARITY": "{name} needs {expected} values (got {got})",
     "E_UNKNOWN_CALL": "{name} was not found",
-    "E_EMPTY_SLOT": "{slot} is empty",
+    "E_EMPTY_SLOT": "Fill in this field.",
     "E_DUPLICATE_ID": "Two blocks or functions share the same id",
     "E_PARSE_SYNTAX": "Syntax error at character {position}",
     "E_PARSE_CHAIN": "Write a < b < c as a < b and b < c",

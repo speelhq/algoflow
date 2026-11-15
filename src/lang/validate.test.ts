@@ -243,26 +243,18 @@ describe("validate (language.md, Validation)", () => {
     expect(codes(program([exprStmt(parsed)]))).toEqual(["E_UNKNOWN_CALL"]);
   });
 
-  it("E_EMPTY_SLOT: a draft with no text, at the draft, naming the slot", () => {
+  it("E_EMPTY_SLOT: a draft with no text, at the draft, naming no slot", () => {
     const hole = empty();
     expect(validate(program([assign("x", hole)]))).toEqual([
-      { nodeId: hole.id, code: "E_EMPTY_SLOT", params: { slot: "value" } },
+      { nodeId: hole.id, code: "E_EMPTY_SLOT", params: {} },
     ]);
-    expect(validate(program([if_(empty(), [])]))[0]).toMatchObject({
-      code: "E_EMPTY_SLOT",
-      params: { slot: "cond" },
-    });
-    expect(validate(program([ast.forTo(empty(), num(0), num(1), [])]))[0]).toMatchObject({
-      code: "E_EMPTY_SLOT",
-      params: { slot: "var" },
-    });
+    expect(codes(program([if_(empty(), [])]))).toEqual(["E_EMPTY_SLOT"]);
+    expect(codes(program([ast.forTo(empty(), num(0), num(1), [])]))).toContain("E_EMPTY_SLOT");
     const unset = empty();
     expect(validate(program([ast.assignTo(unset, num(1))]))).toEqual([
-      { nodeId: unset.id, code: "E_EMPTY_SLOT", params: { slot: "target" } },
+      { nodeId: unset.id, code: "E_EMPTY_SLOT", params: {} },
     ]);
-    expect(validate(program([print(num(1), empty())]))).toEqual([
-      expect.objectContaining({ code: "E_EMPTY_SLOT", params: { slot: "args" } }),
-    ]);
+    expect(codes(program([print(num(1), empty())]))).toEqual(["E_EMPTY_SLOT"]);
     expect(codes(program([assign("x", bin("+", num(1), num(2))), print()]))).toEqual([]);
   });
 

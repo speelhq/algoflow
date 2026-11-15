@@ -30,6 +30,20 @@ describe("the selection", () => {
     expect(useEditor.getState().selectedId).toBeNull();
   });
 
+  it("keeps what Run led to across selections, until Run leads anew or a page opens", () => {
+    useProgram.setState({ program: program([shown], { functions: [fn] }) });
+    const led = createDiagnostic(value.id);
+    useEditor.getState().lead(body.id, led);
+    useEditor.getState().select(null);
+    useEditor.getState().select(shown.id);
+    expect(useEditor.getState().ledDiagnostic).toBe(led);
+    const next = createDiagnostic(fn.id);
+    useEditor.getState().lead(null, next);
+    expect(useEditor.getState()).toMatchObject({ selectedId: null, ledDiagnostic: next });
+    useEditor.getState().open("problem");
+    expect(useEditor.getState().ledDiagnostic).toBeNull();
+  });
+
   it("clears when an edit or an undo removes the selected statement", () => {
     useProgram.setState({ program: program([shown], { functions: [fn] }) });
     useEditor.getState().select(body.id);

@@ -29,8 +29,9 @@ export type EditorState = {
   hoveredId: NodeId | null;
   solution: boolean;
   /**
-   * The diagnostic `Run` or `Submit` led to (`run.md`, Run bar, Starting a run), shown in its
-   * owner's editor until the selection changes.
+   * The diagnostic `Run` or `Submit` last led to (`run.md`, Run bar, Starting a run), shown in its
+   * owner's editor while the program still has it, however often the editor closes and opens again
+   * (`editor.md`, Value line, Drafts).
    */
   ledDiagnostic: Diagnostic | null;
   /**
@@ -47,8 +48,11 @@ export type EditorState = {
   setTyping: (id: NodeId | null) => void;
   setHovered: (id: NodeId | null) => void;
   showSolution: (shown: boolean) => void;
-  /** Selects `owner`, the statement holding the diagnostic, and shows its message. */
-  lead: (owner: NodeId, diagnostic: Diagnostic) => void;
+  /**
+   * `Run` or `Submit` leads to `diagnostic`: selects `owner`, the statement holding it, and opens
+   * its editor, or selects nothing for a function's, whose editor isn't built.
+   */
+  lead: (owner: NodeId | null, diagnostic: Diagnostic) => void;
   /** A page opens on its first tab, with nothing selected and its own chart shown. */
   open: (tab: PanelTab) => void;
 };
@@ -79,7 +83,6 @@ export const useEditor = create<EditorState>()((set) => ({
       slot: slot ?? null,
       insertedCaret: null,
       editing: id !== null && edit,
-      ledDiagnostic: null,
     }),
   selectInserted: (id, caret) =>
     set({
@@ -87,7 +90,6 @@ export const useEditor = create<EditorState>()((set) => ({
       slot: null,
       insertedCaret: caret,
       editing: true,
-      ledDiagnostic: null,
     }),
   closeEditor: () => set({ editing: false }),
   setTyping: (id) => set({ typing: id }),
@@ -95,10 +97,10 @@ export const useEditor = create<EditorState>()((set) => ({
   showSolution: (shown) => set({ solution: shown }),
   lead: (owner, diagnostic) =>
     set({
-      selectedId: requireStatement(owner),
+      selectedId: owner === null ? null : requireStatement(owner),
       slot: null,
       insertedCaret: null,
-      editing: true,
+      editing: owner !== null,
       ledDiagnostic: diagnostic,
       solution: false,
     }),

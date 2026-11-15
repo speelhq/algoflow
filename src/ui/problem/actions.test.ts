@@ -32,7 +32,8 @@ describe("Run with diagnostics", () => {
     useProgram.setState({ program: program([shown], { functions: [twice] }) });
     useEditor.getState().select(shown.id);
     startRun();
-    expect(useEditor.getState()).toMatchObject({ selectedId: null, ledDiagnostic: null });
+    expect(useEditor.getState()).toMatchObject({ selectedId: null, editing: false });
+    expect(useEditor.getState().ledDiagnostic?.code).toBe("E_DUPLICATE_NAME");
     expect(useRun.getState().status).toBe("idle");
     clickChartNode(twice.id);
     expect(useEditor.getState().selectedId).toBeNull();

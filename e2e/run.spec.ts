@@ -195,14 +195,25 @@ test("Run with a diagnostic leads to its node instead of running", async ({ page
   await seedProgram(page, "fizzbuzz", createStoredProgram([assign]));
   await page.goto("/#/p/fizzbuzz");
   await page.getByRole("button", { name: "▶ Run" }).click();
-  // A draft's message is on the explanation line (`editor.md`, Value line, Drafts).
+  // A draft's message is on the explanation line, and its field draws a red border (`editor.md`,
+  // Value line, Drafts).
   const explanation = page.getByTestId("block-editor").getByTestId("explanation");
-  await expect(explanation).toContainText("is empty");
-  // Once the slot is filled the message is gone.
-  // The value's line, after the target's.
-  await page.getByTestId("block-editor").locator("[data-value-line]").last().click();
+  await expect(explanation).toContainText("Fill in this field.");
+  // The value's line, after the target's; the target's draws no red border.
+  const fields = page.getByTestId("block-editor").locator("[data-value-line]");
+  await expect(fields.last()).toHaveAttribute("aria-invalid", "true");
+  await expect(fields.first()).not.toHaveAttribute("aria-invalid");
+  // They stay while the editor closes and opens again.
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("block-editor")).toHaveCount(0);
+  await page.locator('[data-chart-node="asg-empty-01"]').click({ position: { x: 8, y: 20 } });
+  await expect(fields.last()).toHaveAttribute("aria-invalid", "true");
+  await expect(explanation).toContainText("Fill in this field.");
+  // Once the slot is filled the message and the red border are gone.
+  await fields.last().click();
   await page.keyboard.type("1");
-  await expect(explanation).not.toContainText("is empty");
+  await expect(explanation).not.toContainText("Fill in this field.");
+  await expect(fields.last()).not.toHaveAttribute("aria-invalid");
   await expect(page.locator('[data-chart-node="asg-empty-01"]')).toHaveAttribute(
     "data-selected",
     "true",

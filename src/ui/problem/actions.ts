@@ -30,8 +30,7 @@ function prepareRun(): boolean {
   if (!first) return true;
   const owner = getOwner(program, first.nodeId);
   // A function's diagnostic belongs to the function's editor, which is not built yet.
-  if (isStatement(program, owner)) editor.lead(owner, first);
-  else editor.select(null);
+  editor.lead(isStatement(program, owner) ? owner : null, first);
   return false;
 }
 

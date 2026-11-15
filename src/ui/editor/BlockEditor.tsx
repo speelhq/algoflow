@@ -264,6 +264,7 @@ function Body(props: {
         label={fieldLabel(stmt, field)}
         unmatched={shown ? unmatched : null}
         error={led ? { start: draftError.from, end: text.length } : null}
+        invalid={led}
         onKey={onValueKey}
         onChange={(typed, composing) => applyTransition(changeText(session, typed, composing))}
         onSelect={(start, end) => setSession((s) => selectText(s, start, end))}
