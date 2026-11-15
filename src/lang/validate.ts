@@ -112,9 +112,9 @@ class Collector {
     }
   }
 
-  private control({ stmt, routine, inLoop }: StatementScope): void {
+  private control({ stmt, routine, loops }: StatementScope): void {
     const { requires } = getBlockDef(registryKey(stmt));
-    if (requires === "loop" && !inLoop) this.report(stmt.id, "E_BREAK_OUTSIDE");
+    if (requires === "loop" && loops.length === 0) this.report(stmt.id, "E_BREAK_OUTSIDE");
     if (requires === "function" && routine === "main") this.report(stmt.id, "E_RETURN_OUTSIDE");
   }
 

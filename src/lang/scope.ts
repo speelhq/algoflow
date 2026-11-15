@@ -1,7 +1,7 @@
 // Where each statement sits and what the scope rules give it (`language.md`, Scope, Visibility;
 // Declaring a name before a compound statement), read from a program's structure: the variables
-// each statement declares, the variables visible at each statement and what declares them, and
-// whether a loop or a function holds a statement or a place.
+// each statement declares, the variables visible at each statement and what declares them, the
+// loops that hold a statement, and whether a loop or a function holds a place.
 // Registry-driven: slots, `loop`, and regions, never a type.
 import { getBlockDef, registryKey } from "@/blocks/registry";
 import type {
@@ -83,21 +83,26 @@ export function isVisible(list: VisibleList, name: Name): boolean {
 
 /**
  * Where a statement sits and what the scope rules give its slots (`language.md`, Scope): its
- * routine, whether a loop's body holds it at any depth, the variables visible there, and each name
- * first declared inside an earlier compound statement around it, with that statement, which
- * `E_DECLARE_FIRST` names when no visible variable has the name.
+ * routine, the loops whose bodies hold it at any depth, outermost first, the variables visible
+ * there, and each name first declared inside an earlier compound statement around it, with that
+ * statement, which `E_DECLARE_FIRST` names when no visible variable has the name.
  */
 export type StatementScope = {
   stmt: Stmt;
   routine: Routine;
-  inLoop: boolean;
+  loops: readonly Stmt[];
   visible: VisibleList;
   declaredInside: ReadonlyMap<Name, NodeId>;
 };
 
-/** Whether a loop's body holds the regions of `holder`, which a loop's body holds when `inLoop`. */
-function isRegionInLoop(holder: Stmt, inLoop: boolean): boolean {
-  return inLoop || getBlockDef(registryKey(holder)).loop === true;
+/** Whether `stmt` is a loop: its body regions are loop bodies. */
+export function isLoop(stmt: Stmt): boolean {
+  return getBlockDef(registryKey(stmt)).loop === true;
+}
+
+/** The loops whose bodies hold the regions of `holder`, which the bodies of `loops` hold. */
+function loopsInside(holder: Stmt, loops: readonly Stmt[]): readonly Stmt[] {
+  return isLoop(holder) ? [...loops, holder] : loops;
 }
 
 /**
@@ -118,9 +123,9 @@ function walkScopes(
       if (!isVisible(visible, name)) declared.add(name);
       visible = { first: { name, declarer: stmt.id }, rest: visible };
     }
-    const inLoop = isRegionInLoop(stmt, around.inLoop);
+    const loops = loopsInside(stmt, around.loops);
     for (const region of bodyRegions(stmt)) {
-      const inside = { ...around, inLoop, visible, declaredInside };
+      const inside = { ...around, loops, visible, declaredInside };
       for (const name of walkScopes(region.stmts, inside, out)) {
         if (isVisible(visible, name)) continue;
         declared.add(name);
@@ -153,7 +158,7 @@ export function statementScopes(program: Program): readonly StatementScope[] {
     /** Walks a routine's statements, which see `declared`, each declared by `routine`. */
     const walkRoutine = (stmts: Stmt[], routine: Routine, declared: readonly Name[]) => {
       const visible = createVisibleList(declared, routine);
-      walkScopes(stmts, { routine, inLoop: false, visible, declaredInside: new Map() }, made);
+      walkScopes(stmts, { routine, loops: [], visible, declaredInside: new Map() }, made);
     };
     for (const fn of program.functions) walkRoutine(fn.body, fn.id, fn.params);
     walkRoutine(
@@ -266,5 +271,5 @@ export function placeContext(program: Program, place: Place): { loop: boolean; f
   }
   const parent = findScope(program, place.parent);
   if (!parent) return { loop: false, fn: false };
-  return { loop: isRegionInLoop(parent.stmt, parent.inLoop), fn: parent.routine !== "main" };
+  return { loop: isLoop(parent.stmt) || parent.loops.length > 0, fn: parent.routine !== "main" };
 }

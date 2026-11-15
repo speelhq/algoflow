@@ -153,19 +153,19 @@ describe("scope", () => {
     expect(scopesOf(p, read).map(({ visible }) => isVisible(visible, "x"))).toEqual([false, true]);
   });
 
-  it("says whether a loop holds each statement, and in which routine it is", () => {
+  it("gives the loops that hold each statement, outermost first, and its routine", () => {
     const inner = print(v("i"));
     const branch = if_(v("i"), [inner]);
     const loop = for_("i", num(0), num(3), [branch]);
     const body = ret(num(1));
     const fn = { id: "fn0000000001", name: "f", params: [], body: [body] };
     const p = program([loop], { functions: [fn] });
-    const sits = (stmt: Stmt) => scopesOf(p, stmt).map(({ routine, inLoop }) => [routine, inLoop]);
+    const sits = (stmt: Stmt) => scopesOf(p, stmt).map(({ routine, loops }) => [routine, loops]);
     expect([sits(loop), sits(branch), sits(inner), sits(body)]).toEqual([
-      [["main", false]],
-      [["main", true]],
-      [["main", true]],
-      [[fn.id, false]],
+      [["main", []]],
+      [["main", [loop]]],
+      [["main", [loop]]],
+      [[fn.id, []]],
     ]);
   });
 

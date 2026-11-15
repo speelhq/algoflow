@@ -28,7 +28,7 @@ tests.
   heap (`data.ts`). `validate()` returns `Diagnostic[]` and runs after every
   edit and before every run. `walk.ts` traverses blocks by their slots.
   `scope.ts` walks a program's statements once and
-  says where each sits: its routine, whether a loop holds it, and the
+  says where each sits: its routine, the loops that hold it, and the
   variables visible there with what declares each (`language.md`, Scope,
   Visibility). Validation, the value list, and the block menu read that
   walk, and so does the one index of every block and function with its
