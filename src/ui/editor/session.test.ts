@@ -119,6 +119,19 @@ describe("changing the text (editor.md, Value line)", () => {
     expect(cleared.edits[0]?.value).toMatchObject({ type: "draft", text: "" });
   });
 
+  it("takes an optional slot's value out when its field has no text, and opens it with none", () => {
+    const optional: Field = { slot: "value", role: "expr", optional: true };
+    const open = openSession(ast.ret(num(1)), optional, null);
+    const cleared = typeText(open, "");
+    expect(cleared.edits).toEqual([{ field: optional, value: null }]);
+    expect(typeText(cleared.session, "").edits).toEqual([]);
+    const none = openSession(ast.ret(), optional, null);
+    expect(none).toMatchObject({ focus: optional, line: { text: "", start: 0, end: 0 } });
+    expect(typeText(none, "x").edits[0]?.value).toMatchObject({ type: "var", name: "x" });
+    // An undo that takes the value out keeps the field, which then has no text.
+    expect(followStatement(open, ast.ret()).line).toEqual({ text: "", start: 0, end: 0 });
+  });
+
   it("writes nothing when the text writes the value it already holds", () => {
     const first = typeText(openEmptyField(), "x+1");
     expect(typeText(first.session, "x + 1").edits).toEqual([]);

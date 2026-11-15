@@ -194,6 +194,32 @@ test("the editor is placed by its chart node without a control on it", async ({ 
   ).toHaveCount(0);
 });
 
+test("a return's value field stays with or without a value, and no text takes the value out", async ({
+  page,
+}) => {
+  await seedProgress(page, {});
+  // A return outside a function reports E_RETURN_OUTSIDE, and its editor still edits it.
+  const back = {
+    id: "ret-retn-001",
+    type: "return",
+    value: { id: "ret-valu-001", type: "num", value: 1, float: false, raw: "1" },
+  };
+  await seedProgram(page, "tutorial", createStoredProgram([back]));
+  await page.goto("/#/p/tutorial");
+  await page.locator('[data-chart-node="ret-retn-001"]').click({ position: { x: 8, y: 20 } });
+  const field = editor(page).locator("[data-value-line]");
+  await expect(field).toHaveValue("1");
+  await field.click();
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.press("Backspace");
+  await expect(field).toHaveValue("");
+  await expect(field).toHaveAttribute("placeholder", "optional");
+  await expect(chart(page)).not.toContainText("return 1");
+  await expect(chart(page)).toContainText("return");
+  await keys(page, "2");
+  await expect(chart(page)).toContainText("return 2");
+});
+
 test("a print's values are one field, typed, removed, and added by their text", async ({
   page,
 }) => {
@@ -209,7 +235,7 @@ test("a print's values are one field, typed, removed, and added by their text", 
   await expect(chart(page)).toContainText("print(1, 2)");
   await expect(field).toHaveCount(1);
   // No button removes or adds a value: the text does.
-  await expect(editor(page).getByRole("button", { name: "+ value" })).toHaveCount(0);
+  await expect(editor(page).getByTestId("editor-notation").getByRole("button")).toHaveCount(0);
   await page.keyboard.press("Backspace");
   await page.keyboard.press("Backspace");
   await expect(chart(page)).toContainText("print(1)");

@@ -8,7 +8,7 @@ import type { LineContext, Row } from "./choices";
 import {
   fieldDraft,
   fieldText,
-  parseFieldText,
+  parseFieldValue,
   findFieldValue,
   type Field,
   type FieldValue,
@@ -18,14 +18,17 @@ export type Session = {
   focus: Field | null;
   /** The focused field's text, as the learner typed it, and its selection. */
   line: TextLine | null;
-  /** The value the focused field holds: as it opened, or as its text last wrote it. */
+  /**
+   * The value the focused field holds: as it opened, or as its text last wrote it; null while an
+   * optional slot holds none.
+   */
   fieldValue: FieldValue | null;
   highlight: number | null;
   all: boolean;
 };
 
-/** A value written into a field. */
-export type Edit = { field: Field; value: FieldValue };
+/** A value written into a field, or null to take an optional slot's value out. */
+export type Edit = { field: Field; value: FieldValue | null };
 
 /** A transition's result: the next session and the values it writes, in order. */
 export type Transition = { session: Session; edits: Edit[] };
@@ -49,7 +52,7 @@ function isSameValue(a: FieldValue | null, b: FieldValue | null): boolean {
  * menu has just inserted, with the caret at `insertedCaret`; a draft with the caret at the end of its
  * text; any other value with its text selected.
  */
-function openedLine(value: FieldValue, insertedCaret: number | null): TextLine {
+function openedLine(value: FieldValue | null, insertedCaret: number | null): TextLine {
   const text = fieldText(value);
   if (insertedCaret !== null) {
     const at = Math.min(insertedCaret, text.length);
@@ -72,10 +75,10 @@ export const NO_FIELD: Session = {
 function sessionOn(
   stmt: Stmt,
   field: Field | null,
-  line: (value: FieldValue) => TextLine,
+  line: (value: FieldValue | null) => TextLine,
 ): Session {
-  const value = field ? findFieldValue(stmt, field) : undefined;
-  if (!field || !value) return NO_FIELD;
+  if (!field) return NO_FIELD;
+  const value = findFieldValue(stmt, field) ?? null;
   return { ...NO_FIELD, focus: field, line: line(value), fieldValue: value };
 }
 
@@ -114,9 +117,6 @@ export function followStatement(session: Session, stmt: Stmt): Session {
   if (!focus) return session;
   const value = findFieldValue(stmt, focus) ?? null;
   if (isSameValue(value, fieldValue)) return session;
-  // A field the statement no longer has (an optional value taken out, by an undo) leaves the
-  // keyboard.
-  if (!value) return NO_FIELD;
   const text = fieldText(value);
   return { ...session, line: { text, start: text.length, end: text.length }, fieldValue: value };
 }
@@ -130,7 +130,7 @@ export function changeText(session: Session, typed: TextLine, composing: boolean
   if (!focus) return withoutEdits(session);
   const next: Session = { ...session, line: typed, highlight: null };
   if (composing) return withoutEdits(next);
-  const value = parseFieldText(typed.text, focus.role);
+  const value = parseFieldValue(typed.text, focus);
   if (isSameValue(value, fieldValue)) return withoutEdits(next);
   return { session: { ...next, fieldValue: value }, edits: [{ field: focus, value }] };
 }

@@ -24,10 +24,11 @@ import {
 } from "@/ui/chart/text";
 
 /**
- * One field of the notation: a slot of a statement, edited as one text (`editor.md`, Block
- * editor), whose role says how its text is read.
+ * One field of the lines: a slot of a statement, edited as one text (`editor.md`, Block editor),
+ * whose role says how its text is read; `optional` as its slot declares it, which then holds no
+ * value while the field has no text.
  */
-export type Field = { slot: string; role: ExprRole };
+export type Field = { slot: string; role: ExprRole; optional?: true };
 
 /** What a field holds: a value or a target, or the items of an `exprs` slot. */
 export type FieldValue = Expr | Expr[];
@@ -78,17 +79,19 @@ export function editedLines(stmt: Stmt): { token: NotationToken; drawn: boolean 
 }
 
 /**
- * The fields of the notation, in its reading order. An optional slot that holds no value is no
- * field, because `+ value` gives it one.
+ * The fields of the lines, in their reading order, an optional slot's whether it holds a value or
+ * not (`editor.md`, Block editor).
  */
 export function stmtFields(stmt: Stmt): Field[] {
   const out: Field[] = [];
   for (const { token, drawn } of editedLines(stmt).flat()) {
     if ("text" in token || drawn) continue;
     const slot = findSlot(stmt, token.placeholder);
-    if (slot?.role !== "expr" && slot?.role !== "target" && slot?.role !== "exprs") continue;
-    const field = { slot: slot.name, role: slot.role };
-    if (findFieldValue(stmt, field) !== undefined) out.push(field);
+    if (slot?.role === "expr" && slot.optional)
+      out.push({ slot: slot.name, role: "expr", optional: true });
+    else if (slot?.role === "expr" || slot?.role === "target" || slot?.role === "exprs") {
+      out.push({ slot: slot.name, role: slot.role });
+    }
   }
   return out;
 }
@@ -109,15 +112,18 @@ export function oneLine(text: string): string {
 
 /**
  * The text a field shows for its value: a draft's text as typed, or the value as the emitter
- * writes it, and an `exprs` slot's items separated by commas (`editor.md`, Value line).
+ * writes it, an `exprs` slot's items separated by commas, and no text for an optional slot's no
+ * value (`editor.md`, Value line).
  */
-export function fieldText(value: FieldValue): string {
+export function fieldText(value: FieldValue | null): string {
+  if (value === null) return "";
   if (Array.isArray(value)) return value.map(fieldText).join(SEPARATOR);
   return draftText(value) ?? unparse(value);
 }
 
 /** The draft a field holds: its value, or the only item of an `exprs` slot, when it is one. */
-export function fieldDraft(value: FieldValue): Expr | undefined {
+export function fieldDraft(value: FieldValue | null): Expr | undefined {
+  if (value === null) return undefined;
   return (Array.isArray(value) ? value : [value]).find((each) => draftText(each) !== undefined);
 }
 
@@ -137,6 +143,14 @@ export function parseFieldText(text: string, role: ExprRole): FieldValue {
   }
   if (text === "") return createEmptyDraft();
   return "value" in read && !Array.isArray(read.value) ? read.value : createDraft(text);
+}
+
+/**
+ * The value that a field's text writes (`parseFieldText`), or null, no value, for an optional
+ * slot's field with no text (`editor.md`, Block editor).
+ */
+export function parseFieldValue(text: string, field: Field): FieldValue | null {
+  return field.optional && text === "" ? null : parseFieldText(text, field.role);
 }
 
 /** The word an optional slot's field shows while it has no text, the same in every locale. */

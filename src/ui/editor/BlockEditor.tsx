@@ -1,22 +1,22 @@
 // The block editor: a popover beside the selected block's chart node holding its caption field
 // with `Duplicate` and `Delete`, the block's notation with its slots editable in place (values,
-// targets, and lists of values as value lines, an optional slot with no value as `+ value`), the
-// value list of the focused slot, and the explanation line. Reads slot roles, never a type. The
-// editing state is a session (`session.ts`) that only its transitions change.
+// targets, and lists of values as value lines), the value list of the focused slot, and the
+// explanation line. Reads slot roles, never a type. The editing state is a session
+// (`session.ts`) that only its transitions change.
 import { Copy, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { findChallenge } from "@/challenges";
 import { blockText, t } from "@/i18n/t";
-import { duplicateStmt, removeStmt, setExpr } from "@/lang/edit";
+import { duplicateStmt, removeExpr, removeStmt, setExpr } from "@/lang/edit";
 import { variableKinds } from "@/lang/kinds";
 import { blocksById, findVisibleNames, getHoldingRoutine } from "@/lang/scope";
 import type { NodeId, Program, Stmt } from "@/lang/types";
 import { cn } from "@/lib/utils";
-import { createEmptyDraft, getBlockDef, registryKey } from "@/blocks/registry";
+import { getBlockDef, registryKey } from "@/blocks/registry";
 import { useEditor } from "@/store/editor";
 import { useProgram } from "@/store/program";
-import { placeholderValue, slotSpans } from "@/ui/chart/text";
+import { slotSpans } from "@/ui/chart/text";
 import { Button } from "@/ui/primitives/button";
 import { Popover } from "@/ui/primitives/popover";
 import { DiagnosticMessage, editorDiagnostics, ledDraft } from "./diagnostics";
@@ -63,7 +63,6 @@ import {
   type Session,
   type Transition,
 } from "./session";
-import { AddValue } from "./slots";
 import { Spans } from "./Spans";
 import { ValueLine } from "./ValueLine";
 import { EDITOR_GAP, EDITOR_HEIGHT, EDITOR_WIDTH } from "./size";
@@ -181,7 +180,13 @@ function Body(props: {
   /** Writes a transition's values into the program and keeps the session it leaves. */
   const applyTransition = (transition: Transition): Session => {
     for (const { field, value } of transition.edits) {
-      applyTyped((p) => setExpr(p, stmt.id, field.slot, value), `${stmt.id}:${field.slot}`);
+      applyTyped(
+        (p) =>
+          value === null
+            ? removeExpr(p, stmt.id, field.slot)
+            : setExpr(p, stmt.id, field.slot, value),
+        `${stmt.id}:${field.slot}`,
+      );
     }
     setSession(transition.session);
     return transition.session;
@@ -201,13 +206,6 @@ function Body(props: {
     const next = field && fieldBeside(fields, field, step);
     if (next) enter(next, entry);
     else editor?.focus();
-  };
-
-  /** `+ value` gives an optional slot an empty slot, whose field takes the keyboard. */
-  const addValue = (slot: string) => {
-    if (!apply((p) => setExpr(p, stmt.id, slot, createEmptyDraft()))) return;
-    const now = findCurrentStmt() ?? stmt;
-    enter(stmtFields(now).find((field) => field.slot === slot) ?? null, "tab");
   };
 
   // ------------------------------------------------------------ the value line
@@ -240,7 +238,7 @@ function Body(props: {
     elements.current.set(field.slot, element);
   };
 
-  const lineWidget = (field: Field, value: FieldValue): ReactNode => {
+  const lineWidget = (field: Field, value: FieldValue | null): ReactNode => {
     const shown = isSameField(focus, field) ? line : null;
     const text = shown ? shown.text : fieldText(value);
     const led = draftError !== undefined && fieldDraft(value)?.id === draftError.draft;
@@ -269,12 +267,7 @@ function Body(props: {
 
   const widget = (name: string): ReactNode => {
     const field = fields.find((each) => each.slot === name);
-    const value = field && findFieldValue(stmt, field);
-    if (field && value) return lineWidget(field, value);
-    // An optional slot that holds no value is no field (`stmtFields`).
-    return placeholderValue(stmt, name)?.role === "expr" ? (
-      <AddValue key={name} onAdd={() => addValue(name)} />
-    ) : null;
+    return field ? lineWidget(field, findFieldValue(stmt, field) ?? null) : null;
   };
 
   // A counted loop shows its init and its check, one line each, as the chart draws them; a slot

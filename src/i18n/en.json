@@ -493,7 +493,6 @@
     "label": "Edit block",
     "noItems": "Nothing matches",
     "inText": "Inside a text. End it with its quote to choose a value.",
-    "addValue": "+ value",
     "duplicate": "Duplicate",
     "delete": "Delete",
     "caption": {

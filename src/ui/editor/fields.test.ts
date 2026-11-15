@@ -15,6 +15,7 @@ import {
   startField,
   targetSlot,
   parseFieldText,
+  parseFieldValue,
   findFieldValue,
 } from "./fields";
 
@@ -60,12 +61,12 @@ describe("the notation the editor shows", () => {
     expect(fieldBeside(fields, first!, -1)).toBeUndefined();
   });
 
-  it("keeps a return's value slot with no value, which the editor offers as `+ value`", () => {
-    const tokens = editedLines(ret()).flat();
-    expect(
-      tokens.some(({ token }) => "placeholder" in token && token.placeholder === "value"),
-    ).toBe(true);
-    expect(stmtFields(ret())).toEqual([]);
+  it("draws a return's value field whether the return holds a value or not", () => {
+    const field = { slot: "value", role: "expr", optional: true } as const;
+    expect(stmtFields(ret())).toEqual([field]);
+    expect(stmtFields(ret(num(1)))).toEqual([field]);
+    expect(findFieldValue(ret(), field)).toBeUndefined();
+    expect(fieldText(null)).toBe("");
   });
 
   it("is the block's notation otherwise, a list of values one field with or without items", () => {
@@ -145,6 +146,16 @@ describe("a value line's text (editor.md, Value line)", () => {
     expect(parseFieldText("", "exprs")).toEqual([]);
     expect(parseFieldText("x, y z", "exprs")).toMatchObject([{ type: "draft", text: "x, y z" }]);
     expect(parseFieldText("x,", "exprs")).toMatchObject([{ type: "draft", text: "x," }]);
+  });
+
+  it("reads an optional slot's field with no text as no value, and any other field's as a draft", () => {
+    const optional = { slot: "value", role: "expr", optional: true } as const;
+    expect(parseFieldValue("", optional)).toBeNull();
+    expect(parseFieldValue("x", optional)).toMatchObject({ type: "var", name: "x" });
+    expect(parseFieldValue("", { slot: "value", role: "expr" })).toMatchObject({
+      type: "draft",
+      text: "",
+    });
   });
 
   it("shows its slot's hint with no text, or `optional` for an optional slot", () => {
