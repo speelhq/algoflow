@@ -35,7 +35,10 @@ class Collector {
   /** Functions whose own name a diagnostic refuses: no call can name them. */
   readonly refusedDefinitions = new Set<NodeId>();
 
-  /** The names of each routine's loop variables, which no other variable of it may take. */
+  /**
+   * The names of each routine's loop variables, which no other variable of it and no function may
+   * take.
+   */
   private readonly loopNames = new Map<Routine, Set<Name>>();
 
   constructor(private readonly program: Program) {
@@ -50,6 +53,11 @@ class Collector {
   /** Whether a loop of `routine` has a variable named `name`. */
   private hasLoopName(routine: Routine, name: Name): boolean {
     return this.loopNames.get(routine)?.has(name) === true;
+  }
+
+  /** Whether a loop of any routine has a variable named `name`, which no function may take. */
+  private hasAnyLoopName(name: Name): boolean {
+    return [...this.loopNames.values()].some((names) => names.has(name));
   }
 
   report(
@@ -81,8 +89,13 @@ class Collector {
 
   declarations(): void {
     const taken = new Set<Name>(this.program.inputs.map((input) => input.name));
+    // A function that takes a loop variable's name reports it, because the learner names the
+    // function and can't rename the loop's variable (`language.md`, Scope, Names a definition
+    // can't take).
     const claim = (name: Name, nodeId: NodeId) => {
-      if (taken.has(name) || isBuiltinName(name)) this.refuseName(nodeId, "E_DUPLICATE_NAME", name);
+      if (taken.has(name) || isBuiltinName(name) || this.hasAnyLoopName(name)) {
+        this.refuseName(nodeId, "E_DUPLICATE_NAME", name);
+      }
       taken.add(name);
     };
     for (const fn of this.program.functions) {
@@ -110,17 +123,20 @@ class Collector {
       this.reads(scope);
       this.control(scope);
       for (const { name } of declaredBy(stmt)) {
-        // A loop's variable and any other variable keep apart (`language.md`, Scope, Names a
-        // definition can't take).
-        const shared = isLoop(stmt)
-          ? this.isLoopNameTaken(scope, name)
-          : this.takesLoopName(scope, name);
         if (!isValidName(name)) this.report(stmt.id, "E_BAD_NAME", { name });
-        else if (isDefinitionName(this.program, name) || shared) {
-          this.report(stmt.id, "E_DUPLICATE_NAME", { name });
-        }
+        else if (this.isNameTaken(scope, name)) this.report(stmt.id, "E_DUPLICATE_NAME", { name });
       }
     }
+  }
+
+  /**
+   * Whether the variable `name` that a statement declares takes a name that it can't (`language.md`,
+   * Scope, Names a definition can't take). A loop's variable and any other variable keep apart, and
+   * a loop's variable leaves a function of its name to report it (`declarations()`).
+   */
+  private isNameTaken(scope: StatementScope, name: Name): boolean {
+    if (isLoop(scope.stmt)) return isBuiltinName(name) || this.isLoopNameTaken(scope, name);
+    return isDefinitionName(this.program, name) || this.takesLoopName(scope, name);
   }
 
   /** Whether a statement declares `name` as a new variable that a loop of its routine has. */

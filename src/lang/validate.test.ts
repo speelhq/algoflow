@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ast, runAll } from "@/blocks/testing";
 import { isParseError, parse } from "@/python/parse";
 import type { Diagnostic, Program, Stmt } from "./types";
-import { validate } from "./validate";
+import { refusedDefinitions, validate } from "./validate";
 
 const {
   draft,
@@ -131,6 +131,26 @@ describe("validate (language.md, Validation)", () => {
     expect(codes(program([for_("i", num(0), num(3), [for_("i", num(0), num(2), [])])]))).toEqual([
       "E_DUPLICATE_NAME",
     ]);
+  });
+
+  it("E_DUPLICATE_NAME: a function that takes a loop variable's name reports it, and the loop doesn't", () => {
+    const fn = { id: "f0000000000f", name: "i", params: [], body: [] };
+    const inMain = program([for_("i", num(0), num(3), [])], { functions: [fn] });
+    expect(validate(inMain)).toEqual([
+      { nodeId: fn.id, code: "E_DUPLICATE_NAME", params: { name: "i" } },
+    ]);
+    // No call can name the function, as with any function whose name a diagnostic refuses.
+    expect(refusedDefinitions(inMain).has(fn.id)).toBe(true);
+    const other = {
+      id: "f0000000000g",
+      name: "g",
+      params: [],
+      body: [for_("i", num(0), num(3), [])],
+    };
+    expect(validate(program([], { functions: [fn, other] }))).toEqual([
+      { nodeId: fn.id, code: "E_DUPLICATE_NAME", params: { name: "i" } },
+    ]);
+    expect(codes(program([for_("j", num(0), num(3), [])], { functions: [fn] }))).toEqual([]);
   });
 
   it("functions see only their parameters and body", () => {
