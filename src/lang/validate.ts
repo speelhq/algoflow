@@ -134,12 +134,21 @@ class Collector {
     return input || loops.some((loop) => declaredBy(loop).some((d) => d.name === name));
   }
 
-  private reads({ stmt, visible, declaredInside }: StatementScope): void {
+  /**
+   * Reports each read of a name that no visible variable has: a loop's name, which no other
+   * variable of its routine takes, read outside its loop; a name first declared inside an earlier
+   * compound statement; or a name that nothing declares (`language.md`, Validation).
+   */
+  private reads({ stmt, routine, visible, declaredInside }: StatementScope): void {
     const bound = new Set(declaredBy(stmt).map((declared) => declared.target));
     for (const expr of stmtExprs(stmt)) {
       if (bound.has(expr)) continue;
       const name = findVariableName(expr);
       if (name === undefined || isVisible(visible, name)) continue;
+      if (this.hasLoopName(routine, name)) {
+        this.report(stmt.id, "E_LOOP_VARIABLE_OUTSIDE", { name });
+        continue;
+      }
       const compound = declaredInside.get(name);
       if (compound === undefined) this.report(stmt.id, "E_UNDEFINED", { name });
       else this.report(stmt.id, "E_DECLARE_FIRST", { name, compound }, "hoistAssign");

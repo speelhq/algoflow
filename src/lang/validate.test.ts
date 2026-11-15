@@ -85,9 +85,31 @@ describe("validate (language.md, Validation)", () => {
     expect(codes(program([for_("randint", num(0), num(1), [])]))).toEqual(["E_DUPLICATE_NAME"]);
   });
 
-  it("a for variable is visible only in its loop; a while body cannot define its condition", () => {
-    expect(codes(program([for_("i", num(0), num(3), []), print(v("i"))]))).toEqual(["E_UNDEFINED"]);
+  it("E_LOOP_VARIABLE_OUTSIDE: a loop's variable read outside its loop", () => {
+    const after = print(v("i"));
+    expect(validate(program([for_("i", num(0), num(3), []), after]))).toEqual([
+      { nodeId: after.id, code: "E_LOOP_VARIABLE_OUTSIDE", params: { name: "i" } },
+    ]);
     expect(codes(program([for_("i", num(0), num(3), [print(v("i"))])]))).toEqual([]);
+    expect(codes(program([print(v("i")), for_("i", num(0), num(3), [])]))).toEqual([
+      "E_LOOP_VARIABLE_OUTSIDE",
+    ]);
+    // A loop's variable is never first declared inside a compound statement (E_DECLARE_FIRST).
+    const held = createProgramWithInput([if_(v("c"), [for_("i", num(0), num(3), [])]), after]);
+    expect(codes(held)).toEqual(["E_LOOP_VARIABLE_OUTSIDE"]);
+    // An assignment of the loop's name inside an if reports E_DUPLICATE_NAME, and the read after
+    // gets no E_DECLARE_FIRST, whose fix would insert one more variable of the loop's name.
+    const taken = if_(v("c"), [assign("i", num(0))]);
+    const both = createProgramWithInput([taken, for_("i", num(0), num(3), []), after]);
+    expect(codes(both)).toEqual(["E_DUPLICATE_NAME", "E_LOOP_VARIABLE_OUTSIDE"]);
+    // A function doesn't see main's loops, so its read of their name has no variable.
+    const fn = { id: "f0000000000f", name: "f", params: [], body: [ret(v("i"))] };
+    expect(codes(program([for_("i", num(0), num(3), [])], { functions: [fn] }))).toEqual([
+      "E_UNDEFINED",
+    ]);
+  });
+
+  it("a while body cannot define its condition", () => {
     expect(codes(program([while_(v("k"), [assign("k", num(0))])]))).toEqual(["E_UNDEFINED"]);
   });
 

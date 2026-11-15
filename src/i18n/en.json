@@ -589,6 +589,7 @@
   "error": {
     "E_UNDEFINED": "Variable {name} has no value yet",
     "E_DECLARE_FIRST": "Give {name} a value before the if or loop",
+    "E_LOOP_VARIABLE_OUTSIDE": "Variable {name} can be used only inside its loop",
     "E_BAD_NAME": "Names start with a lowercase letter or _ and use only lowercase letters, digits, and _; Python keywords are not allowed",
     "E_DUPLICATE_NAME": "{name} is already in use",
     "E_BREAK_OUTSIDE": "This block only works inside a loop",

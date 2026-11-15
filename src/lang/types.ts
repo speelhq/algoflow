@@ -135,6 +135,7 @@ tuple id type self math random round sorted`.split(/\s+/),
 export const DIAGNOSTIC_CODES = [
   "E_UNDEFINED",
   "E_DECLARE_FIRST",
+  "E_LOOP_VARIABLE_OUTSIDE",
   "E_BAD_NAME",
   "E_DUPLICATE_NAME",
   "E_BREAK_OUTSIDE",

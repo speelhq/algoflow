@@ -330,7 +330,7 @@ describe("loop variables (language.md, Edits, Loop variables)", () => {
     const next = moveStmt(p, inner.id, at("main", 1));
     // The read of the outer i is left with no variable, so the moved loop keeps j rather than i.
     expect(lines(next).slice(2)).toEqual(["for j in range(2):", "    print(i, j)"]);
-    expect(validate(next).map((d) => d.code)).toEqual(["E_UNDEFINED"]);
+    expect(validate(next).map((d) => d.code)).toEqual(["E_LOOP_VARIABLE_OUTSIDE"]);
   });
 
   it("counts a read of a loop that the same edit renames by the loop's new name", () => {
