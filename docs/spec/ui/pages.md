@@ -744,8 +744,8 @@ The end-to-end suite draws, in each locale:
   block menu, the block menu with the program's own functions, the Input
   chart node's menu, a diagnostic's message, and the block editor while
   it names a variable, where a value is expected, while a value is
-  typed, after a number, after a list, after a check, and while it sets
-  an item
+  typed, after a number, after a list, after a check, while it sets an
+  item, and on a loop inside a loop
 - one per view (`views.md`): the views chosen by value, the object
   graph, and the views a learner switches to
 

@@ -192,7 +192,7 @@ lists the codes, what raises each, and its params:
 
 | Code           | Raised by              | params                    |
 | -------------- | ---------------------- | ------------------------- |
-| `E_UNDEFINED`  | reading a variable never assigned (a loop that ran no iteration, `language.md`, Scope) | `name` |
+| `E_UNDEFINED`  | reading a variable never assigned (`language.md`, Scope) | `name` |
 | `E_INDEX`      | a list index (`language.md`, Semantics, Values and the run) | `index`, `length` |
 | `E_KEY`        | a missing dict key (same)                         | `key`                     |
 | `E_ATTRIBUTE`  | a missing attribute (`language.md`, Semantics, Objects) | `cls`, `attr`       |

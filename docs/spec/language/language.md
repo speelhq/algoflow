@@ -348,11 +348,13 @@ Each consumer handles a draft in its own way:
 - `migrate()` reads a draft with no text as no value in an optional slot,
   and as no item in an `exprs` slot, as a field with no text holds them
   (`editor.md`, Block editor).
+- `migrate()` names a loop's variable that still holds a draft (Edits,
+  Loop variables).
 - `migrate()` rejects any other draft that no edit makes (Data, Faults
   that `migrate()` rejects).
 - `create()` fills with a draft with no text every `expr` and `target`
   slot that it gives no value and that isn't `optional`. For example: a
-  new `for` starts at `0`, and its variable is an empty slot.
+  new `for` starts at `0`, and its stop is an empty slot.
 - `create()` gives a statement's `exprs` slot no item, as a field with no
   text holds it. For example: a new `print` writes `print()`.
 - What an expression's `create()` makes only gives the text that a choice
@@ -415,6 +417,10 @@ values, Int range), is stricter and ends in an error:
 - Recursion stops at 200.
 - A name that is first assigned inside a compound statement and read
   after it gives `E_DECLARE_FIRST` (Scope).
+- A loop's variable read after its loop gives `E_UNDEFINED` (Scope,
+  Visibility).
+- A variable that shares its name with a loop's variable of its routine
+  gives `E_DUPLICATE_NAME` (Scope, Names a definition can't take).
 
 ### Lists (`swap`, `method:copy`)
 
@@ -473,7 +479,12 @@ A name becomes visible at one of three places:
 - the function that takes it as a parameter
 
 A name stays visible to the end of its region and in the regions inside
-it.
+it, except a loop's variable, which is visible only inside the loop's
+body, as the variable of JavaScript's `for (let i …)` is. Keeping it
+visible after the loop, as Python does, was rejected, because loops one
+after another share the name that the application gives (Edits, Loop
+variables), so a read after a loop would read whichever loop of the name
+ran last.
 
 A `target` slot that `binds` (`blocks.md`, The block definition) declares
 the variable that its target names, and it doesn't read that variable.
@@ -484,10 +495,6 @@ Two kinds of target read their expressions before the value is stored:
 
 - an item, a key, or an attribute in a binding slot
 - every target of a slot that doesn't bind
-
-The loop statement itself assigns its `for` or `foreach` variable, in the
-region that contains the loop, so the variable stays visible after the
-loop.
 
 The loop reads its bounds, or the iterated list, before the variable
 exists.
@@ -530,6 +537,13 @@ The parameters of one function are distinct.
 
 A function can't take a builtin's name, because the builtin's registry key
 would shadow the function.
+
+A variable that an assignment or a parameter declares can't take the name
+of a loop's variable in its routine, and a loop's variable can't take the
+name of an input or of a loop around it (`E_DUPLICATE_NAME`). Letting a
+loop's variable hide another variable of its name, as JavaScript does, was
+rejected, because Python keeps one variable per name in a function, so the
+two would be one variable.
 
 ### Resolving a call
 
@@ -596,6 +610,42 @@ That node id is the `compound` that `E_DECLARE_FIRST` reports.
 The other edits address nodes by node id. `setExpr` sets an `exprs` slot
 to its items as a whole, because a field edits the slot as one text
 (`editor.md`, Block editor).
+
+### Loop variables
+
+`insertStmt` and `moveStmt` name the variable of each loop of the
+statement they place whose `target` slot declares `names` (`blocks.md`,
+Slots), each loop before the loops inside it.
+
+Such a variable takes the first of its names that a variable can take
+(Scope, Names a definition can't take) and that none of these uses, so
+its loop hides no other variable:
+
+- a loop around it, or a loop inside it that keeps its name
+- another variable of its routine: a parameter, an input, or a variable
+  that an assignment declares
+- a read in the loop's body of a name from outside the loop
+
+For example: a loop inside a loop of `i` takes `j`.
+
+Loops one after another may share a name, because a loop's variable is
+visible only inside the loop (Scope, Visibility).
+
+A loop keeps an item that it stores into, and it keeps its variable when
+its place leaves none of its names free.
+
+Each use of a renamed variable changes with it: each read, and each
+assignment of the variable inside the loop.
+
+`migrate()` names a loop's variable that holds a draft the same way,
+because the learner can't fill or fix the variable in the block editor
+(`editor.md`, Block editor).
+
+A loop's variable that a program holds with a name keeps it when
+`migrate()` reads the program. Renaming it was rejected, because opening
+a program would then change what its statements read.
+
+Validation reports a stored name that breaks the rules of Scope.
 
 ### History
 

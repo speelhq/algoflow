@@ -146,33 +146,45 @@ it opens the module's Module page (`modules.md`, Operations).
 
 The notation has its slots editable in place, each as its role chooses:
 
-- `expr`, `target`, and `exprs`: a value line (Value line; Targets)
+- `expr`, `exprs`, and a `target` that declares no `names`: a value line
+  (Value line; Targets)
+- a `target` that declares `names`, such as a `for`'s variable: its
+  variable, drawn as text, because the application names it
+  (`language.md`, Edits, Loop variables)
 - `body`: not shown
 
-For example: a `for`'s init and check, `i ← 1` and `i < n + 1?`, are
-edited in place.
+A `for`'s variable in a value line, which the learner names, was
+rejected, because a learner who has never programmed doesn't know which
+name to give it.
+
+For example: the start and the stop of a `for`'s init and check,
+`i ← 1` and `i < n + 1?`, are edited in place.
 
 An optional `expr` slot holds no value while its value line has no text.
 An `exprs` slot's value line holds its values separated by commas, and
 the slot holds no item while the line has no text.
 
 A field is a place in the editor where the learner types: a field of the
-notation, or the caption field. Each `expr`, `target`, and `exprs` slot
-of the notation is one field of the notation, its value line.
+notation, or the caption field. Each value line of the notation is one
+field of the notation.
 
-A loop's editor edits the variable and the bounds of a `for`, the
-variable and the list of a `foreach`, or the condition of a `while`. A
-loop's variable is a target that binds, edited in a target's line
-(Targets). The generated chart nodes (`chart.md`, Shapes) change with
-what the editor sets.
+A loop's editor edits the bounds of a `for`, the variable and the list of
+a `foreach`, or the condition of a `while`. A `foreach`'s variable is a
+target that binds, edited in a target's line (Targets). The generated
+chart nodes (`chart.md`, Shapes) change with what the editor sets.
 
 Clicking a slot drawn on the chart node opens the editor on that slot.
 When the editor opens, a field takes the keyboard:
 
 - on a slot clicked on the chart node: that slot's field
-- on a block that the block menu has just inserted: its first field, with
-  the caret where a choice would put it (Value list, Choosing)
+- on a block that the block menu has just inserted: its first field that
+  holds a draft, or its first field when none does, with the caret where
+  a choice would put it (Value list, Choosing)
 - otherwise: the first field that holds a draft
+
+Opening an inserted block on its first field was rejected, because a new
+`for` would then open on its start, which holds `0`, with the caret
+before it.
 
 When no field takes it, the editor itself takes it: the popup, outside
 every field and control.
@@ -518,11 +530,11 @@ because a click in a text field places the caret.
 
 ## Targets
 
-A `target` slot is a value line whose text writes a target
-(`language.md`, Statements, Targets). Text that writes anything else
-stays a draft, which `validate()` reports as `E_NOT_TARGET`
-(`language.md`, Expressions, Drafts). The line's value list leaves out
-the rows whose choice would write no target.
+A `target` slot that declares no `names` (Block editor) is a value line
+whose text writes a target (`language.md`, Statements, Targets). Text
+that writes anything else stays a draft, which `validate()` reports as
+`E_NOT_TARGET` (`language.md`, Expressions, Drafts). The line's value
+list leaves out the rows whose choice would write no target.
 
 The learner types an item as Python writes it, of a variable of any kind,
 a parameter included. For example: `nums[j]`, `heap[i]`.
@@ -568,6 +580,10 @@ text is only the word being typed, or nothing (Targets). It holds:
   `main`, in program order
 - in a function: the function's parameters and the names assigned in its
   body, under `Variables`
+
+The name list leaves out the loops' variables, because no other variable
+may take their names (`language.md`, Scope, Names a definition can't
+take).
 
 The name list leaves out the names that only the block being edited
 assigns, because its target's line holds the name being typed, which

@@ -53,7 +53,7 @@ export type Callee = {
 };
 export type Slot = // Slots
   | { name: string; role: "expr"; hint?: string; optional?: true; atom?: true } // hint: the word that a statement's slot shows while it holds no text (Slots); atom: its value binds as an atom (Notation)
-  | { name: string; role: "target"; hint?: string; binds?: true; stores?: string } // binds: declares the variable its target is (`language.md`, Scope); stores: the slot whose value it stores
+  | { name: string; role: "target"; hint?: string; binds?: true; stores?: string; names?: [Name, ...Name[]] } // binds: declares the variable its target is (`language.md`, Scope); stores: the slot whose value it stores; names: the names the application gives its variable (Slots)
   | { name: string; role: "exprs"; hint?: string }
   | { name: string; role: "name" | "body" | "literal" | "operator" };
 export type Kind = "number" | "text" | "truefalse" | "none" | "list" | "dict" | "object"; // `language.md`, Kinds
@@ -115,6 +115,12 @@ binding slot has no `stores`, because each pass gives its value, and the
 loop's `declares` gives that value's kind (`language.md`, Kinds). Taking
 the value from the statement's first expression slot was rejected,
 because a `for`'s first expression slot is its start.
+
+A binding `target` slot that declares `names` holds a variable that the
+application names from those names (`language.md`, Edits, Loop
+variables).
+
+`for`'s `var` declares `i`, `j`, `k`, and the letters after `k`.
 
 An `exprs` slot with no item is no empty slot. A list that must hold an
 item was rejected, because a builtin's parameters already say how many
@@ -194,9 +200,7 @@ each `expr`, `target`, and `exprs` slot, in the order of the slots
 | `swap`     | list     | a, b                   | `first`, `second`           | `{a} ↔ {b}`                                    | `<a>, <b> = <b>, <a>`                                                               |
 | `delete`   | list     | target                 | `item`                      | `del {target}`                                 | `del <target>`                                                                      |
 
-A new `for`'s variable is an empty slot, because `create()` receives no
-context, and filling in the first unused name of `i`, `j`, and `k` would
-be a special case.
+A new `for`'s variable is `i`, the first of its names.
 
 An assignment is made from its target and its value by
 `createAssignment()` in `assign.ts`, whether an edit, a copy of a
@@ -402,10 +406,6 @@ writes them.
 The `Python` tab writes Python (`emitter.md`), where `←` becomes `=`.
 
 ### Drawing
-
-When the lines of the block editor write a slot twice, the slot is a
-field in its first place, and the other place draws its value. For
-example, `for` writes `{var}` in its init and in its check.
 
 The items of an `exprs` slot, a call's arguments, and a function's
 parameters are separated by `, `, as Python separates them, in every
