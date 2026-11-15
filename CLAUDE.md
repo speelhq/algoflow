@@ -160,6 +160,11 @@ resolves. Close an issue that a change only makes moot as not planned,
 with a comment that names the change, because `Closes` records an issue
 as completed.
 
+When a merged pull request leaves a fault, fix it in a new pull request
+or file it as a new issue that names the merged one, rather than reopen
+the issue it closed, because `Closes` records that issue as completed by
+that pull request.
+
 `develop` accepts only rebase merges, after CI passes, so every commit of
 a pull request ends up on `develop`, and then on `main`. There, a commit
 that a later commit undoes would mislead `git blame` and `git bisect`, so:
