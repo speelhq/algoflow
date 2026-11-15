@@ -338,7 +338,7 @@ as one text (`editor.md`, Block editor).
 Each consumer handles a draft in its own way:
 
 - `validate()` reports every draft (Validation): one with no text as
-  `E_EMPTY_SLOT` with the slot's name, one whose text doesn't parse by
+  `E_EMPTY_SLOT`, one whose text doesn't parse by
   the error that parsing it gives (`parser.md`, Errors), and one in a
   `target` slot whose text parses as `E_NOT_TARGET`.
 - `migrate()` reads a draft whose text is a value of its slot as that
@@ -590,7 +590,7 @@ run. A `Diagnostic` is `{ nodeId, code, params, fix?: "hoistAssign" }`.
 | `E_RETURN_OUTSIDE` | `return` in `main`                                          |                           |
 | `E_ARITY`          | wrong argument count                                        | `name`, `expected`, `got` |
 | `E_UNKNOWN_CALL`   | unknown function, module function, builtin, method, or class | `name`, and for a draft `position` |
-| `E_EMPTY_SLOT`     | a draft with no text (Expressions, Drafts)                  | `slot`                    |
+| `E_EMPTY_SLOT`     | a draft with no text (Expressions, Drafts)                  |                           |
 | `E_PARSE_SYNTAX`   | a draft whose text doesn't parse (`parser.md`, Errors)      | `position`                |
 | `E_PARSE_CHAIN`    | a draft whose text chains a comparison (`parser.md`, Errors) | `position`               |
 | `E_NOT_TARGET`     | a draft in a `target` slot whose text parses (Expressions, Drafts) |                    |
@@ -613,7 +613,7 @@ name.
 
 `edit.ts` exports pure functions that return a new `Program`:
 `insertStmt`, `moveStmt`, `removeStmt`, `duplicateStmt`, `setExpr`,
-`renameName`, `setCaption`, `addFunction`, `removeFunction`, `addClass`,
+`removeExpr`, `renameName`, `setCaption`, `addFunction`, `removeFunction`, `addClass`,
 `removeClass`, `setAttributes`, `setParams`, and `hoistAssign`.
 
 Every edit keeps node ids unique.
@@ -636,6 +636,9 @@ That node id is the `compound` that `E_DECLARE_FIRST` reports.
 The other edits address nodes by node id. `setExpr` sets an `exprs` slot
 to its items as a whole, because a field edits the slot as one text
 (`editor.md`, Block editor).
+
+`removeExpr` takes the value out of an optional `expr` slot, as a value
+line with no text holds that slot (`editor.md`, Block editor).
 
 ### Loop variables
 

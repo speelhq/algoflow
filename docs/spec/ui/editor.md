@@ -30,7 +30,7 @@ and `while` first in their categories.
 
 An entry reads as the block definition's label followed by its notation,
 with every slot written as its hint (`blocks.md`, Notation, Drawing). For
-example: `Set variable  variable ← value`, `Print  print(values)`,
+example: `Assign  variable ← value`, `Print  print(values)`,
 `For loop  variable ← start`, `For each loop  for variable in list`.
 
 The menu lists a block definition whose `requires` the connector doesn't
@@ -124,10 +124,10 @@ From top to bottom, the editor holds:
 - the block's diagnostics, each with its message and, when `fix` is set,
   the button that applies the fix (`chart.md`, Editing on the chart,
   Diagnostics)
-- the block's caption field (Captions), with `Duplicate` and `Delete` as
-  icon buttons beside it, and `Open <name>` when the block calls a
+- the caption line (Captions), with `Duplicate` and `Delete` as icon
+  buttons after its field, and `Open <name>` when the block calls a
   function or constructs a class
-- the block's notation, with its slots editable in place
+- the block's lines, with their slots editable in place
 - the value list of the focused slot (Value list)
 - the explanation line (Explanation line)
 
@@ -136,15 +136,31 @@ block's diagnostics (`run.md`, Run bar, Starting a run), rather than in
 the order validation reports them, because it is the one the learner was
 sent to fix.
 
-A separator divides each of the caption field, the notation, and that
-list from the next.
+A separator divides each of the caption line, the block's lines, and
+that list from the next.
 
 `Open <name>` shows the called function's chart or the constructed class's
 attribute table
 (`chart.md`, Charts and the path bar). For a module's function or class,
 it opens the module's Module page (`modules.md`, Operations).
 
-The notation has its slots editable in place, each as its role chooses:
+Each line of the editor is a label followed by what the line edits, and
+the labels of all its lines stand in one column:
+
+- the caption line: `editor.caption.label`, then the caption field
+- each line that the block definition declares (`blocks.md`, Editor
+  lines): the line's label, then its notation, with its slots editable in
+  place
+
+Two alternatives were rejected:
+
+- one field for the whole statement, because the block's own words would
+  look editable
+- a label above each field, because the line would no longer read as the
+  statement
+
+A line's notation has its slots editable in place, each as its role
+chooses:
 
 - `expr`, `exprs`, and a `target` that declares no `names`: a value line
   (Value line; Targets)
@@ -157,16 +173,20 @@ A `for`'s variable in a value line, which the learner names, was
 rejected, because a learner who has never programmed doesn't know which
 name to give it.
 
-For example: the start and the stop of a `for`'s init and check,
-`i ← 1` and `i < n + 1?`, are edited in place.
+For example: a `for`'s lines read `Start  i ← 1` and
+`Condition  i < n + 1`, and the start and the stop are edited in place.
 
-An optional `expr` slot holds no value while its value line has no text.
-An `exprs` slot's value line holds its values separated by commas, and
-the slot holds no item while the line has no text.
+An optional `expr` slot's value line is drawn whether the slot holds a
+value or not, and the slot holds no value while the line has no text. An
+`exprs` slot's value line holds its values separated by commas, and the
+slot holds no item while the line has no text.
 
 A field is a place in the editor where the learner types: a field of the
-notation, or the caption field. Each value line of the notation is one
-field of the notation.
+lines, or the caption field. Each value line of the block's lines is one
+field of the lines.
+
+Every field is drawn as the application's input (`Input`), and only the
+field that has the keyboard draws the selection color's border and ring.
 
 A loop's editor edits the bounds of a `for`, the variable and the list of
 a `foreach`, or the condition of a `while`. A `foreach`'s variable is a
@@ -192,7 +212,7 @@ every field and control.
 Tab and Shift+Tab never move the keyboard out of an open editor.
 
 Tab and Shift+Tab move the keyboard to the next and previous field of the
-notation.
+lines.
 
 Tab past the editor's last control, and Shift+Tab before its first, move
 the keyboard to the editor itself, and the value list closes. On the
@@ -226,13 +246,12 @@ keyboard alone finds the way out.
 The chart node holds no control for the editor: nothing there takes the
 keyboard or announces a popup.
 
-For assistive technology, the editor names each field of its notation by
+For assistive technology, the editor names each field of its lines by
 the block definition's label and the slot's name
-(`block.<key>.slot.<slot>`, `blocks.md`, Catalog keys), because the
-symbols before a field name nothing a screen reader can say. For example:
-the field after `←` in a `Set variable` block is named
-`Set variable, value`, and the field after `print(` is named
-`Print, values`.
+(`block.<key>.slot.<slot>`, `blocks.md`, Catalog keys), because a line's
+label names the line, and a line can hold two fields. For example: the
+field after `←` in an `Assign` block is named `Assign, value`, and a
+`Print` block's field is named `Print, values`.
 
 The editor itself takes its explanation line as its accessible
 description, so a screen reader reads the ways out when the editor itself
@@ -275,14 +294,14 @@ character, and ←, →, Home, End, and a click move the caret, with Shift to
 select.
 
 ← with the caret at the start of the line's text and no text selected
-moves the keyboard to the end of the previous field of the notation. →
+moves the keyboard to the end of the previous field of the lines. →
 with the caret at the end of the line's text and no text selected moves
-it to the start of the next field of the notation. They move only with no
+it to the start of the next field of the lines. They move only with no
 text selected,
 because ← and → first clear a selection, as in a text field, and Tab
 selects a field's text (Selected text).
 
-At the start of the notation's first field and the end of its last, ←
+At the start of the lines' first field and the end of their last, ←
 and → do nothing and show nothing, as in a text field.
 
 Backspace and Delete remove the selected text, or else one character,
@@ -375,9 +394,21 @@ short word reach unrelated names. For example: `totl` and `Not`.
 ### Drafts
 
 A value line shows a draft's text as typed. Once `Run` or `Submit` leads
-to the draft (`run.md`, Run bar, Starting a run), the line underlines its
-text from the error's position (`parser.md`, Errors), or all of it for
-`E_NOT_TARGET`. The explanation line then shows the error's message.
+to the draft (`run.md`, Run bar, Starting a run), the line draws a red
+border and ring, and it underlines its text from the error's position
+(`parser.md`, Errors), or all of it for `E_NOT_TARGET`. The explanation
+line then shows the error's message.
+
+The line keeps the red border and ring, in place of the selection
+color's while it has the keyboard, and its underline, and the explanation
+line keeps the message, until the slot no longer holds that draft or the
+next `Run` or `Submit` leads to another diagnostic. They stay while the
+editor closes and opens again. Ending them when the editor closes was
+rejected, because a learner who closes it to read the problem or the
+chart would come back to a field that looks fixed.
+
+The border marks the line, and not only its text, because an empty slot
+has no text to underline.
 
 ### Empty slots
 

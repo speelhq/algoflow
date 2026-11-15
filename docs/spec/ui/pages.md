@@ -438,7 +438,7 @@ A Problem page and a Playground program answer these keys:
 | Esc                          | close menu or editor, clear selection; in run mode, clear the breakpoint before the run has ended, else Stop |
 | Tab, Shift+Tab               | next, previous field or control of the block editor, and the editor itself past its last and before its first (`editor.md`, Block editor) |
 | ↑, ↓                         | move the highlight in the editor's list (`editor.md`, Value list) |
-| ←, →                         | previous, next character of a value line's text, and at its ends the previous, next field of the notation (`editor.md`, Value line, Keys) |
+| ←, →                         | previous, next character of a value line's text, and at its ends the previous, next field of the lines (`editor.md`, Value line, Keys) |
 | Enter                        | choose the highlighted entry, and in a target's line, when it leaves a target, go to the next field (`editor.md`, Targets); else close the editor, keeping the selection |
 
 ## Messages

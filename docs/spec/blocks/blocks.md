@@ -32,6 +32,7 @@ export type BlockDef = {
 
   python(block: Stmt | Expr, ctx: EmitContext): PyLine[] | string; // `emitter.md`: stmt → lines, expr → text
   notation(block: Stmt | Expr): string; // Notation
+  lines?: EditorLine[]; // a statement's: the block editor's lines (Editor lines)
   fieldsError?(fields: Readonly<Record<string, unknown>>): FieldFault | undefined; // `language.md`, Data
   text?(block: Stmt | Expr, slot: string): string; // Notation
   yields?(block: Expr, findKind: (e: Expr) => Kind | undefined): Kind | undefined; // Kinds
@@ -44,6 +45,7 @@ export type BlockDef = {
     | { counted: { body: string; init: string; check: string; update: string } }
     | { jump: "exit" | "next" }; // Chart form
 };
+export type EditorLine = { label: "label" | `line.${string}`; notation: string }; // label: a catalog key under block.<key>. (Catalog keys)
 export type Param = { name: string; optional?: true }; // `name` as the notation writes it
 export type FieldFault = { field: string; message: string }; // a stored field no edit writes
 export type Callee = {
@@ -166,6 +168,9 @@ provides the same keys:
   technology (`editor.md`, Block editor). For example,
   `block.assign.slot.target` is `variable`, and `block.assign.slot.value`
   is `value`.
+- `block.<key>.line.<line>`: the label of a line of the block editor
+  that has a label of its own (Editor lines). For example,
+  `block.for.line.start` is `Start`.
 - `block.<key>.<name>.label` and `block.<key>.<name>.help`: the label and
   the help of a value list entry with a `name`
 
@@ -196,7 +201,7 @@ each `expr`, `target`, and `exprs` slot, in the order of the slots
 | `continue` | control  |                        |                             | `continue`                                     | `continue`                                                                          |
 | `print`    | basic    | args                   | `values`                    | `print({args})`                                | `print(<a>, <b>)`                                                                   |
 | `return`   | function | value?                 | `value`                     | `return {value}`, drawn `return` with no value | `return <value>` / `return`                                                         |
-| `expr`     | basic    | expr                   | `expression`                | `{expr}`                                       | `<expr>`                                                                            |
+| `expr`     | basic    | expr                   | `call`                      | `{expr}`                                       | `<expr>`                                                                            |
 | `swap`     | list     | a, b                   | `first`, `second`           | `{a} ↔ {b}`                                    | `<a>, <b> = <b>, <a>`                                                               |
 | `delete`   | list     | target                 | `item`                      | `del {target}`                                 | `del <target>`                                                                      |
 
@@ -474,8 +479,44 @@ The chart draws a check the way it asks every diamond's condition
 (`chart.md`, Shapes), so a diamond's `?` follows one rule. For example:
 `i < n + 1?`.
 
-A counted loop's own notation names it in the block menu and the editor.
-`for`'s notation is its init.
+A counted loop's own notation names it in the block menu. `for`'s
+notation is its init.
+
+## Editor lines
+
+A statement block definition declares `lines`, the lines of the block
+editor below its caption line (`editor.md`, Block editor). Each line is a
+label and a notation with `{slot}` placeholders. The label is a catalog
+key under `block.<key>.` (Catalog keys): `label`, the block definition's
+own label, or `line.<line>`, a label of the line's own.
+
+| key       | label            | text          | notation             |
+| --------- | ---------------- | ------------- | -------------------- |
+| `assign`  | `label`          | Assign        | `{target} ← {value}` |
+| `if`      | `line.condition` | Condition     | `{cond}`             |
+| `for`     | `line.start`     | Start         | `{var} ← {start}`    |
+| `for`     | `line.condition` | Condition     | `{var} < {stop}`     |
+| `foreach` | `label`          | For each loop | `{var} in {list}`    |
+| `while`   | `line.condition` | Condition     | `{cond}`             |
+| `print`   | `label`          | Print         | `{args}`             |
+| `return`  | `label`          | Return        | `{value}`            |
+| `expr`    | `label`          | Call          | `{expr}`             |
+| `swap`    | `label`          | Swap          | `{a} ↔ {b}`          |
+| `delete`  | `label`          | Delete        | `{target}`           |
+
+`break` and `continue` declare no line, because they have no slot to
+fill.
+
+A line's notation writes no keyword of its block, such as `print(` or
+`return`, and no `?`. Writing the keyword was rejected, because the
+line's label already says what the line is.
+
+A `for`'s lines are its init and its check (Chart form), without the
+check's `?`.
+
+Reading the lines from the block's notation was rejected, because the
+notation writes the keywords that a line leaves out, such as `print(`,
+and a counted loop's notation is its init alone.
 
 ## Value list entries
 

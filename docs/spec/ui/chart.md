@@ -280,7 +280,7 @@ drawn red while it is built would report an error before the learner had
 finished its value. What the learner hasn't finished is:
 
 - a draft, an empty slot included (`language.md`, Expressions, Drafts)
-- every diagnostic of a block while a field of its notation has the
+- every diagnostic of a block while a field of its lines has the
   keyboard (`editor.md`, Block editor)
 
 `Run` and `Submit` report both (`run.md`, Run bar, Starting a run). A

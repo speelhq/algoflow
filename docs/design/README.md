@@ -109,3 +109,9 @@ a screenshot can be laid beside its design.
 | 18 Build: the + menu lists the program's own functions         | `block-menu-program.png` | `editor.md`, Block menu |
 
 A design with no screenshot draws a screen that isn't built yet.
+
+## Block editor lines
+
+| Design                                            | Screenshot | Spec (`docs/spec/`) |
+| ------------------------------------------------- | ---------- | ------------------- |
+| Block editor: a label and its fields on each line | `editor-empty.png`, `editor-led.png`, `editor-loop.png` | `editor.md`, Block editor; Value line, Drafts; `blocks.md`, Editor lines |
