@@ -8,7 +8,7 @@ export const exprStmt = defineStmt<"expr">({
   category: "basic",
   // The menu offers it only as method statements and calls.
   hidden: true,
-  slots: [{ name: "expr", role: "expr", hint: "expression" }],
+  slots: [{ name: "expr", role: "expr", hint: "call" }],
   create: () => ({ id: createNodeId(), type: "expr", expr: createEmptyDraft() }),
   *run(block, ctx) {
     yield* ctx.eval(block.expr);

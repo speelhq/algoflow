@@ -26,12 +26,10 @@ describe("fieldLabel", () => {
   it("names a field by the block's label and the slot's name", () => {
     const set = assign("total", num(1));
     const field = (slot: string) => ({ slot, role: "expr" as const });
-    expect(fieldLabel(set, field("value"))).toBe("Set variable, value");
+    expect(fieldLabel(set, field("value"))).toBe("Assign, value");
     expect(fieldLabel(print(v("total")), field("args"))).toBe("Print, values");
     expect(fieldLabel(for_("i", num(0), num(3), []), field("stop"))).toBe("For loop, stop");
-    expect(fieldLabel(exprStmt(ast.call("max", v("a"), num(1))), field("expr"))).toBe(
-      "Expression, expression",
-    );
+    expect(fieldLabel(exprStmt(ast.call("max", v("a"), num(1))), field("expr"))).toBe("Call, call");
   });
 });
 
@@ -128,7 +126,7 @@ describe("a target", () => {
 
   it("is named by the block's label and the slot's name", () => {
     const target = { slot: "target", role: "target" } as const;
-    expect(fieldLabel(assign("total", num(1)), target)).toBe("Set variable, variable");
+    expect(fieldLabel(assign("total", num(1)), target)).toBe("Assign, variable");
   });
 });
 

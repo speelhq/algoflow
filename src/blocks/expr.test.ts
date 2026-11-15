@@ -32,7 +32,7 @@ describe("expr (blocks.md)", () => {
 
 describe("notation (blocks.md, Notation)", () => {
   it("declares the hint of each slot of its table", () => {
-    expect(hints("expr")).toEqual(["expression"]);
+    expect(hints("expr")).toEqual(["call"]);
   });
 
   it("writes the notation of its table", () => {

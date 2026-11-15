@@ -77,7 +77,7 @@ describe("block menu", () => {
       return `${joinSpans(entry?.label ?? [])}  ${entry?.notation}`;
     };
     expect(["assign", "print", "for", "while", "break", "return"].map(read)).toEqual([
-      "Set variable  variable ← value",
+      "Assign  variable ← value",
       "Print  print(values)",
       "For loop  variable ← start",
       "While loop  condition",
