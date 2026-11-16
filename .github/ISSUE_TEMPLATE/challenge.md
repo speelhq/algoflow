@@ -10,9 +10,8 @@ labels: challenge
      why a learner needs that practice.
      If the work waits on open issues or pull requests, add one line after
      the paragraph, such as `Waits on #34 and #47.`
-     Example: The last three problems of the `course` plan. Two more sorts
-     use the cases of `bubble-sort`, and `reverse-list` reverses a list in
-     place with `swap`. -->
+     Example: Two more sorts of the `sorting` plan. They use the cases of
+     `bubble-sort`, and each follows the problem whose move it repeats. -->
 
 ## Problems
 
@@ -24,8 +23,8 @@ labels: challenge
 
 <!-- Name the study plan the problems join, new or existing, and where they
      go in its order. Every problem belongs to exactly one plan.
-     Example: `course`, after `bubble-sort`, in this order. `reverse-list`
-     ends the plan. -->
+     Example: `sorting`, after `bubble-sort`, in this order. `median` ends
+     the plan. -->
 
 ## Block definitions needed
 
