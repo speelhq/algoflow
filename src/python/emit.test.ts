@@ -12,6 +12,52 @@ const SOH = String.fromCharCode(1);
 const DEL = String.fromCharCode(127);
 
 describe("emit (emitter.md)", () => {
+  it("writes one else-if as elif", () => {
+    const second = if_(v("condition2"), [print(str("B"))]);
+    const first = if_(v("condition1"), [print(str("A"))], [second]);
+    const { code, map } = emit(program([first]), {});
+    expect(code).toBe('if condition1:\n    print("A")\nelif condition2:\n    print("B")\n');
+    expect(map[first.id]).toEqual({ start: 1, end: 1 });
+    expect(map[second.id]).toEqual({ start: 3, end: 3 });
+  });
+
+  it("writes consecutive else-if statements as an elif chain", () => {
+    const third = if_(v("condition3"), [print(str("C"))], [print(str("D"))]);
+    const second = if_(v("condition2"), [print(str("B"))], [third]);
+    const first = if_(v("condition1"), [print(str("A"))], [second]);
+    const after = print(str("Done"));
+    const { code, map } = emit(program([first, after]), {});
+    expect(code).toBe(
+      'if condition1:\n    print("A")\nelif condition2:\n    print("B")\nelif condition3:\n    print("C")\nelse:\n    print("D")\nprint("Done")\n',
+    );
+    expect(map[first.id]).toEqual({ start: 1, end: 1 });
+    expect(map[second.id]).toEqual({ start: 3, end: 3 });
+    expect(map[third.id]).toEqual({ start: 5, end: 5 });
+    expect(map[after.id]).toEqual({ start: 9, end: 9 });
+    expect(Object.values(map).some((entry) => entry.start === 7)).toBe(false);
+  });
+
+  it("keeps an else region with an if and another statement nested", () => {
+    const nested = if_(v("condition2"), [print(str("B"))]);
+    const first = if_(v("condition1"), [print(str("A"))], [nested, print(str("C"))]);
+    const { code, map } = emit(program([first]), {});
+    expect(code).toBe(
+      'if condition1:\n    print("A")\nelse:\n    if condition2:\n        print("B")\n    print("C")\n',
+    );
+    expect(map[nested.id]).toEqual({ start: 4, end: 4 });
+  });
+
+  it("places and maps a caption on an elif at the chain's indentation", () => {
+    const second = { ...if_(v("condition2"), [print(str("B"))]), caption: "Alternative" };
+    const chain = if_(v("condition1"), [print(str("A"))], [second]);
+    const outer = if_(v("outer"), [chain]);
+    const { code, map } = emit(program([outer]), {});
+    expect(code).toBe(
+      'if outer:\n    if condition1:\n        print("A")\n    # Alternative\n    elif condition2:\n        print("B")\n',
+    );
+    expect(map[second.id]).toEqual({ start: 4, end: 5 });
+  });
+
   it("1-based inclusive lines; a compound statement maps to its header; else: is unmapped", () => {
     const inner = assign("x", num(1));
     const branch = if_(bin("<", v("a"), v("b")), [inner], [assign("x", num(2))]);

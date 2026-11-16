@@ -81,6 +81,14 @@ class Writer {
   }
 
   stmt(stmt: Stmt, indent: number): void {
+    this.writeStmt(stmt, indent, "statement");
+  }
+
+  elif(stmt: Extract<Stmt, { type: "if" }>, indent: number): void {
+    this.writeStmt(stmt, indent, "elif");
+  }
+
+  private writeStmt(stmt: Stmt, indent: number, kind: "statement" | "elif"): void {
     const pyLines = getBlockDef(registryKey(stmt)).python(stmt, ctx) as PyLine[];
     // A captioned statement's lines start at the comment holding its caption.
     const captioned = stmt.caption === undefined ? undefined : this.lines.length + 1;
@@ -88,16 +96,24 @@ class Writer {
     let first = true;
     for (const pyLine of pyLines) {
       if (typeof pyLine === "string") {
+        const text = first && kind === "elif" ? this.toElifLine(pyLine) : pyLine;
         if (first) {
           this.mapLine(stmt.id); // A compound statement maps to its header; `else:` is unmapped
           if (captioned !== undefined) this.map[stmt.id] = { start: captioned, end: captioned + 1 };
           first = false;
         }
-        this.line(pyLine, indent);
+        this.line(text, indent);
+      } else if ("elif" in pyLine) {
+        this.elif(pyLine.elif, indent);
       } else {
         this.region(pyLine.region, indent + 1);
       }
     }
+  }
+
+  private toElifLine(header: string): string {
+    if (!header.startsWith("if ")) throw new Error(`expected an if header, got ${header}`);
+    return `elif ${header.slice(3)}`;
   }
 
   region(stmts: Stmt[], indent: number): void {

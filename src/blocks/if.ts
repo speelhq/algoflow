@@ -1,4 +1,4 @@
-// The `if` block definition: `if <cond>:` … `else:` (else omitted when empty; empty region → pass).
+// The `if` block definition: `if <cond>:` … `elif` … `else:` (else omitted when empty; empty region → pass).
 import { createNodeId } from "@/lang/id";
 import { decide } from "@/runtime/condition";
 import { defineStmt } from "./types";
@@ -24,11 +24,16 @@ export const ifStmt = defineStmt<"if">({
     const yes = yield* decide(block.cond, ctx);
     return yield* ctx.exec(yes ? block.then : block.else);
   },
-  python: (block, ctx) => [
-    `if ${ctx.expr(block.cond)}:`,
-    ctx.region(block.then),
-    ...(block.else.length > 0 ? ["else:", ctx.region(block.else)] : []),
-  ],
+  python: (block, ctx) => {
+    const lines = [`if ${ctx.expr(block.cond)}:`, ctx.region(block.then)];
+    const onlyElse = block.else.length === 1 ? block.else[0] : undefined;
+    if (onlyElse?.type === "if") {
+      lines.push({ elif: onlyElse });
+    } else if (block.else.length > 0) {
+      lines.push("else:", ctx.region(block.else));
+    }
+    return lines;
+  },
   notation: () => "{cond}",
   lines: [{ label: "line.condition", notation: "{cond}" }],
 });

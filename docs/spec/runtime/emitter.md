@@ -18,6 +18,7 @@ The line map follows these rules:
 
 - Its lines are 1-based and inclusive.
 - A compound statement maps to its header line.
+- An `if` written as `elif` maps to its `elif` header line.
 - `else:` has no entry.
 
 ## The generated language
@@ -143,12 +144,17 @@ caption.
 A block definition writes the Python of its blocks with `python()`:
 
 - A statement block definition's `python()` returns `PyLine[]`, where
-  `PyLine = string | { region: Stmt[] }`.
+  `PyLine = string | { region: Stmt[] } | { elif: Extract<Stmt, { type: "if" }> }`.
 - An expression block definition's `python()` returns text.
+
+The emitter writes `elif` when an `if` statement's `else` region holds
+exactly one `if` statement. It continues this rule recursively, and writes
+any other nonempty `else` region under `else:`.
 
 The emitter flattens the lines. It:
 
 - indents each `{ region }` entry by one level
+- writes an `{ elif }` entry at the same indentation as its containing `if`
 - writes `pass` for an empty region
 - records the line map as it goes
 
@@ -166,7 +172,8 @@ Statements, Targets).
 
 Before a statement with a caption (`language.md`, Captions), the
 emitter writes the comment line `# <caption>` at the statement's
-indentation.
+indentation. For an `if` written as `elif`, it writes the comment
+immediately above the `elif` at the chain's indentation.
 
 The map entry of a statement with a caption starts at its comment line.
 

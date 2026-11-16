@@ -158,7 +158,7 @@ export type ExprRunner = (block: Expr, ctx: RunContext) => Generator<Event, Valu
 
 // ---------------------------------------------------------------- emitter
 
-export type PyLine = string | { region: Stmt[] };
+export type PyLine = string | { region: Stmt[] } | { elif: Extract<Stmt, { type: "if" }> };
 export type Side = "left" | "right";
 export type EmitContext = {
   expr(expr: Expr): string;
