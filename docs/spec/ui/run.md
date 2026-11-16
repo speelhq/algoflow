@@ -400,6 +400,8 @@ next row of its section.
 
 After the last problem of a plan with every problem solved,
 `Plan complete` with `Back to Problems` takes the place of
-`Next problem`. `Plan complete` returns the choice to the learner,
-because the next row after the last `course` problem would put a trainee
-into the first data-structure problem.
+`Next problem`. `Plan complete` returns the choice to the learner rather
+than opening the next plan's first problem, because the Problems page
+then shows the plan solved and the next plan with its description
+(`pages.md`, Problems page), so the learner reads what the next plan
+practices before starting it.
