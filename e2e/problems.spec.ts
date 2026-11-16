@@ -35,12 +35,19 @@ test.describe("Problems page", () => {
       fizzbuzz: { status: "attempted", hints: 0, solution: false },
     });
     await page.goto("/#/");
-    const plan = page.getByTestId("plan-course");
-    await expect(plan.getByRole("heading", { name: "3-Day Course" })).toBeVisible();
-    await expect(plan).toContainText(`2 of ${getChallengePlan("tutorial").problems.length} solved`);
+    const plan = page.getByTestId("plan-decisions");
+    await expect(plan.getByRole("heading", { name: "Values and Decisions" })).toBeVisible();
+    await expect(plan).toContainText(`1 of ${getChallengePlan("tutorial").problems.length} solved`);
     await expect(
-      plan.getByRole("link", { name: "Continue: FizzBuzz ▶", exact: true }),
-    ).toHaveAttribute("href", "#/p/fizzbuzz");
+      plan.getByRole("link", { name: "Continue: Max of three ▶", exact: true }),
+    ).toHaveAttribute("href", "#/p/max-of-three");
+    const loops = page.getByTestId("plan-loops");
+    await expect(loops).toContainText(
+      `1 of ${getChallengePlan("sum-to-n").problems.length} solved`,
+    );
+    await expect(
+      loops.getByRole("link", { name: "Continue: Countdown ▶", exact: true }),
+    ).toHaveAttribute("href", "#/p/countdown");
     await expect(page.getByTestId("problem-row-tutorial").getByRole("img")).toHaveAccessibleName(
       "Solved",
     );
@@ -61,7 +68,7 @@ test.describe("Problems page", () => {
     await seedProgress(page, { nope: { status: "attempted", hints: 0, solution: false } });
     await page.goto("/#/");
     await expect(
-      page.getByTestId("plan-course").getByRole("link", { name: "Start", exact: true }),
+      page.getByTestId("plan-decisions").getByRole("link", { name: "Start", exact: true }),
     ).toHaveAttribute("href", "#/p/tutorial");
   });
 

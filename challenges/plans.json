@@ -1,10 +1,14 @@
 [
   {
-    "id": "course",
-    "title": { "en": "3-Day Course" },
-    "description": {
-      "en": "From your first print to sorting a list, in the order the course teaches them."
-    },
-    "problems": ["tutorial", "sum-to-n", "fizzbuzz", "max-of-three", "countdown"]
+    "id": "decisions",
+    "title": { "en": "Values and Decisions" },
+    "description": { "en": "Print, calculate, and choose between values with a condition." },
+    "problems": ["tutorial", "max-of-three"]
+  },
+  {
+    "id": "loops",
+    "title": { "en": "Loops" },
+    "description": { "en": "Repeat steps with while and for." },
+    "problems": ["countdown", "sum-to-n", "fizzbuzz"]
   }
 ]

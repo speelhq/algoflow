@@ -3,14 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { nextProblem, planAction, type FindStatus } from "./next";
 
 // A plan of the tests' own, so that no case depends on what the bundled plans hold.
-const course = ["tutorial", "sum-to-n", "fizzbuzz", "max-of-three", "countdown"];
+const members = ["tutorial", "sum-to-n", "fizzbuzz", "max-of-three", "countdown"];
 
 vi.mock("./plans", () => ({
   getChallengePlan: () => ({
-    id: "course",
+    id: "own",
     title: { en: "" },
     description: { en: "" },
-    problems: course,
+    problems: members,
   }),
 }));
 
@@ -20,21 +20,21 @@ function statuses(entries: Record<string, "attempted" | "solved">): FindStatus {
 
 describe("planAction", () => {
   it("offers Start on the first problem while no problem has an entry", () => {
-    expect(planAction(course, statuses({}))).toEqual({ kind: "start", id: "tutorial" });
+    expect(planAction(members, statuses({}))).toEqual({ kind: "start", id: "tutorial" });
   });
 
   it("offers Continue on the first unsolved problem once any has an entry", () => {
     const status = statuses({ tutorial: "solved", "sum-to-n": "attempted" });
-    expect(planAction(course, status)).toEqual({ kind: "continue", id: "sum-to-n" });
-    expect(planAction(course, statuses({ "sum-to-n": "solved" }))).toEqual({
+    expect(planAction(members, status)).toEqual({ kind: "continue", id: "sum-to-n" });
+    expect(planAction(members, statuses({ "sum-to-n": "solved" }))).toEqual({
       kind: "continue",
       id: "tutorial",
     });
   });
 
   it("offers nothing once every problem is solved, or for an empty plan", () => {
-    const all = statuses(Object.fromEntries(course.map((id) => [id, "solved" as const])));
-    expect(planAction(course, all)).toBeNull();
+    const all = statuses(Object.fromEntries(members.map((id) => [id, "solved" as const])));
+    expect(planAction(members, all)).toBeNull();
     expect(planAction([], statuses({}))).toBeNull();
   });
 });
@@ -51,7 +51,7 @@ describe("nextProblem", () => {
   });
 
   it("takes the next row once every other problem is solved, and says Plan complete after the last", () => {
-    const all = statuses(Object.fromEntries(course.map((id) => [id, "solved" as const])));
+    const all = statuses(Object.fromEntries(members.map((id) => [id, "solved" as const])));
     expect(nextProblem("fizzbuzz", all)).toEqual({ kind: "next", id: "max-of-three" });
     expect(nextProblem("countdown", all)).toEqual({ kind: "complete" });
   });
