@@ -89,16 +89,47 @@ learner solves them with.
 The curriculum is exactly the problems of these study plans
 (`challenges.md`, Study plans), in this order:
 
-| Plan                                   | Problems, in order                                                                                                                 |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `course` 3-Day Course                  | tutorial, sum-to-n, fizzbuzz, max-of-three, countdown, list-max, count-evens, linear-search, binary-search, bubble-sort, selection-sort, insertion-sort, reverse-list |
-| `structures` Build the Data Structures | stack-balance, bfs-grid, heap-push, heap-pop, dijkstra-grid, dijkstra-heap, astar-grid                                             |
-| `dp` Dynamic Programming               | coin-change, knapsack, lcs                                                                                                         |
+| Plan                                   | Problems, in order                                                                                                                           |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `decisions` Values and Decisions       | hello, swap-values, rectangle, minutes-seconds, even-or-odd, grade, max-of-three, sort-three, leap-year, triangle-type                       |
+| `loops` Loops                          | countdown, sum-to-n, fizzbuzz, fibonacci, isqrt, times-table, number-triangle, collatz, russian-peasant, pythagorean-triples                 |
+| `lists` Lists                          | count-occurrences, average, list-max, index-of-max, linear-search, filter-evens, double-items, running-total, longest-streak, second-largest |
+| `sorting` Sorting and Searching        | reverse-list, rotate-left, move-zeros, bubble-sort, selection-sort, insertion-sort, binary-search, merge-sorted, counting-sort, median       |
+| `numbers` Number Algorithms            | digit-sum, palindrome-number, gcd, is-prime, change-making, to-binary, prime-factors, sieve, luhn, newton-sqrt                               |
+| `structures` Build the Data Structures | stack-balance, bfs-grid, heap-push, heap-pop, dijkstra-grid, dijkstra-heap, astar-grid                                                       |
+| `dp` Dynamic Programming               | coin-change, knapsack, lcs                                                                                                                   |
+
+A plan comes after every plan whose ideas its problems use.
+
+A plan's first problem is no harder by `difficulty` (`challenges.md`,
+Schema) than the last problem of the plan before it. Putting the
+problems that take a number apart by its digits in the `loops` plan,
+where their block definitions first appear, was rejected, because a
+learner who has never programmed finds that harder than reading a list.
+
+Each problem is a known algorithm or a classic exercise. A problem that
+only practices a part of a later problem was rejected, because a
+learner who solves it has built nothing they can name.
+
+An idea is a block definition, a family of operators that one problem
+needs together, or a pattern. For example: `//` and `%` are a family,
+and prefix sums and a loop inside a loop are patterns.
+
+Each problem after `hello` adds at most one idea that the problems
+before it in the curriculum don't use, because a learner who has never
+programmed can't tell which of two new ideas a mistake comes from.
 
 The order of a study plan's problems is part of the plan, because each
 problem builds on the problems before it:
 
-- The `course` problems follow a fixed three-day course.
+- The `decisions` problems add values, then decisions on them.
+- The `loops` problems add repetition, up to a loop inside a loop.
+- The `lists` problems read a list, then build one and change it.
+- The `sorting` problems move items, then sort and search with those
+  moves.
+- The `numbers` problems first use the digits and the divisors of a
+  number and give change greedily, then build on them: a binary form,
+  prime factors, the sieve, a check digit, and Newton's method.
 - The `structures` problems go from a list as a stack, to a list as a
   queue, to the `heap` module.
 - The `dp` problems go from one dimension to two, and then to strings.

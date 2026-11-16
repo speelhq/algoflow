@@ -6,7 +6,8 @@ and a solution. The study plans order the challenges. This file states
 the challenge schema, the checks that `scripts/check.ts` makes, the module
 fields, the hints, the study plans, how a submission is judged, how
 progress is recorded, how a problem opens and how the files are
-bundled, the problems of each plan, and the verification.
+bundled, how a challenge names its variables, how the plan tables
+read, the problems of each plan, and the verification.
 
 ## Schema
 
@@ -128,6 +129,37 @@ The three hints name, in this order:
 
 The hints follow this order so that a learner without an instructor
 can complete the problem after the third hint.
+
+## Names
+
+This section states how a challenge names its variables.
+
+A challenge names each input, each expected variable, and each variable
+of its `solution` for what its value is, in whole English words joined
+by `_`, such as `total_seconds`. Three kinds of variable have shorter
+names:
+
+- a number that mathematics names with a letter: one letter, such as
+  `n`, `a`, `b`, and `c`
+- the variable of a `for` block, which the application names
+  (`language.md`, Edits, Loop variables)
+- the table that a dynamic-programming problem fills: `dp`
+
+`dp` keeps the name that books on dynamic programming give the table,
+so a learner who reads one of them finds the same name.
+
+These things have one name in every challenge:
+
+- the list of numbers that a problem works on: `nums`
+- the value that a search looks for: `target`
+- the position that a problem finds in a list: `position`
+- the largest value: `largest`
+- a true or false result: a name that starts with `is_`, such as
+  `is_prime`
+
+A name chosen for each problem on its own was rejected, because a
+learner who meets `found` for a position in one problem and `at` in
+the next reads two ideas where there is one.
 
 ## Study plans
 
@@ -258,36 +290,105 @@ The build bundles `challenges/*.json` and `plans.json`.
 
 `scripts/check.ts` reads the files from disk.
 
-## Course plan (`course`)
+## Plan tables
 
-This section lists the problems of the `course` plan. The tables of
-the three plans read as follows:
+Each plan's section lists its problems in a table. The tables read as
+follows:
 
 - An input is written `name: default`.
 - An expectation is `expect.variables` unless `stdout` is stated.
 - In the `edge tests` columns, an entry written `edge: …` is a test with
   `edge: true`, and the text after it only describes the test.
 
-| challenge id   | difficulty, topics          | inputs                                 | expectation                                  | edge tests                                            |
-| -------------- | --------------------------- | -------------------------------------- | -------------------------------------------- | ----------------------------------------------------- |
-| tutorial       | easy, output                | `name: "Claude"`                       | stdout `Hello, Claude`                       | `edge: empty` `""` → `Hello, `                        |
-| sum-to-n       | easy, loops variables       | `n: 10`                                | `total = 55`                                 | `edge: 0` → `0`; `1` → `1`                            |
-| fizzbuzz       | easy, loops conditions      | `n: 15`                                | stdout 1..n with `Fizz`, `Buzz`, `FizzBuzz`  | `edge: 1`; `3`                                        |
-| max-of-three   | easy, conditions            | `a: 3, b: 9, c: 5`                     | `biggest = 9`                                | `edge: equal` `3,3,3`; negatives                      |
-| countdown      | easy, loops                 | `n: 5`                                 | stdout `5` … `0`, one per line, with `while` | `edge: 0` → `0`                                       |
-| list-max       | easy, lists                 | `nums: [4, 9, 2, 7]`                   | `biggest = 9`                                | `edge: one` `[7]`; `[-3, -1, -2]` → `-1`              |
-| count-evens    | easy, lists conditions      | `nums: [1, 2, 3, 4, 6]`                | `count = 3`                                  | `edge: empty` → `0`; no evens                         |
-| linear-search  | easy, lists searching       | `nums: [4, 9, 2, 7], target: 2`        | `found = 2`                                  | `edge: missing` → `-1`; first of duplicates           |
-| binary-search  | medium, lists searching     | `nums: [1, 3, 5, 7, 9, 11], target: 7` | `found = 3`, `nums` unchanged                | `edge: missing` → `-1`; `edge: empty`; first and last |
-| bubble-sort    | medium, lists sorting       | `nums: [5, 3, 1, 4, 2]`                | `nums = [1, 2, 3, 4, 5]`                     | `edge: empty`; `edge: one`; `[2, 2, 1]`; sorted       |
-| selection-sort | medium, lists sorting       | same                                   | same                                         | same                                                  |
-| insertion-sort | medium, lists sorting       | same                                   | same                                         | same                                                  |
-| reverse-list   | easy, lists                 | `nums: [1, 2, 3, 4]`                   | `nums = [4, 3, 2, 1]` in place with `swap`   | `edge: empty`; `edge: one`; odd length                |
+## Values-and-decisions plan (`decisions`)
 
-The tutorial prints two values, `print("Hello,", name)`, not
+This section lists the problems of the `decisions` plan.
+
+| challenge id    | difficulty, topics | inputs                | expectation                                                                                                                                                                       | edge tests                                                                        |
+| --------------- | ------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| hello           | easy, output       | `name: "World"`       | stdout `Hello, World`                                                                                                                                                             | `edge: empty` `""` → `Hello, `; `"Ada"` → `Hello, Ada`                            |
+| swap-values     | easy, variables    | `a: 3, b: 7`          | `a = 7`, `b = 3`, with a temporary variable                                                                                                                                       | `edge: equal` `5, 5`; negatives                                                   |
+| rectangle       | easy, variables    | `width: 3, height: 4` | `area = 12`, `perimeter = 14`                                                                                                                                                     | `edge: 0` `width: 0, height: 5` → `0`, `10`; `1, 1` → `1`, `4`                    |
+| minutes-seconds | easy, variables    | `total_seconds: 135`  | `minutes = 2`, `seconds = 15`                                                                                                                                                     | `edge: 0` → `0`, `0`; `60` → `1`, `0`                                             |
+| even-or-odd     | easy, conditions   | `n: 7`                | stdout `odd`                                                                                                                                                                      | `edge: 0` → `even`; `-3` → `odd`                                                  |
+| grade           | easy, conditions   | `score: 72`           | stdout `C`: `A` from 90, `B` from 80, `C` from 70, `D` from 60, else `F`                                                                                                          | `edge: 0` → `F`; `100` → `A`; each boundary                                       |
+| max-of-three    | easy, conditions   | `a: 3, b: 9, c: 5`    | `largest = 9`                                                                                                                                                                     | `edge: equal` `3,3,3`; negatives                                                  |
+| sort-three      | easy, conditions   | `a: 3, b: 1, c: 2`    | `a = 1`, `b = 2`, `c = 3`, by comparing two values and swapping them                                                                                                              | `edge: sorted` `1, 2, 3`; `3, 2, 1`; `2, 1, 2` → `1, 2, 2`                        |
+| leap-year       | easy, conditions   | `year: 2024`          | `is_leap = True`                                                                                                                                                                  | `edge: 1900` → `False`; `2000` → `True`; `2023` → `False`                         |
+| triangle-type   | medium, conditions | `a: 3, b: 4, c: 5`    | stdout `scalene`; checked in this order, `not a triangle` when a side is not less than the sum of the other two, `equilateral` when all three are equal, `isosceles` when two are | `edge: no triangle` `1, 2, 3`; `3, 1, 1` → `not a triangle`; `2, 2, 2`; `2, 2, 3` |
+
+`hello` prints two values, `print("Hello,", name)`, not
 `"Hello, " + name`, because the concatenation would make the learner's
 first action combine a text, an operator, and a variable before any
 problem introduces operators.
+
+## Loops plan (`loops`)
+
+This section lists the problems of the `loops` plan.
+
+| challenge id        | difficulty, topics       | inputs         | expectation                                                                                   | edge tests                                          |
+| ------------------- | ------------------------ | -------------- | --------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| countdown           | easy, loops              | `n: 5`         | stdout `5` … `0`, one per line, with `while`                                                  | `edge: 0` → `0`; `2` → `2`, `1`, `0`                |
+| sum-to-n            | easy, loops variables    | `n: 10`        | `total = 55`                                                                                  | `edge: 0` → `0`; `1` → `1`                          |
+| fizzbuzz            | easy, loops conditions   | `n: 15`        | stdout 1..n with `Fizz`, `Buzz`, `FizzBuzz`                                                   | `edge: 1`; `3`                                      |
+| fibonacci           | easy, loops variables    | `n: 10`        | `fibonacci = 55`, the `n`th Fibonacci number, counting 0 as the 0th and 1 as the 1st          | `edge: 0` → `0`; `1` → `1`; `2` → `1`               |
+| isqrt               | easy, loops              | `n: 20`        | `root = 4`, the largest whole number whose square is at most `n`, found by counting up        | `edge: 0` → `0`; `1` → `1`; `16` → `4`              |
+| times-table         | easy, loops output       | `n: 3`         | stdout `1 x 1 = 1`, `1 x 2 = 2` … `3 x 3 = 9`, nine lines, the second number changing fastest | `edge: 1` → one line; `2` → four lines              |
+| number-triangle     | easy, loops output       | `n: 3`         | stdout `1`, `1 2`, `1 2 3`, each line a text of the numbers from 1 separated by one space     | `edge: 1` → `1`; `4` → four lines                   |
+| collatz             | medium, loops            | `n: 6`         | `steps = 8`                                                                                   | `edge: 1` → `0`; `7` → `16`                         |
+| russian-peasant     | medium, loops conditions | `a: 13, b: 12` | `product = 156`, by halving `a` and doubling `b`, adding `b` when `a` is odd                  | `edge: 0` `a: 0` → `0`; `1, 9` → `9`; `8, 5` → `40` |
+| pythagorean-triples | medium, loops conditions | `n: 20`        | `count = 6`, the triples `i < j < k <= n` with `i * i + j * j == k * k`                       | `edge: 4` → `0`; `5` → `1`; `10` → `2`              |
+
+## Lists plan (`lists`)
+
+This section lists the problems of the `lists` plan.
+
+| challenge id      | difficulty, topics     | inputs                             | expectation                                                                                     | edge tests                                                      |
+| ----------------- | ---------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| count-occurrences | easy, lists conditions | `nums: [3, 1, 3, 2, 3], target: 3` | `count = 3`                                                                                     | `edge: empty` → `0`; `target` absent → `0`                      |
+| average           | easy, lists            | `nums: [70, 85, 90]`               | `mean = 81.666…`, the sum divided by the number of items                                        | `edge: one` `[100]` → `100.0`; `[1, 2]` → `1.5`                 |
+| list-max          | easy, lists            | `nums: [4, 9, 2, 7]`               | `largest = 9`                                                                                   | `edge: one` `[7]`; `[-3, -1, -2]` → `-1`                        |
+| index-of-max      | easy, lists searching  | `nums: [3, 8, 5, 8]`               | `position = 1`, the position of the first largest                                               | `edge: one` `[4]` → `0`; `[1, 2, 9]` → `2`                      |
+| linear-search     | easy, lists searching  | `nums: [4, 9, 2, 7], target: 2`    | `position = 2`                                                                                  | `edge: missing` → `-1`; first of duplicates                     |
+| filter-evens      | easy, lists conditions | `nums: [1, 2, 3, 4, 6]`            | `evens = [2, 4, 6]`, with `append`                                                              | `edge: empty` → `[]`; no evens → `[]`                           |
+| double-items      | easy, lists            | `nums: [1, 2, 3]`                  | `nums = [2, 4, 6]` in place                                                                     | `edge: empty` → `[]`; negatives                                 |
+| running-total     | easy, lists            | `nums: [3, 1, 4, 1]`               | `totals = [3, 4, 8, 9]`, the prefix sums                                                        | `edge: empty` → `[]`; one item                                  |
+| longest-streak    | medium, lists          | `nums: [1, 1, 2, 2, 2, 3]`         | `longest_streak = 3`, the most equal values in a row                                            | `edge: empty` → `0`; `edge: one` `[7]` → `1`; `[1, 2, 3]` → `1` |
+| second-largest    | medium, lists          | `nums: [4, 9, 2, 7]`               | `second_largest = 7`, the largest value below the largest; each list holds two different values | `edge: repeated largest` `[5, 5, 3]` → `3`; `[1, 2]` → `1`      |
+
+## Sorting plan (`sorting`)
+
+This section lists the problems of the `sorting` plan.
+
+| challenge id   | difficulty, topics      | inputs                                      | expectation                                                                                                               | edge tests                                            |
+| -------------- | ----------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| reverse-list   | easy, lists             | `nums: [1, 2, 3, 4]`                        | `nums = [4, 3, 2, 1]` in place with `swap`                                                                                | `edge: empty`; `edge: one`; odd length                |
+| rotate-left    | easy, lists             | `nums: [1, 2, 3, 4]`                        | `nums = [2, 3, 4, 1]`, by shifting each item left                                                                         | `edge: empty`; `edge: one`                            |
+| move-zeros     | medium, lists           | `nums: [0, 1, 0, 3, 12]`                    | `nums = [1, 3, 12, 0, 0]` in place, the other items in their order                                                        | `edge: empty`; no zeros; all zeros                    |
+| bubble-sort    | medium, lists sorting   | `nums: [5, 3, 1, 4, 2]`                     | `nums = [1, 2, 3, 4, 5]`                                                                                                  | `edge: empty`; `edge: one`; `[2, 2, 1]`; sorted       |
+| selection-sort | medium, lists sorting   | as bubble-sort                              | as bubble-sort                                                                                                            | as bubble-sort                                        |
+| insertion-sort | medium, lists sorting   | as bubble-sort                              | as bubble-sort                                                                                                            | as bubble-sort                                        |
+| binary-search  | medium, lists searching | `nums: [1, 3, 5, 7, 9, 11], target: 7`      | `position = 3`, `nums` unchanged                                                                                          | `edge: missing` → `-1`; `edge: empty`; first and last |
+| merge-sorted   | medium, lists sorting   | `left: [1, 4, 6], right: [2, 3, 7]`         | `merged = [1, 2, 3, 4, 6, 7]`                                                                                             | `edge: empty` `left: []` → `right`; equal items       |
+| counting-sort  | medium, lists sorting   | `nums: [3, 1, 2, 3, 0]`, values from 0 to 9 | `nums = [0, 1, 2, 3, 3]`, from a list of counts                                                                           | `edge: empty`; one value repeated                     |
+| median         | easy, lists sorting     | `nums: [70, 90, 80, 60]`                    | `median = 75.0`, the mean of the two middle items with `/`, or the middle item itself when the length is odd, with `sort` | `edge: one` `[50]` → `50`; `[3, 1, 2]` → `2`          |
+
+## Number-algorithms plan (`numbers`)
+
+This section lists the problems of the `numbers` plan.
+
+| challenge id      | difficulty, topics       | inputs                                          | expectation                                                                                                                 | edge tests                                           |
+| ----------------- | ------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| digit-sum         | easy, loops              | `n: 1234`                                       | `total = 10`                                                                                                                | `edge: 0` → `0`; `1000` → `1`                        |
+| palindrome-number | easy, loops conditions   | `n: 12321`                                      | `is_palindrome = True`                                                                                                      | `edge: 0` → `True`; `123` → `False`; `120` → `False` |
+| gcd               | easy, loops              | `a: 48, b: 18`                                  | `gcd = 6`, with `while b != 0`                                                                                              | `edge: zero` `48, 0` → `48`; `a < b`                 |
+| is-prime          | easy, loops conditions   | `n: 29`                                         | `is_prime = True`                                                                                                           | `edge: 1` → `False`; `2` → `True`; `9` → `False`     |
+| change-making     | easy, loops lists        | `amount: 1260, coins: [500, 100, 50, 10, 5, 1]` | `fewest = 6`, the fewest coins, taking the largest first                                                                    | `edge: 0` → `0`; `999` → `15`                        |
+| to-binary         | medium, loops lists      | `n: 13`                                         | `bits = [1, 1, 0, 1]`, with `insert` at the front                                                                           | `edge: 0` → `[0]`; `1` → `[1]`; `8` → `[1, 0, 0, 0]` |
+| prime-factors     | medium, loops lists      | `n: 60`                                         | `factors = [2, 2, 3, 5]`                                                                                                    | `edge: 1` → `[]`; `13` → `[13]`                      |
+| sieve             | medium, lists loops      | `n: 30`                                         | `count = 10`, the primes up to `n`, with a list of flags                                                                    | `edge: 1` → `0`; `2` → `1`                           |
+| luhn              | medium, loops conditions | `n: 79927398713`                                | `is_valid = True`, by the Luhn check digit                                                                                  | `edge: 0` → `True`; `79927398710` → `False`          |
+| newton-sqrt       | medium, loops            | `n: 2.0`                                        | `root`, the square root, from `root ← (n + 1) / 2`, repeating `root ← (root + n / root) / 2` while `root * root - n > 1e-9` | `edge: 1.0` → `1.0`; `9.0` → `3.0`; `0.25` → `0.5`   |
 
 ## Data-structure plan (`structures`)
 
@@ -301,25 +402,25 @@ does (`modules.md`, Built-in modules, `heap`).
 `heap_push` and `heap_pop` from the learner's `heap` module or the
 built-in one (`language.md`, Scope).
 
-| challenge id   | difficulty, topics      | inputs                                            | expectation                                                                                                              | edge tests                                              |
-| -------------- | ----------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
-| stack-balance  | medium, lists           | `text: "([]{})"`                                  | `ok = True` with a list as stack                                                                                         | `edge: empty` → `True`; `"(]"`; `"(("`                  |
-| bfs-grid       | hard, lists searching   | `grid: 5×5 of 0/1, start: [0, 0], goal: [4, 4]`   | `dist = 8`, table `seen`; frontier list used as a queue; `deltas = [[0,1],[1,0],[0,-1],[-1,0]]`                          | `edge: unreachable` → `-1`; start equal to goal → `0`          |
-| heap-push      | medium, lists           | `heap: [], items: [5, 3, 8, 1]`                   | `heap = [1, 3, 8, 5]` after `heap_push(heap, x)` for each item: append, then sift up with `swap`; `defines: [heap_push]` | `edge: empty` items → `[]`; one item                    |
-| heap-pop       | medium, lists           | `heap: [1, 3, 8, 5]`                              | `out = 1`, `heap = [3, 5, 8]` via `heap_pop(heap)`: root out, last item to the root, sift down; `defines: [heap_pop]`    | `edge: one` → `heap = []`; `edge: two` `[2, 9]`; `[1, 1, 2]` |
-| dijkstra-grid  | hard, lists searching   | `cost: 5×5 ints, start, goal`                     | `total`; frontier list, minimum removed by a program function `pop_min(frontier)`                                        | `edge: 1×1`; uniform costs                              |
-| dijkstra-heap  | hard, lists searching   | as dijkstra-grid                                  | same `total`; the frontier is a heap of `[d, r, c]` kept with `heap_push` and `heap_pop`                                 | as dijkstra-grid                                        |
-| astar-grid     | hard, lists searching   | as bfs                                            | `dist = 8`, `expanded` at most bfs's; the frontier is a heap of `[f, r, c]` with `abs(r - gr) + abs(c - gc)` inline               | as bfs                                                  |
+| challenge id   | difficulty, topics      | inputs                                            | expectation                                                                                                                                                 | edge tests                                                   |
+| -------------- | ----------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| stack-balance  | medium, lists           | `text: "([]{})"`                                  | `is_balanced = True` with a list as stack                                                                                                                   | `edge: empty` → `True`; `"(]"`; `"(("`                       |
+| bfs-grid       | hard, lists searching   | `grid: 5×5 of 0/1, start: [0, 0], goal: [4, 4]`   | `distance = 8`, table `seen`; frontier list used as a queue; `deltas = [[0,1],[1,0],[0,-1],[-1,0]]`                                                         | `edge: unreachable` → `-1`; start equal to goal → `0`        |
+| heap-push      | medium, lists           | `heap: [], items: [5, 3, 8, 1]`                   | `heap = [1, 3, 8, 5]` after `heap_push(heap, item)` for each item: append, then sift up with `swap`; `defines: [heap_push]`                                 | `edge: empty` items → `[]`; one item                         |
+| heap-pop       | medium, lists           | `heap: [1, 3, 8, 5]`                              | `smallest = 1`, `heap = [3, 5, 8]` via `heap_pop(heap)`: root out, last item to the root, sift down; `defines: [heap_pop]`                                  | `edge: one` → `heap = []`; `edge: two` `[2, 9]`; `[1, 1, 2]` |
+| dijkstra-grid  | hard, lists searching   | `cost: 5×5 ints, start, goal`                     | `total`; frontier list, minimum removed by a program function `pop_min(frontier)`                                                                           | `edge: 1×1`; uniform costs                                   |
+| dijkstra-heap  | hard, lists searching   | as dijkstra-grid                                  | same `total`; the frontier is a heap of `[distance, row, column]` kept with `heap_push` and `heap_pop`                                                      | as dijkstra-grid                                             |
+| astar-grid     | hard, lists searching   | as bfs                                            | `distance = 8`, `expanded` at most bfs's; the frontier is a heap of `[estimate, row, column]` with `abs(row - goal_row) + abs(column - goal_column)` inline | as bfs                                                       |
 
 ## Dynamic-programming plan (`dp`)
 
 This section lists the problems of the `dp` plan.
 
-| challenge id | difficulty, topics | inputs                                             | expectation                                | edge tests                                    |
-| ------------ | ------------------ | -------------------------------------------------- | ------------------------------------------ | --------------------------------------------- |
-| coin-change  | hard, lists loops  | `coins: [1, 2, 5], amount: 11`                     | `best = 3`, list `dp` of length 12         | `edge: 0` → `0`; `coins [2], amount 3` → `-1` |
-| knapsack     | hard, lists loops  | `weights: [1, 3, 4], values: [15, 20, 30], cap: 4` | `best = 35`, table `dp`                    | `edge: cap 0` → `0`                           |
-| lcs          | hard, lists loops  | `s: "ABCBDAB", t: "BDCABA"`                        | `length = 4`, table `dp` 8 × 7             | `edge: empty` → `0`                           |
+| challenge id | difficulty, topics | inputs                                                  | expectation                                | edge tests                                    |
+| ------------ | ------------------ | ------------------------------------------------------- | ------------------------------------------ | --------------------------------------------- |
+| coin-change  | hard, lists loops  | `coins: [1, 2, 5], amount: 11`                          | `fewest = 3`, list `dp` of length 12       | `edge: 0` → `0`; `coins [2], amount 3` → `-1` |
+| knapsack     | hard, lists loops  | `weights: [1, 3, 4], values: [15, 20, 30], capacity: 4` | `largest = 35`, table `dp`                 | `edge: capacity 0` → `0`                      |
+| lcs          | hard, lists loops  | `first: "ABCBDAB", second: "BDCABA"`                    | `length = 4`, table `dp` 8 × 7             | `edge: empty` → `0`                           |
 
 ## Verification
 
