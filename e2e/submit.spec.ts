@@ -68,8 +68,8 @@ test("FizzBuzz from the list to Accepted, Python, and the next problem", async (
 
   await page.getByTestId("tab-result").click();
   await page.getByRole("button", { name: "Next problem →" }).click();
-  await expect(page).toHaveURL(/#\/p\/max-of-three$/);
-  await expect(page).toHaveTitle("Max of three — AlgoFlow");
+  await expect(page).toHaveURL(/#\/p\/countdown$/);
+  await expect(page).toHaveTitle("Countdown — AlgoFlow");
   const progress = await page.evaluate(() => localStorage.getItem("algoflow:progress"));
   expect(JSON.parse(progress ?? "{}")).toMatchObject({ fizzbuzz: { status: "solved" } });
 });
