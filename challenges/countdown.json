@@ -18,9 +18,9 @@
   "hints": [
     { "en": "Use a **while** block, which repeats its body as long as its condition holds." },
     {
-      "en": "Count down with a variable you can change: `k ← n` before the loop, and a **while** block whose check is `k >= 0?`."
+      "en": "Count down with `n` itself: a **while** block whose check is `n >= 0?`."
     },
-    { "en": "Inside the loop, `print(k)`, then `k ← k - 1`, or the loop never ends." }
+    { "en": "Inside the loop, `print(n)`, then `n ← n - 1`, or the loop never ends." }
   ],
   "takeaway": { "en": "A **while** loop kept going until its condition became false." },
   "solution": {
@@ -32,36 +32,30 @@
     "functions": [],
     "main": [
       {
-        "id": "cnt-init-001",
-        "type": "assign",
-        "target": { "id": "cnt-tgt-0001", "type": "var", "name": "k" },
-        "value": { "id": "cnt-nvar-001", "type": "var", "name": "n" }
-      },
-      {
         "id": "cnt-loop-001",
         "type": "while",
         "cond": {
           "id": "cnt-ge00-001",
           "type": "binop",
           "op": ">=",
-          "left": { "id": "cnt-kvar-001", "type": "var", "name": "k" },
+          "left": { "id": "cnt-nvar-001", "type": "var", "name": "n" },
           "right": { "id": "cnt-zero-001", "type": "num", "value": 0, "float": false, "raw": "0" }
         },
         "body": [
           {
             "id": "cnt-prnt-001",
             "type": "print",
-            "args": [{ "id": "cnt-kvar-002", "type": "var", "name": "k" }]
+            "args": [{ "id": "cnt-nvar-002", "type": "var", "name": "n" }]
           },
           {
             "id": "cnt-decr-001",
             "type": "assign",
-            "target": { "id": "cnt-tgt-0002", "type": "var", "name": "k" },
+            "target": { "id": "cnt-tgt-0002", "type": "var", "name": "n" },
             "value": {
               "id": "cnt-mins-001",
               "type": "binop",
               "op": "-",
-              "left": { "id": "cnt-kvar-003", "type": "var", "name": "k" },
+              "left": { "id": "cnt-nvar-003", "type": "var", "name": "n" },
               "right": {
                 "id": "cnt-one0-001",
                 "type": "num",

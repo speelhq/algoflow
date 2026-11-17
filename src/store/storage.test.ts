@@ -16,7 +16,7 @@ describe("storage", () => {
     vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("full", "QuotaExceededError");
     });
-    expect(() => useProgress.getState().hintShown("tutorial", 1)).not.toThrow();
+    expect(() => useProgress.getState().hintShown("hello", 1)).not.toThrow();
     expect(() => useLayout.getState().setCollapsed(true)).not.toThrow();
     expect(writeStored("algoflow:x", 1)).toBe(false);
   });

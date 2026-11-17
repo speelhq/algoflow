@@ -7,8 +7,8 @@ test.describe("first launch", () => {
   test("with nothing stored, the first problem of the first plan opens", async ({ page }) => {
     await page.goto("/");
     await expect(page.getByTestId("problem-page")).toBeVisible();
-    await expect(page).toHaveTitle("Hello — AlgoFlow");
-    await expect(page).toHaveURL(/#\/p\/tutorial$/);
+    await expect(page).toHaveTitle("Hello, World — AlgoFlow");
+    await expect(page).toHaveURL(/#\/p\/hello$/);
   });
 
   test("← Problems then stays on the Problems page", async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe("first launch", () => {
   test("the layout key alone still counts as a first launch", async ({ page }) => {
     await page.addInitScript(() => localStorage.setItem("algoflow:layout", "{}"));
     await page.goto("/");
-    await expect(page).toHaveURL(/#\/p\/tutorial$/);
+    await expect(page).toHaveURL(/#\/p\/hello$/);
   });
 });
 
@@ -30,14 +30,14 @@ test.describe("Problems page", () => {
     page,
   }) => {
     await seedProgress(page, {
-      tutorial: { status: "solved", hints: 0, solution: false },
+      hello: { status: "solved", hints: 0, solution: false },
       "sum-to-n": { status: "solved", hints: 1, solution: false },
       fizzbuzz: { status: "attempted", hints: 0, solution: false },
     });
     await page.goto("/#/");
     const plan = page.getByTestId("plan-decisions");
     await expect(plan.getByRole("heading", { name: "Values and Decisions" })).toBeVisible();
-    await expect(plan).toContainText(`1 of ${getChallengePlan("tutorial").problems.length} solved`);
+    await expect(plan).toContainText(`1 of ${getChallengePlan("hello").problems.length} solved`);
     await expect(
       plan.getByRole("link", { name: "Continue: Max of three ▶", exact: true }),
     ).toHaveAttribute("href", "#/p/max-of-three");
@@ -48,7 +48,7 @@ test.describe("Problems page", () => {
     await expect(
       loops.getByRole("link", { name: "Continue: Countdown ▶", exact: true }),
     ).toHaveAttribute("href", "#/p/countdown");
-    await expect(page.getByTestId("problem-row-tutorial").getByRole("img")).toHaveAccessibleName(
+    await expect(page.getByTestId("problem-row-hello").getByRole("img")).toHaveAccessibleName(
       "Solved",
     );
     await expect(page.getByTestId("problem-row-fizzbuzz").getByRole("img")).toHaveAccessibleName(
@@ -69,7 +69,7 @@ test.describe("Problems page", () => {
     await page.goto("/#/");
     await expect(
       page.getByTestId("plan-decisions").getByRole("link", { name: "Start", exact: true }),
-    ).toHaveAttribute("href", "#/p/tutorial");
+    ).toHaveAttribute("href", "#/p/hello");
   });
 
   test("a row opens its Problem page", async ({ page }) => {

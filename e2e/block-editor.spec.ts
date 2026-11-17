@@ -204,8 +204,8 @@ test("a return's value field stays with or without a value, and no text takes th
     type: "return",
     value: { id: "ret-valu-001", type: "num", value: 1, float: false, raw: "1" },
   };
-  await seedProgram(page, "tutorial", createStoredProgram([back]));
-  await page.goto("/#/p/tutorial");
+  await seedProgram(page, "hello", createStoredProgram([back]));
+  await page.goto("/#/p/hello");
   await page.locator('[data-chart-node="ret-retn-001"]').click({ position: { x: 8, y: 20 } });
   const field = editor(page).locator("[data-value-line]");
   await expect(field).toHaveValue("1");
@@ -224,7 +224,7 @@ test("a print's values are one field, typed, removed, and added by their text", 
   page,
 }) => {
   await seedProgress(page, {});
-  await page.goto("/#/p/tutorial");
+  await page.goto("/#/p/hello");
   // A new print holds no value, draws no hint, and its field has the keyboard.
   await insert(page, "main/main/0", "print");
   await expect(chart(page)).toContainText("print()");
@@ -482,7 +482,7 @@ test("the editor stays where it is while its list changes, within the canvas", a
 
 test("a text is typed between its quotes and edited as any text field does", async ({ page }) => {
   await seedProgress(page, {});
-  await page.goto("/#/p/tutorial");
+  await page.goto("/#/p/hello");
   await insert(page, "main/main/0", "print");
   const field = editor(page).locator("[data-value-line]").first();
   // `Text` writes its quotes with the caret between them.
@@ -505,7 +505,7 @@ test("a text is typed between its quotes and edited as any text field does", asy
 
 test("an input method's composition edits the program once it ends", async ({ page }) => {
   await seedProgress(page, {});
-  await page.goto("/#/p/tutorial");
+  await page.goto("/#/p/hello");
   await insert(page, "main/main/0", "print");
   await keys(page, "text");
   await page.keyboard.press("Enter");
@@ -524,7 +524,7 @@ test("an input method's composition edits the program once it ends", async ({ pa
 
 test("the changes typed in one field are one entry of the history", async ({ page }) => {
   await seedProgress(page, {});
-  await page.goto("/#/p/tutorial");
+  await page.goto("/#/p/hello");
   await insert(page, "main/main/0", "print");
   await keys(page, "123");
   await expect(chart(page)).toContainText("print(123)");

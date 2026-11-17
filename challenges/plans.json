@@ -3,7 +3,7 @@
     "id": "decisions",
     "title": { "en": "Values and Decisions" },
     "description": { "en": "Print, calculate, and choose between values with a condition." },
-    "problems": ["tutorial", "max-of-three"]
+    "problems": ["hello", "max-of-three"]
   },
   {
     "id": "loops",

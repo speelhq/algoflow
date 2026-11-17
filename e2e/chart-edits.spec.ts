@@ -71,7 +71,7 @@ test("Delete removes the selected block, and undo and redo walk it back", async 
 });
 
 test("undo, redo, and duplicate act while a value line has the keyboard", async ({ page }) => {
-  await page.goto("/#/p/tutorial");
+  await page.goto("/#/p/hello");
   await page.locator('[data-testid="connector"][data-place="main/main/0"]').click();
   await page.getByTestId("block-menu").locator('[data-entry="print"]').click();
   const line = page.getByTestId("block-editor").locator("[data-value-line]");
