@@ -4,7 +4,7 @@
   "difficulty": "easy",
   "topics": ["conditions"],
   "description": {
-    "en": "Store the largest of `a`, `b`, and `c` in `biggest` using **if** blocks, not the `max` builtin."
+    "en": "Store the largest of `a`, `b`, and `c` in `largest` using **if** blocks, not the `max` builtin."
   },
   "inputs": [
     { "name": "a", "kind": "number" },
@@ -14,32 +14,32 @@
   "tests": [
     {
       "inputs": { "a": 3, "b": 9, "c": 5 },
-      "expect": { "variables": { "biggest": 9 } }
+      "expect": { "variables": { "largest": 9 } }
     },
     {
       "inputs": { "a": 3, "b": 3, "c": 3 },
       "edge": true,
-      "expect": { "variables": { "biggest": 3 } }
+      "expect": { "variables": { "largest": 3 } }
     },
     {
       "inputs": { "a": -5, "b": -2, "c": -9 },
-      "expect": { "variables": { "biggest": -2 } }
+      "expect": { "variables": { "largest": -2 } }
     },
     {
       "inputs": { "a": 1, "b": 2, "c": 7 },
-      "expect": { "variables": { "biggest": 7 } }
+      "expect": { "variables": { "largest": 7 } }
     }
   ],
   "hints": [
     { "en": "Use two **if** blocks, one for `b` and one for `c`." },
     {
-      "en": "Each **if** asks whether its value is greater than `biggest`, the largest so far: `b > biggest?`."
+      "en": "Each **if** asks whether its value is greater than `largest`, the largest so far: `b > largest?`."
     },
     {
-      "en": "Before them add `biggest ← a`, and on the **Yes** side of each `biggest ← b` or `biggest ← c`."
+      "en": "Before them add `largest ← a`, and on the **Yes** side of each `largest ← b` or `largest ← c`."
     }
   ],
-  "takeaway": { "en": "Two **if** blocks replaced `biggest` whenever a larger value appeared." },
+  "takeaway": { "en": "Two **if** blocks replaced `largest` whenever a larger value appeared." },
   "solution": {
     "version": 1,
     "title": "Max of three",
@@ -55,7 +55,7 @@
       {
         "id": "max-init-001",
         "type": "assign",
-        "target": { "id": "max-tgt-0001", "type": "var", "name": "biggest" },
+        "target": { "id": "max-tgt-0001", "type": "var", "name": "largest" },
         "value": { "id": "max-avar-001", "type": "var", "name": "a" }
       },
       {
@@ -66,13 +66,13 @@
           "type": "binop",
           "op": ">",
           "left": { "id": "max-bvar-001", "type": "var", "name": "b" },
-          "right": { "id": "max-big0-001", "type": "var", "name": "biggest" }
+          "right": { "id": "max-lrg0-001", "type": "var", "name": "largest" }
         },
         "then": [
           {
             "id": "max-setb-001",
             "type": "assign",
-            "target": { "id": "max-tgt-0002", "type": "var", "name": "biggest" },
+            "target": { "id": "max-tgt-0002", "type": "var", "name": "largest" },
             "value": { "id": "max-bvar-002", "type": "var", "name": "b" }
           }
         ],
@@ -86,13 +86,13 @@
           "type": "binop",
           "op": ">",
           "left": { "id": "max-cvar-001", "type": "var", "name": "c" },
-          "right": { "id": "max-big0-002", "type": "var", "name": "biggest" }
+          "right": { "id": "max-lrg0-002", "type": "var", "name": "largest" }
         },
         "then": [
           {
             "id": "max-setc-001",
             "type": "assign",
-            "target": { "id": "max-tgt-0003", "type": "var", "name": "biggest" },
+            "target": { "id": "max-tgt-0003", "type": "var", "name": "largest" },
             "value": { "id": "max-cvar-002", "type": "var", "name": "c" }
           }
         ],

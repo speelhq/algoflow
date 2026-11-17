@@ -53,13 +53,13 @@ describe("progress store", () => {
 
   it("the status of a row and the solved count of a plan", () => {
     const { submitted } = useProgress.getState();
-    submitted("tutorial", true);
+    submitted("hello", true);
     submitted("sum-to-n", false);
     const { entries } = useProgress.getState();
-    expect(findProgressStatus(entries, "tutorial")).toBe("solved");
+    expect(findProgressStatus(entries, "hello")).toBe("solved");
     expect(findProgressStatus(entries, "sum-to-n")).toBe("attempted");
     expect(findProgressStatus(entries, "toString")).toBeUndefined();
-    expect(solvedCount(entries, ["tutorial", "sum-to-n", "fizzbuzz"])).toBe(1);
+    expect(solvedCount(entries, ["hello", "sum-to-n", "fizzbuzz"])).toBe(1);
   });
 
   it("persists the bare record under algoflow:progress", () => {
@@ -93,14 +93,14 @@ describe("progress store", () => {
   });
 
   it("another tab's write is read on the storage event and joined", () => {
-    useProgress.getState().hintShown("tutorial", 1);
+    useProgress.getState().hintShown("hello", 1);
     localStorage.setItem(
       PROGRESS_STORAGE_KEY,
       JSON.stringify({ fizzbuzz: { status: "solved", hints: 0, solution: false } }),
     );
     window.dispatchEvent(new StorageEvent("storage", { key: PROGRESS_STORAGE_KEY }));
     expect(useProgress.getState().entries).toEqual({
-      tutorial: { status: "attempted", hints: 1, solution: false },
+      hello: { status: "attempted", hints: 1, solution: false },
       fizzbuzz: { status: "solved", hints: 0, solution: false },
     });
   });

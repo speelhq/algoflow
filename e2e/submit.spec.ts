@@ -150,7 +150,7 @@ test("a submission is recorded as attempted, and solved only when accepted", asy
 });
 
 test("after a plan's last problem, Accepted says Plan complete", async ({ page }) => {
-  const { problems } = getChallengePlan("tutorial");
+  const { problems } = getChallengePlan("hello");
   const last = problems.at(-1);
   if (last === undefined) throw new Error("the plan is empty");
   const solved = { status: "solved", hints: 0, solution: false };

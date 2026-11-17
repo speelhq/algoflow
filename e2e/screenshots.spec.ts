@@ -29,7 +29,7 @@ test("First launch", async ({ page }) => {
 
 test("Problems", async ({ page }) => {
   await seedProgress(page, {
-    tutorial: { status: "solved", hints: 0, solution: false },
+    hello: { status: "solved", hints: 0, solution: false },
     "sum-to-n": { status: "solved", hints: 0, solution: false },
     fizzbuzz: { status: "attempted", hints: 1, solution: false },
   });
