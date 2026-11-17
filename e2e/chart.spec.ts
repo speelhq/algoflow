@@ -9,11 +9,11 @@ test.beforeEach(async ({ page }) => {
 test("an empty main draws Start, the Input chart node, and End under a path bar of main", async ({
   page,
 }) => {
-  await page.goto("/#/p/tutorial");
+  await page.goto("/#/p/hello");
   const chart = page.getByTestId("chart");
   await expect(chart.locator("[data-chart-node]")).toHaveCount(3);
   await expect(chart).toContainText("Start");
-  await expect(chart).toContainText('Input name ← "Claude"');
+  await expect(chart).toContainText('Input name ← "World"');
   await expect(chart).toContainText("End");
   await expect(page.getByTestId("path-segment")).toHaveText("main");
 });

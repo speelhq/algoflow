@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { nextProblem, planAction, type FindStatus } from "./next";
 
 // A plan of the tests' own, so that no case depends on what the bundled plans hold.
-const members = ["tutorial", "sum-to-n", "fizzbuzz", "max-of-three", "countdown"];
+const members = ["hello", "sum-to-n", "fizzbuzz", "max-of-three", "countdown"];
 
 vi.mock("./plans", () => ({
   getChallengePlan: () => ({
@@ -20,15 +20,15 @@ function statuses(entries: Record<string, "attempted" | "solved">): FindStatus {
 
 describe("planAction", () => {
   it("offers Start on the first problem while no problem has an entry", () => {
-    expect(planAction(members, statuses({}))).toEqual({ kind: "start", id: "tutorial" });
+    expect(planAction(members, statuses({}))).toEqual({ kind: "start", id: "hello" });
   });
 
   it("offers Continue on the first unsolved problem once any has an entry", () => {
-    const status = statuses({ tutorial: "solved", "sum-to-n": "attempted" });
+    const status = statuses({ hello: "solved", "sum-to-n": "attempted" });
     expect(planAction(members, status)).toEqual({ kind: "continue", id: "sum-to-n" });
     expect(planAction(members, statuses({ "sum-to-n": "solved" }))).toEqual({
       kind: "continue",
-      id: "tutorial",
+      id: "hello",
     });
   });
 
@@ -41,13 +41,13 @@ describe("planAction", () => {
 
 describe("nextProblem", () => {
   it("leads to the next unsolved problem of the plan", () => {
-    const status = statuses({ tutorial: "solved", "sum-to-n": "solved", fizzbuzz: "solved" });
+    const status = statuses({ hello: "solved", "sum-to-n": "solved", fizzbuzz: "solved" });
     expect(nextProblem("sum-to-n", status)).toEqual({ kind: "next", id: "max-of-three" });
   });
 
   it("wraps round to an earlier unsolved problem", () => {
     const status = statuses({ "max-of-three": "solved", countdown: "solved" });
-    expect(nextProblem("countdown", status)).toEqual({ kind: "next", id: "tutorial" });
+    expect(nextProblem("countdown", status)).toEqual({ kind: "next", id: "hello" });
   });
 
   it("takes the next row once every other problem is solved, and says Plan complete after the last", () => {

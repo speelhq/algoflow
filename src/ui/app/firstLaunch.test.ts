@@ -6,12 +6,12 @@ import { firstLaunchTarget } from "./firstLaunch";
 describe("first launch", () => {
   it("opens the first problem of the first plan when nothing is stored", () => {
     for (const hash of ["", "#", "#/"]) {
-      expect(firstLaunchTarget(hash, [], PLANS)).toBe("#/p/tutorial");
+      expect(firstLaunchTarget(hash, [], PLANS)).toBe("#/p/hello");
     }
   });
 
   it("ignores the layout key, which records no work", () => {
-    expect(firstLaunchTarget("#/", ["algoflow:layout"], PLANS)).toBe("#/p/tutorial");
+    expect(firstLaunchTarget("#/", ["algoflow:layout"], PLANS)).toBe("#/p/hello");
   });
 
   it("keeps the Problems page once progress or a program is stored", () => {

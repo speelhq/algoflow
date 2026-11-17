@@ -1,6 +1,6 @@
 {
-  "id": "tutorial",
-  "title": { "en": "Hello" },
+  "id": "hello",
+  "title": { "en": "Hello, World" },
   "difficulty": "easy",
   "topics": ["output"],
   "description": {
@@ -9,8 +9,8 @@
   "inputs": [{ "name": "name", "kind": "text" }],
   "tests": [
     {
-      "inputs": { "name": "Claude" },
-      "expect": { "stdout": ["Hello, Claude"] }
+      "inputs": { "name": "World" },
+      "expect": { "stdout": ["Hello, World"] }
     },
     {
       "inputs": { "name": "" },
@@ -33,18 +33,18 @@
   },
   "solution": {
     "version": 1,
-    "title": "Hello",
-    "challengeId": "tutorial",
+    "title": "Hello, World",
+    "challengeId": "hello",
     "inputs": [{ "name": "name", "kind": "text" }],
     "classes": [],
     "functions": [],
     "main": [
       {
-        "id": "tut-prnt-001",
+        "id": "hel-prnt-001",
         "type": "print",
         "args": [
-          { "id": "tut-text-001", "type": "str", "value": "Hello," },
-          { "id": "tut-name-001", "type": "var", "name": "name" }
+          { "id": "hel-text-001", "type": "str", "value": "Hello," },
+          { "id": "hel-name-001", "type": "var", "name": "name" }
         ]
       }
     ]
